@@ -712,6 +712,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
     
     
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
+    emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
 
     interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, fromRect in
         if sticker.file.mimeType.hasPrefix("bundle") {
@@ -732,7 +733,6 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
         emojis?.closePopover()
     }
     
-    emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
 
     
     var close:(()->Void)? = nil

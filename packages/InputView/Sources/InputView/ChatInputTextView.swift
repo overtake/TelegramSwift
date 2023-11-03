@@ -61,7 +61,7 @@ public protocol ChatInputTextViewDelegate: AnyObject {
     func inputMaximumHeight() -> CGFloat
     func inputMaximumLenght() -> Int
     
-    func inputViewIsEnabled() -> Bool
+    func inputViewIsEnabled(_ event: NSEvent) -> Bool
     func inputViewProcessEnter(_ theEvent: NSEvent) -> Bool
     func inputViewMaybeClosed() -> Bool
     
@@ -645,6 +645,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         
         self.customLayoutManager.ensureLayout(for: self.customTextContainer)
+        self.display()
         self.updateTextElements()
     }
     
@@ -1081,7 +1082,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
     public override func keyDown(with theEvent: NSEvent) {
         if let delegate = self.customDelegate {
-            if delegate.inputViewIsEnabled() {
+            if delegate.inputViewIsEnabled(theEvent) {
                 
                 if isEnterEvent(theEvent) && !self.hasMarkedText() {
                     
@@ -1102,8 +1103,6 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 if !theEvent.modifierFlags.contains(.command) || !isEnterEvent(theEvent) {
                     super.keyDown(with: theEvent)
                 }
-            } else {
-                super.keyDown(with: theEvent)
             }
         } else {
             super.keyDown(with: theEvent)
@@ -1111,16 +1110,15 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
     
     fileprivate func highlightRect(forRange aRange: NSRange, whole: Bool) -> NSRect {
-        if aRange.location > self.string.count || self.string.isEmpty {
+        if aRange.location > self.string.length || self.string.isEmpty {
             return NSZeroRect
         }
         
         let r = aRange
-        let startLineRange = (self.string as NSString).lineRange(for: NSRange(location: r.location, length: 0))
         var er = NSMaxRange(r) - 1
         let text = self.string
         
-        if er >= text.count {
+        if er >= text.length {
             return NSZeroRect
         }
         

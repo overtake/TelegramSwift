@@ -433,51 +433,66 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 
             }))
         }, addMembers: {
-            let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> castError(AddChannelMemberError.self) |> mapToSignal { peers -> Signal<[PeerId], AddChannelMemberError> in
-                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: context.window)
+            
+            
+            struct Result {
+                let success:[PeerId]
+                let failed:[(PeerId, AddChannelMemberError)]
+            }
+            
+            let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapToSignal { memberIds -> Signal<Result, NoError> in
+                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembersAllowPartial(peerId: peerId, memberIds: memberIds), for: context.window) |> map { failed -> Result in
+                    let success = memberIds.filter { memberId in
+                        return !failed.contains(where: { $0.0 == memberId })
+                    }
+                    return .init(success: success, failed: failed)
+                }
             } |> deliverOnMainQueue
             
-            actionsDisposable.add(signal.start(error: { error in
-                let text: String
-                switch error {
-                case .notMutualContact:
-                    text = strings().channelInfoAddUserLeftError
-                case .limitExceeded:
-                    text = strings().channelErrorAddTooMuch
-                case .botDoesntSupportGroups:
-                    text = strings().channelBotDoesntSupportGroups
-                case .tooMuchBots:
-                    text = strings().channelTooMuchBots
-                case .tooMuchJoined:
-                    text = strings().inviteChannelsTooMuch
-                case .generic:
-                    text = strings().unknownError
-                case .kicked:
-                    text = strings().channelAddUserKickedError
-                case let .bot(memberId):
-                    let _ = (context.account.postbox.transaction { transaction in
-                        return transaction.getPeer(peerId)
-                        }
-                        |> deliverOnMainQueue).start(next: { peer in
-                            guard let peer = peer as? TelegramChannel else {
-                                alert(for: context.window, info: strings().unknownError)
-                                return
-                            }
-                            if peer.hasPermission(.addAdmins) {
-                                verifyAlert_button(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
-                                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
-                                })
-                            } else {
-                                alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
-                            }
-                        })
-                    return
-                case .restricted:
-                    text = strings().channelErrorAddBlocked
+            actionsDisposable.add(signal.start(next: { result in
+                
+                let failed = result.failed.filter {
+                    switch $0.1 {
+                    case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked, .restricted:
+                        return true
+                    default:
+                        return false
+                    }
                 }
-                alert(for: context.window, info: text)
+                let botFailed = result.failed.filter {
+                    switch $0.1 {
+                    case .bot:
+                        return true
+                    default:
+                        return false
+                    }
+                }
+                                
+                if !failed.isEmpty {
+                    showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 })
+                } else if let first = botFailed.first {
+                    if case let .bot(memberId) = first.1 {
+                        let _ = (context.account.postbox.transaction { transaction in
+                            return transaction.getPeer(peerId)
+                            }
+                            |> deliverOnMainQueue).start(next: { peer in
+                                guard let peer = peer as? TelegramChannel else {
+                                    alert(for: context.window, info: strings().unknownError)
+                                    return
+                                }
+                                if peer.hasPermission(.addAdmins) {
+                                    verifyAlert_button(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                        showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _,_  in }), for: context.window)
+                                    })
+                                } else {
+                                    alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
+                                }
+                            })
+                    }
+                }
+                
             }, completed: {
-                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                //_ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
             }))
         }, inviteLink: { [weak self] in
             if let strongSelf = self {

@@ -2922,8 +2922,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.urlPreviewQueryState?.1.dispose()
             
             
+            let webpagePreviewAttribute: WebpagePreviewMessageAttribute?
+            
+            let media: RequestEditMessageMedia
+            if let webpreview = presentation.urlPreview?.1 {
+                webpagePreviewAttribute = .init(leadingPreview: !presentation.interfaceState.linkBelowMessage, forceLargeMedia: presentation.interfaceState.largeMedia, isManuallyAdded: false, isSafe: true)
+                media = .update(.webPage(webPage: WebpageReference(webpreview), media: webpreview))
+            } else {
+                webpagePreviewAttribute = nil
+                media = state.editMedia
+            }
+            
+            
             if atDate == nil {
-                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
+                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: media, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, webpagePreviewAttribute: webpagePreviewAttribute, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
                 
                 self.chatInteraction.beginEditingMessage(nil)
                 self.chatInteraction.update({
@@ -2936,10 +2948,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
             } else {
                 let scheduleTime:Int32? = atDate != nil ? Int32(atDate!.timeIntervalSince1970) : nil
-
-                self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
                 
-                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
+               
+                self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
+                                
+                
+                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: media, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, webpagePreviewAttribute: webpagePreviewAttribute, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
                     switch progress {
                     case let .progress(progress):
@@ -3566,6 +3580,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     self?.chatInteraction.update({ state in
                         var state = state
                         state = state.withEditMessage(message)
+                        if let attribute = message.webpagePreviewAttribute {
+                            state = state.updatedInterfaceState { current in
+                                var current = current
+                                current = current.withUpdatedLinkBelowMessage(!attribute.leadingPreview)
+                                if let forceLargeMedia = attribute.forceLargeMedia {
+                                    current = current.withUpdatedLargeMedia(forceLargeMedia)
+                                }
+                                return current
+                            }
+                        }
                         if !context.isPremium && context.peerId != peerId {
                             state = state.updatedInterfaceState { interfaceState in
                                 var interfaceState = interfaceState

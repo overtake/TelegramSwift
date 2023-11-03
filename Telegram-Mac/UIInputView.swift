@@ -39,6 +39,9 @@ final class TextView_Interactions : InterfaceObserver {
     var max_input: Int = 100000
     var supports_continuity_camera: Bool = false
     var inputIsEnabled: Bool = true
+    var canTransform: Bool = true
+    
+    var emojiPlayPolicy: LottiePlayPolicy = .loop
     
     init(presentation: Updated_ChatTextInputState = .init()) {
         self.presentation = presentation
@@ -74,12 +77,14 @@ final class TextView_Interactions : InterfaceObserver {
     var processPaste:(NSPasteboard)->Bool = { _ in return false }
     var processAttriburedCopy: (NSAttributedString) -> Bool = { _ in return false }
     var responderDidUpdate:()->Void = { }
+    
+    var filterEvent: (NSEvent)->Bool = { _ in return true }
 }
 
 
 final class UITextView : View, Notifable, ChatInputTextViewDelegate {
-    func inputViewIsEnabled() -> Bool {
-        return interactions.inputIsEnabled
+    func inputViewIsEnabled(_ event: NSEvent) -> Bool {
+        return interactions.filterEvent(event) && interactions.inputIsEnabled
     }
     
     func inputViewProcessEnter(_ theEvent: NSEvent) -> Bool {
@@ -186,7 +191,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     }
     
     func inputTextCanTransform() -> Bool {
-        return true
+        return interactions.canTransform
     }
     
     func inputViewRevealSpoilers() {
@@ -282,7 +287,12 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     
     private let view: ChatInputTextView
     
-    let interactions: TextView_Interactions
+    var interactions: TextView_Interactions {
+        didSet {
+            oldValue.remove(observer: self)
+            interactions.add(observer: self)
+        }
+    }
     
     var context: AccountContext?
     
@@ -297,8 +307,8 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         self.view.emojiViewProvider = { [weak self] attachment, size, theme in
             let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
             let view = InputAnimatedEmojiAttach(frame: rect)
-            if let context = self?.context {
-                view.set(attachment, size: rect.size, context: context, textColor: theme.textColor)
+            if let context = self?.context, let interactions = self?.interactions {
+                view.set(attachment, size: rect.size, context: context, textColor: theme.textColor, playPolicy: interactions.emojiPlayPolicy)
             }
             return view
         }

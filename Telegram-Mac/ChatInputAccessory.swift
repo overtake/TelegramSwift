@@ -24,7 +24,7 @@ class ChatInputAccessory: View {
     private var displayNode:ChatAccessoryModel?
     
     private let dismiss:ImageButton = ImageButton()
-    private let iconView = ImageView()
+    private let iconView = ImageButton()
     private var progress: Control?
     let container:ChatAccessoryView = ChatAccessoryView()
     
@@ -38,6 +38,9 @@ class ChatInputAccessory: View {
         self.addSubview(iconView)
         self.addSubview(container)
         self.addSubview(dismiss)
+        
+        iconView.autohighlight = false
+        
         
         dismissForward = { [weak self] in
             self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
@@ -88,7 +91,7 @@ class ChatInputAccessory: View {
         container.removeAllStateHandlers()
 
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
-            iconView.image = theme.icons.chat_action_url_preview
+            iconView.set(image: theme.icons.chat_action_url_preview, for: .Normal)
             displayNode = ChatUrlPreviewModel(context: context, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissUrlPreview()
@@ -151,7 +154,7 @@ class ChatInputAccessory: View {
             
         } else if let editState = state.interfaceState.editState {
             displayNode = EditMessageModel(state: editState, context: context)
-            iconView.image = theme.icons.chat_action_edit_message
+            iconView.set(image: theme.icons.chat_action_edit_message, for: .Normal)
             iconView.isHidden = editState.loadingState != .none
             progress?.isHidden = editState.loadingState == .none
             updateProgress(editState.loadingState)
@@ -165,7 +168,7 @@ class ChatInputAccessory: View {
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, context: context)
            
-            iconView.image = theme.icons.chat_action_forward_message
+            iconView.set(image: theme.icons.chat_action_forward_message, for: .Normal)
 
             let anotherAction = { [weak self] in
                 guard let context = self?.chatInteraction.context else {
@@ -250,7 +253,7 @@ class ChatInputAccessory: View {
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
             displayNode = ReplyModel(message: nil, replyMessageId: replyMessageId.messageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, quote: replyMessageId.quote, dismissReply: dismissReply, forceClassic: true)
-            iconView.image = theme.icons.chat_action_reply_message
+            iconView.set(image: theme.icons.chat_action_reply_message, for: .Normal)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)
@@ -275,6 +278,7 @@ class ChatInputAccessory: View {
         } else {
             nodeReady.set(.single(animated))
         }
+        iconView.contextMenu = container.contextMenu
         iconView.sizeToFit()
         displayNode?.view = container
     }

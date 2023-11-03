@@ -1939,6 +1939,8 @@ public final class L10n {
   public static var channelMembersGroupHideMembersInfo: String  { return L10n.tr("Localizable", "ChannelMembers.Group.HideMembers.Info") }
   /// Add Members
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
+  /// Add Reactions...
+  public static var channelReactionsPlaceholder: String  { return L10n.tr("Localizable", "ChannelReactions.Placeholder") }
   /// OVERVIEW
   public static var channelStatsOverview: String  { return L10n.tr("Localizable", "ChannelStats.Overview") }
   /// %d

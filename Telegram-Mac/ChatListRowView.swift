@@ -2725,155 +2725,156 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
         
-        if let delta = internalDelta {
-            moveReveal(delta: delta)
-        } else {
-            let additionalDelta: CGFloat
-            if let state = endRevealState {
-                switch state {
-                case .left:
-                    additionalDelta = -leftRevealWidth
-                case .right:
-                    additionalDelta = rightRevealWidth
-                case .none:
-                    additionalDelta = 0
-                }
-            } else {
+        
+        let additionalDelta: CGFloat
+        if let state = endRevealState {
+            switch state {
+            case .left:
+                additionalDelta = -leftRevealWidth
+            case .right:
+                additionalDelta = rightRevealWidth
+            case .none:
                 additionalDelta = 0
             }
-            
-            if item.isCollapsed {
-                var bp = 0
-                bp += 1
-            }
-            
-            containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -item.height : 0, frame.width - .borderSize, item.height)
-            
-            contentView.frame = CGRect(origin: contentPoint(item), size: frame.size)
-            
-            revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
-            revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
-            
-            
-            if item.shouldHideContent {
-                self.inlineTopicPhotoLayer?.frame = NSMakeRect(20, 20, 30, 30)
+        } else {
+            additionalDelta = 0
+        }
+        
+        if item.isCollapsed {
+            var bp = 0
+            bp += 1
+        }
+        
+        containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -item.height : 0, frame.width - .borderSize, item.height)
+        
+        contentView.frame = CGRect(origin: contentPoint(item), size: frame.size)
+        
+        revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
+        revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
+        
+        
+        if item.shouldHideContent {
+            self.inlineTopicPhotoLayer?.frame = NSMakeRect(20, 20, 30, 30)
+        } else {
+            if item.appearMode == .short {
+                self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, item.margin, 16, 16)
             } else {
-                if item.appearMode == .short {
-                    self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, item.margin, 16, 16)
-                } else {
-                    self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
-                }
+                self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
             }
-            
-            if let badgeView = self.badgeView {
-                let point = badgePoint(item)
-                badgeView.setFrameOrigin(point)
-            }
-            if let badgeView = self.badgeShortView {
-                let point = badgeShortPoint(item)
-                badgeView.setFrameOrigin(point)
-            }
-            
-            if let reactionsView = self.reactionsView {
-                let point = reactionsPoint(item)
-                reactionsView.setFrameOrigin(point)
-            }
-            
-            if let mentionsView = self.mentionsView {
-                let point = mentionPoint(item)
-                mentionsView.setFrameOrigin(point)
-            }
+        }
+        
+        if let badgeView = self.badgeView {
+            let point = badgePoint(item)
+            badgeView.setFrameOrigin(point)
+        }
+        if let badgeView = self.badgeShortView {
+            let point = badgeShortPoint(item)
+            badgeView.setFrameOrigin(point)
+        }
+        
+        if let reactionsView = self.reactionsView {
+            let point = reactionsPoint(item)
+            reactionsView.setFrameOrigin(point)
+        }
+        
+        if let mentionsView = self.mentionsView {
+            let point = mentionPoint(item)
+            mentionsView.setFrameOrigin(point)
+        }
 
-            if let selectionView = self.selectionView {
-                selectionView.frame = selectionViewRect(item)
-            }
-            
-            if let view = avatarTimerBadge {
-                let avatarFrame = self.photoContainer.frame
-                let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
-                let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
-                view.frame = avatarBadgeFrame
-            }
+        if let selectionView = self.selectionView {
+            selectionView.frame = selectionViewRect(item)
+        }
+        
+        if let view = avatarTimerBadge {
+            let avatarFrame = self.photoContainer.frame
+            let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
+            let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+            view.frame = avatarBadgeFrame
+        }
 
+        
+        if let displayNameView = self.displayNameView {
             
-            if let displayNameView = self.displayNameView {
-                
-                if let view = activitiesModel?.view {
-                    view.setFrameOrigin(item.leftInset, displayNameView.frame.height + item.margin + 3)
-                }
-                
-                if let dateTextView = self.dateTextView {
-                    let dateX = contentView.frame.width - dateTextView.frame.width - item.margin
-                    dateTextView.setFrameOrigin(NSMakePoint(dateX, item.margin))
-                }
-                
-                
+            if let view = activitiesModel?.view {
+                view.setFrameOrigin(item.leftInset, displayNameView.frame.height + item.margin + 3)
+            }
+            
+            if let dateTextView = self.dateTextView {
+                let dateX = contentView.frame.width - dateTextView.frame.width - item.margin
+                dateTextView.setFrameOrigin(NSMakePoint(dateX, item.margin))
+            }
+            
+            
+            var addition:CGFloat = 0
+            if item.isSecret {
+                addition += theme.icons.secretImage.backingSize.height
+            }
+            if item.appearMode == .short, item.isTopic {
+                addition += 20
+            }
+            displayNameView.setFrameOrigin(NSMakePoint(item.leftInset + addition, item.margin - 1))
+            
+            var offset: CGFloat = 0
+            if let chatName = item.ctxChatNameLayout {
+                offset += chatName.layoutSize.height + 1
+            }
+            
+            if let statusControl = statusControl {
                 var addition:CGFloat = 0
                 if item.isSecret {
                     addition += theme.icons.secretImage.backingSize.height
                 }
-                if item.appearMode == .short, item.isTopic {
-                    addition += 20
+                statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
+            }
+            
+            var inset: CGFloat = item.leftInset
+            if let view = self.storyReplyImageView {
+                view.setFrameOrigin(NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset))
+                inset += view.frame.width + 2
+            }
+            
+            var mediaPreviewOffset = NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset)
+            let contentImageSpacing: CGFloat = 2.0
+            
+            for (message, _, mediaSize) in self.currentMediaPreviewSpecs {
+                if let previewView = self.mediaPreviewViews[message.id] {
+                    previewView.frame = CGRect(origin: mediaPreviewOffset, size: mediaSize)
                 }
-                displayNameView.setFrameOrigin(NSMakePoint(item.leftInset + addition, item.margin - 1))
-                
-                var offset: CGFloat = 0
-                if let chatName = item.ctxChatNameLayout {
-                    offset += chatName.layoutSize.height + 1
-                }
-                
-                if let statusControl = statusControl {
-                    var addition:CGFloat = 0
-                    if item.isSecret {
-                        addition += theme.icons.secretImage.backingSize.height
-                    }
-                    statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
-                }
-                
-                var inset: CGFloat = item.leftInset
-                if let view = self.storyReplyImageView {
-                    view.setFrameOrigin(NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset))
-                    inset += view.frame.width + 2
-                }
-                
-                var mediaPreviewOffset = NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset)
-                let contentImageSpacing: CGFloat = 2.0
-                
-                for (message, _, mediaSize) in self.currentMediaPreviewSpecs {
-                    if let previewView = self.mediaPreviewViews[message.id] {
-                        previewView.frame = CGRect(origin: mediaPreviewOffset, size: mediaSize)
-                    }
-                    mediaPreviewOffset.x += mediaSize.width + contentImageSpacing
-                }
+                mediaPreviewOffset.x += mediaSize.width + contentImageSpacing
+            }
 
-                var messageOffset: CGFloat = 0
-                if let chatNameLayout = item.ctxChatNameLayout {
-                    messageOffset += min(chatNameLayout.layoutSize.height, 17) + 2
+            var messageOffset: CGFloat = 0
+            if let chatNameLayout = item.ctxChatNameLayout {
+                messageOffset += min(chatNameLayout.layoutSize.height, 17) + 2
+            }
+            let displayHeight = displayNameView.frame.height
+            if let messageTextView = messageTextView {
+                messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
+            }
+            
+            if let topicsView = topicsView, let layout = item.topicsLayout {
+                var inset: CGPoint = .zero
+                if layout.fastTrack {
+                    inset.x += 5
                 }
-                let displayHeight = displayNameView.frame.height
-                if let messageTextView = messageTextView {
-                    messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
+                let point = NSMakePoint(item.leftInset - inset.x, displayHeight + item.margin + 2 - inset.y)
+                topicsView.frame = CGRect(origin: point, size: layout.size)
+            }
+            
+            if let chatNameTextView = chatNameTextView {
+                chatNameTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 2))
+                if let forumTopicNameIcon = forumTopicNameIcon {
+                    forumTopicNameIcon.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 2, displayHeight + item.margin + 2))
                 }
-                
-                if let topicsView = topicsView, let layout = item.topicsLayout {
-                    var inset: CGPoint = .zero
-                    if layout.fastTrack {
-                        inset.x += 5
-                    }
-                    let point = NSMakePoint(item.leftInset - inset.x, displayHeight + item.margin + 2 - inset.y)
-                    topicsView.frame = CGRect(origin: point, size: layout.size)
-                }
-                
-                if let chatNameTextView = chatNameTextView {
-                    chatNameTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 2))
-                    if let forumTopicNameIcon = forumTopicNameIcon {
-                        forumTopicNameIcon.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 2, displayHeight + item.margin + 2))
-                    }
-                    if let forumTopicTextView = forumTopicTextView {
-                        forumTopicTextView.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 12, displayHeight + item.margin + 2))
-                    }
+                if let forumTopicTextView = forumTopicTextView {
+                    forumTopicTextView.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 12, displayHeight + item.margin + 2))
                 }
             }
+        }
+        
+        if let delta = internalDelta {
+            moveReveal(delta: delta)
         }
     }
     
