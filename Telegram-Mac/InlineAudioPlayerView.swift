@@ -362,7 +362,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             if let controller = context.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
             } else {
-                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), focusTarget: .init(messageId: message.id)))
             }
         }
     }

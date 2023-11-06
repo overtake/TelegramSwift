@@ -1004,7 +1004,7 @@
                 location = .peer(id)
                 mode = .history
             }
-            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, messageId: messageId, chatLocationContextHolder: threadInfo?.contextHolder))
+            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, focusTarget: .init(messageId: messageId), chatLocationContextHolder: threadInfo?.contextHolder))
         }
         
         interactions.focusMessageId = { _, focusMessageId, _ in

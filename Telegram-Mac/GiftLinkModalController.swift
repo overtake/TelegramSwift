@@ -271,7 +271,7 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
         
     }, openMessage: { messageId in
         close?()
-        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

@@ -71,7 +71,7 @@ class PeerInfoArguments {
     }
     
     func peerChat(_ peerId:PeerId, postId: MessageId? = nil) {
-        pushViewController(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId))
+        pushViewController(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId)))
     }
     
     func openStory(_ initialId: StoryInitialIndex?) {

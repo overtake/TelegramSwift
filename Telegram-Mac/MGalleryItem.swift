@@ -456,7 +456,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                                 (controller as? ChatController)?.chatInteraction.focusMessageId(nil, postId, TableScrollState.CenterEmpty)
                             }
                         } else {
-                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
                         }
                     } else {
                         navigation.push(PeerInfoController(context: context, peerId: peerId))

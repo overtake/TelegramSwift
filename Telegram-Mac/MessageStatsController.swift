@@ -178,7 +178,7 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
     dataPromise.set(.single(nil) |> then(dataSignal))
     
     let openMessage: (MessageId)->Void = { messageId in
-        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
     }
     
     let searchSignal = context.engine.messages.searchMessages(location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)

@@ -171,6 +171,23 @@ public class SliderView: Control {
         }
     }
     
+    public func next(animated: Bool) {
+        var index = self.indexOfDisplayedSlide + 1
+        if index == self.slides.count {
+            index = 0
+        }
+        transitionStyle = index > dotsControl.indexOfHighlightedDot ? .pushHorizontalFromRight : .pushHorizontalFromLeft
+        displaySlide(at: index, animated: animated)
+    }
+    public func prev(animated: Bool) {
+        var index = self.indexOfDisplayedSlide - 1
+        if index == -1 {
+            index = self.slides.count - 1
+        }
+        transitionStyle = index > dotsControl.indexOfHighlightedDot ? .pushHorizontalFromRight : .pushHorizontalFromLeft
+        displaySlide(at: index, animated: animated)
+    }
+    
     public func displaySlide(at aIndex: Int, animated: Bool = true) {
         
         if aIndex < 0 {

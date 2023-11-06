@@ -268,7 +268,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
                 if peer.isForum, let threadId = message.threadId {
                     ForumUI.open(message.id.peerId, context: context, threadId: threadId)
                 } else {
-                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(message.id.peerId), focusTarget: .init(messageId: message.id)))
                 }
             }
         }, itemImage: MenuAnimation.menu_show_message.value))

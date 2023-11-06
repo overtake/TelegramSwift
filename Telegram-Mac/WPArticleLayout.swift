@@ -176,9 +176,9 @@ class WPArticleLayout: WPLayout {
                 return forceLargeMedia
             }
         }
-        if let value = content.isMediaLargeByDefault {
-            return value
-        }
+//        if let value = content.isMediaLargeByDefault {
+//            return value
+//        }
         
         if content.type == "telegram_background" || content.type == "telegram_theme" {
             return true
@@ -250,6 +250,8 @@ class WPArticleLayout: WPLayout {
                 } else {
                     contrainedImageSize = imageSize.aspectFitted(NSMakeSize(maxw, maxw))
                     if action_text != nil, contrainedImageSize.width < 200 {
+                        contrainedImageSize = NSMakeSize(min(300, maxw), min(300, maxw))
+                    } else if contrainedImageSize.width < 200 {
                         contrainedImageSize = NSMakeSize(min(300, maxw), min(300, maxw))
                     }
                 }

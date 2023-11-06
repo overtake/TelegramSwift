@@ -998,7 +998,7 @@ final class AccountContext {
             } else {
                 updatedMode = .replies(origin: fromId)
             }
-            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
+            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: fromId), initialAction: nil, chatLocationContextHolder: result.contextHolder)
             
             context.bindings.rootNavigation().push(controller)
             
