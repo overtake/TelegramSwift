@@ -759,7 +759,7 @@ private final class PremiumBoardingView : View {
         
     }
     
-    private var currentController: ViewController?
+    private(set) var currentController: ViewController?
     
     private let duration: Double = 0.4
     
@@ -862,6 +862,27 @@ final class PremiumBoardingController : ModalViewController {
                 arguments?.openFeature(value, false)
             }
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        window?.set(handler: { [weak self] _ in
+            let features = self?.genericView.currentController as? PremiumBoardingFeaturesController
+            features?.genericView.prev()
+            return .invoked
+        }, with: self, for: .LeftArrow, priority: .modal)
+        
+        window?.set(handler: { [weak self] _ in
+            let features = self?.genericView.currentController as? PremiumBoardingFeaturesController
+            features?.genericView.next()
+            return .invoked
+        }, with: self, for: .RightArrow, priority: .modal)
+        
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        window?.removeAllHandlers(for: self)
     }
     
     private var arguments: Arguments?
@@ -1245,6 +1266,8 @@ final class PremiumBoardingController : ModalViewController {
             return super.escapeKeyAction()
         }
     }
+    
+    
 }
 
 

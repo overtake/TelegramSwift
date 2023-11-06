@@ -49,7 +49,7 @@ class ChatSwitchInlineController: ChatController {
                                         case .history, .pinned:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         case let .thread(data, mode):
-                                            controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
+                                            controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         }

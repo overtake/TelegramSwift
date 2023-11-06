@@ -2421,9 +2421,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         let chatLocation: ChatLocation = .peer(peerId)
                         let chat: ChatController
                         if addition {
-                            chat = ChatAdditionController(context: context, chatLocation: chatLocation, messageId: messageId)
+                            chat = ChatAdditionController(context: context, chatLocation: chatLocation, focusTarget: .init(messageId: messageId))
                         } else {
-                            chat = ChatController(context: self.context, chatLocation: chatLocation, messageId: messageId, initialAction: initialAction)
+                            chat = ChatController(context: self.context, chatLocation: chatLocation, focusTarget: .init(messageId: messageId), initialAction: initialAction)
                         }
                         let animated = context.layout == .single || forceAnimated
                         navigation.push(chat, context.layout == .single || forceAnimated, style: animated ? .push : ViewControllerStyle.none)

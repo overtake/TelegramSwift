@@ -748,9 +748,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             let navigation = contextValue.context.bindings.rootNavigation()
                             let controller: ChatController
                             if addition {
-                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             } else {
-                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             }
                             navigation.push(controller)
                         }
@@ -1217,7 +1217,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 AppDelegate.eventProcessed = nil
                 
                 let link = inApp(for: url as NSString, context: context, openInfo: { (peerId, isChat, postId, action) in
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId:postId, initialAction:action), true)
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction:action), true)
                 }, applyProxy: { proxy in
                     applyExternalProxy(proxy, accountManager: context.sharedContext.accountManager)
                 })

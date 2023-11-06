@@ -54,6 +54,13 @@ final class PremiumBoardingFeaturesView: View {
         playbackDisposable?.dispose()
     }
     
+    func next() {
+        slideView.next(animated: true)
+    }
+    func prev() {
+        slideView.prev(animated: true)
+    }
+    
     override func layout() {
         super.layout()
         bottomView.frame = NSMakeRect(0, frame.height - 174, frame.width, 174)

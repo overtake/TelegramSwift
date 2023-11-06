@@ -16,6 +16,22 @@ import InAppSettings
 import ObjcUtils
 import ThemeSettings
 
+struct ChatFocusTarget {
+    var messageId: MessageId
+    var string: String?
+    
+    init?(messageId: MessageId?) {
+        if let messageId = messageId {
+            self.init(messageId: messageId, string: nil)
+        }
+        return nil
+    }
+    init(messageId: MessageId, string: String?) {
+        self.messageId = messageId
+        self.string = string
+    }
+}
+
 private var nextClientId: Int32 = 1
 
 
@@ -3415,7 +3431,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             strongSelf.chatInteraction.invokeInitialAction()
                         }
                     } else {
-                       strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                        strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
                     }
                 } else {
                     
@@ -3827,9 +3843,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.openFocusedMedia = { [weak self] timemark in
-            if let messageId = self?.messageId {
+            if let focusTarget = self?.focusTarget {
                 self?.genericView.tableView.enumerateItems(with: { item in
-                    if let item = item as? ChatMediaItem, item.message?.id == messageId {
+                    if let item = item as? ChatMediaItem, item.message?.id == focusTarget.messageId {
                         item.openMedia(timemark)
                         return false
                     }
@@ -3894,7 +3910,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                
                 if toId.peerId != strongSelf.chatInteraction.peerId {
-                    strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(toId.peerId), messageId: toId))
+                    strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(toId.peerId), focusTarget: .init(messageId: toId)))
                 }
                 
                 switch strongSelf.mode {
@@ -4703,7 +4719,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .pinned, messageId: messageId))
+            self.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .pinned, focusTarget: .init(messageId: messageId)))
         }
         
         chatInteraction.unpinAllMessages = { [weak self, unowned context] in
@@ -4914,7 +4930,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 } else {
                     updatedMode = .replies(origin: mode.originId)
                 }
-                self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: isChannelPost ? nil : mode.originId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), focusTarget: isChannelPost ? nil : .init(messageId: mode.originId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }, error: { error in
                 self?.updateState { state in
                     var state = state
@@ -5956,7 +5972,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         case let .thread(data, _):
             switch data.initialAnchor {
             case .automatic:
-                if let messageId = messageId {
+                if let messageId = self.focusTarget?.messageId {
                     location = .InitialSearch(location: .id(messageId), count: count)
                 } else {
                     location = .Initial(count: count)
@@ -5965,7 +5981,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 location = .Scroll(index: .message(index), anchorIndex: .message(index), sourceIndex: .message(index), scrollPosition: .up(false), count: count, animated: false)
             }
         default:
-            if let messageId = messageId {
+            if let messageId = self.focusTarget?.messageId {
                 location = .InitialSearch(location: .id(messageId), count: count)
             } else {
                 location = .Initial(count: count)
@@ -7335,14 +7351,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private let isAdChat: Bool
-    private let messageId: MessageId?
+    private let focusTarget: ChatFocusTarget?
     let mode: ChatMode
     
     private let sizeValue = ValuePromise<NSSize>(ignoreRepeated: true)
     
-    public init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
+    public init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, focusTarget:ChatFocusTarget? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
         self.chatLocation = chatLocation
-        self.messageId = messageId
+        self.focusTarget = focusTarget
         self.chatLocationContextHolder = chatLocationContextHolder ?? Atomic<ChatLocationContextHolder?>(value: nil)
         self.mode = mode
         self.chatInteraction = ChatInteraction(chatLocation: chatLocation, context: context, mode: mode)

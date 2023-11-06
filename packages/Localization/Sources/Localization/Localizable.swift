@@ -6833,8 +6833,34 @@ public final class L10n {
   public static var giveawayChannelsContextRemove: String  { return L10n.tr("Localizable", "Giveaway.Channels.Context.Remove") }
   /// Ends
   public static var giveawayDateEnds: String  { return L10n.tr("Localizable", "Giveaway.Date.Ends") }
-  /// Choose when 3 subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static var giveawayDateInfo: String  { return L10n.tr("Localizable", "Giveaway.Date.Info") }
+  /// %d
+  public static func giveawayDateInfoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_Countable", p1)
+  }
+  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static func giveawayDateInfoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_few", p1)
+  }
+  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static func giveawayDateInfoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_many", p1)
+  }
+  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static func giveawayDateInfoOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_one", p1)
+  }
+  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static func giveawayDateInfoOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_other", p1)
+  }
+  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static func giveawayDateInfoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_two", p1)
+  }
+  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static func giveawayDateInfoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Date.Info_zero", p1)
+  }
   /// Giveaway
   public static var giveawayDateSelectDate: String  { return L10n.tr("Localizable", "Giveaway.Date.SelectDate") }
   /// DATE WHEN GIVEAWAY ENDS

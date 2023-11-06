@@ -13,8 +13,8 @@ import Postbox
 import SwiftSignalKit
 
 class ChatScheduleController: ChatController {
-    public override init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .scheduled, messageId:MessageId? = nil, initialAction:ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
-        super.init(context: context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder)
+    public override init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .scheduled, focusTarget: ChatFocusTarget? = nil, initialAction:ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
+        super.init(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder)
     }
 
     

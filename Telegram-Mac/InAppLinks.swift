@@ -500,7 +500,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
-                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), focusTarget: .init(messageId: commentMessageId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }
         }, error: { error in
             switch error {

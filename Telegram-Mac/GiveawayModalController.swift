@@ -522,8 +522,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_select_date, data: .init(name: strings().giveawayDateEnds, color: theme.colors.text, type: .nextContext(stringForFullDate(timestamp: Int32(state.date.timeIntervalSince1970))), viewType: .singleItem, action: arguments.selectDate)))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
+        if state.quantity > 0 {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateInfoCountable(Int(state.quantity))), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            index += 1
+        }
     case .specific:
         break
     }
