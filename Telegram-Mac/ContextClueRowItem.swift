@@ -49,7 +49,7 @@ class ContextClueRowItem: TableRowItem {
         self.selected = selected
         self.presentation = presentation
         
-        self.sources = self.clues.prefix(20).map { .emoji($0) } + self.animated.map { .animated($0) }
+        self.sources = self.animated.map { .animated($0) } + self.clues.prefix(20).map { .emoji($0) }
 
         if let selected = selected, let index = sources.firstIndex(of: selected) {
             self.selectedIndex = index

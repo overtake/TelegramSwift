@@ -125,7 +125,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         let under = theme.colors.underSelectedColor
 
-        badge = .init(.initialize(string: "X\(media.quantity)", color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: under, additionSize: NSMakeSize(16, 7))
+        badge = .init(.initialize(string: "X\(media.quantity)", color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: theme.chat.bubbleBackgroundColor(isIncoming, object.renderType == .bubble), additionSize: NSMakeSize(16, 7))
         
         var channels:[Channel] = []
         for peerId in media.channelPeerIds {
@@ -316,6 +316,10 @@ final class ChatGiveawayRowItem : ChatRowItem {
         })
     }
     
+    override var fixedContentSize: Bool {
+        return true
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
         
@@ -338,7 +342,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         //channels
         for channel in channels {
-            channel.text.measure(width: w - 30)
+            channel.text.measure(width: w - 46)
         }
         var point: CGPoint = NSMakePoint(0, 0)
         var index = 0

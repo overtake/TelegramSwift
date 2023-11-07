@@ -589,6 +589,12 @@ public final class L10n {
   }
   /// More Boosts Needed
   public static var boostGiftToGetMoreTitle: String  { return L10n.tr("Localizable", "Boost.GiftToGetMore.Title") }
+  /// Start
+  public static var boostGiftStartConfirmationStart: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Start") }
+  /// Are you sure you want to start giveaway now?
+  public static var boostGiftStartConfirmationText: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Text") }
+  /// Start Giveaway
+  public static var boostGiftStartConfirmationTitle: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Title") }
   /// To boost **%1$@**, reassign a previous boost or gift **Telegram Premium** to a friend to get **%2$@** additional boosts
   public static func boostReassignInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "BoostReassign.Info", p1, p2)
@@ -5607,6 +5613,8 @@ public final class L10n {
   public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
   /// This link will only work for members of this chat
   public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
+  /// Giveaway
+  public static var conversationPinnedGiveaway: String  { return L10n.tr("Localizable", "Conversation.PinnedGiveaway") }
   /// %@ will know your phone number. This can be useful for integration with other services.
   public static func conversationShareBotContactConfirmation(_ p1: String) -> String {
     return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmation", p1)
@@ -5615,6 +5623,70 @@ public final class L10n {
   public static var conversationShareBotContactConfirmationOK: String  { return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmationOK") }
   /// Share Your Phone Number?
   public static var conversationShareBotContactConfirmationTitle: String  { return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmationTitle") }
+  /// %1$@ on %2$@
+  public static func conversationPinnedGiveawayFinished(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished", p1, p2)
+  }
+  /// %1$@ on %2$@
+  public static func conversationPinnedGiveawayOngoing(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing", p1, p2)
+  }
+  /// %d
+  public static func conversationPinnedGiveawayFinishedWinnersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_countable", p1)
+  }
+  /// %@ winners were selected
+  public static func conversationPinnedGiveawayFinishedWinnersFew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_few", p1)
+  }
+  /// %@ winners were selected
+  public static func conversationPinnedGiveawayFinishedWinnersMany(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_many", p1)
+  }
+  /// %@ winners was selected
+  public static func conversationPinnedGiveawayFinishedWinnersOne(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_one", p1)
+  }
+  /// %@ winners were selected
+  public static func conversationPinnedGiveawayFinishedWinnersOther(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_other", p1)
+  }
+  /// %@ winners were selected
+  public static func conversationPinnedGiveawayFinishedWinnersTwo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_two", p1)
+  }
+  /// %@ winners were selected
+  public static func conversationPinnedGiveawayFinishedWinnersZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Finished.Winners_zero", p1)
+  }
+  /// %d
+  public static func conversationPinnedGiveawayOngoingWinnersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_countable", p1)
+  }
+  /// %d winners to be selected
+  public static func conversationPinnedGiveawayOngoingWinnersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_few", p1)
+  }
+  /// %d winners to be selected
+  public static func conversationPinnedGiveawayOngoingWinnersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_many", p1)
+  }
+  /// %d winner to be selected
+  public static func conversationPinnedGiveawayOngoingWinnersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_one", p1)
+  }
+  /// %d winners to be selected
+  public static func conversationPinnedGiveawayOngoingWinnersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_other", p1)
+  }
+  /// %d winners to be selected
+  public static func conversationPinnedGiveawayOngoingWinnersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_two", p1)
+  }
+  /// %d winners to be selected
+  public static func conversationPinnedGiveawayOngoingWinnersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.PinnedGiveaway.Ongoing.Winners_zero", p1)
+  }
   /// %@ will know your phone number. This can be useful for integration with other services.\n\nThis will also unblock the bot.
   public static func conversationShareBotContactConfirmationUnblock(_ p1: String) -> String {
     return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmation.Unblock", p1)
@@ -6787,6 +6859,8 @@ public final class L10n {
   public static var giveawayStartGiveaway: String  { return L10n.tr("Localizable", "Giveaway.StartGiveaway") }
   /// Boosts via Gifts
   public static var giveawayTitle: String  { return L10n.tr("Localizable", "Giveaway.Title") }
+  /// Date limit reached.
+  public static var giveawayTooLongDate: String  { return L10n.tr("Localizable", "Giveaway.TooLongDate") }
   /// Giveaway created
   public static var giveawayAlertCreated: String  { return L10n.tr("Localizable", "Giveaway.Alert.Created") }
   /// 🎁 Gift
@@ -8053,6 +8127,20 @@ public final class L10n {
   public static var mediaSenderDiscardChangesOK: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.OK") }
   /// Are you sure you want to discard all changes?
   public static var mediaSenderDiscardChangesText: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Text") }
+  /// Giveaway: %1$@ on %2$@
+  public static func messageGiveawayFinished(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayFinished", p1, p2)
+  }
+  /// Giveaway: %1$@ on %2$@
+  public static func messageGiveawayOngoing(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing", p1, p2)
+  }
+  /// Channel started a giveaway
+  public static var messageGiveawayStarted: String  { return L10n.tr("Localizable", "Message.GiveawayStarted") }
+  /// %@ started a giveaway
+  public static func messageGiveawayStartedOther(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayStartedOther", p1)
+  }
   /// Invoice
   public static var messageInvoiceLabel: String  { return L10n.tr("Localizable", "Message.InvoiceLabel") }
   /// Payment: %@
@@ -8219,6 +8307,34 @@ public final class L10n {
   public static var messageContextConfirmPin1: String  { return L10n.tr("Localizable", "Message.Context.Confirm.Pin1") }
   /// Thank you! Your report will be reviewed by our team very soon.
   public static var messageContextReportAlertOK: String  { return L10n.tr("Localizable", "Message.Context.Report.AlertOK") }
+  /// %d winner was selected
+  public static func messageGiveawayOngoingWinnersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_countable", p1)
+  }
+  /// %d winner were selected
+  public static func messageGiveawayOngoingWinnersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_few", p1)
+  }
+  /// %d winner were selected
+  public static func messageGiveawayOngoingWinnersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_many", p1)
+  }
+  /// %d winner was selected
+  public static func messageGiveawayOngoingWinnersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_one", p1)
+  }
+  /// %d winner were selected
+  public static func messageGiveawayOngoingWinnersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_other", p1)
+  }
+  /// %d winner were selected
+  public static func messageGiveawayOngoingWinnersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_two", p1)
+  }
+  /// %d winner were selected
+  public static func messageGiveawayOngoingWinnersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.GiveawayOngoing.Winners_zero", p1)
+  }
   /// Edit Message...
   public static var messagePlaceholderEdit: String  { return L10n.tr("Localizable", "Message.Placeholder.Edit") }
   /// archived folder
