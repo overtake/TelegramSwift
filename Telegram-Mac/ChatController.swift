@@ -20,11 +20,12 @@ struct ChatFocusTarget {
     var messageId: MessageId
     var string: String?
     
-    init?(messageId: MessageId?) {
+     init?(messageId: MessageId?) {
         if let messageId = messageId {
-            self.init(messageId: messageId, string: nil)
+            self.messageId = messageId
+        } else {
+            return nil
         }
-        return nil
     }
     init(messageId: MessageId, string: String?) {
         self.messageId = messageId
@@ -3431,7 +3432,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             strongSelf.chatInteraction.invokeInitialAction()
                         }
                     } else {
-                        strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
+                        strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
                     }
                 } else {
                     

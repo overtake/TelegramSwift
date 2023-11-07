@@ -328,7 +328,7 @@ private struct State : Equatable {
     
     var selectedMonths: Int32 = 12
     
-    var date: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 60 * 60)
+    var date: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + (60 * 60 * 24 * 3))
     var channels: [PeerEquatable]
     var selectedPeers:[PeerEquatable] = []
     
@@ -425,7 +425,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_size, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                let sizes: [Int32] = [1, 3, 5, 7, 10, 25, 50]
+                var sizes: [Int32] = [1, 3, 5, 7, 10, 25, 50]
+                switch state.type {
+                case let .prepaid(giveaway):
+                    if !sizes.contains(giveaway.quantity) {
+                        sizes.append(giveaway.quantity)
+                    }
+                default:
+                    break
+                }
                 return SelectSizeRowItem(initialSize, stableId: stableId, current: state.quantity, sizes: sizes, hasMarkers: false, titles: sizes.map { "\($0)" }, viewType: .singleItem, selectAction: { index in
                     arguments.updateQuantity(sizes[index])
                 })
@@ -709,12 +717,29 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             addSpecificUsers()
         }
     }, selectDate: {
-        showModal(with: DateSelectorModalController(context: context, mode: .date(title: strings().giveawayDateSelectDate, doneTitle: strings().giveawayDateSelectDateOK), selectedAt: { value in
-            updateState { current in
-                var current = current
-                current.date = value
-                return current
+        
+        let seven_days: TimeInterval = 60 * 60 * 24 * 7
+        
+        let maximum_period = context.appConfiguration.getGeneralValue("giveaway_period_max", orElse: Int32(Date().timeIntervalSince1970 + seven_days))
+        
+        let maximumDate = Date().timeIntervalSince1970 + TimeInterval(maximum_period)
+        
+        showModal(with: DateSelectorModalController(context: context, defaultDate: stateValue.with { $0.date }, mode: .date(title: strings().giveawayDateSelectDate, doneTitle: strings().giveawayDateSelectDateOK), selectedAt: { value in
+            if value.timeIntervalSince1970 > maximumDate {
+                updateState { current in
+                    var current = current
+                    current.date = Date(timeIntervalSince1970: maximumDate)
+                    return current
+                }
+                showModalText(for: context.window, text: strings().giveawayTooLongDate)
+            } else {
+                updateState { current in
+                    var current = current
+                    current.date = value
+                    return current
+                }
             }
+            
         }), for: context.window)
     }, execute: { link in
         if link == "premium" {
@@ -943,20 +968,24 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     }
     
     controller.validateData = { _ in
-        if let prepaid = prepaid {
-            let state = stateValue.with { $0 }
-            let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
-            let countries = state.countries.map { $0.id }
-            let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
-            _ = showModalProgress(signal: signal, for: context.window).start(completed: {
-                PlayConfetti(for: context.window)
-                showModalText(for: context.window, text: strings().giveawayAlertCreated)
-                close?()
-            })
-        } else {
-            
-        }
-        buyAppStore()
+        
+        verifyAlert(for: context.window, header: strings().boostGiftStartConfirmationTitle, information: strings().boostGiftStartConfirmationText, ok: strings().boostGiftStartConfirmationStart, successHandler: { _ in
+            if let prepaid = prepaid {
+                let state = stateValue.with { $0 }
+                let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
+                let countries = state.countries.map { $0.id }
+                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
+                _ = showModalProgress(signal: signal, for: context.window).start(completed: {
+                    PlayConfetti(for: context.window)
+                    showModalText(for: context.window, text: strings().giveawayAlertCreated)
+                    close?()
+                })
+            } else {
+                
+            }
+            buyAppStore()
+        })
+       
         return .none
     }
     

@@ -442,6 +442,10 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    var fixedContentSize: Bool {
+        return false
+    }
+    
     var canBlur: Bool {
         if context.isLite(.blur) {
             return false
@@ -2453,6 +2457,8 @@ class ChatRowItem: TableRowItem {
         }
         
         if isBubbled && isBubbleFullFilled {
+            widthForContent = maxContentWidth
+        } else if fixedContentSize {
             widthForContent = maxContentWidth
         }
         

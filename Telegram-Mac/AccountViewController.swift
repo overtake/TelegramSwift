@@ -897,37 +897,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }, openStory: { initialId in
             StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
         }, openWebBot: { bot in
-            let open:()->Void = {
-                let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
-                _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                    showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file), for: context.window)
-                })
-            }
-            
-            if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
-                var options: [ModalAlertData.Option] = []
-                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
-                
-               
-                var description: ModalAlertData.Description? = nil
-                let installBot = !bot.flags.contains(.notActivated) && bot.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !bot.flags.contains(.showInAttachMenu)
-                
-                if installBot {
-                    description = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: false)
-                }
-                
-                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
-                showModalAlert(for: context.window, data: data, completion: { result in
-                    installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
-                        if value, installBot {
-                            showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
-                        }
-                        open()
-                    })
-                })
-            } else {
-                open()
-            }
+            openWebBot(bot, context: context)
         })
         
         self.arguments = arguments
