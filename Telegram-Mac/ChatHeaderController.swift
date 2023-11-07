@@ -1359,7 +1359,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         
         self.chatInteraction.focusMessageId = { [weak self] fromId, messageId, state in
             self?.parentInteractions.focusMessageId(fromId, messageId, state)
-            self?.inputInteraction.update({$0.updatedSelectedIndex($0.messages.0.firstIndex(where: {$0.id == messageId}) ?? -1)})
+            self?.inputInteraction.update({$0.updatedSelectedIndex($0.messages.0.firstIndex(where: { $0.id == messageId.messageId }) ?? -1)})
             _ = self?.window?.makeFirstResponder(nil)
         }
         

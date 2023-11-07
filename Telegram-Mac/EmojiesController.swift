@@ -399,6 +399,8 @@ private struct State : Equatable {
     var searchCategories: EmojiSearchCategories?
     var selectedEmojiCategory: EmojiSearchCategories.Group?
     
+    var availableReactions: AvailableReactions?
+    
     var color: NSColor? = nil
     
     static func ==(lhs: State, rhs: State) -> Bool {
@@ -460,6 +462,9 @@ private struct State : Equatable {
         if lhs.color != rhs.color {
             return false
         }
+        if lhs.availableReactions != rhs.availableReactions {
+            return false
+        }
         
         return true
     }
@@ -516,6 +521,8 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         hasRecent = true
     case .backgroundIcon:
         hasRecent = true
+    case .channelReactions:
+        hasRecent = true
     }
     if hasRecent {
         let recentImage = NSImage(named: "Icon_EmojiTabRecent")!
@@ -547,7 +554,7 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
     }
     
     for section in state.sections {
-        let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji })
+        let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji }) && arguments.mode != .channelReactions
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
             return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
         }))
@@ -592,6 +599,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }
         return nil
+    }
+    
+    if arguments.mode == .channelReactions, let availableReactions = state.availableReactions {
+        recentAnimated.removeAll()
+        for reaction in availableReactions.reactions {
+            recentAnimated.append(.init(index: .init(index: 0, id: 0), file: reaction.activateAnimation, indexKeys: []))
+        }
     }
     
     
@@ -865,7 +879,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             
-            let hasAnimatedRecent = arguments.mode == .emoji || arguments.mode == .stories || arguments.mode == .forumTopic || arguments.mode == .selectAvatar
+            let hasAnimatedRecent = arguments.mode == .emoji || arguments.mode == .stories || arguments.mode == .forumTopic || arguments.mode == .selectAvatar || arguments.mode == .channelReactions
+            
             if key == .Recent, !recentAnimated.isEmpty, hasAnimatedRecent {
                 let tuple = Tuple(items: recentAnimated, selected: state.selectedItems, color: state.color)
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
@@ -1914,6 +1929,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case forumTopic
         case backgroundIcon
         case stories
+        case channelReactions
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1926,6 +1942,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .topic
             case .backgroundIcon:
                 return .backgroundIcon
+            case .channelReactions:
+                return .channelReactions
             default:
                 return .panel
             }
@@ -2322,7 +2340,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let featured: Signal<[FeaturedStickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks()
         
-        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories in
+        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories, availableReactions in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -2463,6 +2481,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.reactionSettings = reactionSettings
                 current.iconStatusEmoji = iconStatusEmoji
                 current.searchCategories = searchCategories
+                current.availableReactions = availableReactions
                 return current
             }
             DispatchQueue.main.async {

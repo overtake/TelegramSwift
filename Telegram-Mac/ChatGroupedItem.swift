@@ -226,7 +226,7 @@ class ChatGroupedItem: ChatRowItem {
                     showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
                     
                     }, showMessage: { [weak self] message in
-                        self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+                        self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .CenterEmpty)
                     }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.anyMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
             }
             self.parameters[i].automaticDownloadFunc = { message in
@@ -1054,9 +1054,11 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         }
     }
     
-    override func focusAnimation(_ innerId: AnyHashable?) {
+    override func focusAnimation(_ innerId: AnyHashable?, text: String?) {
         if let innerId = innerId {
             guard let item = item as? ChatGroupedItem else {return}
+            
+            
 
             for i in 0 ..< item.layout.count {
                 if AnyHashable(ChatHistoryEntryId.message(item.layout.messages[i])) == innerId {
@@ -1068,6 +1070,12 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     selectionBackground.didChangeSuperview = { [weak selectionBackground, weak self] in
                         self?.forceClearContentBackground = selectionBackground?.superview != nil
                         self?.updateColors()
+                    }
+                    
+                    if let caption = captionViews.first(where: { $0.id == item.layout.messages[i].stableId }) {
+                        if let text = text, !text.isEmpty {
+                            caption.view.highlight(text: text, color: item.presentation.colors.focusAnimationColor)
+                        }
                     }
                                         
                     
@@ -1105,7 +1113,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 }
             }
         } else {
-            super.focusAnimation(innerId)
+            super.focusAnimation(innerId, text: text)
         }
     }
     

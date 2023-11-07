@@ -414,7 +414,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self._updateAnimatableContent()
     }
     
-    open func focusAnimation(_ innerId: AnyHashable?) {
+    open func focusAnimation(_ innerId: AnyHashable?, text: String?) {
         
         if animatedView == nil {
             self.animatedView = RowAnimateView(frame: bounds)

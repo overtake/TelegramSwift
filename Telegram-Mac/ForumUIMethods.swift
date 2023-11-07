@@ -96,7 +96,7 @@ struct ForumUI {
         
         if let controller = controller, controller.chatLocation.peerId == peerId, controller.chatLocation.threadId == threadId {
             if let messageId = messageId {
-                controller.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+                controller.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
             } else {
                 controller.scrollup()
             }

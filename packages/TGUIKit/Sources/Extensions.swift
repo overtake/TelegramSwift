@@ -2158,7 +2158,7 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
 
 public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
     if animated {
-        view.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
+        view.animateAlpha(from: CGFloat(view.opacity), to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
             completed?(finish)
             if checkCompletion {
                 if finish {

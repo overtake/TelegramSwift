@@ -5231,6 +5231,10 @@ public final class L10n {
   public static var chatMessageViewChatList: String  { return L10n.tr("Localizable", "ChatMessage.ViewChatList") }
   /// The folder link has expired
   public static var chatMessageFolderExpired: String  { return L10n.tr("Localizable", "ChatMessage.Folder.Expired") }
+  /// Recommended
+  public static var chatMessageRecommendedTitle: String  { return L10n.tr("Localizable", "ChatMessage.Recommended.Title") }
+  /// Sponsored
+  public static var chatMessageSponsoredTitle: String  { return L10n.tr("Localizable", "ChatMessage.Sponsored.Title") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// %1$@ set the same wallpaper for this chat

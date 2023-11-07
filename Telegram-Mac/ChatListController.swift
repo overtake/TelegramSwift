@@ -1588,7 +1588,7 @@ class ChatListController : PeersListController {
         if let item = item as? ChatListRowItem {
             if item.groupId != .root {
                 if byClick {
-                    item.view?.focusAnimation(nil)
+                    item.view?.focusAnimation(nil, text: nil)
                     open(with: item.entryId, initialAction: nil, addition: false)
                 }
                 return false

@@ -285,7 +285,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         return interactions.supports_continuity_camera
     }
     
-    private let view: ChatInputTextView
+    let view: ChatInputTextView
     
     var interactions: TextView_Interactions {
         didSet {

@@ -490,7 +490,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
             if let media = message.media.first {
                 let interactions = ChatMediaLayoutParameters(presentation: .Empty, media: media)
                 interactions.showMedia = { message in
-                    self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
+                    self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
                 }
                 showChatGallery(context: context, message: message, self?.genericView, interactions, type: type, chatMode: mode, contextHolder: contextHolder)
             }

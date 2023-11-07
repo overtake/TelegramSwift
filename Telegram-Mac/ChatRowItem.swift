@@ -272,6 +272,9 @@ class ChatRowItem: TableRowItem {
         return height
     }
     public var rightSize:NSSize {
+        if let _ = message?.adAttribute {
+            return .zero
+        }
         if let frames = rightFrames {
             return NSMakeSize(frames.width, rightHeight)
         } else {
@@ -606,6 +609,9 @@ class ChatRowItem: TableRowItem {
         
         var top:CGFloat = defaultContentTopOffset
         
+        if message?.adAttribute != nil {
+            top = 4
+        }
         
         if let author = authorText {
             top += author.layoutSize.height
@@ -726,7 +732,7 @@ class ChatRowItem: TableRowItem {
                 if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
                     chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: replyAttribute.messageId))
                 } else {
-                    chatInteraction.focusMessageId(message.id, replyAttribute.messageId, .CenterEmpty)
+                    chatInteraction.focusMessageId(message.id, .init(messageId: replyAttribute.messageId, string: replyAttribute.quote?.text), .CenterEmpty)
                 }
             }
         }
@@ -758,7 +764,7 @@ class ChatRowItem: TableRowItem {
                         } else {
                             switch chatInteraction.mode {
                             case .thread:
-                                chatInteraction.focusMessageId(nil, attr.messageId, .CenterEmpty)
+                                chatInteraction.focusMessageId(nil, .init(messageId: attr.messageId, string: nil), .CenterEmpty)
                             default:
                                 chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
                             }
@@ -1045,6 +1051,10 @@ class ChatRowItem: TableRowItem {
     private static func canFillAuthorName(_ message: Message, chatInteraction: ChatInteraction, renderType: ChatItemRenderType, isIncoming: Bool, hasBubble: Bool) -> Bool {
         var canFillAuthorName: Bool = true
         var disable: Bool = false
+        
+        if message.adAttribute != nil {
+            return false
+        }
         switch chatInteraction.chatLocation {
         case .peer, .thread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
@@ -2080,8 +2090,8 @@ class ChatRowItem: TableRowItem {
                 let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
-            } else if let adAttr = message.adAttribute {
-                let text = adAttr.messageType == .recommended ? strings().chatMessageRecommended : strings().chatMessageSponsored
+            } else if let _ = message.adAttribute {
+                let text = ""//adAttr.messageType == .recommended ? strings().chatMessageRecommended : strings().chatMessageSponsored
                 let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)

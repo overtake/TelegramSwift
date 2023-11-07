@@ -1487,17 +1487,29 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     
     
-    override func focusAnimation(_ innerId: AnyHashable?) {
+    override func focusAnimation(_ innerId: AnyHashable?, text: String?) {
+        
+        guard let item = item as? ChatRowItem else {
+            return
+        }
+        
+        if let text = text, !text.isEmpty, !item.isBubbled {
+            return
+        }
         
         if animatedView == nil {
             self.animatedView = RowAnimateView(frame:bounds)
             self.animatedView?.isEventLess = true
-            rowView.addSubview(animatedView!)
+            if text == nil {
+                rowView.addSubview(animatedView!)
+            } else {
+                rowView.addSubview(animatedView!, positioned: .below, relativeTo: bubbleView)
+            }
             animatedView?.backgroundColor = theme.colors.focusAnimationColor
             animatedView?.layer?.opacity = 0
             
         }
-        animatedView?.stableId = item?.stableId
+        animatedView?.stableId = item.stableId
         
         
         let animation: CABasicAnimation = makeSpringAnimation("opacity")
@@ -1893,7 +1905,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 result = item.reactAction()
             }
             if result {
-                focusAnimation(nil)
+                focusAnimation(nil, text: nil)
             } else {
              //   NSSound.beep()
             }

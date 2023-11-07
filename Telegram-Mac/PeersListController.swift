@@ -2416,7 +2416,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     navigation.removeModalAction()
                 } else {
                     if let current = navigation.controller as? ChatController, peerId == current.chatInteraction.peerId, let messageId = messageId, current.mode == .history {
-                        current.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
+                        current.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                     } else {
                         let chatLocation: ChatLocation = .peer(peerId)
                         let chat: ChatController

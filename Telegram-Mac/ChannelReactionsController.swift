@@ -42,18 +42,17 @@ private final class ReactionsRowItem : GeneralRowItem {
     
     override var height: CGFloat {
         let attr = NSMutableAttributedString()
-        let attributedString = self.state.inputText
         attr.append(self.state.inputText)
-        var str: NSMutableAttributedString = .init()
+        let str: NSMutableAttributedString = .init()
         let ph_width = placeholder.attributedString.sizeFittingWidth(.greatestFiniteMagnitude).width
         while true {
-            str.append(string: clown, font: .normal(15))
+            str.append(string: clown, font: .normal(18))
             if str.sizeFittingWidth(.greatestFiniteMagnitude).width >= ph_width {
                 break
             }
         }
         attr.append(str)
-        attr.addAttribute(.font, value: NSFont.normal(15), range: attr.range)
+        attr.addAttribute(.font, value: NSFont.normal(18), range: attr.range)
         let size = attr.sizeFittingWidth(blockWidth)
         return size.height + 10 + (viewType.innerInset.top + viewType.innerInset.bottom - 10)
     }
@@ -104,15 +103,22 @@ private final class ReactionsRowView: GeneralContainableRowView {
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
-        inputView.inputTheme = theme.inputTheme.withUpdatedFontSize(15)
+        inputView.inputTheme = theme.inputTheme.withUpdatedFontSize(18)
         
         guard let item = item as? ReactionsRowItem else {
             return
         }
+        inputView.context = item.context
+        inputView.interactions.max_height = 500
+        inputView.interactions.min_height = 20
+        inputView.interactions.emojiPlayPolicy = .onceEnd
+        inputView.interactions.canTransform = false
         
         item.interactions.min_height = 20
+        item.interactions.max_height = 500
         item.interactions.emojiPlayPolicy = .onceEnd
-        
+        item.interactions.canTransform = false
+
         item.interactions.filterEvent = { event in
             if let chars = event.characters {
                 return chars.trimmingCharacters(in: CharacterSet.alphanumerics.inverted).isEmpty
@@ -121,7 +127,9 @@ private final class ReactionsRowView: GeneralContainableRowView {
             }
         }
 
-        inputView.interactions = item.interactions
+        self.inputView.set(item.state.textInputState())
+
+        self.inputView.interactions = item.interactions
         
         item.interactions.inputDidUpdate = { [weak self] state in
             guard let `self` = self else {
@@ -131,14 +139,9 @@ private final class ReactionsRowView: GeneralContainableRowView {
             self.inputDidUpdateLayout(animated: true)
         }
         
-        item.interactions.processEnter = { event in
-            return false
-        }
         
         overlay.update(item.placeholder)
         
-        inputView.interactions.canTransform = false
-        inputView.context = item.context
         
         window?.makeFirstResponder(inputView.inputView)
         
@@ -192,7 +195,7 @@ private final class ReactionsRowView: GeneralContainableRowView {
             if textSize.height < maybeHeight {
                 rect = NSMakeRect(item.viewType.innerInset.left + 1, lastSymbolRect.maxY + 9, overlay.frame.width, overlay.frame.height)
             } else {
-                rect = NSMakeRect(lastSymbolRect.maxX + item.viewType.innerInset.left + 4, lastSymbolRect.minY + overlay.frame.height / 2, overlay.frame.width, overlay.frame.height)
+                rect = NSMakeRect(lastSymbolRect.maxX + item.viewType.innerInset.left + 5, lastSymbolRect.minY + overlay.frame.height / 2 + 2, overlay.frame.width, overlay.frame.height)
                 if lastSymbolRect.origin.y == inputView.inputView.textContainerOrigin.y {
                     rect.origin.y -= 2
                 }
@@ -286,25 +289,70 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelReactionsController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let textInteractions = TextView_Interactions()
+
+    
+    if let allowedReactions = allowedReactions, let availableReactions = availableReactions {
+        
+        switch allowedReactions {
+        case .all:
+            for reaction in availableReactions.reactions {
+                textInteractions.update { _ in
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                }
+            }
+        case let .limited(reactions):
+            for reaction in reactions {
+                if let first = availableReactions.reactions.first(where: { $0.value == reaction }) {
+                    textInteractions.update { _ in
+                        return textInteractions.insertText(.makeAnimated(first.activateAnimation, text: first.value.string))
+                    }
+                }
+            }
+        case .empty:
+            break
+        }
+    }
+    
+    let initialState = State(state: textInteractions.presentation)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
 
     
-    let emojis = EmojiesController(context, mode: .forumTopic, selectedItems: [])
+    textInteractions.processEnter = { event in
+        return false
+    }
+    textInteractions.processAttriburedCopy = { attributedString in
+        return globalLinkExecutor.copyAttributedString(attributedString)
+    }
+    textInteractions.processPaste = { pasteboard in
+        if let data = pasteboard.data(forType: .kInApp) {
+            let decoder = AdaptedPostboxDecoder()
+            if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
+                let state = decoded.unique(isPremium: true)
+                textInteractions.update { _ in
+                    return textInteractions.insertText(state.attributedString())
+                }
+                return true
+            }
+        }
+        return false
+    }
+    
+    let emojis = EmojiesController(context, mode: .channelReactions, selectedItems: initialState.selected.map { .init(source: .custom($0.fileId.id), type: .normal) })
     emojis._frameRect = NSMakeRect(0, 0, 350, 300)
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
     emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
 
-    let textInteractions = TextView_Interactions()
 
     
     interactions.sendAnimatedEmoji = { sticker, _, _, _ in
@@ -353,7 +401,9 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId) -> Inpu
             return current
         }
     }, createPack: {
-        
+        execute(inapp: inApp(for: "https://t.me/stickers", context: context, openInfo: { peerId, _, _, _ in
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
+        }))
     }, addReactions: { [weak emojis] control in
         if let emojis = emojis {
             showPopover(for: control, with: emojis, edge: .maxY, inset: NSMakePoint(0, -60))
@@ -373,9 +423,10 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId) -> Inpu
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Reactions")
+    let controller = InputDataController(dataSignal: signal, title: "Reactions", removeAfterDisappear: false)
     
     controller.contextObject = emojis
+    
     
     controller.onDeinit = {
         actionsDisposable.dispose()

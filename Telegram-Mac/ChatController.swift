@@ -377,7 +377,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
 
         searchInteractions = ChatSearchInteractions(jump: { message in
-            chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
+            chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
         }, results: { query in
             chatInteraction.modalSearch(query)
         }, calendarAction: { date in
@@ -1735,7 +1735,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if let reply = historyState.reply() {
             
-            chatInteraction.focusMessageId(nil, reply, .CenterEmpty)
+            chatInteraction.focusMessageId(nil, .init(messageId: reply, string: nil), .CenterEmpty)
             historyState = historyState.withRemovingReplies(max: reply)
         } else {
             let laterId = previousView.with { $0?.originalView?.laterId }
@@ -2734,7 +2734,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 if let last = slowMode.sendingIds.last {
-                    chatInteraction.focusMessageId(nil, last, .CenterEmpty)
+                    chatInteraction.focusMessageId(nil, .init(messageId: last, string: nil), .CenterEmpty)
                 }
                 if let view = self?.genericView.inputView.currentActionView {
                     showSlowModeTimeoutTooltip(slowMode, for: view)
@@ -2876,7 +2876,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
                         if let messageId = messageId {
-                            self?.chatInteraction.focusMessageId(nil, messageId, .top(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
+                            self?.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .top(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
                         }
                     }))
                 case .pinned:
@@ -3104,7 +3104,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 tooltip(for: actionView, text: errorText)
                             }
                             if let last = slowMode.sendingIds.last {
-                                strongSelf.chatInteraction.focusMessageId(nil, last, .CenterEmpty)
+                                strongSelf.chatInteraction.focusMessageId(nil, .init(messageId: last, string: nil), .CenterEmpty)
                             } else {
                                 strongSelf.genericView.inputView.textView.shake()
                             }
@@ -3424,7 +3424,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     break
                                 }
                             }
-                            strongSelf.chatInteraction.focusMessageId(fromId, postId, TableScrollState.CenterEmpty)
+                            strongSelf.chatInteraction.focusMessageId(fromId, .init(messageId: postId, string: nil), TableScrollState.CenterEmpty)
                         }
                         if let action = action {
                             strongSelf.chatInteraction.update({ $0.updatedInitialAction(action) })
@@ -3647,7 +3647,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 case .result(let messageId):
                     if let messageId = messageId {
-                        self?.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+                        self?.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
                     }
                 }
             }))
@@ -3673,7 +3673,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             break
                         case .result(let messageId):
                             if let messageId = messageId {
-                                strongSelf.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+                                strongSelf.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
                             }
                         }
                     }
@@ -3855,7 +3855,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.focusPinnedMessageId = { [weak self] messageId in
-            self?.chatInteraction.focusMessageId(nil, messageId, .CenterActionEmpty { [weak self] _ in
+            self?.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterActionEmpty { [weak self] _ in
                 self?.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(messageId)})
             })
         }
@@ -3905,12 +3905,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             _ = context.engine.peers.updatePeerSendAsPeer(peerId: peerId, sendAs: updatedPeerId).start()
         }
         
-        chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
+        chatInteraction.focusMessageId = { [weak self] fromId, focusTarget, state in
             
             if let strongSelf = self {
                
-                if toId.peerId != strongSelf.chatInteraction.peerId {
-                    strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(toId.peerId), focusTarget: .init(messageId: toId)))
+                if focusTarget.messageId.peerId != strongSelf.chatInteraction.peerId {
+                    strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
                 }
                 
                 switch strongSelf.mode {
@@ -3929,7 +3929,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     if let fromIndex = fromIndex {
-                        let historyView = preloadedChatHistoryViewForLocation(.InitialSearch(location: .id(toId), count: strongSelf.requestCount), context: context, chatLocation: strongSelf.chatLocation, chatLocationContextHolder: strongSelf.chatLocationContextHolder, tagMask: strongSelf.mode.tagMask, additionalData: [])
+                        let historyView = preloadedChatHistoryViewForLocation(.InitialSearch(location: .id(focusTarget.messageId, focusTarget.string), count: strongSelf.requestCount), context: context, chatLocation: strongSelf.chatLocation, chatLocationContextHolder: strongSelf.chatLocationContextHolder, tagMask: strongSelf.mode.tagMask, additionalData: [])
                         
                         struct FindSearchMessage {
                             let message:Message?
@@ -3943,7 +3943,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .single((nil, true))
                                 case let .HistoryView(view, _, _, _):
                                     for entry in view.entries {
-                                        if entry.message.id == toId {
+                                        if entry.message.id == focusTarget.messageId {
                                             return .single((entry.message, false))
                                         }
                                     }
@@ -3960,7 +3960,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let message = message
                                 let toIndex = MessageIndex(message)
                                 let requestCount = strongSelf.requestCount
-                                let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
+                                let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)).text(string: focusTarget.string), count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
                                 strongSelf.setLocation(.init(content: content, id: id))
                             }
@@ -3969,7 +3969,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 case .scheduled:
                     strongSelf.navigationController?.back()
-                    (strongSelf.navigationController?.controller as? ChatController)?.chatInteraction.focusMessageId(fromId, toId, state)
+                    (strongSelf.navigationController?.controller as? ChatController)?.chatInteraction.focusMessageId(fromId, focusTarget, state)
                 case .pinned:
                     break
                 }
@@ -4143,7 +4143,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let slowMode = self.chatInteraction.presentation.slowMode, let errorText = slowMode.errorText {
                     tooltip(for: self.genericView.inputView.attachView, text: errorText)
                     if let last = slowMode.sendingIds.last {
-                        self.chatInteraction.focusMessageId(nil, last, .CenterEmpty)
+                        self.chatInteraction.focusMessageId(nil, .init(messageId: last, string: nil), .CenterEmpty)
                     }
                 } else {
                     filePanel(canChooseDirectories: true, for: window, completion:{ result in
@@ -4181,7 +4181,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let slowMode = self.chatInteraction.presentation.slowMode, let errorText = slowMode.errorText {
                     tooltip(for: self.genericView.inputView.attachView, text: errorText)
                     if let last = slowMode.sendingIds.last {
-                        self.chatInteraction.focusMessageId(nil, last, .CenterEmpty)
+                        self.chatInteraction.focusMessageId(nil, .init(messageId: last, string: nil), .CenterEmpty)
                     }
                 } else {
                     var exts:[String] = mediaExts
@@ -4383,7 +4383,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let slowMode = self.chatInteraction.presentation.slowMode, let errorText = slowMode.errorText {
                     tooltip(for: self.genericView.inputView.attachView, text: errorText)
                     if !slowMode.sendingIds.isEmpty {
-                        self.chatInteraction.focusMessageId(nil, slowMode.sendingIds.last!, .CenterEmpty)
+                        self.chatInteraction.focusMessageId(nil, .init(messageId: slowMode.sendingIds.last!, string: nil), .CenterEmpty)
                     }
                 } else {
                     var updated:[URL] = []
@@ -5973,7 +5973,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             switch data.initialAnchor {
             case .automatic:
                 if let messageId = self.focusTarget?.messageId {
-                    location = .InitialSearch(location: .id(messageId), count: count)
+                    location = .InitialSearch(location: .id(messageId, self.focusTarget?.string), count: count)
                 } else {
                     location = .Initial(count: count)
                 }
@@ -5982,7 +5982,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         default:
             if let messageId = self.focusTarget?.messageId {
-                location = .InitialSearch(location: .id(messageId), count: count)
+                location = .InitialSearch(location: .id(messageId, self.focusTarget?.string), count: count)
             } else {
                 location = .Initial(count: count)
             }
@@ -6261,7 +6261,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             switch self.locationValue?.content {
             case let .InitialSearch(location, _):
                 switch location {
-                case let .id(messageId):
+                case let .id(messageId, _):
                     var found: Bool = false
                     self.genericView.tableView.enumerateItems(with: { item in
                         if let item = item as? ChatRowItem {

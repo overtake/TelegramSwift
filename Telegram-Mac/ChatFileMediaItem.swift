@@ -93,7 +93,7 @@ class ChatFileMediaItem: ChatMediaItem {
         }
             
         (self.parameters as? ChatFileLayoutParameters)?.showMessage = { [weak self] message in
-            self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+            self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .CenterEmpty)
         }
         
     }

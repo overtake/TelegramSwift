@@ -994,7 +994,7 @@
             showModal(with: ShareModalController(ForwardMessagesObject(context, messages: messages)), for: context.window)
         }
         
-        let openChat:(PeerId, MessageId?)->Void = { [weak self] id, messageId in
+        let openChat:(PeerId, ChatFocusTarget?)->Void = { [weak self] id, focusTarget in
             let location: ChatLocation
             let mode: ChatMode
             if let threadInfo = threadInfo, peerId == id {
@@ -1004,7 +1004,7 @@
                 location = .peer(id)
                 mode = .history
             }
-            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, focusTarget: .init(messageId: messageId), chatLocationContextHolder: threadInfo?.contextHolder))
+            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder))
         }
         
         interactions.focusMessageId = { _, focusMessageId, _ in
@@ -1023,7 +1023,7 @@
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
                 if toChat {
-                    openChat(peerId, postId)
+                    openChat(peerId, .init(messageId: postId))
                 } else {
                     strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
                 }
