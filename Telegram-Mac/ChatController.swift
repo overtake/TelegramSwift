@@ -2944,7 +2944,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let media: RequestEditMessageMedia
             if let webpreview = presentation.urlPreview?.1 {
                 webpagePreviewAttribute = .init(leadingPreview: !presentation.interfaceState.linkBelowMessage, forceLargeMedia: presentation.interfaceState.largeMedia, isManuallyAdded: false, isSafe: true)
-                media = .update(.webPage(webPage: WebpageReference(webpreview), media: webpreview))
+                if presentation.urlPreview?.0 == presentation.interfaceState.composeDisableUrlPreview {
+                    media = .keep
+                } else {
+                    media = .update(.webPage(webPage: WebpageReference(webpreview), media: webpreview))
+                }
             } else {
                 webpagePreviewAttribute = nil
                 media = state.editMedia

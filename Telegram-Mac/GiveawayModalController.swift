@@ -981,9 +981,8 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                     close?()
                 })
             } else {
-                
+                buyAppStore()
             }
-            buyAppStore()
         })
        
         return .none
