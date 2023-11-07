@@ -57,6 +57,7 @@ enum PremiumLogEventsSource : Equatable {
     case stories__stealth_mode
     case stories__save_to_gallery
     case channel_boost(PeerId)
+    case no_ads
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -93,6 +94,8 @@ enum PremiumLogEventsSource : Equatable {
             return "stories__save_to_gallery"
         case let .channel_boost(peerId):
             return "channel_boost__\(peerId.id._internalGetInt64Value())"
+        case .no_ads:
+            return "no_ads"
         }
     }
     
@@ -128,6 +131,8 @@ enum PremiumLogEventsSource : Equatable {
             return .stories
         case .channel_boost:
             return nil
+        case .no_ads:
+            return .no_ads
         }
     }
     

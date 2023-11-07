@@ -372,7 +372,7 @@ class WPLayout: Equatable {
     }
     
     func premiumBoarding() {
-        showModal(with: PremiumBoardingController(context: context), for: context.window)
+        showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
     }
     
     func invokeAction() {
