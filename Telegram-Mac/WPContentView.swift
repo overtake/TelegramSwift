@@ -31,6 +31,8 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     private(set) var containerView:View = View()
     private(set) var content:WPLayout?
     private var action: TitleButton? = nil
+    
+    private var closeAdView: ImageButton?
 
     
     var selectableTextViews: [TextView] {
@@ -51,6 +53,9 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             if let action = action {
                 _ = action.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 36), thatFit: true)
                 action.setFrameOrigin(0, content.contentRect.height - action.frame.height + content.imageInsets.top * 2)
+            }
+            if let closeAdView = closeAdView {
+                closeAdView.setFrameOrigin(NSMakePoint(self.frame.width - closeAdView.frame.width - 0, 0))
             }
         }
         dashLayer.frame = NSMakeRect(0, 0, 3, frame.height)
@@ -137,7 +142,31 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             performSubviewRemoval(view, animated: animated)
             self.action = nil
         }
-        let color = self.backgroundColor
+        
+        if let _ = layout.parent.adAttribute {
+            //
+            let current: ImageButton
+            if let view = self.closeAdView {
+                current = view
+            } else {
+                current = ImageButton()
+                current.autohighlight = false
+                current.scaleOnClick = true
+                self.closeAdView = current
+                super.addSubview(current)
+            }
+            current.removeAllHandlers()
+            current.set(handler: { [weak layout] _ in
+                layout?.premiumBoarding()
+            }, for: .Click)
+            current.set(image: NSImage(named: "Icon_GradientClose")!.precomposed(layout.presentation.activity.main), for: .Normal)
+            current.sizeToFit()
+            
+        } else if let view = self.closeAdView {
+            performSubviewRemoval(view, animated: animated)
+            self.closeAdView = nil
+        }
+        
         self.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.1) //color
         self.needsLayout = true
         

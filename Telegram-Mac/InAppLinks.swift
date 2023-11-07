@@ -484,7 +484,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if let current = current, current.chatInteraction.mode.threadId == result.message.messageId {
                 if let commentId = commentId {
                     let commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
-                    current.chatInteraction.focusMessageId(nil, commentMessageId, .CenterEmpty)
+                    current.chatInteraction.focusMessageId(nil, .init(messageId: commentMessageId, string: nil), .CenterEmpty)
                 }
             } else {
                 let mode: ReplyThreadMode

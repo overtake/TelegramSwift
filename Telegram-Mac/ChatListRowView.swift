@@ -1015,7 +1015,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
     
     
-    override func focusAnimation(_ innerId: AnyHashable?) {
+    override func focusAnimation(_ innerId: AnyHashable?, text: String?) {
         
         if animatedView == nil {
             self.animatedView = RowAnimateView(frame:bounds)

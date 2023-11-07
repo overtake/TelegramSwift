@@ -423,7 +423,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         let arguments = PeerMediaPhotosArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, gallery: { [weak self] message, type in
             
             let parameters = ChatMediaGalleryParameters(showMedia: { _ in }, showMessage: { message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
+                self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
             }, isWebpage: false, media: message.anyMedia!, automaticDownload: true)
             
             showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, contextHolder: contextHolder)
@@ -644,7 +644,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     
     func jumpTo(_ toMessage: Message) -> Void {
 
-        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: .photoOrVideo, additionalData: [], chatLocationInput: self.chatLocationInput)
+        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id, nil), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: .photoOrVideo, additionalData: [], chatLocationInput: self.chatLocationInput)
         
         struct FindSearchMessage {
             let message:Message?

@@ -259,7 +259,7 @@ class ChatInputAccessory: View {
             }, for: .Click)
             
             container.set(handler: { [weak self] _ in
-                self?.chatInteraction.focusMessageId(nil, replyMessageId.messageId, .CenterEmpty)
+                self?.chatInteraction.focusMessageId(nil, .init(messageId: replyMessageId.messageId, string: nil), .CenterEmpty)
              }, for: .Click)
 
             

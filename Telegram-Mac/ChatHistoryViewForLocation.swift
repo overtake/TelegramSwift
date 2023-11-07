@@ -15,8 +15,8 @@ import SwiftSignalKit
 import TGUIKit
 
 enum ChatHistoryInitialSearchLocation : Equatable {
-    case index(MessageIndex)
-    case id(MessageId)
+    case index(MessageIndex, String?)
+    case id(MessageId, String?)
 }
 
 
@@ -258,9 +258,9 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         switch mode {
         case .history, .thread, .pinned:
             switch searchLocation {
-            case let .index(index):
+            case let .index(index, _):
                 signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
-            case let .id(id):
+            case let .id(id, _):
                 signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocationInput, count: count, ignoreRelatedChats: ignoreRelatedChats, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
@@ -317,13 +317,16 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                 if view.entries.count > targetIndex {
                     let focusMessage = view.entries[targetIndex].message
                     let mustToFocus: Bool
+                    let text: String?
                     switch searchLocation {
-                    case let .index(index):
+                    case let .index(index, string):
                         mustToFocus = view.entries[targetIndex].index == index
-                    case let .id(id):
+                        text = string
+                    case let .id(id, string):
                         mustToFocus = view.entries[targetIndex].message.id == id
+                        text = string
                     }
-                    scroll = .center(id: ChatHistoryEntryId.message(focusMessage), innerId: nil, animated: false, focus: .init(focus: mustToFocus), inset: 0)
+                    scroll = .center(id: ChatHistoryEntryId.message(focusMessage), innerId: nil, animated: false, focus: .init(focus: mustToFocus, string: text), inset: 0)
                 } else {
                     scroll = .none(nil)
                 }
@@ -507,7 +510,7 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubj
         switch replyThreadMessage.initialAnchor {
         case .automatic:
             if let atMessageId = atMessageId {
-                input = .InitialSearch(location: .id(atMessageId), count: 40)
+                input = .InitialSearch(location: .id(atMessageId, nil), count: 40)
             } else {
                 input = .Initial(count: 40)
             }

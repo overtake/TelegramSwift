@@ -132,7 +132,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
             if let peer = object.message?.peers[peerId] {
                 
                 let color = wpPresentation.activity.main
-                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color, font: .medium(.text))), rect: .zero))
+                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color, font: .medium(.text)), maximumNumberOfLines: 1), rect: .zero))
             }
         }
         self.channels = channels

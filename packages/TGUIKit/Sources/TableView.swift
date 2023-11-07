@@ -275,10 +275,12 @@ public struct TableScrollFocus : Equatable {
         return lhs.focus == rhs.focus
     }
     let focus:Bool
+    let string: String?
     let action:((NSView)->Void)?
-    public init(focus: Bool, action: ((NSView)->Void)? = nil) {
+    public init(focus: Bool, string: String? = nil, action: ((NSView)->Void)? = nil) {
         self.focus = focus
         self.action = action
+        self.string = string
     }
     
     
@@ -319,6 +321,19 @@ public extension TableScrollState {
             return self
         }
     }
+    func text(string: String?) -> TableScrollState {
+        switch self {
+        case let .top(stableId, innerId, animated, focus, inset):
+            return .top(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+        case let .bottom(stableId, innerId, animated, focus, inset):
+            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+        case let .center(stableId, innerId, animated, focus, inset):
+            return .center(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+        default:
+            return self
+        }
+    }
+    
     func offset(_ inset: CGFloat) -> TableScrollState {
         switch self {
         case let .top(stableId, innerId, animated, focus, v):
@@ -3240,7 +3255,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.heightValue {
                     if focus.focus {
-                        view.focusAnimation(innerId)
+                        view.focusAnimation(innerId, text: focus.string)
                         focus.action?(view.interactableView)
                     }
                     completion(true)
@@ -3263,7 +3278,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
                             applied = true
                             if focus.focus {
-                                view.focusAnimation(innerId)
+                                view.focusAnimation(innerId, text: focus.string)
                                 focus.action?(view.interactableView)
                             }
                         }
@@ -3292,7 +3307,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         } else {
             if let item = item  {
                 if focus.focus, let view = viewNecessary(at: item.index) {
-                    view.focusAnimation(innerId)
+                    view.focusAnimation(innerId, text: focus.string)
                     focus.action?(view.interactableView)
                 }
                 completion(true)

@@ -110,6 +110,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case statuses
         case topic
         case backgroundIcon
+        case channelReactions
     }
     let mode: Mode
     let color: NSColor?
@@ -127,7 +128,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.showAllItems = showAllItems
         self.openPremium = openPremium
         self.installPack = installPack
-        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0)
+        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions
        
         
         self.context = context
@@ -155,6 +156,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 } else {
                     self.unlockText = nil
                 }
+            case .channelReactions:
+                self.unlockText = nil
             case .preview:
                 if stableId != AnyHashable(0) {
                     if installed {
@@ -402,6 +405,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 } else if !installed {
                     self.installPack?(info, self.stickerItems)
                 }
+            case .channelReactions:
+                self.installPack?(info, self.stickerItems)
             case .preview:
                 self.installPack?(info, self.stickerItems)
             }

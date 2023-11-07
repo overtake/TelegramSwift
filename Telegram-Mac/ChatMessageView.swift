@@ -184,7 +184,16 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         return true
     }
     
-    
+    override func focusAnimation(_ innerId: AnyHashable?, text: String?) {
+        super.focusAnimation(innerId, text: text)
+        
+        guard let item = item as? ChatRowItem else {
+            return
+        }
+        if let text = text, !text.isEmpty {
+            self.text?.highlight(text: text, color: item.presentation.colors.focusAnimationColor)
+        }
+    }
 
 
     override func set(item:TableRowItem, animated:Bool = false) {

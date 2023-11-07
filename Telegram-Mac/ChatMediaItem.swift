@@ -399,7 +399,7 @@ class ChatMediaItem: ChatRowItem {
                 showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
             }
         }, showMessage: { [weak self] message in
-            self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+            self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .CenterEmpty)
         }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.isRevealed)
         
         self.parameters = parameters
@@ -713,6 +713,17 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         
     }
     
+    
+    override func focusAnimation(_ innerId: AnyHashable?, text: String?) {
+        super.focusAnimation(innerId, text: text)
+        
+        guard let item = item as? ChatRowItem else {
+            return
+        }
+        if let text = text, !text.isEmpty {
+            self.captionViews.first?.view.highlight(text: text, color: item.presentation.colors.focusAnimationColor)
+        }
+    }
     
     fileprivate(set) var contentNode:ChatMediaContentView?
     

@@ -243,6 +243,261 @@ private func drawConnectingCorner(context: CGContext, color: NSColor, at point: 
     }
 }
 
+
+
+public func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat, outerRadius: CGFloat, innerRadius: CGFloat, stroke: Bool = false, strokeWidth: CGFloat = 2.0, useModernPathCalculation: Bool) -> (CGPoint, CGImage?) {
+    if rects.isEmpty {
+        return (CGPoint(), nil)
+    }
+    
+    var topLeft = rects[0].origin
+    var bottomRight = CGPoint(x: rects[0].maxX, y: rects[0].maxY)
+    for i in 1 ..< rects.count {
+        topLeft.x = min(topLeft.x, rects[i].origin.x)
+        topLeft.y = min(topLeft.y, rects[i].origin.y)
+        bottomRight.x = max(bottomRight.x, rects[i].maxX)
+        bottomRight.y = max(bottomRight.y, rects[i].maxY)
+    }
+    
+    var drawingInset = inset
+    if stroke {
+        drawingInset += 2.0
+    }
+    
+    topLeft.x -= drawingInset
+    topLeft.y -= drawingInset
+    bottomRight.x += drawingInset * 2.0
+    bottomRight.y += drawingInset * 2.0
+    
+    return (topLeft, generateImage(CGSize(width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y), rotatedContext: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+        context.setFillColor(color.cgColor)
+        
+        context.setBlendMode(.copy)
+        
+        if useModernPathCalculation {
+            if rects.count == 1 {
+                let path = CGPath(roundedRect: rects[0].offsetBy(dx: -topLeft.x, dy: -topLeft.y), cornerWidth: outerRadius, cornerHeight: outerRadius, transform: nil)
+                context.addPath(path)
+                
+                if stroke {
+                    context.setStrokeColor(color.cgColor)
+                    context.setLineWidth(strokeWidth)
+                    context.strokePath()
+                } else {
+                    context.fillPath()
+                }
+                return
+            }
+            
+            var combinedRects: [[CGRect]] = []
+            var currentRects: [CGRect] = []
+            for rect in rects {
+                if rect.width.isZero {
+                    if !currentRects.isEmpty {
+                        combinedRects.append(currentRects)
+                    }
+                    currentRects.removeAll()
+                } else {
+                    currentRects.append(rect)
+                }
+            }
+            if !currentRects.isEmpty {
+                combinedRects.append(currentRects)
+            }
+            
+            for rects in combinedRects {
+                var rects = rects.map { $0.insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y) }
+                
+                let minRadius: CGFloat = 2.0
+                
+                for _ in 0 ..< rects.count * rects.count {
+                    var hadChanges = false
+                    for i in 0 ..< rects.count - 1 {
+                        if rects[i].maxY > rects[i + 1].minY {
+                            let midY = floor((rects[i].maxY + rects[i + 1].minY) * 0.5)
+                            rects[i].size.height = midY - rects[i].minY
+                            rects[i + 1].origin.y = midY
+                            rects[i + 1].size.height = rects[i + 1].maxY - midY
+                            hadChanges = true
+                        }
+                        if rects[i].maxY >= rects[i + 1].minY && rects[i].insetBy(dx: 0.0, dy: 1.0).intersects(rects[i + 1]) {
+                            if abs(rects[i].minX - rects[i + 1].minX) < minRadius {
+                                let commonMinX = min(rects[i].origin.x, rects[i + 1].origin.x)
+                                if rects[i].origin.x != commonMinX {
+                                    rects[i].origin.x = commonMinX
+                                    hadChanges = true
+                                }
+                                if rects[i + 1].origin.x != commonMinX {
+                                    rects[i + 1].origin.x = commonMinX
+                                    hadChanges = true
+                                }
+                            }
+                            if abs(rects[i].maxX - rects[i + 1].maxX) < minRadius {
+                                let commonMaxX = max(rects[i].maxX, rects[i + 1].maxX)
+                                if rects[i].maxX != commonMaxX {
+                                    rects[i].size.width = commonMaxX - rects[i].minX
+                                    hadChanges = true
+                                }
+                                if rects[i + 1].maxX != commonMaxX {
+                                    rects[i + 1].size.width = commonMaxX - rects[i + 1].minX
+                                    hadChanges = true
+                                }
+                            }
+                        }
+                    }
+                    if !hadChanges {
+                        break
+                    }
+                }
+                
+                context.move(to: CGPoint(x: rects[0].midX, y: rects[0].minY))
+                context.addLine(to: CGPoint(x: rects[0].maxX - outerRadius, y: rects[0].minY))
+                context.addArc(tangent1End: rects[0].topRight, tangent2End: CGPoint(x: rects[0].maxX, y: rects[0].minY + outerRadius), radius: outerRadius)
+                context.addLine(to: CGPoint(x: rects[0].maxX, y: rects[0].midY))
+                
+                for i in 0 ..< rects.count - 1 {
+                    let rect = rects[i]
+                    let next = rects[i + 1]
+                    
+                    if rect.maxX == next.maxX {
+                        context.addLine(to: CGPoint(x: next.maxX, y: next.midY))
+                    } else {
+                        let nextRadius = min(outerRadius, floor(abs(rect.maxX - next.maxX) * 0.5))
+                        context.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - nextRadius))
+                        if next.maxX > rect.maxX {
+                            context.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.maxY), tangent2End: CGPoint(x: rect.maxX + nextRadius, y: rect.maxY), radius: nextRadius)
+                            context.addLine(to: CGPoint(x: next.maxX - nextRadius, y: next.minY))
+                        } else {
+                            context.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.maxY), tangent2End: CGPoint(x: rect.maxX - nextRadius, y: rect.maxY), radius: nextRadius)
+                            context.addLine(to: CGPoint(x: next.maxX + nextRadius, y: next.minY))
+                        }
+                        context.addArc(tangent1End: next.topRight, tangent2End: CGPoint(x: next.maxX, y: next.minY + nextRadius), radius: nextRadius)
+                        context.addLine(to: CGPoint(x: next.maxX, y: next.midY))
+                    }
+                }
+                
+                let last = rects[rects.count - 1]
+                context.addLine(to: CGPoint(x: last.maxX, y: last.maxY - outerRadius))
+                context.addArc(tangent1End: last.bottomRight, tangent2End: CGPoint(x: last.maxX - outerRadius, y: last.maxY), radius: outerRadius)
+                context.addLine(to: CGPoint(x: last.minX + outerRadius, y: last.maxY))
+                context.addArc(tangent1End: last.bottomLeft, tangent2End: CGPoint(x: last.minX, y: last.maxY - outerRadius), radius: outerRadius)
+                
+                for i in (1 ..< rects.count).reversed() {
+                    let rect = rects[i]
+                    let prev = rects[i - 1]
+                    
+                    if rect.minX == prev.minX {
+                        context.addLine(to: CGPoint(x: prev.minX, y: prev.midY))
+                    } else {
+                        let prevRadius = min(outerRadius, floor(abs(rect.minX - prev.minX) * 0.5))
+                        context.addLine(to: CGPoint(x: rect.minX, y: rect.minY + prevRadius))
+                        if rect.minX < prev.minX {
+                            context.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.minY), tangent2End: CGPoint(x: rect.minX + prevRadius, y: rect.minY), radius: prevRadius)
+                            context.addLine(to: CGPoint(x: prev.minX - prevRadius, y: prev.maxY))
+                        } else {
+                            context.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.minY), tangent2End: CGPoint(x: rect.minX - prevRadius, y: rect.minY), radius: prevRadius)
+                            context.addLine(to: CGPoint(x: prev.minX + prevRadius, y: prev.maxY))
+                        }
+                        context.addArc(tangent1End: prev.bottomLeft, tangent2End: CGPoint(x: prev.minX, y: prev.maxY - prevRadius), radius: prevRadius)
+                        context.addLine(to: CGPoint(x: prev.minX, y: prev.midY))
+                    }
+                }
+                
+                context.addLine(to: CGPoint(x: rects[0].minX, y: rects[0].minY + outerRadius))
+                context.addArc(tangent1End: rects[0].topLeft, tangent2End: CGPoint(x: rects[0].minX + outerRadius, y: rects[0].minY), radius: outerRadius)
+                context.addLine(to: CGPoint(x: rects[0].midX, y: rects[0].minY))
+                
+                if stroke {
+                    context.setStrokeColor(color.cgColor)
+                    context.setLineWidth(strokeWidth)
+                    context.strokePath()
+                } else {
+                    context.fillPath()
+                }
+            }
+            return
+        }
+        
+        for i in 0 ..< rects.count {
+            let rect = rects[i].insetBy(dx: -inset, dy: -inset)
+            context.fill(rect.offsetBy(dx: -topLeft.x, dy: -topLeft.y))
+        }
+        
+        for i in 0 ..< rects.count {
+            let rect = rects[i].insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y)
+            
+            var previous: CGRect?
+            if i != 0 {
+                previous = rects[i - 1].insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y)
+            }
+            
+            var next: CGRect?
+            if i != rects.count - 1 {
+                next = rects[i + 1].insetBy(dx: -inset, dy: -inset).offsetBy(dx: -topLeft.x, dy: -topLeft.y)
+            }
+            
+            if let previous = previous {
+                if previous.contains(rect.topLeft) {
+                    if abs(rect.topLeft.x - previous.minX) >= innerRadius {
+                        var radius = innerRadius
+                        if let next = next {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.topLeft.x, y: previous.maxY), type: .topLeft, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.topLeft, type: .topLeft, radius: outerRadius)
+                }
+                if previous.contains(rect.topRight.offsetBy(dx: -1.0, dy: 0.0)) {
+                    if abs(rect.topRight.x - previous.maxX) >= innerRadius {
+                        var radius = innerRadius
+                        if let next = next {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.topRight.x, y: previous.maxY), type: .topRight, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.topRight, type: .topRight, radius: outerRadius)
+                }
+            } else {
+                drawFullCorner(context: context, color: color, at: rect.topLeft, type: .topLeft, radius: outerRadius)
+                drawFullCorner(context: context, color: color, at: rect.topRight, type: .topRight, radius: outerRadius)
+            }
+            
+            if let next = next {
+                if next.contains(rect.bottomLeft) {
+                    if abs(rect.bottomRight.x - next.maxX) >= innerRadius {
+                        var radius = innerRadius
+                        if let previous = previous {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.bottomLeft.x, y: next.minY), type: .bottomLeft, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.bottomLeft, type: .bottomLeft, radius: outerRadius)
+                }
+                if next.contains(rect.bottomRight.offsetBy(dx: -1.0, dy: 0.0)) {
+                    if abs(rect.bottomRight.x - next.maxX) >= innerRadius {
+                        var radius = innerRadius
+                        if let previous = previous {
+                            radius = min(radius, floor((next.minY - previous.maxY) / 2.0))
+                        }
+                        drawConnectingCorner(context: context, color: color, at: CGPoint(x: rect.bottomRight.x, y: next.minY), type: .bottomRight, radius: radius)
+                    }
+                } else {
+                    drawFullCorner(context: context, color: color, at: rect.bottomRight, type: .bottomRight, radius: outerRadius)
+                }
+            } else {
+                drawFullCorner(context: context, color: color, at: rect.bottomLeft, type: .bottomLeft, radius: outerRadius)
+                drawFullCorner(context: context, color: color, at: rect.bottomRight, type: .bottomRight, radius: outerRadius)
+            }
+        }
+    }))
+}
+
+
+
 private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat, outerRadius: CGFloat, innerRadius: CGFloat) -> (CGPoint, CGImage?) {
     if rects.isEmpty {
         return (CGPoint(), nil)
@@ -1017,6 +1272,89 @@ public final class TextViewLayout : Equatable {
     }
     
     
+    func rects(_ fromRange: NSRange) -> [(CGRect, TextViewLine)] {
+        var rects:[(CGRect, TextViewLine)] = []
+        for i in 0 ..< lines.count {
+            let line = lines[i]
+            if let intersection = fromRange.intersection(line.range) {
+                let range = intersection.intersection(selectedRange.range)
+                
+                var ranges:[(NSRange, TextViewLine)] = []
+                if let range = range {
+                    ranges.append((NSMakeRange(fromRange.lowerBound, range.lowerBound - fromRange.lowerBound), line))
+                    ranges.append((NSMakeRange(fromRange.lowerBound, range.lowerBound - fromRange.lowerBound), line))
+                } else {
+                    ranges.append((intersection, line))
+                }
+                for range in ranges {
+                    let startOffset = CTLineGetOffsetForStringIndex(line.line, range.0.lowerBound, nil);
+                    let endOffset = CTLineGetOffsetForStringIndex(line.line, range.0.upperBound, nil);
+
+                    var ascent:CGFloat = 0
+                    var descent:CGFloat = 0
+                    var leading:CGFloat = 0
+                    
+                    _ = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
+                    
+                    var rect:NSRect = line.frame
+                    
+                    rect.size.width = abs(endOffset - startOffset)
+                    rect.origin.x = min(startOffset, endOffset) + line.frame.origin.x
+                    rect.origin.y = rect.minY - rect.height + 2
+                    rect.size.height += ceil(descent - leading)
+                    
+                    rects.append((rect, line))
+  
+                }
+            }
+        }
+        return rects
+    }
+    
+    public func generateBlock(for range: NSRange, backgroundColor: NSColor) -> (CGPoint, CGImage?) {
+        
+        let rectsAndLines = rects(range)
+        var rects = rectsAndLines.map { $0.0 }
+        let lines = rectsAndLines.map { $0.1 }
+        
+        if !rects.isEmpty {
+            let sortedIndices = (0 ..< rects.count).sorted(by: { rects[$0].width > rects[$1].width })
+            for i in 0 ..< sortedIndices.count {
+                let index = sortedIndices[i]
+                for j in -1 ... 1 {
+                    if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
+                        if abs(rects[index + j].width - rects[index].width) < 10 {
+                            rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
+                        }
+                    }
+                }
+            }
+            
+            for i in 0 ..< rects.count {
+                let height = rects[i].size.height
+                rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - height) / 2.0))
+                rects[i].size.height = height
+                
+                if lines[i].penFlush == 1.0 {
+                    rects[i].origin.x = layoutSize.width - rects[i].width
+                } else if lines[i].penFlush == 0.5 {
+                    rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
+                }
+                
+            }
+            
+            return generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: 4, innerRadius: 4, useModernPathCalculation: false)
+            
+//            var image = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: rects[0].height / 2 , innerRadius: 10)
+//            image.0 = rects[0].origin
+//            
+//            return image
+        } else {
+            return (.zero, nil)
+        }
+        
+    }
+    
     public func generateBlock(backgroundColor: NSColor) -> (CGPoint, CGImage?) {
         
         let lines = self.lines.filter { self.attributedString.attributedSubstring(from: $0.range).string != "\n" }
@@ -1789,20 +2127,12 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
         
-        if #available(macOS 10.13, *) {
-            self.layer?.addSublayer(drawLayer)
-            self.drawLayer.drawer = { [weak self] ctx in
-                guard let `self` = self else {
-                    return
-                }
-                self.draw(self.drawLayer, in: ctx)
+        self.layer?.addSublayer(drawLayer)
+        self.drawLayer.drawer = { [weak self] ctx in
+            guard let `self` = self else {
+                return
             }
-        } else {
-            let textView = View()
-            self.addSubview(textView)
-            self.textView = textView
-            
-            textView.displayDelegate = self
+            self.draw(self.drawLayer, in: ctx)
         }
         
         embeddedContainer.masksToBounds = false
@@ -1831,16 +2161,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     public var drawingLayer: CALayer? {
-        if #available(macOS 10.13, *) {
-            return drawLayer
-        } else {
-            if self.hasBackground {
-                return textView?.layer
-            } else {
-                return self.layer
-            }
-        }
-
+        return drawLayer
     }
     
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -2370,6 +2691,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if layout?.selectedRange.range == NSMakeRange(NSNotFound, 0) {
                 layout?.selectedRange = current.selectedRange
             }
+        } else {
+            self.animatedView?.removeFromSuperlayer()
+            self.animatedView = nil
         }
         
         self.textLayout = layout
@@ -2681,7 +3005,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if let textView = textView {
                 self.addSubview(textView, positioned: .below, relativeTo: nil)
             } else {
-                self.layer?.insertSublayer(drawLayer, at: 0)
+                if let animatedView = animatedView, animatedView.superlayer != nil {
+                    self.layer?.insertSublayer(drawLayer, at: 1)
+                } else {
+                    self.layer?.insertSublayer(drawLayer, at: 0)
+                }
             }
             self.layer?.insertSublayer(embeddedContainer, at: 1)
             self.visualEffect?.removeFromSuperview()
@@ -2831,6 +3159,38 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var animatedView: SimpleLayer?
+    
+    public func highlight(text: String, color: NSColor) {
+        guard let textLayout = self.textLayout else {
+            return
+        }
+        
+        
+        self.animatedView?.removeFromSuperlayer()
+        
+        let range = textLayout.attributedString.string.nsstring.range(of: text)
+        if range.location != NSNotFound {
+            let image = textLayout.generateBlock(for: range, backgroundColor: color)
+            
+            let imageView = SimpleLayer(frame: CGRect(origin: image.0, size: image.1!.backingSize))
+            imageView.contents = image.1
+            imageView.opacity = 0.5
+            
+            self.layer?.insertSublayer(imageView, at: 0)
+            
+            self.animatedView = imageView
+            
+            _ = delaySignal(3.0).start(completed: { [weak self] in
+                if let view = self?.animatedView {
+                    performSublayerRemoval(view, animated: true)
+                    self?.animatedView = nil
+                }
+            })
+            
+        }
     }
     
     

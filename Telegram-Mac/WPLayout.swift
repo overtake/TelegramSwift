@@ -293,6 +293,19 @@ class WPLayout: Equatable {
     }
     
     var action_text:String? {
+        
+        if let adAtribute = parent.adAttribute, let author = parent.author {
+            if case .webPage = adAtribute.target {
+                return strings().chatMessageOpenLink
+            } else if author.isBot {
+                return strings().chatMessageViewBot
+            } else if author.isGroup || author.isSupergroup {
+                return strings().chatMessageViewGroup
+            } else {
+                return strings().chatMessageViewChannel
+            }
+        }
+        
         if self.isProxyConfig {
             return strings().chatApplyProxy
         } else if hasInstantPage {
@@ -358,11 +371,33 @@ class WPLayout: Equatable {
         return nil
     }
     
+    func premiumBoarding() {
+        showModal(with: PremiumBoardingController(context: context), for: context.window)
+    }
+    
     func invokeAction() {
         if self.hasInstantPage {
             showInstantPage(InstantPageViewController(context, webPage: parent.media[0] as! TelegramMediaWebpage, message: parent.text))
         } else if let proxyConfig = self.proxyConfig {
             applyExternalProxy(proxyConfig, accountManager: context.sharedContext.accountManager)
+        } else if let adAttribute = parent.adAttribute {
+            let link: inAppLink
+            switch adAttribute.target {
+            case let .peer(id, messageId, startParam):
+                let action: ChatInitialAction?
+                if let startParam = startParam {
+                    action = .start(parameter: startParam, behavior: .none)
+                } else {
+                    action = nil
+                }
+                link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: true, postId: messageId?.id, callback: chatInteraction.openInfo)
+            case let .join(_, joinHash):
+                link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
+            case let .webPage(_, url: url):
+                link = .external(link: url, false)
+            }
+            chatInteraction.markAdAction(adAttribute.opaqueId)
+            execute(inapp: link)
         } else {
             let link = inApp(for: self.content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)

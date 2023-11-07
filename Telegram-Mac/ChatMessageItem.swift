@@ -19,21 +19,6 @@ import InputView
 import ColorPalette
 import CodeSyntax
 
-/*
- static func == (lhs: ChatTextCustomEmojiAttribute, rhs: ChatTextCustomEmojiAttribute) -> Bool {
-     if lhs.fileId != rhs.fileId {
-         return false
-     }
-     if lhs.reference != rhs.reference {
-         return false
-     }
-     if lhs.emoji != rhs.emoji {
-         return false
-     }
-     return true
- }
- 
- */
 
 struct ChatTextCustomEmojiAttribute : Equatable {
   
@@ -116,7 +101,7 @@ final class InlineStickerItem : Hashable {
                     let text = copy.string.nsstring.substring(with: range).fixed
                     updatedAttributes[TextInputAttributes.embedded] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
                     
-                    let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
+                    let insertString = NSAttributedString(string: clown, attributes: updatedAttributes)
                     copy.replaceCharacters(in: range, with: insertString)
 
                 }
@@ -224,17 +209,7 @@ class ChatMessageItem: ChatRowItem {
     }
     
     var actionButtonText: String? {
-        if let adAtribute = message?.adAttribute, let author = message?.author {
-            if case .webPage = adAtribute.target {
-                return strings().chatMessageOpenLink
-            } else if author.isBot {
-                return strings().chatMessageViewBot
-            } else if author.isGroup || author.isSupergroup {
-                return strings().chatMessageViewGroup
-            } else {
-                return strings().chatMessageViewChannel
-            }
-        }
+        
         if unsupported {
             return strings().chatUnsupportedUpdatedApp
         }
@@ -431,8 +406,9 @@ class ChatMessageItem: ChatRowItem {
                  }
              })
              
-             
-             if let text = message.restrictedText(context.contentSettings) {
+             if let ad = message.adAttribute {
+                 messageText = .init()
+             } else  if let text = message.restrictedText(context.contentSettings) {
                  self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
              } else {
                  self.messageText = copy
@@ -511,6 +487,8 @@ class ChatMessageItem: ChatRowItem {
                 default:
                     break
                 }
+            } else if let adAttribute = message.adAttribute {
+                self.webpageLayout = WPArticleLayout(with: .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: nil, file: nil, story: nil, attributes: [], instantPage: nil), context: context, chatInteraction: chatInteraction, parent: message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: true)
             }
             
             super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)

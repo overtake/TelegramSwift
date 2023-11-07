@@ -161,16 +161,16 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
     
     let interaction = ChatInteraction(chatLocation: .peer(.init(0)), context: context)
 
-    interaction.focusMessageId = { _, messageId, animated in
+    interaction.focusMessageId = { _, focusTarget, animated in
         let navigation = context.bindings.rootNavigation()
         if let current = navigation.controller as? ChatController {
-            if current.chatInteraction.peerId == messageId.peerId {
-                current.chatInteraction.focusMessageId(nil, messageId, .center(id: AnyHashable(0), innerId: nil, animated: true, focus: .init(focus: true, action: nil), inset: 0))
+            if current.chatInteraction.peerId == focusTarget.messageId.peerId {
+                current.chatInteraction.focusMessageId(nil, focusTarget, .center(id: AnyHashable(0), innerId: nil, animated: true, focus: .init(focus: true, action: nil), inset: 0))
             } else {
-                navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
+                navigation.push(ChatController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
             }
         } else {
-            navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
+            navigation.push(ChatController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
         }
         
     }
