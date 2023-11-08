@@ -544,7 +544,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                         case let .emoji(emoji):
                             _ = chatInteraction.appendText(emoji, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                         case let .animated(file):
-                            let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
+                            let text = (file.customEmojiText ?? file.stickerText ?? clown).fixed
                             _ = chatInteraction.appendText(.makeAnimated(file, text: text), selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                         }
                         
