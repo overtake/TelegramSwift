@@ -49,7 +49,7 @@ class ContextClueRowItem: TableRowItem {
         self.selected = selected
         self.presentation = presentation
         
-        self.sources = self.animated.map { .animated($0) } + self.clues.prefix(20).map { .emoji($0) }
+        self.sources = self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
 
         if let selected = selected, let index = sources.firstIndex(of: selected) {
             self.selectedIndex = index
@@ -377,15 +377,16 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             var index: Int = 0
             var items:[Entry] = []
             
+            for clue in item.animated {
+                items.append(.animated(clue, index))
+                index += 1
+            }
             
             for clue in item.clues {
                 items.append(.common(clue, index))
                 index += 1
             }
-            for clue in item.animated {
-                items.append(.animated(clue, index))
-                index += 1
-            }
+            
             
             let context = item.context
             
