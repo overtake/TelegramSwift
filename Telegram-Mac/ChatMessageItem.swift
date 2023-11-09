@@ -332,6 +332,8 @@ class ChatMessageItem: ChatRowItem {
              }
              
             let copy = messageAttr.mutableCopy() as! NSMutableAttributedString
+             
+             copy.removeWhitespaceFromQuoteAttribute()
 
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
@@ -809,12 +811,14 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case let .Pre(language: language):
                 
-                let header: (TextNodeLayout, TextNode)?
-                if let language = language, !language.isEmpty {
-                    header = TextNode.layoutText(.initialize(string: language.prefixWithDots(15), color: blockColor.main, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                } else {
-                    header = nil
+                var lg: String = language ?? ""
+                
+                if lg.isEmpty {
+                    lg = strings().contextCopy.lowercased()
                 }
+                
+                let header: (TextNodeLayout, TextNode)?
+                header = TextNode.layoutText(.initialize(string: lg.prefixWithDots(15), color: blockColor.main, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                 
                 string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, isCode: true, space: 4, header: header), range: range)
                 fontAttributes.append((range, .monospace))

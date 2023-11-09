@@ -375,6 +375,43 @@ public extension NSMutableAttributedString {
         }
     }
     
+    func removeWhitespaceFromQuoteAttribute() {
+        let mutableAttributedString = self
+        let fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+
+        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
+            if let _ = value as? TextViewBlockQuoteData {
+                var rangeToModify = range
+
+                // Remove leading whitespace
+                while rangeToModify.length > 0 {
+                    let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
+                    if let firstChar = rangeString.first, firstChar.isWhitespace {
+                        rangeToModify.location += 1
+                        rangeToModify.length -= 1
+                    } else {
+                        break
+                    }
+                }
+
+                // Remove trailing whitespace
+                while rangeToModify.length > 0 {
+                    let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
+                    if let lastChar = rangeString.last, lastChar.isWhitespace {
+                        rangeToModify.length -= 1
+                    } else {
+                        break
+                    }
+                }
+
+                if range != rangeToModify {
+                    // Replace the original range with the modified range
+                    mutableAttributedString.replaceCharacters(in: range, with: (mutableAttributedString.string as NSString).substring(with: rangeToModify))
+                }
+            }
+        }
+    }
+    
     @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
         
         if(string == nil) {
