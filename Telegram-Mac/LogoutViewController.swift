@@ -62,7 +62,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     }
 
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: strings().logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: .innerItem, description: strings().logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: strings().logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: activeAccounts.count < 3 ? .innerItem : .firstItem, description: strings().logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
     index += 1
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_cache, data: InputDataGeneralData(name: strings().logoutOptionsClearCacheTitle, color: theme.colors.text, icon: theme.icons.logoutOptionClearCache, type: .next, viewType: .innerItem, description: strings().logoutOptionsClearCacheText, action: arguments.clearCache)))

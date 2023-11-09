@@ -554,9 +554,9 @@ final class ChatInteraction : InterfaceObserver  {
                                 showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
                             }
                             
-                            if attach.flags.contains(.showInSettingsDisclaimer) {
+                            if attach.flags.contains(.showInSettingsDisclaimer) || attach.flags.contains(.notActivated) {
                                 var options: [ModalAlertData.Option] = []
-                                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: false, mandatory: true))
                                 
                                 var description: ModalAlertData.Description? = nil
                                 let installBot = !attach.flags.contains(.notActivated) && attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !attach.flags.contains(.showInAttachMenu)
@@ -567,19 +567,17 @@ final class ChatInteraction : InterfaceObserver  {
                 
                                 let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
                                 showModalAlert(for: context.window, data: data, completion: { result in
-                                    if installBot {
-                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
-                                            open()
-                                            if value {
-                                                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
-                                            }
-                                        })
-                                    } else {
+                                    _ = context.engine.messages.acceptAttachMenuBotDisclaimer(botId: peer.id).start()
+                                    installAttachMenuBot(context: context, peer: peer, completion: { value in
                                         open()
-                                    }
+                                        if value {
+                                            showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                                        }
+                                    })
                                 })
                             } else {
-                                let installBot = attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true
+                                let botInfo = attach.peer._asPeer().botInfo
+                                let installBot = botInfo?.flags.contains(.canBeAddedToAttachMenu) == true
                                 if installBot {
                                     installAttachMenuBot(context: context, peer: peer, completion: { _ in
                                         open()

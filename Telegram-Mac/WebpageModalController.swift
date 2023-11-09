@@ -598,7 +598,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.title = title
         self.effectiveSize = effectiveSize
         self.thumbFile = thumbFile
-        super.init(frame:NSMakeRect(0,0,380,450))
+        super.init(frame: NSMakeRect(0,0,380,450))
     }
     
     private var preloadData: (TelegramMediaFile, AccountContext)? {
@@ -745,7 +745,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
         installedBotsDisposable.set(combineLatest(bots, appearanceSignal).start(next: { [weak self] items, appearance in
-            self?.installedBots = items.map { $0.peer.id }
+            self?.installedBots = items.filter { $0.flags.contains(.showInAttachMenu) }.map { $0.peer.id }
             self?.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
         
