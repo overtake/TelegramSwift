@@ -74,7 +74,11 @@ final class ChatGiveawayRowItem : ChatRowItem {
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
         let participants_attr = NSMutableAttributedString()
-        _ = participants_attr.append(string: strings().chatGiveawayMessageParticipants, color: wpPresentation.text, font: .normal(.text))
+        if media.flags.contains(.onlyNewSubscribers) {
+            _ = participants_attr.append(string: strings().chatGiveawayMessageParticipantsNew, color: wpPresentation.text, font: .normal(.text))
+        } else {
+            _ = participants_attr.append(string: strings().chatGiveawayMessageParticipants, color: wpPresentation.text, font: .normal(.text))
+        }
         participants_attr.detectBoldColorInString(with: .medium(.text))
         self.participantsText = .init(participants_attr, alignment: .center, alwaysStaticItems: true)
         
@@ -441,6 +445,7 @@ private final class ChatGiveawayRowView: ChatRowView {
             textView.userInteractionEnabled = false
             textView.isSelectable = false
             avatar.setFrameSize(NSMakeSize(18, 18))
+            avatar.userInteractionEnabled = false 
             scaleOnClick = true
             
             self.set(handler: { [weak self] _ in
