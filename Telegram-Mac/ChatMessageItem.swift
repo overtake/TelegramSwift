@@ -808,7 +808,15 @@ class ChatMessageItem: ChatRowItem {
                 }), range: range)
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case let .Pre(language: language):
-                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, isCode: true, space: 4), range: range)
+                
+                let header: (TextNodeLayout, TextNode)?
+                if let language = language, !language.isEmpty {
+                    header = TextNode.layoutText(.initialize(string: language, color: blockColor.main, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                } else {
+                    header = nil
+                }
+                
+                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, isCode: true, space: 4, header: header), range: range)
                 fontAttributes.append((range, .monospace))
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
