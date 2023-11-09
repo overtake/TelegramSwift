@@ -1792,8 +1792,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             transition.updateFrame(view: view, frame: CGRect(origin: forwardNamePoint(item), size: view.frame.size))
         }
 
-        transition.updateFrame(view: rightView, frame: rightFrame(item))
-        rightView.updateLayout(size: rightView.frame.size, transition: transition)
+        if rightView.superview == rowView {
+            transition.updateFrame(view: rightView, frame: rightFrame(item))
+            rightView.updateLayout(size: rightView.frame.size, transition: transition)
+        }
 
         if let view = nameView {
             transition.updateFrame(view: view, frame: CGRect(origin: namePoint(item), size: view.frame.size))
