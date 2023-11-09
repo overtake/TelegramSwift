@@ -147,10 +147,12 @@ private final class TextViewBlockQuote {
     var frame: CGRect
     var colors: PeerNameColors.Colors
     var isCode: Bool
-    init(frame: CGRect, colors: PeerNameColors.Colors, isCode: Bool) {
+    var header: (TextNodeLayout, TextNode)?
+    init(frame: CGRect, colors: PeerNameColors.Colors, isCode: Bool, header: (TextNodeLayout, TextNode)?) {
         self.frame = frame
         self.colors = colors
         self.isCode = isCode
+        self.header = header
     }
 }
 
@@ -160,13 +162,24 @@ public final class TextViewBlockQuoteData: NSObject {
     public let colors: PeerNameColors.Colors
     public let space: CGFloat
     public let isCode: Bool
-    public init(id: Int, colors: PeerNameColors.Colors, isCode: Bool = false, space: CGFloat = 4) {
+    public let header: (TextNodeLayout, TextNode)?
+    public init(id: Int, colors: PeerNameColors.Colors, isCode: Bool = false, space: CGFloat = 4, header: (TextNodeLayout, TextNode)? = nil) {
         self.id = id
         self.colors = colors
         self.isCode = isCode
         self.space = space
+        self.header = header
         super.init()
     }
+    
+    var headerInset: CGFloat {
+        if header != nil {
+            return 20
+        } else {
+            return 0
+        }
+    }
+
     
     override public func isEqual(_ object: Any?) -> Bool {
         guard let other = object as? TextViewBlockQuoteData else {
@@ -982,6 +995,8 @@ public final class TextViewLayout : Equatable {
                 lineOriginY += 2
             }
             
+            var isFirstFormattedLine: Bool = false
+            
             if attributedString.length > 0, let blockQuote = blockQuote(lastLineCharacterIndex) {
                 
                 
@@ -991,6 +1006,9 @@ public final class TextViewLayout : Equatable {
                 
                 if !isWasPreformatted {
                     layoutSize.height += CGFloat(blockQuote.space) + fontLineSpacing
+                    
+                    layoutSize.height += blockQuote.headerInset
+                    isFirstFormattedLine = true
                 } else {
                     
                     if isWasPreformatted {
@@ -1187,8 +1205,14 @@ public final class TextViewLayout : Equatable {
                     if let blockQuote = lineString.attribute(TextInputAttributes.quote, at: 0, effectiveRange: nil) as? TextViewBlockQuoteData {
                         
                         let preformattedSpace = CGFloat(blockQuote.space) * 2
-                        let frame = NSMakeRect(0, lineFrame.minY - lineFrame.height, lineWidth + preformattedSpace + 20, lineFrame.height + preformattedSpace)
-                        blockQuotes.append(.init(frame: frame, colors: blockQuote.colors, isCode: blockQuote.isCode))
+                        
+                        var frame = NSMakeRect(0, lineFrame.minY - lineFrame.height, lineWidth + preformattedSpace + 20, lineFrame.height + preformattedSpace)
+                        
+                        if !isFirstFormattedLine {
+                            frame.origin.y -= blockQuote.headerInset * 2
+                            frame.size.height += blockQuote.headerInset * 2
+                        }
+                        blockQuotes.append(.init(frame: frame, colors: blockQuote.colors, isCode: blockQuote.isCode, header: blockQuote.header))
                     }
 
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
@@ -2384,6 +2408,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 ctx.closePath()
                 ctx.clip()
                 
+               
+                
                 if let secondaryTintColor = secondaryTintColor {
                     let isMonochrome = secondaryTintColor.alpha == 0.2
 
@@ -2447,7 +2473,15 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 
                 ctx.resetClip()
                 
+                if let header = blockQuote.header {
+                    ctx.setFillColor(blockQuote.colors.main.withAlphaComponent(0.2).cgColor)
+                    ctx.drawRoundedRect(rect: NSMakeRect(blockFrame.minX, blockFrame.minY, blockFrame.width, 22), topLeftRadius: radius, topRightRadius: radius)
+
+                    header.1.draw(CGRect(x: blockFrame.minX + 8, y: blockFrame.minY + (22 - header.0.size.height) / 2, width: header.0.size.width, height: header.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+                }
             }
+            
+            
             
             let spoilerRects = layout.spoilerRects(!inAnimation)
             if !spoilerRects.isEmpty {

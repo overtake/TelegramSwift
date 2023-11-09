@@ -1482,6 +1482,31 @@ public extension CGContext {
 
     }
     
+    
+    func drawRoundedRect(rect: CGRect, topLeftRadius: CGFloat = 0, topRightRadius: CGFloat = 0, bottomLeftRadius: CGFloat = 0, bottomRightRadius: CGFloat = 0) {
+        let context = self
+        context.beginPath()
+        
+        let topLeft = rect.origin
+        let topRight = CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y)
+        let bottomRight = CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height)
+        let bottomLeft = CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height)
+        
+        context.move(to: CGPoint(x: topLeft.x + topLeftRadius, y: topLeft.y))
+        context.addLine(to: CGPoint(x: topRight.x - topRightRadius, y: topRight.y))
+        context.addArc(tangent1End: topRight, tangent2End: bottomRight, radius: topRightRadius)
+        context.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y - bottomRightRadius))
+        context.addArc(tangent1End: bottomRight, tangent2End: bottomLeft, radius: bottomRightRadius)
+        context.addLine(to: CGPoint(x: bottomLeft.x + bottomLeftRadius, y: bottomLeft.y))
+        context.addArc(tangent1End: bottomLeft, tangent2End: topLeft, radius: bottomLeftRadius)
+        context.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y + topLeftRadius))
+        context.addArc(tangent1End: topLeft, tangent2End: topRight, radius: topLeftRadius)
+        
+        context.closePath()
+        
+        context.fillPath()
+    }
+    
     func round(_ frame: NSRect, flags: LayoutPositionFlags) {
         var topLeftRadius: CGFloat = 0
         var bottomLeftRadius: CGFloat = 0
