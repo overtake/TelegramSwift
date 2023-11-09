@@ -811,7 +811,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 let header: (TextNodeLayout, TextNode)?
                 if let language = language, !language.isEmpty {
-                    header = TextNode.layoutText(.initialize(string: language, color: blockColor.main, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                    header = TextNode.layoutText(.initialize(string: language.prefixWithDots(15), color: blockColor.main, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                 } else {
                     header = nil
                 }
@@ -828,10 +828,10 @@ class ChatMessageItem: ChatRowItem {
                     CodeSyntax.apply(syntaxed, to: string, offset: range.location)
                 }
                 
-                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), { link in
-                    copyToClipboard(link)
-                    context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
-                }), range: range)
+//                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), { link in
+//                    copyToClipboard(link)
+//                    context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
+//                }), range: range)
                 
             case .Hashtag:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
