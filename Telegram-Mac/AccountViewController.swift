@@ -116,23 +116,6 @@ private final class AnyUpdateStateEquatable  : Equatable {
     }
 }
 
-extension AttachMenuBot : Equatable {
-    public static func ==(lhs: AttachMenuBot, rhs: AttachMenuBot) -> Bool {
-        if lhs.flags != rhs.flags {
-            return false
-        }
-        if lhs.shortName != rhs.shortName {
-            return false
-        }
-        if lhs.peerTypes != rhs.peerTypes {
-            return false
-        }
-        if PeerEquatable(lhs.peer._asPeer()) != PeerEquatable(rhs.peer._asPeer()) {
-            return false
-        }
-        return true
-    }
-}
 
 private enum AccountInfoEntry : TableItemListNodeEntry {
     case info(index:Int, viewType: GeneralViewType, PeerEquatable, EngineStorySubscriptions.Item?)
@@ -336,7 +319,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             if let file = bot.icons[.macOSSettingsStatic] {
                 let iconPath = arguments.context.account.postbox.mediaBox.resourcePath(file.resource)
                 let linked = link(path: iconPath, ext: "png")!
-
+                
                 if let image = NSImage(contentsOf: .init(fileURLWithPath: linked)) {
                     icon = generateSettingsIcon(image.precomposed(flipVertical: true, scale: 1.0))
                 }
@@ -345,8 +328,14 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             if icon == nil {
                 icon = NSImage(named: "Icon_Settings_BotCap")!.precomposed(flipVertical: true, scale: 1.0)
             }
+            let type: GeneralInteractedType
+            if bot.flags.contains(.notActivated) || bot.flags.contains(.showInSettingsDisclaimer) {
+                type = .imageContext(generateTextIcon_NewBadge(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor), "")
+            } else {
+                type = .next
+            }
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: bot.shortName, icon: icon!, activeIcon: icon!, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: bot.shortName, icon: icon!, activeIcon: icon!, type: type, viewType: viewType, action: {
                 arguments.openWebBot(bot)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
@@ -699,6 +688,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     private let disposable = MetaDisposable()
     
+    let actionsDisposable = DisposableSet()
+    
     private var searchController: InputDataController?
     private let searchState: ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     var navigation:NavigationViewController? {
@@ -927,7 +918,38 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         
         let storyStats = context.engine.messages.storySubscriptions(isHidden: false)
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats, context.engine.messages.attachMenuBots()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats, attachMenuBots -> TableUpdateTransition in
+        let bots = context.engine.messages.attachMenuBots() |> then(.complete() |> suspendAwareDelay(1.0, queue: .mainQueue())) |> restart
+        
+        let acceptBots:ValuePromise<[AttachMenuBot]> = ValuePromise(ignoreRepeated: true)
+        
+        var loading:Set<PeerId> = Set()
+        actionsDisposable.add(bots.start(next: { value in
+            var ready: [AttachMenuBot] = []
+            for value in value {
+                if !loading.contains(value.peer.id) {
+                    if let file = value.icons[.macOSSettingsStatic] {
+                        if let peerReference = PeerReference(value.peer._asPeer()) {
+                            _ = freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.attachBot(peer: peerReference, media: file)).start()
+                            loading.insert(value.peer.id)
+                        }
+                    }
+                }
+                if let file = value.icons[.macOSSettingsStatic] {
+                    let iconPath = arguments.context.account.postbox.mediaBox.resourcePath(file.resource)
+                    let linked = link(path: iconPath, ext: "png")!
+                    
+                    if let _ = NSImage(contentsOf: .init(fileURLWithPath: linked)) {
+                        ready.append(value)
+                    }
+                } else {
+                    ready.append(value)
+                }
+            }
+            acceptBots.set(ready)
+        }))
+        
+        
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats, acceptBots.get()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats, attachMenuBots -> TableUpdateTransition in
             let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats, attachMenuBots: attachMenuBots).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
@@ -1104,6 +1126,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     deinit {
         syncLocalizations.dispose()
         disposable.dispose()
+        actionsDisposable.dispose()
     }
 
 }

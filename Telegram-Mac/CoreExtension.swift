@@ -3876,6 +3876,8 @@ func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
         
         let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
         showModalAlert(for: context.window, data: data, completion: { result in
+            
+            _ = context.engine.messages.acceptAttachMenuBotDisclaimer(botId: bot.peer.id).start()
             installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
                 if value, installBot {
                     showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))

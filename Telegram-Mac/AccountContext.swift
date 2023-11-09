@@ -748,23 +748,6 @@ final class AccountContext {
             _ = self?._globalLocationId.swap(value)
         }))
         
-        #if !SHARE
-        actionsDisposable.add(engine.messages.attachMenuBots().start(next: { [weak self] value in
-            guard let `self` = self else {
-                return
-            }
-            for value in value {
-                if let file = value.icons[.macOSSettingsStatic] {
-                    if let peerReference = PeerReference(value.peer._asPeer()) {
-                        _ = freeMediaFileInteractiveFetched(context: self, fileReference: FileMediaReference.attachBot(peer: peerReference, media: file)).start()
-                    }
-                }
-            }
-        }))
-        #endif
-       
-        
-        
     }
     
     @objc private func updateKeyWindow() {

@@ -133,6 +133,22 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
     })!
 }
 
+func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage {
+    
+    let textNode = TextNode.layoutText(.initialize(string: "NEW", color: textColor, font: .avatar(.small)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    var size = textNode.0.size
+    size.width += 6
+    size.height += 4
+    return generateImage(size, rotatedContext: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(size, .cornerRadius)
+        ctx.setFillColor(bgColor.cgColor)
+        ctx.fill(rect)
+        textNode.1.draw(rect.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
+
 private func generateGradientBubble(_ colors: [NSColor]) -> CGImage {
     var colors = colors
     if !System.supportsTransparentFontDrawing {
