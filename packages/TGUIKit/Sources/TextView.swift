@@ -144,15 +144,25 @@ public extension NSAttributedString.Key {
 
 
 private final class TextViewBlockQuote {
+    var range: NSRange
     var frame: CGRect
     var colors: PeerNameColors.Colors
     var isCode: Bool
     var header: (TextNodeLayout, TextNode)?
-    init(frame: CGRect, colors: PeerNameColors.Colors, isCode: Bool, header: (TextNodeLayout, TextNode)?) {
+    init(frame: CGRect, range: NSRange, colors: PeerNameColors.Colors, isCode: Bool, header: (TextNodeLayout, TextNode)?) {
         self.frame = frame
+        self.range = range
         self.colors = colors
         self.isCode = isCode
         self.header = header
+    }
+    
+    var headerInset: CGFloat {
+        if header != nil {
+            return 20
+        } else {
+            return 0
+        }
     }
 }
 
@@ -175,6 +185,14 @@ public final class TextViewBlockQuoteData: NSObject {
     var headerInset: CGFloat {
         if header != nil {
             return 20
+        } else {
+            return 0
+        }
+    }
+    
+    var minimumHeaderSize: CGFloat {
+        if let header = header {
+            return header.0.size.width + 20
         } else {
             return 0
         }
@@ -1002,12 +1020,14 @@ public final class TextViewLayout : Equatable {
                 
                 breakInset = CGFloat(blockQuote.space * 2 + 20)
                 lineCutoutOffset += CGFloat(blockQuote.space * 2)
-                lineAdditionalWidth += blockQuote.space * 2 + 20
+                lineAdditionalWidth += max(breakInset, blockQuote.minimumHeaderSize)
                 
                 if !isWasPreformatted {
                     layoutSize.height += CGFloat(blockQuote.space) + fontLineSpacing
                     
                     layoutSize.height += blockQuote.headerInset
+                    
+                    
                     isFirstFormattedLine = true
                 } else {
                     
@@ -1206,13 +1226,13 @@ public final class TextViewLayout : Equatable {
                         
                         let preformattedSpace = CGFloat(blockQuote.space) * 2
                         
-                        var frame = NSMakeRect(0, lineFrame.minY - lineFrame.height, lineWidth + preformattedSpace + 20, lineFrame.height + preformattedSpace)
+                        var frame = NSMakeRect(0, lineFrame.minY - lineFrame.height, lineWidth + max(preformattedSpace + 20, lineAdditionalWidth), lineFrame.height + preformattedSpace)
                         
-                        if !isFirstFormattedLine {
-                            frame.origin.y -= blockQuote.headerInset * 2
-                            frame.size.height += blockQuote.headerInset * 2
+                        if isFirstFormattedLine {
+                            frame.origin.y -= blockQuote.headerInset
+                            frame.size.height += blockQuote.headerInset
                         }
-                        blockQuotes.append(.init(frame: frame, colors: blockQuote.colors, isCode: blockQuote.isCode, header: blockQuote.header))
+                        blockQuotes.append(.init(frame: frame, range: NSMakeRange(lineRange.location, lineRange.length), colors: blockQuote.colors, isCode: blockQuote.isCode, header: blockQuote.header))
                     }
 
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
@@ -1846,6 +1866,49 @@ public final class TextViewLayout : Equatable {
         return nil
     }
     
+    public func block(at point:NSPoint) -> NSRange? {
+        
+        let index = findIndex(location: point)
+        
+        guard index != -1, !lines.isEmpty else {
+            return nil
+        }
+        
+        let line = lines[index]
+        var ascent:CGFloat = 0
+        var descent:CGFloat = 0
+        var leading:CGFloat = 0
+        
+        let width:CGFloat = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
+        
+        var point = point
+        
+         //point.x -= floorToScreenPixels(System.backingScale, (frame.width - line.frame.width) / 2)
+        
+        
+//        var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width))) + line.frame.minX
+//        if layout.penFlush == 0.5, line.penFlush != 0.5 {
+//            penOffset = startPosition.x
+//        } else if layout.penFlush == 0.0 {
+//            penOffset = startPosition.x
+//        }
+        
+        point.x -= ((layoutSize.width - line.frame.width) * line.penFlush)
+
+        
+        if  width > point.x, point.x >= 0 {
+            var pos = CTLineGetStringIndexForPosition(line.line, point);
+            pos = min(max(0,pos),attributedString.length - 1)
+            var range:NSRange = NSMakeRange(NSNotFound, 0)
+            let attrs = attributedString.attributes(at: pos, effectiveRange: &range)
+            
+            if let _ =  attrs[TextInputAttributes.code] {
+                return range
+            }
+        }
+        return nil
+    }
+    
     func findCharacterIndex(at point:NSPoint) -> Int {
         let index = findIndex(location: point)
         
@@ -2086,6 +2149,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     private var inkViews: [InvisibleInkDustView] = []
     private let embeddedContainer = SimpleLayer()
+    
+    private var blockHeaderRects: [(NSRect, NSRange)] = []
 
     private var clearExceptRevealed: Bool = false
     private var inAnimation: Bool = false {
@@ -2195,6 +2260,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 //        if hasBackground, layer != textView?.layer {
 //            return
 //        }
+        
+        var blockHeaderRects: [(NSRect, NSRange)] = []
 
         if let layout = textLayout, drawingLayer == layer {
             
@@ -2474,10 +2541,18 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 ctx.resetClip()
                 
                 if let header = blockQuote.header {
+                    
+                    let headerHeight = blockQuote.headerInset + 2
+                    
                     ctx.setFillColor(blockQuote.colors.main.withAlphaComponent(0.2).cgColor)
-                    ctx.drawRoundedRect(rect: NSMakeRect(blockFrame.minX, blockFrame.minY, blockFrame.width, 22), topLeftRadius: radius, topRightRadius: radius)
+                    let rect = NSMakeRect(blockFrame.minX, blockFrame.minY, blockFrame.width, headerHeight)
+                    blockHeaderRects.append((rect, blockQuote.range))
+                    ctx.drawRoundedRect(rect: rect, topLeftRadius: radius, topRightRadius: radius)
 
-                    header.1.draw(CGRect(x: blockFrame.minX + 8, y: blockFrame.minY + (22 - header.0.size.height) / 2, width: header.0.size.width, height: header.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+                    header.1.draw(CGRect(x: blockFrame.minX + 8, y: blockFrame.minY + (headerHeight - header.0.size.height) / 2, width: header.0.size.width, height: header.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+                    if let image = NSImage(named: "Icon_CopyCode")?.precomposed(blockQuote.colors.main, flipVertical: true) {
+                        ctx.draw(image, in: CGRect(origin: NSMakePoint(blockFrame.width - image.backingSize.width - 3, blockFrame.minY + (headerHeight - image.backingSize.height) / 2), size: image.backingSize))
+                    }
                 }
             }
             
@@ -2573,6 +2648,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 //            }
             
         }
+        self.blockHeaderRects = blockHeaderRects
     }
     
     
@@ -2917,7 +2993,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         
         self.locationInWindow = nil
         
-        if let layout = textLayout, userInteractionEnabled {
+        if let layout = textLayout, userInteractionEnabled, let window = kitWindow {
             let point = self.convert(event.locationInWindow, from: nil)
             if let _ = layout.spoiler(at: point) {
                 layout.revealSpoiler()
@@ -2925,7 +3001,14 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 self.updateInks(layout, animated: true)
                 return
             }
-            if event.clickCount == 3, isSelectable {
+            if let blockHeader = blockHeaderRects.first(where: { $0.0.contains(point) }) {
+                var quoteRange = NSMakeRange(0, 0)
+                let _ = layout.attributedString.attribute(TextInputAttributes.quote, at: blockHeader.1.location, effectiveRange: &quoteRange)
+                
+                let string = layout.attributedString.attributedSubstring(from: quoteRange)
+                _ = layout.interactions.copyToClipboard?(string.string)
+                showModalText(for: window, text: localizedString("Share.Link.Copied"))
+            } else if event.clickCount == 3, isSelectable {
                 layout.selectAll(at: point)
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
             } else if isSelectable, event.clickCount == 2 || (event.type == .rightMouseUp && !layout.selectedRange.hasSelectText) {
@@ -2977,7 +3060,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         let location = self.convert(event.locationInWindow, from: nil)
         
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
-            if textLayout?.spoiler(at: location) != nil {
+            let inBlockHeader = blockHeaderRects.contains(where: { $0.0.contains(location) })
+            if inBlockHeader {
+                NSCursor.pointingHand.set()
+            } else if textLayout?.spoiler(at: location) != nil {
                 NSCursor.pointingHand.set()
             }  else if textLayout?.color(at: location) != nil {
                 NSCursor.pointingHand.set()
