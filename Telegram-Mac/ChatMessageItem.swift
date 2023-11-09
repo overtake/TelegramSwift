@@ -333,7 +333,6 @@ class ChatMessageItem: ChatRowItem {
              
             let copy = messageAttr.mutableCopy() as! NSMutableAttributedString
              
-             copy.removeWhitespaceFromQuoteAttribute()
 
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
@@ -407,6 +406,9 @@ class ChatMessageItem: ChatRowItem {
                      spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                  }
              })
+             
+             copy.removeWhitespaceFromQuoteAttribute()
+
              
              if let ad = message.adAttribute {
                  messageText = .init()
