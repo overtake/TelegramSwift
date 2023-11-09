@@ -19,10 +19,6 @@ final class ChatMessageBubbleBackdrop: NSView {
     
     private var maskView: SImageView?
     
-    
-    override var isFlipped: Bool {
-        return true
-    }
     init() {
         
         super.init(frame: NSZeroRect)
