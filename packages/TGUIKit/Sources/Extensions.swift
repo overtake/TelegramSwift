@@ -392,7 +392,7 @@ public extension NSMutableAttributedString {
     
     func removeWhitespaceFromQuoteAttribute() {
         let mutableAttributedString = self
-        let fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+        var fullRange = NSRange(location: 0, length: mutableAttributedString.length)
 
         mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
             if let _ = value as? TextViewBlockQuoteData {
@@ -419,8 +419,31 @@ public extension NSMutableAttributedString {
                     }
                 }
                 if range != rangeToModify {
-                    // Replace the original range with the modified range
-                    mutableAttributedString.replaceCharacters(in: range, with: (mutableAttributedString.string as NSString).substring(with: rangeToModify))
+                    mutableAttributedString.replaceCharacters(in: range, with: mutableAttributedString.attributedSubstring(from: rangeToModify))
+                }
+            }
+        }
+        
+        fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+
+        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
+            if let _ = value as? TextViewBlockQuoteData {
+                var rangeToModify = range
+                if rangeToModify.min != 0 {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
+                            rangeToModify.location += 1
+                        }
+                    }
+                }
+                if rangeToModify.max < mutableAttributedString.length {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
+                            rangeToModify.location -= 1
+                        }
+                    }
                 }
                 
                 if rangeToModify.min != 0 {
@@ -442,6 +465,7 @@ public extension NSMutableAttributedString {
             }
         }
     }
+
     
     @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
         
