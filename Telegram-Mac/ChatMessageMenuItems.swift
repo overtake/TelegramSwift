@@ -274,7 +274,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let attributed = enititesAttributedStringForText(layout.selectedString).trimmed
                     let entities = messageTextEntitiesInRange(entities: ChatTextInputState(attributedText: attributed, selectionRange: 0..<0).messageTextEntities(), range: attributed.range, onlyQuoteable: true)
                     
-                    let quote = EngineMessageReplyQuote(text: attributed.string, entities: entities, media: message.media.first)
+                    let quote = EngineMessageReplyQuote(text: attributed.string, offset: nil, entities: entities, media: message.media.first)
                     chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: quote))
 
                 }

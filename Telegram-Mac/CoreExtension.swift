@@ -3899,6 +3899,13 @@ extension NSAttributedString {
         return attach
     }
     
+    static func makeAnimated(_ fileId: Int64, text: String, info: ItemCollectionId? = nil) -> NSAttributedString {
+        let attach = NSMutableAttributedString(string: text)
+        let value = TextInputTextCustomEmojiAttribute(collectionId: info, fileId: fileId, file: nil, emoji: text)
+        attach.addAttribute(TextInputAttributes.customEmoji, value: value, range: attach.range)
+        return attach
+    }
+    
     static func embedded(name: String, color: NSColor, resize: Bool) -> NSAttributedString {
         
         let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])

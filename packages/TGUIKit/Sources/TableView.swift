@@ -2306,10 +2306,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.list.isEmpty || (!tableView.isFlipped && list.count == 1)
     }
     
-    public func reloadData() -> Void {
+    public func reloadData(width: CGFloat? = nil) -> Void {
         self.beginTableUpdates()
         self.enumerateItems { item -> Bool in
-            _ = item.makeSize(frame.width)
+            _ = item.makeSize(width ?? frame.width)
             self.reloadData(row: item.index)
             return true
         }

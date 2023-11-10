@@ -132,6 +132,7 @@ class ChatServiceItem: ChatRowItem {
     private(set) var suggestPhotoData: SuggestPhotoData? = nil
     private(set) var wallpaperData: WallpaperData? = nil
     private(set) var storydata: StoryData? = nil
+    private(set) var suggestChannelsData: ChannelSuggestData? = nil
 
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
@@ -860,6 +861,13 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
+                case .joinedChannel:
+                    let text = strings().chatServiceJoinedChannel
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    self.suggestChannelsData = .init(channels: [peer, peer, peer, peer, peer, peer, peer, peer, peer], presentation: theme)
+                case let .giveawayResults(winners):
+                    let text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
                     break
                 }
@@ -958,6 +966,10 @@ class ChatServiceItem: ChatRowItem {
         }
         if let data = self.storydata {
             height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.suggestChannelsData {
+            data.makeSize(width: blockWidth)
+            height += data.size.height + (isBubbled ? 9 : 6)
         }
         return height
     }
@@ -1667,6 +1679,7 @@ class ChatServiceRowView: TableRowView {
     private var storyView: _StoryView?
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
+    private var suggestChannelsView: ChatChannelSuggestView?
 
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
@@ -1724,7 +1737,7 @@ class ChatServiceRowView: TableRowView {
                 self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
             
-            let activeView = [giftView, suggestView, wallpaperView, storyView].compactMap { $0 }.first
+            let activeView = [giftView, suggestView, wallpaperView, storyView, suggestChannelsView].compactMap { $0 }.first
             
             if let view = activeView {
                 view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
@@ -1975,6 +1988,23 @@ class ChatServiceRowView: TableRowView {
             performSubviewRemoval(view, animated: animated)
             self.storyView = nil
         }
+        
+        if let data = item.suggestChannelsData {
+            let current: ChatChannelSuggestView
+            if let view = self.suggestChannelsView {
+                current = view
+            } else {
+                current = ChatChannelSuggestView(frame: data.size.bounds)
+                self.suggestChannelsView = current
+                addSubview(current)
+            }
+            current.setFrameSize(data.size)
+            current.set(item: item, data: data, animated: animated)
+        } else if let view = self.suggestChannelsView {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.storyView = nil
+        }
+
         
         updateInlineStickers(context: item.context, view: self.textView, textLayout: item.text)
         
