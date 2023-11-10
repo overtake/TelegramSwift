@@ -377,7 +377,7 @@ public extension NSMutableAttributedString {
     
     func removeWhitespaceFromQuoteAttribute() {
         let mutableAttributedString = self
-        let fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+        var fullRange = NSRange(location: 0, length: mutableAttributedString.length)
 
         mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
             if let _ = value as? TextViewBlockQuoteData {
@@ -386,7 +386,7 @@ public extension NSMutableAttributedString {
                 // Remove leading whitespace
                 while rangeToModify.length > 0 {
                     let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
-                    if let firstChar = rangeString.first, firstChar.isWhitespace {
+                    if let firstChar = rangeString.first, firstChar.isNewline {
                         rangeToModify.location += 1
                         rangeToModify.length -= 1
                     } else {
@@ -397,20 +397,43 @@ public extension NSMutableAttributedString {
                 // Remove trailing whitespace
                 while rangeToModify.length > 0 {
                     let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
-                    if let lastChar = rangeString.last, lastChar.isWhitespace {
+                    if let lastChar = rangeString.last, lastChar.isNewline {
                         rangeToModify.length -= 1
                     } else {
                         break
                     }
                 }
-
                 if range != rangeToModify {
-                    // Replace the original range with the modified range
-                    mutableAttributedString.replaceCharacters(in: range, with: (mutableAttributedString.string as NSString).substring(with: rangeToModify))
+                    mutableAttributedString.replaceCharacters(in: range, with: mutableAttributedString.attributedSubstring(from: rangeToModify))
+                }
+            }
+        }
+        
+        fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+
+        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
+            if let _ = value as? TextViewBlockQuoteData {
+                var rangeToModify = range
+                if rangeToModify.min != 0 {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
+                            rangeToModify.location += 1
+                        }
+                    }
+                }
+                if rangeToModify.max < mutableAttributedString.length {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
+                            rangeToModify.location -= 1
+                        }
+                    }
                 }
             }
         }
     }
+
     
     @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
         

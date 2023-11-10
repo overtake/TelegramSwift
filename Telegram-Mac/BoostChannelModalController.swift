@@ -930,12 +930,13 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                 
                 let _ = context.engine.peers.applyChannelBoost(peerId: peerId, slots: [availableBoost.slot]).startStandalone(completed: {
                     updateDisposable.set(nil)
-                    updateDisposable.set(context.engine.peers.getChannelBoostStatus(peerId: peerId).startStandalone(next: { status in
+                    updateDisposable.set(combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()).startStandalone(next: { status, myStatus in
                         updateState { current in
                             var current = current
                             if let status = status {
                                 current.status = status
                             }
+                            current.myStatus = myStatus
                             return current
                         }
                     }))
