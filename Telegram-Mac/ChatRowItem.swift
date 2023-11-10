@@ -2421,6 +2421,7 @@ class ChatRowItem: TableRowItem {
         commentsBubbleDataOverlay?.makeSize()
         commentsData?.makeSize()
         
+        _commentsBubbleData?.drawBorder =  !isBubbleFullFilled || !captionLayouts.isEmpty
         
        
         
