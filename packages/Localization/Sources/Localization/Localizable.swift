@@ -5253,6 +5253,36 @@ public final class L10n {
   }
   /// channel created
   public static var chatServiceChannelCreated: String  { return L10n.tr("Localizable", "ChatService.ChannelCreated") }
+  /// %d winner of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_countable", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_few", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_many", p1)
+  }
+  /// %d winner of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_one", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_other", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_two", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received private message with giftcode.
+  public static func chatServiceGiveawayResultsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults_zero", p1)
+  }
+  /// You joined the channel
+  public static var chatServiceJoinedChannel: String  { return L10n.tr("Localizable", "ChatService.JoinedChannel") }
   /// Your request to join the channel was approved
   public static var chatServiceJoinedChannelByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedChannelByRequest") }
   /// Your request to join the group was approved

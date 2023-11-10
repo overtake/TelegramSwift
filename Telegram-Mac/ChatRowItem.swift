@@ -3030,7 +3030,7 @@ class ChatRowItem: TableRowItem {
         if canReact {
             
             let context = self.context
-
+            
             guard let message = self.message, let peer = chatInteraction.presentation.mainPeer else {
                 return .single(nil)
             }
@@ -3130,21 +3130,30 @@ class ChatRowItem: TableRowItem {
                 
                 if !accessToAll {
                     if let reactions = builtin {
-                        available = reactions.enabled.filter { value in
-                            if let allowed = allowed {
-                                switch allowed {
-                                case .all:
-                                    return true
-                                case let .limited(array):
-                                    return array.contains(value.value)
-                                case .empty:
-                                    return false
+                        if let allowed = allowed {
+                            switch allowed {
+                            case .all:
+                                available = reactions.enabled.map {
+                                    .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: isSelected($0.value))
                                 }
-                            } else {
-                                return true
+                            case let .limited(array):
+                                available = array.compactMap { reaction in
+                                    switch reaction {
+                                    case .builtin:
+                                        if let first = reactions.enabled.first(where: { $0.value == reaction }) {
+                                            return .builtin(value: first.value, staticFile: first.staticIcon, selectFile: first.selectAnimation, appearFile: first.appearAnimation, isSelected: isSelected(reaction))
+                                        } else {
+                                            return nil
+                                        }
+                                    case let .custom(fileId):
+                                        return .custom(value: reaction, fileId: fileId, nil, isSelected: isSelected(reaction))
+                                    }
+                                }
+                            case .empty:
+                                available = []
                             }
-                        }.map {
-                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: isSelected($0.value))
+                        } else {
+                            available = []
                         }
                     }
                 } else {
@@ -3205,7 +3214,7 @@ class ChatRowItem: TableRowItem {
                 let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
                 
                 
-                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 20), 40 + 20)
+                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20)
                 
                 
                 let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)

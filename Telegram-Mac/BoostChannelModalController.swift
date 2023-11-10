@@ -881,7 +881,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false) -> InputDataModalController {
+enum BoostChannelSource {
+    case basic
+    case story
+    case reactions
+}
+
+func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, source: BoostChannelSource = .basic) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -930,12 +936,13 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                 
                 let _ = context.engine.peers.applyChannelBoost(peerId: peerId, slots: [availableBoost.slot]).startStandalone(completed: {
                     updateDisposable.set(nil)
-                    updateDisposable.set(context.engine.peers.getChannelBoostStatus(peerId: peerId).startStandalone(next: { status in
+                    updateDisposable.set(combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()).startStandalone(next: { status, myStatus in
                         updateState { current in
                             var current = current
                             if let status = status {
                                 current.status = status
                             }
+                            current.myStatus = myStatus
                             return current
                         }
                     }))

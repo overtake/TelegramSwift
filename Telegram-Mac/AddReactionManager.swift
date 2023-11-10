@@ -192,11 +192,15 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
            
             super.init(frame: frameRect)
             
+            let imageView: InlineStickerView
             if let file = reaction.selectedAnimation {
-                let imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
-                self.imageView = imageView
-                addSubview(imageView)
+                imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
+            } else {
+                imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: nil, emoji: clown), size: size, isPlayable: false)
             }
+            self.imageView = imageView
+            addSubview(imageView)
+
             addSubview(player)
             self.player.isHidden = false
 

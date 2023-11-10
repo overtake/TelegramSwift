@@ -262,6 +262,8 @@
 		27672EC226F8D65600297DB4 /* 110.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 27672EA426F8D5B100297DB4 /* 110.m4a */; };
 		27672EC326F8D65800297DB4 /* 111.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 27672EAC26F8D5B200297DB4 /* 111.m4a */; };
 		276790912AF3D11E00E9975C /* ChannelReactionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276790902AF3D11E00E9975C /* ChannelReactionsController.swift */; };
+		276790AD2AFE02E100E9975C /* ChatChannelSuggestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276790AC2AFE02E100E9975C /* ChatChannelSuggestView.swift */; };
+		276790AF2AFE52A000E9975C /* menu_unlock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276790AE2AFE52A000E9975C /* menu_unlock.tgs */; };
 		276885032770D7BE0021C891 /* AddReactionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276885022770D7BE0021C891 /* AddReactionManager.swift */; };
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
@@ -1758,6 +1760,8 @@
 		27672EAC26F8D5B200297DB4 /* 111.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = 111.m4a; sourceTree = "<group>"; };
 		27672EAD26F8D5B200297DB4 /* 4.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = 4.m4a; sourceTree = "<group>"; };
 		276790902AF3D11E00E9975C /* ChannelReactionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelReactionsController.swift; sourceTree = "<group>"; };
+		276790AC2AFE02E100E9975C /* ChatChannelSuggestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatChannelSuggestView.swift; sourceTree = "<group>"; };
+		276790AE2AFE52A000E9975C /* menu_unlock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_unlock.tgs; sourceTree = "<group>"; };
 		276885022770D7BE0021C891 /* AddReactionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReactionManager.swift; sourceTree = "<group>"; };
 		276957A82746C07400297991 /* SessionModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionModalController.swift; sourceTree = "<group>"; };
 		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
@@ -3606,7 +3610,9 @@
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
+				27307E972ADDA40A00D970EE /* menu_quote.tgs */,
 				279B03582A4F1CB3007D2AB9 /* menu_stories.tgs */,
+				276790AE2AFE52A000E9975C /* menu_unlock.tgs */,
 				27D48B452A72739F00721995 /* menu_download_circle_lock.tgs */,
 				27D48B442A72739E00721995 /* menu_download_circle.tgs */,
 				27D48B462A7273A000721995 /* menu_eye_locked.tgs */,
@@ -4410,6 +4416,7 @@
 				271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */,
 				27C50AD82AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift */,
 				275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */,
+				276790AC2AFE02E100E9975C /* ChatChannelSuggestView.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -5862,7 +5869,6 @@
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
-				27307E972ADDA40A00D970EE /* menu_quote.tgs */,
 				274952812AA1E79E00499498 /* hand_animation.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */,
@@ -6470,6 +6476,7 @@
 				A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */,
 				27161A9C27EC98290069BCEF /* menu_drugs.tgs in Resources */,
 				27803BFD27A3E944007B0FA9 /* menu_folder_bot.tgs in Resources */,
+				276790AF2AFE52A000E9975C /* menu_unlock.tgs in Resources */,
 				27D6043C2955A20A00588C21 /* menu_forever.tgs in Resources */,
 				D0830FC424127473006198E7 /* new_folder.tgs in Resources */,
 				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
@@ -7340,6 +7347,7 @@
 				278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */,
 				2775025327A924CE00B46456 /* ChatInlineReactionMenuItem.swift in Sources */,
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
+				276790AD2AFE02E100E9975C /* ChatChannelSuggestView.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
 				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,
 				2719D8012A139B9D00081079 /* StoryRecordingView.swift in Sources */,

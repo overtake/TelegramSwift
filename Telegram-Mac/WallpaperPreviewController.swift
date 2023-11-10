@@ -16,6 +16,78 @@ import Postbox
 import InAppSettings
 import CoreGraphics
 
+private final class WallpaperActionButton : Control {
+    private let gradient: VisualEffect = VisualEffect(frame: .zero)
+    private let textView = TextView()
+    private let imageView = LottiePlayerView(frame: NSMakeRect(0, 0, 20, 20))
+    private let container = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(gradient)
+        container.addSubview(textView)
+        container.addSubview(imageView)
+        addSubview(container)
+        scaleOnClick = true
+        
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        layer?.cornerRadius = 10
+    }
+    
+    override func layout() {
+        super.layout()
+        gradient.frame = bounds
+        container.center()
+        if imageView.isHidden {
+            textView.center()
+        } else {
+            imageView.centerY(x: 0)
+            textView.centerY(x: imageView.frame.maxX)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    var isFocused: Bool = false {
+        didSet {
+            gradient.isHidden = isFocused
+            self.backgroundColor = isFocused ? theme.colors.accent : .clear
+            layer?.animateBackground()
+        }
+    }
+    
+    func update(text: String, lottie: LocalAnimatedSticker?) {
+                        
+        
+        gradient.bgColor = theme.colors.text.withAlphaComponent(0.2)
+
+        
+        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.underSelectedColor, font: .medium(.text)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
+        
+        if let lottie = lottie, let data = lottie.data {
+            let colors:[LottieColor] = [.init(keyPath: "", color: NSColor(0xffffff))]
+            imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("bundle_\(lottie.rawValue)"), size: NSMakeSize(20, 20), colors: colors), cachePurpose: .temporaryLZ4(.thumb), playPolicy: .onceEnd, maximumFps: 60, colors: colors, runOnQueue: .mainQueue()))
+        }
+        imageView.isHidden = lottie == nil
+              
+        if imageView.isHidden {
+            container.setFrameSize(NSMakeSize(layout.layoutSize.width, max(layout.layoutSize.height, imageView.frame.height)))
+        } else {
+            container.setFrameSize(NSMakeSize(layout.layoutSize.width + imageView.frame.width, max(layout.layoutSize.height, imageView.frame.height)))
+        }
+                    
+        needsLayout = true
+        
+    }
+}
+
+
 enum WallpaperPreviewMode : Equatable {
     case plain
     case blurred
@@ -197,6 +269,9 @@ private final class WallpaperPreviewView: View {
     private var imageSize: NSSize = NSZeroSize
     private let context: AccountContext
     
+    fileprivate let apply: WallpaperActionButton = WallpaperActionButton(frame: .zero)
+    fileprivate var applyForPeer: WallpaperActionButton?
+
     fileprivate var ready:(()->Void)? = nil
     
     private(set) var wallpaper: Wallpaper {
@@ -232,6 +307,15 @@ private final class WallpaperPreviewView: View {
         addSubview(controlsBg)
         addSubview(colorPicker)
         addSubview(patternsController.view)
+        
+        
+        tableView.layer?.masksToBounds = false
+        tableView.documentView?.layer?.masksToBounds = false
+        tableView.clipView.layer?.masksToBounds = false
+
+        addSubview(apply)
+        
+        apply.update(text: strings().wallpaperPreviewApply, lottie: nil)
         
         
         controlsBg.backgroundColor = theme.colors.background
@@ -405,18 +489,32 @@ private final class WallpaperPreviewView: View {
             })
         }))
         
+        switch source {
+        case let .chat(peer, _):
+            let applyForPeer = WallpaperActionButton(frame: .zero)
+            //TODOLANG
+            applyForPeer.update(text: "Apply for Me and \(peer.compactDisplayTitle)", lottie: context.isPremium ? nil : LocalAnimatedSticker.menu_lock)
+            self.addSubview(applyForPeer)
+            self.applyForPeer = applyForPeer
+            
+        default:
+            break
+        }
+        
     }
     
     private func addTableItems(_ context: AccountContext, source: WallpaperSource) {
         
         
+        
+        
         switch wallpaper {
         case .color:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         case .file(_, _, _, _):
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         default:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -488,6 +586,7 @@ private final class WallpaperPreviewView: View {
         default:
             break
         }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     var croppedRect: NSRect {
@@ -543,12 +642,24 @@ private final class WallpaperPreviewView: View {
         }) + CGFloat(max(0, checkboxViews.count - 1)) * 10
 
         
-        let colorPickerSize = NSMakeSize(frame.width, 168)
-        let patternsSize = NSMakeSize(frame.width, 168)
-        let controlsSize = NSMakeSize(frame.width, 168)
+        var buttonInset: CGFloat = 0
+        if !apply.isHidden {
+            buttonInset += 50
+            apply.isFocused = previewState != .normal
+        }
+        if let applyForPeer = self.applyForPeer, !applyForPeer.isHidden {
+            buttonInset += 50
+            applyForPeer.isFocused = previewState != .normal
+        }
+        
+        
+        
+        let colorPickerSize = NSMakeSize(frame.width, 168 + buttonInset)
+        let patternsSize = NSMakeSize(frame.width, 168 + buttonInset)
+        let controlsSize = NSMakeSize(frame.width, 168 + buttonInset)
 
         let checkboxSize = NSMakeSize(checkboxWidth, 50)
-        let documentSize = NSMakeSize(frame.width, documentView.frame.height)
+        let documentSize = NSMakeSize(size.width, documentView.frame.height)
         
       
 
@@ -570,34 +681,37 @@ private final class WallpaperPreviewView: View {
         transition.updateFrame(view: backgroundView, frame: backgroundSize.bounds)
 //        backgroundView.updateLayout(size: backgroundSize, transition: transition)
         
+        
+
         switch previewState {
         case .color, .pattern:            
-            let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - colorPicker.frame.height - checkboxSize.height - 10), size: checkboxSize)
+            let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, size.height - colorPicker.frame.height - checkboxSize.height - 10), size: checkboxSize)
             
             transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
         case .normal:
-            let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - checkboxSize.height - 10), size: checkboxSize)
+            let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, size.height - checkboxSize.height - 10 - buttonInset), size: checkboxSize)
             
             transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
 
-            transition.updateFrame(view: colorPicker, frame: CGRect(origin: NSMakePoint(0, frame.height), size: colorPickerSize))
+            transition.updateFrame(view: colorPicker, frame: CGRect(origin: NSMakePoint(0, size.height), size: colorPickerSize))
             
-            transition.updateFrame(view: patternsController.view, frame: .init(origin: NSMakePoint(0, frame.height), size: patternsSize))
+            transition.updateFrame(view: patternsController.view, frame: .init(origin: NSMakePoint(0, size.height), size: patternsSize))
             
-            transition.updateFrame(view: controlsBg, frame: .init(origin: NSMakePoint(0, frame.height), size: controlsSize))
+            transition.updateFrame(view: controlsBg, frame: .init(origin: NSMakePoint(0, size.height), size: controlsSize))
 
         }
         
         switch previewState {
         case .color:
-            let pickerRect = CGRect(origin: .init(x: 0, y: frame.height - colorPickerSize.height), size: colorPickerSize)
+            let pickerRect = CGRect(origin: .init(x: 0, y: size.height - colorPickerSize.height), size: colorPickerSize)
             transition.updateFrame(view: colorPicker, frame: pickerRect)
             
-            transition.updateFrame(view: patternsController.view, frame: .init(origin: NSMakePoint(0, frame.height), size: patternsSize))
+            transition.updateFrame(view: patternsController.view, frame: .init(origin: NSMakePoint(0, size.height), size: patternsSize))
 
             transition.updateFrame(view: controlsBg, frame: pickerRect)
+            
         case .pattern:
-            transition.updateFrame(view: colorPicker, frame: CGRect.init(origin: .init(x: 0, y: frame.height), size: colorPickerSize))
+            transition.updateFrame(view: colorPicker, frame: CGRect.init(origin: .init(x: 0, y: size.height), size: colorPickerSize))
             
             let patternsRect: CGRect = .init(origin: NSMakePoint(0, frame.height - patternsSize.height), size: patternsSize)
             
@@ -605,7 +719,12 @@ private final class WallpaperPreviewView: View {
             transition.updateFrame(view: controlsBg, frame: patternsRect)
 
         default:
-            break
+            var buttonY: CGFloat = size.height - 40 - 20
+            if let applyForPeer = applyForPeer {
+                transition.updateFrame(view: applyForPeer, frame: NSMakeRect(20, buttonY, size.width - 40, 40))
+                buttonY -= 50
+            }
+            transition.updateFrame(view: apply, frame: NSMakeRect(20, buttonY, size.width - 40, 40))
         }
         
         patternsController.genericView.updateLayout(size: patternsSize, transition: transition)
@@ -618,12 +737,17 @@ private final class WallpaperPreviewView: View {
             x += view.frame.width + 10
         }
 
+        
+        tableView.setFrameSize(documentSize)
+        tableView.reloadData(width: size.width)
+        
         switch previewState {
         case .color, .pattern:
-            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - colorPicker.frame.height - tableView.listHeight - 10 - 100), size: documentSize))
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - colorPicker.frame.height - tableView.listHeight), size: NSMakeSize(documentSize.width, tableView.listHeight)))
         case .normal:
-            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - tableView.listHeight - 10 - 120), size: documentSize))
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - tableView.listHeight - buttonInset), size: NSMakeSize(documentSize.width, tableView.listHeight)))
         }
+        
         
     }
     
@@ -1308,10 +1432,17 @@ class WallpaperPreviewController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.apply.set(handler: { [weak self] _ in
+            self?.applyAndClose()
+        }, for: .Click)
         
+        genericView.applyForPeer?.set(handler: { [weak self] _ in
+            self?.applyAndClose(bothPeer: true)
+        }, for: .Click)
         
         genericView.ready = { [weak self] in
             self?.readyOnce()
+            
         }
         
         genericView.updateState(synchronousLoad: true)
@@ -1349,13 +1480,18 @@ class WallpaperPreviewController: ModalViewController {
     }
     
 
-    private func applyAndClose() {
+    private func applyAndClose(bothPeer: Bool = false) {
         let context = self.context
         closeAllModals()
         self.onComplete?()
         
         let current = self.genericView.wallpaper
         let source = self.source
+        
+        if case .chat = source, !context.isPremium, bothPeer {
+            showModal(with: PremiumBoardingController(context: context, openFeatures: true), for: context.window)
+            return
+        }
         
         switch source {
         case .gallery, .link, .none:
@@ -1408,11 +1544,11 @@ class WallpaperPreviewController: ModalViewController {
         }
     }
     
-    override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: strings().wallpaperPreviewApply, accept: { [weak self] in
-            self?.applyAndClose()
-        }, drawBorder: true, height: 50)
-    }
+//    override var modalInteractions: ModalInteractions? {
+//        return ModalInteractions(acceptTitle: strings().wallpaperPreviewApply, accept: { [weak self] in
+//            self?.applyAndClose()
+//        }, drawBorder: true, height: 50)
+//    }
     override func initializer() -> NSView {
         return WallpaperPreviewView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), source: source, context: context, wallpaper: wallpaper);
     }

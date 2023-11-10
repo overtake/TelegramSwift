@@ -23,7 +23,7 @@ private final class ReactionsRowItem : GeneralRowItem {
     fileprivate let updateState:(Updated_ChatTextInputState)->Void
     fileprivate let placeholder: TextViewLayout
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, interactions: TextView_Interactions, viewType: GeneralViewType, state: Updated_ChatTextInputState, action: @escaping(Control)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, interactions: TextView_Interactions, viewType: GeneralViewType, state: Updated_ChatTextInputState, action: @escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
         self.context = context
         self._action = action
         self.updateState = updateState
@@ -45,13 +45,13 @@ private final class ReactionsRowItem : GeneralRowItem {
         attr.append(self.state.inputText)
         let str: NSMutableAttributedString = .init()
         let ph_width = placeholder.attributedString.sizeFittingWidth(.greatestFiniteMagnitude).width
-        while true {
-            str.append(string: clown, font: .normal(18))
-            if str.sizeFittingWidth(.greatestFiniteMagnitude).width >= ph_width {
-                break
-            }
-        }
-        attr.append(str)
+//        while true {
+//            str.append(string: clown, font: .normal(18))
+//            if str.sizeFittingWidth(.greatestFiniteMagnitude).width >= ph_width {
+//                break
+//            }
+//        }
+//        attr.append(str)
         attr.addAttribute(.font, value: NSFont.normal(18), range: attr.range)
         let size = attr.sizeFittingWidth(blockWidth)
         return size.height + 10 + (viewType.innerInset.top + viewType.innerInset.bottom - 10)
@@ -64,7 +64,7 @@ private final class ReactionsRowView: GeneralContainableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(inputView)
-        addSubview(overlay)
+        //addSubview(overlay)
         
         overlay.isSelectable = false
                 
@@ -210,10 +210,10 @@ private final class Arguments {
     let interactions: TextView_Interactions
     let toggleEnabled:()->Void
     let createPack:()->Void
-    let addReactions:(Control)->Void
+    let addReactions:(Control?)->Void
     let updateState:(Updated_ChatTextInputState)->Void
 
-    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
+    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
         self.context = context
         self.interactions = interactions
         self.toggleEnabled = toggleEnabled
@@ -225,6 +225,7 @@ private final class Arguments {
 
 private struct State : Equatable {
     var enabled: Bool = true
+    var available: AvailableReactions
     var state:Updated_ChatTextInputState = .init(inputText: .init())
     
     var selected: [TelegramMediaFile] {
@@ -233,7 +234,7 @@ private struct State : Equatable {
         
         for attribute in attributes {
             switch attribute {
-            case let .animated(_, _, _, file, _):
+            case let .animated(_, _, fileId, file, _):
                 if let file = file {
                     files.append(file)
                 }
@@ -243,12 +244,43 @@ private struct State : Equatable {
         }
         return files
     }
+    
+    var allowedReactions: PeerAllowedReactions {
+        var reactions: [MessageReaction.Reaction] = []
+        
+        let attributes = chatTextAttributes(from: state.inputText)
+        
+        for attribute in attributes {
+            switch attribute {
+            case let .animated(_, _, fileId, _, _):
+                if let builtin = available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) {
+                    reactions.append(builtin.value)
+                } else {
+                    reactions.append(.custom(fileId))
+                }
+            default:
+                break
+            }
+        }
+        return .limited(reactions)
+    }
+    
+    var customCount: Int {
+        var count: Int = 0
+        for file in selected {
+            if available.reactions.first(where: { $0.activateAnimation.fileId == file.fileId }) == nil {
+                count += 1
+            }
+        }
+        return count
+    }
 }
 
 
 
 private let _id_enabled = InputDataIdentifier("_id_enabled")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
+private let _id_add = InputDataIdentifier("_id_add")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -272,8 +304,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         //emojies
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emojies, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return ReactionsRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, viewType: .singleItem, state: state.state, action: arguments.addReactions, updateState: arguments.updateState)
+            return ReactionsRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, viewType: .firstItem, state: state.state, action: arguments.addReactions, updateState: arguments.updateState)
         }))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add, data: .init(name: "Add Reactions", color: theme.colors.text, type: .nextContext(""), viewType: .lastItem, action: {
+            arguments.addReactions(nil)
+        })))
         index += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can also [create your own]() emoji packs and use them.", linkHandler: { _ in
@@ -289,14 +326,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) -> InputDataController {
+func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
+    var close:(()->Void)? = nil
 
     let textInteractions = TextView_Interactions()
 
     
-    if let allowedReactions = allowedReactions, let availableReactions = availableReactions {
+    if let allowedReactions = allowedReactions {
         
         switch allowedReactions {
         case .all:
@@ -307,9 +345,16 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             }
         case let .limited(reactions):
             for reaction in reactions {
-                if let first = availableReactions.reactions.first(where: { $0.value == reaction }) {
+                switch reaction {
+                case .builtin:
+                    if let first = availableReactions.reactions.first(where: { $0.value == reaction }) {
+                        textInteractions.update { _ in
+                            return textInteractions.insertText(.makeAnimated(first.activateAnimation, text: first.value.string))
+                        }
+                    }
+                case let .custom(fileId):
                     textInteractions.update { _ in
-                        return textInteractions.insertText(.makeAnimated(first.activateAnimation, text: first.value.string))
+                        return textInteractions.insertText(.makeAnimated(fileId, text: clown))
                     }
                 }
             }
@@ -318,7 +363,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         }
     }
     
-    let initialState = State(state: textInteractions.presentation)
+    let initialState = State(available: availableReactions, state: textInteractions.presentation)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -393,6 +438,8 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         emojis?.setSelectedItems(state.selected.map { .init(source: .custom($0.fileId.id), type: .normal) })
     }))
     
+    var getControl:(()->Control?)? = nil
+
     
     let arguments = Arguments(context: context, interactions: textInteractions, toggleEnabled: {
         updateState { current in
@@ -404,9 +451,11 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         execute(inapp: inApp(for: "https://t.me/stickers", context: context, openInfo: { peerId, _, _, _ in
             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
         }))
+        close?()
     }, addReactions: { [weak emojis] control in
-        if let emojis = emojis {
-            showPopover(for: control, with: emojis, edge: .maxY, inset: NSMakePoint(0, -60))
+        let control = control ?? getControl?()
+        if let emojis = emojis, let control = control {
+            showPopover(for: control, with: emojis, edge: .maxY, inset: NSMakePoint(-325, -200))
         }
     }, updateState: { state in
         textInteractions.update { _ in
@@ -431,8 +480,59 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    controller.validateData = { _ in
+        
+        _ = showModalProgress(signal: context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: stateValue.with { $0.allowedReactions }), for: context.window).start(error: { error in
+            
+            switch error {
+            case .boostRequired:
+                
+                let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+                _ = signal.start(next: { peer in
+                    let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: context.window)
+                    
+                    _ = signal.start(next: { stats, myStatus in
+                        if let stats = stats {
+                            showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .reactions), for: context.window)
+                        }
+                    })
+                })
+            case .generic:
+                alert(for: context.window, info: strings().unknownError)
+            }
 
-    return controller
+            
+        }, completed: {
+            close?()
+            showModalText(for: context.window, text: "Reactions successfully updated")
+        })
+        return .none
+    }
+
+    
+    let modalInteractions = ModalInteractions(acceptTitle: "Update Reactions", accept: { [weak controller] in
+        _ = controller?.returnKeyAction()
+    }, singleButton: true)
+    
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(380, 300))
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
+    
+    controller.didLoaded = { controller, _ in
+        getControl = { [weak controller] in
+            let view = controller?.tableView.item(stableId: InputDataEntryId.general(_id_add))?.view as? GeneralInteractedRowView
+            return view?.textView
+        }
+    }
+    
+    close = { [weak modalController] in
+        modalController?.modal?.close()
+    }
+    
+    return modalController
     
 }
 

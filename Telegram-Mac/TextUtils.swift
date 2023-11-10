@@ -872,6 +872,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceChangedToSameWallpaper(authorName)
             }
+        case .joinedChannel:
+            text = strings().chatServiceJoinedChannel
+        case let .giveawayResults(winners):
+            text = strings().chatServiceGiveawayResultsCountable(Int(winners))
         }
     }
     return (text, entities, media)

@@ -245,7 +245,9 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
         #if DEBUG
-        pushViewController(ChannelReactionsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions))
+        if let availableReactions = availableReactions {
+            showModal(with: ChannelReactionsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions), for: context.window)
+        }
         #else
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
         #endif
@@ -1111,7 +1113,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussionDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoDiscussionDesc, viewType: viewType)
         case let .reactions(_, text, allowedReactions, availableReactions, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(""), viewType: viewType, action: {
                 arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
             })
         case let .color(_, peer, viewType):
