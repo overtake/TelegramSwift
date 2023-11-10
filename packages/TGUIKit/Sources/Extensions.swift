@@ -33,6 +33,21 @@ public extension NSAttributedString {
         return rect.size
     }
     
+    
+    func containsAttribute(attributeName: NSAttributedString.Key) -> Any? {
+        let range = NSRange(location: 0, length: self.length)
+        
+        var containsAttribute: Any? = nil
+        
+        self.enumerateAttribute(attributeName, in: range, options: []) { (value, _, _) in
+            if value != nil {
+                containsAttribute = value
+            }
+        }
+        
+        return containsAttribute
+    }
+    
     func CTSize(_ width:CGFloat, framesetter:CTFramesetter?) -> (CTFramesetter,NSSize) {
         
         var fs = framesetter
@@ -386,7 +401,7 @@ public extension NSMutableAttributedString {
                 // Remove leading whitespace
                 while rangeToModify.length > 0 {
                     let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
-                    if let firstChar = rangeString.first, firstChar.isWhitespace {
+                    if let firstChar = rangeString.first, firstChar.isNewline {
                         rangeToModify.location += 1
                         rangeToModify.length -= 1
                     } else {
@@ -397,16 +412,32 @@ public extension NSMutableAttributedString {
                 // Remove trailing whitespace
                 while rangeToModify.length > 0 {
                     let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
-                    if let lastChar = rangeString.last, lastChar.isWhitespace {
+                    if let lastChar = rangeString.last, lastChar.isNewline {
                         rangeToModify.length -= 1
                     } else {
                         break
                     }
                 }
-
                 if range != rangeToModify {
                     // Replace the original range with the modified range
                     mutableAttributedString.replaceCharacters(in: range, with: (mutableAttributedString.string as NSString).substring(with: rangeToModify))
+                }
+                
+                if rangeToModify.min != 0 {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
+                            rangeToModify.location += 1
+                        }
+                    }
+                }
+                if rangeToModify.max != mutableAttributedString.length {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
+                            rangeToModify.location -= 1
+                        }
+                    }
                 }
             }
         }

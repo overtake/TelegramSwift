@@ -1027,7 +1027,7 @@ public final class TextViewLayout : Equatable {
                     
                     layoutSize.height += blockQuote.headerInset
                     
-                    
+//                    NSLog("count: \(lines.count), attr: \(attributedString.string)")
                     isFirstFormattedLine = true
                 } else {
                     
@@ -1222,7 +1222,7 @@ public final class TextViewLayout : Equatable {
                     layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
-                    if let blockQuote = lineString.attribute(TextInputAttributes.quote, at: 0, effectiveRange: nil) as? TextViewBlockQuoteData {
+                    if let blockQuote = lineString.containsAttribute(attributeName: TextInputAttributes.quote) as? TextViewBlockQuoteData {
                         
                         let preformattedSpace = CGFloat(blockQuote.space) * 2
                         
@@ -1231,6 +1231,7 @@ public final class TextViewLayout : Equatable {
                         if isFirstFormattedLine {
                             frame.origin.y -= blockQuote.headerInset
                             frame.size.height += blockQuote.headerInset
+                            NSLog("\(lineString.string)")
                         }
                         blockQuotes.append(.init(frame: frame, range: NSMakeRange(lineRange.location, lineRange.length), colors: blockQuote.colors, isCode: blockQuote.isCode, header: blockQuote.header))
                     }
