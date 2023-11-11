@@ -3009,6 +3009,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     let value = layout.attributedString.attribute(TextInputAttributes.quote, at: i, effectiveRange: nil)
                     if value != nil {
                         quoteRange.length += 1
+                    } else {
+                        break
                     }
                 }
                 
