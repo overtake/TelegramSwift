@@ -426,44 +426,27 @@ public extension NSMutableAttributedString {
         
         fullRange = NSRange(location: 0, length: mutableAttributedString.length)
 
-        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
-            if let _ = value as? TextViewBlockQuoteData {
-                var rangeToModify = range
-                if rangeToModify.min != 0 {
-                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
-                        if !char.isNewline {
-                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
-                            rangeToModify.location += 1
-                        }
-                    }
-                }
-                if rangeToModify.max < mutableAttributedString.length {
-                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
-                        if !char.isNewline {
-                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
-                            rangeToModify.location -= 1
-                        }
-                    }
-                }
-                
-                if rangeToModify.min != 0 {
-                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
-                        if !char.isNewline {
-                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
-                            rangeToModify.location += 1
-                        }
-                    }
-                }
-                if rangeToModify.max != mutableAttributedString.length {
-                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
-                        if !char.isNewline {
-                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
-                            rangeToModify.location -= 1
-                        }
-                    }
-                }
-            }
-        }
+//        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
+//            if let _ = value as? TextViewBlockQuoteData {
+//                var rangeToModify = range
+//                if rangeToModify.min != 0 {
+//                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
+//                        if !char.isNewline {
+//                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
+//                            rangeToModify.location += 1
+//                        }
+//                    }
+//                }
+//                if rangeToModify.max < mutableAttributedString.length {
+//                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
+//                        if !char.isNewline {
+//                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
+//                            rangeToModify.location -= 1
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     

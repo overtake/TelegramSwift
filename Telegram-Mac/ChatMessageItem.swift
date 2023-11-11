@@ -407,7 +407,7 @@ class ChatMessageItem: ChatRowItem {
                  }
              })
              
-             copy.removeWhitespaceFromQuoteAttribute()
+             //copy.removeWhitespaceFromQuoteAttribute()
 
              
              if let ad = message.adAttribute {
