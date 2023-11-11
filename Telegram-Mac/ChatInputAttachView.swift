@@ -157,8 +157,47 @@ class ChatInputAttachView: ImageButton, Notifable {
                             canAddAttach = canAddAttach && attach.flags.contains(.showInAttachMenu)
                             
                             if canAddAttach {
-                                items.append(ContextMenuItem(attach.shortName, handler: { 
-                                    openWebBot(attach, context: context)
+                                let bot = attach
+                                items.append(ContextMenuItem(attach.shortName, handler: {
+                                    let open:()->Void = { [weak self] in
+                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer._asPeer().displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer._asPeer(), replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
+                                    }
+                                    
+                                    var description: ModalAlertData.Description? = nil
+                                    let installBot = !bot.flags.contains(.notActivated) && bot.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !bot.flags.contains(.showInAttachMenu)
+                                    
+                                    if installBot {
+                                        description = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: false)
+                                    }
+
+                                    
+                                    if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
+                                        var options: [ModalAlertData.Option] = []
+                                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: false, mandatory: true))
+                                        
+                                       
+                                        var description: ModalAlertData.Description? = nil
+                                        let installBot = !bot.flags.contains(.notActivated) && bot.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !bot.flags.contains(.showInAttachMenu)
+                                        
+                                        if installBot {
+                                            description = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: false)
+                                        }
+                                        
+                                        let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                        showModalAlert(for: context.window, data: data, completion: { result in
+                                            
+                                            _ = context.engine.messages.acceptAttachMenuBotDisclaimer(botId: bot.peer.id).start()
+                                            installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
+                                                if value, installBot {
+                                                    showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
+                                                }
+                                                open()
+                                            })
+                                        })
+                                    } else {
+                                        open()
+                                    }
+                                    
                                 }, itemImage: value))
                             }
                         }
