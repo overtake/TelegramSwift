@@ -790,7 +790,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             _ = signal.start(next: { stats, myStatus in
                 if let stats = stats {
                     if stats.level < channel_color_level_min {
-                        showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true), for: context.window)
+                        showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .color(channel_color_level_min)), for: context.window)
                     } else {
                         _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()
                         close?()

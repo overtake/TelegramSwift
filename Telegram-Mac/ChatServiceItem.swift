@@ -87,11 +87,15 @@ class ChatServiceItem: ChatRowItem {
         let aesthetic: TelegramWallpaper
         let peerId: PeerId
         let isIncoming: Bool
-        init(wallpaper: Wallpaper, aesthetic: TelegramWallpaper, peerId: PeerId, isIncoming: Bool) {
+        let forBoth: Bool
+        let installed: TelegramWallpaper?
+        init(wallpaper: Wallpaper, aesthetic: TelegramWallpaper, peerId: PeerId, isIncoming: Bool, forBoth: Bool, installed: TelegramWallpaper?) {
             self.wallpaper = wallpaper
             self.aesthetic = aesthetic
             self.peerId = peerId
             self.isIncoming = isIncoming
+            self.forBoth = forBoth
+            self.installed = installed
         }
         
         var height: CGFloat {
@@ -127,6 +131,7 @@ class ChatServiceItem: ChatRowItem {
             return 10 + 80 + 10 + text.layoutSize.height + 10
         }
     }
+    
     
     private(set) var giftData: GiftData? = nil
     private(set) var suggestPhotoData: SuggestPhotoData? = nil
@@ -822,11 +827,16 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                case let .setChatWallpaper(wallpaper):
+                case let .setChatWallpaper(wallpaper, forBoth):
                     
                     let text: String
                     if authorId == context.peerId {
-                        text = strings().chatServiceYouChangedWallpaper
+                        if forBoth {
+                            let peerName = message.peers[message.id.peerId]?.compactDisplayTitle ?? ""
+                            text = strings().chatServiceYouChangedWallpaperBoth(peerName)
+                        } else {
+                            text = strings().chatServiceYouChangedWallpaper
+                        }
                     } else {
                         text = strings().chatServiceChangedWallpaper(authorName)
                     }
@@ -837,7 +847,10 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId)
+                    
+                    let cachedData = entry.additionalData.cachedData?.data as? CachedUserData
+                    
+                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId, forBoth: forBoth, installed: cachedData?.wallpaper)
                 case .setSameChatWallpaper:
                     let text: String
                     if authorId == context.peerId {
@@ -864,10 +877,23 @@ class ChatServiceItem: ChatRowItem {
                 case .joinedChannel:
                     let text = strings().chatServiceJoinedChannel
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                    self.suggestChannelsData = .init(channels: [peer, peer, peer, peer, peer, peer, peer, peer, peer], presentation: theme)
-                case let .giveawayResults(winners):
-                    let text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                    if let recommendedChannels = entry.additionalData.recommendedChannels, !recommendedChannels.channels.isEmpty, !recommendedChannels.isHidden {
+                        self.suggestChannelsData = .init(channels: recommendedChannels, presentation: theme)
+                    }
+                case let .giveawayResults(winners, unclaimed):
+                    var text: String
+                    if winners == 0 {
+                        text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+                    } else if unclaimed > 0 {
+                        text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                        let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                        let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                        text = winnersString + "\n" + unclaimedString
+                    } else {
+                        text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                    }
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                 default:
                     break
                 }
@@ -906,10 +932,10 @@ class ChatServiceItem: ChatRowItem {
                     _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextOutgoing(name), color: grayTextColor, font: .normal(theme.fontSize))
                 }
                 
-                attributedString.insert(.initialize(string: "🤡", color: grayTextColor, font: .normal(theme.fontSize)), at: 0)
+                attributedString.insert(.initialize(string: clown, color: grayTextColor, font: .normal(theme.fontSize)), at: 0)
                 let file = LocalAnimatedSticker.expired_story.monochromeFile
                 
-                attributedString.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
+                attributedString.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: clown))), range: NSMakeRange(0, 2))
 
                 
             } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self), let peer = message.author, let peerReference = PeerReference(peer) {
@@ -945,6 +971,44 @@ class ChatServiceItem: ChatRowItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         return NSZeroSize
     }
+    
+    func removeBackground() {
+        if let id = self.message?.id.peerId {
+            _ = context.engine.themes.revertChatWallpaper(peerId: id).start()
+        }
+    }
+    
+    func openChannel(_ peerId: PeerId) {
+        guard let message = self.message else {
+            return
+        }
+        chatInteraction.openInfo(peerId, true, nil, nil)
+        
+        var jsonString: String = "{"
+        jsonString += "\"ref_channel_id\": \"\(message.id.peerId.id._internalGetInt64Value())\","
+        jsonString += "\"open_channel_id\": \"\(peerId.id._internalGetInt64Value())\""
+        jsonString += "}"
+        
+        if let data = jsonString.data(using: .utf8), let json = JSON(data: data) {
+            addAppLogEvent(postbox: context.account.postbox, type: "channels.open_recommended_channel", data: json)
+        }
+        
+    }
+    func dismissRecommendedChannels() {
+        guard let message = self.message else {
+            return
+        }
+        _ = context.engine.peers.toggleRecommendedChannelsHidden(peerId: message.id.peerId, hidden: true).start()
+    }
+    func revealRecommendedChannels() {
+        guard let message = self.message else {
+            return
+        }
+        if let data = self.entry.additionalData.recommendedChannels {
+            _ = context.engine.peers.toggleRecommendedChannelsHidden(peerId: message.id.peerId, hidden: !data.isHidden).start()
+        }
+    }
+
     
     override var isBubbled: Bool {
         return presentation.wallpaper.wallpaper != .none && super.isBubbled
@@ -1458,7 +1522,7 @@ class ChatServiceRowView: TableRowView {
             
             let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
             
-            let settings = TelegramThemeSettings.init(baseTheme: .classic, accentColor: 0, outgoingAccentColor: nil, messageColors: [], animateMessageColors: false, wallpaper: data.aesthetic)
+            let settings = TelegramThemeSettings(baseTheme: .classic, accentColor: 0, outgoingAccentColor: nil, messageColors: [], animateMessageColors: false, wallpaper: data.aesthetic)
             
             wallpaper.setSignal(signal: cachedMedia(media: settings, arguments: arguments, scale: System.backingScale), clearInstantly: mediaUpdated)
             
@@ -1473,7 +1537,20 @@ class ChatServiceRowView: TableRowView {
             viewButton.set(font: .normal(.text), for: .Normal)
             viewButton.set(color: item.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
             viewButton.set(background: item.shouldBlurService ? item.presentation.chatServiceItemColor.withAlphaComponent(0.5) : item.presentation.colors.accent, for: .Normal)
-            viewButton.set(text: data.isIncoming ? strings().chatServiceViewBackground : strings().chatServiceUpdateBackground, for: .Normal)
+            
+            
+            let text: String
+            if data.isIncoming {
+                if data.forBoth, data.installed?.isBasicallyEqual(to: data.aesthetic) == true {
+                    text = strings().chatServiceRemoveBackground
+                } else {
+                    text = strings().chatServiceViewBackground
+                }
+            } else {
+                text = strings().chatServiceUpdateBackground
+            }
+            
+            viewButton.set(text: text, for: .Normal)
             viewButton.sizeToFit(NSMakeSize(20, 12))
             
             viewButton.layer?.cornerRadius = viewButton.frame.height / 2
@@ -1696,7 +1773,9 @@ class ChatServiceRowView: TableRowView {
 
         textView.set(handler: { [weak self] control in
             if let item = self?.item as? ChatServiceItem {
-                if let message = item.message, let action = message.extendedMedia as? TelegramMediaAction {
+                if let _ = item.entry.additionalData.recommendedChannels {
+                    item.revealRecommendedChannels()
+                } else if let message = item.message, let action = message.extendedMedia as? TelegramMediaAction {
                     switch action.action {
                     case let .messageAutoremoveTimeoutUpdated(timeout, _):
                         if let peer = item.chatInteraction.peer {
@@ -1947,13 +2026,17 @@ class ChatServiceRowView: TableRowView {
                 
                 let open: (Control)->Void = { [weak self] _ in
                     if let item = self?.item as? ChatServiceItem, let messageId = item.message?.id, let data = item.wallpaperData {
-                        if data.isIncoming {
-                            let chatInteraction = item.chatInteraction
-                            showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] in
-                                chatInteraction?.closeChatThemes()
-                            }), for: item.context.window)
+                        if data.forBoth, data.installed?.isBasicallyEqual(to: data.aesthetic) == true, data.isIncoming {
+                            item.removeBackground()
                         } else {
-                            item.chatInteraction.setupChatThemes()
+                            if data.isIncoming {
+                                let chatInteraction = item.chatInteraction
+                                showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] in
+                                    chatInteraction?.closeChatThemes()
+                                }), for: item.context.window)
+                            } else {
+                                item.chatInteraction.setupChatThemes()
+                            }
                         }
                     }
                 }
@@ -1997,12 +2080,17 @@ class ChatServiceRowView: TableRowView {
                 current = ChatChannelSuggestView(frame: data.size.bounds)
                 self.suggestChannelsView = current
                 addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2, timingFunction: .easeOut)
+                }
             }
             current.setFrameSize(data.size)
             current.set(item: item, data: data, animated: animated)
         } else if let view = self.suggestChannelsView {
             performSubviewRemoval(view, animated: animated, scale: true)
-            self.storyView = nil
+            self.suggestChannelsView = nil
         }
 
         

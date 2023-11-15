@@ -135,8 +135,8 @@ final class ChatGiveawayRowItem : ChatRowItem {
         for peerId in media.channelPeerIds {
             if let peer = object.message?.peers[peerId] {
                 
-                let color = wpPresentation.activity.main
-                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color, font: .medium(.text)), maximumNumberOfLines: 1), rect: .zero))
+                let color = context.peerNameColors.get(peer.nameColor ?? .blue)
+                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color.main, font: .medium(.text)), maximumNumberOfLines: 1), rect: .zero))
             }
         }
         self.channels = channels
@@ -191,6 +191,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
             }
             
             var ok: String = strings().alertOK
+            var disclaimer: String? = nil
             var cancel: String? = nil
             var prizeSlug: String? = nil
             
@@ -315,7 +316,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
                     openSlug(prizeSlug)
                 })
             } else {
-                alert(for: context.window, header: title, info: text)
+                alert(for: context.window, header: title, info: text, ok: ok, disclaimer: warning)
             }
         })
     }
@@ -378,7 +379,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         var i: Int = 0
         for line in lines {
-            var line_w: CGFloat = line.last!.rect.maxX
+            let line_w: CGFloat = line.last!.rect.maxX
             let startX = floorToScreenPixels(System.backingScale, (w - line_w) / 2)
             if line.count == 1 {
                 channels[i].rect.origin.x = startX
@@ -465,7 +466,9 @@ private final class ChatGiveawayRowView: ChatRowView {
             self.avatar.setPeer(account: item.context.account, peer: channel.peer)
             self.textView.update(channel.text)
             
-            self.backgroundColor = presentation.activity.main.withAlphaComponent(0.2)
+            let color = item.context.peerNameColors.get(channel.peer.nameColor ?? .blue)
+            
+            self.backgroundColor = color.main.withAlphaComponent(0.2)
             self.setFrameSize(channel.size)
             self.layer?.cornerRadius = frame.height / 2
             

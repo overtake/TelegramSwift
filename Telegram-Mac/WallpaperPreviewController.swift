@@ -1481,17 +1481,18 @@ class WallpaperPreviewController: ModalViewController {
     
 
     private func applyAndClose(bothPeer: Bool = false) {
+       
+        if case .chat = source, !context.isPremium, bothPeer {
+            showModal(with: PremiumBoardingController(context: context, openFeatures: true), for: context.window)
+            return
+        }
+        
         let context = self.context
         closeAllModals()
         self.onComplete?()
         
         let current = self.genericView.wallpaper
         let source = self.source
-        
-        if case .chat = source, !context.isPremium, bothPeer {
-            showModal(with: PremiumBoardingController(context: context, openFeatures: true), for: context.window)
-            return
-        }
         
         switch source {
         case .gallery, .link, .none:
@@ -1525,13 +1526,13 @@ class WallpaperPreviewController: ModalViewController {
                 case let .image(represenations, settings):
                     if let peerId = source.peerId {
                         let temporaryWallpaper: TelegramWallpaper = .image(represenations, settings)
-                        context.account.pendingPeerMediaUploadManager.add(peerId: peerId, content: .wallpaper(temporaryWallpaper))
+                        context.account.pendingPeerMediaUploadManager.add(peerId: peerId, content: .wallpaper(wallpaper: temporaryWallpaper, forBoth: bothPeer))
                     }
                     complete = .complete()
                 default:
                     switch source {
                     case let .chat(peer, _):
-                        complete = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: current.cloudWallpaper) |> `catch` { _ in return .complete() }
+                        complete = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: current.cloudWallpaper, forBoth: bothPeer) |> `catch` { _ in return .complete() }
                     case let .message(messageId, _):
                         complete = context.engine.themes.setExistingChatWallpaper(messageId: messageId, settings: current.settings) |> `catch` { _ in return .complete() } |> ignoreValues
                     default:
@@ -1572,6 +1573,10 @@ class WallpaperPreviewController: ModalViewController {
     
     private var genericView: WallpaperPreviewView {
         return self.view as! WallpaperPreviewView
+    }
+    
+    override var hasBorder: Bool {
+        return false
     }
     
 }

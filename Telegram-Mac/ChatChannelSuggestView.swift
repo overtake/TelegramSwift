@@ -19,24 +19,28 @@ final class ChannelSuggestData {
     struct Channel {
         let peer: Peer
         let name: TextViewLayout
+        let subscribers: TextViewLayout
         var size: NSSize {
-            return NSMakeSize(avatarSize.width + 20, avatarSize.height + name.layoutSize.height + 4 + 10)
+            return NSMakeSize(avatarSize.width + 20, avatarSize.height + name.layoutSize.height + subscribers.layoutSize.height + 4 + 10)
         }
     }
     
     private(set) var channels:[Channel] = []
     private(set) var size: NSSize = .zero
     
-    init(channels: [Peer], presentation: TelegramPresentationTheme) {
+    init(channels: RecommendedChannels, presentation: TelegramPresentationTheme) {
         var list: [Channel] = []
-        for channel in channels {
+        for channel in channels.channels {
             let attr = NSMutableAttributedString()
-            attr.append(string: channel.displayTitle, color: presentation.colors.text, font: .normal(.short))
-            attr.append(string: "\n")
-            attr.append(string: Int.random(in: 100000..<10000000).prettyNumber, color: presentation.colors.grayText, font: .normal(.small))
-            let name = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
+            attr.append(string: channel.peer._asPeer().displayTitle, color: presentation.colors.text, font: .normal(.short))
+            let name = TextViewLayout(attr, maximumNumberOfLines: 1, alignment: .center)
             name.measure(width: avatarSize.width + 20)
-            let value = Channel(peer: channel, name: name)
+            
+            let subscribers: TextViewLayout = .init(.initialize(string: Int(channel.subscribers).prettyNumber, color: presentation.colors.grayText, font: .normal(.small)), maximumNumberOfLines: 1, alignment: .center)
+            subscribers.measure(width: avatarSize.width + 20)
+
+            
+            let value = Channel(peer: channel.peer._asPeer(), name: name, subscribers: subscribers)
             list.append(value)
         }
         self.channels = list
@@ -54,11 +58,13 @@ final class ChannelSuggestData {
 private final class ChannelView : Control {
     private let avatar = AvatarControl(font: .avatar(17))
     private let textView = TextView()
+    private let subscribers = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         avatar.setFrameSize(avatarSize)
         addSubview(avatar)
         addSubview(textView)
+        addSubview(subscribers)
         
         avatar.userInteractionEnabled = false
         textView.userInteractionEnabled = false
@@ -74,12 +80,14 @@ private final class ChannelView : Control {
     func set(channel: ChannelSuggestData.Channel, context: AccountContext, animated: Bool) {
         avatar.setPeer(account: context.account, peer: channel.peer)
         textView.update(channel.name)
+        subscribers.update(channel.subscribers)
     }
     
     override func layout() {
         super.layout()
         avatar.centerX(y: 0)
         textView.centerX(y: avatar.frame.maxY + 4)
+        subscribers.centerX(y: textView.frame.maxY)
     }
 }
 
@@ -88,6 +96,7 @@ final class ChatChannelSuggestView : Control {
     private let dismiss = ImageButton()
     private let container = View(frame: .zero)
     private let scrollView = HorizontalScrollView(frame: .zero)
+    private let bgLayer = SimpleShapeLayer()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
@@ -101,6 +110,12 @@ final class ChatChannelSuggestView : Control {
         
         scrollView.documentView = container
         
+//        self.layer = bgLayer
+//        
+//        bgLayer.backgroundColor = NSColor.red.cgColor
+//        
+//        bgLayer.frame = frameRect.size.bounds
+        
     }
     
     required init?(coder: NSCoder) {
@@ -109,7 +124,8 @@ final class ChatChannelSuggestView : Control {
     
     func set(item: ChatServiceItem, data: ChannelSuggestData, animated: Bool) {
         
-        let layout = TextViewLayout(.initialize(string: "Similar Values", color: item.presentation.colors.text, font: .medium(.text)))
+        //TODO LANG
+        let layout = TextViewLayout(.initialize(string: "Similar Channels", color: item.presentation.colors.text, font: .medium(.text)))
         layout.measure(width: .greatestFiniteMagnitude)
         
         titleView.update(layout)
@@ -127,8 +143,17 @@ final class ChatChannelSuggestView : Control {
             x += view.frame.width
             container.addSubview(view)
             view.set(channel: channel, context: item.context, animated: animated)
+            
+            view.set(handler: { [weak item] _ in
+                item?.openChannel(channel.peer.id)
+            }, for: .Click)
         }
         container.setFrameSize(NSMakeSize(container.subviewsWidthSize.width + 20, container.subviewsWidthSize.height))
+        
+        dismiss.removeAllHandlers()
+        dismiss.set(handler: { [weak item] _ in
+            item?.dismissRecommendedChannels()
+        }, for: .Click)
     }
     
     override func layout() {

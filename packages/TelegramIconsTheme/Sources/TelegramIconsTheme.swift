@@ -7571,6 +7571,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_channel_stats: CGImage {
+      if let image = cached.with({ $0["profile_channel_stats"] }) {
+          return image
+      } else {
+          let image = _profile_channel_stats()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_channel_stats"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var profile_removed: CGImage {
       if let image = cached.with({ $0["profile_removed"] }) {
           return image
@@ -10520,6 +10533,7 @@ public final class TelegramIconsTheme {
   private let _profile_requests: ()->CGImage
   private let _profile_reactions: ()->CGImage
   private let _profile_channel_color: ()->CGImage
+  private let _profile_channel_stats: ()->CGImage
   private let _profile_removed: ()->CGImage
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
@@ -11286,6 +11300,7 @@ public final class TelegramIconsTheme {
       profile_requests: @escaping()->CGImage,
       profile_reactions: @escaping()->CGImage,
       profile_channel_color: @escaping()->CGImage,
+      profile_channel_stats: @escaping()->CGImage,
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
       destruct_clear_history: @escaping()->CGImage,
@@ -12051,6 +12066,7 @@ public final class TelegramIconsTheme {
       self._profile_requests = profile_requests
       self._profile_reactions = profile_reactions
       self._profile_channel_color = profile_channel_color
+      self._profile_channel_stats = profile_channel_stats
       self._profile_removed = profile_removed
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history

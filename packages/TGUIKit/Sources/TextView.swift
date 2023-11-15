@@ -3001,8 +3001,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 return
             }
             if let blockHeader = blockHeaderRects.first(where: { $0.0.contains(point) }) {
-                var quoteRange = NSMakeRange(0, 0)
-                let _ = layout.attributedString.attribute(TextInputAttributes.quote, at: blockHeader.1.location, effectiveRange: &quoteRange)
+                var quoteRange = blockHeader.1
+                
+                for i in blockHeader.1.max ..< layout.attributedString.length {
+                    let value = layout.attributedString.attribute(TextInputAttributes.quote, at: i, effectiveRange: nil)
+                    if value != nil {
+                        quoteRange.length += 1
+                    } else {
+                        break
+                    }
+                }
+                
                 
                 let string = layout.attributedString.attributedSubstring(from: quoteRange)
                 _ = layout.interactions.copyToClipboard?(string.string)

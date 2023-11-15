@@ -2618,6 +2618,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_requests: {NSImage(named: "Icon_Profile_Requests")!.precomposed(palette.accent, flipVertical: true)},
                                                profile_reactions: { NSImage(named: "Icon_PeerInfo_Reactions")!.precomposed(flipVertical: true) },
                                                 profile_channel_color: { NSImage(named: "Icon_PeerInfo_ChannelColor")!.precomposed(flipVertical: true) },
+                                               profile_channel_stats: { NSImage(named: "Icon_Profile_Channel_Stats")!.precomposed(flipVertical: true) },
                                                profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
                                                profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)},
                                                destruct_clear_history: { NSImage(named: "Icon_ClearChat")!.precomposed(palette.redUI, flipVertical: true) },

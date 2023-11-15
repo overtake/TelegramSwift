@@ -646,6 +646,7 @@ func initialize() -> [String] {
     array.append("profile_requests")
     array.append("profile_reactions")
     array.append("profile_channel_color")
+    array.append("profile_channel_stats")
 
     array.append("profile_removed")
     array.append("profile_links")

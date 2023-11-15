@@ -215,7 +215,7 @@ class ChatWallpaperModalController: ModalViewController {
                 close()
                 switch source {
                 case let .chat(peer, _):
-                    _ = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: nil).start()
+                    _ = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: nil, forBoth: false).start()
                 default:
                     delay(0.2, closure: {
                         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in

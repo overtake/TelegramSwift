@@ -123,10 +123,10 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String? = nil, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
+func alert(for window:Window, header:String? = nil, info:String?, ok: String = strings().modalOK, disclaimer: String? = nil, completion: (()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
     
     
-    let data = ModalAlertData(title: header, info: info ?? "", options: [])
+    let data = ModalAlertData(title: header, info: info ?? "", ok: ok, options: [], disclaimer: disclaimer)
     
     showModalAlert(for: window, data: data, completion: { _ in
         completion?()
