@@ -259,7 +259,7 @@ final class ChannelCommentsRenderData {
     
     let _title: [Text]
     let peers:[Avatar]
-    let drawBorder: Bool
+    var drawBorder: Bool
     let context: AccountContext
     let message: Message?
     let hasUnread: Bool

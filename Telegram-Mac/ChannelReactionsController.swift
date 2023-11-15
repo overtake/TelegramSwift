@@ -228,16 +228,17 @@ private struct State : Equatable {
     var available: AvailableReactions
     var state:Updated_ChatTextInputState = .init(inputText: .init())
     
-    var selected: [TelegramMediaFile] {
+    var stats: ChannelBoostStatus?
+    var myStatus: MyBoostStatus?
+    
+    var selected: [Int64] {
         let attributes = chatTextAttributes(from: state.inputText)
-        var files:[TelegramMediaFile] = []
+        var files:[Int64] = []
         
         for attribute in attributes {
             switch attribute {
             case let .animated(_, _, fileId, file, _):
-                if let file = file {
-                    files.append(file)
-                }
+                files.append(fileId)
             default:
                 break
             }
@@ -267,8 +268,8 @@ private struct State : Equatable {
     
     var customCount: Int {
         var count: Int = 0
-        for file in selected {
-            if available.reactions.first(where: { $0.activateAnimation.fileId == file.fileId }) == nil {
+        for fileId in selected {
+            if available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) == nil {
                 count += 1
             }
         }
@@ -303,10 +304,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
         
         //emojies
+        
+        let error: InputDataValueError?
+        if state.customCount > 0, let stats = state.stats, stats.level < state.customCount {
+            error = .init(description: "\(state.customCount) Boost Level Required", target: .data)
+        } else {
+            error = nil
+        }
+        if let error = error {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.description), data: .init(color: theme.colors.redUI, viewType: .textTopItem)))
+            index += 1
+        }
+
+        
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emojies, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return ReactionsRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, viewType: .firstItem, state: state.state, action: arguments.addReactions, updateState: arguments.updateState)
         }))
         index += 1
+        
+       
         
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add, data: .init(name: "Add Reactions", color: theme.colors.text, type: .nextContext(""), viewType: .lastItem, action: {
             arguments.addReactions(nil)
@@ -317,6 +333,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.createPack()
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
+        
     }
    
     
@@ -393,7 +410,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         return false
     }
     
-    let emojis = EmojiesController(context, mode: .channelReactions, selectedItems: initialState.selected.map { .init(source: .custom($0.fileId.id), type: .normal) })
+    let emojis = EmojiesController(context, mode: .channelReactions, selectedItems: initialState.selected.map { .init(source: .custom($0), type: .normal) })
     emojis._frameRect = NSMakeRect(0, 0, 350, 300)
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
     emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
@@ -435,7 +452,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     }
     
     actionsDisposable.add((statePromise.get() |> deliverOnMainQueue).start(next: { [weak emojis] state in
-        emojis?.setSelectedItems(state.selected.map { .init(source: .custom($0.fileId.id), type: .normal) })
+        emojis?.setSelectedItems(state.selected.map { .init(source: .custom($0), type: .normal) })
     }))
     
     var getControl:(()->Control?)? = nil
@@ -490,13 +507,12 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
                 
                 let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
                 _ = signal.start(next: { peer in
-                    let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: context.window)
                     
-                    _ = signal.start(next: { stats, myStatus in
-                        if let stats = stats {
-                            showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .reactions), for: context.window)
-                        }
-                    })
+                    let stats = stateValue.with { $0.stats }
+                    let myStatus = stateValue.with { $0.myStatus }
+                    if let stats = stats {
+                        showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .reactions), for: context.window)
+                    }
                 })
             case .generic:
                 alert(for: context.window, info: strings().unknownError)
@@ -505,10 +521,20 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             
         }, completed: {
             close?()
+            //TODOLANG
             showModalText(for: context.window, text: "Reactions successfully updated")
         })
         return .none
     }
+    
+    actionsDisposable.add(combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()).start(next: { stats, myStatus in
+        updateState { current in
+            var current = current
+            current.stats = stats
+            current.myStatus = myStatus
+            return current
+        }
+    }))
 
     
     let modalInteractions = ModalInteractions(acceptTitle: "Update Reactions", accept: { [weak controller] in

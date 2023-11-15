@@ -874,8 +874,18 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case .joinedChannel:
             text = strings().chatServiceJoinedChannel
-        case let .giveawayResults(winners):
-            text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+        case let .giveawayResults(winners, unclaimed):
+            if winners == 0 {
+                text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+            } else if unclaimed > 0 {
+                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                text = winnersString + "\n" + unclaimedString
+            } else {
+                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+            }
+
         }
     }
     return (text, entities, media)

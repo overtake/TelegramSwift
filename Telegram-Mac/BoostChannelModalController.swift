@@ -172,6 +172,7 @@ private struct State : Equatable {
     
     var samePeer: Bool
     var infoOnly: Bool
+    var source: BoostChannelSource
     var percentToNext: CGFloat {
         if let nextLevelBoosts = status.nextLevelBoosts {
             return CGFloat(status.boosts - status.currentLevelBoosts) / CGFloat(nextLevelBoosts - status.currentLevelBoosts)
@@ -209,10 +210,15 @@ private struct State : Equatable {
         
         if isAdmin {
             if let _ = remaining {
-                if level == 0 {
-                    title = strings().channelBoostEnableStories
-                } else {
-                    title = strings().channelBoostIncreaseLimit
+                switch source {
+                case .color:
+                    title = strings().channelBoostEnableColors
+                default:
+                    if level == 0 {
+                        title = strings().channelBoostEnableStories
+                    } else {
+                        title = strings().channelBoostIncreaseLimit
+                    }
                 }
             } else {
                 title = strings().channelBoostMaxLevelReached
@@ -269,10 +275,15 @@ private final class BoostRowItem : TableRowItem {
             if state.isAdmin {
                 if let remaining = remaining {
                     let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
-                    if level == 0 {
-                        string = strings().channelBoostEnableStoriesText(valueString)
-                    } else {
-                        string = strings().channelBoostIncreaseLimitText(valueString, "\(level + 1)")
+                    switch state.source {
+                    case let .color(level):
+                        string = strings().channelBoostEnableColorsText("\(level)")
+                    default:
+                        if level == 0 {
+                            string = strings().channelBoostEnableStoriesText(valueString)
+                        } else {
+                            string = strings().channelBoostIncreaseLimitText(valueString, "\(level + 1)")
+                        }
                     }
                 } else {
                     string = ""
@@ -881,10 +892,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-enum BoostChannelSource {
+enum BoostChannelSource : Equatable {
     case basic
     case story
     case reactions
+    case color(Int32)
 }
 
 func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, source: BoostChannelSource = .basic) -> InputDataModalController {
@@ -895,7 +907,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
     
     actionsDisposable.add(updateDisposable)
 
-    let initialState = State(peer: .init(peer), status: boosts, myStatus: myStatus, samePeer: context.globalLocationId == .peer(peer.id), infoOnly: infoOnly)
+    let initialState = State(peer: .init(peer), status: boosts, myStatus: myStatus, samePeer: context.globalLocationId == .peer(peer.id), infoOnly: infoOnly, source: source)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

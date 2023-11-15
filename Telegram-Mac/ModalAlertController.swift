@@ -62,6 +62,7 @@ private final class RowItem : TableRowItem {
     fileprivate let state: State
     fileprivate var info: TextViewLayout?
     fileprivate var desc: Description?
+    fileprivate var disclaimer: TextViewLayout?
     fileprivate let options: [Option]
     fileprivate let toggle: (Int)->Void
     fileprivate let action:()->Void
@@ -86,6 +87,11 @@ private final class RowItem : TableRowItem {
             self.info = nil
         }
         
+        if let disclaimer = state.data.disclaimer {
+            self.disclaimer = .init(.initialize(string: disclaimer, color: presentation.colors.redUI, font: .medium(.text)), alignment: .center)
+        } else {
+            self.disclaimer = nil
+        }
         
         
         if let desc = state.data.description {
@@ -128,6 +134,8 @@ private final class RowItem : TableRowItem {
         
         info?.measure(width: width - 40)
         
+        disclaimer?.measure(width: width - 40 - 20)
+        
         for option in options {
             option.text.measure(width: width - 40 - 40)
         }
@@ -159,8 +167,14 @@ private final class RowItem : TableRowItem {
             }
         }
         
+        if let disclaimer = disclaimer {
+            height += disclaimer.layoutSize.height + 10
+            height += 20
+        }
+        
         height += 40 //button
         height += 20
+        
 
         return height
     }
@@ -238,6 +252,28 @@ private final class RowView : TableRowView {
         }
     }
     
+    private final class DisclaimerView : View {
+        private let textView = TextView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(textView)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(text: TextViewLayout) {
+            self.textView.update(text)
+            self.setFrameSize(text.layoutSize.bounds.insetBy(dx: -5, dy: -5).size)
+        }
+        
+        override func layout() {
+            super.layout()
+            self.textView.center()
+        }
+    }
+    
     private let infoView = TextView()
     private let button = TitleButton(frame: .zero)
     
@@ -246,6 +282,8 @@ private final class RowView : TableRowView {
     private let optionsView = View()
     
     private var descriptionView:TextView?
+    
+    private var disclaimer: DisclaimerView?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -369,6 +407,32 @@ private final class RowView : TableRowView {
             self.descriptionView = nil
         }
         
+        if let disclaimer = item.disclaimer {
+            let current: DisclaimerView
+            let isNew: Bool
+            if let view = self.disclaimer {
+                current = view
+                isNew = false
+            } else {
+                current = DisclaimerView(frame: .zero)
+                self.disclaimer = current
+                addSubview(current)
+                isNew = true
+            }
+            current.set(text: disclaimer)
+            current.layer?.cornerRadius = .cornerRadius
+            current.backgroundColor = item.presentation.colors.redUI.withAlphaComponent(0.2)
+            if isNew {
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                }
+            }
+        } else if let view = self.disclaimer {
+            performSubviewRemoval(view, animated: animated, duration: 0.2, scale: true)
+            self.disclaimer = nil
+        }
+        
         button.set(background: item.presentation.colors.accent, for: .Normal)
         button.set(font: .medium(.text), for: .Normal)
         button.set(text: item.state.data.ok, for: .Normal)
@@ -435,11 +499,14 @@ private final class RowView : TableRowView {
             y += view.frame.height
             y += 10
         }
-        
-        if let descriptionView = descriptionView {
-            transition.updateFrame(view: descriptionView, frame: descriptionView.centerFrameX(y: button.frame.minY - 10 - descriptionView.frame.height))
+        if let disclaimer = disclaimer {
+            transition.updateFrame(view: disclaimer, frame: disclaimer.centerFrameX(y: button.frame.minY - 20 - disclaimer.frame.height))
         }
-        
+        if let descriptionView = descriptionView {
+            let y = disclaimer?.frame.minY ?? button.frame.minY
+            transition.updateFrame(view: descriptionView, frame: descriptionView.centerFrameX(y: y - 10 - descriptionView.frame.height))
+        }
+       
     }
 }
 
@@ -476,6 +543,8 @@ struct ModalAlertData : Equatable {
     var options:[Option] = []
     var mode: Mode = .alert
     
+    var disclaimer: String?
+    
     var hasClose: Bool {
         switch mode {
         case .alert:
@@ -491,7 +560,7 @@ struct ModalAlertResult : Equatable {
 }
 
 private func minimumSize(_ data: ModalAlertData) -> NSSize {
-    var ok = NSAttributedString.initialize(string: data.ok, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
+    let ok = NSAttributedString.initialize(string: data.ok, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
     
     var cancel: CGFloat = 0
     if case let .confirm(text, _) = data.mode {

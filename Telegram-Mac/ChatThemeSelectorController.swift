@@ -376,7 +376,7 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         }, for: .Click)
         
         genericView.resetBg = { [weak self] in
-            _ = context.engine.themes.setChatWallpaper(peerId: peerId, wallpaper: nil).start()
+            _ = context.engine.themes.setChatWallpaper(peerId: peerId, wallpaper: nil, forBoth: false).start()
             self?.close(true)
         }
         genericView.acceptTheme = { [weak self] in

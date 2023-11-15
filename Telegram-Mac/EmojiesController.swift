@@ -702,10 +702,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
             }
         } else {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                return SearchEmptyRowItem(initialSize, stableId: stableId, customTheme: .init(backgroundColor: .clear))
-            }))
-            index += 1
+            if state.sections.isEmpty {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                    return SearchEmptyRowItem(initialSize, stableId: stableId, customTheme: .init(backgroundColor: .clear))
+                }))
+                index += 1
+            }
+           
         }
         
     } else {
@@ -911,47 +914,47 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
         }
         
-        for section in state.sections {
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
-                return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
-            }))
-            index += 1
-            
-            
-            struct Tuple : Equatable {
-                let section: State.Section
-                let isPremium: Bool
-                let revealed: Bool
-                let selectedItems:[EmojiesSectionRowItem.SelectedItem]
-                let items: [StickerPackItem]
-                let index: String
-                let color: NSColor?
-            }
-            
-            var tuples:[Tuple] = []
-            
-            let chunks = section.items.chunks(24)
-            var string: String = "a"
-            
-            for (i, items) in chunks.enumerated() {
-                tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: string, color: state.color))
-                string += "a"
-            }
-            for tuple in tuples {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
-                        arguments.viewSet(info)
-                    }, showAllItems: {
-                        arguments.showAllItems(section.info.id.id)
-                    }, openPremium: arguments.openPremium, installPack: arguments.installPack)
-                }))
-                index += 1
-            }
-            
-        }
     }
     
+    for section in state.sections {
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
+            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
+        }))
+        index += 1
+        
+        struct Tuple : Equatable {
+            let section: State.Section
+            let isPremium: Bool
+            let revealed: Bool
+            let selectedItems:[EmojiesSectionRowItem.SelectedItem]
+            let items: [StickerPackItem]
+            let index: String
+            let color: NSColor?
+        }
+        
+        var tuples:[Tuple] = []
+        //NSLog("name: \(section.info.title), count: \(section.items.count), \(section.items.map { $0.file.customEmojiText })")
+
+        let chunks = section.items.chunks(24)
+        var string: String = "a"
+        
+        for (i, items) in chunks.enumerated() {
+            tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: string, color: state.color))
+            string += "a"
+        }
+        for tuple in tuples {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
+                    arguments.viewSet(info)
+                }, showAllItems: {
+                    arguments.showAllItems(section.info.id.id)
+                }, openPremium: arguments.openPremium, installPack: arguments.installPack)
+            }))
+            index += 1
+        }
+        
+    }
     
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("bottom_section"), equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -2340,7 +2343,17 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let featured: Signal<[FeaturedStickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks()
         
-        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories, availableReactions in
+        let foundSets: Signal<(FoundStickerSets?, String), NoError> = searchValue.get()
+        |> map { $0.request }
+        |> mapToSignal { query in
+            if query.isEmpty {
+                return .single((nil, query))
+            } else {
+                return context.engine.stickers.searchEmojiSetsRemotely(query: query) |> map(Optional.init) |> map { ($0, query) } |> delay(0.2, queue: .concurrentDefaultQueue()) 
+            }
+        }
+        
+        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories, context.reactions.stateValue, foundSets).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories, availableReactions, foundSets in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -2414,56 +2427,91 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 var current = current
                 var sections: [State.Section] = []
                 var itemsDict: [MediaId: StickerPackItem] = [:]
-                for (_, info, _) in view.collectionInfos {
-                    var files: [StickerPackItem] = []
-                    var dict: [MediaId: StickerPackItem] = [:]
-                    
-                    if let info = info as? StickerPackCollectionInfo {
-                        let items = view.entries
-                        for (i, entry) in items.enumerated() {
-                            if entry.index.collectionId == info.id {
-                                if let item = view.entries[i].item as? StickerPackItem {
-                                    var pass: Bool = true
-                                    if case .backgroundIcon = mode {
-                                        pass = item.file.isCustomTemplateEmoji
-                                    }
-                                    if pass {
-                                        files.append(item)
-                                        dict[item.file.fileId] = item
-                                        itemsDict[item.file.fileId] = item
+                if foundSets.0 == nil && foundSets.1.isEmpty {
+                    for (_, info, _) in view.collectionInfos {
+                        var files: [StickerPackItem] = []
+                        var dict: [MediaId: StickerPackItem] = [:]
+                        
+                        if let info = info as? StickerPackCollectionInfo {
+                            let items = view.entries
+                            for (i, entry) in items.enumerated() {
+                                if entry.index.collectionId == info.id {
+                                    if let item = view.entries[i].item as? StickerPackItem {
+                                        var pass: Bool = true
+                                        if case .backgroundIcon = mode {
+                                            pass = item.file.isCustomTemplateEmoji
+                                        }
+                                        if pass {
+                                            files.append(item)
+                                            dict[item.file.fileId] = item
+                                            itemsDict[item.file.fileId] = item
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if !files.isEmpty {
-                            sections.append(.init(info: info, items: files, dict: dict, installed: true))
+                            if !files.isEmpty {
+                                sections.append(.init(info: info, items: files, dict: dict, installed: true))
+                            }
                         }
                     }
                 }
-                for item in featured {
-                    let contains = sections.contains(where: { $0.info.id == item.info.id })
-                    if !contains {
-                        let dict = item.topItems.toDictionary(with: {
-                            $0.file.fileId
-                        }).filter { _, value in
-                            if mode == .backgroundIcon {
-                                return value.file.isCustomTemplateEmoji
-                            } else {
-                                return false
+               
+                if let foundSets = foundSets.0 {
+                    for (id, info, _, _) in foundSets.infos {
+                        var files: [StickerPackItem] = []
+                        var dict: [MediaId: StickerPackItem] = [:]
+                        
+                        if let info = info as? StickerPackCollectionInfo {
+                            let items = foundSets.entries
+                            for (i, entry) in items.enumerated() {
+                                if entry.index.collectionId == id {
+                                    if let item = entry.item as? StickerPackItem {
+                                        var pass: Bool = true
+                                        if case .backgroundIcon = mode {
+                                            pass = item.file.isCustomTemplateEmoji
+                                        }
+                                        if pass {
+                                            files.append(item)
+                                            dict[item.file.fileId] = item
+                                            itemsDict[item.file.fileId] = item
+                                        }
+                                    }
+                                }
                             }
-                        }
-                        let items = item.topItems.filter({ value in
-                            if mode == .backgroundIcon {
-                                return value.file.isCustomTemplateEmoji
-                            } else {
-                                return false
+                            if !files.isEmpty {
+                                sections.append(.init(info: info, items: files, dict: dict, installed: true))
                             }
-                        })
-                        if !items.isEmpty {
-                            sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
                         }
                     }
                 }
+               
+                if foundSets.0 == nil && foundSets.1.isEmpty {
+                    for item in featured {
+                        let contains = sections.contains(where: { $0.info.id == item.info.id })
+                        if !contains {
+                            let dict = item.topItems.toDictionary(with: {
+                                $0.file.fileId
+                            }).filter { _, value in
+                                if mode == .backgroundIcon {
+                                    return value.file.isCustomTemplateEmoji
+                                } else {
+                                    return false
+                                }
+                            }
+                            let items = item.topItems.filter({ value in
+                                if mode == .backgroundIcon {
+                                    return value.file.isCustomTemplateEmoji
+                                } else {
+                                    return false
+                                }
+                            })
+                            if !items.isEmpty {
+                                sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
+                            }
+                        }
+                    }
+                }
+                
                 if let peer = peer {
                     current.peer = .init(peer)
                 }
@@ -2472,7 +2520,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.forumTopicItems = forumTopic
                 current.sections = sections
                 current.itemsDict = itemsDict
-                current.search = search
+                current.search = foundSets.1.isEmpty ? nil : search
                 current.reactions = reactions
                 current.recent = recentEmoji
                 current.topReactionsItems = topReactionsItems

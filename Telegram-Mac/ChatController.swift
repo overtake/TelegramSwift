@@ -2342,6 +2342,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
+        
+        
         let themeEmoticon: Signal<String?, NoError> = self.peerView.get() |> map {
             ($0 as? PeerView)?.cachedData
         } |> map { cachedData in
@@ -2368,7 +2370,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let wallpaper: Signal<TelegramWallpaper?, NoError> = combineLatest(uploadingPeerMedia, self.peerView.get()) |> map { uploading, peerView in
             if let content = uploading[peerId]?.content {
                 switch content {
-                case let .wallpaper(wallpaper):
+                case let .wallpaper(wallpaper, _):
                     return wallpaper
                 }
             }
@@ -2456,6 +2458,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             storiesSignal = .single(nil)
         }
+        
+        let recommendedChannels: Signal<RecommendedChannels?, NoError>
+        if peerId.namespace == Namespaces.Peer.CloudChannel {
+            recommendedChannels = context.engine.peers.recommendedChannels(peerId: peerId)
+        } else {
+            recommendedChannels = .single(nil)
+        }
+                
+
+        
       
         presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal).start(next: { [weak self] presentation, wallpaper, translate, storyState in
             let emoticon = presentation.emoticon
@@ -2516,8 +2528,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   adMessages,
                                                   reactions,
                                                   stateValue.get(),
-                                                  peerView.get()
-    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState, peerView -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+                                                  peerView.get(),
+                                                  recommendedChannels
+    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState, peerView, recommendedChannels -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
@@ -2626,7 +2639,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let peerView = (peerView as? PeerView)
                     let peer = peerView != nil ? peerViewMainPeer(peerView!) : nil
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -3387,10 +3400,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
                                 }), for: context.window)
                                 
-                            } else if let `self` = self {
-                                let thrid:String? = self.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
+                            } else  {
                                 
-                                verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: { [weak strongSelf] result in
+                                let successHandler: (ConfirmResult)->Void = { [weak strongSelf] result in
                                     
                                     guard let strongSelf = strongSelf else {return}
                                     
@@ -3408,7 +3420,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     _ = context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: type).start()
                                     strongSelf.chatInteraction.update({$0.withoutSelectionState()})
-                                })
+                                }
+                                
+                                if messages.count == 1, let giveaway = messages[0].media.first as? TelegramMediaGiveaway {
+                                    let title = strings().chatGiveawayDeleteConfirmationTitle
+                                    let info = strings().chatGiveawayDeleteConfirmationText(stringForFullDate(timestamp: giveaway.untilDate))
+                                    verifyAlert(for: context.window, header: title, information: info, ok: strings().confirmDelete, cancel: strings().modalCancel, successHandler: successHandler)
+                                } else {
+                                    let thrid:String? = strongSelf.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
+                                    
+                                    verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: successHandler)
+                                }
                             }
                         }
                     }

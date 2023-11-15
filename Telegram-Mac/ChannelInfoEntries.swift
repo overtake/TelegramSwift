@@ -652,6 +652,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
+    case stats(section: ChannelInfoSection, datacenterId: Int32, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -680,6 +681,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
         case let .color(section, peer, _): return .color(section: section, peer: peer, viewType: viewType)
+        case let .stats(section, datacenterId, _): return .stats(section: section, datacenterId: datacenterId, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
@@ -832,6 +834,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .stats(sectionId, datacenterId, viewType):
+            if case .stats(sectionId, datacenterId, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .discussionDesc(sectionId, viewType):
             if case .discussionDesc(sectionId, viewType) = entry {
                 return true
@@ -902,36 +910,38 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 8
         case .members:
             return 9
-        case .blocked:
+        case .stats:
             return 10
-        case .link:
+        case .blocked:
             return 11
-        case .inviteLinks:
+        case .link:
             return 12
-        case .requests:
+        case .inviteLinks:
             return 13
-        case .color:
+        case .requests:
             return 14
-        case .reactions:
+        case .color:
             return 15
-        case .discussion:
+        case .reactions:
             return 16
-        case .discussionDesc:
+        case .discussion:
             return 17
-        case .aboutInput:
+        case .discussionDesc:
             return 18
-        case .aboutDesc:
+        case .aboutInput:
             return 19
-        case .signMessages:
+        case .aboutDesc:
             return 20
-        case .signDesc:
+        case .signMessages:
             return 21
-        case .report:
+        case .signDesc:
             return 22
-        case .leave:
+        case .report:
             return 23
-        case .media:
+        case .leave:
             return 24
+        case .media:
+            return 25
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -966,6 +976,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .reactions(sectionId, _, _, _, _):
             return sectionId.rawValue
         case let .color(sectionId, _, _):
+            return sectionId.rawValue
+        case let .stats(sectionId, _, _):
             return sectionId.rawValue
         case let .discussionDesc(sectionId, _):
             return sectionId.rawValue
@@ -1017,6 +1029,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .reactions(sectionId, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .color(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .stats(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussionDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1120,7 +1134,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelColor, icon: theme.icons.profile_channel_color, type: .imageContext(generatePeerNameColorImage(colors: arguments.context.peerNameColors, peer: peer.peer), ""), viewType: viewType, action: {
                 arguments.openNameColor(peer: peer.peer)
             })
-
+        case let .stats(_, datacenterId, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoStatAndBoosts, icon: theme.icons.profile_channel_stats, type: .next, viewType: viewType, action: {
+                arguments.stats(datacenterId)
+            })
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .aboutInput(_, text, viewType):
@@ -1303,6 +1320,11 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             }
             entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
             entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
+            
+            if let datacenterId = (view.cachedData as? CachedChannelData)?.statsDatacenterId {
+                entries.append(.stats(section: .manage, datacenterId: datacenterId, viewType: .innerItem))
+            }
+            
             entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
 
         }

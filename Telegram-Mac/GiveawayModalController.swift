@@ -662,7 +662,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     }
     
     let addSpecificUsers:()->Void = {
-        let behaviour = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 10)
+        let behaviour = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 10, settings: [.remote, .excludeBots])
         _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayTypeSpecificModalSelectUsers, behavior: behaviour, selectedPeerIds: Set(stateValue.with { $0.selectedPeers.map { $0.peer.id } })).start(next: { peerIds in
             let peers: Signal<[PeerEquatable], NoError> = context.account.postbox.transaction { transaction in
                 var peers:[PeerEquatable] = []

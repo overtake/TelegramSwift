@@ -308,7 +308,7 @@ private final class ModalHeaderView: View {
         self.customTheme = customTheme
         
         
-        titleView.update(TextViewLayout(.initialize(string: data.center?.title, color: customTheme().text, font: .medium(.title)), maximumNumberOfLines: 1))
+        titleView.update(TextViewLayout(.initialize(string: data.center?.title, color: customTheme().text, font: .medium(.title)), maximumNumberOfLines: 2))
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
@@ -440,7 +440,7 @@ private final class ModalHeaderView: View {
 
         let header = controller.modalHeader
         if let header = header {
-            titleView.update(TextViewLayout(.initialize(string: header.center?.title, color: customTheme().text, font: .medium(.title)), maximumNumberOfLines: 1))
+            titleView.update(TextViewLayout(.initialize(string: header.center?.title, color: customTheme().text, font: .medium(.title)), maximumNumberOfLines: 2, alignment: .center))
             subtitleView?.update(TextViewLayout(.initialize(string: header.center?.subtitle, color: customTheme().grayText, font: .normal(.text)), maximumNumberOfLines: 1))
 
             if let image = header.right?.image {
@@ -587,7 +587,9 @@ public class Modal: NSObject {
             controller._frameRect = topView.bounds
         }
         
-        container = ModalContainerView(frame: containerRect.insetBy(dx: -1, dy: -1))
+        let noBorder = controller.contentBelowBackground || controller.containerBackground == .clear || controller.isFullScreen || !controller.hasBorder
+        
+        container = ModalContainerView(frame: noBorder ? containerRect : containerRect.insetBy(dx: -1, dy: -1))
         container.layer?.cornerRadius = controller.cornerRadius
         container.background = controller.containerBackground
                 
@@ -610,7 +612,7 @@ public class Modal: NSObject {
         container.borderView.layer?.borderColor = controller.modalTheme.grayText.withAlphaComponent(0.1).cgColor
         container.borderView.layer?.cornerRadius = controller.cornerRadius
         
-        container.borderView.isHidden = controller.contentBelowBackground || controller.containerBackground == .clear || controller.isFullScreen || !controller.hasBorder
+        container.borderView.isHidden = noBorder
 
         if !controller.contentBelowBackground {
             container.addSubview(controller.view)
@@ -764,7 +766,9 @@ public class Modal: NSObject {
             focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
         }
         
-        focus = focus.insetBy(dx: -1, dy: -1)
+        if controller?.hasBorder == true {
+            focus = focus.insetBy(dx: -1, dy: -1)
+        }
 
 
         if focus != container.frame {

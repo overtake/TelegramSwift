@@ -1123,7 +1123,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
     [self updatePlaceholder:self.animates newSize:newSize];
     
-    [self refreshAttributes];
 }
     
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -1159,7 +1158,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
-    [self refreshAttributes];
 }
 
 
