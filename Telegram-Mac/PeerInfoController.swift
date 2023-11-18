@@ -407,6 +407,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
+        let peerId = peer.id
         self.peerId = peer.id
         self.peer = peer
         self.source = source
