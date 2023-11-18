@@ -3481,7 +3481,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     } else {
                         stories = nil
                     }
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo, stories: stories))
+                    if let navigation = strongSelf.navigationController {
+                        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories)
+                    }
                 }
             }
         }
@@ -3550,7 +3552,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: self?.genericView.tableView, supportTableView: nil)
-            self?.navigationController?.header?.show(true, contextObject: object)
+            context.sharedContext.showInlinePlayer(object)
         }
         
         
@@ -7362,7 +7364,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.context.globalPeerHandler.set(.single(chatLocation))
         self.genericView.tableView.notifyScrollHandlers()
         self.genericView.updateHeader(chatInteraction.presentation, false, false)
-        if let controller = context.audioPlayer, let header = self.navigationController?.header, header.needShown {
+        if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
             header.view.update(with: object)
         }
@@ -7527,12 +7529,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //            }
             
             if oldValue.recordingState == nil && value.recordingState != nil {
-                if let pause = context.audioPlayer?.pause() {
+                if let pause = context.sharedContext.getAudioPlayer()?.pause() {
                     isPausedGlobalPlayer = pause
                 }
             } else if value.recordingState == nil && oldValue.recordingState != nil {
                 if isPausedGlobalPlayer {
-                    _ = context.audioPlayer?.play()
+                    _ = context.sharedContext.getAudioPlayer()?.play()
                 }
             }
             if let until = value.slowMode?.validUntil, until > self.context.timestamp {

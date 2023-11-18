@@ -588,6 +588,7 @@ class SharedAccountContext {
     func getCrossAccountGroupCall() -> GroupCallContext? {
         return crossGroupCall.with { $0 }
     }
+   
     #endif
     
     
@@ -725,6 +726,36 @@ class SharedAccountContext {
     }
     
     #endif
+    
+    
+    #if !SHARE
+    private let crossInlinePlayer: Atomic<InlineAudioPlayerView.ContextObject?> = Atomic<InlineAudioPlayerView.ContextObject?>(value: nil)
+
+    func getCrossInlinePlayer() -> InlineAudioPlayerView.ContextObject? {
+        return crossInlinePlayer.with { $0 }
+    }
+    func endInlinePlayer(animated: Bool) -> Void {
+        let value = crossInlinePlayer.swap(nil)
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let header = accountContext.bindings.rootNavigation().header
+            header?.hide(animated)
+        }
+    }
+    
+    func showInlinePlayer(_ object: InlineAudioPlayerView.ContextObject) {
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let header = accountContext.bindings.rootNavigation().header
+            header?.show(true, contextObject: object)
+        }
+        _ = crossInlinePlayer.swap(object)
+    }
+    
+    func getAudioPlayer() -> APController? {
+        return getCrossInlinePlayer()?.controller
+    }
+    
+    #endif
+    
     deinit {
         batteryLevelTimer?.invalidate()
     }

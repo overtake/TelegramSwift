@@ -966,7 +966,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         }
         //save(true)
     }, openInfo: { peerId in
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }, toggleExcludeMuted: { updated in
         updateState { state in
             var state = state

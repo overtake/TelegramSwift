@@ -103,7 +103,7 @@ final class PhoneNumberConfirmController : GenericViewController<PhoneNumberConf
         self.locked = true
         
         let context = self.context
-        _ = showModalProgress(signal: context.engine.accountData.requestChangeAccountPhoneNumberVerification(phoneNumber: phoneNumber) |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
+        _ = showModalProgress(signal: context.engine.accountData.requestChangeAccountPhoneNumberVerification(phoneNumber: phoneNumber, pushNotificationConfiguration: nil, firebaseSecretStream: .complete()) |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
             self?.navigationController?.push(PhoneNumberCodeConfirmController(context: context, data: data, phoneNumber: formatPhoneNumber(phoneNumber)))
             self?.locked = false
         }, error: { [weak self] error in

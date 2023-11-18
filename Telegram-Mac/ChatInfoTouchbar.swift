@@ -93,7 +93,7 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         case 0:
             chatInteraction.push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         case 1:
-            chatInteraction.push(PeerInfoController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+            PeerInfoController.push(navigation: chatInteraction.context.bindings.rootNavigation(), context: chatInteraction.context, peerId: chatInteraction.peerId)
         default:
             break
         }

@@ -1154,7 +1154,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? strings().peerInfoDeleteChannel : strings().peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
-        case .section(_):
+        case let .section(id):
             return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
         }
     }
@@ -1180,7 +1180,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
     }
     var entries: [ChannelInfoEntry] = []
     
-    
+    entries.append(.info(sectionId: .header, peerView: view, editable: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
+
     
     var infoBlock:[ChannelInfoEntry] = []
     
@@ -1192,8 +1193,6 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
         }
         entries.append(contentsOf: block)
     }
-    
-    infoBlock.append(.info(sectionId: .header, peerView: view, editable: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
 
     
     if let channel = peerViewMainPeer(view) as? TelegramChannel {

@@ -2027,6 +2027,12 @@ public final class L10n {
   public static var channelStatsGraphNewFollowersBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.NewFollowersBySource") }
   /// NOTIFICATIONS
   public static var channelStatsGraphNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Notifications") }
+  /// REACTIONS BY EMOTICON
+  public static var channelStatsGraphReactions: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Reactions") }
+  /// STORIES INTERACTIONS
+  public static var channelStatsGraphStories: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Stories") }
+  /// STORIES REACTIONS
+  public static var channelStatsGraphStoriesReactions: String  { return L10n.tr("Localizable", "ChannelStats.Graph.StoriesReactions") }
   /// VIEWS BY HOURS (UTC)
   public static var channelStatsGraphViewsByHours: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsByHours") }
   /// VIEWS BY SOURCE
@@ -3391,6 +3397,8 @@ public final class L10n {
   }
   /// imported
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// Launch App
+  public static var chatMessageLaunchBot: String  { return L10n.tr("Localizable", "Chat.Message.LaunchBot") }
   /// Open Gift Link
   public static var chatMessageOpenGiftLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenGiftLink") }
   /// Open Link
@@ -12821,6 +12829,8 @@ public final class L10n {
   public static var statsMessagePrivateForwardsTitle: String  { return L10n.tr("Localizable", "Stats.MessagePrivateForwardsTitle") }
   /// Public Shares
   public static var statsMessagePublicForwardsTitle: String  { return L10n.tr("Localizable", "Stats.MessagePublicForwardsTitle") }
+  /// REACTIONS
+  public static var statsMessageReactionsTitle: String  { return L10n.tr("Localizable", "Stats.MessageReactionsTitle") }
   /// Message Statistics
   public static var statsMessageTitle: String  { return L10n.tr("Localizable", "Stats.MessageTitle") }
   /// %d
@@ -12923,6 +12933,10 @@ public final class L10n {
   public static var statsGroupTopPosterPromote: String  { return L10n.tr("Localizable", "Stats.GroupTopPoster.Promote") }
   /// PUBLIC SHARES
   public static var statsMessagePublicForwardsTitleHeader: String  { return L10n.tr("Localizable", "Stats.MessagePublicForwardsTitle.Header") }
+  /// Story Statistics
+  public static var statsMessageStatsStoryTitle: String  { return L10n.tr("Localizable", "Stats.MessageStats.StoryTitle") }
+  /// Story
+  public static var statsStoryTitle: String  { return L10n.tr("Localizable", "Stats.Story.Title") }
   /// Activate
   public static var statusBarActivate: String  { return L10n.tr("Localizable", "StatusBar.Activate") }
   /// Hide

@@ -109,7 +109,7 @@ class ChatMusicContentView: ChatAudioContentView {
     }
     
     override func checkState(animated: Bool) {
-        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
+        if let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 if playAnimationView == nil {
                     playAnimationView = PeerMediaPlayerAnimationView()

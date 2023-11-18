@@ -376,9 +376,6 @@ class PCallSession {
     let accountContext: AccountContext
     init(accountContext: AccountContext, account: Account, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool, data: PCallSession.InitialData) {
         
-        DispatchQueue.main.async {
-            _ = accountContext.audioPlayer?.pause()
-        }
         self.account = account
         self.accountContext = accountContext
         self.peerId = peerId

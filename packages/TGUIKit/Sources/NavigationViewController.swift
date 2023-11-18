@@ -105,19 +105,28 @@ open class NavigationHeader {
         let view = self.view
         let realHeight = self.realHeight
         let height = self.height
-        view.frame = NSMakeRect(0, navigation.controller.bar.height - height, navigation.containerView.frame.width, realHeight)
+        view.frame = NSMakeRect(0, -height, navigation.containerView.frame.width, realHeight)
         disposable.set((view.ready.get() |> filter {$0} |> take(1)).start(next: { [weak navigation, weak self, weak view] (ready) in
             if let navigation = navigation, let view = view {
-                var contentInset = navigation.controller.bar.height + height
+                var contentInset = height + navigation.controller.barHeight
                 self?.needShown = true
 
-                navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
+                if let header = self?.supplyHeader, header.needShown {
+                    navigation.containerView.addSubview(view, positioned: .below, relativeTo: header.view)
+                } else {
+                    navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
+                }
                 
-                var inset:CGFloat = navigation.controller.bar.height
+                var inset:CGFloat = 0
+                
+                var barInset: CGFloat = height
+                
+                
 
                 if let supplyHeader = self?.supplyHeader, supplyHeader.needShown {
                     inset += supplyHeader.height
                     contentInset += supplyHeader.height
+                    barInset += supplyHeader.height
                 }
                 let transition: ContainedViewLayoutTransition
                 if animated {
@@ -125,6 +134,11 @@ open class NavigationHeader {
                 } else {
                     transition = .immediate
                 }
+                
+                let size = navigation.navigationBar.frame.size
+                transition.updateFrame(view: navigation.navigationBar, frame: CGRect(origin: NSMakePoint(0, barInset), size: size))
+
+                
                 transition.updateFrame(view: view, frame: NSMakeRect(0, inset, view.frame.width, view.frame.height))
 
                 navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), transition: transition)
@@ -144,21 +158,25 @@ open class NavigationHeader {
         
         if let navigation = navigation, let view = _view {
             _view = nil
-            performSubviewPosRemoval(view, pos: NSMakePoint(0, navigation.controller.bar.height - height), animated: animated, duration: 0.2, timingFunction: .easeOut)
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, -height), animated: animated, duration: 0.2, timingFunction: .easeOut)
 
-            var inset:CGFloat = navigation.controller.bar.height
+            var barInset: CGFloat = 0
+            
+            var inset:CGFloat = navigation.controller.barHeight
             if let supplyHeader = supplyHeader, supplyHeader.needShown  {
                 inset += supplyHeader.height
+                barInset += supplyHeader.height
             }
             
-            let transiton: ContainedViewLayoutTransition
+            let transition: ContainedViewLayoutTransition
             if animated {
-                transiton = .animated(duration: 0.2, curve: .easeOut)
+                transition = .animated(duration: 0.2, curve: .easeOut)
             } else {
-                transiton = .immediate
+                transition = .immediate
             }
-            
-            navigation.controller.updateFrame(CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset)), transition: transiton)
+            let size = navigation.navigationBar.frame.size
+            transition.updateFrame(view: navigation.navigationBar, frame: CGRect(origin: NSMakePoint(0, barInset), size: size))
+            navigation.controller.updateFrame(CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset)), transition: transition)
         }
         
     }
@@ -180,9 +198,15 @@ public class CallNavigationHeader : NavigationHeader {
         disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view, weak self] (ready) in
             if let navigation = navigation, let view = view {
                 self?.needShown = true
-                var contentInset = navigation.controller.bar.height + height
-                navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.navigationBar)
+                var contentInset = height + navigation.controller.barHeight
                 
+                if let simpleHeader = self?.simpleHeader, simpleHeader.needShown {
+                    navigation.containerView.addSubview(view, positioned: .above, relativeTo: simpleHeader.view)
+                } else {
+                    navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
+                }
+                
+                var barInset: CGFloat = height
                 
                 let transition: ContainedViewLayoutTransition
                 if animated {
@@ -191,16 +215,16 @@ public class CallNavigationHeader : NavigationHeader {
                     transition = .immediate
                 }
                 
-                let size = navigation.navigationBar.frame.size
-                transition.updateFrame(view: navigation.navigationBar, frame: CGRect.init(origin: NSMakePoint(0, height), size: size))
-
                 if let simpleHeader = self?.simpleHeader, simpleHeader.needShown {
                     let view = simpleHeader.view
                     let size = view.frame.size
-                    transition.updateFrame(view: view, frame: CGRect(origin: NSMakePoint(0, height + navigation.controller.bar.height), size: size))
+                    transition.updateFrame(view: view, frame: CGRect(origin: NSMakePoint(0, height), size: size))
                     contentInset += simpleHeader.height
+                    barInset += simpleHeader.height
                 }
-
+                
+                let size = navigation.navigationBar.frame.size
+                transition.updateFrame(view: navigation.navigationBar, frame: CGRect(origin: NSMakePoint(0, barInset), size: size))
                 transition.updateFrame(view: view, frame: CGRect(origin: .zero, size: view.frame.size))
 
                 navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), transition: transition)
@@ -227,13 +251,13 @@ public class CallNavigationHeader : NavigationHeader {
             } else {
                 transition = .immediate
             }
-            var contentInset: CGFloat = navigation.controller.bar.height
+            var contentInset: CGFloat = navigation.controller.barHeight
             if let header = simpleHeader, header.needShown {
-                transition.updateFrame(view: header.view, frame: CGRect.init(origin: NSMakePoint(0, navigation.controller.bar.height), size: header.view.frame.size))
+                transition.updateFrame(view: header.view, frame: CGRect.init(origin: NSMakePoint(0, 0), size: header.view.frame.size))
                 contentInset += header.height
             }
-                        
-            transition.updateFrame(view: navigation.navigationBar, frame: CGRect.init(origin: .zero, size: navigation.navigationBar.frame.size))
+                                    
+            transition.updateFrame(view: navigation.navigationBar, frame: CGRect.init(origin: NSMakePoint(0, contentInset - navigation.navigationBar.frame.height), size: navigation.navigationBar.frame.size))
             
             navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), transition: transition)
         }
@@ -443,8 +467,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         containerView.addSubview(navigationBar)
         
-        navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.bar.height)
-        controller.view.frame = NSMakeRect(0, controller.bar.height , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.bar.height)
+        navigationBar.frame = NSMakeRect(0, 0, NSWidth(containerView.frame), controller.barHeight)
+        controller.view.frame = NSMakeRect(0, controller.barHeight , NSWidth(containerView.frame), NSHeight(containerView.frame) - controller.barHeight)
         
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle, liveSwiping: false)
         
@@ -476,9 +500,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         return barInset
     }
     
-    public func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+    override open func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
         
-        navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
+        navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.barHeight)
         
         if let leftView = leftView {
             navigationBar.switchLeftView(leftView, animation: animation)
@@ -525,7 +549,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
         
         if controller.isLoaded() {
-            controller.frame = NSMakeRect(point.x, barInset + controller.bar.height + keepTop, width, containerSize.height - barInset - controller.bar.height)
+            controller.frame = NSMakeRect(point.x, barInset + controller.barHeight + keepTop, width, containerSize.height - barInset - controller.barHeight)
             
             if let tied = controller.tied {
                 containerView.addSubview(tied.view, positioned: .below, relativeTo: controller.view)
@@ -663,7 +687,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
         
         let keepTop = frame.width == controller.stake.keepLeft ? 0 : controller.stake.keepTop()
-        var contentInset = controller.bar.height + keepTop
+        var contentInset = controller.barHeight + keepTop
 
         let size = CGSize(width: containerView.frame.width - keepLeft, height: containerView.frame.height)
         let point = NSMakePoint(keepLeft, contentInset)
@@ -696,17 +720,19 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             barInset += header.height
         }
         
+        if let header = header, header.needShown {
+            header.view.frame = NSMakeRect(point.x, barInset, size.width, header.realHeight)
+            containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
+            contentInset += header.height
+            barInset += header.height
+        }
 
         let animatePosBar: Bool = controller.bar.height != previous.bar.height && style != .none
         self.navigationBar.frame = NSMakeRect(point.x, barInset, size.width, animatePosBar && controller.bar.height == 0 ? previous.bar.height : controller.bar.height)
         
         
         
-        if let header = header, header.needShown {
-            header.view.frame = NSMakeRect(point.x, contentInset, size.width, header.realHeight)
-            containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
-            contentInset += header.height
-        }
+     
         
         if keepLeft > 0 || previous.stake.keepIn {
             controller.tied = previous
@@ -723,14 +749,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
        
         
         let reloadHeaders = { [weak self] in
-            if let header = self?.header, header.needShown {
-                header.view.removeFromSuperview()
+            if let header = self?.callHeader, header.needShown {
                 self?.containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
             }
-            
-            if let header = self?.callHeader, header.needShown {
-                header.view.removeFromSuperview()
-                self?.containerView.addSubview(header.view, positioned: .above, relativeTo: self?.navigationBar)
+            if let header = self?.header, header.needShown {
+                self?.containerView.addSubview(header.view, positioned: .above, relativeTo: controller.view)
             }
         }
         
@@ -838,7 +861,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationBar.frame = NSMakeRect(point.x, barInset, controller.frame.width, controller.bar.height)
 
             navigationBar.removeFromSuperview()
-            containerView.addSubview(navigationBar)
+            containerView.addSubview(navigationBar, positioned: .below, relativeTo: self.controller.view)
 
 
             reloadHeaders()
@@ -876,7 +899,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         
         navigationBar.removeFromSuperview()
-        containerView.addSubview(navigationBar)
+        containerView.addSubview(navigationBar, positioned: .below, relativeTo: self.controller.view)
 
         reloadHeaders()
                 
@@ -1172,7 +1195,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     
                     guard let previous = self.previousController, self.controller.supportSwipes, self.stackCount > 1 && !self.isLocked, self.canSwipeBack else {return .failed}
                     
-                    previous.view.frame = NSMakeRect(0, previous.bar.height, self.frame.width, self.frame.height - previous.bar.height)
+                    previous.view.frame = NSMakeRect(0, previous.barHeight, self.frame.width, self.frame.height - previous.barHeight)
                     
                     self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
                     

@@ -212,9 +212,7 @@ final class AccountContext {
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
-    
-    var audioPlayer:APController?
-    
+        
     
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     let blockedPeersContext: BlockedPeersContext
@@ -853,8 +851,6 @@ final class AccountContext {
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
         self.networkStatusManager.cleanup()
-        self.audioPlayer?.cleanup()
-        self.audioPlayer = nil
         self.diceCache.cleanup()
         _chatThemes.set(.single([]))
         _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))

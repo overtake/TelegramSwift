@@ -116,6 +116,9 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
         didSet {
             if state != oldValue {
                 updateEditStateTitles()
+                requestUpdateRightBar()
+                requestUpdateBackBar()
+                requestUpdateCenterBar()
             }
         }
     }
@@ -138,6 +141,7 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
         }
         
         update(with: new)
+       
     }
     
     var doneString:String {
@@ -169,8 +173,6 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
         case .Some:
             editBar.set(text: someString, for: .Normal)
         }
-        editBar.set(color: presentation.colors.accent, for: .Normal)
-        self.editBar.needsLayout = true
     }
     
     override func requestUpdateRightBar() {
@@ -187,7 +189,7 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
     
     override func loadView() {
-        editBar = TextButtonBarView(controller: self, text: "", style: navigationButtonStyle, alignment:.Right)
+        editBar = TextButtonBarView(controller: self, text: "", style: barPresentation, alignment:.Right)
         addHandler()
         rightBarView = editBar
         updateEditStateTitles()
@@ -204,7 +206,8 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
     
     public func set(editable: Bool) ->Void {
-        editBar.isHidden = !editable
+        editBar.button.isHidden = !editable
+        editBar.isEnabled = editable
     }
     
     public func set(enabled: Bool) ->Void {

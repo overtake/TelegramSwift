@@ -176,7 +176,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func checkState() {
         if let item = item as? PeerMediaMusicRowItem {
-            if let controller = item.context.audioPlayer, let song = controller.currentSong {
+            if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
                 if song.entry.isEqual(to: item.message.id) {
                     if playAnimationView == nil {
                         playAnimationView = PeerMediaPlayerAnimationView()
@@ -211,7 +211,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             textView.update(item.textLayout)
             textView.centerY(x: item.contentInset.left)
             textView.backgroundColor = backdorColor
-            item.context.audioPlayer?.add(listener: self)
+            item.context.sharedContext.getAudioPlayer()?.add(listener: self)
             
             
             let imageCorners = ImageCorners(topLeft: .Corner(4.0), topRight: .Corner(4.0), bottomLeft: .Corner(4.0), bottomRight: .Corner(4.0))
@@ -283,7 +283,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
         fetchDisposable.dispose()
         statusDisposable.dispose()
         if let item = item as? PeerMediaMusicRowItem {
-            item.context.audioPlayer?.remove(listener: self)
+            item.context.sharedContext.getAudioPlayer()?.remove(listener: self)
         }
     }
     

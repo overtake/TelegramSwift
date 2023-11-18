@@ -9950,6 +9950,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_stats_likes: CGImage {
+      if let image = cached.with({ $0["channel_stats_likes"] }) {
+          return image
+      } else {
+          let image = _channel_stats_likes()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_stats_likes"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_stats_shares: CGImage {
+      if let image = cached.with({ $0["channel_stats_shares"] }) {
+          return image
+      } else {
+          let image = _channel_stats_shares()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_stats_shares"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10716,6 +10742,8 @@ public final class TelegramIconsTheme {
   private let _message_quote_pink: ()->CGImage
   private let _message_quote_bubble_incoming: ()->CGImage
   private let _message_quote_bubble_outgoing: ()->CGImage
+  private let _channel_stats_likes: ()->CGImage
+  private let _channel_stats_shares: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11482,7 +11510,9 @@ public final class TelegramIconsTheme {
       message_quote_blue: @escaping()->CGImage,
       message_quote_pink: @escaping()->CGImage,
       message_quote_bubble_incoming: @escaping()->CGImage,
-      message_quote_bubble_outgoing: @escaping()->CGImage
+      message_quote_bubble_outgoing: @escaping()->CGImage,
+      channel_stats_likes: @escaping()->CGImage,
+      channel_stats_shares: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12249,5 +12279,7 @@ public final class TelegramIconsTheme {
       self._message_quote_pink = message_quote_pink
       self._message_quote_bubble_incoming = message_quote_bubble_incoming
       self._message_quote_bubble_outgoing = message_quote_bubble_outgoing
+      self._channel_stats_likes = channel_stats_likes
+      self._channel_stats_shares = channel_stats_shares
   }
 }

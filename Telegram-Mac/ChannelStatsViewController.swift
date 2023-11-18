@@ -15,6 +15,143 @@ import Postbox
 import GraphCore
 
 
+enum StatsPostItem: Equatable {
+    static func == (lhs: StatsPostItem, rhs: StatsPostItem) -> Bool {
+        switch lhs {
+        case let .message(lhsMessage, _):
+            if case let .message(rhsMessage, _) = rhs {
+                return lhsMessage.id == rhsMessage.id
+            } else {
+                return false
+            }
+        case let .story(lhsStory, _):
+            if case let .story(rhsStory, _) = rhs, lhsStory == rhsStory {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    
+    case message(Message, ChannelStatsMessageInteractions)
+    case story(EngineStoryItem, PeerEquatable)
+    
+    var isStory: Bool {
+        if case .story = self {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    var timestamp: Int32 {
+        switch self {
+        case let .message(message, _):
+            return message.timestamp
+        case let .story(story, _):
+            return story.timestamp
+        }
+    }
+    
+    var identifier: InputDataIdentifier {
+        switch self {
+        case let .message(message, _):
+            return _id_message(message.id)
+        case let .story(story, _):
+            return _id_story(story)
+        }
+    }
+    
+    var views: Int {
+        switch self {
+        case let .message(message, interactions):
+            return Int(max(message.channelViewsCount ?? 0, interactions.views))
+        case let .story(story, _):
+            return Int(story.views?.seenCount ?? 0)
+        }
+    }
+    var shares: Int {
+        switch self {
+        case let .message(_, interactions):
+            return Int(interactions.forwards)
+        case let .story(story, _):
+            return story.views?.forwardCount ?? 0
+        }
+    }
+    var likes: Int {
+        switch self {
+        case let .message(message, interactions):
+            return Int(message.reactionsAttribute?.reactions.reduce(0, { $0 + $1.count }) ?? 0)
+        case let .story(story, _):
+            return Int(story.views?.reactions.reduce(0, { $0 + $1.count }) ?? 0)
+        }
+    }
+    
+    var imageReference: ImageMediaReference? {
+        if let image = self.image {
+            switch self {
+            case let .message(message, _):
+                return ImageMediaReference.message(message: MessageReference(message), media: image)
+            case let .story(story, peer):
+                if let peerReference = PeerReference(peer.peer) {
+                    return ImageMediaReference.story(peer: peerReference, id: story.id, media: image)
+                }
+            }
+        }
+        return nil
+    }
+    
+    var image: TelegramMediaImage? {
+        switch self {
+        case let .message(message, _):
+            for media in message.media {
+                if let image = media as? TelegramMediaImage {
+                    return image
+                } else if let file = media as? TelegramMediaFile {
+                    if file.isVideo && !file.isInstantVideo {
+                        let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
+                        if let iconImageRepresentation = iconImageRepresentation {
+                            return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        }
+                    }
+                } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
+                    if let image = content.image {
+                        return image
+                    } else if let file = content.file {
+                        if file.isVideo && !file.isInstantVideo {
+                            let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
+                            if let iconImageRepresentation = iconImageRepresentation {
+                                return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                            }
+                        }
+                    }
+                }
+            }
+        case let .story(story, _):
+            if let image = story.media._asMedia() as? TelegramMediaImage {
+                return image
+            } else if let file = story.media._asMedia() as? TelegramMediaFile {
+                if file.isVideo && !file.isInstantVideo {
+                    let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
+                    if let iconImageRepresentation = iconImageRepresentation {
+                        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                    }
+                }
+            }
+        }
+        return nil
+    }
+    
+    var title: String {
+        switch self {
+        case let .message(message, _):
+            return pullText(from: message).string as String
+        case .story:
+            return strings().statsStoryTitle
+        }
+    }
+}
+
 
 struct UIStatsState : Equatable {
     
@@ -62,8 +199,12 @@ struct UIStatsState : Equatable {
 private func _id_message(_ messageId: MessageId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_message_\(messageId)")
 }
+private func _id_story(_ story: EngineStoryItem) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_story\(story.id)")
+}
 
-private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, messages: [Message]?, interactions: [MessageId : ChannelStatsMessageInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openMessage: @escaping(MessageId)->Void, context: ChannelStatsContext, accountContext: AccountContext, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
+
+private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, peer: Peer, messages: [Message]?, stories: PeerStoryListContext.State?, interactions: [MessageId : ChannelStatsMessageInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openPost: @escaping(StatsPostItem)->Void, context: ChannelStatsContext, accountContext: AccountContext, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -164,6 +305,27 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             }))
         }
         
+        if !stats.reactionsByEmotionGraph.isEmpty {
+            graphs.append(Graph(graph: stats.reactionsByEmotionGraph, title: strings().channelStatsGraphReactions, identifier: InputDataIdentifier("reactionsByEmotionGraph"), type: .bars, load: { identifier in
+                context.loadReactionsByEmotionGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
+        
+        if !stats.storyInteractionsGraph.isEmpty {
+            graphs.append(Graph(graph: stats.storyInteractionsGraph, title: strings().channelStatsGraphStories, identifier: InputDataIdentifier("storyInteractionsGraph"), type: .twoAxisStep, load: { identifier in
+                context.loadStoryInteractionsGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
+        
+        if !stats.storyReactionsByEmotionGraph.isEmpty {
+            graphs.append(Graph(graph: stats.storyReactionsByEmotionGraph, title: strings().channelStatsGraphStoriesReactions, identifier: InputDataIdentifier("storyReactionsByEmotionGraph"), type: .bars, load: { identifier in
+                context.loadStoryReactionsByEmotionGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
+        
 
         for graph in graphs {
             entries.append(.sectionId(sectionId, type: .normal))
@@ -214,15 +376,31 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        if let messages = messages, let interactions = interactions, !messages.isEmpty {
+        var posts: [StatsPostItem] = []
+        if let messages = messages {
+            for message in messages {
+                if let interactions = interactions?[message.id] {
+                    posts.append(.message(message, interactions))
+                }
+            }
+        }
+        if let stories {
+            for story in stories.items {
+                posts.append(.story(story, .init(peer)))
+            }
+        }
+        posts.sort(by: { $0.timestamp > $1.timestamp })
+
+        
+        if !posts.isEmpty {
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelStatsRecentHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
-            for (i, message) in messages.enumerated() {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), comparable: nil, item: { initialSize, stableId in
-                    return ChannelRecentPostRowItem(initialSize, stableId: stableId, context: accountContext, message: message, interactions: interactions[message.id], viewType: bestGeneralViewType(messages, for: i), action: {
-                        openMessage(message.id)
+            for (i, postStats) in posts.enumerated() {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: postStats.identifier, equatable: InputDataEquatable(postStats), comparable: nil, item: { initialSize, stableId in
+                    return ChannelRecentPostRowItem(initialSize, stableId: stableId, context: accountContext, postStats: postStats, viewType: bestGeneralViewType(posts, for: i), action: {
+                        openPost(postStats)
                     })
                 }))
                 index += 1
@@ -272,13 +450,32 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     }
     messagesPromise.set(.single(nil) |> then(messageView))
 
-    let openMessage: (MessageId)->Void = { messageId in
-        context.bindings.rootNavigation().push(MessageStatsController(context, messageId: messageId, datacenterId: datacenterId))
+    let openPost: (StatsPostItem)->Void = { item in
+        let subject: MessageStatsSubject
+        switch item {
+        case let .message(message, _):
+            subject = .messageId(message.id)
+        case let .story(story, peer):
+            subject = .story(story, .init(peer.peer))
+        }
+        context.bindings.rootNavigation().push(MessageStatsController(context, subject: subject, datacenterId: datacenterId))
     }
     
     let detailedDisposable = DisposableDict<InputDataIdentifier>()
     
-    let signal = combineLatest(queue: prepareQueue, statePromise.get(), statsContext.state, messagesPromise.get()) |> map { uiState, state, messageView in
+    let storiesPromise = Promise<PeerStoryListContext.State?>()
+
+    let storyList = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false)
+    storyList.loadMore()
+    storiesPromise.set(
+        .single(nil)
+        |> then(
+            storyList.state
+            |> map(Optional.init)
+        )
+    )
+    
+    let signal = combineLatest(queue: prepareQueue, statePromise.get(), statsContext.state, messagesPromise.get(), storiesPromise.get(), context.account.postbox.loadedPeerWithId(peerId)) |> map { uiState, state, messageView, stories, peer in
         
         
         let interactions = state.stats?.messageInteractions.reduce([MessageId : ChannelStatsMessageInteractions]()) { (map, interactions) -> [MessageId : ChannelStatsMessageInteractions] in
@@ -291,9 +488,8 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
             return lhsMessage.timestamp > rhsMessage.timestamp
         })
         
-
         
-        return statsEntries(state, uiState: uiState, messages: messages, interactions: interactions, updateIsLoading: { identifier, isLoading in
+        return statsEntries(state, uiState: uiState, peer: peer, messages: messages, stories: stories, interactions: interactions, updateIsLoading: { identifier, isLoading in
             updateState { state in
                 if isLoading {
                     return state.withAddedLoading(identifier)
@@ -301,9 +497,11 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
                     return state.withRemovedLoading(identifier)
                 }
             }
-        }, openMessage: openMessage, context: statsContext, accountContext: context, detailedDisposable: detailedDisposable)
+        }, openPost: openPost, context: statsContext, accountContext: context, detailedDisposable: detailedDisposable)
     } |> map {
         return InputDataSignalValue(entries: $0)
+    } |> afterDisposed {
+        let _ = storyList.state
     }
     
     

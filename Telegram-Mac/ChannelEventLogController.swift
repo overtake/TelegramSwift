@@ -429,14 +429,14 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
 
         self.chatInteraction.openInfo = { [weak self] peerId, _, _, _ in
-            if let strongSelf = self {
-               strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
             }
         }
         
         self.chatInteraction.inlineAudioPlayer = { [weak self] controller in
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: self?.genericView.tableView, supportTableView: nil)
-            self?.navigationController?.header?.show(true, contextObject: object)
+            context.sharedContext.showInlinePlayer(object)
         }
  
 

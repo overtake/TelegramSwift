@@ -635,6 +635,17 @@ public extension NSView {
         return isInSuperclassView(superclass, view: self)
     }
     
+    
+    func findSubview(at point: CGPoint) -> NSView? {
+        for subview in subviews.reversed() {
+            let convertedPoint = subview.convert(point, from: self)
+            if subview.bounds.contains(convertedPoint) {
+                return subview
+            }
+        }
+        return nil
+    }
+    
     func _mouseInside() -> Bool {
         if let window = self.window {
        
@@ -1339,6 +1350,19 @@ public extension CGImage {
         return NSImage(cgImage: self, size: backingSize)
     }
 
+    func highlight(color: NSColor) -> CGImage {
+        let image = self
+        let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
+        context.withContext { ctx in
+            ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
+            let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
+            
+            ctx.clip(to: imageRect, mask: image)
+            ctx.setFillColor(color.cgColor)
+            ctx.fill(imageRect)
+        }
+        return context.generateImage() ?? image
+    }
     
     func createMatchingBackingDataWithImage(orienation: ImageOrientation) -> CGImage?
     {

@@ -520,6 +520,10 @@ open class ViewController : NSObject {
         }
     }
     
+    open func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+        self.navigationController?.swapNavigationBar(leftView: leftView, centerView: centerView, rightView: rightView, animation: animation)
+    }
+    
     public var noticeResizeWhenLoaded: Bool = true
     
     public var animationStyle:AnimationStyle = AnimationStyle(duration: 0.4, function:CAMediaTimingFunctionName.spring)
@@ -531,6 +535,14 @@ open class ViewController : NSObject {
     
     public var popover:Popover?
     open var modal:Modal?
+    
+    open var barHeight: CGFloat {
+        return bar.height
+    }
+    
+    open var barPresentation: ControlStyle {
+        return navigationButtonStyle
+    }
     
     var widthOnDisappear: CGFloat? = nil
     
@@ -675,13 +687,18 @@ open class ViewController : NSObject {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
             leftBarView.requestUpdate()
         }
-        self.leftBarView.style = navigationButtonStyle
+        self.leftBarView.style = barPresentation
     }
     
     open func requestUpdateCenterBar() {
         setCenterTitle(defaultBarTitle)
         setCenterStatus(defaultBarStatus)
+        self.centerBarView.style = barPresentation
     }
+    open func requestUpdateRightBar() {
+        self.rightBarView.style = barPresentation
+    }
+    
     
     open func dismiss() {
         if navigationController?.controller == self {
@@ -689,11 +706,7 @@ open class ViewController : NSObject {
         } 
     }
     
-    open func requestUpdateRightBar() {
-        (self.rightBarView as? TextButtonBarView)?.style = navigationButtonStyle
-        self.rightBarView.style = navigationButtonStyle
-    }
-    
+
     
     @objc func viewFrameChanged(_ notification:Notification) {
         if atomicSize.with({ $0 != frame.size}) {
@@ -756,15 +769,15 @@ open class ViewController : NSObject {
 
     
     open func getCenterBarViewOnce() -> TitledBarView {
-        return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
+        return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: barPresentation.textColor, font: .medium(.title)))
     }
     
-    public func setCenterTitle(_ text:String) {
-        self.centerBarView.text = .initialize(string: text, color: presentation.colors.text, font: .medium(.title))
+    open func setCenterTitle(_ text:String) {
+        self.centerBarView.text = .initialize(string: text, color: barPresentation.textColor, font: .medium(.title))
     }
-    public func setCenterStatus(_ text: String?) {
+    open func setCenterStatus(_ text: String?) {
         if let text = text {
-            self.centerBarView.status = .initialize(string: text, color: presentation.colors.grayText, font: .normal(.text))
+            self.centerBarView.status = .initialize(string: text, color: barPresentation.borderColor, font: .normal(.text))
         } else {
             self.centerBarView.status = nil
         }
@@ -1035,7 +1048,7 @@ open class ViewController : NSObject {
     
     
     open func backSettings() -> (String,CGImage?) {
-        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(presentation.colors.accentIcon))
+        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(barPresentation.foregroundColor))
     }
     
     open var popoverClass:AnyClass {

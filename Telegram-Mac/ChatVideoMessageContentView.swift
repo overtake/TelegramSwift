@@ -146,7 +146,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     override func open() {
         if let parent = parent, let context = context {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
+                if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
@@ -171,7 +171,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     private func updateSongState() {
-        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
+        if let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
             var singleEqual: Bool = false
             if let single = singleWrapper {
                 singleEqual = song.entry.isEqual(to: single)
@@ -293,7 +293,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     @objc func updatePlayerIfNeeded() {
-        let timebase:CMTimebase? = context?.audioPlayer?.currentSong?.stableId == parent?.chatStableId ? context?.audioPlayer?.timebase : nil
+        let timebase:CMTimebase? = context?.sharedContext.getAudioPlayer()?.currentSong?.stableId == parent?.chatStableId ? context?.sharedContext.getAudioPlayer()?.timebase : nil
         
         var accept = acceptVisibility
         if isLite(.video) && timebase == nil {
@@ -358,7 +358,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
             
             if mediaUpdated {
                 
-                context.audioPlayer?.add(listener: self)
+                context.sharedContext.getAudioPlayer()?.add(listener: self)
                 
                 player.layer?.cornerRadius = size.height / 2
                 data = nil

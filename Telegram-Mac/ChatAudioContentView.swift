@@ -82,8 +82,8 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func open() {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters, let context = context, let parent = parent  {
-            if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
-            } else {               
+            if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
+            } else {
                 let controller:APController
 
                 if parameters.isWebpage {
@@ -134,7 +134,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
-        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
+        if let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: parent), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:0))
                 progressView.state = .Icon(image: presentation.pauseThumb, mode: .normal)
@@ -175,7 +175,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
        
         
         
-        context.audioPlayer?.add(listener: self)
+        context.sharedContext.getAudioPlayer()?.add(listener: self)
         self.setNeedsDisplay()
         
         self.fetchStatus = .Local
@@ -214,7 +214,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     override func clean() {
         //fetchDisposable.dispose()
         statusDisposable.dispose()
-        context?.audioPlayer?.remove(listener: self)
+        context?.sharedContext.getAudioPlayer()?.remove(listener: self)
     }
     
 }

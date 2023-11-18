@@ -67,7 +67,9 @@ class PeerInfoArguments {
     }
     
     func peerInfo(_ peerId:PeerId) {
-        pushViewController(PeerInfoController(context: context, peerId: peerId))
+        if let navigation = pullNavigation() {
+            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
+        }
     }
     
     func peerChat(_ peerId:PeerId, postId: MessageId? = nil) {
@@ -245,11 +247,33 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
 
 final class PeerInfoView : View {
     let tableView: TableView
+    let navigationBarView = NavigationBarView(frame: .zero)
+    private let navBgView = View()
     required init(frame frameRect: NSRect) {
         tableView = .init(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
+        addSubview(navBgView)
+        addSubview(navigationBarView)
+        navigationBarView.background = .clear
     }
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        navigationBarView.backgroundColor = .clear
+        navBgView.backgroundColor = theme.colors.background
+        navBgView.borderColor = theme.colors.border
+        navBgView.border = [.Bottom]
+    }
+    
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        var result = super.hitTest(point)
+        if result == nil {
+            result = navigationBarView.hitTest(point.offsetBy(dx: 0, dy: -self.frame.minY))
+        }
+        return result
+    }
+    
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -257,7 +281,22 @@ final class PeerInfoView : View {
     
     override func layout() {
         super.layout()
+        navigationBarView.frame = NSMakeRect(0, -50, frame.width, 50)
+        navBgView.frame = navigationBarView.frame
         tableView.frame = bounds
+    }
+    
+    func set(leftBar: BarView, centerView: BarView, rightView: BarView, controller: ViewController, animated: Bool) {
+        
+        navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
+        navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
+        navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
+
+    }
+    
+    fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {
+        self.navBgView.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
+        self.navigationBarView.bottomBorder.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
     }
 }
 
@@ -270,6 +309,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
     let peerId:PeerId
+    let peer: Peer
     
     private let arguments:Promise<PeerInfoArguments> = Promise()
     
@@ -290,17 +330,85 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     let source: Source
     let stories: PeerExpiringStoryListContext?
+
+    fileprivate enum ScrollState : Equatable {
+        case pageUp
+        case pageIn
+    }
+    
+    private var scrollState: ScrollState = .pageUp
+    
+    private func updateScrollState(_ state: ScrollState, animated: Bool) {
+        if state != self.scrollState {
+            self.scrollState = state
+            CATransaction.begin()
+            self.requestUpdateBackBar()
+            self.requestUpdateCenterBar()
+            self.requestUpdateRightBar()
+            genericView.updateScrollState(state, animated: animated)
+            CATransaction.commit()
+        }
+    }
+    
+    override func requestUpdateBackBar() {
+        if let leftBarView = _leftBar as? BackNavigationBar {
+            leftBarView.requestUpdate()
+        }
+        _leftBar.style = barPresentation
+    }
+    
+    override func requestUpdateCenterBar() {
+        setCenterTitle(defaultBarTitle)
+        setCenterStatus(defaultBarStatus)
+        _centerBar.style = barPresentation
+    }
+    override func requestUpdateRightBar() {
+        _rightBar.style = barPresentation
+    }
+    
+    override func setCenterTitle(_ text:String) {
+        _centerBar.text = .initialize(string: text, color: barPresentation.textColor, font: .medium(.title))
+    }
+    override func setCenterStatus(_ text: String?) {
+        if let text = text {
+            _centerBar.status = .initialize(string: text, color: barPresentation.borderColor, font: .normal(.text))
+        } else {
+            _centerBar.status = nil
+        }
+    }
     
     
-    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId) {
+    override var barPresentation: ControlStyle {
+        if let nameColor = peer.nameColor, state == .Normal, scrollState == .pageUp {
+            let backgroundColor = context.peerNameColors.get(nameColor).main
+            let foregroundColor = backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            return .init(foregroundColor: foregroundColor, backgroundColor: .clear, highlightColor: .clear, borderColor: .clear, textColor: foregroundColor)
+        } else {
+            return .init(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear, borderColor: theme.colors.border)
+        }
+    }
+    
+    override func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+        if leftView == leftBarView {
+            self.genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar, controller: self, animated: animation == .crossfade)
+        } else {
+            self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
+        }
+    }
+    
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
             return
         }
-        navigation.push(PeerInfoController(context: context, peerId: peerId))
+        let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+        _ = signal.start(next: { [weak navigation] peer in
+            navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source))
+        })
     }
     
-    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
-        self.peerId = peerId
+    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
+        self.peerId = peer.id
+        self.peer = peer
         self.source = source
         self.threadInfo = threadInfo
         
@@ -312,6 +420,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
         super.init(context)
+        
+        bar = .init(height: 50, enableBorder: true)
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
             self?.navigationController?.push(controller)
@@ -381,10 +491,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.tableView.reloadData()
     }
     
-    
+    override func getLeftBarViewOnce() -> BarView {
+        return BarView(controller: self)
+    }
+    override func getRightBarViewOnce() -> BarView {
+        return BarView(controller: self)
+    }
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let currentEvent = NSApp.currentEvent, state == .Edit {
@@ -397,8 +511,33 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         return .invokeNext
     }
     
+    private func updateNavigationBar() {
+        updateScrollState(self.genericView.tableView.documentOffset.y <= 0 ? .pageUp : .pageIn, animated: true)
+    }
+    
+    private var _leftBar: BarView!
+    private var _centerBar: TitledBarView!
+    private var _rightBar: BarView!
+
     override func viewDidLoad() -> Void {
+        
+        _leftBar = super.getLeftBarViewOnce()
+        _centerBar = super.getCenterBarViewOnce()
+        _rightBar = super.getRightBarViewOnce()
+        
         super.viewDidLoad()
+        
+        genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
+        genericView.updateScrollState(scrollState, animated: false)
+        
+        genericView.tableView.layer?.masksToBounds = false
+        genericView.tableView.documentView?.layer?.masksToBounds = false
+        genericView.tableView.clipView.layer?.masksToBounds = false
+        genericView.layer?.masksToBounds = false
+        
+        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.updateNavigationBar()
+        }))
         
         self.genericView.tableView.hasVerticalScroller = false
         

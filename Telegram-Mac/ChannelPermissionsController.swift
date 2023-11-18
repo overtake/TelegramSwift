@@ -791,7 +791,9 @@ final class ChannelPermissionsController : TableViewController {
         }, openPeer: { participant in
             restrict(participant, true)
         }, openPeerInfo: { [weak self] peer in
-            self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peer.id)
+            }
         }, openKicked: { [weak self] in
             self?.navigationController?.push(ChannelBlacklistViewController(context, peerId: peerId))
         }, presentRestrictedPublicGroupPermissionsAlert: {

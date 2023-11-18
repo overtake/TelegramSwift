@@ -305,7 +305,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
                 break
             case .Local, .Remote:
                 if let wrapper = item.audioWrapper {
-                    if let controller = item.context.audioPlayer, controller.playOrPause(wrapper) {
+                    if let controller = item.context.sharedContext.getAudioPlayer(), controller.playOrPause(wrapper) {
                     } else {
                         let controller = APSingleResourceController(context: item.context, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
@@ -342,7 +342,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     }
     
     func checkState() {
-        if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = item.context.audioPlayer, let song = controller.currentSong {
+        if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: wrapper), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
             } else {
@@ -390,7 +390,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     
     deinit {
         if let item = item as? ContextListRowItem {
-            item.context.audioPlayer?.remove(listener: self)
+            item.context.sharedContext.getAudioPlayer()?.remove(listener: self)
         }
         statusDisposable.dispose()
         fetchDisposable.dispose()

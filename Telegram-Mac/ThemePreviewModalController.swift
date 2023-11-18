@@ -375,6 +375,10 @@ class ThemePreviewModalController: ModalViewController {
     override var modalTheme: ModalViewController.Theme {
         return .init(text: currentTheme.colors.text, grayText: currentTheme.colors.grayText, background: currentTheme.colors.background, border: currentTheme.colors.border, accent: currentTheme.colors.accent, grayForeground: currentTheme.colors.grayForeground)
     }
+    
+    override var hasBorder: Bool {
+        return false
+    }
 }
 
 

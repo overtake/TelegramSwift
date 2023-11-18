@@ -265,7 +265,9 @@ class BlockedPeersViewController: EditableViewController<TableView> {
             }))
         }, openPeer: { [weak self] peerId in
             guard let `self` = self else {return}
-            self.navigationController?.push(PeerInfoController(context: self.context, peerId: peerId))
+            if let navigation = self.navigationController {
+                PeerInfoController.push(navigation: navigation, context: self.context, peerId: peerId)
+            }
         })
         
         

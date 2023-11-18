@@ -189,7 +189,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, folders: ChatListFolders?) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, inlinePlayerContext: InlineAudioPlayerView.ContextObject?, folders: ChatListFolders?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -596,13 +596,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 self.launchAction = .preferences
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
-            case let .profile(peerId, necessary):
+            case let .profile(peer, necessary):
                 
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
 
                 if (necessary || context.layout != .single) {
-                    let controller = PeerInfoController(context: context, peerId: peerId)
+                    let controller = PeerInfoController(context: context, peer: peer._asPeer())
                     controller.navigationController = self.rightController
                     controller.loadViewIfNeeded(self.rightController.bounds)
 
@@ -657,15 +657,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if let groupCallContext = groupCallContext {
             rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
-        
+        if let inlinePlayerContext = inlinePlayerContext {
+            rightController.header?.show(true, contextObject: inlinePlayerContext)
+        }
         self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutValue).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
-        
-        
-        if let controller = context.audioPlayer, let _ = self.rightController.header {
-            self.rightController.header?.show(false, contextObject: InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: nil, supportTableView: nil))
-        }
         
        // _ready.set(.single(true))
     }

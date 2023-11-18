@@ -617,9 +617,9 @@
         guard let navigationController = self.navigationController, isProfileIntended else {
             return
         }
-        if navigationController.controller is PeerInfoController {
-            navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
-            navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
+        if let controller = navigationController.controller as? PeerInfoController {
+            controller.swapNavigationBar(leftView: self.leftBarView, centerView: self.centerBarView, rightView: self.rightBarView, animation: .crossfade)
+            
         }
 
     }
@@ -716,8 +716,7 @@
         }
         
         if let navigationController = navigationController, isProfileIntended {
-            navigationController.swapNavigationBar(leftView: nil, centerView: navigationController.controller.centerBarView, rightView: nil, animation: .crossfade)
-            navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: navigationController.controller.rightBarView, animation: .none)
+            navigationController.controller.swapNavigationBar(leftView: navigationController.controller.leftBarView, centerView: navigationController.controller.centerBarView, rightView: navigationController.controller.rightBarView, animation: .crossfade)
         }
     }
     
@@ -1017,7 +1016,7 @@
             }
             let tableView = (navigation.first { $0 is ChatController} as? ChatController)?.genericView.tableView
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: tableView, supportTableView: self?.currentTable)
-            navigation.header?.show(true, contextObject: object)
+            context.sharedContext.showInlinePlayer(object)
         }
         
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in
@@ -1025,7 +1024,9 @@
                 if toChat {
                     openChat(peerId, .init(messageId: postId))
                 } else {
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
+                    if let navigation = strongSelf.navigationController {
+                        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo)
+                    }
                 }
             }
         }
@@ -1339,7 +1340,7 @@
     private func searchGroupUsers() {
         _ = (selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
-                context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+                PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
             }
         })
     }
@@ -1375,9 +1376,6 @@
         return super.defaultBarTitle
     }
     
-    override func backSettings() -> (String, CGImage?) {
-        return super.backSettings()
-    }
     
     override func didRemovedFromStack() {
         super.didRemovedFromStack()
