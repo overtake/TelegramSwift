@@ -1259,7 +1259,7 @@ class GalleryViewer: NSResponder {
     
     func openInfo(_ peerId: PeerId) {
         close()
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }
     
     func share(_ control: Control) -> Void {

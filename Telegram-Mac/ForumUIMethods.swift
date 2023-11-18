@@ -143,11 +143,11 @@ struct ForumUI {
                 return
             }
         }
-        navigation.push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
     }
     static func openTopicInfo(_ threadId: Int64, peerId: PeerId, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()
-        navigation.push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
     }
     static func createTopic(_ peerId: PeerId, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()

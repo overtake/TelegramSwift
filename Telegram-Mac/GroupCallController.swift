@@ -858,7 +858,8 @@ final class GroupCallUIController : ViewController {
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.data.call.accountContext.bindings.rootNavigation().push(PeerInfoController.init(context: strongSelf.data.call.accountContext, peerId: peer.id))
+            let navigation = strongSelf.data.call.accountContext.bindings.rootNavigation()
+            PeerInfoController.push(navigation: navigation, context: strongSelf.data.call.accountContext, peerId: peer.id)
             strongSelf.data.call.accountContext.window.orderFrontRegardless()
         }, inviteMembers: { [weak self] in
             guard let window = self?.window, let data = self?.data else {

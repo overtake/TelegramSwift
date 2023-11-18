@@ -116,7 +116,7 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
         case let .input(_, value, viewType):
             return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: value, placeholder: nil, inputPlaceholder: "https://t.me/addstickers/", defaultText: "https://t.me/addstickers/", rightItem: .action(theme.icons.recentDismiss, .clearText), filter: { text in
                 var filter = NSCharacterSet.alphanumerics
-                filter.insert(charactersIn: "_")
+                filter.insert(charactersIn: "_/")
                 return text.trimmingCharacters(in: filter.inverted)
             }, updated: { updatedText in
                  arguments.textChanged(value, updatedText)

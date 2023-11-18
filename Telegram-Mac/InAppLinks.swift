@@ -255,6 +255,10 @@ var globalLinkExecutor:TextViewInteractions {
                 modified.replaceCharacters(in: range.0, with: range.1)
             }
             
+            modified.removeAttribute(TextInputAttributes.quote, range: modified.range)
+            modified.removeAttribute(TextInputAttributes.code, range: modified.range)
+            modified.removeAttribute(TextInputAttributes.monospace, range: modified.range)
+
             let input = ChatTextInputState(attributedText: modified, selectionRange: 0 ..< modified.length)
             
             if !modified.string.isEmpty {

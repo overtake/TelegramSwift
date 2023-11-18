@@ -27,9 +27,7 @@ open class TextViewLabel: View {
     public var alignment: NSTextAlignment = .left
     public var attributedString:NSAttributedString? {
         didSet {
-            if attributedString != oldValue {
-                self.update(attr: self.attributedString, size: NSMakeSize(frame.width, frame.height))
-            }
+            self.update(attr: self.attributedString, size: NSMakeSize(frame.width, frame.height))
         }
     }
 
@@ -39,10 +37,7 @@ open class TextViewLabel: View {
     
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        
-        ctx.setFillColor(self.backgroundColor.cgColor)
-        ctx.fill(layer.bounds)
-        
+                
         if let text = text {
             let focus = self.focus(text.0.size)
             text.1.draw(focus, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)

@@ -31,6 +31,10 @@ class GeneralContainableRowView : TableRowView {
         self.containerView.addSubview(view, positioned: place, relativeTo: otherView)
     }
     
+    func addBasicSubview(_ view: NSView, positioned place: NSWindow.OrderingMode) {
+        subviews.insert(view, at: place == .below ? 0 : 1)
+    }
+    
     override var backdorColor: NSColor {
         return theme.colors.background
     }
@@ -186,6 +190,10 @@ class GeneralRowContainerView : Control {
         setCorners(corners, animated: animated, frame: NSMakeRect(0, 0, size.width, size.height))
     }
     
+    override func scrollWheel(with event: NSEvent) {
+        superview?.scrollWheel(with: event)
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -259,15 +267,6 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         self.needsDisplay = true
         self.needsLayout = true
     }
-
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        if backingScaleFactor == 1.0 {
-            ctx.setFillColor(backdorColor.cgColor)
-            ctx.fill(layer.bounds)
-        }
-        super.draw(layer, in: ctx)
-    }
-    
 
 
     required init?(coder: NSCoder) {

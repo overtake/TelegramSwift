@@ -449,7 +449,7 @@ final class ChatTextInputState: Codable, Equatable {
             case .code:
                 result.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case let .pre(_, language):
-                result.addAttribute(TextInputAttributes.code, value: language ?? "", range: range)
+                break
             case let .uid(_, id):
                 result.addAttribute(TextInputAttributes.textMention, value: ChatTextInputTextMentionAttribute(peerId: PeerId(id)), range: range)
             case let .url(_, url):
@@ -473,6 +473,41 @@ final class ChatTextInputState: Codable, Equatable {
     func attributedString() -> NSAttributedString {
         return self.textInputState().inputText
     }
+    
+    func makeAttributeString(addPreAsBlock: Bool = false) -> NSAttributedString {
+        let string = self.textInputState().inputText.mutableCopy() as! NSMutableAttributedString
+        var pres:[(Range<Int>, String)] = []
+
+        for attribute in attributes {
+            switch attribute {
+            case let .pre(range, language):
+                if addPreAsBlock {
+                    pres.append((range, language ?? ""))
+                }
+            default:
+                break
+            }
+        }
+        if addPreAsBlock {
+            var offset: Int = 0
+            for (pre, language) in pres.sorted(by: { $0.0.lowerBound < $1.0.lowerBound }) {
+                let symbols = "```"
+                
+                string.insert(.initialize(string: symbols), at: pre.lowerBound + offset)
+                offset += symbols.count
+
+                if !language.isEmpty {
+                    string.insert(.initialize(string: language + "\n"), at: pre.lowerBound + offset)
+                    offset += language.length + 1
+                }
+                string.insert(.initialize(string: symbols), at: pre.upperBound + offset)
+                offset += symbols.count
+            }
+        }
+
+        return string.copy() as! NSAttributedString
+    }
+
 
     func subInputState(from range: NSRange, theme: TelegramPresentationTheme = theme) -> ChatTextInputState {
 //        let subText = convertMarkdownToAttributes(attributedString().attributedSubstring(from: range)).trimmed
@@ -536,6 +571,7 @@ final class ChatTextInputState: Codable, Equatable {
                             let test = lang.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                             if test.length == lang.length {
                                 language = lang
+                                offsetRanges.append(NSMakeRange(newLineRange.location, lang.length))
                                 text = String(text.suffix(text.length - newLineRange.location))
                             }
                         }
@@ -910,9 +946,10 @@ final class ChatEditState : Equatable {
             if let attribute = attribute {
                 attributes = chatTextAttributes(from: attribute)
             }
-            let temporaryState = ChatTextInputState(inputText:message.text, selectionRange: message.text.length ..< message.text.length, attributes: attributes)
+            
+            let newText = ChatTextInputState(inputText:message.text, selectionRange: message.text.length ..< message.text.length, attributes: attributes).makeAttributeString(addPreAsBlock: true)
 
-            self.inputState = temporaryState
+            self.inputState = .init(inputText: newText.string, selectionRange: newText.length ..< newText.length, attributes: chatTextAttributes(from: newText))
 
         }
         self.loadingState = loadingState

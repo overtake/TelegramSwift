@@ -437,7 +437,7 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
         let pause = theme.icons.storage_music_pause
         let inset = NSEdgeInsets(left: 3, top: 3)
 
-        if let controller = item.context.audioPlayer, let song = controller.currentSong {
+        if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: item.message), case .playing = song.state {
                 audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: pause, iconInset: inset)
                 audio.state = .Icon(image: pause, mode: .normal)

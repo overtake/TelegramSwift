@@ -640,17 +640,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             x -= 10
         }
         
-//        if repeatControl.isHidden {
-//            if playingSpeed.isHidden {
-//                volumeControl.centerY(x: dismiss.frame.minX - 10 - volumeControl.frame.width)
-//            } else {
-//                volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
-//            }
-//        } else {
-//            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
-//        }
-        
-        
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
@@ -678,7 +667,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         controller?.cleanup()
         instantVideoPip?.hide()
         instantVideoPip = nil
-        self.hide(animated)
+        context?.sharedContext.endInlinePlayer(animated: animated)
     }
     
     required init(frame frameRect: NSRect) {

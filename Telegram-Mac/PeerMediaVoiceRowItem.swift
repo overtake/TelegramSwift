@@ -354,7 +354,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             backgroundColor = theme.colors.fileActivityBackground
             foregroundColor = theme.colors.fileActivityForeground
         }
-        if let controller = item.context.audioPlayer, let song = controller.currentSong {
+        if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
            
             
             if song.entry.isEqual(to: item.message), case .playing = song.state {

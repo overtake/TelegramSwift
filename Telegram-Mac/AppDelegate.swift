@@ -865,7 +865,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 if let account = account {
                                                                     
                                     let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, account: account)
-                                    return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), folders: folders)
+                                    return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), inlinePlayerContext: sharedContext.getCrossInlinePlayer(), folders: folders)
                                     
                                 } else {
                                     return nil
@@ -1121,11 +1121,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func navigateProfile(_ peerId: PeerId, account: Account) {
         if let context = self.contextValue?.context, context.peerId == account.peerId {
-            context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
             context.window.makeKeyAndOrderFront(nil)
             context.window.orderFrontRegardless()
         } else {
-            sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(peerId, necessary: true))
+            let signal = account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+            _ = signal.start(next: { peer in
+                self.sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(EnginePeer(peer), necessary: true))
+            })
         }
     }
     func navigateChat(_ peerId: PeerId, account: Account) {

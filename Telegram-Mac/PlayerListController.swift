@@ -677,7 +677,7 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
         
         
         let arguments = PlayerListArguments(chatInteraction: chatInteraction, music: { message, _ in
-            context.audioPlayer?.playOrPause(message.id)
+            context.sharedContext.getAudioPlayer()?.playOrPause(message.id)
         })
         
         let historyViewTransition: Signal<TableUpdateTransition, NoError>

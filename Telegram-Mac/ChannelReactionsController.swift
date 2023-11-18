@@ -67,6 +67,8 @@ private final class ReactionsRowView: GeneralContainableRowView {
         //addSubview(overlay)
         
         overlay.isSelectable = false
+        
+        inputView.placeholder = strings().channelReactionsPlaceholder
                 
         
         overlay.set(handler: { [weak self] control in

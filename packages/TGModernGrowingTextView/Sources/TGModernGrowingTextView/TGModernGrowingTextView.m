@@ -12,13 +12,13 @@
 static int64_t nextId = 0;
 
 
+
 @interface TGTextFieldPlaceholder : NSTextField
     
     @end
 
 @interface TGModernGrowingTextView ()
 @property (nonatomic,strong) TGTextFieldPlaceholder *placeholder;
-@property (nonatomic,strong) NSArray<NSValue *> *textAttachmentRanges;
 @end
 
 @implementation MarkdownUndoItem
@@ -105,8 +105,6 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
 NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
-NSString *const TGQuoteAttributeName = @"NSAttachment";
-NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 
 
 
@@ -168,12 +166,8 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         return [super readSelectionFromPasteboard:pboard];
     }
 }
-
-
--(void)setSelectedRange:(NSRange)charRange affinity:(NSSelectionAffinity)affinity stillSelecting:(BOOL)stillSelectingFlag {
-    [super setSelectedRange:charRange affinity:affinity stillSelecting:stillSelectingFlag];
-}
     
+
 
 -(NSPoint)textContainerOrigin {
     
@@ -188,7 +182,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 }
     
 -(void)drawRect:(NSRect)dirtyRect {
-        
+    
     
     CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
                                           graphicsPort];
@@ -220,37 +214,11 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         NSRange range = [[ranges objectAtIndex:i] rangeValue];
         for (int j = 0; j < range.length; j++) {
             NSRect rect = [self highlightRectForRange:NSMakeRange(range.location + j, 1) whole:false];
-            rect.origin.x = floor(rect.origin.x);
-            rect.origin.y = floor(rect.origin.y);
-            rect.size.width = ceil(rect.size.width);
-            rect.size.height = ceil(rect.size.height);
             CGContextClearRect(context, rect);
             CGContextSetFillColorWithColor(context, [[_weakTextView.textColor colorWithAlphaComponent:0.15] CGColor]);
             CGContextFillRect(context, rect);
         }
-    }
-    
-    for (int j = 0; j < self.selectedRange.length; j++) {
-        NSRange range = NSMakeRange(self.selectedRange.location + j, 1);
-        
-        __block BOOL draw = true;
-        [_weakTextView.textAttachmentRanges enumerateObjectsUsingBlock:^(NSValue * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            if (NSEqualRanges([obj rangeValue], range)) {
-                draw = false;
-                *stop = YES;
-            }
-        }];
-        if (draw) {
-            NSRect rect = [self highlightRectForRange:range whole:false];
-            rect.origin.x = floor(rect.origin.x);
-            rect.origin.y = floor(rect.origin.y);
-            rect.size.width = ceil(rect.size.width);
-            rect.size.height = ceil(rect.size.height);
-            CGContextClearRect(context, rect);
-            CGContextSetFillColorWithColor(context, [self.selectedTextColor CGColor]);
-            CGContextFillRect(context, rect);
-        }
-       
+
     }
     
     [super drawRect:dirtyRect];
@@ -324,20 +292,10 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 }
     
 -(BOOL)becomeFirstResponder {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if ([_weakd respondsToSelector:@selector(responderDidUpdate)]) {
-            [_weakd responderDidUpdate];
-        }
-    });
     return [super becomeFirstResponder];
 }
     
 -(BOOL)resignFirstResponder {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if ([_weakd respondsToSelector:@selector(responderDidUpdate)]) {
-            [_weakd responderDidUpdate];
-        }
-    });
     return [super resignFirstResponder];
 }
     
@@ -353,7 +311,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     __block BOOL addedTransformations = false;
 
     
-    menu.appearance = self.appearance;
+    
     
     [menu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull s) {
         
@@ -437,14 +395,12 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     NSMenuItem *spoiler = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Spoiler", nil) action:@selector(makeSpoiler:) keyEquivalent:@"p"];
     [spoiler setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
-    NSMenuItem *quote = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Quote", nil) action:@selector(makeQuote:) keyEquivalent:@"i"];
-    [quote setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
-
+    
     
     NSMenuItem *removeAll = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.RemoveAll", nil) action:@selector(removeAll:) keyEquivalent:@""];
     
     
-    return @[removeAll, [NSMenuItem separatorItem], strikethrough, underline, spoiler, code, italic, bold, url, quote];
+    return @[removeAll, [NSMenuItem separatorItem], strikethrough, underline, spoiler, code, italic, bold, url];
 }
     
     
@@ -464,10 +420,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     //    [attr enumerateAttributesInRange:selectedRange options:nil usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
     //
     //    }];
-}
-
--(void)makeQuote:(id)sender {
-    [self.weakd makeQuoteOfRange:self.selectedRange];
 }
     
 -(void)boldWord:(id)sender {
@@ -727,13 +679,10 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     if (![[self undoManager] isUndoing]) {
         [[self undoManager] setActionName:NSLocalizedString(@"actions.remove-item", @"Remove Item")];
     }
-    [CATransaction begin];
-    
     [[self textStorage] setAttributedString:item.was];
     [self setSelectedRange:item.wasRange];
     [self.weakd textViewTextDidChangeSelectedRange:item.wasRange];
     [self.weakTextView update:YES];
-    [CATransaction commit];
 }
     
     
@@ -992,9 +941,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 //        [layoutManager addTextContainer:container];
 //
         _textView = [[[self _textViewClass] alloc] initWithFrame:self.bounds];
-        _textView.autoresizingMask = 0;
-        _textView.autoresizesSubviews = NO;
-        
+
         _attachments = [[NSMutableDictionary alloc] init];
         
         [_textView setRichText:NO];
@@ -1002,10 +949,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         _textView.insertionPointColor = _cursorColor;
         [_textView setAllowsUndo:YES];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectionDidChanged:) name:NSTextViewDidChangeSelectionNotification object:_textView];
-        
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(scrollDidChangeBounds:) name:NSViewBoundsDidChangeNotification object:_scrollView.contentView];
-
         
         self._undo = [[NSUndoManager alloc] init];
         self.textView.undo = self._undo;
@@ -1033,7 +976,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         [self.scrollView setDrawsBackground:NO];
         self.wantsLayer = _textView.wantsLayer = _scrollView.wantsLayer = YES;
         
-        _textAttachmentRanges = [NSArray array];
         
         _placeholder = [[TGTextFieldPlaceholder alloc] init];
         _placeholder.layer.opacity = 0.7;
@@ -1053,17 +995,12 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         
         [self addSubview:_placeholder];
         
-        
         _textView.weakTextView = self;
         
         
     }
     
     return self;
-}
-
--(void)scrollDidChangeBounds:(NSNotification *)notification {
-   // [self.textView setNeedsDisplayInRect:self.textView.bounds];
 }
 
     
@@ -1085,15 +1022,9 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 
 -(void)setSelectTextColor:(NSColor *)selectTextColor {
     _selectedTextColor = selectTextColor;
-    _textView.selectedTextColor = selectTextColor;
     [self refreshAttributes];
 }
     
--(void)setSelectedTextColor:(NSColor *)selectedTextColor {
-    _selectedTextColor = selectedTextColor;
-    _textView.selectedTextColor = selectedTextColor;
-    [self refreshAttributes];
-}
     
 -(void)setTextFont:(NSFont *)textFont {
     _textFont = textFont;
@@ -1109,7 +1040,9 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
     
     if ((self._selectedRange.location != self.textView.selectedRange.location) || (self._selectedRange.length != self.textView.selectedRange.length)) {
-        [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        });
         self._selectedRange = self.textView.selectedRange;
     }
     
@@ -1123,6 +1056,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
     [self updatePlaceholder:self.animates newSize:newSize];
     
+    [self refreshAttachments];
 }
     
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -1134,7 +1068,9 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 }
     
 -(BOOL)becomeFirstResponder {
+    // if(self.window.firstResponder != _textView) {
     [self.window makeFirstResponder:_textView];
+    // }
     return YES;
 }
     
@@ -1158,79 +1094,48 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
+    [self refreshAttributes];
 }
 
 
 -(void)refreshAttachments {
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
-    NSMutableArray<NSValue *> *textAttachmentRanges = [NSMutableArray array];
-
     NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
 
-    //self.textView.textContainer.exclusionPaths = @[];
     
-     
     NSRange range = NSMakeRange(0, self.textView.attributedString.length);
         
     [self.textView.attributedString enumerateAttributesInRange:range options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
         
         [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            if ([key isEqualToString:TGAnimatedEmojiAttributeName] || [key isEqualToString:TGQuoteAttributeName]) {
+            if ([key isEqualToString:TGAnimatedEmojiAttributeName]) {
                 TGTextAttachment *attachment = (TGTextAttachment *)obj;
                 if (attachment) {
                     [ranges addObject:[NSValue valueWithRange:range]];
                     [attachments addObject:obj];
-                    if ([attachment.type isEqualToString:@"quote"]) {
-                        [textAttachmentRanges addObject:[NSValue valueWithRange:range]];
-                    }
                 }
             }
         }];
+        
     }];
     
-    _textAttachmentRanges = textAttachmentRanges;
-    
     NSMutableArray<NSString *> *validIds = [NSMutableArray array];
-    
-    NSMutableArray<NSBezierPath *> *exclusions = [NSMutableArray array];
     
     for (int i = 0; i < ranges.count; i++) {
         NSRange range = ranges[i].rangeValue;
         TGTextAttachment *attachment = attachments[i];
         
+        NSRect rect = [self.textView highlightRectForRange:range whole:NO];
         NSView* view = [self.attachments valueForKey:attachment.identifier];
-        
         if (view == nil) {
-            view = _getAttachView(attachment, NSMakeSize(18, 16));
+            view = _getAttachView(attachment, rect.size);
         }
-        
-        NSSize exclusionSize = [attachment makeSizeFor:view textViewSize:[self.delegate textViewSize:self] range:range];
-        NSRect highlightRect = [self.textView highlightRectForRange:range whole:NO];
-       
-        
         if (view != nil) {
-            NSRect rect = highlightRect;
-            rect.size.height = MAX(exclusionSize.height, view.frame.size.height);
-            rect.size.width = MAX(exclusionSize.width, view.frame.size.width);
+            rect.size.height = view.frame.size.height;
+            rect.size.width = view.frame.size.width;
+            rect.origin.y -= 1;
             rect.origin.y = floor(rect.origin.y);
             rect.origin.x = floor(rect.origin.x);
-            
-            if (exclusionSize.width != 0) {
-                rect.origin.x = 0;
-//                if (range.location + range.length != self.string.length) {
-//                    rect.origin.y += highlightRect.size.height;
-//                } else {
-//                    rect.origin.y += highlightRect.size.height;
-//                }
-                
-                NSBezierPath *path = [[NSBezierPath alloc] init];
-                [path appendBezierPathWithRect:rect];
-                [exclusions addObject:path];
-               // self.textView.textContainer.exclusionPaths = exclusions;
-            } else {
-                rect.origin.y -= 1;
-            }
-            
             view.frame = rect;
             if(view != nil && view.superview != _textView) {
                 [_textView addSubview:view];
@@ -1238,8 +1143,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
             [validIds addObject:attachment.identifier];
             [_attachments setObject:view forKey:attachment.identifier];
         }
-        
-        
     }
     
     NSMutableArray<NSString *> *toRemove = [NSMutableArray array];
@@ -1267,16 +1170,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
     }
     
-    //self.textView.textContainer.exclusionPaths = exclusions;
-//    [self.textView setNeedsDisplay:YES];
-//    [self.textView setNeedsLayout:YES];
-//    
-//    //[self.textView.textStorage setAttributedString:self.attributedString];
-//
-//    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
-//    [_textView.layoutManager ensureGlyphsForGlyphRange:NSMakeRange(0, _textView.attributedString.length)];
-
-    //[self textDidChange:nil];
 }
     
 -(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull, NSSize size))getAttachView {
@@ -1328,24 +1221,20 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         if (![text isEqualToString:self.string]) {
             return;
         }
+        
     }
     
-//    [self refreshAttachments];
-
-    
     self.scrollView.verticalScrollElasticity = NSHeight(_scrollView.contentView.documentRect) <= NSHeight(_scrollView.frame) ? NSScrollElasticityNone : NSScrollElasticityAllowed;
-        
-    [self.textView setNeedsDisplay:YES];
-
+    
     [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     NSRect newRect = [_textView.layoutManager usedRectForTextContainer:_textView.textContainer];
-
+    
     NSSize size = newRect.size;
     size.width = NSWidth(self.frame);
     
     
     NSSize newSize = NSMakeSize(size.width, size.height);
-
+    
     
     newSize.height+= 2;
     
@@ -1438,24 +1327,26 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     [self updatePlaceholder: animated newSize: newSize];
     
     
-    
-    
-    
-   // [self setNeedsDisplay:YES];
-    [self.textView setNeedsDisplay:YES];
-    [_textView setNeedsLayout:YES];
+    [self setNeedsDisplay:YES];
     
     if (_textView.selectedRange.location != NSNotFound) {
         [self setSelectedRange:_textView.selectedRange];
     }
-
+    
+    [self setNeedsDisplay:YES];
+    
+    
+    [_textView setNeedsDisplay:YES];
+    
+    [self refreshAttributes];
+    
 }
  
     
 -(void)scrollToCursor {
     [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     
-    NSRect lineRect = [self.textView highlightRectForRange:NSMakeRange(self.selectedRange.location + self.selectedRange.length, 0) whole:true];
+    NSRect lineRect = [self.textView highlightRectForRange:NSMakeRange(self.selectedRange.location + self.selectedRange.length - 1, 1) whole:true];
     
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
     maxY = MIN(MAX(lineRect.origin.y, 0), maxY - self.scrollView.frame.size.height);
@@ -1526,7 +1417,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         _placeholder.layer.opacity = self._needShowPlaceholder ? 1.0 : 0.0;
         
         
-//        [self needsDisplay];
+        [self needsDisplay];
     }
 }
     
@@ -1562,14 +1453,8 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
     
     NSSize size = [_placeholder.attributedStringValue size];
-    [_placeholder setFrameSize:NSMakeSize(MAX(MIN(NSWidth(_textView.frame) - self._startXPlaceholder, size.width + 10), 0), size.height)];
+    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder, size.width + 10), size.height)];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
-    
-    [self.attachments enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSView * _Nonnull obj, BOOL * _Nonnull stop) {
-        [obj removeFromSuperview];
-    }];
-    [self.attachments removeAllObjects];
-    [self refreshAttachments];
 }
     
 -(BOOL)_needShowPlaceholder {
@@ -1591,7 +1476,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
    // [_placeholder sizeToFit];
     NSSize size = [_placeholder.attributedStringValue size];
-    [_placeholder setFrameSize:NSMakeSize(MAX(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10, size.width + 10), 0), size.height)];
+    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10, size.width + 10), size.height)];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0)))];
     BOOL animates = _animates;
     _animates = NO;
@@ -1630,11 +1515,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
             return;
         }
         
-//        NSBezierPath *path = [[NSBezierPath alloc] init];
-//        
-//        [path appendBezierPathWithRect:NSMakeRect(0, 0, 50, 20)];
-//        
-//        self.textView.textContainer.exclusionPaths = @[path];
         
         
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
@@ -1642,7 +1522,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
         if (self.selectedTextColor != nil) {
             [_textView setSelectedTextAttributes:
                  [NSDictionary dictionaryWithObjectsAndKeys:
-                  [NSColor clearColor], NSBackgroundColorAttributeName,
+                  self.selectedTextColor, NSBackgroundColorAttributeName,
                   nil]];
         }
         
@@ -1800,21 +1680,17 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 
         }
         
+        [self setSelectedRange:self.selectedRange];
+
     } @catch (NSException *exception) {
         
     }
     
     [self refreshAttachments];
-    
-    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
-
 }
 
 -(void)strikethroughWord {
     [self.textView makeStrikethrough:nil];
-}
--(void)makeQuote {
-    [self.textView makeQuote:nil];
 }
 -(void)underlineWord {
     [self.textView makeUnderline:nil];
@@ -1869,9 +1745,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
         
     [string enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
-        if (value != nil) {
-            [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
-        }
+        [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
         
     NSRange selectedRange = _textView.selectedRange;
@@ -1888,6 +1762,7 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
    
     [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
     
+    [self refreshAttachments];
     
 }
     
@@ -1920,7 +1795,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     
 - (void)addSimpleItem:(SimpleUndoItem *)item {
     [self.inputView addSimpleItem:item];
-    [self refreshAttachments];
     [self update: YES];
 }
     
@@ -2100,105 +1974,5 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
     return self.scrollView;
 }
 
--(BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)commandSelector {
-    if (commandSelector == @selector(deleteBackward:)) {
-        
-    } else if (commandSelector == @selector(deleteForward:)) {
-        
-    }
-    return false;
-}
-
-
-
--(NSRange)textView:(NSTextView *)textView willChangeSelectionFromCharacterRange:(NSRange)oldSelectedCharRange toCharacterRange:(NSRange)newSelectedCharRange {
-    
-    NSRange newSelectedRange = newSelectedCharRange;
-    
-    NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
-    NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
-
-    NSRange range = NSMakeRange(0, self.textView.attributedString.length);
-        
-    [self.textView.attributedString enumerateAttributesInRange:range options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
-        
-        [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            if ([key isEqualToString:TGQuoteAttributeName]) {
-                TGTextAttachment *attachment = (TGTextAttachment *)obj;
-                if (attachment) {
-                    [ranges addObject:[NSValue valueWithRange:range]];
-                    [attachments addObject:obj];
-                }
-            }
-        }];
-    }];
-    
-    if (newSelectedRange.location == NSNotFound) {
-        return newSelectedRange;
-    }
-    
-//    
-//    for (int i = 0; i < ranges.count; i++) {
-//        NSRange range = [[ranges objectAtIndex:i] rangeValue];
-//        
-//        NSRange fullRange = NSMakeRange(range.location - 1, range.length + 2);
-//        
-//        NSRange intersection = NSIntersectionRange(fullRange, newSelectedRange);
-//        
-//        
-//        if (intersection.location + intersection.length != 0) {
-//            if (oldSelectedCharRange.location > newSelectedRange.location) {
-//                if (newSelectedRange.location > fullRange.location) {
-//                    newSelectedRange.location = range.location - 1;
-//                    if (newSelectedRange.length > 0) {
-//                        newSelectedRange.location += 1;
-//                        newSelectedRange.length = MAX(range.length, newSelectedRange.length + 1);
-//                    }
-//                } else if (newSelectedRange.location == fullRange.location) {
-//                    if (newSelectedRange.length > 0 && newSelectedRange.location > 0) {
-//                        newSelectedRange.location = newSelectedRange.location - 1;
-//                        
-//                    }
-//                }
-//            } else {
-//                newSelectedRange.location = range.location + range.length + 1;
-//            }
-//        }
-//
-//    }
-    
-    
-//    if (newSelectedRange.length > 0) {
-//        for (int i = 0; i < ranges.count; i++) {
-//            NSRange range = [[ranges objectAtIndex:i] rangeValue];
-//            if (newSelectedRange.location + 1 == range.location) {
-//                newSelectedRange.location = range.location;
-//                newSelectedRange.length = MAX(range.length, newSelectedRange.length - 1);
-//            }
-//        }
-//    }
-    
-    
-    /*
-     if (newSelectedRange.length > 0) {
-         if (newSelectedRange.location == range.location - 1 && newSelectedRange.length <= 3) {
-             newSelectedRange = range;
-         } else if (newSelectedRange.location > range.location) {
-             int bp = 0;
-             bp += 1;
-         }
-     }
-     */
-    
-//    if (self.string.length > 0) {
-//        if (newSelectedRange.length == 0) {
-//            NSLog(@"char: %@", [self.string substringWithRange:NSMakeRange(newSelectedRange.location - 1, 1)]);
-//        } else {
-//            NSLog(@"char: %@", [self.string substringWithRange:newSelectedRange]);
-//        }
-//    }
-    
-    return newSelectedRange;
-}
-
 @end
+

@@ -300,7 +300,9 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                 removePeerDisposable.set(applyPeers.start())
             }))
         }, openInfo: { [weak self] peer in
-            self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peer.id)
+            }
         })
 
         let previous:Atomic<[AppearanceWrapperEntry<SelectivePrivacyPeersEntry>]> = Atomic(value: [])

@@ -162,6 +162,21 @@ class ChatMessageItem: ChatRowItem {
         }
         return super.defaultContentTopOffset
     }
+    override var contentOffset: NSPoint {
+        var offset = super.contentOffset
+        if isBubbled, isAdRow {
+            offset.y += 2
+        }
+        return offset
+    }
+
+    override var height: CGFloat {
+        var height = super.height
+        if isBubbled, isAdRow {
+            height += 3
+        }
+        return height
+    }
     
     override var hasBubble: Bool {
         get {
@@ -222,25 +237,7 @@ class ChatMessageItem: ChatRowItem {
     }
     
     func invokeAction() {
-        if let adAttribute = message?.adAttribute, let peer = peer {
-            let link: inAppLink
-            switch adAttribute.target {
-            case let .peer(id, messageId, startParam):
-                let action: ChatInitialAction?
-                if let startParam = startParam {
-                    action = .start(parameter: startParam, behavior: .none)
-                } else {
-                    action = nil
-                }
-                link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: peer.isChannel || peer.isBot, postId: messageId?.id, callback: chatInteraction.openInfo)
-            case let .join(_, joinHash):
-                link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
-            case let .webPage(title, url: url):
-                link = .external(link: url, false)
-            }
-            chatInteraction.markAdAction(adAttribute.opaqueId)
-            execute(inapp: link)
-        } else if let webpage = webpageLayout {
+        if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, messageId: message?.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
         } else if unsupported {

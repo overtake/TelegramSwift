@@ -2210,7 +2210,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     let controller = context.bindings.rootNavigation().controller as? PeerInfoController
 
                     if controller?.peerId != peerId {
-                        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                     }
                     self?.close()
                 }

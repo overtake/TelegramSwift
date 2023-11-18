@@ -20,7 +20,7 @@ public enum NavigationBarSwapAnimation {
 public struct NavigationBarStyle {
     public let height:CGFloat
     public let enableBorder:Bool
-    public init(height:CGFloat, enableBorder:Bool = true) {
+    public init(height:CGFloat, enableBorder:Bool = true, custom: Bool = false) {
         self.height = height
         self.enableBorder = enableBorder
     }
@@ -32,13 +32,15 @@ public struct NavigationBarStyle {
 
 public class NavigationBarView: View {
     
-    private var bottomBorder:View = View()
+    public private(set) var bottomBorder:View = View()
     
     private var leftView:BarView = BarView(frame: NSZeroRect)
     private var centerView:BarView = BarView(frame: NSZeroRect)
     private var rightView:BarView = BarView(frame: NSZeroRect)
     
     weak var navigation: NavigationViewController?
+    
+    
     
     override init() {
         super.init()
@@ -75,7 +77,6 @@ public class NavigationBarView: View {
     
     override public func layout() {
         super.layout()
-        self.bottomBorder.setNeedsDisplay()
         self.bottomBorder.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
 
         self.layout(left: leftView, center: centerView, right: rightView)
@@ -113,9 +114,9 @@ public class NavigationBarView: View {
             let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? width / 3 : width / 4))
             let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? width / 3 : width / 4))
             
-            left.frame = NSMakeRect(startPosition, 0, leftWidth, frame.height - .borderSize);
-            center.frame = NSMakeRect(left.frame.maxX, 0, width - (leftWidth + rightWidth), frame.height - .borderSize);
-            right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height - .borderSize);
+            left.frame = NSMakeRect(startPosition, 0, leftWidth, frame.height);
+            center.frame = NSMakeRect(left.frame.maxX, 0, width - (leftWidth + rightWidth), frame.height);
+            right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height);
         }
     }
     
@@ -424,6 +425,7 @@ public class NavigationBarView: View {
             self.centerView = center
             self.rightView = right
             
+            
             self.addSubview(bottomBorder)
             needsLayout = true
         }
@@ -462,17 +464,20 @@ public class NavigationBarView: View {
             applyAnimation(animation, from: self.leftView, to: barView)
             self.leftView = barView
         }
+        layout(left: leftView, center: centerView, right: rightView)
     }
     public func switchCenterView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
         if self.centerView != barView {
             applyAnimation(animation, from: self.centerView, to: barView)
             self.centerView = barView
         }
+        layout(left: leftView, center: centerView, right: rightView)
     }
     public func switchRightView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
         if self.rightView != barView {
             applyAnimation(animation, from: self.rightView, to: barView)
             self.rightView = barView
         }
+        layout(left: leftView, center: centerView, right: rightView)
     }
 }

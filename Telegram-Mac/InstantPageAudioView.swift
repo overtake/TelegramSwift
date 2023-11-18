@@ -80,9 +80,9 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         
         linearProgress.fetchingColor = theme.colors.grayText
         
-        if let current = context.audioPlayer?.currentSong {
+        if let current = context.sharedContext.getAudioPlayer()?.currentSong {
             if current.entry.isEqual(to: self.wrapper) {
-                context.audioPlayer?.add(listener: self)
+                context.sharedContext.getAudioPlayer()?.add(listener: self)
             }
         }
         statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)

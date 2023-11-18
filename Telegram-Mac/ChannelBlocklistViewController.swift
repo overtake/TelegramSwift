@@ -330,7 +330,9 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
             
            restrict(memberId, true)
         }, openInfo: { [weak self] peerId in
-            self?.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
+            }
         }, addMember: {
             let behavior = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1)
             

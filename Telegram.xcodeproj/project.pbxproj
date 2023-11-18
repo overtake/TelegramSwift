@@ -45,6 +45,7 @@
 		2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718244C2A0507A300AFBD4C /* menu_success.tgs */; };
 		2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718244E2A05413000AFBD4C /* StoryMyInputView.swift */; };
 		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
+		271891F82B08A7DB0008B238 /* LokiRng in Frameworks */ = {isa = PBXBuildFile; productRef = 271891F72B08A7DB0008B238 /* LokiRng */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		271999D92A372549009A3CC7 /* ChatStoryRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */; };
@@ -264,6 +265,7 @@
 		276790912AF3D11E00E9975C /* ChannelReactionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276790902AF3D11E00E9975C /* ChannelReactionsController.swift */; };
 		276790AD2AFE02E100E9975C /* ChatChannelSuggestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276790AC2AFE02E100E9975C /* ChatChannelSuggestView.swift */; };
 		276790AF2AFE52A000E9975C /* menu_unlock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276790AE2AFE52A000E9975C /* menu_unlock.tgs */; };
+		276790BD2B06919500E9975C /* PeerInfoSpawnEmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */; };
 		276885032770D7BE0021C891 /* AddReactionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276885022770D7BE0021C891 /* AddReactionManager.swift */; };
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
@@ -1545,6 +1547,7 @@
 		2718244C2A0507A300AFBD4C /* menu_success.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_success.tgs; sourceTree = "<group>"; };
 		2718244E2A05413000AFBD4C /* StoryMyInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyInputView.swift; sourceTree = "<group>"; };
 		271824502A08C60400AFBD4C /* StoryChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatListView.swift; sourceTree = "<group>"; };
+		271891F62B08A7B70008B238 /* LokiRng */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = LokiRng; path = "submodules/telegram-ios/submodules/Utils/LokiRng"; sourceTree = "<group>"; };
 		2718FF8127BFB28900196BC4 /* login_airplane.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_airplane.tgs; sourceTree = "<group>"; };
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
@@ -1762,6 +1765,7 @@
 		276790902AF3D11E00E9975C /* ChannelReactionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelReactionsController.swift; sourceTree = "<group>"; };
 		276790AC2AFE02E100E9975C /* ChatChannelSuggestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatChannelSuggestView.swift; sourceTree = "<group>"; };
 		276790AE2AFE52A000E9975C /* menu_unlock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_unlock.tgs; sourceTree = "<group>"; };
+		276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoSpawnEmojiView.swift; sourceTree = "<group>"; };
 		276885022770D7BE0021C891 /* AddReactionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReactionManager.swift; sourceTree = "<group>"; };
 		276957A82746C07400297991 /* SessionModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionModalController.swift; sourceTree = "<group>"; };
 		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
@@ -3049,6 +3053,7 @@
 				27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */,
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
+				271891F82B08A7DB0008B238 /* LokiRng in Frameworks */,
 				279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */,
 				27D43DC3279191A5006968A6 /* OpenSSLEncryption in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
@@ -3828,6 +3833,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				271891F62B08A7B70008B238 /* LokiRng */,
 				277D28182AD02EF900CC6420 /* InputView */,
 				27E60C0F29ED272800E10E39 /* Emoji */,
 				27AAAD5829A49F2500F70A9A /* System */,
@@ -4555,6 +4561,7 @@
 				D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */,
 				27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */,
 				27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */,
+				276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */,
 			);
 			name = table;
 			sourceTree = "<group>";
@@ -6298,6 +6305,7 @@
 				2738A2D3289C41CE00EC1010 /* CurrencyFormat */,
 				27AAAD5929A4A11600F70A9A /* System */,
 				277D28192AD02F1800CC6420 /* InputView */,
+				271891F72B08A7DB0008B238 /* LokiRng */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7031,6 +7039,7 @@
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C21BE3B11FD14CDB00C1C849 /* ParseAppearanceColors.swift in Sources */,
 				D06C695F253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift in Sources */,
+				276790BD2B06919500E9975C /* PeerInfoSpawnEmojiView.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
 				9F72973420B878B00067F815 /* MapResources.swift in Sources */,
 				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,
@@ -8186,6 +8195,10 @@
 		2700B221273ADC94003E4018 /* HotKey */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = HotKey;
+		};
+		271891F72B08A7DB0008B238 /* LokiRng */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LokiRng;
 		};
 		2738A2D3289C41CE00EC1010 /* CurrencyFormat */ = {
 			isa = XCSwiftPackageProductDependency;

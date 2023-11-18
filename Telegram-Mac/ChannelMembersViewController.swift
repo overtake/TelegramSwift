@@ -499,7 +499,9 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 strongSelf.navigationController?.push(LinkInvationController(strongSelf.context, peerId: strongSelf.peerId))
             }
         }, openInfo: { [weak self] peer in
-             self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peer.id)
+            }
         }, toggleHideMembers: { value in
             let signal = context.engine.peers.updateChannelMembersHidden(peerId: peerId, value: value)
 
@@ -566,8 +568,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     
     private func searchChannelUsers() {
         _ = (selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
-            if let peerId = peerId, let context = self?.context {
-                self?.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
+            if let peerId = peerId, let context = self?.context, let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
             }
         })
     }

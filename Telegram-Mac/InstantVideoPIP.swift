@@ -211,12 +211,12 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         window?.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
             if let strongSelf = self, let _ = startDragPosition {
                 if startViewPosition.x == strongSelf.view.frame.origin.x && startViewPosition.y == strongSelf.view.frame.origin.y {
-                    context.audioPlayer?.playOrPause()
+                    context.sharedContext.getAudioPlayer()?.playOrPause()
                 }
                 startDragPosition = nil
                 if let opacity = strongSelf.view.layer?.opacity, opacity < 0.5 {
-                    context.audioPlayer?.notifyCompleteQueue(animated: true)
-                    context.audioPlayer?.cleanup()
+                    context.sharedContext.getAudioPlayer()?.notifyCompleteQueue(animated: true)
+                    context.sharedContext.getAudioPlayer()?.cleanup()
                 } else {
                     strongSelf.findCorner()
                 }

@@ -143,7 +143,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 
                 appDelegate?.enumerateAccountContexts({ context in
                     closeAllModals(window: context.window)
-                    _ = context.audioPlayer?.pause()
+                    _ = context.sharedContext.getAudioPlayer()?.pause()
                     let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
                         return self.logout()
                     }, updateCurrectController: bindings.updateCurrectController)

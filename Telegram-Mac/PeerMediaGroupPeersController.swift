@@ -36,7 +36,7 @@ private final class GroupPeersArguments {
     }
     
     func peerInfo(_ peerId:PeerId) {
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }
 }
 
@@ -453,32 +453,36 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
     }
     
     let upgradeToSupergroup: (PeerId, @escaping () -> Void) -> Void = { upgradedPeerId, f in
-        let navigationController = context.bindings.rootNavigation()
-        
-        var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
-        
-        chatController!.navigationController = navigationController
-        chatController!.loadViewIfNeeded(navigationController.bounds)
-        
-        var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
-        
-        var controller: PeerInfoController? = PeerInfoController(context: context, peerId: upgradedPeerId)
-        
-        controller!.navigationController = navigationController
-        controller!.loadViewIfNeeded(navigationController.bounds)
-        
-        let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
-        
-        signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
-        
-        _ = signal.start(completed: { [weak navigationController] in
-            navigationController?.removeAll()
-            navigationController?.push(chatController!, false, style: ViewControllerStyle.none)
-            navigationController?.push(controller!, false, style: ViewControllerStyle.none)
+        _ = (context.account.postbox.loadedPeerWithId(upgradedPeerId) |> deliverOnMainQueue).start(next: { upgradedPeer in
             
-            chatController = nil
-            controller = nil
+            let navigationController = context.bindings.rootNavigation()
+            
+            var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
+            
+            chatController!.navigationController = navigationController
+            chatController!.loadViewIfNeeded(navigationController.bounds)
+            
+            var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+            
+            var controller: PeerInfoController? = PeerInfoController(context: context, peer: upgradedPeer)
+            
+            controller!.navigationController = navigationController
+            controller!.loadViewIfNeeded(navigationController.bounds)
+            
+            let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
+            
+            signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
+            
+            _ = signal.start(completed: { [weak navigationController] in
+                navigationController?.removeAll()
+                navigationController?.push(chatController!, false, style: ViewControllerStyle.none)
+                navigationController?.push(controller!, false, style: ViewControllerStyle.none)
+                
+                chatController = nil
+                controller = nil
+            })
         })
+        
     }
     
     

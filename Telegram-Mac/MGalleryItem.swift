@@ -459,7 +459,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                             navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
                         }
                     } else {
-                        navigation.push(PeerInfoController(context: context, peerId: peerId))
+                        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
                     }
                     viewer?.close()
                 }, hashtag: { hashtag in

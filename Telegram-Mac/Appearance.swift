@@ -2800,7 +2800,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               message_quote_blue: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0x368AD1)) },
                               message_quote_pink: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0xC7508B)) },
                               message_quote_bubble_incoming: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_incoming) },
-                              message_quote_bubble_outgoing: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_outgoing) }
+                              message_quote_bubble_outgoing: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_outgoing) },
+                              channel_stats_likes: { NSImage(named: "Icon_ChannelStats_Likes")!.precomposed(palette.grayIcon) },
+                              channel_stats_shares: { NSImage(named: "Icon_ChannelStats_Shares")!.precomposed(palette.grayIcon) }
 
     )
 }

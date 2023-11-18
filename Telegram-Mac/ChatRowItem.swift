@@ -1544,7 +1544,7 @@ class ChatRowItem: TableRowItem {
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
                 let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
-                    context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId, source: .reaction(message.id)))
+                    PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId, source: .reaction(message.id))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
                 })

@@ -235,11 +235,21 @@ final class GroupInfoArguments : PeerInfoArguments {
     
     func visibilitySetup() {
         let setup = ChannelVisibilityController(context, peerId: peerId, isChannel: false, linksManager: linksManager)
-        _ = (setup.onComplete.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peerId in
-            self?.changeControllers(peerId)
+        let context = context
+        let signal: Signal<Peer?, NoError> = setup.onComplete.get() |> take(1) |> mapToSignal { peerId in
+            if let peerId = peerId {
+                return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
+            } else {
+                return .single(nil)
+            }
+        } |> deliverOnMainQueue
+        
+        _ = signal.start(next: { [weak self] peer in
+            self?.changeControllers(peer)
             self?.pullNavigation()?.back()
         })
         pushViewController(setup)
+
     }
 
     func autoremoveController() {
@@ -269,11 +279,12 @@ final class GroupInfoArguments : PeerInfoArguments {
 
     }
     
-    private func changeControllers(_ peerId: PeerId?) {
+    private func changeControllers(_ peer: Peer?) {
         guard let navigationController = self.pullNavigation() else {
             return
         }
-        if let peerId = peerId {
+        if let peer = peer {
+            let peerId = peer.id
             var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
             
             navigationController.removeAll()
@@ -283,7 +294,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
             
-            var controller: PeerInfoController? = PeerInfoController(context: context, peerId: peerId)
+            var controller: PeerInfoController? = PeerInfoController(context: context, peer: peer)
             
             
             controller!.navigationController = navigationController
@@ -340,8 +351,17 @@ final class GroupInfoArguments : PeerInfoArguments {
     
     func preHistorySetup() {
         let setup = PreHistorySettingsController(context, peerId: peerId)
-        _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] peerId in
-            self?.changeControllers(peerId)
+        let context = self.context
+        let signal: Signal<Peer?, NoError> = setup.onComplete.get() |> take(1) |> mapToSignal { peerId in
+            if let peerId = peerId {
+                return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
+            } else {
+                return .single(nil)
+            }
+        } |> deliverOnMainQueue
+        
+        _ = signal.start(next: { [weak self] peer in
+            self?.changeControllers(peer)
         })
         pushViewController(setup)
     }
@@ -582,33 +602,35 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
             let context = self.context
             
+            let signal = context.account.postbox.loadedPeerWithId(upgradedPeerId) |> deliverOnMainQueue
             
-            var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
-            
-            chatController!.navigationController = navigationController
-            chatController!.loadViewIfNeeded(navigationController.bounds)
-            
-            var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
-            
-            var controller: PeerInfoController? = PeerInfoController(context: context, peerId: upgradedPeerId)
-            
-            controller!.navigationController = navigationController
-            controller!.loadViewIfNeeded(navigationController.bounds)
-            
-            let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
-            
-            signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
-            
-            _ = signal.start(completed: { [weak navigationController] in
-                navigationController?.removeAll()
-                navigationController?.push(chatController!, false, style: ViewControllerStyle.none)
-                navigationController?.push(controller!, false, style: ViewControllerStyle.none)
+            _ = signal.start(next: { peer in
+                var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
                 
-                chatController = nil
-                controller = nil
-                f()
+                chatController!.navigationController = navigationController
+                chatController!.loadViewIfNeeded(navigationController.bounds)
+                
+                var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                
+                var controller: PeerInfoController? = PeerInfoController(context: context, peer: peer)
+                
+                controller!.navigationController = navigationController
+                controller!.loadViewIfNeeded(navigationController.bounds)
+                
+                let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
+                
+                signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
+                
+                _ = signal.start(completed: { [weak navigationController] in
+                    navigationController?.removeAll()
+                    navigationController?.push(chatController!, false, style: ViewControllerStyle.none)
+                    navigationController?.push(controller!, false, style: ViewControllerStyle.none)
+                    
+                    chatController = nil
+                    controller = nil
+                    f()
+                })
             })
-            
         }
     }
     
@@ -1882,7 +1904,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator, backgroundColor: .clear)
         default:
             preconditionFailure()
         }
@@ -1919,7 +1941,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             entries.append(contentsOf: block)
         }
         
-        infoBlock.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
+        entries.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
         
         
         if let editingState = state.editingState {

@@ -11,6 +11,7 @@ import Cocoa
 open class BarView: Control {
     
     
+    
     public var clickHandler:()->Void = {}
     
     public var minWidth:CGFloat = 20
@@ -52,9 +53,17 @@ open class BarView: Control {
     }
     
     override open func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        set(background: .clear, for: .Normal)
-        backgroundColor = .clear
+       // super.updateLocalizationAndTheme(theme: theme)
+        guard let controller = self.controller else {
+            return
+        }
+        backgroundColor = controller.barPresentation.backgroundColor
+    }
+    
+    public override var style: ControlStyle {
+        didSet {
+            updateLocalizationAndTheme(theme: presentation)
+        }
     }
     
 

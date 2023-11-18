@@ -895,7 +895,8 @@ func initialize() -> [String] {
     array.append("message_quote_bubble_incoming")
     array.append("message_quote_bubble_outgoing")
 
-    
+    array.append("channel_stats_likes")
+    array.append("channel_stats_shares")
 
     return array
 }

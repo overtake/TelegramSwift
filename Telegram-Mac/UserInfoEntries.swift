@@ -1677,6 +1677,10 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     entries.append(UserInfoEntry.section(sectionId: sectionId))
     sectionId += 1
     
+    let editing = state.editingState != nil
+
+    entries.append(UserInfoEntry.info(sectionId: sectionId, peerView: view, editable: editing, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
+
     
     func applyBlock(_ block:[UserInfoEntry]) {
         var block = block
@@ -1688,9 +1692,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     
     var headerBlock: [UserInfoEntry] = []
     
-    let editing = state.editingState != nil 
         
-    headerBlock.append(.info(sectionId: sectionId, peerView: view, editable: editing, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
     
     if editing {
         headerBlock.append(.setFirstName(sectionId: sectionId, text: state.editingState?.editingFirstName ?? "", viewType: .singleItem))
@@ -1804,27 +1806,30 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     } else if view.peerIsContact {
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSuggestPhoto(user.compactDisplayTitle), type: .suggest, nextType: state.suggestingPhotoState != nil ? .loading : .none, viewType: .singleItem))
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSetPhoto(user.compactDisplayTitle), type: .set, nextType: .none, viewType: .singleItem))
-                        photoBlock.append(.setPhotoInfo(sectionId: sectionId, string: strings().userInfoSetPhotoBlockInfo(user.compactDisplayTitle), viewType: .textBottomItem))
 
                         if user.photo.contains(where: { $0.isPersonal }), let image = cachedData.photo {
                             photoBlock.append(.resetPhoto(sectionId: sectionId, string: strings().userInfoResetPhoto, image: image, user: user, viewType: .lastItem))
                         }
                     }
+                    if !photoBlock.isEmpty {
+                        entries.append(UserInfoEntry.setPhotoInfo(sectionId: sectionId, string: strings().userInfoSetPhotoBlockInfo(user.compactDisplayTitle), viewType: .textBottomItem))
+                    }
                     if !photoBlock.isEmpty, peer is TelegramSecretChat || view.peerIsContact {
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1
                     }
-                    
-                    if peer is TelegramSecretChat {
-                        destructBlock.append(.deleteChat(sectionId: sectionId, viewType: .singleItem))
-                    }
-                    if view.peerIsContact {
+
+                    if peer is TelegramSecretChat || view.peerIsContact {
                         destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
                     }
                 }
                
             }
             applyBlock(photoBlock)
+            
+            
+            
+            
             applyBlock(destructBlock)
             
             if peer.botInfo?.flags.contains(.canEdit) == true, state.editingState != nil {

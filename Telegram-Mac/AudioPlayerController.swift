@@ -716,10 +716,7 @@ class APController : NSResponder {
     }
 
     func start() {
-        context.audioPlayer?.stop()
-        context.audioPlayer?.cleanup()
-
-        context.audioPlayer = self
+        
     }
 
 
@@ -1089,8 +1086,6 @@ class APController : NSResponder {
 
     func cleanup() {
         listeners.removeAll()
-        context.audioPlayer = nil
-        mainWindow.applyResponderIfNeeded()
         stop()
     }
 

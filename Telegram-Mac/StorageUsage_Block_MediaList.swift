@@ -202,7 +202,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
             }
         case .music, .voice:
             if let file = message.anyMedia as? TelegramMediaFile {
-                if let controller = context.audioPlayer, let song = controller.currentSong, song.entry.isEqual(to: message) {
+                if let controller = context.sharedContext.getAudioPlayer(), let song = controller.currentSong, song.entry.isEqual(to: message) {
                     controller.playOrPause()
                 } else {
                     

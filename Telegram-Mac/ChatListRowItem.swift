@@ -1340,8 +1340,8 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    func toggleArchive() {
-        ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
+    func toggleArchive(unarchive: Bool = false) {
+        ChatListRowItem.toggleArchive(context: context, associatedGroupId: unarchive ? .archive : associatedGroupId, peerId: peerId)
     }
     
     static func toggleArchive(context: AccountContext, associatedGroupId: EngineChatList.Group?, peerId: PeerId?) {
@@ -1399,9 +1399,9 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        let toggleArchive:()->Void = {
+        let toggleArchive:(Bool)->Void = { unarchive in
             if let peerId = peerId {
-                ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
+                ChatListRowItem.toggleArchive(context: context, associatedGroupId: unarchive ? .archive : associatedGroupId, peerId: peerId)
             }
         }
         
@@ -1469,8 +1469,10 @@ class ChatListRowItem: TableRowItem {
                 return nil
             }
         })
+        
+        
 
-        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData, soundsDataSignal) |> take(1) |> map { filters, cachedData, soundsData -> [ContextMenuItem] in
+        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData, soundsDataSignal, context.engine.messages.chatList(group: .archive, count: 1000) |> take(1)) |> take(1) |> map { filters, cachedData, soundsData, archived -> [ContextMenuItem] in
             
             var items:[ContextMenuItem] = []
             
@@ -1491,8 +1493,15 @@ class ChatListRowItem: TableRowItem {
                     firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
                 }
                 
+                
                 if groupId == .root, (canArchive || associatedGroupId != .root) {
-                    secondGroup.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive, itemImage: associatedGroupId == .root ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
+                    
+                    let isArchived = archived.items.contains(where: { $0.renderedPeer.peerId == peerId })
+
+                    
+                    secondGroup.append(ContextMenuItem(associatedGroupId == .root && !isArchived ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: {
+                        toggleArchive(isArchived)
+                    }, itemImage: associatedGroupId == .root && !isArchived ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
                 }
                 
                 if context.peerId != peer.id, !isAd {

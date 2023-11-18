@@ -16,7 +16,7 @@ public enum TextBarAligment {
 
 open class TextButtonBarView: BarView {
 
-    private let button:TitleButton = TitleButton()
+    public let button:TitleButton = TitleButton()
     private let progressIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
     public var alignment:TextBarAligment = .Center
     private var _isFitted: Bool
@@ -26,8 +26,8 @@ open class TextButtonBarView: BarView {
         self.canBeEmpty = canBeEmpty
         
         button.userInteractionEnabled = false
-        button.set(font: navigationButtonStyle.font, for: .Normal)
-        button.set(color: navigationButtonStyle.foregroundColor, for: .Normal)
+        button.set(font: style.font, for: .Normal)
+        button.set(color: style.foregroundColor, for: .Normal)
         button.set(text: text, for: .Normal)
         button.disableActions()
         
@@ -43,6 +43,9 @@ open class TextButtonBarView: BarView {
         
         self.addSubview(button)
         self.addSubview(progressIndicator)
+        
+        button.disableActions()
+        button.animates = false 
         
     }
     
@@ -111,9 +114,8 @@ open class TextButtonBarView: BarView {
     }
     public override var style: ControlStyle {
         didSet {
-            //button.set(color: style.foregroundColor, for: .Normal)
-
             button.set(font: style.font, for: .Normal)
+            set(color: style.foregroundColor, for: .Normal)
             button.style = style
         }
     }
@@ -135,8 +137,11 @@ open class TextButtonBarView: BarView {
     
     override open func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        button.set(color: navigationButtonStyle.foregroundColor, for: .Normal)
-        button.set(background: presentation.colors.background, for: .Normal)
+        guard let controller = self.controller else {
+            return
+        }
+        button.set(color: controller.barPresentation.foregroundColor, for: .Normal)
+        button.set(background: controller.barPresentation.backgroundColor, for: .Normal)
     }
     
     open override func layout() {

@@ -15,12 +15,26 @@ import Postbox
 import GraphCore
 
 
+private final class Arguments {
+    let context: AccountContext
+    let loadDetailedGraph: (StatsGraph, Int64) -> Signal<StatsGraph?, NoError>
+    let openMessage: (EngineMessage.Id) -> Void
+    
+    init(context: AccountContext, loadDetailedGraph: @escaping (StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, openMessage: @escaping (EngineMessage.Id) -> Void) {
+        self.context = context
+        self.loadDetailedGraph = loadDetailedGraph
+        self.openMessage = openMessage
+    }
+}
+
+
+
 
 private func _id_message(_ messageId: MessageId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_message_\(messageId)")
 }
 
-private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResult, SearchMessagesState)?, _ uiState: UIStatsState, openMessage: @escaping(MessageId) -> Void, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, context: MessageStatsContext, accountContext: AccountContext) -> [InputDataEntry] {
+private func statsEntries(_ stats: PostStats?, _ search: (SearchMessagesResult, SearchMessagesState)?, _ uiState: UIStatsState, arguments: Arguments, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, accountContext: AccountContext) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -78,6 +92,22 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         if !stats.interactionsGraph.isEmpty {
             graphs.append(Graph(graph: stats.interactionsGraph, title: strings().statsMessageInteractionsTitle, identifier: InputDataIdentifier("interactionsGraph"), type: chartType, load: { identifier in
                 updateIsLoading(identifier, true)
+                let _ = arguments.loadDetailedGraph(stats.interactionsGraph, stats.interactionsGraphDelta * 1000).start(next: { graph in
+                    if let graph = graph, case .Loaded = graph {
+                        updateIsLoading(identifier, false)
+                    }
+                })
+            }))
+        }
+        
+        if !stats.reactionsGraph.isEmpty {
+            graphs.append(Graph(graph: stats.reactionsGraph, title: strings().statsMessageReactionsTitle, identifier: InputDataIdentifier("reactionsGraph"), type: .bars, load: { identifier in
+                updateIsLoading(identifier, true)
+                let _ = arguments.loadDetailedGraph(stats.reactionsGraph, stats.interactionsGraphDelta).start(next: { graph in
+                    if let graph = graph, case .Loaded = graph {
+                        updateIsLoading(identifier, false)
+                    }
+                })
             }))
         }
         
@@ -133,7 +163,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             for (i, message) in messages.messages.enumerated() {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), comparable: nil, item: { initialSize, stableId in
                     return MessageSharedRowItem(initialSize, stableId: stableId, context: accountContext, message: message, viewType: bestGeneralViewType(messages.messages, for: i), action: {
-                        openMessage(message.id)
+                        arguments.openMessage(message.id)
                     })
                 }))
                 index += 1
@@ -152,8 +182,28 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
     return entries
 }
 
+protocol PostStats {
+    var views: Int { get }
+    var forwards: Int { get }
+    var interactionsGraph: StatsGraph { get }
+    var interactionsGraphDelta: Int64 { get }
+    var reactionsGraph: StatsGraph { get }
+}
 
-func MessageStatsController(_ context: AccountContext, messageId: MessageId, datacenterId: Int32) -> ViewController {
+extension MessageStats: PostStats {
+    
+}
+
+extension StoryStats: PostStats {
+    
+}
+
+enum MessageStatsSubject {
+    case messageId(MessageId)
+    case story(EngineStoryItem, EnginePeer)
+}
+
+func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubject, datacenterId: Int32) -> ViewController {
     
     let initialState = UIStatsState(loading: [])
     
@@ -166,40 +216,68 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
     
     
     let actionsDisposable = DisposableSet()
-    let dataPromise = Promise<MessageStats?>(nil)
+    let dataPromise = Promise<PostStats?>(nil)
     let messagesPromise = Promise<(SearchMessagesResult, SearchMessagesState)?>(nil)
     
-    
-    let statsContext = MessageStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, messageId: messageId)
-    let dataSignal: Signal<MessageStats?, NoError> = statsContext.state
+    let anyStatsContext: Any
+    let dataSignal: Signal<PostStats?, NoError>
+    var loadDetailedGraphImpl: ((StatsGraph, Int64) -> Signal<StatsGraph?, NoError>)?
+    switch subject {
+    case let .messageId(messageId):
+        let statsContext = MessageStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, messageId: messageId)
+        loadDetailedGraphImpl = { [weak statsContext] graph, x in
+            return statsContext?.loadDetailedGraph(graph, x: x) ?? .single(nil)
+        }
+        dataSignal = statsContext.state
         |> map { state in
             return state.stats
+        }
+        dataPromise.set(.single(nil) |> then(dataSignal))
+        anyStatsContext = statsContext
+    case let .story(storyItem, peer):
+        let statsContext = StoryStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, peerId: peer.id, storyId: storyItem.id)
+        loadDetailedGraphImpl = { [weak statsContext] graph, x in
+            return statsContext?.loadDetailedGraph(graph, x: x) ?? .single(nil)
+        }
+        dataSignal = statsContext.state
+        |> map { state in
+            return state.stats
+        }
+        dataPromise.set(.single(nil) |> then(dataSignal))
+        anyStatsContext = statsContext
     }
-    dataPromise.set(.single(nil) |> then(dataSignal))
     
-    let openMessage: (MessageId)->Void = { messageId in
+    let arguments = Arguments.init(context: context, loadDetailedGraph: { graph, x -> Signal<StatsGraph?, NoError> in
+        return loadDetailedGraphImpl?(graph, x) ?? .single(nil)
+    }, openMessage: { messageId in
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
-    }
+    })
     
-    let searchSignal = context.engine.messages.searchMessages(location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)
-        |> map(Optional.init)
-        |> afterNext { result in
-            if let result = result {
-                for message in result.0.messages {
-                    if let peer = message.peers[message.id.peerId], let peerReference = PeerReference(peer) {
-                        let _ = context.engine.peers.updatedRemotePeer(peer: peerReference).start()
+
+    if case let .messageId(messageId) = subject {
+        let searchSignal = context.engine.messages.searchMessages(location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)
+            |> map(Optional.init)
+            |> afterNext { result in
+                if let result = result {
+                    for message in result.0.messages {
+                        if let peer = message.peers[message.id.peerId], let peerReference = PeerReference(peer) {
+                            let _ = context.engine.peers.updatedRemotePeer(peer: peerReference).start()
+                        }
                     }
                 }
-            }
+        }
+        messagesPromise.set(.single(nil) |> then(searchSignal))
+    } else {
+        messagesPromise.set(.single(nil))
     }
-    messagesPromise.set(.single(nil) |> then(searchSignal))
+    
 
     
     
     let signal = combineLatest(dataPromise.get(), messagesPromise.get(), statePromise.get())
         |> deliverOnMainQueue
         |> map { data, search, state -> [InputDataEntry] in
-            return statsEntries(data, search, state, openMessage: openMessage, updateIsLoading: { identifier, isLoading in
+            return statsEntries(data, search, state, arguments: arguments, updateIsLoading: { identifier, isLoading in
                 updateState { state in
                     if isLoading {
                         return state.withAddedLoading(identifier)
@@ -207,7 +285,7 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
                         return state.withRemovedLoading(identifier)
                     }
                 }
-            }, context: statsContext, accountContext: context)
+            }, accountContext: context)
         } |> map {
             return InputDataSignalValue(entries: $0)
         }
@@ -215,10 +293,18 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
         actionsDisposable.dispose()
     }
 
+    let title: String
+    switch subject {
+    case .messageId:
+        title = strings().statsMessageTitle
+    case .story:
+        title = strings().statsMessageStatsStoryTitle
+    }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().statsMessageTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: title, removeAfterDisappear: false, hasDone: false)
     
-    controller.contextObject = statsContext
+    controller.contextObject = anyStatsContext
+    
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true

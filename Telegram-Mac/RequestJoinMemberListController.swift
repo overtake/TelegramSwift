@@ -288,7 +288,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         }
         manager?.update(userId, action: .deny)
     }, openInfo: { peerId in
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }, openInviteLinks: openInviteLinks)
     
     let peerSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
