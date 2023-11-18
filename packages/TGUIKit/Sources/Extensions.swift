@@ -2548,7 +2548,7 @@ public func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFl
 
     let rect = CGRect(origin: CGPoint(x: 0.0, y: tailHeight), size: rectSize)
     
-    guard let tailPosition else {
+    guard let tailPosition = tailPosition else {
         return CGPath(roundedRect: rect, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
     }
 
