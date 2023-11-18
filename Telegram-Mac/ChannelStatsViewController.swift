@@ -384,7 +384,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
                 }
             }
         }
-        if let stories {
+        if let stories = stories {
             for story in stories.items {
                 posts.append(.story(story, .init(peer)))
             }
