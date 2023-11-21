@@ -314,6 +314,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         }
     }
     
+    var emojis:[InputAnimatedEmojiAttach] {
+        return view.emojis.compactMap { $0 as? InputAnimatedEmojiAttach }
+    }
+    
     
     override func layout() {
         super.layout()

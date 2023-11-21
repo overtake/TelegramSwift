@@ -1,8 +1,8 @@
 //
-//  ChannelStatsSegmentController.swift
+//  CustomizeAccountController.swift
 //  Telegram
 //
-//  Created by Mike Renoir on 03.09.2023.
+//  Created by Mike Renoir on 20.11.2023.
 //  Copyright © 2023 Telegram. All rights reserved.
 //
 
@@ -19,11 +19,11 @@ private final class CenterView : TitledBarView {
         self.segment = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(controller: controller)
         
-        segment.add(segment: .init(title: strings().statsStatistics, handler: { [weak self] in
+        segment.add(segment: .init(title: strings().customizeNameTitle, handler: { [weak self] in
             self?.select?(0)
         }))
         
-        segment.add(segment: .init(title: strings().statsBoosts, handler: { [weak self] in
+        segment.add(segment: .init(title: strings().customizeProfileTitle, handler: { [weak self] in
             self?.select?(1)
         }))
         
@@ -53,22 +53,21 @@ private final class CenterView : TitledBarView {
     }
 }
 
-final class ChannelStatsSegmentController : SectionViewController {
-    private let stats: ViewController
-    private let boosts: ViewController
+final class CustomizeAccountController : SectionViewController {
+    private let name: ViewController
+    private let profile: ViewController
     private let context: AccountContext
     private let peerId: PeerId
-    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool) {
+    init(_ context: AccountContext, peer: Peer) {
         self.context = context
-        self.peerId = peerId
-        self.stats = ChannelStatsViewController(context, peerId: peerId)
-        self.boosts = ChannelBoostStatsController(context: context, peerId: peerId)
+        self.peerId = peer.id
+        self.name = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .name)
+        self.profile = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .profile)
 
         var items:[SectionControllerItem] = []
-        items.append(SectionControllerItem(title: { "" }, controller: stats))
-        if isChannel {
-            items.append(SectionControllerItem(title: { "" }, controller: boosts))
-        }
+        items.append(SectionControllerItem(title: { "" }, controller: name))
+        items.append(SectionControllerItem(title: { "" }, controller: profile))
+
         super.init(sections: items, selected: 0, hasHeaderView: false, hasBar: true)
 
     }
@@ -78,7 +77,7 @@ final class ChannelStatsSegmentController : SectionViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return BarView(80, controller: self)
+        return TextButtonBarView(controller: self, text: strings().selectColorApply, style: barPresentation, alignment:.Right)
     }
     
     override var enableBack: Bool {
@@ -99,6 +98,11 @@ final class ChannelStatsSegmentController : SectionViewController {
         self.selectionUpdateHandler = { [weak self] index in
             self?.centerView.segment.set(selected: index, animated: true)
         }
+        
+        self.rightBarView.set(handler:{ [weak self] _ in
+            let controller = self?.selectedSection.controller as? InputDataController
+            controller?.validateInputValues()
+        }, for: .Click)
     }
     
     private var centerView: CenterView {

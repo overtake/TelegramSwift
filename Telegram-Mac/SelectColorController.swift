@@ -73,6 +73,138 @@ private final class EmojiSelectRowView: GeneralContainableRowView {
 }
 
 
+private class ProfilePreviewRowItem : GeneralRowItem {
+    fileprivate let theme: TelegramPresentationTheme
+    fileprivate let peer: Peer
+    fileprivate let nameColor: PeerNameColor
+    fileprivate let backgroundEmojiId: Int64?
+    fileprivate let context: AccountContext
+    fileprivate let nameLayout: TextViewLayout
+    fileprivate let statusLayout: TextViewLayout
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, nameColor: PeerNameColor, backgroundEmojiId: Int64?, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType) {
+        self.theme = theme
+        self.peer = peer
+        self.nameColor = nameColor
+        self.backgroundEmojiId = backgroundEmojiId
+        self.context = context
+        
+        let textColor = context.peerNameColors.get(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+
+        
+        self.nameLayout = .init(.initialize(string: peer.displayTitle, color: textColor, font: .medium(18)), maximumNumberOfLines: 1)
+        self.statusLayout = .init(.initialize(string: strings().peerStatusRecently, color: textColor.withAlphaComponent(0.4), font: .normal(15)))
+        super.init(initialSize, stableId: stableId, viewType: viewType)
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        
+        nameLayout.measure(width: blockWidth - 60)
+        statusLayout.measure(width: blockWidth - 60)
+
+        return true
+    }
+    
+    override func viewClass() -> AnyClass {
+        return ProfilePreviewRowView.self
+    }
+    
+    
+    override var hasBorder: Bool {
+        return false
+    }
+    override var height: CGFloat {
+        return 240
+    }
+}
+
+private final class ProfilePreviewRowView : GeneralContainableRowView {
+    private let avatar = AvatarControl(font: .avatar(18))
+    private let nameView = TextView()
+    private let statusView = TextView()
+    private var emojiSpawn: PeerInfoSpawnEmojiView?
+    private let backgroundView = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(backgroundView)
+        addSubview(avatar)
+        addSubview(nameView)
+        addSubview(statusView)
+        
+        
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        
+        statusView.userInteractionEnabled = false
+        statusView.isSelectable = false
+        
+        avatar.setFrameSize(NSMakeSize(120, 120))
+        avatar.layer?.cornerRadius = avatar.frame.height / 2
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        guard let item = item as? ProfilePreviewRowItem else {
+            return
+        }
+        avatar.setPeer(account: item.context.account, peer: item.peer)
+        
+        nameView.update(item.nameLayout)
+        statusView.update(item.statusLayout)
+        
+        backgroundView.backgroundColor = item.context.peerNameColors.get(item.nameColor).main
+        
+        if animated {
+            backgroundView.layer?.animateBackground()
+        }
+        
+        
+        if let emoji = item.backgroundEmojiId {
+            let current: PeerInfoSpawnEmojiView
+            if let view = self.emojiSpawn {
+                current = view
+            } else {
+                var rect = focus(NSMakeSize(180, 180))
+                rect.origin.y = 0
+                current = PeerInfoSpawnEmojiView(frame: rect)
+                self.emojiSpawn = current
+                addSubview(current, positioned: .above, relativeTo: backgroundView)
+            }
+            current.set(fileId: emoji, color: item.context.peerNameColors.get(item.nameColor).main.withAlphaComponent(0.3), context: item.context, animated: animated)
+        } else if let view = self.emojiSpawn {
+            performSubviewRemoval(view, animated: animated)
+            self.emojiSpawn = nil
+        }
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 64
+        shadow.shadowColor = NSColor.white.withAlphaComponent(0.5)
+        shadow.shadowOffset = NSMakeSize(0, 0)
+        avatar.shadow = shadow
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        backgroundView.frame = containerView.bounds
+        avatar.centerX(y: 30)
+        nameView.centerX(y: avatar.frame.maxY + 20)
+        statusView.centerX(y: nameView.frame.maxY + 4)
+        emojiSpawn?.centerX(y: 30)
+    }
+}
 
 private class PreviewRowItem: GeneralRowItem {
 
@@ -313,7 +445,7 @@ private enum PeerNameColorEntry: Comparable, Identifiable {
         }
     }
     
-    func item(initialSize: NSSize, context: AccountContext, action: @escaping (PeerNameColor) -> Void) -> TableRowItem {
+    func item(initialSize: NSSize, context: AccountContext, action: @escaping (PeerNameColor) -> Void) -> PeerNameColorIconItem {
         switch self {
             case let .color(_, color, selected):
             return PeerNameColorIconItem(initialSize: initialSize, stableId: self.stableId, context: context, color: color, selected: selected, action: action)
@@ -348,17 +480,17 @@ private class PeerNameColorIconItem: TableRowItem {
     }
 }
 
-private final class PeerNameColorIconView : HorizontalRowView {
+private final class PeerNameColorIconView : View {
     
     private let fillView: SimpleLayer = SimpleLayer()
     private let ringView: SimpleLayer = SimpleLayer()
     private let control = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.container.layer?.addSublayer(ringView)
-        self.container.layer?.addSublayer(fillView)
+        self.layer?.addSublayer(ringView)
+        self.layer?.addSublayer(fillView)
         addSubview(control)
-        let bounds = CGRect(origin: CGPoint(x: 12.5, y: 17.5), size: CGSize(width: 35, height: 35))
+        let bounds = focus(CGSize(width: 35, height: 35))
         
         fillView.frame = bounds
         ringView.frame = bounds
@@ -381,8 +513,11 @@ private final class PeerNameColorIconView : HorizontalRowView {
     
     private var wasSelected: Bool = false
     
-    override func set(item: TableRowItem, animated: Bool) {
-        super.set(item: item, animated: animated)
+    private var item: TableRowItem?
+    
+    func set(item: TableRowItem, animated: Bool) {
+        
+        self.item = item
         
         guard let item = item as? PeerNameColorIconItem else {
             return
@@ -417,6 +552,8 @@ private final class PeerNamesRowItem : GeneralRowItem {
     fileprivate let selected: PeerNameColor
     fileprivate let selectAction:(PeerNameColor)->Void
     fileprivate let context: AccountContext
+    
+    let itemSize: NSSize = NSMakeSize(45, 45)
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, colors: [PeerNameColor], selected: PeerNameColor, viewType: GeneralViewType, action: @escaping(PeerNameColor)->Void) {
         self.colors = colors
         self.context = context
@@ -425,8 +562,37 @@ private final class PeerNamesRowItem : GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
+    var frames:[CGRect] = []
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+
+        frames.removeAll()
+        
+        let perRow = Int(floor((blockWidth - 10) / itemSize.width))
+
+        var point: CGPoint = NSMakePoint(5, 5)
+        for i in 1 ... colors.count {
+            frames.append(CGRect(origin: point, size: itemSize))
+            if i % perRow == 0 {
+                point.x = 5
+                point.y += itemSize.height
+            } else {
+                point.x += itemSize.width
+            }
+        }
+        
+        return true
+    }
+    
+    override var instantlyResize: Bool {
+        return true
+    }
+    
     override var height: CGFloat {
-        return 55
+        let perRow = floor((blockWidth - 10) / itemSize.width)
+        
+        return frames[frames.count - 1].maxY + 5
     }
     
     override func viewClass() -> AnyClass {
@@ -435,16 +601,23 @@ private final class PeerNamesRowItem : GeneralRowItem {
 }
 
 private final class PeerNamesRowView : GeneralContainableRowView {
-    let tableView: HorizontalTableView
+    let tableView: View
     required init(frame frameRect: NSRect) {
-        tableView = HorizontalTableView(frame: frameRect)
+        tableView = View(frame: frameRect)
         super.init(frame: frameRect)
         addSubview(tableView)
     }
     
     override func layout() {
         super.layout()
-        tableView.frame = containerView.focus(NSMakeSize(containerView.frame.width, 40))
+        tableView.frame = containerView.bounds
+        guard let item = item as? PeerNamesRowItem else {
+            return
+        }
+        
+        for (i, subview) in tableView.subviews.enumerated() {
+            subview.frame = item.frames[i]
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -470,42 +643,52 @@ private final class PeerNamesRowView : GeneralContainableRowView {
 
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: previous, rightList: entries)
         
-        let animation: NSTableView.AnimationOptions = animated ? .effectFade : .none
+        //let animation: NSTableView.AnimationOptions = animated ? .effectFade : .none
         
         for rdx in deleteIndices.reversed() {
-            tableView.remove(at: rdx, animation: animation)
+            tableView.subviews[rdx].removeFromSuperview()
         }
         
         
         for (idx, entry, _) in indicesAndItems {
-            _ = tableView.insert(item: entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction), at: idx, animation: animation)
+            let view = PeerNameColorIconView(frame: item.itemSize.bounds)
+            let item = entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction)
+            view.set(item: item, animated: animated)
+            tableView.subviews.insert(view, at: idx)
         }
         for (idx, entry, _) in updateIndices {
             let item = item
-            tableView.replace(item: entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction), at: idx, animated: animated)
+            let updatedItem = entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction)
+            (tableView.subviews[idx] as? PeerNameColorIconView)?.set(item: updatedItem, animated: animated)
         }
-        
 
         self.previous = entries
         
+        needsLayout = true
+        
     }
+    
 }
 
 
 private final class Arguments {
     let context: AccountContext
     let source: SelectColorSource
+    let type: SelectColorType
     let toggleColor:(PeerNameColor) -> Void
     let getView:()->NSView
     let showEmojiPanel:()->Void
     let removeIcon:()->Void
-    init(context: AccountContext, source: SelectColorSource, toggleColor:@escaping(PeerNameColor) -> Void, getView:@escaping()->NSView, showEmojiPanel:@escaping()->Void, removeIcon:@escaping()->Void) {
+    let resetColor:()->Void
+    init(context: AccountContext, source: SelectColorSource, type: SelectColorType, toggleColor:@escaping(PeerNameColor) -> Void, getView:@escaping()->NSView, showEmojiPanel:@escaping()->Void, removeIcon:@escaping()->Void, resetColor:@escaping()->Void) {
         self.context = context
         self.source = source
+        self.type = type
         self.toggleColor = toggleColor
         self.getView = getView
         self.showEmojiPanel = showEmojiPanel
         self.removeIcon = removeIcon
+        self.resetColor = resetColor
     }
 }
 
@@ -524,6 +707,7 @@ private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
 private let _id_icon = InputDataIdentifier("_id_icon")
 private let _id_icon_remove = InputDataIdentifier("_id_icon_remove")
+private let _id_reset_color = InputDataIdentifier("_id_reset_color")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -533,12 +717,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().selectColorPreview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    let previewHeader: String
+    switch arguments.type {
+    case .name:
+        previewHeader = strings().selectColorPreview
+    case .profile:
+        previewHeader = strings().selectColorPreviewProfile
+    }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(previewHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
 
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, nameColor: state.selected, backgroundEmojiId: state.backgroundEmojiId, context: arguments.context, theme: theme, viewType: .firstItem)
-    }))
+    switch arguments.type {
+    case .name:
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return PreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, nameColor: state.selected, backgroundEmojiId: state.backgroundEmojiId, context: arguments.context, theme: theme, viewType: .firstItem)
+        }))
+    case .profile:
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return ProfilePreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, nameColor: state.selected, backgroundEmojiId: state.backgroundEmojiId, context: arguments.context, theme: theme, viewType: .firstItem)
+        }))
+    }
+    
     
     var colors: [PeerNameColor] = []
     for index in arguments.context.peerNameColors.displayOrder {
@@ -546,12 +746,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
    
+    let colorsViewType: GeneralViewType
+    if case .profile = arguments.type {
+        colorsViewType = .innerItem
+    } else {
+        colorsViewType = .lastItem
+    }
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_colors, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PeerNamesRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: state.selected, viewType: .lastItem, action: { color in
+        return PeerNamesRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: state.selected, viewType: colorsViewType, action: { color in
             arguments.toggleColor(color)
         })
     }))
+    
+    switch arguments.type {
+    case .profile:
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_color, data: .init(name: strings().selectColorResetColor, color: theme.colors.accent, viewType: .lastItem, action: arguments.resetColor)))
+    default:
+        break
+    }
     
     let info: String
     switch arguments.source {
@@ -582,8 +795,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else {
         removeData = .init(isLoading: false, text: nil)
     }
+    let iconHeader: String
+    switch arguments.type {
+    case .name:
+        iconHeader = strings().selectColorIconTitle
+    case .profile:
+        iconHeader = strings().selectColorIconTitleProfile
+    }
+    
    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().selectColorIconTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: removeData)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(iconHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: removeData)))
     index += 1
     
     let type: GeneralInteractedType
@@ -600,9 +821,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let iconInfo: String
     switch arguments.source {
     case .account:
-        iconInfo = strings().selectColorIconInfoUser
+        switch arguments.type {
+        case .name:
+            iconInfo = strings().selectColorIconInfoUser
+        case .profile:
+            iconInfo = strings().selectColorIconInfoUserProfile
+        }
     case .channel:
-        iconInfo = strings().selectColorIconInfoChannel
+        switch arguments.type {
+        case .name:
+            iconInfo = strings().selectColorIconInfoChannel
+        case .profile:
+            iconInfo = strings().selectColorIconInfoChannelProfile
+        }
     }
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(iconInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
@@ -611,6 +842,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     return entries
+}
+
+enum SelectColorType {
+    case name
+    case profile
 }
 
 enum SelectColorSource {
@@ -652,7 +888,7 @@ enum SelectColorSource {
     }
 }
 
-func SelectColorController(context: AccountContext, source: SelectColorSource) -> InputDataController {
+func SelectColorController(context: AccountContext, source: SelectColorSource, type: SelectColorType) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
@@ -737,7 +973,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
     
     var close:(()->Void)? = nil
 
-    let arguments = Arguments(context: context, source: source, toggleColor: { [weak emojis] value in
+    let arguments = Arguments(context: context, source: source, type: type, toggleColor: { [weak emojis] value in
         updateState { current in
             var current = current
             current.selected = value
@@ -758,6 +994,8 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             return current
         }
         emojis?.setSelectedItem(nil)
+    }, resetColor: {
+        
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -828,8 +1066,8 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
         }
     }
    
-    close = { [weak controller] in
-        controller?.navigationController?.back()
+    close = {
+        context.bindings.rootNavigation().back()
     }
     
     return controller

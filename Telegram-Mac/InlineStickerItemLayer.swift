@@ -49,7 +49,7 @@ class InlineStickerLockLayer : SimpleLayer {
 
 
             context.withContext { c in
-                c.setFillColor((color ?? .white).cgColor)
+                c.setFillColor((color ?? NSColor(0xffffff)).cgColor)
                 c.fill(CGRect(origin: CGPoint(), size: size))
                 
                 let rect = CGRect(origin: CGPoint(x: -size.width / 2.0, y: -size.height / 2.0), size: CGSize(width: size.width * 1.8, height: size.height * 1.8))
@@ -103,7 +103,7 @@ class InlineStickerLockLayer : SimpleLayer {
             vImageMatrixMultiply_ARGB8888(&destinationBuffer, &destinationBuffer, &matrix, divisor, nil, nil, vImage_Flags(kvImageDoNotTile))
             
             context.withFlippedContext { c in
-                c.setFillColor((color ?? .white).withMultipliedAlpha(0.6).cgColor)
+                c.setFillColor((color ?? NSColor(0xffffff)).withMultipliedAlpha(0.6).cgColor)
                 c.fill(CGRect(origin: CGPoint(), size: size))
             }
             

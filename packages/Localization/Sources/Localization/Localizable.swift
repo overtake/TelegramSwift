@@ -1689,6 +1689,12 @@ public final class L10n {
   }
   /// **Preparing stats**\nPlease wait a few moments while we generate your stats
   public static var channelStatsLoading: String  { return L10n.tr("Localizable", "Channel.Stats.Loading") }
+  /// Reactions
+  public static var channelStatsOverviewReactions: String  { return L10n.tr("Localizable", "Channel.Stats.Overview.Reactions") }
+  /// Views
+  public static var channelStatsOverviewViews: String  { return L10n.tr("Localizable", "Channel.Stats.Overview.Views") }
+  /// Private Shares
+  public static var channelStatsOverviewStoryPrivateShares: String  { return L10n.tr("Localizable", "Channel.Stats.Overview.Story.PrivateShares") }
   /// Sorry, this channel has too many admins and the new owner can't be added. Please remove one of the existing admins first.
   public static var channelTransferOwnerErrorAdminsTooMuch: String  { return L10n.tr("Localizable", "Channel.TransferOwner.ErrorAdminsTooMuch") }
   /// Sorry, this user is not a member of this channel and their privacy settings prevent you from adding them manually.
@@ -1763,6 +1769,12 @@ public final class L10n {
   }
   /// This channel reached **Level 1** and can now post stories.
   public static var channelBoostEnabledStoriesForChannelText: String  { return L10n.tr("Localizable", "ChannelBoost.EnabledStoriesForChannelText") }
+  /// Custom Reactions
+  public static var channelBoostEnableReactions: String  { return L10n.tr("Localizable", "ChannelBoost.EnableReactions") }
+  /// Your channel needs to reach **%1$@ level** to add %2$@ custom emoji as reactions.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableReactionsText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableReactionsText", p1, p2)
+  }
   /// Enable Stories
   public static var channelBoostEnableStories: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStories") }
   /// Enable Stories for This Channel
@@ -5875,6 +5887,10 @@ public final class L10n {
   public static func customStatusMenuTimer(_ p1: String) -> String {
     return L10n.tr("Localizable", "CustomStatus.Menu.Timer", p1)
   }
+  /// Name
+  public static var customizeNameTitle: String  { return L10n.tr("Localizable", "Customize.Name.Title") }
+  /// Profile
+  public static var customizeProfileTitle: String  { return L10n.tr("Localizable", "Customize.Profile.Title") }
   /// Night Mode
   public static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
   /// Disable
@@ -8465,6 +8481,12 @@ public final class L10n {
   }
   /// Edit Message...
   public static var messagePlaceholderEdit: String  { return L10n.tr("Localizable", "Message.Placeholder.Edit") }
+  /// Message in General...
+  public static var messagePlaceholderMessageInGeneral: String  { return L10n.tr("Localizable", "Message.Placeholder.MessageInGeneral") }
+  /// Reply to %@...
+  public static func messagePlaceholderReplyToTopic(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Message.Placeholder.ReplyToTopic", p1)
+  }
   /// archived folder
   public static var messageStatusArchived: String  { return L10n.tr("Localizable", "Message.Status.Archived") }
   /// preparing archive
@@ -9851,6 +9873,8 @@ public final class L10n {
   public static var peerMediaPosts: String  { return L10n.tr("Localizable", "PeerMedia.Posts") }
   /// Shared Media
   public static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
+  /// Similar Channels
+  public static var peerMediaSimilarChannels: String  { return L10n.tr("Localizable", "PeerMedia.SimilarChannels") }
   /// Stories
   public static var peerMediaStories: String  { return L10n.tr("Localizable", "PeerMedia.Stories") }
   /// Voicemessages
@@ -9863,6 +9887,34 @@ public final class L10n {
   public static var peerMediaPopoverSharedLinks: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedLinks") }
   /// Shared Media
   public static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
+  /// %d
+  public static func peerMediaStatusSubscribersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_countable", p1)
+  }
+  /// %d Subscribers
+  public static func peerMediaStatusSubscribersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_few", p1)
+  }
+  /// %d Subscribers
+  public static func peerMediaStatusSubscribersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_many", p1)
+  }
+  /// %d Subscriber
+  public static func peerMediaStatusSubscribersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_one", p1)
+  }
+  /// %d Subscribers
+  public static func peerMediaStatusSubscribersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_other", p1)
+  }
+  /// %d Subscribers
+  public static func peerMediaStatusSubscribersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_two", p1)
+  }
+  /// %d Subscribers
+  public static func peerMediaStatusSubscribersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_zero", p1)
+  }
   /// %d
   public static func peerMediaTitleSearchFilesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_countable", p1)
@@ -11841,6 +11893,8 @@ public final class L10n {
   public static var selectColorPremium: String  { return L10n.tr("Localizable", "SelectColor.Premium") }
   /// COLOR PREVIEW
   public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
+  /// Reset Color
+  public static var selectColorResetColor: String  { return L10n.tr("Localizable", "SelectColor.ResetColor") }
   /// REMOVE ICON
   public static var selectColorIconRemoveIcon: String  { return L10n.tr("Localizable", "SelectColor.Icon.RemoveIcon") }
   /// Icon
@@ -11849,18 +11903,30 @@ public final class L10n {
   public static var selectColorIconTitle: String  { return L10n.tr("Localizable", "SelectColor.Icon.Title") }
   /// Make replies to your messages stand out by adding\ncustom icons to them.
   public static var selectColorIconInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.Channel") }
-  /// Make replies to your messages stand out by adding custom icons to them..
+  /// Make replies to your messages stand out by adding custom icons to them.
   public static var selectColorIconInfoUser: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.User") }
+  /// Make your channel profile stand out by adding custom icons to background.
+  public static var selectColorIconInfoChannelProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.Channel.Profile") }
+  /// Make your profile stand out by adding custom icons to background.
+  public static var selectColorIconInfoUserProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.User.Profile") }
   /// Not Selected
   public static var selectColorIconSelectOff: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select.Off") }
+  /// ADD ICON TO PROFILE BACKGROUND
+  public static var selectColorIconTitleProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Title.Profile") }
   /// You can choose and individual color to tint your channel name, the links channel send, and replies to channel messages.
   public static var selectColorInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.Info.Channel") }
   /// You can choose and individual color to tint your name, the links you send, and replies to your messages.
   public static var selectColorInfoUser: String  { return L10n.tr("Localizable", "SelectColor.Info.User") }
+  /// This color will be used for your channel profile background.
+  public static var selectColorInfoChannelProfile: String  { return L10n.tr("Localizable", "SelectColor.Info.Channel.Profile") }
+  /// This color will be used for your profile background.
+  public static var selectColorInfoUserProfile: String  { return L10n.tr("Localizable", "SelectColor.Info.User.Profile") }
   /// Your selected color will also tint the link preview.
   public static var selectColorMessage2PreviewText: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Text") }
   /// Link Preview.
   public static var selectColorMessage2PreviewTitle: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Title") }
+  /// PROFILE PREVIEW
+  public static var selectColorPreviewProfile: String  { return L10n.tr("Localizable", "SelectColor.Preview.Profile") }
   /// Your channel name color has been updated!
   public static var selectColorSuccessChannel: String  { return L10n.tr("Localizable", "SelectColor.Success.Channel") }
   /// Your name color has been updated!

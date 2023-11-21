@@ -82,7 +82,7 @@ class PeerInfoSpawnEmojiView : View {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         var avatarBackgroundPatternLayerCount = 0
         let lokiRng = LokiRng(seed0: 123, seed1: 0, seed2: 0)
-        for row in 0 ..< 3 {
+        for row in 0 ..< 4 {
             let avatarPatternCount = row % 2 == 0 ? 9 : 9
             let avatarPatternAngleSpan: CGFloat = CGFloat.pi * 2.0 / CGFloat(avatarPatternCount - 1)
             

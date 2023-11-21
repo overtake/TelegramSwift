@@ -927,11 +927,11 @@ class ShareStoryObject : ShareObject {
     private let media:Media
     private let _hasLink: Bool
     private let storyId: StoryId
-    init(_ context: AccountContext, media: Media, hasLink: Bool, storyId: StoryId) {
+    init(_ context: AccountContext, media: Media, hasLink: Bool, storyId: StoryId, additionTopItems:ShareAdditionItems?) {
         self.media = media
         self._hasLink = hasLink
         self.storyId = storyId
-        super.init(context)
+        super.init(context, additionTopItems: additionTopItems)
     }
     
     override var hasLink: Bool {
@@ -963,6 +963,11 @@ class ShareStoryObject : ShareObject {
         let withoutSound = self.withoutSound
         let threadIds = self.threadIds
         let media = self.media
+        
+        let needRepost = peerIds.contains(where: { $0.id._internalGetInt64Value() == 1000 && $0.namespace._internalGetInt32Value() == 7 })
+        
+        let peerIds = peerIds.filter { $0.id._internalGetInt64Value() != 1000 && $0.namespace._internalGetInt32Value() != 7 }
+        
         for peerId in peerIds {
             let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
             |> take(1)
@@ -2063,7 +2068,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in
             
         })
-        
+                
         selectInteraction.updateFolder = { filter in
             updateFilter {
                 $0.withUpdatedFilter(filter)
@@ -2172,23 +2177,27 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                         
                         if let additionTopItems = share.additionTopItems {
                             var index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
-                            entries.append(.separator(additionTopItems.topSeparator, index))
-                            offset -= 1
+
+                            if !additionTopItems.topSeparator.isEmpty {
+                                entries.append(.separator(additionTopItems.topSeparator, index))
+                                offset -= 1
+                            }
                             
                             
                             for item in additionTopItems.items {
                                 index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
-                                let theme = PeerStatusStringTheme()
+                                let theme = PeerStatusStringTheme(titleColor: presentation?.colors.text ?? theme.colors.text, statusColor: presentation?.colors.grayText ?? theme.colors.grayText)
                                 
                                 let status = NSAttributedString.initialize(string: item.status, color: theme.statusColor, font: theme.statusFont)
                                 let title = NSAttributedString.initialize(string: item.peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
                                 entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), nil, true, multipleSelection))
                                 offset -= 1
                             }
-                            
-                            index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
-                            entries.append(.separator(additionTopItems.bottomSeparator, index))
-                            offset -= 1
+                            if !additionTopItems.bottomSeparator.isEmpty {
+                                index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
+                                entries.append(.separator(additionTopItems.bottomSeparator, index))
+                                offset -= 1
+                            }
                         }
                         
                         if !share.excludePeerIds.contains(value.3.id) {

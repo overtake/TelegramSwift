@@ -367,7 +367,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
 }
 
 
-func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacenterId: Int32) -> ViewController {
+func GroupStatsViewController(_ context: AccountContext, peerId: PeerId) -> ViewController {
     
     let initialState = UIStatsState(loading: [])
     
@@ -381,7 +381,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }
     
-    let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, datacenterId: datacenterId, peerId: peerId)
+    let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId)
 
     let peersPromise = Promise<[PeerId: Peer]?>(nil)
     

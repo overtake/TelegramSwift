@@ -235,7 +235,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     func openNameColor(peer: Peer) {
-        pushViewController(SelectColorController(context: context, source: .channel(peer)))
+        pushViewController(SelectColorController(context: context, source: .channel(peer), type: .name))
     }
     
     func openRequests() {
@@ -557,7 +557,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         if datacenterId == 0 {
             self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId))
         } else {
-            self.pushViewController(ChannelStatsSegmentController(context, datacenterId: datacenterId, peerId: peerId, isChannel: true))
+            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true))
         }
     }
     func share() {

@@ -62,7 +62,31 @@ struct ForumUI {
         if let threadId = threadId {
             signal = openTopic(threadId, peerId: peerId, context: context) |> map { _ in context.layout == .dual }
         } else {
-            signal = .single(true)
+            let viewAsMessages: Signal<Bool?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+            |> map { $0 as? CachedChannelData }
+            |> map { $0?.viewForumAsMessages.knownValue }
+            |> deliverOnMainQueue
+            |> take(1)
+            
+            signal = viewAsMessages |> mapToSignal { value in
+                if let value = value {
+                    if !value {
+                        return .single(true)
+                    } else {
+                        let ready = Promise<Bool>()
+                        
+                        let controller = ChatController(context: context, chatLocation: .peer(peerId))
+
+                        context.bindings.rootNavigation().push(controller)
+                        
+                        ready.set(controller.ready.get() |> map { context.layout == .single ? false : $0 })
+                        
+                        return ready.get() |> take(1)
+                    }
+                } else {
+                    return .single(true)
+                }
+            }
         }
         
         _ = signal.start(next: { value in
@@ -110,6 +134,8 @@ struct ForumUI {
         let context = context
         let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)
         |> deliverOnMainQueue
+        
+        _ = context.engine.peers.updateForumViewAsMessages(peerId: peerId, value: false).start()
         
         let ready: Promise<Bool> = Promise()
         

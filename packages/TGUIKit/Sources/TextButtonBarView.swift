@@ -36,6 +36,8 @@ open class TextButtonBarView: BarView {
         _isFitted = false
         super.init(controller: controller)
         
+        self.style = style
+        
         self.alignment = alignment
         button.style = style
 

@@ -2024,7 +2024,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
                     items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
                         self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
+                        _ = context.engine.peers.updateForumViewAsMessages(peerId: peer.peer.id, value: true).start()
                     }, itemImage: MenuAnimation.menu_read.value))
+                }
+                if let cachedData = self?.state?.forumPeer?.peerView.cachedData as? CachedChannelData {
+                    if case .thread = chatController?.chatInteraction.chatLocation {
+                        
+                    }
                 }
 
                 if peer.peer.hasPermission(.manageTopics) {
@@ -2432,8 +2438,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 
                 if self.navigationController?.controller !== self {
                     switch entryId {
-                    case .chatId:
-                        self.navigationController?.back()
+                    case let .chatId(_, pid, _):
+                        if pid != peerId {
+                            self.navigationController?.back()
+                        }
                     default:
                         break
                     }

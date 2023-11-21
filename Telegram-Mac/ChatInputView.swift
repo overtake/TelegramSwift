@@ -215,9 +215,15 @@ class ChatInputView: View, Notifable {
     
     private var textPlaceholder: String {
         
-        if let peer = chatInteraction.presentation.peer, let _ = permissionText(from: peer, for: .banSendText), chatInteraction.presentation.state == .normal {
+        guard let peer = chatInteraction.presentation.peer else {
+            return strings().messagesPlaceholderSentMessage
+        }
+        
+        if let _ = permissionText(from: peer, for: .banSendText), chatInteraction.presentation.state == .normal {
             return strings().channelPersmissionMessageBlock
         }
+        
+       
         
         if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
@@ -227,6 +233,19 @@ class ChatInputView: View, Notifable {
                 return strings().messagesPlaceholderReply
             case .topic:
                 return strings().messagesPlaceholderSentMessage
+            }
+        }
+        
+        if let cachedData = chatInteraction.presentation.cachedData as? CachedChannelData {
+            let viewForumAsMessages = cachedData.viewForumAsMessages.knownValue
+            if peer.isForum, viewForumAsMessages == true {
+                if let replyMessage = chatInteraction.presentation.interfaceState.replyMessage {
+                    if let threadInfo = replyMessage.associatedThreadInfo {
+                        return strings().messagePlaceholderReplyToTopic(threadInfo.title)
+                    }
+                } else {
+                    return strings().messagePlaceholderMessageInGeneral
+                }
             }
         }
         
@@ -573,6 +592,7 @@ class ChatInputView: View, Notifable {
         accessoryDisposable.set(accessory.nodeReady.get().start(next: { [weak self] animated in
             self?.updateAccesory(animated: animated)
         }))
+        self.textView.placeholder = textPlaceholder
     }
     
     private func updateAccesory(animated: Bool) {

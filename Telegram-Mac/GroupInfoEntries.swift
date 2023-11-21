@@ -419,7 +419,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(GroupStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+        self.pushViewController(GroupStatsViewController(context, peerId: peerId))
     }
     
     func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {

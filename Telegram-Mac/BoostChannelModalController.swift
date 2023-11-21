@@ -213,6 +213,8 @@ private struct State : Equatable {
                 switch source {
                 case .color:
                     title = strings().channelBoostEnableColors
+                case .reactions:
+                    title = strings().channelBoostEnableReactions
                 default:
                     if level == 0 {
                         title = strings().channelBoostEnableStories
@@ -278,6 +280,8 @@ private final class BoostRowItem : TableRowItem {
                     switch state.source {
                     case let .color(level):
                         string = strings().channelBoostEnableColorsText("\(level)")
+                    case .reactions:
+                        string = strings().channelBoostEnableReactionsText("\(level + 1)", "\(level)")
                     default:
                         if level == 0 {
                             string = strings().channelBoostEnableStoriesText(valueString)

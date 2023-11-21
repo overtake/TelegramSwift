@@ -41,6 +41,7 @@ enum PeerMediaCollectionMode : Int32 {
     case voice = 3
     case commonGroups = 4
     case gifs = 5
+    case similarChannels
     var tagsValue:MessageTags {
         switch self {
         case .photoOrVideo:
@@ -60,6 +61,8 @@ enum PeerMediaCollectionMode : Int32 {
         case .gifs:
             return .gif
         case .stories:
+            return []
+        case .similarChannels:
             return []
         }
     }
