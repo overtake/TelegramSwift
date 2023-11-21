@@ -19,6 +19,22 @@ import TelegramCore
 import InAppSettings
 import SwiftSignalKit
 import Postbox
+
+
+func canTranscribeFile(_ file: TelegramMediaFile, context: AccountContext) -> Bool {
+    if context.isPremium {
+        return true
+    } else {
+        let has_trial = context.appConfiguration.getGeneralValue("transcribe_audio_trial_weekly_number", orElse: 0) > 0
+        let max_trial_duration = context.appConfiguration.getGeneralValue("transcribe_audio_trial_duration_max", orElse: 0)
+        if has_trial, max_trial_duration > Int(file.duration ?? 0) {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     
     enum TranscribeState {
@@ -135,7 +151,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         self.parameters = parameters
         
         
-        let canTranscribe = context.isPremium
+        let canTranscribe = canTranscribeFile(file, context: context)
 
         if canTranscribe, let message = object.message {
             var pending: Bool
@@ -229,7 +245,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)
             
-            let canTranscribe = context.isPremium
+            let canTranscribe = canTranscribeFile(media as! TelegramMediaFile, context: context)
 
             
             let maxVoiceWidth:CGFloat = min(min(250, blockWidth), width - 50 - (canTranscribe ? 35 : 0))

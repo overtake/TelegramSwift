@@ -184,6 +184,10 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
             emojiContent.emojiViewProvider = newValue
         }
     }
+    
+    public var emojis:[NSView] {
+        return emojiContent.subviews
+    }
 
     
     private let containerView = View()

@@ -373,12 +373,12 @@ class ShortPeerRowItem: GeneralRowItem {
         switch viewType {
         case .legacy:
             if let titleAttr = titleAttr {
-                title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset, 20), nil,false, .left)
-                titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset, 20), nil,true, .left)
+                title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
+                titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,true, .left)
             }
             if let statusAttr = statusAttr {
-                status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset, 20), nil,false, .left)
-                statusSelected = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - inset.right - addition - textAdditionInset, 20), nil,true, .left)
+                status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
+                statusSelected = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - inset.right - addition - textAdditionInset - 10, 20), nil,true, .left)
             }
         case let .modern(_, insets):
             let textSize = NSMakeSize(self.width - textInset - insets.left - insets.right - inset.left - inset.right - addition - textAdditionInset, 20)

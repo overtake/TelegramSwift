@@ -493,8 +493,12 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     
     static func nameColor(_ peer: Peer?) -> PeerNameColor? {
-        if let peer = peer as? TelegramUser, peer.isPremium {
-            return peer.nameColor
+        if let peer = peer as? TelegramUser {
+            if peer.isPremium {
+                return peer.nameColor
+            } else {
+                return nil
+            }
         } else {
             return peer?.nameColor
         }
@@ -683,7 +687,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     
     var colorfulProfile: Bool {
-        if let nameColor = peer?.nameColor {
+        if let _ = nameColor {
             return true
         } else {
             return false
@@ -1369,7 +1373,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.emojiSpawn = current
                 addSubview(current, positioned: .above, relativeTo: backgroundView)
             }
-            current.set(fileId: emoji, color: item.actionColor, context: item.context, animated: animated)
+            current.set(fileId: emoji, color: item.peerColor.withAlphaComponent(0.3), context: item.context, animated: animated)
         } else if let view = self.emojiSpawn {
             performSubviewRemoval(view, animated: animated)
             self.emojiSpawn = nil
@@ -1384,7 +1388,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         nameView.change(opacity: item.editing ? 0 : 1, animated: animated)
         statusView.change(opacity: item.editing ? 0 : 1, animated: animated)
         
-        backgroundView.change(opacity: item.editing ? 0 : 1, animated: animated)
+        backgroundView.change(opacity: item.editing || !item.colorfulProfile ? 0 : 1, animated: animated)
 
         statusView.update(item.statusLayout)
         statusView.isSelectable = item.threadId == nil

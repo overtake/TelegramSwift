@@ -29,6 +29,53 @@ extension ChatListFilterPeerCategories {
 }
 
 
+final class TelegramStoryRepostPeerObject : Peer {
+    
+    var timeoutAttribute: UInt32?
+    
+    var id: PeerId
+    
+    var indexName: PeerIndexNameRepresentation
+    
+    var associatedPeerId: PeerId?
+    var associatedMediaIds: [MediaId]?
+    var notificationSettingsPeerId: PeerId?
+    
+    func isEqual(_ other: Peer) -> Bool {
+        if let other = other as? TelegramStoryRepostPeerObject {
+            return true
+        }
+        return false
+    }
+    
+    
+    init() {
+        self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt64Value(Int64(1000)))
+        self.indexName = .title(title: "", addressNames: [""])
+        self.notificationSettingsPeerId = nil
+    }
+    
+    var displayTitle: String? {
+        return "Repost Story"
+    }
+    
+    var icon: EmptyAvatartType? {
+        return .icon(colors: theme.colors.peerColors(4), icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
+    }
+    
+    
+    init(decoder: PostboxDecoder) {
+        self.id = PeerId(0)
+        self.indexName = .title(title: "", addressNames: [""])
+        self.notificationSettingsPeerId = nil
+    }
+    func encode(_ encoder: PostboxEncoder) {
+        
+    }
+}
+
+
+
 final class TelegramFilterCategory : Peer {
     
     var timeoutAttribute: UInt32? 
@@ -492,6 +539,9 @@ extension Peer {
         if let peer = self as? TelegramFilterCategory {
             return peer.icon
         }
+        if let peer = self as? TelegramStoryRepostPeerObject {
+            return peer.icon
+        }
         return nil
     }
     
@@ -532,6 +582,8 @@ extension Peer {
                 return " "
             }
             return folder
+        case let repost as TelegramStoryRepostPeerObject:
+            return repost.displayTitle ?? ""
         default:
             return " "
         }

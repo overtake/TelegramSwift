@@ -24,8 +24,8 @@ enum StatsPostItem: Equatable {
             } else {
                 return false
             }
-        case let .story(lhsStory, _):
-            if case let .story(rhsStory, _) = rhs, lhsStory == rhsStory {
+        case let .story(lhsStory, _, _):
+            if case let .story(rhsStory, _, _) = rhs, lhsStory == rhsStory {
                 return true
             } else {
                 return false
@@ -33,8 +33,8 @@ enum StatsPostItem: Equatable {
         }
     }
     
-    case message(Message, ChannelStatsMessageInteractions)
-    case story(EngineStoryItem, PeerEquatable)
+    case message(Message, ChannelStatsPostInteractions)
+    case story(EngineStoryItem, PeerEquatable, ChannelStatsPostInteractions)
     
     var isStory: Bool {
         if case .story = self {
@@ -48,7 +48,7 @@ enum StatsPostItem: Equatable {
         switch self {
         case let .message(message, _):
             return message.timestamp
-        case let .story(story, _):
+        case let .story(story, _, _):
             return story.timestamp
         }
     }
@@ -57,7 +57,7 @@ enum StatsPostItem: Equatable {
         switch self {
         case let .message(message, _):
             return _id_message(message.id)
-        case let .story(story, _):
+        case let .story(story, _, _):
             return _id_story(story)
         }
     }
@@ -66,24 +66,24 @@ enum StatsPostItem: Equatable {
         switch self {
         case let .message(message, interactions):
             return Int(max(message.channelViewsCount ?? 0, interactions.views))
-        case let .story(story, _):
-            return Int(story.views?.seenCount ?? 0)
+        case let .story(story, _, interactions):
+            return Int(max(story.views?.seenCount ?? 0, Int(interactions.views)))
         }
     }
     var shares: Int {
         switch self {
         case let .message(_, interactions):
             return Int(interactions.forwards)
-        case let .story(story, _):
-            return story.views?.forwardCount ?? 0
+        case let .story(_, _, interactions):
+            return Int(interactions.forwards)
         }
     }
     var likes: Int {
         switch self {
-        case let .message(message, interactions):
-            return Int(message.reactionsAttribute?.reactions.reduce(0, { $0 + $1.count }) ?? 0)
-        case let .story(story, _):
-            return Int(story.views?.reactions.reduce(0, { $0 + $1.count }) ?? 0)
+        case let .message(_, interactions):
+            return Int(interactions.reactions)
+        case let .story(_, _, interactions):
+            return Int(interactions.reactions)
         }
     }
     
@@ -92,7 +92,7 @@ enum StatsPostItem: Equatable {
             switch self {
             case let .message(message, _):
                 return ImageMediaReference.message(message: MessageReference(message), media: image)
-            case let .story(story, peer):
+            case let .story(story, peer, _):
                 if let peerReference = PeerReference(peer.peer) {
                     return ImageMediaReference.story(peer: peerReference, id: story.id, media: image)
                 }
@@ -127,7 +127,7 @@ enum StatsPostItem: Equatable {
                     }
                 }
             }
-        case let .story(story, _):
+        case let .story(story, _, _):
             if let image = story.media._asMedia() as? TelegramMediaImage {
                 return image
             } else if let file = story.media._asMedia() as? TelegramMediaFile {
@@ -204,7 +204,7 @@ private func _id_story(_ story: EngineStoryItem) -> InputDataIdentifier {
 }
 
 
-private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, peer: Peer, messages: [Message]?, stories: PeerStoryListContext.State?, interactions: [MessageId : ChannelStatsMessageInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openPost: @escaping(StatsPostItem)->Void, context: ChannelStatsContext, accountContext: AccountContext, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
+private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, peer: Peer, messages: [Message]?, stories: PeerStoryListContext.State?, interactions: [ChannelStatsPostInteractions.PostId : ChannelStatsPostInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openPost: @escaping(StatsPostItem)->Void, context: ChannelStatsContext, accountContext: AccountContext, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -379,14 +379,16 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         var posts: [StatsPostItem] = []
         if let messages = messages {
             for message in messages {
-                if let interactions = interactions?[message.id] {
+                if let interactions = interactions?[.message(id: message.id)] {
                     posts.append(.message(message, interactions))
                 }
             }
         }
         if let stories = stories {
             for story in stories.items {
-                posts.append(.story(story, .init(peer)))
+                if let interactions = interactions?[.story(peerId: peer.id, id: story.id)] {
+                    posts.append(.story(story, .init(peer), interactions))
+                }
             }
         }
         posts.sort(by: { $0.timestamp > $1.timestamp })
@@ -428,7 +430,7 @@ private final class SegmentedBarView : BarView {
 }
 
 
-func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datacenterId: Int32) -> ViewController {
+func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId) -> ViewController {
 
     let initialState = UIStatsState(loading: [])
     
@@ -438,7 +440,8 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
         statePromise.set(stateValue.modify { f($0) })
     }
     
-    let statsContext = ChannelStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, peerId: peerId)
+    
+    let statsContext = ChannelStatsContext(postbox: context.account.postbox, network: context.account.network, peerId: peerId)
 
     
     let messagesPromise = Promise<MessageHistoryView?>(nil)
@@ -455,10 +458,10 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
         switch item {
         case let .message(message, _):
             subject = .messageId(message.id)
-        case let .story(story, peer):
+        case let .story(story, peer, _):
             subject = .story(story, .init(peer.peer))
         }
-        context.bindings.rootNavigation().push(MessageStatsController(context, subject: subject, datacenterId: datacenterId))
+        context.bindings.rootNavigation().push(MessageStatsController(context, subject: subject))
     }
     
     let detailedDisposable = DisposableDict<InputDataIdentifier>()
@@ -478,16 +481,15 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     let signal = combineLatest(queue: prepareQueue, statePromise.get(), statsContext.state, messagesPromise.get(), storiesPromise.get(), context.account.postbox.loadedPeerWithId(peerId)) |> map { uiState, state, messageView, stories, peer in
         
         
-        let interactions = state.stats?.messageInteractions.reduce([MessageId : ChannelStatsMessageInteractions]()) { (map, interactions) -> [MessageId : ChannelStatsMessageInteractions] in
+        let interactions = state.stats?.postInteractions.reduce([ChannelStatsPostInteractions.PostId : ChannelStatsPostInteractions]()) { (map, interactions) -> [ChannelStatsPostInteractions.PostId : ChannelStatsPostInteractions] in
             var map = map
-            map[interactions.messageId] = interactions
+            map[interactions.postId] = interactions
             return map
         }
-        
-        let messages = messageView?.entries.map { $0.message }.filter { interactions?[$0.id] != nil }.sorted(by: { (lhsMessage, rhsMessage) -> Bool in
+
+        let messages = messageView?.entries.map { $0.message }.sorted(by: { (lhsMessage, rhsMessage) -> Bool in
             return lhsMessage.timestamp > rhsMessage.timestamp
         })
-        
         
         return statsEntries(state, uiState: uiState, peer: peer, messages: messages, stories: stories, interactions: interactions, updateIsLoading: { identifier, isLoading in
             updateState { state in

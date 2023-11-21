@@ -377,9 +377,20 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
     }
     
+    var nameColor:  PeerNameColor? {
+        if let peer = peer as? TelegramUser {
+            if peer.isPremium {
+                return peer.nameColor
+            } else {
+                return nil
+            }
+        } else {
+            return peer.nameColor
+        }
+    }
     
     override var barPresentation: ControlStyle {
-        if let nameColor = peer.nameColor, state == .Normal, scrollState == .pageUp {
+        if let nameColor = self.nameColor, state == .Normal, scrollState == .pageUp {
             let backgroundColor = context.peerNameColors.get(nameColor).main
             let foregroundColor = backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             return .init(foregroundColor: foregroundColor, backgroundColor: .clear, highlightColor: .clear, borderColor: .clear, textColor: foregroundColor)

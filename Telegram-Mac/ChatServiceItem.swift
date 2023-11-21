@@ -1032,7 +1032,7 @@ class ChatServiceItem: ChatRowItem {
             height += data.height + (isBubbled ? 9 : 6)
         }
         if let data = self.suggestChannelsData {
-            data.makeSize(width: blockWidth)
+            data.makeSize(width: width - 80)
             height += data.size.height + (isBubbled ? 9 : 6)
         }
         return height

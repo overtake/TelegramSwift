@@ -779,7 +779,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if let cachedData = data.cachedData as? CachedChannelData, views >= 100 {
                 if cachedData.flags.contains(.canViewStats) {
                     thirdBlock.append(ContextMenuItem.init(strings().chatContextViewStatistics, handler: {
-                        context.bindings.rootNavigation().push(MessageStatsController(context, subject: .messageId(messageId), datacenterId: cachedData.statsDatacenterId))
+                        context.bindings.rootNavigation().push(MessageStatsController(context, subject: .messageId(messageId)))
                     }, itemImage: MenuAnimation.menu_statistics.value))
                 }
             }

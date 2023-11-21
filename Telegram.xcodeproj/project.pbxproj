@@ -46,6 +46,8 @@
 		2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718244E2A05413000AFBD4C /* StoryMyInputView.swift */; };
 		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
 		271891F82B08A7DB0008B238 /* LokiRng in Frameworks */ = {isa = PBXBuildFile; productRef = 271891F72B08A7DB0008B238 /* LokiRng */; };
+		271892082B0B2E5C0008B238 /* SimilarChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */; };
+		2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892092B0B93E00008B238 /* CustomizeAccountController.swift */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		271999D92A372549009A3CC7 /* ChatStoryRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */; };
@@ -1548,6 +1550,8 @@
 		2718244E2A05413000AFBD4C /* StoryMyInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyInputView.swift; sourceTree = "<group>"; };
 		271824502A08C60400AFBD4C /* StoryChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatListView.swift; sourceTree = "<group>"; };
 		271891F62B08A7B70008B238 /* LokiRng */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = LokiRng; path = "submodules/telegram-ios/submodules/Utils/LokiRng"; sourceTree = "<group>"; };
+		271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimilarChannelsController.swift; sourceTree = "<group>"; };
+		271892092B0B93E00008B238 /* CustomizeAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizeAccountController.swift; sourceTree = "<group>"; };
 		2718FF8127BFB28900196BC4 /* login_airplane.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_airplane.tgs; sourceTree = "<group>"; };
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
@@ -4329,6 +4333,7 @@
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
 				D02BD7BF232D0FB800D1814A /* AppAppearanceViewController.swift */,
 				27307E9B2ADEB45800D970EE /* SelectColorController.swift */,
+				271892092B0B93E00008B238 /* CustomizeAccountController.swift */,
 			);
 			name = appearance;
 			sourceTree = "<group>";
@@ -4493,6 +4498,7 @@
 				C22674441DC20664000BA9ED /* PeerMediaListController.swift */,
 				D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */,
 				D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */,
+				271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */,
 			);
 			name = list;
 			sourceTree = "<group>";
@@ -7293,6 +7299,7 @@
 				A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */,
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
+				271892082B0B2E5C0008B238 /* SimilarChannelsController.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
@@ -7418,6 +7425,7 @@
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
 				27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */,
+				2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */,
 				27D48B4D2A72F87000721995 /* PremiumBoardingStoriesController.swift in Sources */,
 				27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,

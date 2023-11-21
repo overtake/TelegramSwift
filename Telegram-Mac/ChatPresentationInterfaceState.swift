@@ -661,8 +661,11 @@ class ChatPresentationInterfaceState: Equatable {
                     
                 case .history:
                     if peer.isForum {
-                        if interfaceState.replyMessage == nil {
-                            return .restricted(strings().chatInputReplyToAnswer)
+                        let viewForumAsMessages = (cachedData as? CachedChannelData)?.viewForumAsMessages.knownValue
+                        if viewForumAsMessages == false || viewForumAsMessages == nil {
+                            if interfaceState.replyMessage == nil {
+                                return .restricted(strings().chatInputReplyToAnswer)
+                            }
                         }
                     }
                 default:

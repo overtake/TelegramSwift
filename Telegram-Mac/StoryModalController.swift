@@ -2302,10 +2302,14 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
+        
         let share:(StoryContentItem)->Void = { [weak self] story in
             if let peerId = story.peerId, story.sharable {
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
-                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: darkAppearance), for: context.window)
+                
+                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: "repost to my stories")], topSeparator: "", bottomSeparator: "")
+                
+                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id), additionTopItems: additionTopItems), presentation: darkAppearance), for: context.window)
             } else {
                 self?.genericView.showShareError()
             }
@@ -2553,6 +2557,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         share(story)
                     }, itemImage: MenuAnimation.menu_share.value))
                 }
+                
                
                 
                 if !story.storyItem.isForwardingDisabled {

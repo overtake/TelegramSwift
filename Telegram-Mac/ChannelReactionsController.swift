@@ -22,14 +22,17 @@ private final class ReactionsRowItem : GeneralRowItem {
     fileprivate let _action:(Control)->Void
     fileprivate let updateState:(Updated_ChatTextInputState)->Void
     fileprivate let placeholder: TextViewLayout
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, interactions: TextView_Interactions, viewType: GeneralViewType, state: Updated_ChatTextInputState, action: @escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
+    fileprivate let isCustom:(Int64)->Bool
+    fileprivate let currentLevel: Int
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, interactions: TextView_Interactions, viewType: GeneralViewType, state: Updated_ChatTextInputState, currentLevel: Int, action: @escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, isCustom:@escaping(Int64)->Bool) {
         self.context = context
         self._action = action
+        self.currentLevel = currentLevel
         self.updateState = updateState
         self.interactions = interactions
+        self.isCustom = isCustom
         self.state = state
-        self.placeholder = TextViewLayout.init(.initialize(string: strings().channelReactionsPlaceholder, color: theme.colors.grayText, font: .normal(.title)))
+        self.placeholder = TextViewLayout(.initialize(string: strings().channelReactionsPlaceholder, color: theme.colors.grayText, font: .normal(.title)))
         self.placeholder.measure(width: .greatestFiniteMagnitude)
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -139,6 +142,20 @@ private final class ReactionsRowView: GeneralContainableRowView {
             }
             self.set(state)
             self.inputDidUpdateLayout(animated: true)
+        }
+        
+        var count: Int32 = 0
+        for emojies in inputView.emojis {
+            if item.isCustom(emojies.fileId) {
+                count += 1
+            }
+            if item.isCustom(emojies.fileId) {
+                if count > item.currentLevel {
+                    emojies.layer?.opacity = 0.5
+                } else {
+                    emojies.layer?.opacity = 1.0
+                }
+            }
         }
         
         
@@ -277,6 +294,10 @@ private struct State : Equatable {
         }
         return count
     }
+    
+    func isCustom(_ fileId: Int64) -> Bool {
+        return available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) == nil
+    }
 }
 
 
@@ -320,7 +341,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emojies, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return ReactionsRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, viewType: .firstItem, state: state.state, action: arguments.addReactions, updateState: arguments.updateState)
+            return ReactionsRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, viewType: .firstItem, state: state.state, currentLevel: state.stats?.level ?? 0, action: arguments.addReactions, updateState: arguments.updateState, isCustom: { fileId in
+                return state.isCustom(fileId)
+            })
         }))
         index += 1
         
