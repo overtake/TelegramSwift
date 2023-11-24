@@ -30,7 +30,6 @@
 		270B7CC429FA925D009C994C /* StoryControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC329FA925D009C994C /* StoryControlsView.swift */; };
 		270B7CC629FA9E1E009C994C /* StoryListNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */; };
 		270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */; };
-		270D04C72AEA916A00EFF1E1 /* grammars.dat in Resources */ = {isa = PBXBuildFile; fileRef = 270D04C62AEA916900EFF1E1 /* grammars.dat */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
 		270F020726F0B0830099D2AA /* EmojiAnimationEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */; };
@@ -48,6 +47,10 @@
 		271891F82B08A7DB0008B238 /* LokiRng in Frameworks */ = {isa = PBXBuildFile; productRef = 271891F72B08A7DB0008B238 /* LokiRng */; };
 		271892082B0B2E5C0008B238 /* SimilarChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */; };
 		2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892092B0B93E00008B238 /* CustomizeAccountController.swift */; };
+		2718920E2B0DD1550008B238 /* grammars.dat in Resources */ = {isa = PBXBuildFile; fileRef = 2718920D2B0DD1550008B238 /* grammars.dat */; };
+		271892102B0DDAF00008B238 /* ShareStoryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718920F2B0DDAEF0008B238 /* ShareStoryController.swift */; };
+		271892122B0E44190008B238 /* StoryPrivacyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892112B0E44190008B238 /* StoryPrivacyModalController.swift */; };
+		271892142B0E57390008B238 /* StoryPosterState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892132B0E57390008B238 /* StoryPosterState.swift */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		271999D92A372549009A3CC7 /* ChatStoryRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */; };
@@ -1534,7 +1537,6 @@
 		270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListNavigationView.swift; sourceTree = "<group>"; };
 		270D04492AEA742F00EFF1E1 /* libCodeSyntax.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libCodeSyntax.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CodeSyntax.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		270D04C62AEA916900EFF1E1 /* grammars.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = grammars.dat; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
 		270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiAnimationEffectView.swift; sourceTree = "<group>"; };
@@ -1552,6 +1554,10 @@
 		271891F62B08A7B70008B238 /* LokiRng */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = LokiRng; path = "submodules/telegram-ios/submodules/Utils/LokiRng"; sourceTree = "<group>"; };
 		271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimilarChannelsController.swift; sourceTree = "<group>"; };
 		271892092B0B93E00008B238 /* CustomizeAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizeAccountController.swift; sourceTree = "<group>"; };
+		2718920D2B0DD1550008B238 /* grammars.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = grammars.dat; path = submodules/libprisma/libprisma/grammars.dat; sourceTree = SOURCE_ROOT; };
+		2718920F2B0DDAEF0008B238 /* ShareStoryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareStoryController.swift; sourceTree = "<group>"; };
+		271892112B0E44190008B238 /* StoryPrivacyModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPrivacyModalController.swift; sourceTree = "<group>"; };
+		271892132B0E57390008B238 /* StoryPosterState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPosterState.swift; sourceTree = "<group>"; };
 		2718FF8127BFB28900196BC4 /* login_airplane.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_airplane.tgs; sourceTree = "<group>"; };
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
@@ -3186,6 +3192,9 @@
 				2719D80C2A16013F00081079 /* StoryMediaController.swift */,
 				2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */,
 				2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */,
+				2718920F2B0DDAEF0008B238 /* ShareStoryController.swift */,
+				271892112B0E44190008B238 /* StoryPrivacyModalController.swift */,
+				271892132B0E57390008B238 /* StoryPosterState.swift */,
 			);
 			name = "media-list";
 			sourceTree = "<group>";
@@ -5102,8 +5111,8 @@
 				C27A6F721ECF610C00C65577 /* currencies.json */,
 				C2CFCAB81EBB4A1600843F6A /* voip */,
 				C23BC3671E9AA03E00D79F92 /* emoji11.txt */,
-				270D04C62AEA916900EFF1E1 /* grammars.dat */,
 				D0FFCEBD215A7CB700995AFE /* emoji14.txt */,
+				2718920D2B0DD1550008B238 /* grammars.dat */,
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
 				C252532C1DF0440300ADBC98 /* begin_record.caf */,
@@ -6463,6 +6472,7 @@
 				27CB174C2763257900DD25E0 /* menu_secret_chat.tgs in Resources */,
 				2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */,
 				27672EBC26F8D64600297DB4 /* 104.m4a in Resources */,
+				2718920E2B0DD1550008B238 /* grammars.dat in Resources */,
 				27803BFF27A3E944007B0FA9 /* menu_folder_math.tgs in Resources */,
 				27672EBD26F8D64900297DB4 /* 105.m4a in Resources */,
 				27672EBE26F8D64E00297DB4 /* 106.m4a in Resources */,
@@ -6615,7 +6625,6 @@
 				27CB176E27638F0000DD25E0 /* menu_check_selected.tgs in Resources */,
 				27CE155D297966D8001F8CE8 /* emoji_category_work.tgs in Resources */,
 				2763A165261DF5EF00C12762 /* voice_chat_cancel_reminder_to_mute.tgs in Resources */,
-				270D04C72AEA916A00EFF1E1 /* grammars.dat in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				27336743276247820027441E /* menu_copyright.tgs in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
@@ -7070,6 +7079,7 @@
 				C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */,
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				2703405028212EE700D0156C /* ReactionCarouselView.swift in Sources */,
+				271892122B0E44190008B238 /* StoryPrivacyModalController.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				2726BDF5286F31B30044D260 /* EmojiesPackItem.swift in Sources */,
 				27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */,
@@ -7203,6 +7213,7 @@
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C234A7FE1ED725C300EBBECE /* LanguageViewController.swift in Sources */,
 				C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */,
+				271892142B0E57390008B238 /* StoryPosterState.swift in Sources */,
 				27D6042F29530E8B00588C21 /* StoragePieChartItem.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */,
@@ -7509,6 +7520,7 @@
 				9FB7CB6D221EB22700888EA9 /* CallSettingsModalController.swift in Sources */,
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
 				275801442ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift in Sources */,
+				271892102B0DDAF00008B238 /* ShareStoryController.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */,
 				27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */,

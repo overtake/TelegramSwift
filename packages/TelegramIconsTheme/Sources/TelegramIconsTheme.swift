@@ -9976,6 +9976,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var story_repost_from_white: CGImage {
+      if let image = cached.with({ $0["story_repost_from_white"] }) {
+          return image
+      } else {
+          let image = _story_repost_from_white()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_repost_from_white"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_repost_from_green: CGImage {
+      if let image = cached.with({ $0["story_repost_from_green"] }) {
+          return image
+      } else {
+          let image = _story_repost_from_green()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_repost_from_green"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10744,6 +10770,8 @@ public final class TelegramIconsTheme {
   private let _message_quote_bubble_outgoing: ()->CGImage
   private let _channel_stats_likes: ()->CGImage
   private let _channel_stats_shares: ()->CGImage
+  private let _story_repost_from_white: ()->CGImage
+  private let _story_repost_from_green: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11512,7 +11540,9 @@ public final class TelegramIconsTheme {
       message_quote_bubble_incoming: @escaping()->CGImage,
       message_quote_bubble_outgoing: @escaping()->CGImage,
       channel_stats_likes: @escaping()->CGImage,
-      channel_stats_shares: @escaping()->CGImage
+      channel_stats_shares: @escaping()->CGImage,
+      story_repost_from_white: @escaping()->CGImage,
+      story_repost_from_green: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12281,5 +12311,7 @@ public final class TelegramIconsTheme {
       self._message_quote_bubble_outgoing = message_quote_bubble_outgoing
       self._channel_stats_likes = channel_stats_likes
       self._channel_stats_shares = channel_stats_shares
+      self._story_repost_from_white = story_repost_from_white
+      self._story_repost_from_green = story_repost_from_green
   }
 }

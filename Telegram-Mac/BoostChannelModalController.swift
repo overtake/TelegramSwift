@@ -140,13 +140,15 @@ private func generateBadgePath(rectSize: CGSize, tailPosition: CGFloat = 0.5) ->
 
 private final class Arguments {
     let context: AccountContext
+    let presentation: TelegramPresentationTheme
     let boost:()->Void
     let openChannel:()->Void
     let shareLink:(String)->Void
     let copyLink:(String)->Void
     let openGiveaway:()->Void
-    init(context: AccountContext, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
+    init(context: AccountContext, presentation: TelegramPresentationTheme, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
         self.context = context
+        self.presentation = presentation
         self.boost = boost
         self.copyLink = copyLink
         self.shareLink = shareLink
@@ -256,13 +258,14 @@ private final class BoostRowItem : TableRowItem {
     fileprivate let context: AccountContext
     fileprivate let state: State
     fileprivate let text: TextViewLayout
+    fileprivate let presentation: TelegramPresentationTheme
     fileprivate let boost:()->Void
     fileprivate let openChannel:()->Void
-    init(_ initialSize: NSSize, state: State, context: AccountContext, boost:@escaping()->Void, openChannel:@escaping()->Void) {
+    init(_ initialSize: NSSize, presentation: TelegramPresentationTheme, state: State, context: AccountContext, boost:@escaping()->Void, openChannel:@escaping()->Void) {
         self.context = context
         self.state = state
         self.boost = boost
-        
+        self.presentation = presentation
         self.openChannel = openChannel
         
         var remaining: Int?
@@ -336,7 +339,7 @@ private final class BoostRowItem : TableRowItem {
 
         
         let textString = NSMutableAttributedString()
-        textString.append(string: string, color: theme.colors.text, font: .normal(.text))
+        textString.append(string: string, color: presentation.colors.text, font: .normal(.text))
         textString.detectBoldColorInString(with: .medium(.text))
         
         self.text = .init(textString, alignment: .center)
@@ -398,13 +401,13 @@ private final class BoostRowItemView : TableRowView {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(_ peer: Peer, context: AccountContext, maxWidth: CGFloat) {
+        func update(_ peer: Peer, context: AccountContext, presentation: TelegramPresentationTheme, maxWidth: CGFloat) {
             self.avatar.setPeer(account: context.account, peer: peer)
             
-            let layout = TextViewLayout.init(.initialize(string: peer.displayTitle, color: theme.colors.text, font: .medium(.text)))
+            let layout = TextViewLayout.init(.initialize(string: peer.displayTitle, color: presentation.colors.text, font: .medium(.text)))
             layout.measure(width: maxWidth - 40)
             textView.update(layout)
-            self.backgroundColor = theme.colors.background
+            self.backgroundColor = presentation.colors.background
             
             self.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + avatar.frame.width + 10, 30))
             
@@ -440,14 +443,14 @@ private final class BoostRowItemView : TableRowView {
             currentLevel.isSelectable = false
         }
         
-        func update(_ state: State, context: AccountContext, transition: ContainedViewLayoutTransition) {
+        func update(_ state: State, context: AccountContext, presentation: TelegramPresentationTheme, transition: ContainedViewLayoutTransition) {
             
             self.state = state
             
             let width = frame.width * state.percentToNext
 
             
-            var normalCountLayout = TextViewLayout(.initialize(string: strings().channelBoostLevel("\(state.status.level)"), color: theme.colors.text, font: .medium(13)))
+            var normalCountLayout = TextViewLayout(.initialize(string: strings().channelBoostLevel("\(state.status.level)"), color: presentation.colors.text, font: .medium(13)))
             normalCountLayout.measure(width: .greatestFiniteMagnitude)
             
             if width >= 10 + normalCountLayout.layoutSize.width {
@@ -459,7 +462,7 @@ private final class BoostRowItemView : TableRowView {
 
             
             
-            var premiumCountLayout = TextViewLayout(.initialize(string: strings().channelBoostLevel("\(state.status.level + 1)"), color: theme.colors.text, font: .medium(13)))
+            var premiumCountLayout = TextViewLayout(.initialize(string: strings().channelBoostLevel("\(state.status.level + 1)"), color: presentation.colors.text, font: .medium(13)))
             premiumCountLayout.measure(width: .greatestFiniteMagnitude)
             
             if width >= frame.width - 10 {
@@ -470,7 +473,7 @@ private final class BoostRowItemView : TableRowView {
             nextLevel.update(premiumCountLayout)
             nextLevel.isHidden = state.status.nextLevelBoosts == nil
             
-            nextLevel_background.backgroundColor = theme.colors.background
+            nextLevel_background.backgroundColor = presentation.colors.background
             
             self.updateLayout(size: self.frame.size, transition: transition)
         }
@@ -668,12 +671,12 @@ private final class BoostRowItemView : TableRowView {
             transition = .immediate
         }
         
-        channel.update(item.state.peer.peer, context: item.context, maxWidth: frame.width - 40)
+        channel.update(item.state.peer.peer, context: item.context, presentation: item.presentation, maxWidth: frame.width - 40)
         channel.isHidden = item.state.samePeer
         
         
         lineView.setFrameSize(NSMakeSize(frame.width - 40, 30))
-        lineView.update(item.state, context: item.context, transition: transition)
+        lineView.update(item.state, context: item.context, presentation: item.presentation, transition: transition)
         lineView.layer?.cornerRadius = 10
         
         let size = top.update(state: item.state, context: item.context, transition: transition)
@@ -716,8 +719,10 @@ private final class AcceptRowItem : TableRowItem {
     fileprivate let boost:()->Void
     fileprivate let state: State
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, state: State, context: AccountContext, boost:@escaping()->Void) {
+    fileprivate let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, state: State, context: AccountContext, presentation: TelegramPresentationTheme, boost:@escaping()->Void) {
         self.boost = boost
+        self.presentation = presentation
         self.state = state
         self.context = context
         super.init(initialSize)
@@ -769,7 +774,7 @@ private final class AcceptRowView : TableRowView {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(state: State, lottie: LocalAnimatedSticker) {
+        func update(state: State, presentation: TelegramPresentationTheme, lottie: LocalAnimatedSticker) {
             
             let title: String
             var gradient: Bool = false
@@ -783,7 +788,7 @@ private final class AcceptRowView : TableRowView {
                     gradient = true
                 }
             }
-            set(background: theme.colors.accent, for: .Normal)
+            set(background: presentation.colors.accent, for: .Normal)
             
             //self.gradient.isHidden = !gradient
             
@@ -832,7 +837,7 @@ private final class AcceptRowView : TableRowView {
             return
         }
         
-        button.update(state: item.state, lottie: .menu_lighting)
+        button.update(state: item.state, presentation: item.presentation, lottie: .menu_lighting)
         
         button.setFrameSize(NSMakeSize(frame.width - 40, 40))
         button.layer?.cornerRadius = 10
@@ -859,7 +864,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return BoostRowItem(initialSize, state: state, context: arguments.context, boost: arguments.boost, openChannel: arguments.openChannel)
+        return BoostRowItem(initialSize, presentation: arguments.presentation, state: state, context: arguments.context, boost: arguments.boost, openChannel: arguments.openChannel)
     }))
     index += 1
     
@@ -870,9 +875,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
                 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: {
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: {
                 arguments.copyLink(state.link)
-            }))
+            }), customTheme: .initialize(arguments.presentation))
         }))
         index += 1
         
@@ -881,13 +886,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().boostGetBoosts, linkHandler: { _ in
             arguments.openGiveaway()
-        }), data: .init(color: theme.colors.text, viewType: .textBottomItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        }), data: .init(color: arguments.presentation.colors.text, viewType: .textBottomItem, fontSize: 13, centerViewAlignment: true, alignment: .center, linkColor: arguments.presentation.colors.link)))
         
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_accept, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return AcceptRowItem(initialSize, state: state, context: arguments.context, boost: arguments.boost)
+            return AcceptRowItem(initialSize, state: state, context: arguments.context, presentation: arguments.presentation, boost: arguments.boost)
         }))
         index += 1
     }
@@ -903,7 +908,7 @@ enum BoostChannelSource : Equatable {
     case color(Int32)
 }
 
-func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, source: BoostChannelSource = .basic) -> InputDataModalController {
+func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -923,7 +928,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
 
     var close:(()->Void)? = nil
     
-    let arguments = Arguments(context: context, boost: {
+    let arguments = Arguments(context: context, presentation: presentation, boost: {
         
         let myStatus = stateValue.with { $0.myStatus }
         let nextLevelBoosts = stateValue.with { $0.status.nextLevelBoosts }
@@ -963,13 +968,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                         }
                     }))
                 })
-//                updateState { current in
-//                    var current = current
-//                    current.status = current.status.increment()
-//                    return current
-//                }
-                
-                
+
                 PlayConfetti(for: context.window)
             } else if !occupiedBoosts.isEmpty, let _ = myStatus {
                 showModal(with: BoostReassignController(context: context, peer: peer, boosts: occupiedBoosts), for: context.window)
@@ -986,60 +985,6 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         }
 
 
-//
-//        switch canApplyStatus {
-//        case .ok:
-//            commit()
-//        case let .replace(previousPeer):
-//            let text = strings().channelBoostReplaceBoost(previousPeer._asPeer().compactDisplayTitle, peer.compactDisplayTitle)
-//            
-//            verifyAlert(for: context.window, information: text, ok: strings().channelBoostReplace, cancel: strings().modalCancel, successHandler: { result in
-//                commit()
-//            })
-//            
-//        case let .error(error):
-//            let title: String?
-//            let text: String?
-//            var dismiss: Bool = false
-//            var needPremium = false
-//            switch error {
-//            case .generic:
-//                title = appName
-//                text = strings().unknownError
-//            case let .floodWait(timeout):
-//                title = strings().channelBoostErrorBoostTooOftenTitle
-//                let valueText = timeIntervalString(Int(timeout))
-//                text = strings().channelBoostErrorBoostTooOftenText(valueText) 
-//                dismiss = true
-//            case .peerBoostAlreadyActive:
-//                title = nil
-//                text = nil
-//                dismiss = true
-//            case .premiumRequired:
-//                title = strings().channelBoostErrorPremiumNeededTitle
-//                text = strings().channelBoostErrorPremiumNeededText
-//                needPremium = true
-//            case .giftedPremiumNotAllowed:
-//                title = strings().channelBoostErrorGiftedPremiumNotAllowedTitle
-//                text = strings().channelBoostErrorGiftedPremiumNotAllowedText
-//                dismiss = true
-//            }
-//            
-//            if dismiss {
-//                close?()
-//            }
-//            if let title = title, let text = text {
-//                if needPremium {
-//                    verifyAlert_button(for: context.window, header: title, information: text, option: strings().channelBoostErrorPremiumNeededTextOK, successHandler: { result in
-//                        if result == .thrid {
-//                            showModal(with: PremiumBoardingController(context: context, source: .channel_boost(peer.id)), for: context.window)
-//                        }
-//                    })
-//                } else {
-//                    alert(for: context.window, header: title, info: text)
-//                }
-//            }
-//        }
     }, openChannel: {
         close?()
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
@@ -1067,13 +1012,10 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         controller.setCenterTitle(stateValue.with { $0.title })
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(380, 300))
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(380, 300), presentation: presentation)
     
-    modalController.getModalTheme = {
-        return .init(text: theme.colors.text, grayText: theme.colors.grayText, background: theme.colors.listBackground, border: .clear, accent: theme.colors.accent, grayForeground: theme.colors.grayForeground)
-    }
     
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
+    controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: {
         close?()
     })
     
@@ -1081,14 +1023,8 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         modalController?.close()
     }
     
-    controller.afterViewDidLoad = {
-//        DispatchQueue.main.async {
-//            updateState { current in
-//                var current = current
-//                current.currentBoosts += 4
-//                return current
-//            }
-//        }
+    controller.getBackgroundColor = {
+        return presentation.colors.listBackground
     }
     
     return modalController

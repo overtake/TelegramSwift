@@ -282,7 +282,7 @@ class GeneralRowItem: TableRowItem {
                          redColor: theme.colors.redUI,
                          indicatorColor: theme.colors.indicatorColor,
                          appearance: theme.colors.appearance,
-                         switchAppearance: nil,
+                         switchAppearance: .init(theme: theme),
                          unselectedImage: theme.icons.chatToggleUnselected,
                          selectedImage: theme.icons.chatToggleSelected)
         }

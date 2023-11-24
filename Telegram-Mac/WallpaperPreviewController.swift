@@ -527,8 +527,8 @@ private final class WallpaperPreviewView: View {
         }
         
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil)
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil)
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil)
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil)
         
 
         let firstText: String
@@ -1534,7 +1534,7 @@ class WallpaperPreviewController: ModalViewController {
                     case let .chat(peer, _):
                         complete = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: current.cloudWallpaper, forBoth: bothPeer) |> `catch` { _ in return .complete() }
                     case let .message(messageId, _):
-                        complete = context.engine.themes.setExistingChatWallpaper(messageId: messageId, settings: current.settings) |> `catch` { _ in return .complete() } |> ignoreValues
+                        complete = context.engine.themes.setExistingChatWallpaper(messageId: messageId, settings: current.settings, forBoth: bothPeer) |> `catch` { _ in return .complete() } |> ignoreValues
                     default:
                         complete = .complete()
                     }

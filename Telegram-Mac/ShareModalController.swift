@@ -478,10 +478,12 @@ final class ShareAdditionItems {
     let items: [ShareAdditionItem]
     let topSeparator: String
     let bottomSeparator: String
-    init(items: [ShareAdditionItem], topSeparator: String, bottomSeparator: String) {
+    let selectable: Bool
+    init(items: [ShareAdditionItem], topSeparator: String, bottomSeparator: String, selectable: Bool = true) {
         self.items = items
         self.topSeparator = topSeparator
         self.bottomSeparator = bottomSeparator
+        self.selectable = selectable
     }
 }
 
@@ -927,10 +929,12 @@ class ShareStoryObject : ShareObject {
     private let media:Media
     private let _hasLink: Bool
     private let storyId: StoryId
-    init(_ context: AccountContext, media: Media, hasLink: Bool, storyId: StoryId, additionTopItems:ShareAdditionItems?) {
+    private let repostAction:()->Void
+    init(_ context: AccountContext, media: Media, hasLink: Bool, storyId: StoryId, additionTopItems:ShareAdditionItems?, repostAction:@escaping()->Void) {
         self.media = media
         self._hasLink = hasLink
         self.storyId = storyId
+        self.repostAction = repostAction
         super.init(context, additionTopItems: additionTopItems)
     }
     
@@ -967,6 +971,10 @@ class ShareStoryObject : ShareObject {
         let needRepost = peerIds.contains(where: { $0.id._internalGetInt64Value() == 1000 && $0.namespace._internalGetInt32Value() == 7 })
         
         let peerIds = peerIds.filter { $0.id._internalGetInt64Value() != 1000 && $0.namespace._internalGetInt32Value() != 7 }
+        
+        if needRepost {
+            self.repostAction()
+        }
         
         for peerId in peerIds {
             let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
@@ -2190,7 +2198,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                                 
                                 let status = NSAttributedString.initialize(string: item.status, color: theme.statusColor, font: theme.statusFont)
                                 let title = NSAttributedString.initialize(string: item.peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
-                                entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), nil, true, multipleSelection))
+                                entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), nil, true, multipleSelection && additionTopItems.selectable))
                                 offset -= 1
                             }
                             if !additionTopItems.bottomSeparator.isEmpty {

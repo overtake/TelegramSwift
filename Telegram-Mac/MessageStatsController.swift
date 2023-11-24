@@ -230,7 +230,7 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
     var loadDetailedGraphImpl: ((StatsGraph, Int64) -> Signal<StatsGraph?, NoError>)?
     switch subject {
     case let .messageId(messageId):
-        let statsContext = MessageStatsContext(postbox: context.account.postbox, network: context.account.network, messageId: messageId)
+        let statsContext = MessageStatsContext(account: context.account, messageId: messageId)
         loadDetailedGraphImpl = { [weak statsContext] graph, x in
             return statsContext?.loadDetailedGraph(graph, x: x) ?? .single(nil)
         }
@@ -241,7 +241,7 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         dataPromise.set(.single(nil) |> then(dataSignal))
         anyStatsContext = statsContext
     case let .story(storyItem, peer):
-        let statsContext = StoryStatsContext(postbox: context.account.postbox, network: context.account.network, peerId: peer.id, storyId: storyItem.id)
+        let statsContext = StoryStatsContext(account: context.account, peerId: peer.id, storyId: storyItem.id)
         loadDetailedGraphImpl = { [weak statsContext] graph, x in
             return statsContext?.loadDetailedGraph(graph, x: x) ?? .single(nil)
         }

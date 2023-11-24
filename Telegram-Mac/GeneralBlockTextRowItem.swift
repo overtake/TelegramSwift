@@ -29,10 +29,10 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let rightAction: RightAction?
     fileprivate let centerViewAlignment: Bool
     fileprivate let _hasBorder: Bool?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false, customTheme: GeneralRowItem.Theme? = nil) {
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: text, color: color, font: font)
+        _ = attr.append(string: text, color: customTheme?.textColor ?? color, font: font)
         attr.detectBoldColorInString(with: .medium(font.pointSize))
         
         self.textLayout = TextViewLayout(attr, maximumNumberOfLines: singleLine ? 1 : 0, alwaysStaticItems: false)
@@ -41,11 +41,11 @@ class GeneralBlockTextRowItem: GeneralRowItem {
         self.centerViewAlignment = centerViewAlignment
         self.rightAction = rightAction
         if let header = header {
-            self.headerLayout = TextViewLayout(.initialize(string: header.text, color: color, font: .medium(.title)), maximumNumberOfLines: 3)
+            self.headerLayout = TextViewLayout(.initialize(string: header.text, color: customTheme?.textColor ?? color, font: .medium(.title)), maximumNumberOfLines: 3)
         } else {
             self.headerLayout = nil
         }
-        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, customTheme: customTheme)
     }
     
     override var hasBorder: Bool {
@@ -100,7 +100,10 @@ private final class GeneralBlockTextRowView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        guard let item = item as? GeneralRowItem else {
+            return theme.colors.background
+        }
+        return item.customTheme?.backgroundColor ?? theme.colors.background
     }
     
     override func updateColors() {
@@ -181,6 +184,7 @@ private final class GeneralBlockTextRowView : TableRowView {
             } else {
                 current = ImageButton()
                 current.scaleOnClick = true
+                current.autohighlight = false
                 containerView.addSubview(current)
                 self.rightAction = current
             }

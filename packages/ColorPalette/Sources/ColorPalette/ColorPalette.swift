@@ -10,7 +10,14 @@ import Cocoa
 import Colors
 
 
+
 public class PeerNameColors: Equatable {
+    public enum Subject {
+        case background
+        case palette
+        case stories
+    }
+    
     public struct Colors: Equatable {
         public let main: NSColor
         public let secondary: NSColor?
@@ -62,7 +69,14 @@ public class PeerNameColors: Equatable {
         return PeerNameColors(
             colors: defaultSingleColors,
             darkColors: [:],
-            displayOrder: [5, 3, 1, 0, 2, 4, 6]
+            displayOrder: [5, 3, 1, 0, 2, 4, 6],
+            profileColors: [:],
+            profileDarkColors: [:],
+            profilePaletteColors: [:],
+            profilePaletteDarkColors: [:],
+            profileStoryColors: [:],
+            profileStoryDarkColors: [:],
+            profileDisplayOrder: []
         )
     }
     
@@ -70,15 +84,39 @@ public class PeerNameColors: Equatable {
     public let darkColors: [Int32: Colors]
     public let displayOrder: [Int32]
     
+    public let profileColors: [Int32: Colors]
+    public let profileDarkColors: [Int32: Colors]
+    public let profilePaletteColors: [Int32: Colors]
+    public let profilePaletteDarkColors: [Int32: Colors]
+    public let profileStoryColors: [Int32: Colors]
+    public let profileStoryDarkColors: [Int32: Colors]
+    public let profileDisplayOrder: [Int32]
+    
    
     
-    public init(colors: [Int32: Colors], darkColors: [Int32: Colors], displayOrder: [Int32]) {
+    public init(
+        colors: [Int32: Colors],
+        darkColors: [Int32: Colors],
+        displayOrder: [Int32],
+        profileColors: [Int32: Colors],
+        profileDarkColors: [Int32: Colors],
+        profilePaletteColors: [Int32: Colors],
+        profilePaletteDarkColors: [Int32: Colors],
+        profileStoryColors: [Int32: Colors],
+        profileStoryDarkColors: [Int32: Colors],
+        profileDisplayOrder: [Int32]
+    ) {
         self.colors = colors
         self.darkColors = darkColors
         self.displayOrder = displayOrder
+        self.profileColors = profileColors
+        self.profileDarkColors = profileDarkColors
+        self.profilePaletteColors = profilePaletteColors
+        self.profilePaletteDarkColors = profilePaletteDarkColors
+        self.profileStoryColors = profileStoryColors
+        self.profileStoryDarkColors = profileStoryDarkColors
+        self.profileDisplayOrder = profileDisplayOrder
     }
-    
-  
     
     public static func == (lhs: PeerNameColors, rhs: PeerNameColors) -> Bool {
         if lhs.colors != rhs.colors {
@@ -88,6 +126,27 @@ public class PeerNameColors: Equatable {
             return false
         }
         if lhs.displayOrder != rhs.displayOrder {
+            return false
+        }
+        if lhs.profileColors != rhs.profileColors {
+            return false
+        }
+        if lhs.profileDarkColors != rhs.profileDarkColors {
+            return false
+        }
+        if lhs.profilePaletteColors != rhs.profilePaletteColors {
+            return false
+        }
+        if lhs.profilePaletteDarkColors != rhs.profilePaletteDarkColors {
+            return false
+        }
+        if lhs.profileStoryColors != rhs.profileStoryColors {
+            return false
+        }
+        if lhs.profileStoryDarkColors != rhs.profileStoryDarkColors {
+            return false
+        }
+        if lhs.profileDisplayOrder != rhs.profileDisplayOrder {
             return false
         }
         return true
@@ -174,6 +233,7 @@ public final class InputViewTheme: Equatable {
         return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: fontSize)
     }
 }
+
 
 
 public struct SearchTheme {
@@ -273,6 +333,7 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
     
     return true
 }
+
 
 public struct PaletteAccentColor : Equatable {
     public static func == (lhs: PaletteAccentColor, rhs: PaletteAccentColor) -> Bool {

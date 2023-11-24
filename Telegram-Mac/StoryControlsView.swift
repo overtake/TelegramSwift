@@ -23,15 +23,77 @@ private let unmuted_image = NSImage(named: "Icon_StoryUnmute")!.precomposed(NSCo
 private let privacy_close_friends = NSImage(named: "Icon_StoryCloseFriends")!.precomposed()
 private let privacy_contacts = NSImage(named: "Icon_Story_Contacts")!.precomposed()
 private let privacy_selected_contacts = NSImage(named: "Icon_Story_Selected_Contacts")!.precomposed()
+private let forward_repost = NSImage(named: "Icon_StoryView_Repost")!.precomposed(NSColor.white)
+
+
+private final class RepostView : View {
+    private let imageView = ImageView()
+    private var avatarView: AvatarControl?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        self.imageView.image = forward_repost
+        self.imageView.sizeToFit()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(forwardInfo: EngineStoryItem.ForwardInfo, context: AccountContext, animated: Bool) {
+        switch forwardInfo {
+        case let .known(peer, _):
+            let current: AvatarControl
+            if let view = self.avatarView {
+                current = view
+            } else {
+                current = AvatarControl(font: .avatar(4))
+                current.setFrameSize(NSMakeSize(12, 12))
+                self.avatarView = current
+                addSubview(current)
+            }
+            current.setPeer(account: context.account, peer: peer._asPeer())
+        default:
+            if let view = avatarView {
+                performSubviewRemoval(view, animated: animated)
+                self.avatarView = nil
+            }
+        }
+        
+        let size = NSMakeSize(avatarView != nil ? 27 : 12, 16)
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.setFrameSize(size)
+        self.updateLayout(size: size, transition: transition)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: imageView, frame: self.imageView.centerFrameY(x: 0))
+        if let avatar = avatarView {
+            transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: self.imageView.frame.maxX + 3))
+        }
+    }
+}
 
 final class StoryControlsView : Control {
     private let avatar = AvatarControl(font: .avatar(13))
     private let textView = TextView()
+    private let dateContainer = Control()
     private let dateView = TextView()
     private let userContainer = View()
     private let more = ImageButton()
     private let muted = ImageButton()
-    private let closeFriends = ImageButton()
+    private let privacy = ImageButton()
 
     private let avatarAndText = Control()
     
@@ -40,16 +102,19 @@ final class StoryControlsView : Control {
     private var story: StoryContentItem?
     
     private let shadowView = ShadowView()
+    
+    private var repostView: RepostView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(shadowView)
         avatar.setFrameSize(NSMakeSize(32, 32))
         userContainer.addSubview(avatarAndText)
         avatarAndText.addSubview(avatar)
-        avatarAndText.addSubview(dateView)
+        dateContainer.addSubview(dateView)
+        avatarAndText.addSubview(dateContainer)
         avatarAndText.addSubview(textView)
         userContainer.addSubview(more)
-        userContainer.addSubview(closeFriends)
+        userContainer.addSubview(privacy)
         userContainer.addSubview(muted)
         
 
@@ -67,8 +132,8 @@ final class StoryControlsView : Control {
         muted.scaleOnClick = true
         muted.autohighlight = false
 
-        closeFriends.scaleOnClick = true
-        closeFriends.autohighlight = false
+        privacy.scaleOnClick = true
+        privacy.autohighlight = false
         
         more.set(image: more_image, for: .Normal)
         more.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
@@ -103,10 +168,12 @@ final class StoryControlsView : Control {
         avatar.userInteractionEnabled = false
         textView.userInteractionEnabled = false
      
-        closeFriends.set(handler: { [weak self] control in
+        privacy.set(handler: { [weak self] control in
             if let story = self?.story {
                 if story.peerId != self?.arguments?.context.peerId {
                     self?.arguments?.showFriendsTooltip(control, story)
+                } else {
+                    self?.arguments?.setupPrivacy(story)
                 }
             }
         }, for: .Click)
@@ -140,21 +207,58 @@ final class StoryControlsView : Control {
         self.arguments = arguments
         avatar.setPeer(account: context.account, peer: peer)
         
-        closeFriends.isHidden = !story.storyItem.isCloseFriends && !story.storyItem.isSelectedContacts && !story.storyItem.isContacts
+        privacy.isHidden = !story.storyItem.isCloseFriends && !story.storyItem.isSelectedContacts && !story.storyItem.isContacts
         
         if story.storyItem.isCloseFriends {
-            closeFriends.set(image: privacy_close_friends, for: .Normal)
+            privacy.set(image: privacy_close_friends, for: .Normal)
         } else if story.storyItem.isSelectedContacts {
-            closeFriends.set(image: privacy_selected_contacts, for: .Normal)
+            privacy.set(image: privacy_selected_contacts, for: .Normal)
         } else if story.storyItem.isContacts {
-            closeFriends.set(image: privacy_contacts, for: .Normal)
+            privacy.set(image: privacy_contacts, for: .Normal)
         }
-        closeFriends.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+        privacy.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
 
         
         
         let date = NSMutableAttributedString()
         let color = NSColor.white.withAlphaComponent(0.8)
+        if let forwardInfo = story.storyItem.forwardInfo {
+            let peerId: PeerId?
+            switch forwardInfo {
+            case let .known(peer, _):
+                date.append(string: peer._asPeer().compactDisplayTitle, color: NSColor.white, font: .medium(.small))
+                date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
+                peerId = peer.id
+            case let .unknown(name):
+                date.append(string: name, color: NSColor.white, font: .medium(.small))
+                date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
+                peerId = nil
+            }
+            let current: RepostView
+            var isNew = false
+            if let view = self.repostView {
+                current = view
+            } else {
+                current = RepostView(frame: .zero)
+                self.repostView = current
+                dateContainer.addSubview(current)
+                isNew = true
+            }
+            current.set(forwardInfo: forwardInfo, context: context, animated: animated)
+            if isNew {
+                current.centerY(x: 0)
+            }
+            if let peerId = peerId {
+                dateContainer.set(handler: { [weak arguments] _ in
+                    arguments?.openChat(peerId, nil, nil)
+                }, for: .Click)
+            } else {
+                dateContainer.removeAllHandlers()
+            }
+        } else if let view = repostView {
+            performSubviewRemoval(view, animated: animated)
+            self.repostView = nil
+        }
         if story.storyItem.expirationTimestamp < context.timestamp {
             date.append(string: stringForFullDate(timestamp: story.storyItem.timestamp), color: color, font: .medium(.small))
         } else {
@@ -174,14 +278,19 @@ final class StoryControlsView : Control {
         more.isHidden = context.peerId == groupId
 
         
-        let textWidth = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (closeFriends.isHidden ? 0 : 20)
+        let textWidth = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (privacy.isHidden ? 0 : 20) - (repostView != nil ? repostView!.frame.width + 3 : 0)
 
 
         let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
         dateLayout.measure(width: textWidth)
 
                
-
+        dateContainer.userInteractionEnabled = self.repostView != nil
+        dateContainer.scaleOnClick = true
+        dateView.userInteractionEnabled = false
+        
+        
+        
         let authorName = NSMutableAttributedString()
         authorName.append(string: context.peerId == groupId ? strings().storyControlsYourStory : peer.displayTitle, color: .white, font: .medium(.title))
         
@@ -220,7 +329,24 @@ final class StoryControlsView : Control {
         
         transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: 0))
         transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY), size: textView.frame.size))
-        transition.updateFrame(view: dateView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.maxY - dateView.frame.height), size: dateView.frame.size))
+        
+        
+        
+        var dateContainerSize: NSSize = dateView.frame.size
+        if let repostView = self.repostView {
+            dateContainerSize.width += repostView.frame.width + 3
+            transition.updateFrame(view: repostView, frame: repostView.centerFrameY(x: 0))
+            repostView.updateLayout(size: repostView.frame.size, transition: transition)
+        }
+        
+        transition.updateFrame(view: dateContainer, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.maxY - dateView.frame.height), size: dateContainerSize))
+        
+        
+        if let view = repostView {
+            transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: view.frame.maxX + 3))
+        } else {
+            transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: 0))
+        }
 
         var controlX = size.width
         
@@ -229,9 +355,9 @@ final class StoryControlsView : Control {
             transition.updateFrame(view: more, frame: more.centerFrameY(x: controlX))
         }
         
-        if !closeFriends.isHidden {
-            controlX -= (closeFriends.frame.width + 5)
-            transition.updateFrame(view: closeFriends, frame: closeFriends.centerFrameY(x: controlX))
+        if !privacy.isHidden {
+            controlX -= (privacy.frame.width + 5)
+            transition.updateFrame(view: privacy, frame: privacy.centerFrameY(x: controlX))
         }
         if !muted.isHidden {
             controlX -= (muted.frame.width + 5)
@@ -243,7 +369,7 @@ final class StoryControlsView : Control {
         super.layout()
         
 
-        let width = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (closeFriends.isHidden ? 0 : 20)
+        let width = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (privacy.isHidden ? 0 : 20)
         
         self.textView.resize(width)
         self.dateView.resize(width)

@@ -458,7 +458,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     var peerColor: NSColor {
         if let nameColor = nameColor, threadId == nil, !editing {
-            return context.peerNameColors.get(nameColor).main
+            return context.peerNameColors.getProfile(nameColor).main
         } else {
             return .clear
         }
@@ -466,7 +466,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     var actionColor: NSColor {
         if let nameColor = nameColor, threadId == nil, !editing {
-            let textColor = context.peerNameColors.get(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            let textColor = context.peerNameColors.getProfile(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             return textColor.withAlphaComponent(0.2)
         } else {
             return theme.colors.background
@@ -475,7 +475,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     var accentColor: NSColor {
         if let nameColor = nameColor, threadId == nil {
-            let textColor = context.peerNameColors.get(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            let textColor = context.peerNameColors.getProfile(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             return textColor
         } else {
             return theme.colors.accent
@@ -495,17 +495,17 @@ class PeerInfoHeadItem: GeneralRowItem {
     static func nameColor(_ peer: Peer?) -> PeerNameColor? {
         if let peer = peer as? TelegramUser {
             if peer.isPremium {
-                return peer.nameColor
+                return peer.profileColor
             } else {
                 return nil
             }
         } else {
-            return peer?.nameColor
+            return nil
         }
     }
     static func textColor(_ peer: Peer?, threadId: Int64?, context: AccountContext) -> NSColor {
         if let nameColor = PeerInfoHeadItem.nameColor(peer), threadId == nil {
-            let textColor = context.peerNameColors.get(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            let textColor = context.peerNameColors.getProfile(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             return textColor
         } else {
             return theme.colors.text
@@ -513,7 +513,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     static func grayTextColor(_ peer: Peer?, threadId: Int64?, context: AccountContext) -> NSColor {
         if let nameColor = PeerInfoHeadItem.nameColor(peer), threadId == nil {
-            let textColor = context.peerNameColors.get(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            let textColor = context.peerNameColors.getProfile(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             return textColor.withAlphaComponent(0.4)
         } else {
             if threadId != nil {
@@ -1362,7 +1362,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             photoContainer.shadow = shadow
         }
         
-        if item.colorfulProfile, let emoji = item.peer?.backgroundEmojiId, !item.editing {
+        if item.colorfulProfile, let emoji = item.peer?.profileBackgroundEmojiId, !item.editing {
             let current: PeerInfoSpawnEmojiView
             if let view = self.emojiSpawn {
                 current = view

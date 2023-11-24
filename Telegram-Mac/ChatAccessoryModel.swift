@@ -358,6 +358,19 @@ class ChatAccessoryView : Button {
             }
         }
     }
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
     
     private var isLite: Bool = false
     
@@ -416,19 +429,7 @@ class ChatAccessoryView : Button {
         NotificationCenter.default.removeObserver(self)
     }
     
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
-        }
-    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

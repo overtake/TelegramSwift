@@ -86,7 +86,7 @@ class GeneralTextRowItem: GeneralRowItem {
         }
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, linkColor: NSColor = theme.colors.link, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
        
         let attributedText: NSMutableAttributedString
         self.textColor = textColor
@@ -98,7 +98,7 @@ class GeneralTextRowItem: GeneralRowItem {
         case let .plain(text):
             attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize ?? 11.5)).mutableCopy() as! NSMutableAttributedString
         case let .markdown(text, handler):
-            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(fontSize ?? 11.5), textColor: textColor), link: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: theme.colors.link), linkAttribute: { contents in
+            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(fontSize ?? 11.5), textColor: textColor), link: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: linkColor), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, handler))
             })).mutableCopy() as! NSMutableAttributedString
         case let .customMarkdown(text, linkColor, linkFont, handler):

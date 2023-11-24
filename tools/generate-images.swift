@@ -897,6 +897,9 @@ func initialize() -> [String] {
 
     array.append("channel_stats_likes")
     array.append("channel_stats_shares")
+    
+    array.append("story_repost_from_white")
+    array.append("story_repost_from_green")
 
     return array
 }
