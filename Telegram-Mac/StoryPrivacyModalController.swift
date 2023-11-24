@@ -644,7 +644,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         currentIds.append(context.peerId)
         
         if currentIds != peerIds {
-            let peers = context.account.postbox.transaction { transaction in
+            let peers: Signal<[EnginePeer.Id: EnginePeer], NoError> = context.account.postbox.transaction { transaction in
                 var peers:[EnginePeer.Id: EnginePeer] = [:]
                 for currentId in currentIds {
                     if let peer = transaction.getPeer(currentId) {
