@@ -318,7 +318,8 @@ final class AccountContext {
     private let checkSidebarShouldEnable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
-    
+    private var replyColors: EngineAvailableColorOptions?
+    private var profileColors: EngineAvailableColorOptions?
     var limitConfiguration: LimitsConfiguration {
         return _limitConfiguration.with { $0 }
     }
@@ -330,7 +331,11 @@ final class AccountContext {
     }
     
     var peerNameColors: PeerNameColors {
-        return _appConfiguration.with { .with(appConfiguration: $0) }
+        if let replyColors = self.replyColors, let profileColors = self.profileColors {
+            return .with(availableReplyColors: replyColors, availableProfileColors: profileColors)
+        } else {
+            return .init(colors: [:], darkColors: [:], displayOrder: [], profileColors: [:], profileDarkColors: [:], profilePaletteColors: [:], profilePaletteDarkColors: [:], profileStoryColors: [:], profileStoryDarkColors: [:], profileDisplayOrder: [])
+        }
     }
     
     
@@ -591,7 +596,10 @@ final class AccountContext {
         
         #endif
         
-        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), engine.accountData.observeAvailableColorOptions(scope: .profile), engine.accountData.observeAvailableColorOptions(scope: .replies)).start(next: { [weak self] profile, replies in
+            self?.replyColors = replies
+            self?.profileColors = profile
+        }))
         
         let autoplayMedia = _autoplayMedia
         prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in

@@ -24,6 +24,10 @@ public struct SwitchViewAppearance : Equatable {
         self.borderColor = borderColor
         
     }
+    
+    public init(theme presentation: PresentationTheme) {
+        self.init(backgroundColor: presentation.colors.background, stateOnColor: presentation.colors.accent, stateOffColor: presentation.colors.grayForeground, disabledColor: presentation.colors.grayTransparent, borderColor: presentation.colors.border)
+    }
 }
 
 public var switchViewAppearance: SwitchViewAppearance {

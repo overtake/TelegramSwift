@@ -308,6 +308,9 @@ final class ChatChannelSuggestView : Control {
         dismiss.set(handler: { [weak item] _ in
             item?.dismissRecommendedChannels()
         }, for: .Click)
+        
+        container.backgroundColor = item.presentation.colors.background
+        backgroundColor = item.presentation.colors.background
     }
     
     override func layout() {

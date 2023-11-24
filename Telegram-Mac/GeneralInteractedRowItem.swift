@@ -51,6 +51,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
                 width -= 40
             case .selectable:
                 width -= 40
+            case .selectableLeft:
+                width -= 40
             default:
                 break
             }
@@ -66,6 +68,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
             case .context:
                 width -= 40
             case .selectable:
+                width -= 40
+            case .selectableLeft:
                 width -= 40
             default:
                 break
@@ -92,7 +96,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         self.menuItems = menuItems
         self.disableBorder = disableBorder
         if let description = description {
-            descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)))
+            descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
             descLayout = nil
         }

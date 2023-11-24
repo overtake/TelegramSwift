@@ -2802,7 +2802,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               message_quote_bubble_incoming: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_incoming) },
                               message_quote_bubble_outgoing: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_outgoing) },
                               channel_stats_likes: { NSImage(named: "Icon_ChannelStats_Likes")!.precomposed(palette.grayIcon) },
-                              channel_stats_shares: { NSImage(named: "Icon_ChannelStats_Shares")!.precomposed(palette.grayIcon) }
+                              channel_stats_shares: { NSImage(named: "Icon_ChannelStats_Shares")!.precomposed(palette.grayIcon) },
+                              story_repost_from_white: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.listGrayText) },
+                              story_repost_from_green: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.greenUI) }
 
     )
 }

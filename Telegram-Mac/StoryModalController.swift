@@ -356,7 +356,8 @@ final class StoryArguments {
     let deactivateMediaArea:(MediaArea)->Void
     let invokeMediaArea:(MediaArea)->Void
     let like:(MessageReaction.Reaction?, StoryInteraction.State)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void) {
+    let setupPrivacy:(StoryContentItem)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -391,6 +392,7 @@ final class StoryArguments {
         self.invokeMediaArea = invokeMediaArea
         self.like = like
         self.showLikePanel = showLikePanel
+        self.setupPrivacy = setupPrivacy
     }
     
     func longDown() {
@@ -2307,9 +2309,11 @@ final class StoryModalController : ModalViewController, Notifable {
             if let peerId = story.peerId, story.sharable {
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
                 
-                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: "repost to my stories")], topSeparator: "", bottomSeparator: "")
+                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: "repost to my stories")], topSeparator: "", bottomSeparator: "", selectable: false)
                 
-                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id), additionTopItems: additionTopItems), presentation: darkAppearance), for: context.window)
+                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id), additionTopItems: additionTopItems, repostAction: {
+                    showModal(with: StoryPrivacyModalController(context: context, presentation: darkAppearance, reason: .share(story)), for: context.window)
+                }), presentation: darkAppearance), for: context.window)
             } else {
                 self?.genericView.showShareError()
             }
@@ -2725,6 +2729,8 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                 })
             }
+        }, setupPrivacy: { story in
+            showModal(with: StoryPrivacyModalController(context: context, presentation: darkAppearance, reason: .settings(story)), for: context.window)
         })
         
         self.arguments = arguments
@@ -2906,13 +2912,14 @@ final class StoryModalController : ModalViewController, Notifable {
             DispatchQueue.main.async {
                 self?.interactions.update { current in
                     var current = current
-                    current.hasPopover = hasPopover(context.window)
                     current.hasMenu = contextMenuOnScreen() || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
                     current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil
                     || findModal(InputDataModalController.self, isAboveTo: self) != nil
                     || findModal(ShareModalController.self, isAboveTo: self) != nil
                     || findModal(StoryStealthModeController.self, isAboveTo: self) != nil
                     || findModal(PremiumBoardingController.self, isAboveTo: self) != nil
+                    || findModal(ShareStoryController.self, isAboveTo: self) != nil
+                    current.hasPopover = hasPopover(context.window) && !current.hasModal
                     return current
                 }
             }
@@ -3054,13 +3061,6 @@ final class StoryModalController : ModalViewController, Notifable {
         
        
         
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if self?.isNotMainScreen == true {
-                return .rejected
-            }
-            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.bold))
-            return .invoked
-        }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.isNotMainScreen == true {
@@ -3077,6 +3077,16 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.zoomOut()
             return .invoked
         }, with: self, for: .Minus, priority: .modal, modifierFlags: [.command])
+        
+        
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
+            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.bold))
+            return .invoked
+        }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.isNotMainScreen == true {

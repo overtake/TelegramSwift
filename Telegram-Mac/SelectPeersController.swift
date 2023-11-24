@@ -245,12 +245,12 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     
     if let linkInvation = linkInvation {
-        let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.colors.accent, flipVertical: true)
-        entries.append(SelectPeerEntry.actionButton(strings().peerSelectInviteViaLink, icon, 0, GeneralRowItem.Theme(), linkInvation))
+        let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.accentColor, flipVertical: true)
+        entries.append(SelectPeerEntry.actionButton(strings().peerSelectInviteViaLink, icon, 0, theme, linkInvation))
     }
         
     var index:Int32 = 0
@@ -269,7 +269,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                     }
                 }
                 
-                entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil), index, !excludeIds.contains(peer.id)))
+                entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
                 index += 1
             }
         }
@@ -283,7 +283,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                     }
                 }
                 
-                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil), index, !excludeIds.contains(peer.id)))
+                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
                 index += 1
             }
         }
@@ -291,7 +291,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
     }
     
     if entries.isEmpty {
-        entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
+        entries.append(.searchEmpty(.init(), NSImage(named: "Icon_EmptySearchResults")!.precomposed(theme.grayTextColor)))
     }
     
     return entries
@@ -877,7 +877,7 @@ class SelectChatsBehavior: SelectPeersBehavior {
     }
 }
 
-fileprivate class SelectContactsBehavior : SelectPeersBehavior {
+class SelectContactsBehavior : SelectPeersBehavior {
     fileprivate let index: PeerNameIndex = .lastNameFirst
     private var previousGlobal:Atomic<[SelectPeerValue]> = Atomic(value: [])
    
@@ -893,6 +893,7 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
         let previousGlobal = self.previousGlobal
         let previousSearch = Atomic<String?>(value: nil)
         let account = context.account
+        let theme = self.customTheme()
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             let settings = self?.settings ?? SelectPeerSettings()
@@ -909,7 +910,7 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                     |> deliverOn(prepareQueue)
                     |> map { view, searchView, accountPeer -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, excludeIds: excludePeerIds, linkInvation: linkInvation), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, excludeIds: excludePeerIds, linkInvation: linkInvation, theme: theme), updatedSearch)
                 }
                 
             } else  {
@@ -1379,7 +1380,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 }
                 genericView.tokenView.removeTokens(uniqueIds: idsToRemove, animated: animated)                
                 
-                modal?.interactions?.updateEnables(!value.selected.isEmpty)
+                modal?.interactions?.updateEnables(true)
             }
         }
     }
@@ -1560,6 +1561,10 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     override var modalTheme: ModalViewController.Theme {
         let customTheme = behavior.customTheme()
         return .init(text: customTheme.textColor, grayText: customTheme.grayTextColor, background: customTheme.backgroundColor, border: customTheme.borderColor, accent: customTheme.accentColor, grayForeground: customTheme.grayBackground)
+    }
+    
+    override var containerBackground: NSColor {
+        return behavior.customTheme().backgroundColor
     }
     
     override var modalInteractions: ModalInteractions? {

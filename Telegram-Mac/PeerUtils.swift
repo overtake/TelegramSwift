@@ -60,7 +60,7 @@ final class TelegramStoryRepostPeerObject : Peer {
     }
     
     var icon: EmptyAvatartType? {
-        return .icon(colors: theme.colors.peerColors(4), icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
+        return .icon(colors: theme.colors.peerColors(4), icon: NSImage(named: "Icon_StoryRepost")!.precomposed(), iconSize: NSMakeSize(36, 36), cornerRadius: nil)
     }
     
     

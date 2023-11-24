@@ -17,9 +17,9 @@ import KeyboardKey
 
 private final class ReactionsRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
+    fileprivate let _action:(Control)->Void
     fileprivate let interactions: TextView_Interactions
     fileprivate let state: Updated_ChatTextInputState
-    fileprivate let _action:(Control)->Void
     fileprivate let updateState:(Updated_ChatTextInputState)->Void
     fileprivate let placeholder: TextViewLayout
     fileprivate let isCustom:(Int64)->Bool
@@ -48,13 +48,6 @@ private final class ReactionsRowItem : GeneralRowItem {
         attr.append(self.state.inputText)
         let str: NSMutableAttributedString = .init()
         let ph_width = placeholder.attributedString.sizeFittingWidth(.greatestFiniteMagnitude).width
-//        while true {
-//            str.append(string: clown, font: .normal(18))
-//            if str.sizeFittingWidth(.greatestFiniteMagnitude).width >= ph_width {
-//                break
-//            }
-//        }
-//        attr.append(str)
         attr.addAttribute(.font, value: NSFont.normal(18), range: attr.range)
         let size = attr.sizeFittingWidth(blockWidth)
         return size.height + 10 + (viewType.innerInset.top + viewType.innerInset.bottom - 10)

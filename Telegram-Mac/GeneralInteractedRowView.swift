@@ -30,9 +30,7 @@ class GeneralInteractedRowView: GeneralRowView {
         
         
         if let item = item as? GeneralInteractedRowItem {
-            
-            nextView.image = theme.icons.generalNext
-            
+                        
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
                     descriptionView = TextView()
@@ -65,15 +63,20 @@ class GeneralInteractedRowView: GeneralRowView {
                 switchView = nil
             }
             if case let .selectableLeft(value) = item.type {
+                
+                let unselected: CGImage = item.customTheme?.unselectedImage ?? theme.icons.chatToggleUnselected
+                let selected: CGImage = item.customTheme?.selectedImage ?? theme.icons.chatToggleSelected
+
                 let current: SelectingControl
                 if let view = self.selectLeftControl {
                     current = view
                 } else {
-                    current = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    
+                    current = SelectingControl(unselectedImage: unselected, selectedImage: selected)
                     containerView.addSubview(current)
                     self.selectLeftControl = current
                 }
-                current.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected, selected: value, animated: animated)
+                current.update(unselectedImage: unselected, selectedImage: selected, selected: value, animated: animated)
                 
                 current.layer?.opacity = item.enabled ? 1 : 0.7
             } else if let view = self.selectLeftControl {
@@ -109,7 +112,10 @@ class GeneralInteractedRowView: GeneralRowView {
                     textView?.isEventLess = true
                     containerView.addSubview(textView!)
                 }
-                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+                let grayText = item.customTheme?.grayTextColor ?? theme.colors.grayText
+                let underselect = item.customTheme?.underSelectedColor ?? theme.colors.underSelectedColor
+
+                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? underselect : grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
                 textView?.set(layout: layout)
                 var nextVisible: Bool = true
@@ -173,7 +179,9 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             if needNextImage {
                 nextView.isHidden = false
-                nextView.image = item.isSelected ? nil : theme.icons.generalNext
+                                
+                let color = (item.customTheme?.grayTextColor ?? theme.colors.grayText).withAlphaComponent(0.5)
+                nextView.image = item.isSelected ? nil : NSImage(named: "Icon_GeneralNext")?.precomposed(color)
                 nextView.sizeToFit()
             }
             switch item.viewType {

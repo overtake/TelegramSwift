@@ -13,6 +13,200 @@ import TelegramCore
 import Postbox
 import TGModernGrowingTextView
 
+
+private final class StoryRepostView : View {
+    private let borderLayer = DashLayer()
+    private let nameView = TextView()
+    private let textView: TextView = TextView()
+    
+    private var text_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var header_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(nameView)
+        addSubview(textView)
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+
+        self.backgroundColor = NSColor.black.withAlphaComponent(0.6)
+        self.layer?.addSublayer(borderLayer)
+        self.layer?.cornerRadius = .cornerRadius
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(forwardInfo: EngineStoryItem.ForwardInfo, context: AccountContext, arguments: StoryArguments) {
+        let colors: PeerNameColor?
+        let nameText: String
+        let text = "Story"
+        
+        let forwardPeer: Peer?
+        switch forwardInfo {
+        case .known(let peer, _):
+            colors = peer.nameColor
+            forwardPeer = peer._asPeer()
+            nameText = peer._asPeer().compactDisplayTitle
+        case let .unknown(name):
+            colors = nil
+            nameText = name
+            forwardPeer = nil
+        }
+        
+        let nameAttr = NSMutableAttributedString()
+        
+        if let forwardPeer = forwardPeer {
+            if forwardPeer.isChannel {
+                nameAttr.insert(.embedded(name: "Icon_Reply_Channel", color: NSColor(rgb: 0xffffff), resize: false), at: 0)
+            } else {
+                nameAttr.append(.embedded(name: "Icon_Reply_Group", color: NSColor(rgb: 0xffffff), resize: false))
+            }
+        } else {
+            nameAttr.insert(.embedded(name: "Icon_Reply_User", color: NSColor(rgb: 0xffffff), resize: false), at: 0)
+        }
+        
+        nameAttr.append(string: nameText, color: NSColor.white, font: .normal(.text))
+        
+        
+        let nameLayout = TextViewLayout(nameAttr, maximumNumberOfLines: 1)
+        nameLayout.measure(width: .greatestFiniteMagnitude)
+        self.nameView.update(nameLayout)
+        
+        
+        let textLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
+        textLayout.measure(width: .greatestFiniteMagnitude)
+        self.textView.update(textLayout)
+        
+        
+        updateInlineStickers(context: context, view: self.nameView, textLayout: nameLayout, itemViews: &header_inlineStickerItemViews)
+        updateInlineStickers(context: context, view: self.textView, textLayout: textLayout, itemViews: &text_inlineStickerItemViews)
+
+        
+        if let colors = colors {
+            let value = context.peerNameColors.get(colors)
+            borderLayer.colors = .init(main: NSColor(0xffffff), secondary: value.secondary != nil ? .clear : nil, tertiary: value.tertiary != nil ? .clear : nil)
+        } else {
+            borderLayer.colors = .init(main: NSColor(0xffffff), secondary: nil, tertiary: nil)
+        }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(layer: self.borderLayer, frame: NSMakeRect(0, 0, 3, size.height))
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(6, 2), size: self.nameView.frame.size))
+        transition.updateFrame(view: self.textView, frame: CGRect(origin: NSMakePoint(8, size.height - textView.frame.height - 3), size: self.textView.frame.size))
+
+    }
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: InlineStickerItemLayer]) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+        
+        let textColor: NSColor
+        if textLayout.attributedString.length > 0 {
+            var range:NSRange = NSMakeRange(NSNotFound, 0)
+            let attrs = textLayout.attributedString.attributes(at: max(0, textLayout.attributedString.length - 1), effectiveRange: &range)
+            textColor = attrs[.foregroundColor] as? NSColor ?? theme.colors.text
+        } else {
+            textColor = theme.colors.text
+        }
+
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
+                validIds.append(id)
+                
+                let rect = item.rect.insetBy(dx: -2, dy: -2)
+                
+                let view: InlineStickerItemLayer
+                if let current = itemViews[id], current.frame.size == rect.size && current.textColor == id.color {
+                    view = current
+                } else {
+                    itemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
+                    itemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in itemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            itemViews.removeValue(forKey: key)
+        }
+        updateAnimatableContent()
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    
+    
+    @objc func updateAnimatableContent() -> Void {
+        for (_, value) in text_inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            }
+        }
+        for (_, value) in header_inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            }
+        }
+    }
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    func size(max width: CGFloat, transition: ContainedViewLayoutTransition) -> NSSize {
+        nameView.resize(width - 15)
+        textView.resize(width - 15)
+        return NSMakeSize(max(nameView.frame.maxX, textView.frame.maxX) + 5, 36)
+    }
+}
+
+
+
 private extension NSImage {
     func tint(color: NSColor) -> NSImage {
         return NSImage(size: size, flipped: false) { (rect) -> Bool in
@@ -459,6 +653,9 @@ final class StoryListView : Control, Notifable {
         
         private var showMore: TextView?
         
+        private var repostView: StoryRepostView?
+
+        
         required init(frame frameRect: NSRect) {
             scrollView.background = .clear
             super.init(frame: frameRect)
@@ -510,7 +707,7 @@ final class StoryListView : Control, Notifable {
             self.updateLayout(size: frame.size, transition: .immediate)
         }
         
-        func update(text: String, entities: [MessageTextEntity], context: AccountContext, state: State, transition: ContainedViewLayoutTransition, toggleState: @escaping(State)->Void, arguments: StoryArguments?) -> NSSize {
+        func update(text: String, entities: [MessageTextEntity], forwardInfo: EngineStoryItem.ForwardInfo?, context: AccountContext, state: State, transition: ContainedViewLayoutTransition, toggleState: @escaping(State)->Void, arguments: StoryArguments?) -> NSSize {
             
             self.state = state
             self.arguments = arguments
@@ -524,7 +721,6 @@ final class StoryListView : Control, Notifable {
             }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true, isDark: theme.colors.isDark).mutableCopy() as! NSMutableAttributedString
             
             
-
             
             var spoilers:[TextViewLayout.Spoiler] = []
             for entity in entities {
@@ -640,6 +836,20 @@ final class StoryListView : Control, Notifable {
                 self.updateInlineStickers(context: context, view: textView, textLayout: layout)
             }
             
+            if let forwardInfo = forwardInfo, let arguments = arguments {
+                let current: StoryRepostView
+                if let view = self.repostView {
+                    current = view
+                } else {
+                    current = StoryRepostView(frame: NSMakeRect(0, 0, frame.width - 20, 36))
+                    self.repostView = current
+                    self.addSubview(current)
+                }
+                current.set(forwardInfo: forwardInfo, context: context, arguments: arguments)
+            } else if let view = self.repostView {
+                performSubviewRemoval(view, animated: false)
+            }
+            
             self.updateLayout(size: frame.size, transition: transition)
             
             switch state {
@@ -665,12 +875,24 @@ final class StoryListView : Control, Notifable {
                 let rect = CGRect(origin: NSMakePoint(0, size.height - containerSize.height), size: containerSize)
                 transition.updateFrame(view: container, frame: rect)
 
+                
+                
+                
                 transition.updateFrame(view: documentView, frame: NSMakeRect(0, 0, container.frame.width, textView.frame.height + 10))
                 transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
                 transition.updateFrame(view: scrollView, frame: container.bounds)
 
                 transition.updateFrame(view: shadowView, frame: container.frame)
 
+                if let view = repostView {
+                    let size = view.size(max: size.width - 20, transition: transition)
+                    var y = container.frame.minY - size.height
+                    if state == .revealed {
+                        y -= 10
+                    }
+                    transition.updateFrame(view: view, frame: NSMakeRect(10, y, size.width, size.height))
+                    view.updateLayout(size: size, transition: transition)
+                }
                 
                 
                 textView.resize(size.width - 20)
@@ -1257,7 +1479,7 @@ final class StoryListView : Control, Notifable {
         }
         
         
-        let aspectSize = control.frame.size//oldRect.size.aspectFilled(control.frame.size)
+        let aspectSize = control.frame.size
 
         let point = self.convert(content.frame.origin, from: container)
         
@@ -1530,7 +1752,12 @@ final class StoryListView : Control, Notifable {
         
         let entities: [MessageTextEntity] = story.entities
         
-        if !text.isEmpty, !(story.media._asMedia() is TelegramMediaUnsupported) {
+        var hasText: Bool = !text.isEmpty && !(story.media._asMedia() is TelegramMediaUnsupported)
+        if let _ = story.forwardInfo {
+            hasText = true
+        }
+        
+        if hasText {
             let current: Text
             if let view = self.text {
                 current = view
@@ -1545,7 +1772,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 transition = .immediate
             }
-            let size = current.update(text: text, entities: entities, context: context, state: state, transition: transition, toggleState: { [weak self] state in
+            let size = current.update(text: text, entities: entities, forwardInfo: story.forwardInfo, context: context, state: state, transition: transition, toggleState: { [weak self] state in
                 self?.arguments?.interaction.update { current in
                     var current = current
                     current.readingText = state == .revealed

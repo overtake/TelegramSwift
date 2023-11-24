@@ -73,7 +73,7 @@ final class TextView_Interactions : InterfaceObserver {
     }
     
     var inputDidUpdate:((Updated_ChatTextInputState)->Void) = { _ in }
-    var processEnter:(NSEvent)->Bool = { _ in return true }
+    var processEnter:(NSEvent)->Bool = { event in return FastSettings.checkSendingAbility(for: event) }
     var processPaste:(NSPasteboard)->Bool = { _ in return false }
     var processAttriburedCopy: (NSAttributedString) -> Bool = { _ in return false }
     var responderDidUpdate:()->Void = { }
@@ -156,7 +156,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
 
     private func refreshInputView() {
         refreshTextInputAttributes(self.view.textView, theme: inputTheme, spoilersRevealed: revealSpoilers, availableEmojis: Set())
-        refreshChatTextInputTypingAttributes(self.view.textView, theme: inputTheme)
+       // refreshChatTextInputTypingAttributes(self.view.textView, theme: inputTheme)
     }
     
     func chatInputTextViewDidChangeSelection(dueToEditing: Bool) {

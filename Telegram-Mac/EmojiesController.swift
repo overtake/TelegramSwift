@@ -2346,8 +2346,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let foundSets: Signal<(FoundStickerSets?, String), NoError> = searchValue.get()
         |> map { $0.request }
         |> mapToSignal { query in
-            if query.isEmpty {
-                return .single((nil, query))
+            if query.isEmpty || query.containsOnlyEmoji {
+                return .single((nil, ""))
             } else {
                 return context.engine.stickers.searchEmojiSetsRemotely(query: query) |> map(Optional.init) |> map { ($0, query) } |> delay(0.2, queue: .concurrentDefaultQueue()) 
             }
@@ -2520,7 +2520,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.forumTopicItems = forumTopic
                 current.sections = sections
                 current.itemsDict = itemsDict
-                current.search = foundSets.1.isEmpty ? nil : search
+                current.search = foundSets.0 != nil && foundSets.1.isEmpty ? nil : search
                 current.reactions = reactions
                 current.recent = recentEmoji
                 current.topReactionsItems = topReactionsItems
