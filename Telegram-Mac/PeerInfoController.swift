@@ -380,21 +380,21 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     var nameColor:  PeerNameColor? {
         if let peer = peer as? TelegramUser {
             if peer.isPremium {
-                return peer.nameColor
+                return peer.profileColor
             } else {
                 return nil
             }
         } else {
-            return peer.nameColor
+            return peer.profileColor
         }
     }
     
     override var barPresentation: ControlStyle {
         if let nameColor = self.nameColor, state == .Normal, scrollState == .pageUp {
-            let backgroundColor = context.peerNameColors.get(nameColor).main
+            let backgroundColor = context.peerNameColors.getProfile(nameColor).main
             let foregroundColor = backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             return .init(foregroundColor: foregroundColor, backgroundColor: .clear, highlightColor: .clear, borderColor: .clear, textColor: foregroundColor)
-        } else {
+        }  else {
             return .init(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear, borderColor: theme.colors.border)
         }
     }
@@ -524,7 +524,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     private func updateNavigationBar() {
-        updateScrollState(self.genericView.tableView.documentOffset.y <= 0 ? .pageUp : .pageIn, animated: true)
+        updateScrollState(self.genericView.tableView.documentOffset.y <= 0 && nameColor != nil ? .pageUp : .pageIn, animated: true)
     }
     
     private var _leftBar: BarView!
@@ -540,7 +540,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         super.viewDidLoad()
         
         genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
-        genericView.updateScrollState(scrollState, animated: false)
+        genericView.updateScrollState(nameColor != nil ? scrollState : .pageIn, animated: false)
         
         genericView.tableView.layer?.masksToBounds = false
         genericView.tableView.documentView?.layer?.masksToBounds = false
@@ -555,6 +555,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         self.genericView.tableView.getBackgroundColor = {
             theme.colors.listBackground
+        }
+        
+        if peer.isChannel {
+            _ = context.engine.peers.requestRecommendedChannels(peerId: peerId, forceUpdate: true).startStandalone()
         }
         
         

@@ -58,6 +58,7 @@ enum PremiumLogEventsSource : Equatable {
     case stories__save_to_gallery
     case channel_boost(PeerId)
     case no_ads
+    case recommended_channels
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -96,6 +97,8 @@ enum PremiumLogEventsSource : Equatable {
             return "channel_boost__\(peerId.id._internalGetInt64Value())"
         case .no_ads:
             return "no_ads"
+        case .recommended_channels:
+            return "recommended_channels"
         }
     }
     
@@ -133,6 +136,8 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .no_ads:
             return .no_ads
+        case .recommended_channels:
+            return nil
         }
     }
     
@@ -223,22 +228,26 @@ enum PremiumValue : String {
     case animated_userpics
     case translations
     case stories
+    case wallpapers
+    case peer_colors
     func gradient(_ index: Int) -> [NSColor] {
-        let colors:[NSColor] = [ NSColor(rgb: 0xF27C30),
-                                 NSColor(rgb: 0xE36850),
-                                 NSColor(rgb: 0xE36850),
-                                 NSColor(rgb: 0xda5d63),
-                                 NSColor(rgb: 0xD15078),
-                                 NSColor(rgb: 0xC14998),
-                                 NSColor(rgb: 0xB24CB5),
-                                 NSColor(rgb: 0xA34ED0),
-                                 NSColor(rgb: 0x9054E9),
-                                 NSColor(rgb: 0x7561EB),
-                                 NSColor(rgb: 0x5A6EEE),
-                                 NSColor(rgb: 0x548DFF),
-                                 NSColor(rgb: 0x54A3FF),
-                                 NSColor(rgb: 0x54bdff),
-                                 NSColor(rgb: 0x71c8ff)]
+        let colors:[NSColor] = [ NSColor(rgb: 0xef6922),
+                                 NSColor(rgb: 0xe95a2c),
+                                 NSColor(rgb: 0xe74e33),
+                                 NSColor(rgb: 0xe3433c),
+                                 NSColor(rgb: 0xdb374b),
+                                 NSColor(rgb: 0xcb3e6d),
+                                 NSColor(rgb: 0xbc4395),
+                                 NSColor(rgb: 0xab4ac4),
+                                 NSColor(rgb: 0x9b4fed),
+                                 NSColor(rgb: 0x8958ff),
+                                 NSColor(rgb: 0x676bff),
+                                 NSColor(rgb: 0x5b79ff),
+                                 NSColor(rgb: 0x4492ff),
+                                 NSColor(rgb: 0x429bd5),
+                                 NSColor(rgb: 0x41a6a5),
+                                 NSColor(rgb: 0x3eb26d),
+                                 NSColor(rgb: 0x3dbd4a)]
         return [colors[index]]
     }
     
@@ -308,6 +317,10 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(presentation.colors.accent)
         case .stories:
             return NSImage(named: "Icon_Premium_Stories")!.precomposed(presentation.colors.accent)
+        case .wallpapers:
+            return NSImage(named: "Icon_Premium_Wallpapers")!.precomposed(presentation.colors.accent)
+        case .peer_colors:
+            return NSImage(named: "Icon_Premium_Peer_Colors")!.precomposed(presentation.colors.accent)
         }
     }
     
@@ -341,6 +354,10 @@ enum PremiumValue : String {
             return strings().premiumBoardingTranslateTitle
         case .stories:
             return strings().premiumBoardingStoriesTitle
+        case .wallpapers:
+            return strings().premiumBoardingWallpapersTitle
+        case .peer_colors:
+            return strings().premiumBoardingColorsTitle
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -373,6 +390,10 @@ enum PremiumValue : String {
             return strings().premiumBoardingTranslateInfo
         case .stories:
             return strings().premiumBoardingStoriesInfo
+        case .wallpapers:
+            return strings().premiumBoardingWallpapersInfo
+        case .peer_colors:
+            return strings().premiumBoardingColorsInfo
         }
     }
 }
@@ -393,6 +414,9 @@ private struct State : Equatable {
     var status: PremiumEmojiStatusInfo?
     var period: PremiumPeriod?
     var periods: [PremiumPeriod] = []
+    
+    var newPerks: [String] = []
+
 }
 
 
@@ -433,8 +457,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: { value in
+        
+        struct Tuple : Equatable {
+            let value: PremiumValue
+            let isNew: Bool
+        }
+        let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in
                 arguments.openFeature(value, true)
             })
         }))
@@ -915,7 +946,7 @@ final class PremiumBoardingController : ModalViewController {
         canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
         
-        let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment)
+        let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -948,6 +979,13 @@ final class PremiumBoardingController : ModalViewController {
             }, makeAcceptView: { [weak strongSelf] in
                 return strongSelf?.genericView.makeAcceptView()
             }), animated: animated)
+            
+            FastSettings.dismissPremiumPerk(value.rawValue)
+            updateState { current in
+                var current = current
+                current.newPerks.removeAll(where: { $0 == value.rawValue })
+                return current
+            }
         }, togglePeriod: { period in
             updateState { current in
                 var current = current
@@ -1237,6 +1275,7 @@ final class PremiumBoardingController : ModalViewController {
         self.onDeinit = {
             actionsDisposable.dispose()
         }
+        
     }
     
     func buy() {

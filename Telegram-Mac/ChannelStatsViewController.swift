@@ -234,8 +234,20 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         if stats.viewsPerPost.current > 0 {
             overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewViewsPerPost, value: stats.viewsPerPost.attributedString))
         }
+        if stats.viewsPerStory.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewViewsPerStory, value: stats.viewsPerStory.attributedString))
+        }
         if stats.sharesPerPost.current > 0 {
             overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewSharesPerPost, value: stats.sharesPerPost.attributedString))
+        }
+        if stats.sharesPerStory.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewSharesPerStory, value: stats.sharesPerStory.attributedString))
+        }
+        if stats.reactionsPerPost.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewReactionsPerPost, value: stats.reactionsPerPost.attributedString))
+        }
+        if stats.reactionsPerStory.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewReactionsPerStory, value: stats.reactionsPerStory.attributedString))
         }
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in

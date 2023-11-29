@@ -168,7 +168,7 @@ final class StoryInteraction : InterfaceObserver {
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
-        
+        var canViewStats: Bool = false
         var reactions: AvailableReactions?
         var isPaused: Bool {
             return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel
@@ -357,7 +357,9 @@ final class StoryArguments {
     let invokeMediaArea:(MediaArea)->Void
     let like:(MessageReaction.Reaction?, StoryInteraction.State)->Void
     let setupPrivacy:(StoryContentItem)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void) {
+    let loadForward:(StoryId)->Promise<EngineStoryItem?>
+    let openStory:(StoryId)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void, loadForward:@escaping(StoryId)->Promise<EngineStoryItem?>, openStory:@escaping(StoryId)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -393,6 +395,8 @@ final class StoryArguments {
         self.like = like
         self.showLikePanel = showLikePanel
         self.setupPrivacy = setupPrivacy
+        self.loadForward = loadForward
+        self.openStory = openStory
     }
     
     func longDown() {
@@ -986,7 +990,7 @@ private final class StoryViewController: Control, Notifable {
     private let rightTop = Control()
     private let rightBottom = Control()
     
-    private var storyContext: StoryContentContext?
+    fileprivate var storyContext: StoryContentContext?
     fileprivate var storyViewList: EngineStoryViewListContext?
 
     
@@ -1278,6 +1282,7 @@ private final class StoryViewController: Control, Notifable {
             current.entryId = state.slice?.peer.id
             current.storyId = state.slice?.item.storyItem.id
             current.canRecordVoice = state.slice?.additionalPeerData.areVoiceMessagesAvailable == true
+            current.canViewStats = state.slice?.additionalPeerData.canViewStats == true
             current.isProfileIntended = false
             if updated {
                 current.magnified = false
@@ -2319,6 +2324,13 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
+        let statisticsStory:(StoryContentItem)->Void = { [weak self] story in
+            if let peer = story.peer {
+                context.bindings.rootNavigation().push(MessageStatsController(context, subject: .story(story.storyItem, peer)))
+            }
+            self?.close()
+        }
+        
         
         let beforeCompletion:()->Void = { [weak interactions] in
             interactions?.update({ current in
@@ -2562,7 +2574,11 @@ final class StoryModalController : ModalViewController, Notifable {
                     }, itemImage: MenuAnimation.menu_share.value))
                 }
                 
-               
+                if self?.arguments?.interaction.presentation.canViewStats == true {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuStatistics, handler: {
+                        statisticsStory(story)
+                    }, itemImage: MenuAnimation.menu_statistics.value))
+                }
                 
                 if !story.storyItem.isForwardingDisabled {
                     let resource: TelegramMediaFile?
@@ -2731,6 +2747,17 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }, setupPrivacy: { story in
             showModal(with: StoryPrivacyModalController(context: context, presentation: darkAppearance, reason: .settings(story)), for: context.window)
+        }, loadForward: { [weak self] storyId in
+            guard let state = self?.genericView.storyContext?.stateValue else {
+                return Promise(nil)
+            }
+            if let promise = state.slice?.forwardInfoStories[storyId] {
+                return promise
+            } else {
+                return .init(nil)
+            }
+        }, openStory: { storyId in
+            StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: nil)
         })
         
         self.arguments = arguments

@@ -20,6 +20,7 @@ private let like_image = NSImage(named: "Icon_StoryLike_Count")!.precomposed(NSC
 
 private let view_image = NSImage(named: "Icon_Story_Viewers")!.precomposed(NSColor.white)
 
+private let repost_image = NSImage(named: "Icon_Story_Repost")!.precomposed(NSColor.white)
 
 final class StoryChannelInputView : Control, StoryInput {
     
@@ -47,7 +48,8 @@ final class StoryChannelInputView : Control, StoryInput {
     private let likeAction = StoryLikeActionButton(frame: NSMakeRect(0, 0, 50, 50))
 
     private var likeCount: DynamicCounterTextView?
-    
+    private var shareCount: DynamicCounterTextView?
+
     private var arguments: StoryArguments?
     private var story: StoryContentItem?
     
@@ -86,15 +88,7 @@ final class StoryChannelInputView : Control, StoryInput {
         }, for: .Click)
         
         likeAction.set(handler: { [weak self] control in
-            
-            let control = control as! StoryLikeActionButton
-            
-            guard let arguments = self?.arguments else {
-                return
-            }
-            let state = arguments.interaction.presentation
             self?.like(.init(item: .builtin("❤️".withoutColorizer), fromRect: nil), resetIfNeeded: true)
-
         }, for: .Click)
         
         likeAction.set(handler: { [weak self] control in
@@ -135,6 +129,7 @@ final class StoryChannelInputView : Control, StoryInput {
             
             let storyViews = story.storyItem.views
             var reactedCount = storyViews?.reactedCount ?? 0
+            let forwardedCount = storyViews?.forwardCount ?? 0
             if story.storyItem.myReaction != nil, reactedCount == 0 {
                 reactedCount = 1
             }
@@ -170,6 +165,29 @@ final class StoryChannelInputView : Control, StoryInput {
             } else if let view = self.likeCount {
                 performSubviewRemoval(view, animated: animated)
                 self.likeCount = nil
+            }
+            
+            if forwardedCount > 0 {
+                let current: DynamicCounterTextView
+                var isNew = false
+                if let view = self.shareCount {
+                    current = view
+                } else {
+                    current = DynamicCounterTextView(frame: .zero)
+                    self.shareCount = current
+                    self.addSubview(current)
+                    isNew = true
+                }
+                let text = DynamicCounterTextView.make(for: forwardedCount.prettyNumber, count: "\(forwardedCount)", font: .normal(.header), textColor: .white, width: .greatestFiniteMagnitude)
+                current.update(text, animated: animated && !isNew)
+                current.change(size: text.size, animated: animated && !isNew)
+
+                if isNew {
+                    current.centerY(x: share.frame.maxX + 10)
+                }
+            } else if let view = self.shareCount {
+                performSubviewRemoval(view, animated: animated)
+                self.shareCount = nil
             }
         }
         
@@ -243,12 +261,16 @@ final class StoryChannelInputView : Control, StoryInput {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         if let likeCount = self.likeCount {
             transition.updateFrame(view: likeCount, frame: likeCount.centerFrameY(x: size.width - likeCount.frame.width - 16))
-
             transition.updateFrame(view: likeAction, frame: likeAction.centerFrameY(x: likeCount.frame.minX - likeAction.frame.width))
         } else {
             transition.updateFrame(view: likeAction, frame: likeAction.centerFrameY(x: size.width - likeAction.frame.width))
         }
-        transition.updateFrame(view: share, frame: share.centerFrameY(x: likeAction.frame.minX - share.frame.width - 10))
+        if let shareCount = shareCount {
+            transition.updateFrame(view: share, frame: share.centerFrameY(x: likeAction.frame.minX - share.frame.width - 10 - shareCount.frame.width - 10))
+            transition.updateFrame(view: shareCount, frame: shareCount.centerFrameY(x: share.frame.maxX + 10))
+        } else {
+            transition.updateFrame(view: share, frame: share.centerFrameY(x: likeAction.frame.minX - share.frame.width - 10))
+        }
         
         
         

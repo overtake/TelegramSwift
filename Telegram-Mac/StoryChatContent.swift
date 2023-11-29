@@ -107,15 +107,17 @@ final class StoryContentContextState {
             let isMuted: Bool
             let areVoiceMessagesAvailable: Bool
             let presence: EnginePeer.Presence?
-
+            let canViewStats: Bool
             init(
                 isMuted: Bool,
                 areVoiceMessagesAvailable: Bool,
-                presence: EnginePeer.Presence?
+                presence: EnginePeer.Presence?,
+                canViewStats: Bool
             ) {
                 self.isMuted = isMuted
                 self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
                 self.presence = presence
+                self.canViewStats = canViewStats
             }
         }
 
@@ -127,6 +129,7 @@ final class StoryContentContextState {
         let previousItemId: Int32?
         let nextItemId: Int32?
         let allItems: [StoryContentItem]
+        let forwardInfoStories: [StoryId: Promise<EngineStoryItem?>]
         init(
             peer: EnginePeer,
             additionalPeerData: AdditionalPeerData,
@@ -134,7 +137,8 @@ final class StoryContentContextState {
             totalCount: Int,
             previousItemId: Int32?,
             nextItemId: Int32?,
-            allItems: [StoryContentItem]) {
+            allItems: [StoryContentItem],
+            forwardInfoStories: [StoryId: Promise<EngineStoryItem?>]) {
                 self.peer = peer
                 self.additionalPeerData = additionalPeerData
                 self.item = item
@@ -142,6 +146,7 @@ final class StoryContentContextState {
                 self.previousItemId = previousItemId
                 self.nextItemId = nextItemId
                 self.allItems = allItems
+                self.forwardInfoStories = forwardInfoStories
             }
         
         static func ==(lhs: FocusedSlice, rhs: FocusedSlice) -> Bool {
@@ -232,6 +237,8 @@ final class StoryContentContextImpl: StoryContentContext {
             }
         }
         
+        private var currentForwardInfoStories: [StoryId: Promise<EngineStoryItem?>] = [:]
+        
         init(context: AccountContext, peerId: EnginePeer.Id, focusedId initialFocusedId: Int32?, loadIds: @escaping ([StoryKey]) -> Void) {
             self.context = context
             self.peerId = peerId
@@ -254,9 +261,10 @@ final class StoryContentContextImpl: StoryContentContext {
                 ),
                 context.engine.data.subscribe(TelegramEngine.EngineData.Item.NotificationSettings.Global())
             )
-            |> mapToSignal { _, views, globalNotificationSettings -> Signal<(CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile]), NoError> in
-                return context.account.postbox.transaction { transaction -> (CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile]) in
+            |> mapToSignal { _, views, globalNotificationSettings -> Signal<(CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile], [Int64: EngineStoryItem.ForwardInfo], [StoryId: EngineStoryItem?]), NoError> in
+                return context.account.postbox.transaction { transaction -> (CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile], [Int64: EngineStoryItem.ForwardInfo], [StoryId: EngineStoryItem?]) in
                     var peers: [PeerId: Peer] = [:]
+                    var forwardInfoStories: [StoryId: EngineStoryItem?] = [:]
                     var allEntityFiles: [MediaId: TelegramMediaFile] = [:]
                     
                     if let itemsView = views.views[PostboxViewKey.storyItems(peerId: peerId)] as? StoryItemsView {
@@ -269,12 +277,17 @@ final class StoryContentContextImpl: StoryContentContext {
                                         }
                                     }
                                 }
-                                if let forwardInfo = itemValue.forwardInfo, case let .known(peerId, _) = forwardInfo {
+                                if let forwardInfo = itemValue.forwardInfo, case let .known(peerId, id, _) = forwardInfo {
                                     if let peer = transaction.getPeer(peerId) {
                                         peers[peer.id] = peer
                                     }
+                                    let storyId = StoryId(peerId: peerId, id: id)
+                                    if let story = getCachedStory(storyId: storyId, transaction: transaction) {
+                                        forwardInfoStories[storyId] = story
+                                    } else {
+                                        forwardInfoStories.updateValue(nil, forKey: storyId)
+                                    }
                                 }
-
                                 for entity in itemValue.entities {
                                     if case let .CustomEmoji(_, fileId) = entity.type {
                                         let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
@@ -301,10 +314,19 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                     
-                    return (views, peers, globalNotificationSettings, allEntityFiles)
+                    var pendingForwardsInfo: [Int64: EngineStoryItem.ForwardInfo] = [:]
+                    if let stateView = views.views[PostboxViewKey.storiesState(key: .local)] as? StoryStatesView, let localState = stateView.value?.get(Stories.LocalState.self) {
+                        for item in localState.items {
+                            if let forwardInfo = item.forwardInfo, let peer = transaction.getPeer(forwardInfo.peerId) {
+                                pendingForwardsInfo[item.randomId] = .known(peer: EnginePeer(peer), storyId: forwardInfo.storyId, isModified: forwardInfo.isModified)
+                            }
+                        }
+                    }
+                    
+                    return (views, peers, globalNotificationSettings, allEntityFiles, pendingForwardsInfo, forwardInfoStories)
                 }
             }
-            |> deliverOnMainQueue).start(next: { [weak self] views, peers, globalNotificationSettings, allEntityFiles in
+            |> deliverOnMainQueue).startStrict(next: { [weak self] views, peers, globalNotificationSettings, allEntityFiles, pendingForwardsInfo, forwardInfoStories in
                 guard let `self` = self else {
                     return
                 }
@@ -326,23 +348,59 @@ final class StoryContentContextImpl: StoryContentContext {
                     peerPresence = presencesView.presences[peerId]
                 }
                 
-                if let cachedPeerDataView = views.views[PostboxViewKey.cachedPeerData(peerId: peerId)] as? CachedPeerDataView, let cachedUserData = cachedPeerDataView.cachedPeerData as? CachedUserData {
-                    var isMuted = false
-                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
-                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings, topSearchPeers: [])
+                for (storyId, story) in forwardInfoStories {
+                    let promise: Promise<EngineStoryItem?>
+                    var added = false
+                    if let current = self.currentForwardInfoStories[storyId] {
+                        promise = current
                     } else {
-                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: nil, topSearchPeers: [])
+                        promise = Promise<EngineStoryItem?>()
+                        self.currentForwardInfoStories[storyId] = promise
+                        added = true
                     }
-                    additionalPeerData = StoryContentContextState.AdditionalPeerData(
-                        isMuted: isMuted,
-                        areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable,
-                        presence: peerPresence.flatMap { EnginePeer.Presence($0) }
-                    )
-                } else {
+                    if let story = story {
+                        promise.set(.single(story))
+                    } else if added {
+                        promise.set(self.context.engine.messages.getStory(peerId: storyId.peerId, id: storyId.id))
+                    }
+                }
+                
+                if let cachedPeerDataView = views.views[PostboxViewKey.cachedPeerData(peerId: peerId)] as? CachedPeerDataView {
+                    if let cachedUserData = cachedPeerDataView.cachedPeerData as? CachedUserData {
+                        var isMuted = false
+                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
+                            isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings, topSearchPeers: [])
+                        } else {
+                            isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: nil, topSearchPeers: [])
+                        }
+                        additionalPeerData = StoryContentContextState.AdditionalPeerData(
+                            isMuted: isMuted,
+                            areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable,
+                            presence: peerPresence.flatMap { EnginePeer.Presence($0) },
+                            canViewStats: false
+                        )
+                    } else if let cachedChannelData = cachedPeerDataView.cachedPeerData as? CachedChannelData {
+                        additionalPeerData = StoryContentContextState.AdditionalPeerData(
+                            isMuted: true,
+                            areVoiceMessagesAvailable: true,
+                            presence: peerPresence.flatMap { EnginePeer.Presence($0) },
+                            canViewStats: cachedChannelData.flags.contains(.canViewStats)
+                        )
+                    } else {
+                        additionalPeerData = StoryContentContextState.AdditionalPeerData(
+                            isMuted: true,
+                            areVoiceMessagesAvailable: true,
+                            presence: peerPresence.flatMap { EnginePeer.Presence($0) },
+                            canViewStats: false
+                        )
+                    }
+                }
+                else {
                     additionalPeerData = StoryContentContextState.AdditionalPeerData(
                         isMuted: true,
                         areVoiceMessagesAvailable: true,
-                        presence: peerPresence.flatMap { EnginePeer.Presence($0) }
+                        presence: peerPresence.flatMap { EnginePeer.Presence($0) },
+                        canViewStats: false
                     )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
@@ -421,7 +479,7 @@ final class StoryContentContextImpl: StoryContentContext {
                                 isEdited: false,
                                 isMy: true,
                                 myReaction: nil,
-                                forwardInfo: nil
+                                forwardInfo: pendingForwardsInfo[item.randomId]
                             ))
                             totalCount += 1
                         }
@@ -456,7 +514,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                 }
-                if focusedIndex == nil, let state = state {
+                if focusedIndex == nil, let state {
                     if let storedFocusedId = self.storedFocusedId {
                         focusedIndex = mappedItems.firstIndex(where: { $0.id >= storedFocusedId })
                     } else if let index = mappedItems.firstIndex(where: { $0.isPending }) {
@@ -537,7 +595,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             totalCount: totalCount,
                             previousItemId: previousItemId,
                             nextItemId: nextItemId,
-                            allItems: allItems
+                            allItems: allItems,
+                            forwardInfoStories: self.currentForwardInfoStories
                         )
                         self.isReady = true
                         self.updated.set(.single(Void()))
@@ -583,7 +642,7 @@ final class StoryContentContextImpl: StoryContentContext {
             self.nextPeerContext = nextPeerContext
             
             self.centralDisposable = (centralPeerContext.updated.get()
-            |> deliverOnMainQueue).start(next: { [weak self] _ in
+            |> deliverOnMainQueue).startStrict(next: { [weak self] _ in
                 guard let `self` = self else {
                     return
                 }
@@ -592,7 +651,7 @@ final class StoryContentContextImpl: StoryContentContext {
             
             if let previousPeerContext = previousPeerContext {
                 self.previousDisposable = (previousPeerContext.updated.get()
-                |> deliverOnMainQueue).start(next: { [weak self] _ in
+                |> deliverOnMainQueue).startStrict(next: { [weak self] _ in
                     guard let `self` = self else {
                         return
                     }
@@ -602,7 +661,7 @@ final class StoryContentContextImpl: StoryContentContext {
             
             if let nextPeerContext = nextPeerContext {
                 self.nextDisposable = (nextPeerContext.updated.get()
-                |> deliverOnMainQueue).start(next: { [weak self] _ in
+                |> deliverOnMainQueue).startStrict(next: { [weak self] _ in
                     guard let `self` = self else {
                         return
                     }
@@ -692,7 +751,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: focusedPeerId)),
                 singlePeerListContext.state
             )
-            |> deliverOnMainQueue).start(next: { [weak self] peer, state in
+            |> deliverOnMainQueue).startStrict(next: { [weak self] peer, state in
                 guard let `self` = self, let peer = peer else {
                     return
                 }
@@ -786,7 +845,7 @@ final class StoryContentContextImpl: StoryContentContext {
             })
         } else {
             self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions(isHidden: isHidden, tempKeepNewlyArchived: true)
-            |> deliverOnMainQueue).start(next: { [weak self] storySubscriptions in
+            |> deliverOnMainQueue).startStrict(next: { [weak self] storySubscriptions in
                 guard let `self` = self else {
                     return
                 }
@@ -888,6 +947,8 @@ final class StoryContentContextImpl: StoryContentContext {
             disposable.dispose()
         }
         self.storySubscriptionsDisposable?.dispose()
+        self.currentStateUpdatedDisposable?.dispose()
+        self.pendingStateReadyDisposable?.dispose()
     }
     
     private func updatePeerContexts() {
@@ -920,7 +981,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             }
                         }
                         for (peerId, ids) in idsByPeerId {
-                            self.requestStoryDisposables.add(self.context.engine.messages.refreshStories(peerId: peerId, ids: ids).start())
+                            self.requestStoryDisposables.add(self.context.engine.messages.refreshStories(peerId: peerId, ids: ids).startStrict())
                         }
                     }
                 }
@@ -970,7 +1031,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     )
                     self.pendingState = pendingState
                     self.pendingStateReadyDisposable = (pendingState.updated.get()
-                    |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
+                    |> deliverOnMainQueue).startStrict(next: { [weak self, weak pendingState] _ in
                         guard let `self` = self, let pendingState = pendingState, self.pendingState === pendingState, pendingState.isReady else {
                             return
                         }
@@ -984,7 +1045,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         
                         self.currentStateUpdatedDisposable?.dispose()
                         self.currentStateUpdatedDisposable = (pendingState.updated.get()
-                        |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
+                        |> deliverOnMainQueue).startStrict(next: { [weak self, weak pendingState] _ in
                             guard let `self` = self, let pendingState = pendingState, self.currentState === pendingState else {
                                 return
                             }
@@ -1063,7 +1124,7 @@ final class StoryContentContextImpl: StoryContentContext {
         for (id, info) in resultResources.sorted(by: { $0.value.priority < $1.value.priority }) {
             validIds.append(id)
             if self.preloadStoryResourceDisposables[id] == nil {
-                self.preloadStoryResourceDisposables[id] = preloadStoryMedia(context: context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).start()
+                self.preloadStoryResourceDisposables[id] = preloadStoryMedia(context: context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).startStrict()
             }
         }
         
@@ -1089,7 +1150,7 @@ final class StoryContentContextImpl: StoryContentContext {
         for (peerId, ids) in pollIdByPeerId {
             for id in ids {
                 if self.pollStoryMetadataDisposables[StoryId(peerId: peerId, id: id)] == nil {
-                    self.pollStoryMetadataDisposables[StoryId(peerId: peerId, id: id)] = self.context.engine.messages.refreshStoryViews(peerId: peerId, ids: ids).start()
+                    self.pollStoryMetadataDisposables[StoryId(peerId: peerId, id: id)] = self.context.engine.messages.refreshStoryViews(peerId: peerId, ids: ids).startStrict()
                 }
             }
         }
@@ -1151,7 +1212,7 @@ final class StoryContentContextImpl: StoryContentContext {
     }
     
     func markAsSeen(id: StoryId) {
-        let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).start()
+        let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).startStandalone()
     }
 }
 
@@ -1175,30 +1236,43 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     private var requestedStoryKeys = Set<StoryKey>()
     private var requestStoryDisposables = DisposableSet()
     
+    private var currentForwardInfoStories: [StoryId: Promise<EngineStoryItem?>] = [:]
+    
     init(
         context: AccountContext,
         storyId: StoryId,
+        storyItem: EngineStoryItem? = nil,
         readGlobally: Bool
     ) {
         self.context = context
         self.readGlobally = readGlobally
+        
+        let item: Signal<Stories.StoredItem?, NoError>
+        if let storyItem = storyItem {
+            item = .single(.item(storyItem.asStoryItem()))
+        } else {
+            item = context.account.postbox.combinedView(keys: [PostboxViewKey.story(id: storyId)])
+            |> map { views -> Stories.StoredItem? in
+                return (views.views[PostboxViewKey.story(id: storyId)] as? StoryView)?.item?.get(Stories.StoredItem.self)
+            }
+        }
         
         self.storyDisposable = (combineLatest(queue: .mainQueue(),
             context.engine.data.subscribe(
                 TelegramEngine.EngineData.Item.Peer.Peer(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.Presence(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.AreVoiceMessagesAvailable(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.CanViewStats(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global()
             ),
-            context.account.postbox.combinedView(keys: [PostboxViewKey.story(id: storyId)]) |> mapToSignal { views -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile]), NoError> in
-                let item = (views.views[PostboxViewKey.story(id: storyId)] as? StoryView)?.item?.get(Stories.StoredItem.self)
-            
-                return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile]) in
+            item |> mapToSignal { item -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]), NoError> in
+                return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]) in
                     guard let item = item else {
-                        return (nil, [:], [:])
+                        return (nil, [:], [:], [:])
                     }
                     var peers: [PeerId: Peer] = [:]
+                    var stories: [StoryId: EngineStoryItem?] = [:]
                     var allEntityFiles: [MediaId: TelegramMediaFile] = [:]
                     if case let .item(item) = item {
                         if let views = item.views {
@@ -1208,9 +1282,15 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                                 }
                             }
                         }
-                        if let forwardInfo = item.forwardInfo, case let .known(peerId, _) = forwardInfo {
+                        if let forwardInfo = item.forwardInfo, case let .known(peerId, id, _) = forwardInfo {
                             if let peer = transaction.getPeer(peerId) {
                                 peers[peer.id] = peer
+                            }
+                            let storyId = StoryId(peerId: peerId, id: id)
+                            if let story = getCachedStory(storyId: storyId, transaction: transaction) {
+                                stories[storyId] = story
+                            } else {
+                                stories.updateValue(nil, forKey: storyId)
                             }
                         }
                         for entity in item.entities {
@@ -1236,17 +1316,17 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                             }
                         }
                     }
-                    return (item, peers, allEntityFiles)
+                    return (item, peers, allEntityFiles, stories)
                 }
             }
         )
-        |> deliverOnMainQueue).start(next: { [weak self] data, itemAndPeers in
+        |> deliverOnMainQueue).startStrict(next: { [weak self] data, itemAndPeers in
             guard let `self` = self else {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
-            let (item, peers, allEntityFiles) = itemAndPeers
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings) = data
+            let (item, peers, allEntityFiles, forwardInfoStories) = itemAndPeers
             
             guard let peer = peer else {
                 return
@@ -1257,15 +1337,33 @@ final class SingleStoryContentContextImpl: StoryContentContext {
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
                 areVoiceMessagesAvailable: areVoiceMessagesAvailable,
-                presence: presence
+                presence: presence,
+                canViewStats: canViewStats
             )
+            
+            for (storyId, story) in forwardInfoStories {
+                let promise: Promise<EngineStoryItem?>
+                var added = false
+                if let current = self.currentForwardInfoStories[storyId] {
+                    promise = current
+                } else {
+                    promise = Promise<EngineStoryItem?>()
+                    self.currentForwardInfoStories[storyId] = promise
+                    added = true
+                }
+                if let story = story {
+                    promise.set(.single(story))
+                } else if added {
+                    promise.set(self.context.engine.messages.getStory(peerId: storyId.peerId, id: storyId.id))
+                }
+            }
             
             if item == nil {
                 let storyKey = StoryKey(peerId: storyId.peerId, id: storyId.id)
                 if !self.requestedStoryKeys.contains(storyKey) {
                     self.requestedStoryKeys.insert(storyKey)
                     
-                    self.requestStoryDisposables.add(self.context.engine.messages.refreshStories(peerId: storyId.peerId, ids: [storyId.id]).start())
+                    self.requestStoryDisposables.add(self.context.engine.messages.refreshStories(peerId: storyId.peerId, ids: [storyId.id]).startStrict())
                 }
             }
             
@@ -1320,7 +1418,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                         totalCount: 1,
                         previousItemId: nil,
                         nextItemId: nil,
-                        allItems: [mainItem]
+                        allItems: [mainItem],
+                        forwardInfoStories: self.currentForwardInfoStories
                     ),
                     previousSlice: nil,
                     nextSlice: nil
@@ -1360,7 +1459,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     
     func markAsSeen(id: StoryId) {
         if self.readGlobally {
-            let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).start()
+            let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).startStandalone()
+
         }
     }
 }
@@ -1400,18 +1500,19 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.Peer(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.Presence(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.AreVoiceMessagesAvailable(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.CanViewStats(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global()
             ),
             listContext.state,
             self.focusedIdUpdated.get()
         )
-        |> deliverOnMainQueue).start(next: { [weak self] data, state, _ in
+        |> deliverOnMainQueue).startStrict(next: { [weak self] data, state, _ in
             guard let `self` = self else {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings) = data
             
             guard let peer = peer else {
                 return
@@ -1422,7 +1523,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
                 areVoiceMessagesAvailable: areVoiceMessagesAvailable,
-                presence: presence
+                presence: presence,
+                canViewStats: canViewStats
             )
             
             self.listState = state
@@ -1522,7 +1624,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                         totalCount: state.totalCount,
                         previousItemId: focusedIndex == 0 ? nil : state.items[focusedIndex - 1].id,
                         nextItemId: (focusedIndex == state.items.count - 1) ? nil : state.items[focusedIndex + 1].id,
-                        allItems: allItems
+                        allItems: allItems,
+                        forwardInfoStories: [:]
                     ),
                     previousSlice: nil,
                     nextSlice: nil
@@ -1592,7 +1695,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                     if let mediaId = info.media.id {
                         validIds.append(mediaId)
                         if self.preloadStoryResourceDisposables[mediaId] == nil {
-                            self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).start()
+                            self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).startStrict()
                         }
                     }
                 }
@@ -1617,7 +1720,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                     }
                 }
                 for (peerId, ids) in pollIdByPeerId {
-                    self.pollStoryMetadataDisposables.add(self.context.engine.messages.refreshStoryViews(peerId: peerId, ids: ids).start())
+                    self.pollStoryMetadataDisposables.add(self.context.engine.messages.refreshStoryViews(peerId: peerId, ids: ids).startStrict())
                 }
             }
         })
@@ -1672,7 +1775,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
     }
     
     func markAsSeen(id: StoryId) {
-        let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: true).start()
+        let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: true).startStandalone()
     }
 }
 
@@ -2076,5 +2179,46 @@ func extractItemEntityFiles(item: EngineStoryItem, allEntityFiles: [MediaId: Tel
         }
     }
     return result
+}
+
+private func getCachedStory(storyId: StoryId, transaction: Transaction) -> EngineStoryItem? {
+    if let storyItem = transaction.getStory(id: storyId)?.get(Stories.StoredItem.self), case let .item(item) = storyItem, let media = item.media {
+        return EngineStoryItem(
+            id: item.id,
+            timestamp: item.timestamp,
+            expirationTimestamp: item.expirationTimestamp,
+            media: EngineMedia(media),
+            mediaAreas: item.mediaAreas,
+            text: item.text,
+            entities: item.entities,
+            views: item.views.flatMap { views in
+                return EngineStoryItem.Views(
+                    seenCount: views.seenCount,
+                    reactedCount: views.reactedCount,
+                    forwardCount: views.forwardCount,
+                    seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
+                        return transaction.getPeer(id).flatMap(EnginePeer.init)
+                    },
+                    reactions: views.reactions,
+                    hasList: views.hasList
+                )
+            },
+            privacy: item.privacy.flatMap(EngineStoryPrivacy.init),
+            isPinned: item.isPinned,
+            isExpired: item.isExpired,
+            isPublic: item.isPublic,
+            isPending: false,
+            isCloseFriends: item.isCloseFriends,
+            isContacts: item.isContacts,
+            isSelectedContacts: item.isSelectedContacts,
+            isForwardingDisabled: item.isForwardingDisabled,
+            isEdited: item.isEdited,
+            isMy: item.isMy,
+            myReaction: item.myReaction,
+            forwardInfo: item.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, transaction: transaction) }
+        )
+    } else {
+        return nil
+    }
 }
 

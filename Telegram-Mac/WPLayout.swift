@@ -85,8 +85,10 @@ class WPLayout: Equatable {
             return result
         }
     }
+    private let entities: [MessageTextEntity]?
+    private let adAttribute: AdMessageAttribute?
     
-    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil) {
         self.content = content
         self.context = context
         self.presentation = presentation
@@ -94,6 +96,8 @@ class WPLayout: Equatable {
         self.mayCopyText = mayCopyText
         self.parent = parent
         self.fontSize = fontSize
+        self.entities = entities
+        self.adAttribute = adAttribute
         self._approximateSynchronousValue = approximateSynchronousValue
         
         if let websiteName = content.websiteName {
@@ -137,7 +141,15 @@ class WPLayout: Equatable {
         
         
         if let text = text {
-            _ = attributedText.append(string: text, color: presentation.text, font: .normal(fontSize))
+            
+            let entitites = entities ?? []
+
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entitites)], for: text, message: nil, context: context, fontSize: fontSize, openInfo: chatInteraction.openInfo, textColor: presentation.text, linkColor: presentation.link, monospacedPre: presentation.text, monospacedCode: presentation.text, isDark: false).mutableCopy() as! NSMutableAttributedString
+
+            InlineStickerItem.apply(to: attributed, associatedMedia: parent.associatedMedia, entities: entitites, isPremium: true, offset: 0)
+
+            attributedText.insert(attributed, at: attributedText.length)
+            
         }
         if attributedText.length > 0 {
             var p: ParsingType = [.Links]
@@ -145,9 +157,13 @@ class WPLayout: Equatable {
             if wname == "instagram" || wname == "twitter" {
                 p = [.Links, .Mentions, .Hashtags]
             }
+            if adAttribute == nil {
+                attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
+            }
+
             
-            attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true, mayItems: mayCopyText)
+            
             
             let interactions = globalLinkExecutor
             interactions.resolveLink = { link in
@@ -201,7 +217,9 @@ class WPLayout: Equatable {
                             break
                         }
                     }
-                    
+                    if let adAttribute = adAttribute {
+                        chatInteraction.markAdAction(adAttribute.opaqueId)
+                    }
                     execute(inapp: link)
                 }
             }

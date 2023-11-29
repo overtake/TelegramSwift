@@ -22,14 +22,15 @@ final class PremiumBoardingRowItem : GeneralRowItem {
 
     fileprivate let premValueIndex: Int
     fileprivate let presentation: TelegramPresentationTheme
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, presentation: TelegramPresentationTheme, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, callback: @escaping(PremiumValue)->Void) {
+    fileprivate let isNew: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, presentation: TelegramPresentationTheme, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, isNew: Bool, callback: @escaping(PremiumValue)->Void) {
         self.value = value
         self.limits = limits
         self.presentation = presentation
         self.premValueIndex = index
         self.isLastItem = isLast
         self.callback = callback
+        self.isNew = isNew
         self.titleLayout = .init(.initialize(string: value.title(limits), color: presentation.colors.text, font: .medium(.title)))
         self.infoLayout = .init(.initialize(string: value.info(limits), color: presentation.colors.grayText, font: .normal(.text)))
 
@@ -62,6 +63,7 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
     private let imageView = ImageView()
     private let nextView = ImageView()
     private let overlay = Control()
+    private var newBadge: ImageView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
@@ -118,6 +120,10 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
         
         nextView.centerY(x: containerView.frame.width - 20 - nextView.frame.width)
         
+        if let newBadge = newBadge {
+            newBadge.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 5, titleView.frame.minY + 1))
+        }
+        
         overlay.frame = bounds
     }
     
@@ -138,6 +144,21 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
         infoView.update(item.infoLayout)
         
         
+        if item.isNew {
+            let current: ImageView
+            if let view = self.newBadge {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.newBadge = current
+            }
+            current.image = generateTextIcon_NewBadge(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor)
+            current.sizeToFit()
+        } else if let view = self.newBadge {
+            performSubviewRemoval(view, animated: animated)
+            self.newBadge = nil
+        }
         
         
         needsLayout = true

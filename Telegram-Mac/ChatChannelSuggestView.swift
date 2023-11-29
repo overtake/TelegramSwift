@@ -21,6 +21,7 @@ final class ChannelSuggestData {
         let peer: Peer
         let name: TextViewLayout
         let subscribers: TextViewLayout
+        let locked: Bool
         var size: NSSize {
             return NSMakeSize(avatarSize.width + 20, avatarSize.height + name.layoutSize.height + 4 + 10)
         }
@@ -29,19 +30,34 @@ final class ChannelSuggestData {
     private(set) var channels:[Channel] = []
     private(set) var size: NSSize = .zero
     
-    init(channels: RecommendedChannels, presentation: TelegramPresentationTheme) {
+    init(channels: RecommendedChannels, context: AccountContext, presentation: TelegramPresentationTheme) {
         var list: [Channel] = []
         for channel in channels.channels {
             let attr = NSMutableAttributedString()
-            attr.append(string: channel.peer._asPeer().displayTitle, color: presentation.colors.text, font: .normal(.short))
+            let isPremium: Bool = context.isPremium
+            let nameText: String
+            let color: NSColor
+            let subscribersText: String
+            let limit = context.appConfiguration.getGeneralValue("recommended_channels_limit_premium", orElse: 0)
+            if !isPremium, channel == channels.channels.last {
+                nameText = strings().peerMediaSimilarChannelsMoreChannels
+                color = presentation.colors.grayText
+                subscribersText = "+\(Int(limit) - channels.channels.count)"
+            } else {
+                nameText = channel.peer._asPeer().displayTitle
+                color = presentation.colors.text
+                subscribersText = Int(channel.subscribers).prettyNumber
+            }
+            
+            attr.append(string: nameText, color: color, font: .normal(.short))
             let name = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
             name.measure(width: avatarSize.width + 20)
             
-            let subscribers: TextViewLayout = .init(.initialize(string: Int(channel.subscribers).prettyNumber, color: .white, font: .medium(10)), maximumNumberOfLines: 1, alignment: .center)
+            let subscribers: TextViewLayout = .init(.initialize(string: subscribersText, color: .white, font: .medium(10)), maximumNumberOfLines: 1, alignment: .center)
             subscribers.measure(width: avatarSize.width + 20)
-
             
-            let value = Channel(peer: channel.peer._asPeer(), name: name, subscribers: subscribers)
+            
+            let value = Channel(peer: channel.peer._asPeer(), name: name, subscribers: subscribers, locked: !isPremium && channel == channels.channels.last)
             list.append(value)
         }
         self.channels = list
@@ -81,8 +97,8 @@ private final class ChannelView : Control {
             disposable.dispose()
         }
         
-        func set(subscribers: TextViewLayout, presentation: TelegramPresentationTheme) {
-            imageView.image = NSImage(named: "Icon_Reply_User")?.precomposed(.white)
+        func set(subscribers: TextViewLayout, locked: Bool, presentation: TelegramPresentationTheme) {
+            imageView.image = locked ? NSImage(named: "Icon_EmojiLock")?.precomposed(.white) : NSImage(named: "Icon_Reply_User")?.precomposed(.white)
             imageView.contentGravity = .resizeAspectFill
             imageView.setFrameSize(NSMakeSize(12, 12))
             textView.update(subscribers)
@@ -219,7 +235,7 @@ private final class ChannelView : Control {
                 self?.subscribers.applyBlur(color: presentation.colors.background.darker(), image: image)
             }
         }
-        self.subscribers.set(subscribers: channel.subscribers, presentation: presentation)
+        self.subscribers.set(subscribers: channel.subscribers, locked: channel.locked, presentation: presentation)
         avatar.setPeer(account: context.account, peer: channel.peer)
         textView.update(channel.name)
         
@@ -289,7 +305,7 @@ final class ChatChannelSuggestView : Control {
             let view = ChannelView(frame: .zero)
             container.addSubview(view)
         }
-        
+                
         
         var x: CGFloat = 10
         for (i, channel) in data.channels.enumerated() {
@@ -299,7 +315,11 @@ final class ChatChannelSuggestView : Control {
             view.set(channel: channel, presentation: item.presentation, context: item.context, animated: animated)
             
             view.set(handler: { [weak item] _ in
-                item?.openChannel(channel.peer.id)
+                if !channel.locked {
+                    item?.openChannel(channel.peer.id)
+                } else {
+                    item?.openPremiumBoarding()
+                }
             }, for: .Click)
         }
         container.setFrameSize(NSMakeSize(container.subviewsWidthSize.width + 20, container.subviewsWidthSize.height))

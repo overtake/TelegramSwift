@@ -26,6 +26,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     private let dashLayer = DashLayer()
     
     var textView:TextView = TextView()
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
     
     private(set) var containerView:View = View()
@@ -171,6 +172,10 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         self.needsLayout = true
         
         self.dashLayer.colors = layout.presentation.activity
+        
+        if let textLayout = layout.textLayout {
+            updateInlineStickers(context: layout.context, view: self.textView, textLayout: textLayout)
+        }
     }
     
     func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
@@ -180,5 +185,117 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     var mediaContentView: NSView? {
         return containerView
     }
+    
+    @objc func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
+            }
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    
+    var isEmojiLite: Bool {
+        if let layout = self.content {
+            return layout.context.isLite(.emoji)
+        }
+        return false
+    }
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        
+        guard let content = self.content else {
+            return
+        }
+        
+        let textColor = content.presentation.text
+        
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+        
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
+                validIds.append(id)
+                
+                
+                let rect: NSRect
+                if textLayout.isBigEmoji {
+                    rect = item.rect
+                } else {
+                    rect = item.rect.insetBy(dx: -2, dy: -2)
+                }
+                
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, textColor == current.textColor {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+        updateAnimatableContent()
+    }
+
 
 }

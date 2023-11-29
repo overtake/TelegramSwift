@@ -231,6 +231,22 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(translations)
         
+        let peer_colors = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        peer_colors.setup(context: context, type: .peer_colors, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.peer_colors.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(peer_colors)
+        
+        let wallpapers = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        wallpapers.setup(context: context, type: .wallpapers, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.wallpapers.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(wallpapers)
+        
         switch value {
         case .double_limits:
             slideView.displaySlide(at: 1, animated: false)
@@ -260,6 +276,11 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 12, animated: false)
         case .translations:
             slideView.displaySlide(at: 13, animated: false)
+        case .peer_colors:
+            slideView.displaySlide(at: 14, animated: false)
+        case .wallpapers:
+            slideView.displaySlide(at: 15, animated: false)
+
         }
         
         needsLayout = true

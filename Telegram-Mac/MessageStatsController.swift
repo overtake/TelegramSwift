@@ -18,9 +18,9 @@ import GraphCore
 private final class Arguments {
     let context: AccountContext
     let loadDetailedGraph: (StatsGraph, Int64) -> Signal<StatsGraph?, NoError>
-    let openMessage: (EngineMessage.Id) -> Void
+    let openMessage: (StoryStatsPublicForwardsContext.State.Forward) -> Void
     
-    init(context: AccountContext, loadDetailedGraph: @escaping (StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, openMessage: @escaping (EngineMessage.Id) -> Void) {
+    init(context: AccountContext, loadDetailedGraph: @escaping (StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, openMessage: @escaping (StoryStatsPublicForwardsContext.State.Forward) -> Void) {
         self.context = context
         self.loadDetailedGraph = loadDetailedGraph
         self.openMessage = openMessage
@@ -30,11 +30,21 @@ private final class Arguments {
 
 
 
-private func _id_message(_ messageId: MessageId) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_message_\(messageId)")
+private func _id_forward(_ forward: StoryStatsPublicForwardsContext.State.Forward) -> InputDataIdentifier {
+    switch forward {
+    case let .message(message):
+        return InputDataIdentifier("_id_message_\(message.id)")
+    case let .story(_, storyItem):
+        return InputDataIdentifier("_id_story_item_\(storyItem.id)")
+    }
 }
 
-private func statsEntries(_ stats: PostStats?, _ search: (SearchMessagesResult, SearchMessagesState)?, _ uiState: UIStatsState, arguments: Arguments, isStory: Bool, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, accountContext: AccountContext) -> [InputDataEntry] {
+private func _id_message(_ message: Message) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_message_\(message.id)")
+}
+
+
+private func statsEntries(_ stats: PostStats?, storyViews: EngineStoryItem.Views?, messages: SearchMessagesResult?, forwards: StoryStatsPublicForwardsContext.State?, _ uiState: UIStatsState, arguments: Arguments, isStory: Bool, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, accountContext: AccountContext) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -50,21 +60,42 @@ private func statsEntries(_ stats: PostStats?, _ search: (SearchMessagesResult, 
         
         var overviewItems:[ChannelOverviewItem] = []
         
-        overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewViews, value: .initialize(string: stats.views.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
-       
-        if let search = search, search.0.totalCount > 0 {
-            overviewItems.append(ChannelOverviewItem(title: strings().statsMessagePublicForwardsTitle, value: .initialize(string: Int(search.0.totalCount).formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+        var views: Int = 0
+        if let stats = stats as? MessageStats {
+            views = stats.views
+        } else if let storyView = storyViews {
+            views = Int(storyView.seenCount)
         }
         
-        if stats.forwards > 0 {
-            let header: String
-            if isStory {
-                header = strings().statsMessagePrivateForwardsTitle
-            } else {
-                header = strings().channelStatsOverviewStoryPrivateShares
-            }
-            overviewItems.append(ChannelOverviewItem(title: header, value: .initialize(string: "≈" + stats.forwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+        overviewItems.append(ChannelOverviewItem(title: strings().channelStatsOverviewViews, value: .initialize(string: views.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+       
+        
+        var publicShares: Int32?
+        if let messages = messages {
+            publicShares = messages.totalCount
+        } else if let forwards = forwards {
+            publicShares = forwards.count
         }
+
+        
+        if let publicShares = publicShares, publicShares > 0 {
+            overviewItems.append(ChannelOverviewItem(title: strings().statsMessagePublicForwardsTitle, value: .initialize(string: Int(publicShares).formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+        }
+        
+        var privateForwards: Int = 0
+        if let stats = stats as? MessageStats {
+            privateForwards = stats.forwards
+        } else if let storyView = storyViews {
+            privateForwards = Int(storyView.forwardCount)
+        }
+        
+        let header: String
+        if isStory {
+            header = strings().statsMessagePrivateForwardsTitle
+        } else {
+            header = strings().channelStatsOverviewStoryPrivateShares
+        }
+        overviewItems.append(ChannelOverviewItem(title: header, value: .initialize(string: "≈" + privateForwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
     
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
@@ -162,14 +193,27 @@ private func statsEntries(_ stats: PostStats?, _ search: (SearchMessagesResult, 
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        if let messages = search?.0, !messages.messages.isEmpty {
+        
+        
+        struct Tuple: Equatable {
+            let target: StoryStatsPublicForwardsContext.State.Forward
+            let viewType: GeneralViewType
+        }
+        
+        if let messages = messages, !messages.messages.isEmpty {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
+            var items: [Tuple] = []
+            
             for (i, message) in messages.messages.enumerated() {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), comparable: nil, item: { initialSize, stableId in
-                    return MessageSharedRowItem(initialSize, stableId: stableId, context: accountContext, message: message, viewType: bestGeneralViewType(messages.messages, for: i), action: {
-                        arguments.openMessage(message.id)
+                items.append(.init(target: .message(.init(message)), viewType: bestGeneralViewType(messages.messages, for: i)))
+            }
+            
+            for item in items {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_forward(item.target), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
+                    return MessageSharedRowItem(initialSize, stableId: stableId, context: accountContext, forward: item.target, viewType: item.viewType, action: {
+                        arguments.openMessage(item.target)
                     })
                 }))
                 index += 1
@@ -178,6 +222,30 @@ private func statsEntries(_ stats: PostStats?, _ search: (SearchMessagesResult, 
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
+        
+        if let forwards = forwards, !forwards.forwards.isEmpty {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            var items: [Tuple] = []
+            
+            for (i, forward) in forwards.forwards.enumerated() {
+                items.append(.init(target: forward, viewType: bestGeneralViewType(forwards.forwards, for: i)))
+            }
+            
+            for item in items {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_forward(item.target), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
+                    return MessageSharedRowItem(initialSize, stableId: stableId, context: accountContext, forward: item.target, viewType: item.viewType, action: {
+                        arguments.openMessage(item.target)
+                    })
+                }))
+                index += 1
+            }
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
+        
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: strings().channelStatsLoading)
@@ -189,12 +257,12 @@ private func statsEntries(_ stats: PostStats?, _ search: (SearchMessagesResult, 
 }
 
 protocol PostStats {
-    var views: Int { get }
-    var forwards: Int { get }
     var interactionsGraph: StatsGraph { get }
     var interactionsGraphDelta: Int64 { get }
     var reactionsGraph: StatsGraph { get }
+    
 }
+
 
 extension MessageStats: PostStats {
     
@@ -224,13 +292,17 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
     let actionsDisposable = DisposableSet()
     let dataPromise = Promise<PostStats?>(nil)
     let messagesPromise = Promise<(SearchMessagesResult, SearchMessagesState)?>(nil)
-    
+    let forwardsPromise = Promise<StoryStatsPublicForwardsContext.State?>(nil)
+
+
     let anyStatsContext: Any
     let dataSignal: Signal<PostStats?, NoError>
     var loadDetailedGraphImpl: ((StatsGraph, Int64) -> Signal<StatsGraph?, NoError>)?
+    
+    var forwardsContext: StoryStatsPublicForwardsContext?
     switch subject {
-    case let .messageId(messageId):
-        let statsContext = MessageStatsContext(account: context.account, messageId: messageId)
+    case let .messageId(id):
+        let statsContext = MessageStatsContext(account: context.account, messageId: id)
         loadDetailedGraphImpl = { [weak statsContext] graph, x in
             return statsContext?.loadDetailedGraph(graph, x: x) ?? .single(nil)
         }
@@ -240,6 +312,20 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         }
         dataPromise.set(.single(nil) |> then(dataSignal))
         anyStatsContext = statsContext
+        
+        let searchSignal = context.engine.messages.searchMessages(location: .publicForwards(messageId: id), query: "", state: nil)
+        |> map(Optional.init)
+        |> afterNext { result in
+            if let result = result {
+                for message in result.0.messages {
+                    if let peer = message.peers[message.id.peerId], let peerReference = PeerReference(peer) {
+                        let _ = context.engine.peers.updatedRemotePeer(peer: peerReference).start()
+                    }
+                }
+            }
+        }
+        messagesPromise.set(.single(nil) |> then(searchSignal))
+        forwardsPromise.set(.single(nil))
     case let .story(storyItem, peer):
         let statsContext = StoryStatsContext(account: context.account, peerId: peer.id, storyId: storyItem.id)
         loadDetailedGraphImpl = { [weak statsContext] graph, x in
@@ -251,12 +337,41 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         }
         dataPromise.set(.single(nil) |> then(dataSignal))
         anyStatsContext = statsContext
+        
+        messagesPromise.set(.single(nil))
+        
+        forwardsContext = StoryStatsPublicForwardsContext(account: context.account, peerId: peer.id, storyId: storyItem.id)
+        if let forwardsContext {
+            forwardsPromise.set(
+                .single(nil)
+                |> then(
+                    forwardsContext.state
+                    |> map(Optional.init)
+                )
+            )
+        } else {
+            forwardsPromise.set(.single(nil))
+        }
     }
+
     
     let arguments = Arguments.init(context: context, loadDetailedGraph: { graph, x -> Signal<StatsGraph?, NoError> in
         return loadDetailedGraphImpl?(graph, x) ?? .single(nil)
-    }, openMessage: { messageId in
-        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
+    }, openMessage: { target in
+        var peers: [Peer] = []
+        switch target {
+        case let .message(message):
+            peers = message.peers.map( { $0.1 })
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(message.id.peerId), focusTarget: .init(messageId: message.id)))
+        case let .story(peer, item):
+            peers = [peer._asPeer()]
+            StoryModalController.ShowSingleStory(context: context, storyId: .init(peerId: peer.id, id: item.id), initialId: nil)
+        }
+        _ = context.account.postbox.transaction ({ transaction -> Void in
+            updatePeersCustom(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
+                return updated
+            })
+        }).startStandalone()
     })
     
 
@@ -286,10 +401,20 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         isStory = true
     }
     
-    let signal = combineLatest(dataPromise.get(), messagesPromise.get(), statePromise.get())
+    let signal = combineLatest(dataPromise.get(), messagesPromise.get(), forwardsPromise.get(), statePromise.get())
         |> deliverOnMainQueue
-        |> map { data, search, state -> [InputDataEntry] in
-            return statsEntries(data, search, state, arguments: arguments, isStory: isStory, updateIsLoading: { identifier, isLoading in
+        |> map { data, search, forwards, state -> [InputDataEntry] in
+            
+            var storyViews: EngineStoryItem.Views?
+            switch subject {
+            case .messageId:
+                storyViews = nil
+            case let .story(storyItem, _):
+                storyViews = storyItem.views
+            }
+
+            
+            return statsEntries(data, storyViews: storyViews, messages: search?.0, forwards: forwards, state, arguments: arguments, isStory: isStory, updateIsLoading: { identifier, isLoading in
                 updateState { state in
                     if isLoading {
                         return state.withAddedLoading(identifier)
@@ -303,6 +428,7 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         }
     |> afterDisposed {
         actionsDisposable.dispose()
+        _ = forwardsContext
     }
 
     let title: String

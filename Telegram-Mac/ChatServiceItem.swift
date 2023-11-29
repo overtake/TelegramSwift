@@ -878,7 +878,7 @@ class ChatServiceItem: ChatRowItem {
                     let text = strings().chatServiceJoinedChannel
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     if let recommendedChannels = entry.additionalData.recommendedChannels, !recommendedChannels.channels.isEmpty, !recommendedChannels.isHidden {
-                        self.suggestChannelsData = .init(channels: recommendedChannels, presentation: theme)
+                        self.suggestChannelsData = .init(channels: recommendedChannels, context: context, presentation: theme)
                     }
                 case let .giveawayResults(winners, unclaimed):
                     var text: String
@@ -993,6 +993,15 @@ class ChatServiceItem: ChatRowItem {
             addAppLogEvent(postbox: context.account.postbox, type: "channels.open_recommended_channel", data: json)
         }
         
+    }
+    
+    func openPremiumBoarding() {
+        let context = self.context
+        let limit = context.appConfiguration.getGeneralValue("recommended_channels_limit_premium", orElse: 0)
+
+        showModalText(for: context.window, text: strings().similarChannelAlertText(Int(limit)), callback: { _ in
+            showModal(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
+        })
     }
     func dismissRecommendedChannels() {
         guard let message = self.message else {
