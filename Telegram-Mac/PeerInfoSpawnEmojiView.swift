@@ -79,6 +79,12 @@ class PeerInfoSpawnEmojiView : View {
         updateLayout(size: frame.size, transition: transition)
     }
     
+    var fraction: CGFloat = 0 {
+        didSet {
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+    }
+    
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         var avatarBackgroundPatternLayerCount = 0
         let lokiRng = LokiRng(seed0: 123, seed1: 0, seed2: 0)
@@ -90,7 +96,7 @@ class PeerInfoSpawnEmojiView : View {
                 let baseItemDistance: CGFloat = 80 + CGFloat(row) * 28.0
                 
                 let itemDistanceFraction = max(0.0, min(1.0, baseItemDistance / 140.0))
-                let itemScaleFraction = patternScaleValueAt(fraction: 0, t: itemDistanceFraction, reverse: false)
+                let itemScaleFraction = patternScaleValueAt(fraction: fraction, t: itemDistanceFraction, reverse: false)
                 let itemDistance = baseItemDistance * (1.0 - itemScaleFraction) + 20.0 * itemScaleFraction
                 
                 var itemAngle = -CGFloat.pi * 0.5 + CGFloat(i) * avatarPatternAngleSpan

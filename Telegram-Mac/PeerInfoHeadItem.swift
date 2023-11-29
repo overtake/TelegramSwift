@@ -1074,6 +1074,8 @@ private final class PeerInfoHeadView : GeneralRowView {
     private let actionsView = View()
     private var photoEditableView: PeerInfoPhotoEditableView?
     
+    private var listener: TableScrollListener!
+    
     
     private var activeDragging: Bool = false {
         didSet {
@@ -1114,6 +1116,9 @@ private final class PeerInfoHeadView : GeneralRowView {
         addSubview(statusView)
         addSubview(actionsView)
         
+        listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.updateSpawnerFraction()
+        })
        
         
         layer?.masksToBounds = false
@@ -1152,7 +1157,15 @@ private final class PeerInfoHeadView : GeneralRowView {
          registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
     }
     
-    
+    private func updateSpawnerFraction() {
+        if let item = self.item, let table = item.table {
+            let position = table.scrollPosition().current
+            let y = position.rect.minY - table.frame.height
+            let clamp = min(max(0, y), item.height)
+            let fraction = min(1, (clamp / item.height) + 0.4)
+            self.emojiSpawn?.fraction = fraction
+        }
+    }
     
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         if activeDragging {
@@ -1348,6 +1361,8 @@ private final class PeerInfoHeadView : GeneralRowView {
             return
         }
         
+        item.table?.addScroll(listener: listener)
+        
         photoView.setPeer(account: item.context.account, peer: item.peer)
 
         updatePhoto(item, animated: animated)
@@ -1452,6 +1467,8 @@ private final class PeerInfoHeadView : GeneralRowView {
             performSubviewRemoval(view, animated: animated)
             self.emojiSpawn = nil
         }
+        
+        self.updateSpawnerFraction()
         
         self.photoVideoView?.layer?.cornerRadius = item.isForum ? self.photoView.frame.height / 3 : self.photoView.frame.height / 2
         
