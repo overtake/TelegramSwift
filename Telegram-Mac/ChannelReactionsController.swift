@@ -307,10 +307,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: .init(name: "Enable Reactions", color: theme.colors.text, type: .switchable(state.enabled), viewType: .singleItem, action: arguments.toggleEnabled)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: .init(name: strings().channelReactionsEnableReactions, color: theme.colors.text, type: .switchable(state.enabled), viewType: .singleItem, action: arguments.toggleEnabled)))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add emoji from any emoji pack as a reaction."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelReactionsEnableReactionsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     
@@ -323,7 +323,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let error: InputDataValueError?
         if state.customCount > 0, let stats = state.stats, stats.level < state.customCount {
-            error = .init(description: "\(state.customCount) Boost Level Required", target: .data)
+            error = .init(description: strings().channelReactionsLevelRequired(state.customCount), target: .data)
         } else {
             error = nil
         }
@@ -342,12 +342,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
        
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add, data: .init(name: "Add Reactions", color: theme.colors.text, type: .nextContext(""), viewType: .lastItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add, data: .init(name: strings().channelReactionsAdd, color: theme.colors.text, type: .nextContext(""), viewType: .lastItem, action: {
             arguments.addReactions(nil)
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can also [create your own]() emoji packs and use them.", linkHandler: { _ in
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().channelReactionsAddInfo, linkHandler: { _ in
             arguments.createPack()
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
@@ -507,7 +507,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Reactions", removeAfterDisappear: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().channelReactionsTitle, removeAfterDisappear: false)
     
     controller.contextObject = emojis
     
@@ -539,8 +539,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             
         }, completed: {
             close?()
-            //TODOLANG
-            showModalText(for: context.window, text: "Reactions successfully updated")
+            showModalText(for: context.window, text: strings().channelReactionsSuccess)
         })
         return .none
     }
@@ -555,7 +554,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     }))
 
     
-    let modalInteractions = ModalInteractions(acceptTitle: "Update Reactions", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().channelReactionsOK, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     
