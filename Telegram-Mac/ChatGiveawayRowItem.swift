@@ -135,8 +135,8 @@ final class ChatGiveawayRowItem : ChatRowItem {
         for peerId in media.channelPeerIds {
             if let peer = object.message?.peers[peerId] {
                 
-                let color = context.peerNameColors.get(peer.nameColor ?? .blue)
-                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color.main, font: .medium(.text)), maximumNumberOfLines: 1), rect: .zero))
+                let color = isIncoming || object.renderType == .list ? context.peerNameColors.get(peer.nameColor ?? .blue).main : theme.colors.accentIconBubble_outgoing
+                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color, font: .medium(.text)), maximumNumberOfLines: 1), rect: .zero))
             }
         }
         self.channels = channels

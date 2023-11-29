@@ -1681,6 +1681,10 @@ public final class L10n {
   public static var channelSelectPeersContacts: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Contacts") }
   /// global
   public static var channelSelectPeersGlobal: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Global") }
+  /// Subscribe to **[Telegram Premium]()** to unlock up to **%d** similar channels
+  public static func channelSimilarPremium(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Similar.Premium", p1)
+  }
   /// Off
   public static var channelSlowModeOff: String  { return L10n.tr("Localizable", "Channel.SlowMode.Off") }
   /// Slowmode is enabled.\nYou can send your next message in %@:%@
@@ -2053,10 +2057,18 @@ public final class L10n {
   public static var channelStatsOverviewEnabledNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Overview.EnabledNotifications") }
   /// Followers
   public static var channelStatsOverviewFollowers: String  { return L10n.tr("Localizable", "ChannelStats.Overview.Followers") }
+  /// Reactions Per Post
+  public static var channelStatsOverviewReactionsPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.ReactionsPerPost") }
+  /// Reactions Per Story
+  public static var channelStatsOverviewReactionsPerStory: String  { return L10n.tr("Localizable", "ChannelStats.Overview.ReactionsPerStory") }
   /// Shares Per Post
   public static var channelStatsOverviewSharesPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.SharesPerPost") }
+  /// Shares Per Story
+  public static var channelStatsOverviewSharesPerStory: String  { return L10n.tr("Localizable", "ChannelStats.Overview.SharesPerStory") }
   /// Views Per Post
   public static var channelStatsOverviewViewsPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.ViewsPerPost") }
+  /// Views Per Story
+  public static var channelStatsOverviewViewsPerStory: String  { return L10n.tr("Localizable", "ChannelStats.Overview.ViewsPerStory") }
   /// RECENT POSTS
   public static var channelStatsRecentHeader: String  { return L10n.tr("Localizable", "ChannelStats.Recent.Header") }
   /// Checking...
@@ -9887,6 +9899,8 @@ public final class L10n {
   public static var peerMediaPopoverSharedLinks: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedLinks") }
   /// Shared Media
   public static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
+  /// More Channels
+  public static var peerMediaSimilarChannelsMoreChannels: String  { return L10n.tr("Localizable", "PeerMedia.SimilarChannels.MoreChannels") }
   /// %d
   public static func peerMediaStatusSubscribersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Status.Subscribers_countable", p1)
@@ -10209,6 +10223,10 @@ public final class L10n {
   public static var premiumBoardingChatsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Chats.Info") }
   /// Advanced Chat Management
   public static var premiumBoardingChatsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Chats.Title") }
+  /// Choose a color and logo for your profile and replies to your messages.
+  public static var premiumBoardingColorsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Colors.Info") }
+  /// Name and Profile Colors
+  public static var premiumBoardingColorsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Colors.Title") }
   /// Connected Accounts
   public static var premiumBoardingDoubleAccounts: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Accounts") }
   /// Bio
@@ -10361,6 +10379,10 @@ public final class L10n {
   public static var premiumBoardingVoiceInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Voice.Info") }
   /// Voice-to-Text Conversion
   public static var premiumBoardingVoiceTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Voice.Title") }
+  /// Set custom wallpapers for you and your chat partner.
+  public static var premiumBoardingWallpapersInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Wallpapers.Info") }
+  /// Wallpapers for Both Sides
+  public static var premiumBoardingWallpapersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Wallpapers.Title") }
   /// Double the Limit
   public static var premiumGetPremiumDouble: String  { return L10n.tr("Localizable", "Premium.GetPremium.Double") }
   /// Let **%@** enjoy exclusive features of Telegram with **Telegram Premium**.
@@ -12673,6 +12695,10 @@ public final class L10n {
   public static var sidebarHide: String  { return L10n.tr("Localizable", "Sidebar.Hide") }
   /// Sidebar is not available in this chat
   public static var sidebarPeerRestricted: String  { return L10n.tr("Localizable", "Sidebar.Peer.Restricted") }
+  /// Subscribe to [Telegram Premium]() to unlock up to %d similar channels
+  public static func similarChannelAlertText(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SimilarChannel.Alert.Text", p1)
+  }
   /// Slow mode is enabled. You can't forward a message with a comment
   public static var slowModeForwardCommentError: String  { return L10n.tr("Localizable", "SlowMode.ForwardComment.Error") }
   /// Slow mode is enabled. You can't send more than one message at a time.
@@ -13429,6 +13455,8 @@ public final class L10n {
   public static var storyControlsMenuReport: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Report") }
   /// Share
   public static var storyControlsMenuShare: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Share") }
+  /// Statistics
+  public static var storyControlsMenuStatistics: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Statistics") }
   /// Stealth Mode
   public static var storyControlsMenuStealtMode: String  { return L10n.tr("Localizable", "Story.Controls.Menu.StealtMode") }
   /// Unhide Stories

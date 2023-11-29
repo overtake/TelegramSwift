@@ -188,7 +188,7 @@ class DateSelectorModalController: ModalViewController {
         case .date:
             height = 70
         case .schedule:
-            height = sendWhenOnline ? 150 : 130
+            height = sendWhenOnline ? 160 : 130
         }
         
         self.modal?.resize(with:NSMakeSize(frame.width, height), animated: false)

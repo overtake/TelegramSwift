@@ -620,18 +620,24 @@ extension Peer {
         switch self {
         case let user as TelegramUser:
             if let firstName = user.firstName {
-                if firstName.isEmpty {
-                    return " "
+                if !firstName.isEmpty {
+                    return firstName
                 }
-                return firstName
-            } else if let lastName = user.lastName {
-                if lastName.isEmpty {
-                    return " "
+            }
+            if let lastName = user.lastName {
+                if !lastName.isEmpty {
+                    return lastName
                 }
-                return lastName
-            } else {
+            }
+            if let phone = user.phone {
+                if !phone.isEmpty {
+                    return phone
+                }
+            }
+            if user.firstName == nil, user.lastName == nil {
                 return strings().peerDeletedUser
             }
+            return " "
         default:
             return displayTitle
         }

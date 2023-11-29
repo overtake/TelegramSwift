@@ -16,19 +16,23 @@ import Postbox
 private final class Arguments {
     let context: AccountContext
     let openInfo:(PeerId)->Void
-    init(context: AccountContext, openInfo:@escaping(PeerId)->Void) {
+    let premium:()->Void
+    init(context: AccountContext, openInfo:@escaping(PeerId)->Void, premium:@escaping()->Void) {
         self.context = context
         self.openInfo = openInfo
+        self.premium = premium
     }
 }
 
 private struct State : Equatable {
     var channels: RecommendedChannels?
+    var isPremium: Bool
 }
 
 private func _id_channel(_ id: PeerId) -> InputDataIdentifier {
     return .init("_id_channel_\(id.toInt64())")
 }
+private let _id_more = InputDataIdentifier("_id_more")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -68,6 +72,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+        
+        let limit = arguments.context.appConfiguration.getGeneralValue("recommended_channels_limit_premium", orElse: 0)
+        
+        if !state.isPremium {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_more, equatable: .init(state.isPremium), comparable: nil, item: { initialSize, stableId in
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().channelSimilarPremium(Int(limit)), font: .normal(.text), insets: .init(), centerViewAlignment: true, linkCallback: { _ in
+                    arguments.premium()
+                })
+            }))
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
     }
     
     
@@ -80,21 +96,28 @@ func SimilarChannelsController(context: AccountContext, peerId: PeerId, recommen
     let actionsDisposable = DisposableSet()
     
 
-    let initialState = State(channels: recommendedChannels)
+    let initialState = State(channels: recommendedChannels, isPremium: context.isPremium)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
-    
-    actionsDisposable.add(context.engine.peers.recommendedChannels(peerId: peerId).start(next: { channels in
+    let isPremium = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId))
+    |> map { peer -> Bool in
+        return peer?.isPremium ?? false
+    }
+
+
+    actionsDisposable.add(combineLatest(context.engine.peers.recommendedChannels(peerId: peerId), isPremium).start(next: { channels, isPremium in
         updateState { current in
             var current = current
             current.channels = channels
+            current.isPremium = isPremium
             return current
         }
     }))
+    
 
     let arguments = Arguments(context: context, openInfo: { channelId in
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(channelId)))
@@ -108,6 +131,8 @@ func SimilarChannelsController(context: AccountContext, peerId: PeerId, recommen
         if let data = jsonString.data(using: .utf8), let json = JSON(data: data) {
             addAppLogEvent(postbox: context.account.postbox, type: "channels.open_recommended_channel", data: json)
         }
+    }, premium: {
+        showModal(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

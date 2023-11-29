@@ -29,13 +29,21 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let rightAction: RightAction?
     fileprivate let centerViewAlignment: Bool
     fileprivate let _hasBorder: Bool?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false, customTheme: GeneralRowItem.Theme? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false, customTheme: GeneralRowItem.Theme? = nil, linkCallback:((String)->Void)? = nil) {
         
-        let attr = NSMutableAttributedString()
-        _ = attr.append(string: text, color: customTheme?.textColor ?? color, font: font)
+        let color = customTheme?.textColor ?? color
+        let linkColor = customTheme?.accentColor ?? theme.colors.link
+
+        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: font, textColor: color), bold: MarkdownAttributeSet(font: .medium(font.pointSize), textColor: color), link: MarkdownAttributeSet(font: .normal(font.pointSize), textColor: linkColor), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { value in
+                linkCallback?(value)
+            }))
+        })).mutableCopy() as! NSMutableAttributedString
+        
         attr.detectBoldColorInString(with: .medium(font.pointSize))
         
         self.textLayout = TextViewLayout(attr, maximumNumberOfLines: singleLine ? 1 : 0, alwaysStaticItems: false)
+        self.textLayout.interactions = globalLinkExecutor
         self.header = header
         self._hasBorder = hasBorder
         self.centerViewAlignment = centerViewAlignment

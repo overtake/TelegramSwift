@@ -2889,6 +2889,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         guard storyInterfaceState != .empty, canStoryOverscroll, initFromEvent == nil || initFromEvent == false else {
             return
         }
+        
+        if searchController != nil {
+            return
+        }
+        
         if genericView.tableView.liveScrolling {
 //            let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
 //            optional?.view?.layer?.removeAllAnimations()
@@ -2937,6 +2942,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
          scrollPositions = []
 
          guard genericView.tableView.documentOffset.y == 0, canStoryOverscroll, storyInterfaceState != .empty else {
+             return false
+         }
+         if searchController != nil {
              return false
          }
         

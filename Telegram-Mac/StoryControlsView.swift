@@ -42,7 +42,7 @@ private final class RepostView : View {
     
     func set(forwardInfo: EngineStoryItem.ForwardInfo, context: AccountContext, animated: Bool) {
         switch forwardInfo {
-        case let .known(peer, _):
+        case let .known(peer, _, _):
             let current: AvatarControl
             if let view = self.avatarView {
                 current = view
@@ -225,11 +225,11 @@ final class StoryControlsView : Control {
         if let forwardInfo = story.storyItem.forwardInfo {
             let peerId: PeerId?
             switch forwardInfo {
-            case let .known(peer, _):
+            case let .known(peer, _, _):
                 date.append(string: peer._asPeer().compactDisplayTitle, color: NSColor.white, font: .medium(.small))
                 date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
                 peerId = peer.id
-            case let .unknown(name):
+            case let .unknown(name, _):
                 date.append(string: name, color: NSColor.white, font: .medium(.small))
                 date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
                 peerId = nil

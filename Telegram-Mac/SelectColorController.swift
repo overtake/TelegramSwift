@@ -133,7 +133,7 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
     private let nameView = TextView()
     private let statusView = TextView()
     private var emojiSpawn: PeerInfoSpawnEmojiView?
-    private let backgroundView = View()
+    private let backgroundView = PeerInfoBackgroundView(frame: .zero)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(backgroundView)
@@ -172,9 +172,9 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
         statusView.update(item.statusLayout)
         
         if let nameColor = item.nameColor {
-            backgroundView.backgroundColor = item.getColor(nameColor).main
+            backgroundView.gradient = [item.getColor(nameColor).main, item.getColor(nameColor).secondary ?? item.getColor(nameColor).main]
         } else {
-            backgroundView.backgroundColor = .clear
+            backgroundView.gradient = [NSColor(0xffffff, 0)]
         }
         
         if animated {
@@ -182,7 +182,7 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
         }
         
         
-        if let emoji = item.backgroundEmojiId, let nameColor = item.nameColor {
+        if let emoji = item.backgroundEmojiId {
             let current: PeerInfoSpawnEmojiView
             if let view = self.emojiSpawn {
                 current = view
@@ -193,20 +193,17 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
                 self.emojiSpawn = current
                 addSubview(current, positioned: .above, relativeTo: backgroundView)
             }
-            current.set(fileId: emoji, color: item.getColor(nameColor).main.withAlphaComponent(0.3), context: item.context, animated: animated)
+            let color: NSColor
+            if let nameColor = item.nameColor {
+                color = item.getColor(nameColor).main.withAlphaComponent(0.3)
+            } else {
+                color = theme.colors.background.withAlphaComponent(0.3)
+            }
+            
+            current.set(fileId: emoji, color: color, context: item.context, animated: animated)
         } else if let view = self.emojiSpawn {
             performSubviewRemoval(view, animated: animated)
             self.emojiSpawn = nil
-        }
-        
-        if let _ = item.nameColor {
-            let shadow = NSShadow()
-            shadow.shadowBlurRadius = 64
-            shadow.shadowColor = NSColor.white.withAlphaComponent(0.5)
-            shadow.shadowOffset = NSMakeSize(0, 0)
-            avatar.shadow = shadow
-        } else {
-            avatar.shadow = nil
         }
         
         needsLayout = true

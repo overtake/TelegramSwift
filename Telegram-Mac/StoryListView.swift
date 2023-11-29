@@ -14,7 +14,7 @@ import Postbox
 import TGModernGrowingTextView
 
 
-private final class StoryRepostView : View {
+private final class StoryRepostView : Control {
     private let borderLayer = DashLayer()
     private let nameView = TextView()
     private let textView: TextView = TextView()
@@ -22,6 +22,7 @@ private final class StoryRepostView : View {
     private var text_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     private var header_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
+    private let disposable = MetaDisposable()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -36,6 +37,8 @@ private final class StoryRepostView : View {
         self.layer?.addSublayer(borderLayer)
         self.layer?.cornerRadius = .cornerRadius
         
+        scaleOnClick = true
+        
     }
     
     required init?(coder: NSCoder) {
@@ -47,16 +50,21 @@ private final class StoryRepostView : View {
         let nameText: String
         let text = "Story"
         
+        
+        
         let forwardPeer: Peer?
+        let storyId: StoryId?
         switch forwardInfo {
-        case .known(let peer, _):
+        case let .known(peer, id, _):
             colors = peer.nameColor
             forwardPeer = peer._asPeer()
             nameText = peer._asPeer().compactDisplayTitle
-        case let .unknown(name):
+            storyId = .init(peerId: peer.id, id: id)
+        case let .unknown(name, _):
             colors = nil
             nameText = name
             forwardPeer = nil
+            storyId = nil
         }
         
         let nameAttr = NSMutableAttributedString()
@@ -90,10 +98,36 @@ private final class StoryRepostView : View {
         
         if let colors = colors {
             let value = context.peerNameColors.get(colors)
-            borderLayer.colors = .init(main: NSColor(0xffffff), secondary: value.secondary != nil ? .clear : nil, tertiary: value.tertiary != nil ? .clear : nil)
+            borderLayer.colors = .init(main: NSColor(0xffffff), secondary: value.secondary != nil ? NSColor(0xffffff, 0) : nil, tertiary: value.tertiary != nil ? NSColor(0xffffff, 0) : nil)
         } else {
             borderLayer.colors = .init(main: NSColor(0xffffff), secondary: nil, tertiary: nil)
         }
+        let height: CGFloat
+        if let storyId = storyId {
+            self.borderLayer.isHidden = false
+            self.textView.isHidden = false
+            height = 36
+            layer?.cornerRadius = .cornerRadius
+            let signal = arguments.loadForward(storyId).get() |> deliverOnMainQueue
+            disposable.set(signal.start(next: { [weak self] item in
+                if let item = item {
+                    let textLayout = TextViewLayout(.initialize(string: item.text, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
+                    textLayout.measure(width: .greatestFiniteMagnitude)
+                    self?.textView.update(textLayout)
+                }
+            }))
+            self.set(handler: { [weak arguments] _ in
+                arguments?.openStory(storyId)
+            }, for: .Click)
+        } else {
+            self.removeAllHandlers()
+            height = 20
+            borderLayer.isHidden = true
+            self.textView.isHidden = true
+            layer?.cornerRadius = height / 2
+        }
+        
+        self.setFrameSize(NSMakeSize(self.frame.width, height))
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
@@ -159,16 +193,6 @@ private final class StoryRepostView : View {
         updateAnimatableContent()
     }
     
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
     
     
     
@@ -184,6 +208,17 @@ private final class StoryRepostView : View {
             }
         }
     }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
     private func updateListeners() {
         let center = NotificationCenter.default
         if let window = window {
@@ -201,7 +236,11 @@ private final class StoryRepostView : View {
     func size(max width: CGFloat, transition: ContainedViewLayoutTransition) -> NSSize {
         nameView.resize(width - 15)
         textView.resize(width - 15)
-        return NSMakeSize(max(nameView.frame.maxX, textView.frame.maxX) + 5, 36)
+        return NSMakeSize(max(nameView.frame.maxX, textView.frame.maxX) + 5, frame.height)
+    }
+    
+    deinit {
+        disposable.dispose()
     }
 }
 

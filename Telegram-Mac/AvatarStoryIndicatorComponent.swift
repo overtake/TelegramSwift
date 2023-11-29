@@ -166,6 +166,18 @@ private final class ProgressLayer: SimpleLayer {
 
 
 public final class AvatarStoryIndicatorComponent : Equatable {
+    
+    public struct ActiveColors {
+        let basic: [NSColor]
+        let close: [NSColor]
+        public init(basic: [NSColor], close: [NSColor]) {
+            self.basic = basic
+            self.close = close
+        }
+        public static var `default`: ActiveColors {
+            return ActiveColors(basic: [NSColor(rgb: 0x34C76F), NSColor(rgb: 0x3DA1FD)], close: [NSColor(rgb: 0x7CD636), NSColor(rgb: 0x26B470)])
+        }
+    }
     public struct Counters: Equatable {
         public var totalCount: Int
         public var unseenCount: Int
@@ -182,13 +194,15 @@ public final class AvatarStoryIndicatorComponent : Equatable {
     public let activeLineWidth: CGFloat
     public let inactiveLineWidth: CGFloat
     public let counters: Counters?
+    public let activeColors: ActiveColors
     public init(
         hasUnseen: Bool,
         hasUnseenCloseFriendsItems: Bool,
         theme: PresentationTheme,
         activeLineWidth: CGFloat,
         inactiveLineWidth: CGFloat,
-        counters: Counters?
+        counters: Counters?,
+        activeColors: ActiveColors = .default
     ) {
         self.hasUnseen = hasUnseen
         self.hasUnseenCloseFriendsItems = hasUnseenCloseFriendsItems
@@ -196,19 +210,20 @@ public final class AvatarStoryIndicatorComponent : Equatable {
         self.activeLineWidth = activeLineWidth
         self.inactiveLineWidth = inactiveLineWidth
         self.counters = counters
+        self.activeColors = activeColors
     }
     public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme, active: Bool = false) {
         let hasUnseen = story.hasUnseen || story.hasUnseenCloseFriends
         self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
     }
     
-    public convenience init(stats: EngineChatList.StoryStats, presentation: PresentationTheme) {
+    public convenience init(stats: EngineChatList.StoryStats, presentation: PresentationTheme, activeColors: ActiveColors = .default) {
         let hasUnseen = stats.unseenCount > 0
-        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: stats.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount))
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: stats.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount), activeColors: activeColors)
     }
     
-    public convenience init(state storyState: PeerExpiringStoryListContext.State, presentation: PresentationTheme) {
-        self.init(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
+    public convenience init(state storyState: PeerExpiringStoryListContext.State, presentation: PresentationTheme, activeColors: ActiveColors = .default) {
+        self.init(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount), activeColors: activeColors)
     }
 
     
@@ -237,7 +252,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
     public final class IndicatorView : View {
         
         private final class Drawer: LayerBackedView {
-            
+                        
             required init(frame frameRect: NSRect) {
                 super.init(frame: frameRect)
                 layer?.masksToBounds = false
@@ -290,15 +305,9 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                     let inactiveColors: [NSColor]
                     
                     if component.hasUnseenCloseFriendsItems {
-                        activeColors = [
-                            NSColor(rgb: 0x7CD636),
-                            NSColor(rgb: 0x26B470)
-                        ]
+                        activeColors = component.activeColors.close
                     } else {
-                        activeColors = [
-                            NSColor(rgb: 0x34C76F),
-                            NSColor(rgb: 0x3DA1FD)
-                        ]
+                        activeColors = component.activeColors.basic
                     }
                     
                     if component.theme.colors.isDark {

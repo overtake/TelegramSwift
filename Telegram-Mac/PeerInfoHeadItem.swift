@@ -464,6 +464,22 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
     }
     
+    var profileEmojiColor: NSColor {
+        if let nameColor = nameColor, threadId == nil, !editing {
+            return context.peerNameColors.getProfile(nameColor).main
+        } else {
+            return theme.colors.background
+        }
+    }
+    var backgroundGradient: [NSColor] {
+        if let nameColor = nameColor, threadId == nil, !editing {
+            let colors = context.peerNameColors.getProfile(nameColor)
+            return [colors.main, colors.secondary ?? colors.main].compactMap { $0 }
+        } else {
+            return [NSColor(0xffffff, 0)]
+        }
+    }
+    
     var actionColor: NSColor {
         if let nameColor = nameColor, threadId == nil, !editing {
             let textColor = context.peerNameColors.getProfile(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
@@ -587,7 +603,17 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.updatePhoto = updatePhoto
         
         if let storyState = stories, !storyState.items.isEmpty {
-            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme)
+            
+            let colors: AvatarStoryIndicatorComponent.ActiveColors
+            if let profileColor = peer?.profileColor {
+                let color = context.peerNameColors.getProfile(profileColor)
+                let values: [NSColor] = [color.main.lighter(), color.secondary ?? color.main.lighter().withAlphaComponent(0.8)]
+                colors = .init(basic: values, close: values)
+            } else {
+                colors = .default
+            }
+            
+            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme, activeColors: colors)
             self.avatarStoryComponent = compoment
         } else {
             self.avatarStoryComponent = nil
@@ -798,9 +824,57 @@ class PeerInfoHeadItem: GeneralRowItem {
 }
 
 
+final class PeerInfoBackgroundView: View {
+    private let backgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
+    private let avatarBackgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layer?.addSublayer(backgroundGradientLayer)
+        self.layer?.addSublayer(avatarBackgroundGradientLayer)
+        
+        let baseAvatarGradientAlpha: CGFloat = 0.4
+        let numSteps = 6
+        self.avatarBackgroundGradientLayer.colors = (0 ..< numSteps).map { i in
+            let step: CGFloat = 1.0 - CGFloat(i) / CGFloat(numSteps - 1)
+            return NSColor(white: 1.0, alpha: baseAvatarGradientAlpha * pow(step, 2.0)).cgColor
+        }
+        self.avatarBackgroundGradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+        self.avatarBackgroundGradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
+        self.avatarBackgroundGradientLayer.type = .radial
+        
+        self.backgroundGradientLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
+        self.backgroundGradientLayer.endPoint = CGPoint(x: 0.5, y: 0.0)
+        self.backgroundGradientLayer.type = .axial
+
+    }
+    
+    override var isFlipped: Bool {
+        return false
+    }
+    
+    var gradient: [NSColor] = [] {
+        didSet {
+            backgroundGradientLayer.colors = gradient.map { $0.cgColor }
+            avatarBackgroundGradientLayer.isHidden = gradient[0].alpha == 0
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(layer: avatarBackgroundGradientLayer, frame: size.bounds.focus(NSMakeSize(300, 300)).offsetBy(dx: 0, dy: 30))
+        transition.updateFrame(layer: backgroundGradientLayer, frame: size.bounds)
+    }
+}
 
 private final class PeerInfoPhotoEditableView : Control {
-    private let backgroundView = View()
+    private let backgroundView = View(frame: .zero)
     private let camera: ImageView = ImageView()
     private var progressView:RadialProgressContainerView?
     private var updatingPhotoState: PeerInfoUpdatingPhotoState?
@@ -991,7 +1065,7 @@ private final class PeerInfoHeadView : GeneralRowView {
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
 
-    private let backgroundView: View = View()
+    private let backgroundView = PeerInfoBackgroundView(frame: .zero)
     
     private var emojiSpawn: PeerInfoSpawnEmojiView?
     
@@ -1013,7 +1087,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         }
 //        self.containerView.backgroundColor = .clear
 //        self.borderView.backgroundColor = .clear
-        self.backgroundView.backgroundColor = item.peerColor
+        self.backgroundView.gradient = item.backgroundGradient
     }
  
 
@@ -1212,7 +1286,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
         }
-        backgroundView.frame = NSMakeRect(0, -1000, frame.width, frame.height + 1000)
+        backgroundView.frame = NSMakeRect(0, -130, frame.width, frame.height + 130)
 
     }
     
@@ -1351,18 +1425,18 @@ private final class PeerInfoHeadView : GeneralRowView {
             self.videoRepresentation = nil
         }
         
+//        
+//        if item.editing || !item.colorfulProfile {
+//            photoContainer.shadow = nil
+//        } else {
+//            let shadow = NSShadow()
+//            shadow.shadowBlurRadius = 64
+//            shadow.shadowColor = NSColor.white.withAlphaComponent(0.5)
+//            shadow.shadowOffset = NSMakeSize(0, 0)
+//            photoContainer.shadow = shadow
+//        }
         
-        if item.editing || !item.colorfulProfile {
-            photoContainer.shadow = nil
-        } else {
-            let shadow = NSShadow()
-            shadow.shadowBlurRadius = 64
-            shadow.shadowColor = NSColor.white.withAlphaComponent(0.5)
-            shadow.shadowOffset = NSMakeSize(0, 0)
-            photoContainer.shadow = shadow
-        }
-        
-        if item.colorfulProfile, let emoji = item.peer?.profileBackgroundEmojiId, !item.editing {
+        if let emoji = item.peer?.profileBackgroundEmojiId, !item.editing {
             let current: PeerInfoSpawnEmojiView
             if let view = self.emojiSpawn {
                 current = view
@@ -1373,7 +1447,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.emojiSpawn = current
                 addSubview(current, positioned: .above, relativeTo: backgroundView)
             }
-            current.set(fileId: emoji, color: item.peerColor.withAlphaComponent(0.3), context: item.context, animated: animated)
+            current.set(fileId: emoji, color: item.profileEmojiColor.withAlphaComponent(0.3), context: item.context, animated: animated)
         } else if let view = self.emojiSpawn {
             performSubviewRemoval(view, animated: animated)
             self.emojiSpawn = nil
