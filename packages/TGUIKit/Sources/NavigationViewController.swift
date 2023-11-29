@@ -1197,7 +1197,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     
                     previous.view.frame = NSMakeRect(0, previous.barHeight, self.frame.width, self.frame.height - previous.barHeight)
                     
-                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
+                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: navigationBar)
                     
                     
                     let prevBackgroundView = self.containerView.copy() as! NSView

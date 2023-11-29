@@ -4215,7 +4215,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         self.chatInteraction.focusMessageId(nil, .init(messageId: last, string: nil), .CenterEmpty)
                     }
                 } else {
-                    var exts:[String] = mediaExts
+                    var exts:[String]? = nil
                     if let type = type {
                         switch type {
                         case .photo:
