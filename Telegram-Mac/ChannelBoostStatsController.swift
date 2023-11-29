@@ -608,9 +608,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
-        
-        //TODOLANG
-        
+                
         let prepaid:[PrepaidGiveaway] = state.boostStatus?.prepaidGiveaways ?? []
         
         

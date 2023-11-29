@@ -114,10 +114,6 @@ private final class StoryPreviewRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        let attr = NSMutableAttributedString()
-        attr.append(self.state.inputText)
-        attr.addAttribute(.font, value: NSFont.normal(13), range: attr.range)
-        let size = attr.sizeFittingWidth(blockWidth)
         return 100
     }
 }
@@ -306,31 +302,25 @@ private struct State : Equatable {
         let peersText = privacy.additionallyIncludePeers.compactMap { self.peers[$0] }.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
 
         switch category {
-        case .everyone:
+        case .everyone, .contacts:
             if privacy.additionallyIncludePeers.isEmpty {
-                return "exclude people"
+                return strings().storyPrivacyExcludePeople
             } else {
-                return "except \(peersText)"
-            }
-        case .contacts:
-            if privacy.additionallyIncludePeers.isEmpty {
-                return "exclude people"
-            } else {
-                return "except \(peersText)"
+                return strings().storyPrivacyExceptPeople(peersText)
             }
         case .closeFriends:
             if friends.isEmpty {
-                return "edit list"
+                return strings().storyPrivacyEditList
             } else {
                 if friends.count > 2 {
-                    return "\(friends.count) people"
+                    return strings().storyPrivacyPeopleListCountable(friends.count)
                 } else {
                     return friends.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
                 }
             }
         case .nobody:
             if privacy.additionallyIncludePeers.isEmpty {
-                return "choose"
+                return strings().storyPrivacyChoose
             } else {
                 return peersText
             }
@@ -400,14 +390,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         switch arguments.reason {
         case .share:
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("POST STORY AS"), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyPostStoryAs), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             let sendAs = state.privacy.sendAsPeerId ?? arguments.context.peerId
             
             let sendAsPeer = state.sendAsPeers.first(where: { $0.peer.id == sendAs })?.peer ?? state.peers[arguments.context.peerId]?._asPeer()
             if let peer = sendAsPeer {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: presentation.colors.text, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: presentation.colors.grayText), status: "personal account", inset: NSEdgeInsets(left: 20, right: 20), generalType: .next, viewType: .singleItem, action: arguments.showSendAs, customTheme: rowTheme)
+                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: presentation.colors.text, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: presentation.colors.grayText), status: strings().storyPrivacyPersonalAccount, inset: NSEdgeInsets(left: 20, right: 20), generalType: .next, viewType: .singleItem, action: arguments.showSendAs, customTheme: rowTheme)
                 }))
                 
                 entries.append(.sectionId(sectionId, type: .normal))
@@ -418,20 +408,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         if state.sendAsPeerId == arguments.context.peerId || state.sendAsPeerId == nil {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WHO CAN VIEW THIS STORY"), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyWhoCanViewStory), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_everyone, data: .init(name: "Everyone", color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .everyone), viewType: .firstItem, description: state.text(for: .everyone), descTextColor: presentation.colors.accent, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_everyone, data: .init(name: strings().storyPrivacyEveryone, color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .everyone), viewType: .firstItem, description: state.text(for: .everyone), descTextColor: presentation.colors.accent, action: {
                 arguments.togleCategory(.everyone)
             }, descClick: {
                 arguments.selectUsers(.everyone)
             }, theme: rowTheme)))
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_my_contacts, data: .init(name: "My Contacts", color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .contacts), viewType: .innerItem, description: state.text(for: .contacts), descTextColor: presentation.colors.accent, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_my_contacts, data: .init(name: strings().storyPrivacyContacts, color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .contacts), viewType: .innerItem, description: state.text(for: .contacts), descTextColor: presentation.colors.accent, action: {
                 arguments.togleCategory(.contacts)
             }, descClick: {
                 arguments.selectUsers(.contacts)
             }, theme: rowTheme)))
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_close_friends, data: .init(name: "Close Friends", color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .closeFriends), viewType: .innerItem, description: state.text(for: .closeFriends), descTextColor: presentation.colors.accent, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_close_friends, data: .init(name: strings().storyPrivacyCloseFriends, color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .closeFriends), viewType: .innerItem, description: state.text(for: .closeFriends), descTextColor: presentation.colors.accent, action: {
                 arguments.togleCategory(.closeFriends)
             }, descClick: {
                 arguments.selectUsers(.closeFriends)
@@ -439,7 +429,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             
 
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_select_users, data: .init(name: "Select Users", color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .nobody), viewType: .lastItem, description: state.text(for: .nobody), descTextColor: presentation.colors.accent, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_select_users, data: .init(name: strings().storyPrivacySelectUsers, color: presentation.colors.text, type: .selectableLeft(state.privacy.selectedPrivacy == .nobody), viewType: .lastItem, description: state.text(for: .nobody), descTextColor: presentation.colors.accent, action: {
                 arguments.togleCategory(.nobody)
             }, descClick: {
                 arguments.selectUsers(.nobody)
@@ -447,12 +437,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             let grayListText: String
             if state.blockedPeers.isEmpty {
-                grayListText = "Select people"
+                grayListText = strings().storyPrivacyGrayListPart1
             } else {
-                grayListText = "\(state.blockedPeers.count) person"
+                grayListText = strings().storyPrivacyGrayListPersonCountable(state.blockedPeers.count)
             }
 
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("[\(grayListText)](select_people) who will never see your stories.", linkHandler: { link in
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().storyPrivacyGrayListMain(grayListText), linkHandler: { link in
                 arguments.updateBlockList()
             }), data: .init(color: presentation.colors.listGrayText, viewType: .textBottomItem, linkColor: presentation.colors.link)))
             index += 1
@@ -466,14 +456,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_allow_screenshot, data: .init(name: "Allow Screenshots", color: presentation.colors.text, type: .switchable(!state.privacy.isForwardingDisabled), viewType: .firstItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_allow_screenshot, data: .init(name: strings().storyPrivacyAllowScreenshot, color: presentation.colors.text, type: .switchable(!state.privacy.isForwardingDisabled), viewType: .firstItem, action: {
                 arguments.toggleOption(.screenshot)
             }, theme: rowTheme)))
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_post_to_profile, data: .init(name: "Post to My Profile", color: presentation.colors.text, type: .switchable(state.privacy.pin), viewType: .lastItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_privacy_post_to_profile, data: .init(name: strings().storyPrivacyPostToMyProfile, color: presentation.colors.text, type: .switchable(state.privacy.pin), viewType: .lastItem, action: {
                 arguments.toggleOption(.pin)
             }, theme: rowTheme)))
 
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Keep this story on your profile even after it expires in 24 hours. Privacy settings will apply."), data: .init(color: presentation.colors.listGrayText, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyBasicInfo), data: .init(color: presentation.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
         case .settings:
             break
@@ -485,21 +475,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let current = state.find(state.privacy.selectedPrivacy)
         switch state.privacy.selectedPrivacy {
         case .closeFriends:
-            privacyText = "Close Friends"
+            privacyText = strings().storyPrivacyCloseFriends
         case .contacts:
-            privacyText = "Contacts"
+            privacyText = strings().storyPrivacyContacts
         case .everyone:
-            privacyText = "Everyone"
+            privacyText = strings().storyPrivacyEveryone
         case .nobody:
             if current.additionallyIncludePeers.isEmpty {
-                privacyText = "Nobody"
+                privacyText = ""
             } else {
-                privacyText = current.additionallyIncludePeers.compactMap { state.peers[$0] }.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
+                if current.additionallyIncludePeers.count > 3 {
+                    privacyText = strings().storyPrivacyPeopleListCountable(current.additionallyIncludePeers.count)
+                } else {
+                    privacyText = current.additionallyIncludePeers.compactMap { state.peers[$0] }.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
+                }
             }
         }
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_settings, data: .init(name: "Privacy", color: presentation.colors.text, type: .nextContext(privacyText), viewType: .singleItem, action: arguments.reveal, theme: rowTheme)))
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can set up who will see you repost."), data: .init(color: presentation.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_settings, data: .init(name: strings().storyPrivacyRevealTitle, color: presentation.colors.text, type: .nextContext(privacyText), viewType: .singleItem, action: arguments.reveal, theme: rowTheme)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyRevealInfo), data: .init(color: presentation.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
 
     }
@@ -597,13 +591,13 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         let title: String
         switch privacy.base {
         case .closeFriends:
-            title = "Close Friends"
+            title = strings().storyPrivacySelectTitleCloseFriends
         case .contacts:
-            title = "Excluded Contacts"
+            title = strings().storyPrivacySelectTitleContacts
         case .everyone:
-            title = "Excluded Contacts"
+            title = strings().storyPrivacySelectTitleContacts
         case .nobody:
-            title = "Selected Users"
+            title = strings().storyPrivacySelectTitleNobody
         }
         
         let selectedPeerIds:[EnginePeer.Id]
@@ -801,7 +795,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
             if let index = peers.firstIndex(where: { $0.peer.id == currentPeerId }) {
                 peers.move(at: index, to: 0)
             }
-            let header = ContextMenuItem("POST AS")
+            let header = ContextMenuItem(strings().storyPrivacyContextPostAs)
             header.isEnabled = false
             items.append(header)
             
@@ -853,7 +847,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     }, updateBlockList: {
         let current = stateValue.with { $0.blockedPeers.map { $0.peerId }}
         let behaviour = SelectContactsBehavior(customTheme: { GeneralRowItem.Theme.initialize(presentation) })
-        _ = selectModalPeers(window: context.window, context: context, title: "Hide Your Stories From", behavior: behaviour, selectedPeerIds: Set(current)).start(next: { updatedPeerIds in
+        _ = selectModalPeers(window: context.window, context: context, title: strings().storyPrivacySelectHideFrom, behavior: behaviour, selectedPeerIds: Set(current)).start(next: { updatedPeerIds in
             _ = blockedContext.updatePeerIds(updatedPeerIds).start()
         })
     }, showEmojis: { [weak emoji] control in
@@ -869,9 +863,9 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     let title: String
     switch reason {
     case .share:
-        title = "Share Story"
+        title = strings().storyPrivacyTitleRepost
     case .settings:
-        title = "Story Privacy"
+        title = strings().storyPrivacyTitlePrivacy
     }
     
     let controller = InputDataController(dataSignal: signal, title: title)
@@ -918,11 +912,11 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 target = .myStories
             }
             _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo).start()
-            showModalText(for: context.window, text: "You successfully shared story")
+            showModalText(for: context.window, text: strings().storyPrivacySaveRepost)
             close?()
         case let .settings(story):
             _ = context.engine.messages.editStoryPrivacy(id: story.storyItem.id, privacy: selectedPrivacy).startStandalone()
-            showModalText(for: context.window, text: "Privacy successfully updated")
+            showModalText(for: context.window, text: strings().storyPrivacySavePrivacy)
             close?()
         }
         return .none

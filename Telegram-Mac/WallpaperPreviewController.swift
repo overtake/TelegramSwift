@@ -492,8 +492,7 @@ private final class WallpaperPreviewView: View {
         switch source {
         case let .chat(peer, _):
             let applyForPeer = WallpaperActionButton(frame: .zero)
-            //TODOLANG
-            applyForPeer.update(text: "Apply for Me and \(peer.compactDisplayTitle)", lottie: context.isPremium ? nil : LocalAnimatedSticker.menu_lock)
+            applyForPeer.update(text: strings().channelWallpaperApplyBoth(peer.compactDisplayTitle), lottie: context.isPremium ? nil : LocalAnimatedSticker.menu_lock)
             self.addSubview(applyForPeer)
             self.applyForPeer = applyForPeer
             

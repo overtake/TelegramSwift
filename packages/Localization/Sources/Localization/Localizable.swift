@@ -1743,6 +1743,10 @@ public final class L10n {
   public static var channelUsernameListInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.List.Info.Channel") }
   /// Drag and drop links to change order in which they will be displayed on group info page.
   public static var channelUsernameListInfoGroup: String  { return L10n.tr("Localizable", "Channel.Username.List.Info.Group") }
+  /// Apply for Me and %@
+  public static func channelWallpaperApplyBoth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Wallpaper.ApplyBoth", p1)
+  }
   /// Aggressive Anti-Spam
   public static var channelAdminsAggressiveAntiSpam: String  { return L10n.tr("Localizable", "ChannelAdmins.AggressiveAntiSpam") }
   /// Recent Actions
@@ -1967,8 +1971,26 @@ public final class L10n {
   public static var channelMembersGroupHideMembersInfo: String  { return L10n.tr("Localizable", "ChannelMembers.Group.HideMembers.Info") }
   /// Add Members
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
+  /// Add Reactions
+  public static var channelReactionsAdd: String  { return L10n.tr("Localizable", "ChannelReactions.Add") }
+  /// Enable Reaction
+  public static var channelReactionsEnableReactions: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions") }
+  /// %d Boost Level Required
+  public static func channelReactionsLevelRequired(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelReactions.LevelRequired", p1)
+  }
+  /// Update Reactions
+  public static var channelReactionsOK: String  { return L10n.tr("Localizable", "ChannelReactions.OK") }
   /// Add Reactions...
   public static var channelReactionsPlaceholder: String  { return L10n.tr("Localizable", "ChannelReactions.Placeholder") }
+  /// Reactions successfully updated
+  public static var channelReactionsSuccess: String  { return L10n.tr("Localizable", "ChannelReactions.Success") }
+  /// Reactions
+  public static var channelReactionsTitle: String  { return L10n.tr("Localizable", "ChannelReactions.Title") }
+  /// You can also [create your own]() emoji packs and use them.
+  public static var channelReactionsAddInfo: String  { return L10n.tr("Localizable", "ChannelReactions.Add.Info") }
+  /// You can add emoji from any emoji pack as a reaction.
+  public static var channelReactionsEnableReactionsInfo: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions.Info") }
   /// OVERVIEW
   public static var channelStatsOverview: String  { return L10n.tr("Localizable", "ChannelStats.Overview") }
   /// %d
@@ -13691,6 +13713,120 @@ public final class L10n {
   public static var storyMediaTitleArchive: String  { return L10n.tr("Localizable", "StoryMedia.Title.Archive") }
   /// My Stories
   public static var storyMediaTitleMyStories: String  { return L10n.tr("Localizable", "StoryMedia.Title.MyStories") }
+  /// Allow Screenshots
+  public static var storyPrivacyAllowScreenshot: String  { return L10n.tr("Localizable", "StoryPrivacy.AllowScreenshot") }
+  /// Keep this story on your profile even after it expires in 24 hours. Privacy settings will apply.
+  public static var storyPrivacyBasicInfo: String  { return L10n.tr("Localizable", "StoryPrivacy.BasicInfo") }
+  /// choose
+  public static var storyPrivacyChoose: String  { return L10n.tr("Localizable", "StoryPrivacy.Choose") }
+  /// Close Friends
+  public static var storyPrivacyCloseFriends: String  { return L10n.tr("Localizable", "StoryPrivacy.CloseFriends") }
+  /// Contacts
+  public static var storyPrivacyContacts: String  { return L10n.tr("Localizable", "StoryPrivacy.Contacts") }
+  /// edit list
+  public static var storyPrivacyEditList: String  { return L10n.tr("Localizable", "StoryPrivacy.EditList") }
+  /// Everyone
+  public static var storyPrivacyEveryone: String  { return L10n.tr("Localizable", "StoryPrivacy.Everyone") }
+  /// except %@
+  public static func storyPrivacyExceptPeople(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.ExceptPeople", p1)
+  }
+  /// exclude people
+  public static var storyPrivacyExcludePeople: String  { return L10n.tr("Localizable", "StoryPrivacy.ExcludePeople") }
+  /// [(%@)](select_people) who will never see your stories.
+  public static func storyPrivacyGrayListMain(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayList_Main", p1)
+  }
+  /// Select people
+  public static var storyPrivacyGrayListPart1: String  { return L10n.tr("Localizable", "StoryPrivacy.GrayList_Part1") }
+  /// %d
+  public static func storyPrivacyGrayListPersonCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_countable", p1)
+  }
+  /// %d people
+  public static func storyPrivacyGrayListPersonFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_few", p1)
+  }
+  /// %d people
+  public static func storyPrivacyGrayListPersonMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_many", p1)
+  }
+  /// %d person
+  public static func storyPrivacyGrayListPersonOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_one", p1)
+  }
+  /// %d people
+  public static func storyPrivacyGrayListPersonOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_other", p1)
+  }
+  /// %d people
+  public static func storyPrivacyGrayListPersonTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_two", p1)
+  }
+  /// %d people
+  public static func storyPrivacyGrayListPersonZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.GrayListPerson_zero", p1)
+  }
+  /// %d
+  public static func storyPrivacyPeopleListCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_countable", p1)
+  }
+  /// %d people
+  public static func storyPrivacyPeopleListFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_few", p1)
+  }
+  /// %d people
+  public static func storyPrivacyPeopleListMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_many", p1)
+  }
+  /// %d person
+  public static func storyPrivacyPeopleListOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_one", p1)
+  }
+  /// %d people
+  public static func storyPrivacyPeopleListOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_other", p1)
+  }
+  /// %d people
+  public static func storyPrivacyPeopleListTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_two", p1)
+  }
+  /// %d people
+  public static func storyPrivacyPeopleListZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryPrivacy.PeopleList_zero", p1)
+  }
+  /// personal account
+  public static var storyPrivacyPersonalAccount: String  { return L10n.tr("Localizable", "StoryPrivacy.PersonalAccount") }
+  /// POST STORY AS
+  public static var storyPrivacyPostStoryAs: String  { return L10n.tr("Localizable", "StoryPrivacy.PostStoryAs") }
+  /// Post to My Profile
+  public static var storyPrivacyPostToMyProfile: String  { return L10n.tr("Localizable", "StoryPrivacy.PostToMyProfile") }
+  /// Select Users
+  public static var storyPrivacySelectUsers: String  { return L10n.tr("Localizable", "StoryPrivacy.SelectUsers") }
+  /// WHO CAN VIEW THIS STORY
+  public static var storyPrivacyWhoCanViewStory: String  { return L10n.tr("Localizable", "StoryPrivacy.WhoCanViewStory") }
+  /// SHARE AS
+  public static var storyPrivacyContextPostAs: String  { return L10n.tr("Localizable", "StoryPrivacy.Context.PostAs") }
+  /// Choose who can see your reposted story.
+  public static var storyPrivacyRevealInfo: String  { return L10n.tr("Localizable", "StoryPrivacy.Reveal.Info") }
+  /// Privacy
+  public static var storyPrivacyRevealTitle: String  { return L10n.tr("Localizable", "StoryPrivacy.Reveal.Title") }
+  /// Saved!
+  public static var storyPrivacySavePrivacy: String  { return L10n.tr("Localizable", "StoryPrivacy.Save.Privacy") }
+  /// Success!
+  public static var storyPrivacySaveRepost: String  { return L10n.tr("Localizable", "StoryPrivacy.Save.Repost") }
+  /// Hide Your Stories From
+  public static var storyPrivacySelectHideFrom: String  { return L10n.tr("Localizable", "StoryPrivacy.Select.HideFrom") }
+  /// Close Friends
+  public static var storyPrivacySelectTitleCloseFriends: String  { return L10n.tr("Localizable", "StoryPrivacy.Select.Title.CloseFriends") }
+  /// Excluded Contacts
+  public static var storyPrivacySelectTitleContacts: String  { return L10n.tr("Localizable", "StoryPrivacy.Select.Title.Contacts") }
+  /// Select Users
+  public static var storyPrivacySelectTitleNobody: String  { return L10n.tr("Localizable", "StoryPrivacy.Select.Title.Nobody") }
+  /// Story Privacy
+  public static var storyPrivacyTitlePrivacy: String  { return L10n.tr("Localizable", "StoryPrivacy.Title.Privacy") }
+  /// Share Story
+  public static var storyPrivacyTitleRepost: String  { return L10n.tr("Localizable", "StoryPrivacy.Title.Repost") }
   /// Block User
   public static var storyViewContextMenuBlock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Block") }
   /// Delete Contact
