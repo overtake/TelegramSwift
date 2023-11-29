@@ -16,6 +16,111 @@ import TGUIKit
 import InAppSettings
 
 
+func generateSingleColorImage(size: CGSize, color: NSColor) -> CGImage? {
+    return generateImage(size, contextGenerator: { size, context in
+        context.setFillColor(color.cgColor)
+        context.fill(CGRect(origin: CGPoint(), size: size))
+    })
+}
+
+
+func generateSettingsMenuPeerColorsLabelIcon(peer: Peer?, context: AccountContext, isDark: Bool = theme.colors.isDark) -> CGImage {
+    var colors:[PeerNameColors.Colors] = []
+    if let nameColor = peer?.nameColor {
+        colors.append(context.peerNameColors.get(nameColor, dark: isDark))
+    }
+    if let nameColor = peer?.profileColor {
+        colors.append(context.peerNameColors.getProfile(nameColor, dark: isDark))
+    }
+    return  generateSettingsMenuPeerColorsLabelIcon(colors: colors)
+}
+
+func generateSettingsMenuPeerColorsLabelIcon(colors: [PeerNameColors.Colors]) -> CGImage {
+    let iconWidth: CGFloat = 24.0
+    let iconSpacing: CGFloat = 18.0
+    let borderWidth: CGFloat = 2.0
+    
+    if colors.isEmpty {
+        return generateSingleColorImage(size: CGSize(width: iconWidth, height: iconWidth), color: .clear)!
+    }
+
+    return generateImage(CGSize(width: CGFloat(max(0, colors.count - 1)) * iconSpacing + CGFloat(colors.count == 0 ? 0 : 1) * iconWidth, height: 24.0), rotatedContext: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+        
+        for i in 0 ..< colors.count {
+            let iconFrame = CGRect(origin: CGPoint(x: CGFloat(i) * iconSpacing, y: 0.0), size: CGSize(width: iconWidth, height: iconWidth))
+            context.setBlendMode(.copy)
+            context.setFillColor(NSColor.clear.cgColor)
+            context.fillEllipse(in: iconFrame.insetBy(dx: -borderWidth, dy: -borderWidth))
+            context.setBlendMode(.normal)
+            
+            if let image = generatePeerNameColorImage(nameColor: colors[i], isDark: false, bounds: iconFrame.size, size: iconFrame.size) {
+                context.saveGState()
+                context.translateBy(x: iconFrame.midX, y: iconFrame.midY)
+                context.scaleBy(x: 1.0, y: -1.0)
+                context.translateBy(x: -iconFrame.midX, y: -iconFrame.midY)
+                context.draw(image, in: iconFrame)
+                context.restoreGState()
+            }
+        }
+    })!
+}
+
+
+func generatePeerNameColorImage(nameColor: PeerNameColors.Colors, isDark: Bool, bounds: CGSize = CGSize(width: 40.0, height: 40.0), size: CGSize = CGSize(width: 40.0, height: 40.0)) -> CGImage? {
+    return generateImage(bounds, rotatedContext: { contextSize, context in
+        let bounds = CGRect(origin: CGPoint(), size: contextSize)
+        context.clear(bounds)
+        
+        let circleBounds = CGRect(origin: CGPoint(x: floorToScreenPixels((bounds.width - size.width) / 2.0), y: floorToScreenPixels((bounds.height - size.height) / 2.0)), size: size)
+        context.addEllipse(in: circleBounds)
+        context.clip()
+        
+        if let secondColor = nameColor.secondary {
+            var firstColor = nameColor.main
+            var secondColor = secondColor
+            if isDark, nameColor.tertiary == nil {
+                firstColor = secondColor
+                secondColor = nameColor.main
+            }
+            
+            context.setFillColor(secondColor.cgColor)
+            context.fill(circleBounds)
+            
+            if let thirdColor = nameColor.tertiary {
+                context.move(to: CGPoint(x: contextSize.width, y: 0.0))
+                context.addLine(to: CGPoint(x: contextSize.width, y: contextSize.height))
+                context.addLine(to: CGPoint(x: 0.0, y: contextSize.height))
+                context.closePath()
+                context.setFillColor(firstColor.cgColor)
+                context.fillPath()
+                
+                context.setFillColor(thirdColor.cgColor)
+                context.translateBy(x: contextSize.width / 2.0, y: contextSize.height / 2.0)
+                context.rotate(by: .pi / 4.0)
+                
+                let rectSide = size.width / 40.0 * 18.0
+                let rectCornerRadius = round(size.width / 40.0 * 4.0)
+                
+                let path = CGPath(roundedRect: CGRect(origin: CGPoint(x: -rectSide / 2.0, y: -rectSide / 2.0), size: CGSize(width: rectSide, height: rectSide)), cornerWidth: rectCornerRadius, cornerHeight: rectCornerRadius, transform: nil)
+                context.addPath(path)
+                context.fillPath()
+            } else {
+                context.move(to: .zero)
+                context.addLine(to: CGPoint(x: contextSize.width, y: 0.0))
+                context.addLine(to: CGPoint(x: 0.0, y: contextSize.height))
+                context.closePath()
+                context.setFillColor(firstColor.cgColor)
+                context.fillPath()
+            }
+        } else {
+            context.setFillColor(nameColor.main.cgColor)
+            context.fill(circleBounds)
+        }
+    })
+}
+
+
 func generatePeerNameColorImage(colors: PeerNameColors, peer: Peer?) -> CGImage {
     let attr = NSMutableAttributedString()
     let color = peer?.nameColor ?? .blue
@@ -379,8 +484,11 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
         index += 1
     }
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: appearance.presentation.colors.text, type: .imageContext(generatePeerNameColorImage(colors: arguments.context.peerNameColors, peer: state.myPeer), ""), viewType: .lastItem, action: arguments.userNameColor)))
+    let icon = generateSettingsMenuPeerColorsLabelIcon(peer: state.myPeer, context: arguments.context, isDark: appearance.presentation.colors.isDark)
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: appearance.presentation.colors.text, type: .imageContext(icon, ""), viewType: .lastItem, action: arguments.userNameColor)))
     index += 1
+
     
     
     entries.append(.sectionId(sectionId, type: .normal))
