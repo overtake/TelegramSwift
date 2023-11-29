@@ -341,7 +341,7 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         messagesPromise.set(.single(nil))
         
         forwardsContext = StoryStatsPublicForwardsContext(account: context.account, peerId: peer.id, storyId: storyItem.id)
-        if let forwardsContext {
+        if let forwardsContext = forwardsContext {
             forwardsPromise.set(
                 .single(nil)
                 |> then(
