@@ -358,7 +358,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func requestUpdateCenterBar() {
-        if scrollState == .pageIn {
+        if scrollState == .pageIn || nameColor == nil {
             setCenterTitle(defaultBarTitle)
         } else {
             setCenterTitle("")

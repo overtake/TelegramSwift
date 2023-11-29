@@ -526,6 +526,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
     }
     
+    
     private let counterDisposable = MetaDisposable()
 
 
