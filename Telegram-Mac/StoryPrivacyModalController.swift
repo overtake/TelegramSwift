@@ -417,7 +417,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             break
         }
         
-        if state.sendAsPeerId == arguments.context.peerId {
+        if state.sendAsPeerId == arguments.context.peerId || state.sendAsPeerId == nil {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WHO CAN VIEW THIS STORY"), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
