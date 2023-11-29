@@ -358,7 +358,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func requestUpdateCenterBar() {
-        setCenterTitle(defaultBarTitle)
+        if scrollState == .pageIn {
+            setCenterTitle(defaultBarTitle)
+        } else {
+            setCenterTitle("")
+        }
         setCenterStatus(defaultBarStatus)
         _centerBar.style = barPresentation
     }
@@ -524,7 +528,16 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     private func updateNavigationBar() {
-        updateScrollState(self.genericView.tableView.documentOffset.y <= 0 && nameColor != nil ? .pageUp : .pageIn, animated: true)
+        
+        let maxY = genericView.tableView.item(at: 1).view?.frame.maxY ?? 0
+        
+        var scrollState: ScrollState
+        if self.genericView.tableView.documentOffset.y <= maxY && nameColor != nil {
+            scrollState = .pageUp
+        } else {
+            scrollState = .pageIn
+        }
+        updateScrollState(scrollState, animated: true)
     }
     
     private var _leftBar: BarView!
