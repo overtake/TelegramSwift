@@ -42,6 +42,7 @@ final class StoryChannelInputView : Control, StoryInput {
 
     
     private let share = ImageButton()
+    private let repost = ImageButton()
     private let views = Control()
     private let viewsText = TextView()
     
@@ -59,6 +60,7 @@ final class StoryChannelInputView : Control, StoryInput {
         super.init(frame: frameRect)
         self.layer?.cornerRadius = 10
         addSubview(likeAction)
+        addSubview(repost)
         addSubview(share)
         addSubview(views)
         views.addSubview(viewsImage)
@@ -72,6 +74,9 @@ final class StoryChannelInputView : Control, StoryInput {
         viewsText.userInteractionEnabled = false
         viewsText.isSelectable = false
         
+        repost.scaleOnClick = true
+        repost.autohighlight = false
+
         
         share.scaleOnClick = true
         share.autohighlight = false
@@ -81,6 +86,15 @@ final class StoryChannelInputView : Control, StoryInput {
         share.set(image: share_image, for: .Normal)
         share.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
                 
+        repost.set(image: repost_image, for: .Normal)
+        repost.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+
+        repost.set(handler: { [weak self] _ in
+            if let story = self?.story {
+                self?.arguments?.repost(story)
+            }
+        }, for: .Click)
+        
         share.set(handler: { [weak self] _ in
             if let story = self?.story {
                 self?.arguments?.share(story)
@@ -135,7 +149,6 @@ final class StoryChannelInputView : Control, StoryInput {
             }
             let seenCount = storyViews?.seenCount ?? 0
             
-            let string = strings().storyMyInputViewsCountable(seenCount)
             
             let text: NSAttributedString = .initialize(string: seenCount.prettyNumber, color: darkAppearance.colors.text, font: .normal(.header))
             let layout = TextViewLayout(text)
@@ -266,10 +279,12 @@ final class StoryChannelInputView : Control, StoryInput {
             transition.updateFrame(view: likeAction, frame: likeAction.centerFrameY(x: size.width - likeAction.frame.width))
         }
         if let shareCount = shareCount {
-            transition.updateFrame(view: share, frame: share.centerFrameY(x: likeAction.frame.minX - share.frame.width - 10 - shareCount.frame.width - 10))
-            transition.updateFrame(view: shareCount, frame: shareCount.centerFrameY(x: share.frame.maxX + 10))
+            transition.updateFrame(view: repost, frame: repost.centerFrameY(x: likeAction.frame.minX - repost.frame.width - shareCount.frame.width - 10))
+            transition.updateFrame(view: share, frame: share.centerFrameY(x: repost.frame.minX - share.frame.width - 10))
+            transition.updateFrame(view: shareCount, frame: shareCount.centerFrameY(x: repost.frame.maxX + 10))
         } else {
-            transition.updateFrame(view: share, frame: share.centerFrameY(x: likeAction.frame.minX - share.frame.width - 10))
+            transition.updateFrame(view: repost, frame: repost.centerFrameY(x: likeAction.frame.minX - repost.frame.width - 10))
+            transition.updateFrame(view: share, frame: share.centerFrameY(x: repost.frame.minX - share.frame.width - 10))
         }
         
         

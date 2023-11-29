@@ -1162,7 +1162,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             let position = table.scrollPosition().current
             let y = position.rect.minY - table.frame.height
             let clamp = min(max(0, y), item.height)
-            let fraction = min(1, (clamp / item.height) + 0.4)
+            let fraction = min(1, (clamp / item.height) + 0.3)
             self.emojiSpawn?.fraction = fraction
         }
     }
