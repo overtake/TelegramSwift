@@ -255,7 +255,6 @@ final class PeerInfoView : View {
         addSubview(tableView)
         addSubview(navBgView)
         addSubview(navigationBarView)
-        navigationBarView.background = .clear
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -281,17 +280,24 @@ final class PeerInfoView : View {
     
     override func layout() {
         super.layout()
-        navigationBarView.frame = NSMakeRect(0, -50, frame.width, 50)
-        navBgView.frame = navigationBarView.frame
-        tableView.frame = bounds
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, -50, frame.width, 50))
+        transition.updateFrame(view: navBgView, frame: navigationBarView.frame)
+        transition.updateFrame(view: tableView, frame: bounds)
     }
     
     func set(leftBar: BarView, centerView: BarView, rightView: BarView, controller: ViewController, animated: Bool) {
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
         
         navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
         navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
         navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
 
+        
     }
     
     fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {

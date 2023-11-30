@@ -573,6 +573,7 @@ final class ChatTextInputState: Codable, Equatable {
                                 language = lang
                                 offsetRanges.append(NSMakeRange(newLineRange.location, lang.length))
                                 text = String(text.suffix(text.length - newLineRange.location))
+                                rawOffset -= newLineRange.location
                             }
                         }
                         

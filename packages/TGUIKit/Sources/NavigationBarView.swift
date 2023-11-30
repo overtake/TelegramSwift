@@ -455,7 +455,6 @@ public class NavigationBarView: View {
             fromView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak fromView] completed in
                 if completed {
                     fromView?.removeFromSuperview()
-                    fromView?.layer?.removeAllAnimations()
                 }
             })
         }
