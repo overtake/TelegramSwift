@@ -209,7 +209,7 @@ class ChatVoiceRowItem: ChatMediaItem {
             } else if let attributes = message.audioTranscription {
                 parameters.transcribeData = .init(state: .state(.collapsed(true)), text: nil, isPending: false, fontColor: transcribtedColor, backgroundColor: bgColor)
             } else {
-                parameters.transcribeData = .init(state: context.audioTranscriptionTrial.remainingCount == 0 ? .locked : .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+                parameters.transcribeData = .init(state: context.audioTranscriptionTrial.cooldownUntilTime != nil ? .locked : .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
             }
             parameters.transcribe = { [weak self] in
                 self?.chatInteraction.transcribeAudio(message)
