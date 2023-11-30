@@ -389,7 +389,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 return nil
             }
         } else {
-            return peer.profileColor
+            return nil
         }
     }
     
@@ -528,6 +528,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     private func updateNavigationBar() {
+        
+        guard nameColor != nil else {
+            return
+        }
         
         let maxY = genericView.tableView.item(at: 1).view?.frame.maxY ?? 0
         

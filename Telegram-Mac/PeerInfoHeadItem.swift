@@ -1163,7 +1163,19 @@ private final class PeerInfoHeadView : GeneralRowView {
             let y = position.rect.minY - table.frame.height
             let clamp = min(max(0, y), item.height)
             let fraction = min(1, (clamp / item.height) + 0.3)
+            let photoFraction = min(1, (clamp / item.height))
+
             self.emojiSpawn?.fraction = fraction
+            
+            var tr = CATransform3DIdentity
+            tr = CATransform3DTranslate(tr, photoContainer.frame.width / 2, photoContainer.frame.height / 2, 0)
+            tr = CATransform3DScale(tr,  1 - photoFraction,  1 - photoFraction, 1)
+            tr = CATransform3DTranslate(tr, -photoContainer.frame.width / 2, -photoContainer.frame.height / 2, 0)
+            if self.emojiSpawn != nil {
+                photoContainer.layer?.transform = tr
+            } else {
+                photoContainer.layer?.transform = CATransform3DIdentity
+            }
         }
     }
     
