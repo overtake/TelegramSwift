@@ -249,6 +249,7 @@ final class PeerInfoView : View {
     let tableView: TableView
     let navigationBarView = NavigationBarView(frame: .zero)
     private let navBgView = View()
+    private let borderView = View()
     required init(frame frameRect: NSRect) {
         tableView = .init(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
@@ -260,8 +261,8 @@ final class PeerInfoView : View {
         super.updateLocalizationAndTheme(theme: theme)
         navigationBarView.backgroundColor = .clear
         navBgView.backgroundColor = theme.colors.background
-        navBgView.borderColor = theme.colors.border
-        navBgView.border = [.Bottom]
+        borderView.backgroundColor = theme.colors.border
+        navBgView.addSubview(borderView)
     }
     
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -287,17 +288,22 @@ final class PeerInfoView : View {
         transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, -50, frame.width, 50))
         transition.updateFrame(view: navBgView, frame: navigationBarView.frame)
         transition.updateFrame(view: tableView, frame: bounds)
+        transition.updateFrame(view: borderView, frame: NSMakeRect(0, navBgView.frame.height - .borderSize, navBgView.frame.width, .borderSize))
     }
     
     func set(leftBar: BarView, centerView: BarView, rightView: BarView, controller: ViewController, animated: Bool) {
         
-        self.updateLayout(size: self.frame.size, transition: .immediate)
-        
+        let transition: ContainedViewLayoutTransition = .immediate
+        CATransaction.begin()
+        transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, 0, frame.width, 50))
         navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
         navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
         navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
+        CATransaction.commit()
 
-        
+        CATransaction.begin()
+        self.updateLayout(size: self.frame.size, transition: transition)
+        CATransaction.commit()
     }
     
     fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {
@@ -413,11 +419,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
-        if leftView == leftBarView {
-            self.genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar, controller: self, animated: animation == .crossfade)
-        } else {
-            self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
-        }
+        self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
     }
     
     static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
