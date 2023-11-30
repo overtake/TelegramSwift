@@ -51,6 +51,7 @@
 		271892102B0DDAF00008B238 /* ShareStoryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718920F2B0DDAEF0008B238 /* ShareStoryController.swift */; };
 		271892122B0E44190008B238 /* StoryPrivacyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892112B0E44190008B238 /* StoryPrivacyModalController.swift */; };
 		271892142B0E57390008B238 /* StoryPosterState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892132B0E57390008B238 /* StoryPosterState.swift */; };
+		271892162B18D9CD0008B238 /* transcription_locked.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271892152B18D9CD0008B238 /* transcription_locked.tgs */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		271999D92A372549009A3CC7 /* ChatStoryRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */; };
@@ -1558,6 +1559,7 @@
 		2718920F2B0DDAEF0008B238 /* ShareStoryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareStoryController.swift; sourceTree = "<group>"; };
 		271892112B0E44190008B238 /* StoryPrivacyModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPrivacyModalController.swift; sourceTree = "<group>"; };
 		271892132B0E57390008B238 /* StoryPosterState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPosterState.swift; sourceTree = "<group>"; };
+		271892152B18D9CD0008B238 /* transcription_locked.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = transcription_locked.tgs; sourceTree = "<group>"; };
 		2718FF8127BFB28900196BC4 /* login_airplane.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_airplane.tgs; sourceTree = "<group>"; };
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
@@ -5891,6 +5893,7 @@
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
+				271892152B18D9CD0008B238 /* transcription_locked.tgs */,
 				274952812AA1E79E00499498 /* hand_animation.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */,
@@ -6460,6 +6463,7 @@
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
 				27672EB426F8D63300297DB4 /* 6.m4a in Resources */,
 				27CE1566297966D8001F8CE8 /* emoji_category_arrow_to_search.tgs in Resources */,
+				271892162B18D9CD0008B238 /* transcription_locked.tgs in Resources */,
 				2751E7A527F72078003E3937 /* menu_note_slash.tgs in Resources */,
 				27672EB526F8D63500297DB4 /* 7.m4a in Resources */,
 				2751E79727F34374003E3937 /* menu_clear_messages.tgs in Resources */,
@@ -7952,7 +7956,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.2.4;
+				MARKETING_VERSION = 10.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -8160,7 +8164,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.2.4;
+				MARKETING_VERSION = 10.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";

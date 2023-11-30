@@ -443,8 +443,8 @@ public class NavigationBarView: View {
         switch animation {
         case .none:
             toView.layer?.opacity = 1.0
-            self.addSubview(toView, positioned: .below, relativeTo: fromView)
             fromView.removeFromSuperview()
+            self.addSubview(toView, positioned: .below, relativeTo: fromView)
             toView.layer?.removeAllAnimations()
             fromView.layer?.removeAllAnimations()
         case .crossfade:
@@ -453,8 +453,10 @@ public class NavigationBarView: View {
             toView.layer?.removeAllAnimations()
             toView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             fromView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak fromView] completed in
-                fromView?.removeFromSuperview()
-                fromView?.layer?.removeAllAnimations()
+                if completed {
+                    fromView?.removeFromSuperview()
+                    fromView?.layer?.removeAllAnimations()
+                }
             })
         }
     }

@@ -39,6 +39,7 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     
     enum TranscribeState {
         case possible
+        case locked
         case state(TranscribeAudioState)
     }
     
@@ -61,6 +62,8 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
         func makeSize(_ width: CGFloat) -> NSSize? {
             switch state {
             case .possible:
+                self.size = nil
+            case .locked:
                 self.size = nil
             case  let .state(state):
                 switch state {
@@ -203,8 +206,10 @@ class ChatVoiceRowItem: ChatMediaItem {
                 }
                 
                 parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+            } else if let attributes = message.audioTranscription {
+                parameters.transcribeData = .init(state: .state(.collapsed(true)), text: nil, isPending: false, fontColor: transcribtedColor, backgroundColor: bgColor)
             } else {
-                parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+                parameters.transcribeData = .init(state: context.audioTranscriptionTrial.remainingCount == 0 ? .locked : .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
             }
             parameters.transcribe = { [weak self] in
                 self?.chatInteraction.transcribeAudio(message)

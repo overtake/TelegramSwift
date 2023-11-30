@@ -64,6 +64,7 @@ open class TextButtonBarView: BarView {
     }
     
     public func set(color:NSColor, for state:ControlState) -> Void {
+        _isFitted = false
         button.set(color: color, for: state)
     }
     
@@ -91,7 +92,7 @@ open class TextButtonBarView: BarView {
     
     override func fit(to maxWidth: CGFloat) -> CGFloat {
         if button.isEmpty && canBeEmpty {
-            _isFitted = true
+            //_isFitted = true
             return self.minWidth
         } else {
             var width: CGFloat = 20

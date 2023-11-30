@@ -58,11 +58,13 @@ final class CustomizeAccountController : SectionViewController {
     private let profile: ViewController
     private let context: AccountContext
     private let peerId: PeerId
+    private let profileState: SelectColorCallback = .init()
+    private let nameState: SelectColorCallback = .init()
     init(_ context: AccountContext, peer: Peer) {
         self.context = context
         self.peerId = peer.id
-        self.name = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .name)
-        self.profile = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .profile)
+        self.name = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .name, callback: nameState)
+        self.profile = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .profile, callback: profileState)
 
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title: { "" }, controller: name))
@@ -98,10 +100,32 @@ final class CustomizeAccountController : SectionViewController {
         self.selectionUpdateHandler = { [weak self] index in
             self?.centerView.segment.set(selected: index, animated: true)
         }
+        let context = self.context
         
         self.rightBarView.set(handler:{ [weak self] _ in
-            let controller = self?.selectedSection.controller as? InputDataController
-            controller?.validateInputValues()
+            
+            let nameState = self?.nameState.getState?()
+            let profileState = self?.profileState.getState?()
+            
+            if context.isPremium {
+                let nameColor = nameState?.0 ?? .blue
+                let backgroundEmojiId = nameState?.1
+                let profileColor = profileState?.0
+                let profileBackgroundEmojiId = profileState?.1
+
+                
+                _ = context.engine.accountData.updateNameColorAndEmoji(nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId).start()
+                showModalText(for: context.window, text: strings().selectColorSuccessUser)
+                self?.navigationController?.back()
+
+            } else {
+                showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
+            }
+
+//            let controller = self?.selectedSection.controller as? InputDataController
+//            controller?.validateInputValues()
         }, for: .Click)
     }
     
