@@ -306,7 +306,9 @@ private final class TextAndLabelModalView : View {
         
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.title), textColor: nightAccentPalette.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, contents)
-        }))
+        })).mutableCopy() as! NSMutableAttributedString
+        
+        attr.detectBoldColorInString(with: .medium(.title))
         
         let textLayout = TextViewLayout(attr)
         textLayout.interactions = .init(processURL: { contents in

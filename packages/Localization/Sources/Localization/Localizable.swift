@@ -5787,6 +5787,66 @@ public final class L10n {
   public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
   /// This link will only work for members of this chat
   public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
+  /// %d
+  public static func conversationFreeTranscriptionCooldownTooltipCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_countable", p1)
+  }
+  /// You have used all your **%d** free transcriptions this week.
+  public static func conversationFreeTranscriptionCooldownTooltipFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_few", p1)
+  }
+  /// You have used all your **%d** free transcriptions this week.
+  public static func conversationFreeTranscriptionCooldownTooltipMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_many", p1)
+  }
+  /// You have used all your **%d** free transcription this week.
+  public static func conversationFreeTranscriptionCooldownTooltipOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_one", p1)
+  }
+  /// You have used all your **%d** free transcriptions this week.
+  public static func conversationFreeTranscriptionCooldownTooltipOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_other", p1)
+  }
+  /// You have used all your **%d** free transcriptions this week.
+  public static func conversationFreeTranscriptionCooldownTooltipTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_two", p1)
+  }
+  /// You have used all your **%d** free transcriptions this week.
+  public static func conversationFreeTranscriptionCooldownTooltipZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_zero", p1)
+  }
+  /// %d
+  public static func conversationFreeTranscriptionLimitTooltipCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_countable", p1)
+  }
+  /// You have **%d** free voice transcriptions left this week.
+  public static func conversationFreeTranscriptionLimitTooltipFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_few", p1)
+  }
+  /// You have **%d** free voice transcriptions left this week.
+  public static func conversationFreeTranscriptionLimitTooltipMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_many", p1)
+  }
+  /// You have **%d** free voice transcription left this week.
+  public static func conversationFreeTranscriptionLimitTooltipOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_one", p1)
+  }
+  /// You have **%d** free voice transcriptions left this week.
+  public static func conversationFreeTranscriptionLimitTooltipOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_other", p1)
+  }
+  /// You have **%d** free voice transcriptions left this week.
+  public static func conversationFreeTranscriptionLimitTooltipTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_two", p1)
+  }
+  /// You have **%d** free voice transcriptions left this week.
+  public static func conversationFreeTranscriptionLimitTooltipZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionLimitTooltip_zero", p1)
+  }
+  /// Wait until **%@** to use it again or subscribe to [Telegram Premium]() now.
+  public static func conversationFreeTranscriptionWaitOrSubscribe(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Conversation.FreeTranscriptionWaitOrSubscribe", p1)
+  }
   /// Giveaway
   public static var conversationPinnedGiveaway: String  { return L10n.tr("Localizable", "Conversation.PinnedGiveaway") }
   /// %@ will know your phone number. This can be useful for integration with other services.

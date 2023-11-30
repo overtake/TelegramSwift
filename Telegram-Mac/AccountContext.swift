@@ -398,6 +398,9 @@ final class AccountContext {
         return giftStickersValues.get()
     }
 
+    public private(set) var audioTranscriptionTrial: AudioTranscription.TrialState = .defaultValue
+
+
     
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
@@ -600,6 +603,23 @@ final class AccountContext {
             self?.replyColors = replies
             self?.profileColors = profile
         }))
+        
+        actionsDisposable.add((self.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: account.peerId))
+           |> mapToSignal { peer -> Signal<AudioTranscription.TrialState, NoError> in
+               let isPremium = peer?.isPremium ?? false
+               if isPremium {
+                   return .single(AudioTranscription.TrialState(cooldownUntilTime: nil, remainingCount: 1))
+               } else {
+                   return self.engine.data.subscribe(TelegramEngine.EngineData.Item.Configuration.AudioTranscriptionTrial())
+               }
+           }
+           |> deliverOnMainQueue).startStrict(next: { [weak self] audioTranscriptionTrial in
+               guard let `self` = self else {
+                   return
+               }
+               self.audioTranscriptionTrial = audioTranscriptionTrial
+           }))
+
         
         let autoplayMedia = _autoplayMedia
         prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in
