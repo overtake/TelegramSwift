@@ -4605,6 +4605,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self else {
                 return
             }
+            
+         
                         
             let value: [MessageId : TranscribeAudioState] = strongSelf.uiState.with { $0.transribe }
            
@@ -4622,6 +4624,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return state
                 }
             } else {
+                
+                let currentTime = Int32(Date().timeIntervalSince1970)
+                if !context.isPremium, message.audioTranscription == nil {
+                    if let cooldownUntilTime = context.audioTranscriptionTrial.cooldownUntilTime, cooldownUntilTime > currentTime {
+                        let time = stringForMediumDate(timestamp: Int32(cooldownUntilTime))
+                        let trialCount = context.appConfiguration.getGeneralValue("transcribe_audio_trial_weekly_number", orElse: 0)
+                        let usedString = strings().conversationFreeTranscriptionCooldownTooltipCountable(Int(trialCount))
+                        let waitString = strings().conversationFreeTranscriptionWaitOrSubscribe(time)
+                        let fullString = "\(usedString) \(waitString)"
+                        showModalText(for: context.window, text: fullString, callback: { _ in
+                            showModal(with: PremiumBoardingController(context: context, source: .translations), for: context.window)
+                        })
+                        return
+                    } else {
+                        let remainingCount = context.audioTranscriptionTrial.remainingCount
+                        let text = strings().conversationFreeTranscriptionLimitTooltipCountable(Int(remainingCount))
+                        showModalText(for: context.window, text: text)
+                    }
+                }
+                
                 strongSelf.updateState { state in
                     var state = state
                     state.transribe[messageId] = .loading

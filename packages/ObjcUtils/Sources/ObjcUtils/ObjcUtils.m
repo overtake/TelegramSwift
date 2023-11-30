@@ -1048,39 +1048,39 @@ double mappingRange(double x, double in_min, double in_max, double out_min, doub
 @end
 
 @implementation NSMutableAttributedString(Extension)
-
--(void)detectBoldColorInStringWithFont:(NSFont *)font  {
-    [self detectBoldColorInStringWithFont:font string:[self.string copy]];
-}
-
--(void)detectBoldColorInStringWithFont:(NSFont *)font string:(NSString *)string {
-    NSRange range;
-    
-    NSUInteger offset = 0;
-    
-    while ((range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)]).location != NSNotFound) {
-        
-        
-        
-        offset = range.location + range.length;
-        
-        
-        range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)];
-        
-        if(range.location != NSNotFound) {
-            [self addAttribute:NSFontAttributeName value:font range:NSMakeRange(offset, range.location - offset)];
-            
-            offset+= (range.location - offset) + range.length;
-            
-        }
-        
-        
-    }
-    
-    while ((range = [self.string rangeOfString:@"**"]).location != NSNotFound) {
-        [self replaceCharactersInRange:range withString:@""];
-    }
-}
+//
+//-(void)detectBoldColorInStringWithFont:(NSFont *)font  {
+//    [self detectBoldColorInStringWithFont:font string:[self.string copy]];
+//}
+//
+//-(void)detectBoldColorInStringWithFont:(NSFont *)font string:(NSString *)string {
+//    NSRange range;
+//    
+//    NSUInteger offset = 0;
+//    
+//    while ((range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)]).location != NSNotFound) {
+//        
+//        
+//        
+//        offset = range.location + range.length;
+//        
+//        
+//        range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)];
+//        
+//        if(range.location != NSNotFound) {
+//            [self addAttribute:NSFontAttributeName value:font range:NSMakeRange(offset, range.location - offset)];
+//            
+//            offset+= (range.location - offset) + range.length;
+//            
+//        }
+//        
+//        
+//    }
+//    
+//    while ((range = [self.string rangeOfString:@"**"]).location != NSNotFound) {
+//        [self replaceCharactersInRange:range withString:@""];
+//    }
+//}
 
 
 @end

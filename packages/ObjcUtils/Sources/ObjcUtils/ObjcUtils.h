@@ -52,9 +52,9 @@
 
 
 
-@interface NSMutableAttributedString(Extension)
--(void)detectBoldColorInStringWithFont:(NSFont *)font;
-@end
+//@interface NSMutableAttributedString(Extension)
+//-(void)detectBoldColorInStringWithFont:(NSFont *)font;
+//@end
 
 NSArray<NSString *> *  __nonnull cut_long_message(NSString *message, int max_length);
 int64_t SystemIdleTime(void);
