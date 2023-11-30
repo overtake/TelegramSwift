@@ -15,7 +15,7 @@ import SwiftSignalKit
 
 class SidebarCapView : View {
     private let text:NSTextField = NSTextField()
-    fileprivate let close:TitleButton = TitleButton()
+    fileprivate let close:TextButton = TextButton()
     fileprivate var restrictedByPeer: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

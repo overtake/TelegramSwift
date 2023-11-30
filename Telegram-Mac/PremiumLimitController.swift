@@ -531,7 +531,7 @@ final class PremiumLimitView: View {
     private let header = View()
     private let dismiss = ImageButton()
     private let accept = AcceptView(frame: .zero)
-    private let acceptOK = TitleButton(frame: .zero)
+    private let acceptOK = TextButton(frame: .zero)
     private let title = TextView()
     private let desc = TextView()
     private let top = TypeView(frame: .zero)

@@ -18,8 +18,8 @@ final class DateSelectorModalView : View {
     private let atView = TextView()
     fileprivate let timePicker: TimePicker
     private let containerView = View()
-    fileprivate let sendOn = TitleButton()
-    fileprivate let sendWhenOnline = TitleButton()
+    fileprivate let sendOn = TextButton()
+    fileprivate let sendWhenOnline = TextButton()
     required init(frame frameRect: NSRect) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: DateSelectorUtil.formatDay(Date()), value: Date()))

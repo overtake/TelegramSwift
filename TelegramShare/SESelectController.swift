@@ -101,8 +101,8 @@ class SelectAccountView: Control {
 class ShareModalView : View {
     let searchView:SearchView = SearchView(frame: NSZeroRect)
     let tableView:TableView = TableView()
-    let acceptView:TitleButton = TitleButton()
-    let cancelView:TitleButton = TitleButton()
+    let acceptView:TextButton = TextButton()
+    let cancelView:TextButton = TextButton()
     private var photoView: AvatarControl?
     private var control: Control = Control()
     let borderView:View = View()

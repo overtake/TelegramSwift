@@ -238,7 +238,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<Entry>], right: 
 final class StoryMediaView : View {
     
     private class Panel : View {
-        private let button = TitleButton()
+        private let button = TextButton()
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(button)
@@ -348,7 +348,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
 
     
     private var editButton:ImageButton? = nil
-    private var doneButton:TitleButton? = nil
+    private var doneButton:TextButton? = nil
 
     override func requestUpdateRightBar() {
         editButton?.style = navigationButtonStyle
@@ -371,7 +371,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         
         self.editButton = editButton
 //
-        let doneButton = TitleButton()
+        let doneButton = TextButton()
       //  doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
         doneButton.set(text: strings().navigationDone, for: .Normal)

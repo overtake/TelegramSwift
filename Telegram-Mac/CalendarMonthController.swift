@@ -133,7 +133,7 @@ class CalendarMonthView : View {
         self.month = month
 
         for i in 0 ..< 7 * 6 {
-            let day = TitleButton()
+            let day = TextButton()
             day.set(font: .normal(.text), for: .Normal)
             day.set(background: theme.colors.background, for: .Normal)
             day.scaleOnClick = true
@@ -264,7 +264,7 @@ class CalendarMonthView : View {
         }
 
         for i in 0 ..< dayViews.subviews.count {
-            if let view = dayViews.subviews[i] as? TitleButton {
+            if let view = dayViews.subviews[i] as? TextButton {
                 view.frame = NSMakeRect(inset.x, inset.y, oneSize.width, oneSize.height)
                 view.layer?.cornerRadius = view.frame.height / 2
                 if let currentDay = view.contextObject as? Int {

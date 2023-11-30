@@ -14,8 +14,8 @@ import TelegramCore
 import SwiftSignalKit
 
 class ChannelDiscussionInputView: View {
-    private let leftButton: TitleButton = TitleButton()
-    private let rightButton: TitleButton = TitleButton()
+    private let leftButton: TextButton = TextButton()
+    private let rightButton: TextButton = TextButton()
     private var badge:BadgeNode?
     private var badgeView:View = View()
     private let disposable = MetaDisposable()

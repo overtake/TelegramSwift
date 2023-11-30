@@ -491,7 +491,7 @@ private final class ChatGiveawayRowView: ChatRowView {
     
     private let badgeView = View()
     
-    private let action = TitleButton()
+    private let action = TextButton()
     private let channels = View()
     
     required init(frame frameRect: NSRect) {

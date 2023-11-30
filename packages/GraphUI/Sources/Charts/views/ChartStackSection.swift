@@ -23,7 +23,7 @@ public class ChartStackSection: View, ChartThemeContainer {
     
     var headerLabel: NSTextField!
     var titleLabel: NSTextField!
-    var backButton: TitleButton!
+    var backButton: TextButton!
     
     var controller: BaseChartController!
     
@@ -34,7 +34,7 @@ public class ChartStackSection: View, ChartThemeContainer {
         visibilityView = ChartVisibilityView()
         headerLabel = NSTextField()
         titleLabel = NSTextField()
-        backButton = TitleButton()
+        backButton = TextButton()
         
         super.init(frame: CGRect())
         

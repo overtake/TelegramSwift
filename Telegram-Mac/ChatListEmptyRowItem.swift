@@ -64,8 +64,8 @@ class ChatListEmptyRowItem: TableRowItem {
 private class ChatListEmptyRowView : TableRowView {
     
     private final class ForumView: View {
-        private let createTopic = TitleButton()
-        private var offForum: TitleButton?
+        private let createTopic = TextButton()
+        private var offForum: TextButton?
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             createTopic.layer?.cornerRadius = 4
@@ -84,11 +84,11 @@ private class ChatListEmptyRowView : TableRowView {
 
             
             if peer.groupAccess.isCreator {
-                let current: TitleButton
+                let current: TextButton
                 if let view = self.offForum {
                     current = view
                 } else {
-                    current = TitleButton()
+                    current = TextButton()
                     self.offForum = current
                     addSubview(current)
                 }

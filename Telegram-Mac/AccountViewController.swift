@@ -632,7 +632,7 @@ private func prepareEntries(left: [AppearanceWrapperEntry<AccountInfoEntry>], ri
 final class AccountControllerView : Control {
     fileprivate let searchView: AccountSearchBarView
     fileprivate let tableView: TableView
-    fileprivate let edit = TitleButton()
+    fileprivate let edit = TextButton()
     private let statusContainer: View
     private let textView = TextView()
     

@@ -576,7 +576,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     private let loadMessageDisposable = MetaDisposable()
     private var pinnedMessage: ChatPinnedMessage?
     
-    private var inlineButton: TitleButton? = nil
+    private var inlineButton: TextButton? = nil
     private var _state: ChatHeaderState
     private let particleList: VerticalParticleListControl = VerticalParticleListControl()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
@@ -714,11 +714,11 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     
     private func installReplyMarkup(_ button: ReplyMarkupButton, message: Message, animated: Bool) {
         self.dismiss.isHidden = true
-        let current: TitleButton
+        let current: TextButton
         if let view = self.inlineButton {
             current = view
         } else {
-            current = TitleButton()
+            current = TextButton()
             current.autohighlight = false
             current.scaleOnClick = true
             
@@ -818,8 +818,8 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
 
 class ChatReportView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
-    private let report:TitleButton = TitleButton()
-    private let unarchiveButton = TitleButton()
+    private let report:TextButton = TextButton()
+    private let unarchiveButton = TextButton()
     private let dismiss:ImageButton = ImageButton()
 
     private var statusLayer: InlineStickerItemLayer?
@@ -994,7 +994,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
 
 class ShareInfoView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
-    private let share:TitleButton = TitleButton()
+    private let share:TextButton = TextButton()
     private let dismiss:ImageButton = ImageButton()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
@@ -1067,10 +1067,10 @@ class ShareInfoView : Control, ChatHeaderProtocol {
 
 class AddContactView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
-    private let add:TitleButton = TitleButton()
+    private let add:TextButton = TextButton()
     private let dismiss:ImageButton = ImageButton()
-    private let blockButton: TitleButton = TitleButton()
-    private let unarchiveButton = TitleButton()
+    private let blockButton: TextButton = TextButton()
+    private let unarchiveButton = TextButton()
     private let buttonsContainer = View()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
@@ -1905,7 +1905,7 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
     private var avatars:[AvatarContentView] = []
     private let avatarsContainer = View(frame: NSMakeRect(0, 0, 25 * 3 + 10, 38))
 
-    private let joinButton = TitleButton()
+    private let joinButton = TextButton()
     private var data: ChatActiveGroupCallInfo?
     private let headerView = TextView()
     private let membersCountView = DynamicCounterTextView()
@@ -2607,7 +2607,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     private var container: View = View()
     private let chatInteraction:ChatInteraction
     
-    private var textView = TitleButton()
+    private var textView = TextButton()
     private var action = ImageButton()
     
     private var _state: ChatHeaderState?
@@ -2736,7 +2736,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         
         if updated || !animated {
             let container = View(frame: bounds)
-            let textView = TitleButton()
+            let textView = TextButton()
             textView.userInteractionEnabled = false
             textView.autohighlight = false
             textView.isEventLess = true

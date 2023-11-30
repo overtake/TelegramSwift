@@ -15,7 +15,7 @@ import SwiftSignalKit
 final class PhoneNumberCodeConfirmView : View {
     private let desc = TextView()
     fileprivate let input: Auth_CodeEntryContol = Auth_CodeEntryContol(frame: .zero)
-    fileprivate let next = TitleButton()
+    fileprivate let next = TextButton()
     
     private var aboutString: String = strings().phoneNumberCodeInfo
     

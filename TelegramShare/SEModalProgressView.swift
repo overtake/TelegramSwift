@@ -12,7 +12,7 @@ import TGUIKit
 
 class SEModalProgressView: View {
     private let progress:LinearProgressControl = LinearProgressControl()
-    private let cancel:TitleButton = TitleButton()
+    private let cancel:TextButton = TextButton()
     private let header:TextView = TextView()
     private let borderView:View = View()
     private let containerView:View = View()

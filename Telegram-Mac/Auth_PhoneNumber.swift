@@ -273,7 +273,7 @@ private final class TextField : NSTextField {
 
 final class Auth_PhoneInput: View, NSTextFieldDelegate {
     private let separator = View()
-    private let country: TitleButton = TitleButton()
+    private let country: TextButton = TextButton()
     
     private let country_overlay: Control = Control()
     private let nextView = ImageView()
@@ -610,7 +610,7 @@ final class Auth_PhoneNumberView : View {
     private let container: View = View()
     private let input: Auth_PhoneInput = Auth_PhoneInput(frame: .zero)
     
-    private let qrButton: TitleButton = TitleButton()
+    private let qrButton: TextButton = TextButton()
     private let nextView: Auth_NextView = Auth_NextView()
     
     private var qrEnabled: Bool = false

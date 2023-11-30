@@ -68,7 +68,7 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
 private final class StoryMyEmptyRowView: GeneralContainableRowView {
     private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: .zero)
     private let textView: TextView = TextView()
-    private let archive = TitleButton()
+    private let archive = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)

@@ -82,7 +82,7 @@ private final class StoryStealthModeView : Control {
     private let titleView = TextView()
     private let descView = TextView()
     
-    fileprivate let button = TitleButton()
+    fileprivate let button = TextButton()
     
     private let infoView1 = InfoView(frame: .zero)
     private let infoView2 = InfoView(frame: .zero)

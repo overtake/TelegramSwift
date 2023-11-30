@@ -16,7 +16,7 @@ class ChaneNumberIntroView : View {
     let imageView:LottiePlayerView = LottiePlayerView()
     let textView:TextView = TextView()
     private let containerView:View = View()
-    fileprivate let next = TitleButton()
+    fileprivate let next = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(containerView)

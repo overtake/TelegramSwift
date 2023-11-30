@@ -147,7 +147,7 @@ private final class BackView : Control {
 
 private final class SelfPresentationPlaceholder : View {
     private let textView = TextView()
-    private let button = TitleButton()
+    private let button = TextButton()
     private let visualEffect = NSVisualEffectView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

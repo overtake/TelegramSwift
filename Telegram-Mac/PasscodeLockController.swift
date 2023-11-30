@@ -16,7 +16,7 @@ import LocalAuthentication
 import BuildConfig
 
 private class TouchIdContainerView : View {
-    fileprivate let button: TitleButton = TitleButton()
+    fileprivate let button: TextButton = TextButton()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

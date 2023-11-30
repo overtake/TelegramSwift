@@ -67,7 +67,7 @@ private class WebAuthorizationRowView : TableRowView, ViewDisplayDelegate {
     private let statusTextView: TextView = TextView()
     private let dateView: TextView = TextView()
     private let photoView: AvatarControl = AvatarControl(font: .avatar(8))
-    private let logoutButton: TitleButton = TitleButton()
+    private let logoutButton: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         botNameView.isSelectable = false

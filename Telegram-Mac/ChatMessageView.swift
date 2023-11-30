@@ -15,7 +15,7 @@ import Postbox
 
 class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
-    class ActionButton: TitleButton {
+    class ActionButton: TextButton {
         
         var urlView: ImageView?
         

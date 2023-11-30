@@ -68,8 +68,8 @@ private final class VideoAvatarModalView : View {
     private var keyFrameDotView: View?
     private let controls: View = View()
     
-    fileprivate let ok: TitleButton = TitleButton()
-    fileprivate let cancel: TitleButton = TitleButton()
+    fileprivate let ok: TextButton = TextButton()
+    fileprivate let cancel: TextButton = TextButton()
 
     fileprivate let scrubberView: VideoEditorScrubblerControl = VideoEditorScrubblerControl(frame: .zero)
     fileprivate let selectionRectView: SelectionRectView

@@ -174,7 +174,7 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
     private let container: View = View()
     
     
-    private let action = TitleButton()
+    private let action = TextButton()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

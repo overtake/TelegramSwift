@@ -96,7 +96,7 @@ private struct FeaturedEntry : TableItemListNodeEntry {
 
 private class StickersModalView : View {
     private let tableView:TableView = TableView(frame: NSZeroRect)
-    private let add:TitleButton = TitleButton()
+    private let add:TextButton = TextButton()
     private let shareView:ImageButton = ImageButton()
     private let close: ImageButton = ImageButton()
     private let headerTitle:TextView = TextView()

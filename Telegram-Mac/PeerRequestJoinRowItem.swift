@@ -89,8 +89,8 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
     private let timeView = TextView()
     private let nameView = TextView()
     private let aboutView = TextView()
-    private let addButton = TitleButton()
-    private let dismissButton = TitleButton()
+    private let addButton = TextButton()
+    private let dismissButton = TextButton()
     
     private var statusView: TextView?
     private var progressIndicator: ProgressIndicator?

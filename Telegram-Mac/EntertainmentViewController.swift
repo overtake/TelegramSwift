@@ -506,9 +506,9 @@ final class EntertainmentView : View {
     fileprivate var sectionView: NSView
     private let bottomView = View()
     private let borderView = View()
-    fileprivate let emoji: TitleButton = TitleButton()
-    fileprivate let stickers: TitleButton = TitleButton()
-    fileprivate let gifs: TitleButton = TitleButton()
+    fileprivate let emoji: TextButton = TextButton()
+    fileprivate let stickers: TextButton = TextButton()
+    fileprivate let gifs: TextButton = TextButton()
     
     private var premiumView: StickerPremiumHolderView?
 

@@ -18,7 +18,7 @@ private final class RepostStoryView : Control {
     private let headerView = View(frame: NSMakeRect(0, 0, 50, 50))
     
     fileprivate let dismiss = ImageButton()
-    fileprivate let privacy = TitleButton()
+    fileprivate let privacy = TextButton()
     
     fileprivate let textView = UITextView(frame: .zero)
     private let bottomView = View(frame: NSMakeRect(0, 0, 50, 50))
