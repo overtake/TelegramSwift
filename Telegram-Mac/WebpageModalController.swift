@@ -138,7 +138,7 @@ private final class HeaderView : View {
                 btn.sizeToFit()
                 button = btn
             case .back:
-                let btn = TitleButton()
+                let btn = TextButton()
                 btn.autohighlight = false
                 btn.animates = false
                 btn.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(color), for: .Normal)

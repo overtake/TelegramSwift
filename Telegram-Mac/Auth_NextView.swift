@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 
 
-final class Auth_NextView: TitleButton {
+final class Auth_NextView: TextButton {
     
     private var locked: Bool = false
     private var string: String = strings().loginNext

@@ -16,7 +16,7 @@ public enum TextBarAligment {
 
 open class TextButtonBarView: BarView {
 
-    public let button:TitleButton = TitleButton()
+    public let button:TextButton = TextButton()
     private let progressIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 25, 25))
     public var alignment:TextBarAligment = .Center
     private var _isFitted: Bool
@@ -51,7 +51,7 @@ open class TextButtonBarView: BarView {
         
     }
     
-    public var direction: TitleButtonImageDirection = .left {
+    public var direction: TextButtonImageDirection = .left {
         didSet {
             button.direction = direction
         }

@@ -124,7 +124,7 @@ final class HelloView: View, PremiumDecorationProtocol {
         view.font = font.fontName as CFTypeRef
         view.fontSize = font.pointSize
         
-        let size = TitleButton.size(with: phrases[index], font: font)
+        let size = TextButton.size(with: phrases[index], font: font)
 
         view.foregroundColor =  NSColor(rgb: 0xffffff, alpha: CGFloat.random(in: 0.4 ... 0.6)).cgColor
         view.compositingFilter = "softLightBlendMode"

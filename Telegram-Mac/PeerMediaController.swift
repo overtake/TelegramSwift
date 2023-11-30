@@ -630,7 +630,7 @@
     }
      
      private var editButton:ImageButton? = nil
-     private var doneButton:TitleButton? = nil
+     private var doneButton:TextButton? = nil
      
      override func requestUpdateRightBar() {
          super.requestUpdateRightBar()
@@ -653,7 +653,7 @@
          
          self.editButton = editButton
  //
-         let doneButton = TitleButton()
+         let doneButton = TextButton()
          doneButton.set(font: .medium(.text), for: .Normal)
          doneButton.set(text: strings().navigationDone, for: .Normal)
          

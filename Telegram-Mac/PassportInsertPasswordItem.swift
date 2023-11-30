@@ -75,7 +75,7 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
     let input:NSSecureTextField
     private let inputContainer: View = View()
     private let descTextView: TextView = TextView()
-    private let nextButton: TitleButton = TitleButton()
+    private let nextButton: TextButton = TextButton()
     private let forgotPassword: ImageButton = ImageButton()
     required init(frame frameRect: NSRect) {
         input = PassportInsertPasswordField(frame: NSZeroRect)

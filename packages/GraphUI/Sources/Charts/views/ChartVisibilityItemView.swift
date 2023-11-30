@@ -13,7 +13,7 @@ import GraphCore
 class ChartVisibilityItemView: View {
     static let textFont = NSFont.systemFont(ofSize: 14, weight: .medium)
     
-    let checkButton: TitleButton = TitleButton()
+    let checkButton: TextButton = TextButton()
     
     required init(frame: CGRect) {
         super.init(frame: frame)

@@ -15,7 +15,7 @@ private final class TooltipView: View {
     private let textContainer = View()
     let cornerView = ImageView()
     
-    var button: TitleButton?
+    var button: TextButton?
     
     var didRemoveFromWindow:(()->Void)?
     weak var view: NSView? {
@@ -76,9 +76,9 @@ private final class TooltipView: View {
     func update(text: NSAttributedString, button: (String, ()->Void)?, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
         
         if let buttonData = button {
-            let button: TitleButton
+            let button: TextButton
             if self.button == nil {
-                button = TitleButton()
+                button = TextButton()
                 self.button = button
                 textContainer.addSubview(button)
             } else {

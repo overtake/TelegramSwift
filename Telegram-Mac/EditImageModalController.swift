@@ -427,7 +427,7 @@ private final class EditImageView : View {
     private var image: CGImage
     fileprivate let selectionRectView: SelectionRectView = SelectionRectView(frame: NSMakeRect(0, 0, 100, 100))
     private let imageContainer: View = View()
-    private let reset: TitleButton = TitleButton()
+    private let reset: TextButton = TextButton()
     private var currentData: EditedImageData?
     private let fakeCorners: (topLeft: ImageView, topRight: ImageView, bottomLeft: ImageView, bottomRight: ImageView)
     private var canReset: Bool = false

@@ -73,8 +73,8 @@ final class SuspiciousAuthRowItem: GeneralRowItem {
 private final class SuspiciousAuthRowView : GeneralRowView {
     private let titleView = TextView()
     private let infoView = TextView()
-    private let accept = TitleButton()
-    private let revoke = TitleButton()
+    private let accept = TextButton()
+    private let revoke = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         

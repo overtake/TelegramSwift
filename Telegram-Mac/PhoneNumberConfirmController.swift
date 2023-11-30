@@ -16,7 +16,7 @@ final class PhoneNumberConfirmView : View {
     private let title = TextView()
     private let desc = TextView()
     fileprivate let input: Auth_PhoneInput = Auth_PhoneInput(frame: .zero)
-    fileprivate let next = TitleButton()
+    fileprivate let next = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(title)

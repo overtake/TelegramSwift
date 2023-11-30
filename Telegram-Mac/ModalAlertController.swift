@@ -275,9 +275,9 @@ private final class RowView : TableRowView {
     }
     
     private let infoView = TextView()
-    private let button = TitleButton(frame: .zero)
+    private let button = TextButton(frame: .zero)
     
-    private var secondButton: TitleButton? = nil
+    private var secondButton: TextButton? = nil
     
     private let optionsView = View()
     
@@ -335,11 +335,11 @@ private final class RowView : TableRowView {
         self.button.alphaValue = item.actionEnabled ? 1 : 0.8
         
         if case let .confirm(string, _) = item.state.data.mode {
-            let current: TitleButton
+            let current: TextButton
             if let view = self.secondButton {
                 current = view
             } else {
-                current = TitleButton()
+                current = TextButton()
                 current.scaleOnClick = true
                 current.disableActions()
                 current.set(font: .medium(.text), for: .Normal)

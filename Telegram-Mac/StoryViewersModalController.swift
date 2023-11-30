@@ -68,7 +68,7 @@ private final class StoryViewerEmptyRowView : TableRowView {
     private let textView = TextView()
     private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 120, 120))
     private let container = View()
-    private var button: TitleButton?
+    private var button: TextButton?
     private var premiumText: TextView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -126,11 +126,11 @@ private final class StoryViewerEmptyRowView : TableRowView {
         }
         
         if !item.context.isPremium {
-            let current: TitleButton
+            let current: TextButton
             if let view = self.button {
                 current = view
             } else {
-                current = TitleButton()
+                current = TextButton()
                 current.scaleOnClick = true
                 current.autohighlight = false
                 self.button = current

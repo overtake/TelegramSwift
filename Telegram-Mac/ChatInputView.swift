@@ -39,7 +39,7 @@ class ChatInputView: View, Notifable {
     
     private var messageActionsPanelView:MessageActionsPanelView?
     private var recordingPanelView:ChatInputRecordingView?
-    private var blockedActionView:TitleButton?
+    private var blockedActionView:TextButton?
     private var additionBlockedActionView: ImageButton?
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
@@ -438,7 +438,7 @@ class ChatInputView: View, Notifable {
         case let .action(text, action, addition):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
-            self.blockedActionView = TitleButton(frame: bounds)
+            self.blockedActionView = TextButton(frame: bounds)
             self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)
             self.blockedActionView?.set(text: text, for: .Normal)
             self.blockedActionView?.set(background: theme.colors.grayBackground, for: .Highlight)
@@ -475,7 +475,7 @@ class ChatInputView: View, Notifable {
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
             
-            self.blockedActionView = TitleButton(frame: bounds.insetBy(dx: 5, dy: 5))
+            self.blockedActionView = TextButton(frame: bounds.insetBy(dx: 5, dy: 5))
             self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.underSelectedColor)
             self.blockedActionView?.set(text: text, for: .Normal)
             self.blockedActionView?.scaleOnClick = true

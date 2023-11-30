@@ -408,7 +408,7 @@ class ChatPollItem: ChatRowItem {
     override var isForceRightLine: Bool {
         var size: NSSize = .zero
         if let action = self.actionButtonText {
-            size = TitleButton.size(with: action, font: .normal(.text))
+            size = TextButton.size(with: action, font: .normal(.text))
         } else if let totalVotesText = self.totalVotesText {
             size = totalVotesText.layoutSize
         }
@@ -977,7 +977,7 @@ private final class PollOptionView : Control {
 private final class PollView : Control {
     fileprivate let titleView: TextView = TextView()
     private let typeView: TextView = TextView()
-    private var actionButton: TitleButton?
+    private var actionButton: TextButton?
     private var totalVotesTextView: TextView?
     
     private var mergedAvatarsView: MergedAvatarsView?
@@ -1046,7 +1046,7 @@ private final class PollView : Control {
         if let actionText = item.actionButtonText {
             y += item.defaultContentInnerInset - 4
             if self.actionButton == nil {
-                self.actionButton = TitleButton()
+                self.actionButton = TextButton()
                 self.addSubview(self.actionButton!)
             }
             guard let actionButton = self.actionButton else {

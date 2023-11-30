@@ -99,7 +99,7 @@ private final class RevokeRowItemView : TableRowView {
     private let title = TextView()
     private let text = TextView()
     private let iconBg = View()
-    private let button = TitleButton()
+    private let button = TextButton()
     
     private var handLayer: InlineStickerItemLayer?
     

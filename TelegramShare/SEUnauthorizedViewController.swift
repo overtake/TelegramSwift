@@ -12,7 +12,7 @@ import Localization
 
 class SEUnauthorizedView : View {
     fileprivate let imageView:ImageView = ImageView()
-    fileprivate let cancel:TitleButton = TitleButton()
+    fileprivate let cancel:TextButton = TextButton()
     fileprivate let textView:TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

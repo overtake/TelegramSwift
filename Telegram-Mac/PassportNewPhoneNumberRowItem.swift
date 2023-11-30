@@ -45,7 +45,7 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
     var arguments:PassportPhoneNumberArguments?
     
     
-    private let countrySelector:TitleButton = TitleButton()
+    private let countrySelector:TextButton = TextButton()
     
     
     fileprivate let errorLabel:LoginErrorStateView = LoginErrorStateView()

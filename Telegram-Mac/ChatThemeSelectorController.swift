@@ -19,7 +19,7 @@ final class ChatThemeSelectorView : View {
     
     private let controls:View = View()
     
-    fileprivate var accept: TitleButton?
+    fileprivate var accept: TextButton?
     
     fileprivate let cancel = ImageButton()
     
@@ -28,8 +28,8 @@ final class ChatThemeSelectorView : View {
 
     private let headerContainer = View()
     
-    fileprivate let selectBackground = TitleButton()
-    fileprivate var resetBackground: TitleButton?
+    fileprivate let selectBackground = TextButton()
+    fileprivate var resetBackground: TextButton?
     
     fileprivate var resetBg:(()->Void)? = nil
     fileprivate var acceptTheme:(()->Void)? = nil
@@ -121,12 +121,12 @@ final class ChatThemeSelectorView : View {
         }
         
         if chatTheme?.0 != installedTheme {
-            let accept: TitleButton
+            let accept: TextButton
             var isNew: Bool = false
             if let view = self.accept {
                 accept = view
             } else {
-                accept = TitleButton()
+                accept = TextButton()
                 accept.autohighlight = false
                 accept.scaleOnClick = true
                 accept.layer?.cornerRadius = .cornerRadius
@@ -191,11 +191,11 @@ final class ChatThemeSelectorView : View {
         }
         
         if isBespokeWallpaper {
-            let current: TitleButton
+            let current: TextButton
             if let view = self.resetBackground {
                 current = view
             } else {
-                current = TitleButton()
+                current = TextButton()
                 current.autohighlight = false
                 current.scaleOnClick = true
                 addSubview(current)

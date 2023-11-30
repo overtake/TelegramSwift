@@ -15,7 +15,7 @@ private enum InputFormatterViewState {
     case link
 }
 private class InputFormatterView : NSView {
-    let link: TitleButton = TitleButton()
+    let link: TextButton = TextButton()
     
     let linkField: NSTextField = NSTextField(frame: NSMakeRect(0, 0, 30, 18))
     let dismissLink:ImageButton = ImageButton()

@@ -96,8 +96,8 @@ extension ExportAuthTransferTokenResult : Equatable {
 }
 
 final class AuthView : Control {
-    private var continueOn: TitleButton?
-    fileprivate let back = TitleButton()
+    private var continueOn: TextButton?
+    fileprivate let back = TextButton()
     
     fileprivate let proxyButton:ImageButton = ImageButton()
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
@@ -153,11 +153,11 @@ final class AuthView : Control {
     }
     
     func showLanguage(title: String, callback: @escaping()->Void) {
-        let current: TitleButton
+        let current: TextButton
         if let view = self.continueOn {
             current = view
         } else {
-            current = TitleButton()
+            current = TextButton()
             self.continueOn = current
             self.addSubview(current, positioned: .below, relativeTo: back)
             current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

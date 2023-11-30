@@ -17,8 +17,8 @@ import Postbox
 
 class MessageActionsPanelView: Control, Notifable {
     
-    private let deleteButton:TitleButton = TitleButton()
-    private let forwardButton:TitleButton = TitleButton()
+    private let deleteButton:TextButton = TextButton()
+    private let forwardButton:TextButton = TextButton()
     private let countTitle:TextView = TextView()
         
     required init(frame frameRect: NSRect) {

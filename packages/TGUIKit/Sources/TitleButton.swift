@@ -1,5 +1,5 @@
 //
-//  TitleButton.swift
+//  TextButton.swift
 //  TGUIKit
 //
 //  Created by keepcoder on 05/10/2016.
@@ -8,7 +8,7 @@
 
 import Cocoa
 
-public enum TitleButtonImageDirection {
+public enum TextButtonImageDirection {
     case left
     case right
     case top
@@ -43,7 +43,7 @@ public class TextLayerExt: CATextLayer {
 }
 
 
-open class TitleButton: ImageButton {
+open class TextButton: ImageButton {
 
     private var text:TextViewLabel = TextViewLabel(frame: NSMakeRect(0, 0, 16, 14))
     
@@ -55,7 +55,7 @@ open class TitleButton: ImageButton {
     
     public var autoSizeToFit: Bool = true
     
-    public var direction: TitleButtonImageDirection = .left {
+    public var direction: TextButtonImageDirection = .left {
         didSet {
             if direction != oldValue {
                 updateLayout()
@@ -147,7 +147,7 @@ open class TitleButton: ImageButton {
             font = style.font
         }
         
-        let size:NSSize = TitleButton.size(with: string, font: font)
+        let size:NSSize = TextButton.size(with: string, font: font)
         self.currentTextSize = size
         var msize:NSSize = size
         

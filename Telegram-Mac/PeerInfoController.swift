@@ -351,6 +351,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func requestUpdateBackBar() {
+        super.requestUpdateBackBar()
         if let leftBarView = _leftBar as? BackNavigationBar {
             leftBarView.requestUpdate()
         }
@@ -358,6 +359,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func requestUpdateCenterBar() {
+        super.requestUpdateCenterBar()
         if scrollState == .pageIn || nameColor == nil {
             setCenterTitle(defaultBarTitle)
         } else {
@@ -367,6 +369,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         _centerBar.style = barPresentation
     }
     override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
         _rightBar.style = barPresentation
     }
     
@@ -375,7 +378,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     override func setCenterStatus(_ text: String?) {
         if let text = text {
-            _centerBar.status = .initialize(string: text, color: barPresentation.borderColor, font: .normal(.text))
+            _centerBar.status = .initialize(string: text, color: barPresentation.grayTextColor, font: .normal(.text))
         } else {
             _centerBar.status = nil
         }
@@ -397,9 +400,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         if let nameColor = self.nameColor, state == .Normal, scrollState == .pageUp {
             let backgroundColor = context.peerNameColors.getProfile(nameColor).main
             let foregroundColor = backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
-            return .init(foregroundColor: foregroundColor, backgroundColor: .clear, highlightColor: .clear, borderColor: .clear, textColor: foregroundColor)
+            return .init(foregroundColor: foregroundColor, backgroundColor: .clear, highlightColor: .clear, borderColor: .clear, grayTextColor: theme.colors.grayText, textColor: foregroundColor)
         }  else {
-            return .init(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear, borderColor: theme.colors.border)
+            return .init(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear, borderColor: theme.colors.border, grayTextColor: theme.colors.grayText, textColor: theme.colors.text)
         }
     }
     

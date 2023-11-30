@@ -496,7 +496,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     private var lockView: ImageView?
     private let container = View()
     
-    private var reveal: TitleButton?
+    private var reveal: TextButton?
     
     private var appearanceViews:[WeakReference<NSView>] = []
     
@@ -722,11 +722,11 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         
         
         if case let .more(rect, count) = item.items.last {
-            let current: TitleButton
+            let current: TextButton
             if let view = self.reveal {
                 current = view
             } else {
-                current = TitleButton()
+                current = TextButton()
                 self.reveal = current
                 contentView.addSubview(current)
             }
@@ -779,16 +779,16 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     item?.invokeLockAction()
                 }, for: .Click)
             } else {
-                let current: TitleButton
+                let current: TextButton
                 let isNew: Bool
-                if let view = self.unlock as? TitleButton {
+                if let view = self.unlock as? TextButton {
                     current = view
                     isNew = false
                 } else {
                     if let view = unlock {
                         performSubviewRemoval(view, animated: animated)
                     }
-                    current = TitleButton(frame: .zero)
+                    current = TextButton(frame: .zero)
                     current.autohighlight = false
                     current.scaleOnClick = true
                     current.layer?.cornerRadius = 10

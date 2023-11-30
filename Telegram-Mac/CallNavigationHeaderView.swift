@@ -552,7 +552,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     
     private let container = View()
     
-    fileprivate let callInfo:TitleButton = TitleButton()
+    fileprivate let callInfo:TextButton = TextButton()
     fileprivate let endCall:ImageButton = ImageButton()
     fileprivate let statusTextView:TextView = TextView()
     fileprivate let muteControl:ImageButton = ImageButton()

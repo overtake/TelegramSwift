@@ -64,8 +64,8 @@ public class ModalInteractions {
     var enables:((Bool)->Void)? = nil
     let alignCancelLeft: Bool
     
-    var doneUpdatable:(((TitleButton)->Void)->Void)? = nil
-    var cancelUpdatable:(((TitleButton)->Void)->Void)? = nil
+    var doneUpdatable:(((TextButton)->Void)->Void)? = nil
+    var cancelUpdatable:(((TextButton)->Void)->Void)? = nil
     let singleButton: Bool
     
     fileprivate var customTheme: ()->ModalViewController.Theme
@@ -88,18 +88,18 @@ public class ModalInteractions {
         }
     }
     
-    public func updateDone(_ f:@escaping (TitleButton) -> Void) -> Void {
+    public func updateDone(_ f:@escaping (TextButton) -> Void) -> Void {
         doneUpdatable?(f)
     }
-    public func updateCancel(_ f:@escaping(TitleButton) -> Void) -> Void {
+    public func updateCancel(_ f:@escaping(TextButton) -> Void) -> Void {
         cancelUpdatable?(f)
     }
     
 }
 
 private class ModalInteractionsContainer : View {
-    let acceptView:TitleButton
-    let cancelView:TitleButton?
+    let acceptView:TextButton
+    let cancelView:TextButton?
     let interactions:ModalInteractions
     let borderView:View?
     
@@ -145,12 +145,12 @@ private class ModalInteractionsContainer : View {
     
     init(interactions:ModalInteractions, modal:Modal) {
         self.interactions = interactions
-        acceptView = TitleButton()
+        acceptView = TextButton()
         acceptView.disableActions()
         acceptView.scaleOnClick = true
 
         if let cancelTitle = interactions.cancelTitle {
-            let cancelView = TitleButton()
+            let cancelView = TextButton()
             self.cancelView = cancelView
             cancelView.set(font: .medium(.text), for: .Normal)
             cancelView.set(text: cancelTitle, for: .Normal)

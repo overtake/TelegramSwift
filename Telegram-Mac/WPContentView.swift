@@ -31,7 +31,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     
     private(set) var containerView:View = View()
     private(set) var content:WPLayout?
-    private var action: TitleButton? = nil
+    private var action: TextButton? = nil
     
     private var closeAdView: ImageButton?
 
@@ -113,11 +113,11 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         self.content = layout
         
         if let text = layout.action_text {
-            let current: TitleButton
+            let current: TextButton
             if let view = self.action {
                 current = view
             } else {
-                current = TitleButton()
+                current = TextButton()
                 self.action = current
                 current.disableActions()
                 addSubview(current)

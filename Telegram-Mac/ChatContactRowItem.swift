@@ -87,7 +87,7 @@ class ChatContactRowView : ChatRowView {
     private let contactPhotoView:AvatarControl = AvatarControl(font: .avatar(.title))
     private let nameView: TextView = TextView()
     private let phoneView: TextView = TextView()
-    private var actionButton: TitleButton?
+    private var actionButton: TextButton?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -141,7 +141,7 @@ class ChatContactRowView : ChatRowView {
             
             if let _ = item.vCard {
                 if actionButton == nil {
-                    actionButton = TitleButton()
+                    actionButton = TextButton()
                     actionButton?.layer?.cornerRadius = .cornerRadius
                     actionButton?.disableActions()
                     actionButton?.set(font: .normal(.text), for: .Normal)

@@ -76,7 +76,7 @@ class ChartDetailsView: Control {
         titleLabel.setVisible(!viewModel.title.isEmpty, animated: animated)
         arrowView.setVisible(viewModel.showArrow, animated: animated)
         
-        let textLabelWidth = max(TitleButton.size(with: viewModel.title, font: NSFont.systemFont(ofSize: 12, weight: .bold)).width, 60)
+        let textLabelWidth = max(TextButton.size(with: viewModel.title, font: NSFont.systemFont(ofSize: 12, weight: .bold)).width, 60)
 
         let viewWidth = intrinsicContentSize.width
         
@@ -114,7 +114,7 @@ class ChartDetailsView: Control {
                 }
                 let titleLabel = self.labelsViews[index]
                 
-                let textLabelWidth = max(TitleButton.size(with: value.title, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width, 60)
+                let textLabelWidth = max(TextButton.size(with: value.title, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width, 60)
 
                 titleLabel.setTextColor(self.theme.chartDetailsTextColor, animated: false)
                 titleLabel.setText(value.title, animated: false)
@@ -146,7 +146,7 @@ class ChartDetailsView: Control {
                 titleLabel.setTextColor(self.theme.chartDetailsTextColor, animated: false)
                 titleLabel.setText(value.title, animated: false)
                 
-                let textLabelWidth = max(TitleButton.size(with: viewModel.title, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width, 60)
+                let textLabelWidth = max(TextButton.size(with: viewModel.title, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width, 60)
                 
                 titleLabel.frame = CGRect(x: x, y: y, width: textLabelWidth, height: labelHeight)
                 titleLabel.alphaValue = value.visible ? 1 : 0
@@ -167,10 +167,10 @@ class ChartDetailsView: Control {
                 (viewModel.totalValue?.visible == true ? labelHeight : 0) +
                 verticalMargins * 2
             
-            var textLabelWidth = max(TitleButton.size(with: viewModel.title, font: NSFont.systemFont(ofSize: 12, weight: .bold)).width, 60)
+            var textLabelWidth = max(TextButton.size(with: viewModel.title, font: NSFont.systemFont(ofSize: 12, weight: .bold)).width, 60)
 
             let maxValue = viewModel.values.map { value -> CGFloat in
-                return TitleButton.size(with: value.title, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width
+                return TextButton.size(with: value.title, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width
             }.max() ?? 0
             
             textLabelWidth = max(maxValue, textLabelWidth)

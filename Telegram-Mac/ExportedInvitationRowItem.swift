@@ -191,8 +191,8 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
     
     private let linkContainer: Control = Control()
     private let linkView: TextView = TextView()
-    private let share: TitleButton = TitleButton()
-    private let copy: TitleButton = TitleButton()
+    private let share: TextButton = TextButton()
+    private let copy: TextButton = TextButton()
     private let actions: ImageButton = ImageButton()
     private let usageTextView = TextView()
     private let usageContainer = Control()

@@ -767,7 +767,7 @@ private final class PremiumBoardingView : View {
             
             return acceptView
         } else {
-            let okButton = TitleButton()
+            let okButton = TextButton()
             okButton.scaleOnClick = true
             okButton.autohighlight = false
             okButton.set(font: .medium(.text), for: .Normal)

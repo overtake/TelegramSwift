@@ -6388,7 +6388,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private var editButton:ImageButton? = nil
-    private var doneButton:TitleButton? = nil
+    private var doneButton:TextButton? = nil
     
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
@@ -6413,7 +6413,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.editButton = editButton
 //        
-        let doneButton = TitleButton()
+        let doneButton = TextButton()
       //  doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
         doneButton.set(text: strings().navigationDone, for: .Normal)
@@ -8110,6 +8110,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         (centerBarView as? ChatTitleBarView)?.updateStatus(presentation: chatInteraction.presentation)
+        (centerBarView as? ChatTitleBarView)?.updateLocalizationAndTheme(theme: theme)
     }
     
     

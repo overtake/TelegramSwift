@@ -804,7 +804,7 @@ private final class StoryViewController: Control, Notifable {
         }
         private let bg = Control()
         private let textView = TextView()
-        private let button = TitleButton()
+        private let button = TextButton()
         private let media = View(frame: NSMakeRect(0, 0, 24, 24))
         
         private var close:(()->Void)?

@@ -777,7 +777,7 @@ open class ViewController : NSObject {
     }
     open func setCenterStatus(_ text: String?) {
         if let text = text {
-            self.centerBarView.status = .initialize(string: text, color: barPresentation.borderColor, font: .normal(.text))
+            self.centerBarView.status = .initialize(string: text, color: barPresentation.grayTextColor, font: .normal(.text))
         } else {
             self.centerBarView.status = nil
         }

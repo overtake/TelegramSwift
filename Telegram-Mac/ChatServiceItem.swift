@@ -1289,7 +1289,7 @@ class ChatServiceRowView: TableRowView {
         
         private let textView = TextView()
                 
-        fileprivate let viewButton = TitleButton()
+        fileprivate let viewButton = TextButton()
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -1461,7 +1461,7 @@ class ChatServiceRowView: TableRowView {
 
         private var visualEffect: VisualEffect?
                         
-        fileprivate let viewButton = TitleButton()
+        fileprivate let viewButton = TextButton()
         private var progressView: RadialProgressView?
         private let statusDisposable = MetaDisposable()
         private var progressText: TextView?

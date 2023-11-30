@@ -80,7 +80,7 @@ private final class LocationMapView : View {
     private let headerTextView: TextView = TextView()
     private let header: View = View()
     private let expandContainer: Control = Control(frame: NSMakeRect(0, 0, 0, 50))
-    private let expandButton: TitleButton = TitleButton()
+    private let expandButton: TextButton = TextButton()
     private var state: LocationViewState = .normal(.user(nil))
     private var hasExpand: Bool = true
     private let loadingView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))

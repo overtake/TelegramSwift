@@ -1067,7 +1067,7 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
 final class StorageUsageView : View {
     
     private class SelectPanel: Control {
-        let button = TitleButton()
+        let button = TextButton()
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             border = [.Top]
@@ -1181,7 +1181,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
         super.init(context)
     }
     
-    private var doneButton:TitleButton? = nil
+    private var doneButton:TextButton? = nil
     
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
@@ -1194,7 +1194,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
         let back = BarView(70, controller: self)
        
 //
-        let doneButton = TitleButton()
+        let doneButton = TextButton()
         doneButton.set(font: .medium(.text), for: .Normal)
         doneButton.set(text: strings().navigationEdit, for: .Normal)
         

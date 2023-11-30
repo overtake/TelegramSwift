@@ -118,7 +118,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         var x: CGFloat = 35
         
         for title in tags {
-            let tagView = TitleButton()
+            let tagView = TextButton()
             tagView.animates = false
             tagView.set(font: .normal(12), for: .Normal)
             tagView.set(color: presentation.colors.underSelectedColor, for: .Normal)
@@ -183,7 +183,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var lock:Bool = false
     
-    private var tags: [TitleButton] = []
+    private var tags: [TextButton] = []
     
     private let clear:ImageButton = ImageButton()
     private let search:ImageButton = ImageButton()

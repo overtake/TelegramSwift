@@ -73,7 +73,7 @@ final class Auth_TokenView : View {
     fileprivate let logoView = LottiePlayerView(frame: NSMakeRect(0, 0, 40, 40))
     private let containerView = View()
     private let titleView = TextView()
-    fileprivate let cancelButton = TitleButton()
+    fileprivate let cancelButton = TextButton()
     
     private let firstHelp: ExportTokenOptionView
     private let secondHelp: ExportTokenOptionView
