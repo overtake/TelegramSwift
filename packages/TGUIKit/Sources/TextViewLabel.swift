@@ -31,10 +31,6 @@ open class TextViewLabel: View {
         }
     }
 
-    override open func draw(_ dirtyRect: NSRect) {
-
-    }
-    
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
                 
@@ -64,7 +60,7 @@ open class TextViewLabel: View {
         } else {
             text = nil
         }
-        self.layer?.setNeedsDisplay()
+        self.setNeedsDisplay()
     }
     
     open override func layout() {
@@ -87,6 +83,7 @@ open class TextViewLabel: View {
                 let attr = attributedString
                 attributedString = attr
             }
+            needsDisplay = true
         }
     }
     
