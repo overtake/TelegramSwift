@@ -296,7 +296,7 @@ final class PeerInfoView : View {
     
     fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {
         self.navBgView.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
-        self.navigationBarView.bottomBorder.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
+      //  self.navigationBarView.bottomBorder.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
     }
 }
 
@@ -539,7 +539,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let maxY = genericView.tableView.item(at: 1).view?.frame.maxY ?? 0
         
         var scrollState: ScrollState
-        if self.genericView.tableView.documentOffset.y <= maxY && nameColor != nil {
+        if self.genericView.tableView.documentOffset.y <= maxY, state == .Normal {
             scrollState = .pageUp
         } else {
             scrollState = .pageIn
@@ -557,9 +557,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         _centerBar = super.getCenterBarViewOnce()
         _rightBar = super.getRightBarViewOnce()
         
+        genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
+
         super.viewDidLoad()
         
-        genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
         genericView.updateScrollState(nameColor != nil ? scrollState : .pageIn, animated: false)
         
         genericView.tableView.layer?.masksToBounds = false
@@ -830,6 +831,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 }
             })
         }
+        updateNavigationBar()
     }
     
     private func applyState(_ state: ViewControllerState) {

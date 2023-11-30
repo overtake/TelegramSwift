@@ -274,6 +274,8 @@ class ChatVoiceContentView: ChatAudioContentView {
             switch data.state {
             case .possible:
                 controlState = .possible(false)
+            case .locked:
+                controlState = .locked
             case let .state(inner):
                 switch inner {
                 case .collapsed:

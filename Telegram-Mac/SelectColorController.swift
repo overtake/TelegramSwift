@@ -926,7 +926,14 @@ enum SelectColorSource {
     }
 }
 
-func SelectColorController(context: AccountContext, source: SelectColorSource, type: SelectColorType) -> InputDataController {
+final class SelectColorCallback {
+    var getState:(()->(PeerNameColor?, Int64?))? = nil
+    init() {
+        
+    }
+}
+
+func SelectColorController(context: AccountContext, source: SelectColorSource, type: SelectColorType, callback: SelectColorCallback? = nil) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
@@ -937,6 +944,12 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, t
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    callback?.getState = {
+        return stateValue.with { ($0.selected, $0.backgroundEmojiId) }
+    }
+    
+
     let peerId: PeerId = source.peerId
     
     let getColor:(PeerNameColor)->PeerNameColors.Colors = { color in
