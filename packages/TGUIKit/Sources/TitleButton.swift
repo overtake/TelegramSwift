@@ -135,6 +135,7 @@ open class TextButton: ImageButton {
     
     @discardableResult public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
         
+        
         if isEmpty {
             return super.sizeToFit(addition, maxSize, thatFit: thatFit)
         } else {

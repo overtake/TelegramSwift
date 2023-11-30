@@ -31,6 +31,10 @@ open class TextViewLabel: View {
         }
     }
 
+    override open func draw(_ dirtyRect: NSRect) {
+
+    }
+    
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
                 
