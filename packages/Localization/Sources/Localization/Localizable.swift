@@ -8867,6 +8867,10 @@ public final class L10n {
   public static var newPollQuizMultipleError: String  { return L10n.tr("Localizable", "NewPoll.QuizMultiple.Error") }
   /// New Quiz
   public static var newPollTitleQuiz: String  { return L10n.tr("Localizable", "NewPoll.Title.Quiz") }
+  /// No, it's not me!
+  public static var newSessionIsntMe: String  { return L10n.tr("Localizable", "NewSession.IsntMe") }
+  /// Yes, it's me
+  public static var newSessionItsMe: String  { return L10n.tr("Localizable", "NewSession.ItsMe") }
   /// You can check the list of your active logins in\n[Settings > Active Sessions.]()
   public static var newSessionReviewAcceptText: String  { return L10n.tr("Localizable", "NewSessionReview.Accept.Text") }
   /// New Login Allowed
