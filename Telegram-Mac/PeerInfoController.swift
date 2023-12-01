@@ -285,9 +285,9 @@ final class PeerInfoView : View {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, -50, frame.width, 50))
+        transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, 0, size.width, 50))
         transition.updateFrame(view: navBgView, frame: navigationBarView.frame)
-        transition.updateFrame(view: tableView, frame: bounds)
+        transition.updateFrame(view: tableView, frame: size.bounds.offsetBy(dx: 0, dy: 50))
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, navBgView.frame.height - .borderSize, navBgView.frame.width, .borderSize))
     }
     
@@ -295,15 +295,12 @@ final class PeerInfoView : View {
         
         let transition: ContainedViewLayoutTransition = .immediate
         CATransaction.begin()
-        transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, 0, frame.width, 50))
         navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
         navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
         navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
         CATransaction.commit()
 
-        CATransaction.begin()
         self.updateLayout(size: self.frame.size, transition: transition)
-        CATransaction.commit()
     }
     
     fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {
@@ -363,7 +360,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func requestUpdateBackBar() {
-        super.requestUpdateBackBar()
+//        super.requestUpdateBackBar()
         if let leftBarView = _leftBar as? BackNavigationBar {
             leftBarView.requestUpdate()
         }
@@ -371,7 +368,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func requestUpdateCenterBar() {
-        super.requestUpdateCenterBar()
+//        super.requestUpdateCenterBar()
         if scrollState == .pageIn || nameColor == nil {
             setCenterTitle(defaultBarTitle)
         } else {
@@ -381,7 +378,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         _centerBar.style = barPresentation
     }
     override func requestUpdateRightBar() {
-        super.requestUpdateRightBar()
+//        super.requestUpdateRightBar()
         _rightBar.style = barPresentation
     }
     
@@ -408,6 +405,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
     }
     
+    override var barHeight: CGFloat {
+        return 0
+    }
+    
     override var barPresentation: ControlStyle {
         if let nameColor = self.nameColor, state == .Normal, scrollState == .pageUp {
             let backgroundColor = context.peerNameColors.getProfile(nameColor).main
@@ -419,7 +420,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     override func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
-        self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
+        if leftView == leftBarView {
+            self.genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar, controller: self, animated: animation == .crossfade)
+        } else {
+            self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
+        }
     }
     
     static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
@@ -448,7 +453,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
         super.init(context)
         
-        bar = .init(height: 50, enableBorder: true)
+        bar = .init(height: 50, enableBorder: false)
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
             self?.navigationController?.push(controller)

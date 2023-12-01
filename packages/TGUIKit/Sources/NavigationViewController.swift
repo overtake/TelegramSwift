@@ -730,7 +730,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         let animatePosBar: Bool = controller.bar.height != previous.bar.height && style != .none
         self.navigationBar.frame = NSMakeRect(point.x, barInset, size.width, animatePosBar && controller.bar.height == 0 ? previous.bar.height : controller.bar.height)
         
-        
+        self.navigationBar.layer?.removeAllAnimations()
+
         
      
         
@@ -826,11 +827,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             
             if animatePosBar {
                 navigationBar.layer?.animatePosition(from: NSMakePoint(pfrom, barInset), to: NSMakePoint(pto, barInset), duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function, removeOnCompletion: false, completion: { [weak controller, weak navigationBar] completed in
-                    if let controller = controller, completed {
+                    if let controller = controller {
                         navigationBar?.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
-                        navigationBar?.layer?.removeAllAnimations()
                     }
-
+                    navigationBar?.layer?.removeAllAnimations()
                 })
             }
             
@@ -898,7 +898,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
         
         
-        navigationBar.removeFromSuperview()
         containerView.addSubview(navigationBar, positioned: .below, relativeTo: self.controller.view)
 
         reloadHeaders()
