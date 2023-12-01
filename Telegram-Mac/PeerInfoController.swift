@@ -498,13 +498,6 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        genericView.tableView.enumerateItems(with: { item in
-            if let item = item as? PeerMediaBlockRowItem {
-                item.redraw()
-                return false
-            }
-            return true
-        })
     }
     
     override func viewDidAppear(_ animated: Bool) {
