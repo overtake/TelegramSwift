@@ -265,14 +265,14 @@ final class PeerInfoView : View {
         navBgView.addSubview(borderView)
     }
     
-    override func hitTest(_ point: NSPoint) -> NSView? {
-        var result = super.hitTest(point)
-        if result == nil {
-            result = navigationBarView.hitTest(point.offsetBy(dx: 0, dy: -self.frame.minY))
-        }
-        return result
-    }
-    
+//    override func hitTest(_ point: NSPoint) -> NSView? {
+//        var result = super.hitTest(point)
+//        if result == nil {
+//            result = navigationBarView.hitTest(point.offsetBy(dx: 0, dy: -self.frame.minY))
+//        }
+//        return result
+//    }
+//    
     
     
     required init?(coder: NSCoder) {
