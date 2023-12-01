@@ -1203,6 +1203,10 @@
             }
         }))
     }
+     
+     override func viewDidResized(_ size: NSSize) {
+         super.viewDidResized(size)
+     }
     
     
     private var currentTable: TableView? {
