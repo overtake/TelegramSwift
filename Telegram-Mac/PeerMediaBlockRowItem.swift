@@ -54,9 +54,9 @@ class PeerMediaBlockRowItem: GeneralRowItem {
             return 1
         } else {
             if let temporaryHeight = temporaryHeight {
-                return temporaryHeight + 70
+                return temporaryHeight + 100
             } else {
-                return table?.frame.height ?? initialSize.height
+                return (table?.frame.height ?? initialSize.height) + 100
             }
         }
     }
@@ -123,6 +123,7 @@ private final class PeerMediaBlockRowView : TableRowView {
         guard let item = item as? PeerMediaBlockRowItem else {
             return
         }
+                
         item.controller.bar = .init(height: 0)
         item.controller._frameRect = bounds
         
@@ -172,11 +173,11 @@ private final class PeerMediaBlockRowView : TableRowView {
                     let currentY = item.controller.view.frame.minY
                     if previousY != currentY {
                         if currentY == 0, previousY != 0 {
-                            item.controller.viewWillAppear(true)
-                            item.controller.viewDidAppear(true)
+                            item.controller.viewWillAppear(false)
+                            item.controller.viewDidAppear(false)
                         } else if previousY == 0 {
-                            item.controller.viewWillDisappear(true)
-                            item.controller.viewDidDisappear(true)
+                            item.controller.viewWillDisappear(false)
+                            item.controller.viewDidDisappear(false)
                         }
                     }
                 }
@@ -221,7 +222,7 @@ private final class PeerMediaBlockRowView : TableRowView {
                             mainTable?.scroll(to: .up(true))
                         }
                     } else if updated {
-                        item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+                        item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
                     }
                 }
                 

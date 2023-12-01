@@ -284,21 +284,23 @@ final class PeerInfoView : View {
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, 0, size.width, 50))
         transition.updateFrame(view: navBgView, frame: navigationBarView.frame)
-        transition.updateFrame(view: tableView, frame: size.bounds.offsetBy(dx: 0, dy: 50))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 50, size.width, size.height - 50))
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, navBgView.frame.height - .borderSize, navBgView.frame.width, .borderSize))
     }
     
     func set(leftBar: BarView, centerView: BarView, rightView: BarView, controller: ViewController, animated: Bool) {
         
         let transition: ContainedViewLayoutTransition = .immediate
-        CATransaction.begin()
         navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
         navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
         navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
-        CATransaction.commit()
 
         self.updateLayout(size: self.frame.size, transition: transition)
     }
@@ -350,12 +352,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     private func updateScrollState(_ state: ScrollState, animated: Bool) {
         if state != self.scrollState {
             self.scrollState = state
-            CATransaction.begin()
             self.requestUpdateBackBar()
             self.requestUpdateCenterBar()
             self.requestUpdateRightBar()
             genericView.updateScrollState(state, animated: animated)
-            CATransaction.commit()
         }
     }
     
@@ -496,6 +496,16 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         window?.removeAllHandlers(for: self)
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        genericView.tableView.enumerateItems(with: { item in
+            if let item = item as? PeerMediaBlockRowItem {
+                item.redraw()
+                return false
+            }
+            return true
+        })
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -604,7 +614,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let threadId = threadInfo?.message.messageId
                 
         mediaController.navigationController = self.navigationController
-        mediaController._frameRect = bounds
+        mediaController._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height)
         mediaController.bar = .init(height: 0)
         
         mediaController.loadViewIfNeeded()
