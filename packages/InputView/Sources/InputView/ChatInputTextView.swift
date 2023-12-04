@@ -1215,70 +1215,70 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
 
     public override var isContinuousSpellCheckingEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)ContinuousSpellCheckingEnabled")
+            return UserDefaults.standard.bool(forKey: "ContinuousSpellCheckingEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)ContinuousSpellCheckingEnabled")
+            UserDefaults.standard.set(newValue, forKey: "ContinuousSpellCheckingEnabled\(settingsKey)")
             super.isContinuousSpellCheckingEnabled = newValue
         }
     }
 
     public override var isGrammarCheckingEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)GrammarCheckingEnabled")
+            return UserDefaults.standard.bool(forKey: "GrammarCheckingEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)GrammarCheckingEnabled")
+            UserDefaults.standard.set(newValue, forKey: "GrammarCheckingEnabled\(settingsKey)")
             super.isGrammarCheckingEnabled = newValue
         }
     }
 
     public override var isAutomaticSpellingCorrectionEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticSpellingCorrectionEnabled")
+            return UserDefaults.standard.bool(forKey: "AutomaticSpellingCorrectionEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticSpellingCorrectionEnabled")
+            UserDefaults.standard.set(newValue, forKey: "AutomaticSpellingCorrectionEnabled\(settingsKey)")
             super.isAutomaticSpellingCorrectionEnabled = newValue
         }
     }
 
     public override var isAutomaticQuoteSubstitutionEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticQuoteSubstitutionEnabled")
+            return UserDefaults.standard.bool(forKey: "AutomaticQuoteSubstitutionEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticQuoteSubstitutionEnabled")
+            UserDefaults.standard.set(newValue, forKey: "AutomaticQuoteSubstitutionEnabled\(settingsKey)")
             super.isAutomaticSpellingCorrectionEnabled = newValue
         }
     }
 
     public override var isAutomaticLinkDetectionEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticLinkDetectionEnabled")
+            return UserDefaults.standard.bool(forKey: "AutomaticLinkDetectionEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticLinkDetectionEnabled")
+            UserDefaults.standard.set(newValue, forKey: "AutomaticLinkDetectionEnabled\(settingsKey)")
             super.isAutomaticSpellingCorrectionEnabled = newValue
         }
     }
 
     public override var isAutomaticDataDetectionEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticDataDetectionEnabled")
+            return UserDefaults.standard.bool(forKey: "AutomaticDataDetectionEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticDataDetectionEnabled")
+            UserDefaults.standard.set(newValue, forKey: "AutomaticDataDetectionEnabled\(settingsKey)")
             super.isAutomaticSpellingCorrectionEnabled = newValue
         }
     }
 
     public override var isAutomaticDashSubstitutionEnabled: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticDashSubstitutionEnabled")
+            return UserDefaults.standard.bool(forKey: "AutomaticDashSubstitutionEnabled\(settingsKey)")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticDashSubstitutionEnabled")
+            UserDefaults.standard.set(newValue, forKey: "AutomaticDashSubstitutionEnabled\(settingsKey)")
             super.isAutomaticSpellingCorrectionEnabled = newValue
         }
     }

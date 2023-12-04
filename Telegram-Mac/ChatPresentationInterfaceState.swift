@@ -560,6 +560,8 @@ class ChatPresentationInterfaceState: Equatable {
             return true
         } else if case .restricted = state, let peer = self.peer, peer.isForum, case .history = self.chatMode {
             return true
+        } else if let peer = peer, peer.isChannel {
+            return peer.isChannel
         }
         return false
     }

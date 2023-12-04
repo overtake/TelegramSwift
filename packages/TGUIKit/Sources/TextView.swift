@@ -1163,7 +1163,7 @@ public final class TextViewLayout : Equatable {
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
                 if brokenLineRange.location >= 0 && brokenLineRange.length > 0 && brokenLineRange.location + brokenLineRange.length <= attributedString.length {
-                    attributedString.enumerateAttributes(in: NSMakeRange(brokenLineRange.location, brokenLineRange.length), options: []) { attributes, range, _ in
+                    attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
                         if let _ = attributes[.strikethroughStyle] {
                             let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
                             
@@ -1549,8 +1549,7 @@ public final class TextViewLayout : Equatable {
         if width != 0 {
             constrainedWidth = width
         }
-        
-        
+
         toolTipRects.removeAll()
         
         calculateLayout(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing, saveRTL: saveRTL)

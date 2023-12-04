@@ -2946,6 +2946,7 @@ final class StoryModalController : ModalViewController, Notifable {
             DispatchQueue.main.async {
                 self?.interactions.update { current in
                     var current = current
+                                        
                     current.hasMenu = contextMenuOnScreen() || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
                     current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil
                     || findModal(InputDataModalController.self, isAboveTo: self) != nil
@@ -2953,6 +2954,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     || findModal(StoryStealthModeController.self, isAboveTo: self) != nil
                     || findModal(PremiumBoardingController.self, isAboveTo: self) != nil
                     || findModal(ShareStoryController.self, isAboveTo: self) != nil
+                    || findModal(StoryModalController.self, isAboveTo: self) != nil
                     current.hasPopover = hasPopover(context.window) && !current.hasModal
                     return current
                 }

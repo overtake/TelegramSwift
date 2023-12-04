@@ -7237,7 +7237,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case .start:
                 let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
                 if row != -1 {
-                    guard let item = self.genericView.tableView.item(at: row) as? ChatRowItem, let message = item.message, canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode) else {return .failed}
+                    guard let item = self.genericView.tableView.item(at: row) as? ChatRowItem else {
+                        return .failed
+                    }
+                    if !item.isSharable {
+                        if let message = item.message, !canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode) {
+                            return .failed
+                        }
+                    }
                     (item.view as? RevealTableView)?.initRevealState()
                     return .success(RevealTableItemController(item: item))
                 } else {

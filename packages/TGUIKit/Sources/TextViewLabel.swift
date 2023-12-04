@@ -37,7 +37,6 @@ open class TextViewLabel: View {
     
     override open func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-                
         if let text = text {
             let focus = self.focus(text.0.size)
             text.1.draw(focus, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
@@ -82,7 +81,10 @@ open class TextViewLabel: View {
         } set(value) {
             let redraw = value.size != self.frame.size
             super.frame = value
-            
+            if value.size == NSMakeSize(611, 50) {
+                var bp = 0
+                bp += 1
+            }
             if redraw {
                 let attr = attributedString
                 attributedString = attr
