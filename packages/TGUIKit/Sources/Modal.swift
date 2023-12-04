@@ -1108,7 +1108,7 @@ public func findModal<T>(_ t: T.Type, isAboveTo: ModalViewController? = nil) -> 
     for (i, modal) in activeModals.enumerated() {
         if let controller = modal.value?.controller, type(of: controller) == t {
             if let index = index {
-                if index > i {
+                if index >= i {
                     continue
                 }
             }

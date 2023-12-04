@@ -438,20 +438,25 @@ class ChatInputView: View, Notifable {
         case let .action(text, action, addition):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
-            self.blockedActionView = TextButton(frame: bounds)
-            self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)
-            self.blockedActionView?.set(text: text, for: .Normal)
-            self.blockedActionView?.set(background: theme.colors.grayBackground, for: .Highlight)
+            
+            let blockedActionView = TextButton(frame: bounds)
+            blockedActionView.autoSizeToFit = false
+            blockedActionView.set(color: theme.colors.accent, for: .Normal)
+            blockedActionView.set(font: .normal(.title), for: .Normal)
+            
+            blockedActionView.set(text: text, for: .Normal)
+            blockedActionView.set(background: theme.colors.grayBackground, for: .Highlight)
+            blockedActionView.sizeToFit(.zero, bounds.size, thatFit: true)
             if animated {
-                self.blockedActionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                blockedActionView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            self.blockedActionView?.set(handler: {_ in
+            blockedActionView.set(handler: {_ in
                 action(chatInteraction)
             }, for:.Click)
 
-
-
-            self.addSubview(self.blockedActionView!, positioned: .below, relativeTo: _ts)
+            self.addSubview(blockedActionView, positioned: .below, relativeTo: _ts)
+            
+            self.blockedActionView = blockedActionView
 
             if let addition = addition {
                 additionBlockedActionView = ImageButton()
@@ -476,6 +481,7 @@ class ChatInputView: View, Notifable {
             self.blockedActionView?.removeFromSuperview()
             
             self.blockedActionView = TextButton(frame: bounds.insetBy(dx: 5, dy: 5))
+            self.blockedActionView?.autoSizeToFit = false
             self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.underSelectedColor)
             self.blockedActionView?.set(text: text, for: .Normal)
             self.blockedActionView?.scaleOnClick = true
@@ -718,18 +724,17 @@ class ChatInputView: View, Notifable {
         accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
                 
         if let view = messageActionsPanelView {
-            transition.updateFrame(view: view, frame: bounds)
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         if let view = blockedActionView {
             if view.scaleOnClick {
-                transition.updateFrame(view: view, frame: bounds.insetBy(dx: 5, dy: 5))
+                transition.updateFrame(view: view, frame: size.bounds.insetBy(dx: 5, dy: 5))
             } else {
-                transition.updateFrame(view: view, frame: bounds)
+                transition.updateFrame(view: view, frame: size.bounds)
             }
             for subview in view.subviews {
-                transition.updateFrame(view: subview, frame: view.bounds)
-                
                 if let shimmer = subview as? ShimmerEffectView {
+                    transition.updateFrame(view: subview, frame: view.bounds)
                     shimmer.updateAbsoluteRect(view.bounds, within: view.frame.size)
                     shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: view.bounds, cornerRadius: view.frame.height / 2)], horizontal: true, size: view.frame.size)
 
@@ -737,10 +742,10 @@ class ChatInputView: View, Notifable {
             }
         }
         if let view = chatDiscussionView {
-            transition.updateFrame(view: view, frame: bounds)
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         if let view = restrictedView {
-            transition.updateFrame(view: view, frame: bounds)
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         
         guard let superview = superview else { return }

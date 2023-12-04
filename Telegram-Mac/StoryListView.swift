@@ -72,6 +72,8 @@ private final class StoryRepostView : Control {
         if let forwardPeer = forwardPeer {
             if forwardPeer.isChannel {
                 nameAttr.insert(.embedded(name: "Icon_Reply_Channel", color: NSColor(rgb: 0xffffff), resize: false), at: 0)
+            } else if forwardPeer.isUser {
+                nameAttr.insert(.embedded(name: "Icon_Reply_User", color: NSColor(rgb: 0xffffff), resize: false), at: 0)
             } else {
                 nameAttr.append(.embedded(name: "Icon_Reply_Group", color: NSColor(rgb: 0xffffff), resize: false))
             }
@@ -88,7 +90,6 @@ private final class StoryRepostView : Control {
         
         
         let textLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
-        textLayout.measure(width: .greatestFiniteMagnitude)
         self.textView.update(textLayout)
         
         
@@ -232,7 +233,7 @@ private final class StoryRepostView : Control {
             center.removeObserver(self)
         }
     }
-    
+    private var first: Bool = true
     func size(max width: CGFloat, transition: ContainedViewLayoutTransition) -> NSSize {
         nameView.resize(width - 15)
         textView.resize(width - 15)
