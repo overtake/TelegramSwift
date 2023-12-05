@@ -485,7 +485,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLocation? = nil, maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil, storyState: PeerExpiringStoryListContext.State? = nil, peerStoryStats: [PeerId : PeerStoryStats] = [:], cachedData: CachedPeerData? = nil, peer: Peer? = nil, holeLater: Bool = false, holeEarlier: Bool = false, recommendedChannels: RecommendedChannels? = nil, includeJoin: Bool = false) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLocation? = nil, maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil, storyState: PeerExpiringStoryListContext.State? = nil, peerStoryStats: [PeerId : PeerStoryStats] = [:], cachedData: CachedPeerData? = nil, peer: Peer? = nil, holeLater: Bool = false, holeEarlier: Bool = false, recommendedChannels: RecommendedChannels? = nil, includeJoin: Bool = false, earlierId: MessageIndex? = nil, laterId: MessageIndex? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
     
     var groupedPhotos:[ChatHistoryEntry] = []
@@ -574,14 +574,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
     for (i, entry) in messagesEntries.enumerated() {
         var message = entry.message
         
-        if let maybeJoinMessage = joinMessage {
-            if message.timestamp > maybeJoinMessage.timestamp, (!holeEarlier || i > 0) {
-                entries.append(.MessageEntry(maybeJoinMessage, MessageIndex(maybeJoinMessage), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(recommendedChannels: recommendedChannels), autoplayMedia)))
-                joinMessage = nil
-            }
-        }
-        
-        
+    
         if message.media.isEmpty {
             if message.text.length <= 7 {
                 
@@ -1019,7 +1012,25 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         }
     }
     
-    
+    if let lowerTimestamp = messagesEntries.last?.message.timestamp, let upperTimestamp = messagesEntries.first?.message.timestamp {
+        if let joinMessage = joinMessage {
+            var insertAtPosition: Int?
+            if joinMessage.timestamp >= lowerTimestamp && laterId == nil {
+                insertAtPosition = entries.count
+            } else if joinMessage.timestamp < lowerTimestamp && joinMessage.timestamp > upperTimestamp {
+                for i in 0 ..< entries.count {
+                    if let timestamp = entries[i].message?.timestamp, timestamp > joinMessage.timestamp {
+                        insertAtPosition = i
+                        break
+                    }
+                }
+            }
+            if let insertAtPosition = insertAtPosition {
+                entries.append(.MessageEntry(joinMessage, MessageIndex(joinMessage), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(recommendedChannels: recommendedChannels), autoplayMedia)))
+            }
+        }
+    }
+
     
     var hasUnread = false
     if let maxReadIndex = maxReadIndex {
@@ -1049,10 +1060,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         entries.insert(.topThreadInset(addTopThreadInset, MessageIndex.absoluteLowerBound(), renderType), at: 0)
     }
     
-    if let maybeJoinMessage = joinMessage, !holeLater {
-        entries.append(.MessageEntry(maybeJoinMessage, MessageIndex(maybeJoinMessage), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(recommendedChannels: recommendedChannels), autoplayMedia)))
-        joinMessage = nil
-    }
 
   
     if !dynamicAdMessages.isEmpty {
