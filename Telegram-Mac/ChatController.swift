@@ -1531,7 +1531,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = messagesViewQueue//.init(name: "messagesViewQueue", qos: .userInteractive)
+    private let queue: Queue = .init(name: "messagesViewQueue", qos: .userInteractive)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
