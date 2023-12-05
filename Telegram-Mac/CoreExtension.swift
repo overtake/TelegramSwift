@@ -2778,6 +2778,7 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
             
             let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
             var cgImage = image._cgImage
+            var type: CFString = kUTTypeJPEG
             if settings.colors.count > 1 {
                 cgImage = generateImage(image.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
@@ -2788,7 +2789,8 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
                     ctx.clear(size.bounds)
                     ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
                     ctx.fill(size.bounds)
-                })
+                }, scale: 1)
+                type = kUTTypePNG
             } else if intense > 0 {
                 cgImage = generateImage(image.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
@@ -2796,12 +2798,13 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
                     
                     ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
                     ctx.fill(size.bounds)
-                })
+                }, scale: 1)
+                type = kUTTypeJPEG
             }
-            if let image = cgImage, let colorDestination = CGImageDestinationCreateWithURL(darkUrl as CFURL, kUTTypePNG, 1, nil) {
+            if let image = cgImage, let colorDestination = CGImageDestinationCreateWithURL(darkUrl as CFURL, type, 1, nil) {
                 CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
                 
-                let colorQuality: Float = 1.0
+                let colorQuality: Float = 0.7
                 
                 let options = NSMutableDictionary()
                 options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)

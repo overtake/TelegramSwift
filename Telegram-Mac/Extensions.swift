@@ -1908,10 +1908,10 @@ extension CGImage {
         
         
         
-        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) {
             
                         
-            let colorQuality: Float = 1
+            let colorQuality: Float = 0.8
             
             let options = NSMutableDictionary()
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
