@@ -637,14 +637,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         let userController = WKUserContentController()
         
         
-        #if BETA
         if #available(macOS 14.0, *) {
             if let uuid = FastSettings.getUUID(context.account.id.int64) {
                 let store = WKWebsiteDataStore(forIdentifier: uuid)
                 configuration.websiteDataStore = store
             }
         }
-        #endif
        
         
 
