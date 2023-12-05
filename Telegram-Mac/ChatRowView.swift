@@ -597,7 +597,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         
         if let reactions = item.reactionsLayout, reactions.presentation.isOutOfBounds {
-            frame.origin.y += reactions.size.height + item.defaultReactionsInset + item.defaultContentInnerInset
+          //  frame.origin.y += reactions.size.height + item.defaultReactionsInset + item.defaultContentInnerInset
         }
         
         return frame
@@ -1198,6 +1198,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         if reactionsLayout.presentation.isOutOfBounds, !item.isIncoming {
             frame.origin.x = contentFrame.maxX - reactionsLayout.size.width
+        } else if reactionsLayout.presentation.isOutOfBounds {
+            if let replyMarkupModel = item.replyMarkupModel {
+                frame.origin.y += replyMarkupModel.size.height + item.defaultContentInnerInset
+            }
         }
         return frame
     }

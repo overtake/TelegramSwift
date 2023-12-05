@@ -2440,12 +2440,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 let lineWidth: CGFloat = 3.0
                 
                 let blockFrame = blockQuote.frame
+                let blockColor = blockQuote.isCode ? blockQuote.colors.tertiary ?? blockQuote.colors.main : blockQuote.colors.main
                 let tintColor = blockQuote.colors.main
                 let secondaryTintColor = blockQuote.colors.secondary
                 let tertiaryTintColor = blockQuote.colors.tertiary
                 
                 
-                ctx.setFillColor(tintColor.withAlphaComponent(0.1).cgColor)
+                ctx.setFillColor(blockColor.withAlphaComponent(blockQuote.isCode ? 0.25 : 0.1).cgColor)
                 ctx.addPath(CGPath(roundedRect: blockFrame, cornerWidth: radius, cornerHeight: radius, transform: nil))
                 ctx.fillPath()
                 

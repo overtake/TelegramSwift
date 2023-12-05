@@ -639,6 +639,17 @@ class FastSettings {
         UserDefaults.standard.setValue(dismissedPerks, forKey: "dismissedPerks")
     }
     
+    static func getUUID(_ id: Int64) -> UUID? {
+        let stored = UserDefaults.standard.string(forKey: "_uuid_\(id)")
+        if let stored = stored {
+            return .init(uuidString: stored)
+        } else {
+            let uuid: UUID = UUID()
+            UserDefaults.standard.setValue(uuid.uuidString, forKey: "_uuid_\(id)")
+            return uuid
+        }
+    }
+    
 }
 
 fileprivate let TelegramFileMediaBoxPath:String = "TelegramFileMediaBoxPathAttributeKey"

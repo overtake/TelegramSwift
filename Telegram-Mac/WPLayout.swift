@@ -144,7 +144,7 @@ class WPLayout: Equatable {
             
             let entitites = entities ?? []
 
-            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entitites)], for: text, message: nil, context: context, fontSize: fontSize, openInfo: chatInteraction.openInfo, textColor: presentation.text, linkColor: presentation.link, monospacedPre: presentation.text, monospacedCode: presentation.text, isDark: false).mutableCopy() as! NSMutableAttributedString
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entitites)], for: text, message: nil, context: context, fontSize: fontSize, openInfo: chatInteraction.openInfo, textColor: presentation.text, linkColor: presentation.link, monospacedPre: presentation.text, monospacedCode: presentation.text, isDark: false, bubbled: false).mutableCopy() as! NSMutableAttributedString
 
             InlineStickerItem.apply(to: attributed, associatedMedia: parent.associatedMedia, entities: entitites, isPremium: true, offset: 0)
 
