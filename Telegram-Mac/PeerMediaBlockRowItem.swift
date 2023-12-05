@@ -54,7 +54,7 @@ class PeerMediaBlockRowItem: GeneralRowItem {
             return 1
         } else {
             if let temporaryHeight = temporaryHeight {
-                return temporaryHeight + 100
+                return temporaryHeight
             } else {
                 return (table?.frame.height ?? initialSize.height) + 100
             }

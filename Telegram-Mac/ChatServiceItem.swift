@@ -276,6 +276,10 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case .customText(let text, _):
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case let .botDomainAccessGranted(domain):
+                    let _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case let .botAppAccessGranted(appName, _):
+                    let _ = attributedString.append(string: strings().authSessionsMessageApp(appName ?? ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .pinnedMessageUpdated:
                     var replyMessageText = ""
                     var pinnedId: MessageId?

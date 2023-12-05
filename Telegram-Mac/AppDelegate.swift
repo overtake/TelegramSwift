@@ -502,7 +502,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let networkDisposable = MetaDisposable()
         
-//        
+        
+       
+//
 //        self.window.closeInterceptor = {
 //            if !self.terminated {
 //                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)

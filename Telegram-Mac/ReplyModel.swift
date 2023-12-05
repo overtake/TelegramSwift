@@ -290,7 +290,7 @@ class ReplyModel: ChatAccessoryModel {
                         let textAttr: NSMutableAttributedString
                     
                         
-                        textAttr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: quote.entities)], for: quote.text, message: nil, context: context, fontSize: 13, openInfo: { _,_, _, _ in }, textColor: presentation.enabledText, linkColor: presentation.enabledText, monospacedPre: presentation.enabledText, monospacedCode: presentation.enabledText, isDark: presentation.app.dark).mutableCopy() as! NSMutableAttributedString
+                        textAttr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: quote.entities)], for: quote.text, message: nil, context: context, fontSize: 13, openInfo: { _,_, _, _ in }, textColor: presentation.enabledText, linkColor: presentation.enabledText, monospacedPre: presentation.enabledText, monospacedCode: presentation.enabledText, isDark: presentation.app.dark, bubbled: presentation.app.bubbled).mutableCopy() as! NSMutableAttributedString
                         
                         InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  quote.entities, isPremium: context.isPremium, ignoreSpoiler: true)
                         text = textAttr

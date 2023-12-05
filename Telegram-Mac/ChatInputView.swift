@@ -487,7 +487,9 @@ class ChatInputView: View, Notifable {
             self.blockedActionView?.scaleOnClick = true
             self.blockedActionView?.set(background: theme.colors.accent, for: .Normal)
             self.blockedActionView?.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+            self.blockedActionView?.sizeToFit(.zero, bounds.insetBy(dx: 5, dy: 5).size, thatFit: true)
 
+            
             let shimmer = ShimmerEffectView()
             shimmer.isStatic = true
             self.blockedActionView?.addSubview(shimmer)

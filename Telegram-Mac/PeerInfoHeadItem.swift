@@ -836,7 +836,7 @@ final class PeerInfoBackgroundView: View {
         let numSteps = 6
         self.avatarBackgroundGradientLayer.colors = (0 ..< numSteps).map { i in
             let step: CGFloat = 1.0 - CGFloat(i) / CGFloat(numSteps - 1)
-            return NSColor(white: 1.0, alpha: baseAvatarGradientAlpha * pow(step, 2.0)).cgColor
+            return NSColor.white.withAlphaComponent(baseAvatarGradientAlpha * pow(step, 2.0)).cgColor
         }
         self.avatarBackgroundGradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
         self.avatarBackgroundGradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
@@ -868,7 +868,7 @@ final class PeerInfoBackgroundView: View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(layer: avatarBackgroundGradientLayer, frame: size.bounds.focus(NSMakeSize(300, 300)).offsetBy(dx: 0, dy: 30))
+        transition.updateFrame(layer: avatarBackgroundGradientLayer, frame: size.bounds.focus(NSMakeSize(300, 300)).offsetBy(dx: 0, dy: 20))
         transition.updateFrame(layer: backgroundGradientLayer, frame: size.bounds)
     }
 }

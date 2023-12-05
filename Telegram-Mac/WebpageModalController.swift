@@ -16,6 +16,9 @@ import WebKit
 import HackUtils
 import ColorPalette
 
+
+
+
 //
 //private class SelectChatRequired : SelectPeersBehavior {
 //    private let peerType: ReplyMarkupButtonRequestPeerType
@@ -632,6 +635,18 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
         let configuration = WKWebViewConfiguration()
         let userController = WKUserContentController()
+        
+        
+        #if BETA
+        if #available(macOS 14.0, *) {
+            if let uuid = FastSettings.getUUID(context.account.id.int64) {
+                let store = WKWebsiteDataStore(forIdentifier: uuid)
+                configuration.websiteDataStore = store
+            }
+        }
+        #endif
+       
+        
 
         if FastSettings.debugWebApp {
             configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
