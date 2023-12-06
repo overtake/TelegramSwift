@@ -23,7 +23,7 @@ CROSS_SDK_MAC="MacOSX.sdk"
 
 
 SOURCE_DIR="$OUT_DIR/openssl-1.1.1d"
-SOURCE_ARCHIVE="$SRC_DIR/openssl-1.1.1d.tar.gz"
+SOURCE_ARCHIVE= "${BUILD_DIR}openssl-1.1.1d.zip"
 
 rm -rf "$SOURCE_DIR"
 
@@ -148,16 +148,16 @@ function build_for ()
     "no-tests" \
   )
 
-  ./Configure $PLATFORM "-arch $ARCH" ${DEFAULT_FLAGS[@]} --prefix="${ABS_TMP_DIR}/${ARCH}" || exit 1
+  ./Configure $PLATFORM -mmacosx-version-min=10.13 no-shared no-tests --prefix="${ABS_TMP_DIR}/${ARCH}" || exit 1
   
-  make || exit 2
+  make build_libs || exit 2
   unset CROSS_TOP
   unset CROSS_SDK
 
   cd "$DIR"
 }
 
-patch "$SOURCE_DIR/Configurations/10-main.conf" < "$PWD/OpenSSLEncryption/patch-conf.diff" || exit 1
+# patch "$SOURCE_DIR/Configurations/10-main.conf" < "$PWD/OpenSSLEncryption/patch-conf.diff" || exit 1
 
 
 for ARCH in $ARCHS
