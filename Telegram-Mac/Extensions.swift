@@ -128,6 +128,7 @@ extension NSMutableAttributedString {
 public extension String {
     var fixed:String {
         var str:String = self
+        
 //        str = str.replacingOccurrences(of: "✌", with: "✌️")
 //        str = str.replacingOccurrences(of: "☺", with: "☺️")
 //        str = str.replacingOccurrences(of: "☝", with: "☝️")

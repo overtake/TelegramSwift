@@ -556,8 +556,8 @@ private enum PreviewEntryId : Hashable {
             } else {
                 return false
             }
-        case .mediaGroup:
-            if case .mediaGroup = rhs {
+        case let .mediaGroup(index):
+            if case .mediaGroup(index) = rhs {
                 return true
             } else {
                 return false
@@ -582,7 +582,7 @@ private enum PreviewEntryId : Hashable {
     }
     
     case media(Media)
-    case mediaGroup
+    case mediaGroup(Int)
     case archive
     case section(Int)
 }
@@ -598,8 +598,8 @@ private enum PreviewEntry : Comparable, Identifiable {
             return .section(sectionId)
         case let .media(_, _, _, media, _):
             return .media(media)
-        case .mediaGroup:
-            return .mediaGroup
+        case let .mediaGroup(index, _, _, _, _):
+            return .mediaGroup(index)
         case .archive:
             return .archive
         }
@@ -708,8 +708,10 @@ private func previewMediaEntries( _ state: PreviewState) -> [PreviewEntry] {
             for (i, media) in state.medias.enumerated() {
                 messages.append(Message(media, stableId: UInt32(i), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: MessageId.Id(i))))
             }
-            if !messages.isEmpty {
-                entries.append(.mediaGroup(index: index, sectionId: sectionId, urls: state.urls, messages: messages, isSpoiler: state.currentState.isSpoiler))
+            let collages = messages.chunks(10)
+            for collage in collages {
+                entries.append(.mediaGroup(index: index, sectionId: sectionId, urls: state.urls, messages: collage, isSpoiler: state.currentState.isSpoiler))
+                index += 1
             }
         } else {
             for (i, media) in state.medias.enumerated() {
@@ -1388,7 +1390,14 @@ class PreviewSenderController: ModalViewController, Notifable {
                 self.closeModal()
                 
                 self.chatInteraction.sendMessage(silent, atDate)
-                self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
+                if state.isCollage {
+                    let collages = medias.chunks(10)
+                    for collage in collages {
+                        self.chatInteraction.sendMedias(collage, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
+                    }
+                } else {
+                    self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
+                }
             }
             
             

@@ -94,7 +94,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
 
         case let fileMedia as TelegramMediaFile:
             if fileMedia.probablySticker {
-                messageText = strings().chatListSticker(fileMedia.stickerText ?? "")
+                messageText = strings().chatListSticker(fileMedia.stickerText?.normalizedEmoji ?? "")
             } else if fileMedia.isVoice {
                 if !message.text.isEmpty {
                     messageText = ("🎤" + " " + messageText)

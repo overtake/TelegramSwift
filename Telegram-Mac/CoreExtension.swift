@@ -2849,7 +2849,7 @@ func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = th
 
 
 func canCollagesFromUrl(_ urls:[URL]) -> Bool {
-    var canCollage: Bool = urls.count > 1 && urls.count <= 10
+    var canCollage: Bool = urls.count > 1
     
     var musicCount: Int = 0
     var voiceCount: Int = 0
