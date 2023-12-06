@@ -1734,6 +1734,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1761,6 +1762,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;

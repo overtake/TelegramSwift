@@ -650,6 +650,16 @@ class FastSettings {
         }
     }
     
+    static func clear_uuid(_ id: Int64) {
+#if DEBUG
+        if #available(macOS 14.0, *) {
+            if let uuid = FastSettings.getUUID(id) {
+                WKWebsiteDataStore.remove(forIdentifier: uuid, completionHandler: { _ in
+                })
+            }
+        }
+#endif
+    }
 }
 
 fileprivate let TelegramFileMediaBoxPath:String = "TelegramFileMediaBoxPathAttributeKey"

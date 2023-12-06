@@ -12,6 +12,7 @@ import TelegramCore
 
 import Postbox
 import SwiftSignalKit
+import WebKit
 
 private struct LogoutControllerState : Equatable {
     
@@ -127,6 +128,9 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         verifyAlert_button(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
             closeAllModals()
             _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+            
+            FastSettings.clear_uuid(context.account.id.int64)
+            
         })
     })
     
