@@ -5,9 +5,6 @@
       location = "group:submodules/CodeSyntax/CodeSyntax/CodeSyntax.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/libtgvoip/libtgvoip_osx.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:submodules/AppCenter-sdk/AppCenter/AppCenter.xcodeproj">
    </FileRef>
    <FileRef

@@ -179,8 +179,6 @@
 		2748C56127BA477900F05503 /* Auth_Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56027BA477900F05503 /* Auth_Token.swift */; };
 		2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56227BA53C800F05503 /* Auth_Loading.swift */; };
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
-		2748D44527C61DCF0057CF99 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2748D44427C61DCF0057CF99 /* libtgvoip.framework */; };
-		2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */; };
 		274952802AA1D8AB00499498 /* SuspiciousRevokeModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2749527F2AA1D8AB00499498 /* SuspiciousRevokeModal.swift */; };
 		274952822AA1E79E00499498 /* hand_animation.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274952812AA1E79E00499498 /* hand_animation.tgs */; };
 		274952852AA472F600499498 /* BoostChannelModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274952842AA472F600499498 /* BoostChannelModalController.swift */; };
@@ -1682,8 +1680,6 @@
 		2748C56227BA53C800F05503 /* Auth_Loading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Loading.swift; sourceTree = "<group>"; };
 		2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PhoneNumber.swift; sourceTree = "<group>"; };
 		2748D44427C61DCF0057CF99 /* libtgvoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libtgvoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OngoingCallThreadLocalContext.mm; sourceTree = "<group>"; };
-		2748D44827C624690057CF99 /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OngoingCallThreadLocalContext.h; sourceTree = "<group>"; };
 		2749527F2AA1D8AB00499498 /* SuspiciousRevokeModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousRevokeModal.swift; sourceTree = "<group>"; };
 		274952812AA1E79E00499498 /* hand_animation.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_animation.tgs; sourceTree = "<group>"; };
 		274952842AA472F600499498 /* BoostChannelModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostChannelModalController.swift; sourceTree = "<group>"; };
@@ -3011,7 +3007,6 @@
 				27B6D05D27393A5500C785C7 /* MergeLists in Frameworks */,
 				D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */,
 				27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */,
-				2748D44527C61DCF0057CF99 /* libtgvoip.framework in Frameworks */,
 				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
 				27A697A3273D313000B33415 /* Stripe in Frameworks */,
 				27C2B1A627C3CF13004BC87B /* FetchManager in Frameworks */,
@@ -5193,8 +5188,6 @@
 		C271EB981EB9DEDA0034792D /* calls */ = {
 			isa = PBXGroup;
 			children = (
-				2748D44827C624690057CF99 /* OngoingCallThreadLocalContext.h */,
-				2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */,
 			);
 			name = calls;
 			sourceTree = "<group>";
@@ -7574,7 +7567,6 @@
 				C251FB4C1FEDCC750035E5D7 /* ChatPresentationUtils.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
 				9F7B74052227F4F2006610E4 /* SharedAccountInfo.swift in Sources */,
-				2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */,
 				2796FEEF273E503200DA653C /* ChatInputSendAsView.swift in Sources */,
 				C24FD40E1F20EE8B00A97196 /* ContextClueRowItem.swift in Sources */,
 				C29A65051E0845B80071BCEF /* ExternalVideoLoader.swift in Sources */,
@@ -7932,7 +7924,7 @@
 					"$(PROJECT_DIR)/submodules",
 					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -7988,6 +7980,7 @@
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
@@ -8033,6 +8026,7 @@
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
@@ -8140,7 +8134,7 @@
 					"$(PROJECT_DIR)/submodules",
 					"$(PROJECT_DIR)/submodules/AppCenter",
 				);
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;

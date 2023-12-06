@@ -1,4 +1,5 @@
 import Foundation
+import WebKit
 import UserNotifications
 import TGUIKit
 import SwiftSignalKit
@@ -323,6 +324,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
                 let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+                FastSettings.clear_uuid(context.account.id.int64)
             }
         }))
         

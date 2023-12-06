@@ -451,8 +451,6 @@ class ChatServiceItem: ChatRowItem {
                         }
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                     }
-                case let .botDomainAccessGranted(domain):
-                    _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .botSentSecureValues(types):
                     let permissions = types.map({$0.rawValue}).joined(separator: ", ")
                      _ = attributedString.append(string: strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -898,6 +896,14 @@ class ChatServiceItem: ChatRowItem {
                     }
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
+                    
+                    let messageId: MessageId? = message.replyAttribute?.messageId
+                    
+                    if let messageId = messageId {
+                        attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                            chatInteraction?.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
+                        }), for: attributedString.range, color: grayTextColor)
+                    }
                 default:
                     break
                 }

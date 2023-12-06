@@ -167,29 +167,6 @@ public struct CallAuxiliaryServer {
 }
 
 
-private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc  {
-    private let queue: Queue
-    
-    init(queue: Queue) {
-        self.queue = queue
-        
-        super.init()
-    }
-    
-    func dispatch(_ f: @escaping () -> Void) {
-        self.queue.async {
-            f()
-        }
-    }
-    
-    func dispatch(after seconds: Double, block f: @escaping () -> Void) {
-        self.queue.after(seconds, f)
-    }
-    
-    func isCurrent() -> Bool {
-        return self.queue.isCurrent()
-    }
-}
 
 
 let callQueue = Queue(name: "VoIPQueue")
