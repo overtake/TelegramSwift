@@ -227,6 +227,8 @@
 		275C14182A67F1CB000DDACF /* AvatarStoryControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */; };
 		275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC38267B8701009CF884 /* bot_menu_close.tgs */; };
 		275DDC3B267B8702009CF884 /* bot_close_menu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC39267B8702009CF884 /* bot_close_menu.tgs */; };
+		275E851C2B20C4EC007A72CA /* ShelfPack in Frameworks */ = {isa = PBXBuildFile; productRef = 275E851B2B20C4EC007A72CA /* ShelfPack */; };
+		275E851F2B20C79E007A72CA /* MetalEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 275E851E2B20C79E007A72CA /* MetalEngine */; };
 		275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */; };
 		2760E55626970513001C59F8 /* WidgetStorageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55526970513001C59F8 /* WidgetStorageController.swift */; };
 		2760E55926970672001C59F8 /* WidgetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55826970672001C59F8 /* WidgetButton.swift */; };
@@ -1730,6 +1732,8 @@
 		275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarStoryControl.swift; sourceTree = "<group>"; };
 		275DDC38267B8701009CF884 /* bot_menu_close.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_menu_close.tgs; sourceTree = "<group>"; };
 		275DDC39267B8702009CF884 /* bot_close_menu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_close_menu.tgs; sourceTree = "<group>"; };
+		275E851A2B20C452007A72CA /* ShelfPack */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = ShelfPack; path = "submodules/telegram-ios/submodules/Utils/ShelfPack"; sourceTree = "<group>"; };
+		275E851D2B20C61D007A72CA /* MetalEngine */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = MetalEngine; path = "submodules/telegram-ios/submodules/MetalEngine"; sourceTree = "<group>"; };
 		275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_StickersList.swift; sourceTree = "<group>"; };
 		275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileRowItem.swift; sourceTree = "<group>"; };
 		2760E55526970513001C59F8 /* WidgetStorageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStorageController.swift; sourceTree = "<group>"; };
@@ -3005,6 +3009,7 @@
 				27A6978D273D192800B33415 /* libphonenumber in Frameworks */,
 				271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */,
 				27B6D05D27393A5500C785C7 /* MergeLists in Frameworks */,
+				275E851F2B20C79E007A72CA /* MetalEngine in Frameworks */,
 				D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */,
 				27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */,
 				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
@@ -3049,6 +3054,7 @@
 				9F18908F2237E95400665EF5 /* VideoToolbox.framework in Frameworks */,
 				279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */,
 				9F4EEF8421D4F59C002C3B33 /* Accelerate.framework in Frameworks */,
+				275E851C2B20C4EC007A72CA /* ShelfPack in Frameworks */,
 				277DFE6127842E6600F78396 /* Translate in Frameworks */,
 				27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
@@ -3843,6 +3849,8 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				275E851D2B20C61D007A72CA /* MetalEngine */,
+				275E851A2B20C452007A72CA /* ShelfPack */,
 				271891F62B08A7B70008B238 /* LokiRng */,
 				277D28182AD02EF900CC6420 /* InputView */,
 				27E60C0F29ED272800E10E39 /* Emoji */,
@@ -6317,6 +6325,8 @@
 				27AAAD5929A4A11600F70A9A /* System */,
 				277D28192AD02F1800CC6420 /* InputView */,
 				271891F72B08A7DB0008B238 /* LokiRng */,
+				275E851B2B20C4EC007A72CA /* ShelfPack */,
+				275E851E2B20C79E007A72CA /* MetalEngine */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -8263,6 +8273,14 @@
 		2755491C274B7FCB0098A3CD /* TextRecognizing */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TextRecognizing;
+		};
+		275E851B2B20C4EC007A72CA /* ShelfPack */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ShelfPack;
+		};
+		275E851E2B20C79E007A72CA /* MetalEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MetalEngine;
 		};
 		276651DB273D574900671FB4 /* ApiCredentials */ = {
 			isa = XCSwiftPackageProductDependency;
