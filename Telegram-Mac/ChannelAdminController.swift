@@ -558,11 +558,11 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     case .stories:
                         title = strings().channelEditAdminPermissionManageStories
                     }
-                    entries.append(.rightItem(sectionId, index, title, rights, currentRightsFlags, isSelected, !state.updating, bestGeneralViewType(rightsOrder, for: i)))
+                    entries.append(.rightItem(sectionId, index, title, rights, currentRightsFlags, isSelected, false, bestGeneralViewType(rightsOrder, for: i)))
                     
                     if isExpanded {
                         for right in subRights {
-                            entries.append(.subRightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), .direct(right), currentRightsFlags, currentRightsFlags.contains(right), !state.updating, .innerItem))
+                            entries.append(.subRightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), .direct(right), currentRightsFlags, currentRightsFlags.contains(right), false, .innerItem))
                         }
                     }
                 }
