@@ -815,32 +815,36 @@ class ChatMessageItem: ChatRowItem {
                 if lg.isEmpty {
                     lg = strings().contextCopy.lowercased()
                 }
+                let isIncoming = message?.isIncoming(context.account, bubbled) ?? false
+                let color = theme.chat.activityColor(isIncoming, bubbled)
+
                 
                 let header: (TextNodeLayout, TextNode)?
-                header = TextNode.layoutText(.initialize(string: lg.prefixWithDots(15), color: blockColor.main, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                
+                header = TextNode.layoutText(.initialize(string: lg.prefixWithDots(15), color: color, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+
                 let tetriary: NSColor
                 let dark: Bool
-                if bubbled {
-                    let isIncoming = message?.isIncoming(context.account, bubbled) ?? false
-                    if isIncoming {
-                        tetriary = blockColor.main
-                        dark = isDark
-                    } else {
-                        if isDark {
-                            tetriary = NSColor.black
-                            dark = isDark
-                        } else {
-                            tetriary = blockColor.main
-                            dark = false
-                        }
-                    }
-                } else {
-                    tetriary = blockColor.main
-                    dark = isDark
-                }
+//                if bubbled {
+//
+//                    if isIncoming {
+//                        tetriary = blockColor.main
+//                        dark = isDark
+//                    } else {
+//                        if isDark {
+//                            tetriary = NSColor.black
+//                            dark = isDark
+//                        } else {
+//                            tetriary = blockColor.main
+//                            dark = false
+//                        }
+//                    }
+//                } else {
+//                    tetriary = blockColor.main
+//                    dark = isDark
+//                }
                 
-                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: .init(main: blockColor.main, secondary: nil, tertiary: tetriary), isCode: true, space: 4, header: header), range: range)
+                
+                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: .init(main: color, secondary: nil, tertiary: color), isCode: true, space: 4, header: header), range: range)
                 fontAttributes.append((range, .monospace))
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
@@ -848,7 +852,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 if let language = language?.lowercased() {
                     let code = string.attributedSubstring(from: range).string
-                    let syntaxed = CodeSyntax.syntax(code: code, language: language, theme: .init(dark: dark, textColor: textColor, textFont: .code(fontSize), italicFont: .italicMonospace(fontSize), mediumFont: .semiboldMonospace(fontSize)))
+                    let syntaxed = CodeSyntax.syntax(code: code, language: language, theme: .init(dark: isDark, textColor: textColor, textFont: .code(fontSize), italicFont: .italicMonospace(fontSize), mediumFont: .semiboldMonospace(fontSize)))
                     CodeSyntax.apply(syntaxed, to: string, offset: range.location)
                 }
                 
