@@ -25,6 +25,7 @@ import ColorPalette
 import WebKit
 import System
 import CodeSyntax
+import MetalEngine
 
 
 #if !APP_STORE
@@ -291,6 +292,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView?.autoresizingMask = [.width, .height]
         window.contentView?.autoresizesSubviews = true
         
+        v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+
         
 //        let ctxLayer = CtxInstallLayer()
 //        self.ctxLayer = ctxLayer

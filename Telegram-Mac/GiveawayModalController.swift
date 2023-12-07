@@ -839,7 +839,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
         let countries = state.countries.map { $0.id }
         
-        let source = BotPaymentInvoiceSource.premiumGiveaway(boostPeer: peerId, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970), currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
+        let source = BotPaymentInvoiceSource.premiumGiveaway(boostPeer: peerId, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: false, prizeDescription: nil, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970), currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
         
         let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
 
@@ -897,8 +897,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                 showModal(with: lockModal, for: context.window)
             }
         })
-        
-        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, countries: stateValue.with { $0.countries.map { $0.id } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
+        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, countries: stateValue.with { $0.countries.map { $0.id } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, showWinners: false, prizeDescription: nil, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
         
                 
         let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
@@ -974,7 +973,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                 let state = stateValue.with { $0 }
                 let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
                 let countries = state.countries.map { $0.id }
-                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
+                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: false, prizeDescription: nil, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
                 _ = showModalProgress(signal: signal, for: context.window).start(completed: {
                     PlayConfetti(for: context.window)
                     showModalText(for: context.window, text: strings().giveawayAlertCreated)
