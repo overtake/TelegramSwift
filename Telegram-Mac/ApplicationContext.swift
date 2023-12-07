@@ -523,7 +523,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
+            context.bindings.rootNavigation().push(MetalEngineTestController())
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

@@ -2738,7 +2738,6 @@ func smartTimeleftText( _ left: Int) -> String {
 }
 
 
-public typealias UIImage = NSImage
 
 extension NSImage {
     

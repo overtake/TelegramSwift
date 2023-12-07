@@ -10,6 +10,7 @@ import Foundation
 import CoreText
 import AppKit
 
+public typealias UIImage = NSImage
 
 public extension NSAttributedString {
     
