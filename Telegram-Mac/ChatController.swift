@@ -6063,7 +6063,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.navigationController?.push(ChatScheduleController(context: context, chatLocation: self.chatLocation))
     }
     
-    @available(OSX 10.12.2, *)
+    @available(macOS 10.12.2, *)
     override func makeTouchBar() -> NSTouchBar? {
         if let temporaryTouchBar = temporaryTouchBar as? ChatTouchBar {
             temporaryTouchBar.updateChatInteraction(self.chatInteraction, textView: self.genericView.inputView.textView.inputView)

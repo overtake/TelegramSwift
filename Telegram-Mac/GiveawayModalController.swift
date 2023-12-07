@@ -243,7 +243,8 @@ private final class Arguments {
     let toggleOption:(State.PaymentOption)->Void
     let addChannel:()->Void
     let deleteChannel:(PeerId)->Void
-    init(context: AccountContext, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void) {
+    let toggleShowWinners:(Bool)->Void
+    init(context: AccountContext, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void, toggleShowWinners:@escaping(Bool)->Void) {
         self.context = context
         self.updateQuantity = updateQuantity
         self.updateReceiver = updateReceiver
@@ -253,6 +254,7 @@ private final class Arguments {
         self.toggleOption = toggleOption
         self.addChannel = addChannel
         self.deleteChannel = deleteChannel
+        self.toggleShowWinners = toggleShowWinners
     }
 }
 
@@ -326,6 +328,9 @@ private struct State : Equatable {
     var type: GiveawayType = .random
     var quantity: Int32 = 10
     
+    var showWinners: Bool = false
+    var prizeDescription: String?
+    
     var selectedMonths: Int32 = 12
     
     var date: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + (60 * 60 * 24 * 3))
@@ -349,6 +354,9 @@ private let _id_size_header = InputDataIdentifier("_id_size_header")
 private let _id_add_channel = InputDataIdentifier("_id_add_channel")
 private let _id_receiver_all = InputDataIdentifier("_id_receiver_all")
 private let _id_receiver_new = InputDataIdentifier("_id_receiver_new")
+private let _id_show_winners = InputDataIdentifier("_id_show_winners")
+private let _id_prize_description = InputDataIdentifier("_id_prize_description")
+
 private let _id_select_date = InputDataIdentifier("_id_select_date")
 private let _id_prepaid = InputDataIdentifier("_id_prepaid")
 
@@ -520,9 +528,40 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayReceiverTypeInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
+       
+        
+        
+        
+        #if DEBUG
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
+        
+        //WINNERS
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WINNERS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_winners, data: .init(name: "Show Winners", color: theme.colors.text, type: .switchable(state.showWinners), viewType: .singleItem, action: {
+            arguments.toggleShowWinners(state.showWinners)
+        })))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose wether to make the list of winners public when the giveaway ends."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADDITIONAL PRIZES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .singleItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Prize Description", filter: { $0 }, limit: 100))
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Provide description of any additional prizes you plan to award to the winners, in addition to Telegram Premium."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        #endif
+        
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateTitle), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
@@ -780,6 +819,12 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             current.channels.removeAll(where: { $0.peer.id == peerId })
             return current
         }
+    }, toggleShowWinners: { value in
+        updateState { current in
+            var current = current
+            current.showWinners = !value
+            return current
+        }
     })
     
     let products: Signal<[InAppPurchaseManager.Product], NoError>
@@ -839,7 +884,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
         let countries = state.countries.map { $0.id }
         
-        let source = BotPaymentInvoiceSource.premiumGiveaway(boostPeer: peerId, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: false, prizeDescription: nil, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970), currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
+        let source = BotPaymentInvoiceSource.premiumGiveaway(boostPeer: peerId, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: state.showWinners, prizeDescription: state.prizeDescription, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970), currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
         
         let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
 
@@ -897,7 +942,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                 showModal(with: lockModal, for: context.window)
             }
         })
-        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, countries: stateValue.with { $0.countries.map { $0.id } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, showWinners: false, prizeDescription: nil, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
+        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, countries: stateValue.with { $0.countries.map { $0.id } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, showWinners: state.showWinners, prizeDescription: state.prizeDescription, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
         
                 
         let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
@@ -966,6 +1011,15 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         controller.tableView.clipView.layer?.masksToBounds = false
     }
     
+    controller.updateDatas = { data in
+        updateState { current in
+            var current = current
+            current.prizeDescription = data[_id_prize_description]?.stringValue
+            return current
+        }
+        return .none
+    }
+    
     controller.validateData = { _ in
         
         verifyAlert(for: context.window, header: strings().boostGiftStartConfirmationTitle, information: strings().boostGiftStartConfirmationText, ok: strings().boostGiftStartConfirmationStart, successHandler: { _ in
@@ -973,7 +1027,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                 let state = stateValue.with { $0 }
                 let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
                 let countries = state.countries.map { $0.id }
-                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: false, prizeDescription: nil, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
+                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: state.showWinners, prizeDescription: state.prizeDescription, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
                 _ = showModalProgress(signal: signal, for: context.window).start(completed: {
                     PlayConfetti(for: context.window)
                     showModalText(for: context.window, text: strings().giveawayAlertCreated)
