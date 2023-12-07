@@ -16,18 +16,17 @@ mkdir build
 OUT_DIR="${BUILD_DIR}build"
 
 
-
+NAME="openssl-1.1.1s";
 
 CROSS_TOP_MAC="$(xcode-select -p)/Platforms/MacOSX.platform"
 CROSS_SDK_MAC="MacOSX.sdk"
 
+git clone -b OpenSSL_1_1_1-stable https://github.com/openssl/openssl build/${NAME}
 
-SOURCE_DIR="$OUT_DIR/openssl-1.1.1d"
-SOURCE_ARCHIVE= "${BUILD_DIR}openssl-1.1.1d.zip"
 
-rm -rf "$SOURCE_DIR"
+SOURCE_DIR="$OUT_DIR/${NAME}"
 
-tar -xzf "$SOURCE_ARCHIVE" --directory "$OUT_DIR"
+
 
 export CROSS_COMPILE=`xcode-select --print-path`/Toolchains/XcodeDefault.xctoolchain/usr/bin/
 
@@ -164,8 +163,8 @@ for ARCH in $ARCHS
 do
   build_for darwin64-$ARCH-cc $ARCH MAC
   mkdir build/$ARCH
-  mv "build/openssl-1.1.1d/libssl.a" "build/$ARCH/libssl.a"
-  mv "build/openssl-1.1.1d/libcrypto.a" "build/$ARCH/libcrypto.a"
+  mv "build/${NAME}/libssl.a" "build/$ARCH/libssl.a"
+  mv "build/${NAME}/libcrypto.a" "build/$ARCH/libcrypto.a"
 done
 
 
