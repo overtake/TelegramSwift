@@ -911,9 +911,19 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
             } else {
                 target = .myStories
             }
-            _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo).start()
-            showModalText(for: context.window, text: strings().storyPrivacySaveRepost)
-            close?()
+            
+            actionsDisposable.add(context.engine.messages.checkStoriesUploadAvailability(target: target).start(next: { availability in
+                
+                switch availability {
+                case .available:
+                    _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo).start()
+                    showModalText(for: context.window, text: strings().storyPrivacySaveRepost)
+                    close?()
+                default:
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                }
+                
+            }))
         case let .settings(story):
             _ = context.engine.messages.editStoryPrivacy(id: story.storyItem.id, privacy: selectedPrivacy).startStandalone()
             showModalText(for: context.window, text: strings().storyPrivacySavePrivacy)

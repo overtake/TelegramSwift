@@ -53,7 +53,11 @@ final class ChatGiveawayRowItem : ChatRowItem {
             self.grayColor = grayColor
             //TODOLANG
             self.with = .init(.initialize(string: "with", color: grayColor, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .center)
-            self.prizeDescription = .init(.initialize(string: prizeDescription, color: textColor, font: .normal(.text)), alignment: .center)
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: prizeDescription, color: textColor, font: .normal(.text))
+            attr.detectBoldColorInString(with: .medium(.text))
+            self.prizeDescription = .init(attr, alignment: .center)
         }
         var size: NSSize {
             return NSMakeSize(width, self.with.layoutSize.height + self.prizeDescription.layoutSize.height + 3)
@@ -92,7 +96,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         
         if let prizeDescription = media.prizeDescription {
-            self.additionalPrizes = .init(prizeDescription: prizeDescription, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), grayColor: theme.chat.grayText(isIncoming, object.renderType == .bubble))
+            self.additionalPrizes = .init(prizeDescription: "**\(media.quantity)** \(prizeDescription)", textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), grayColor: theme.chat.grayText(isIncoming, object.renderType == .bubble))
         } else {
             self.additionalPrizes = nil
         }
