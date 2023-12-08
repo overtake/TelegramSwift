@@ -75,6 +75,7 @@ public struct TextInputAttributes {
 func findClosestRect(rectangles: [CGRect], point: CGPoint) -> CGRect? {
     var closestRect: CGRect?
     var closestYDistance = CGFloat.greatestFiniteMagnitude
+    let point = point.offsetBy(dx: 0, dy: 5.0)
     for rect in rectangles {
         
         let point = NSMakePoint(point.x, point.y + rect.height / 2)
