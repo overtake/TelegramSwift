@@ -274,16 +274,16 @@ final class StoryChannelInputView : Control, StoryInput {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         if let likeCount = self.likeCount {
             transition.updateFrame(view: likeCount, frame: likeCount.centerFrameY(x: size.width - likeCount.frame.width - 16))
-            transition.updateFrame(view: likeAction, frame: likeAction.centerFrameY(x: likeCount.frame.minX - likeAction.frame.width))
+            transition.updateFrame(view: likeAction, frame: likeAction.centerFrameY(x: likeCount.frame.minX - likeAction.frame.width + 5))
         } else {
             transition.updateFrame(view: likeAction, frame: likeAction.centerFrameY(x: size.width - likeAction.frame.width))
         }
         if let shareCount = shareCount {
-            transition.updateFrame(view: repost, frame: repost.centerFrameY(x: likeAction.frame.minX - repost.frame.width - shareCount.frame.width - 10))
+            transition.updateFrame(view: shareCount, frame: shareCount.centerFrameY(x: likeAction.frame.minX - shareCount.frame.width + 5))
+            transition.updateFrame(view: repost, frame: repost.centerFrameY(x: shareCount.frame.minX - repost.frame.width - 5))
             transition.updateFrame(view: share, frame: share.centerFrameY(x: repost.frame.minX - share.frame.width - 10))
-            transition.updateFrame(view: shareCount, frame: shareCount.centerFrameY(x: repost.frame.maxX + 10))
         } else {
-            transition.updateFrame(view: repost, frame: repost.centerFrameY(x: likeAction.frame.minX - repost.frame.width - 10))
+            transition.updateFrame(view: repost, frame: repost.centerFrameY(x: likeAction.frame.minX - repost.frame.width))
             transition.updateFrame(view: share, frame: share.centerFrameY(x: repost.frame.minX - share.frame.width - 10))
         }
         

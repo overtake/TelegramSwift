@@ -570,7 +570,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         })))
         
         if state.additionalPrizes {
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Enter Your Prize", filter: { $0 }, limit: 100))
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Enter Your Prize", filter: { $0 }, limit: 128))
             
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain("All prizes: \(state.quantity) Telegram Premium subscriptions for 3 months."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
