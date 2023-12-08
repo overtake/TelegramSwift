@@ -197,8 +197,12 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     var textFieldLeftInset: CGFloat {
         if let placeholder = placeholder {
-            if let _ = placeholder.placeholder {
-                return 102
+            if let placeholder = placeholder.placeholder {
+                if placeholder.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).isEmpty {
+                    return 30
+                } else {
+                    return 102
+                }
             } else {
                 if let icon = placeholder.icon {
                     return icon.backingSize.width + 6 + placeholder.insets.left

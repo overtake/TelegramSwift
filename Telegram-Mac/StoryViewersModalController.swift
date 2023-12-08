@@ -27,11 +27,16 @@ private final class StoryViewerEmptyRowItem : GeneralRowItem {
         self.context = context
         self.presentation = presentation
         let string: String
-        if state.views?.totalCount == 0 {
-            string = strings().storyAlertNoViews
+        if state.isChannel {
+            string = strings().storyAlertNoReactionsChannels
         } else {
-            string = strings().storyAlertViewsExpired
+            if state.views?.totalCount == 0 {
+                string = strings().storyAlertNoViews
+            } else {
+                string = strings().storyAlertViewsExpired
+            }
         }
+        
         self.text = .init(.initialize(string: string, color: presentation.colors.grayText, font: .normal(.text)), alignment: .center)
         
         if !context.isPremium {
@@ -442,6 +447,8 @@ private struct State : Equatable {
     var listMode: EngineStoryViewListContext.ListMode
     var sortMode: EngineStoryViewListContext.SortMode
     var query: String = ""
+    var peer: EnginePeer?
+    var isChannel: Bool
 }
 
 
@@ -500,7 +507,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let expired = state.item.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
         
         var totalHeight: CGFloat = 450
-        let totalCount = state.item.views?.seenCount ?? 0
+        var totalCount = state.item.views?.seenCount ?? 0
+        
+        if state.isChannel {
+            totalCount = (state.item.views?.reactedCount ?? 0) + (state.item.views?.forwardCount ?? 0)
+        }
         if totalCount > 15 && !expired {
             totalHeight -= 40
         }
@@ -617,16 +628,26 @@ private final class StoryViewersTopView : View {
     
     func update(_ state: State, arguments: Arguments) {
         self.arguments = arguments
-        let string = strings().storyViewsTitleCountable(state.item.views?.seenCount ?? 0)
+        let string: String
+        let isChannel = state.isChannel
+        if isChannel {
+            string = strings().storyViewsTitleChannel
+        } else {
+            string = strings().storyViewsTitleCountable(state.item.views?.seenCount ?? 0)
+        }
         let layout = TextViewLayout(.initialize(string: string, color: darkAppearance.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         self.titleView.update(layout)
         
-        let totalCount = state.item.views?.seenCount ?? 0
+        var totalCount = state.item.views?.seenCount ?? 0
         let totalLikes = state.item.views?.reactedCount ?? 0
         let expired = state.item.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
-        let onlyTitle = (state.item.privacy != nil && state.item.privacy?.base != .everyone) || expired
+        let onlyTitle = (state.item.privacy != nil && state.item.privacy?.base != .everyone) || expired || isChannel
 
+        if isChannel {
+            totalCount = (state.item.views?.reactedCount ?? 0) + (state.item.views?.forwardCount ?? 0)
+        }
+        
         segmentControl.view.isHidden = totalCount <= 20 || onlyTitle
         titleView.isHidden = totalCount > 20 && !onlyTitle
         filter.isHidden = totalLikes < 10 || totalLikes == totalCount || expired
@@ -652,7 +673,7 @@ private final class StoryViewersTopView : View {
     
 }
 
-func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
+func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext, peerId: PeerId, isChannel: Bool, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
     
     let initialViews = story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false)
@@ -663,7 +684,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(item: story, views: nil, previous: nil, listMode: .everyone, sortMode: .reactionsFirst)
+    let initialState = State(item: story, views: nil, previous: nil, listMode: .everyone, sortMode: .reactionsFirst, isChannel: isChannel)
     
     let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -743,7 +764,12 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     let controller = InputDataController(dataSignal: signal, title: "")
     
-    let seenCount = (story.views?.seenCount ?? 0)
+    var seenCount = (story.views?.seenCount ?? 0)
+    
+    if isChannel {
+        seenCount = (story.views?.reactedCount ?? 0) + (story.views?.forwardCount ?? 0)
+    }
+    
     let expired = story.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
 
     let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, seenCount > 15 && !expired ? 90 : 50))
@@ -860,6 +886,14 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             }
         }
         previous = value
+    }))
+    
+    actionsDisposable.add(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)).start(next: { peer in
+        updateState { current in
+            var current = current
+            current.peer = peer
+            return current
+        }
     }))
     
     

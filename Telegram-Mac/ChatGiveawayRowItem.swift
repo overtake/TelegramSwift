@@ -39,10 +39,34 @@ final class ChatGiveawayRowItem : ChatRowItem {
         var rect: NSRect
     }
     
+    class AdditionalPrizes {
+        let prizeDescription: TextViewLayout
+        let with: TextViewLayout
+        let grayColor: NSColor
+        var width: CGFloat = 0
+        func makeSize(width: CGFloat) {
+            self.width = width
+            prizeDescription.measure(width: width)
+            with.measure(width: .greatestFiniteMagnitude)
+        }
+        init(prizeDescription: String, textColor: NSColor, grayColor: NSColor) {
+            self.grayColor = grayColor
+            //TODOLANG
+            self.with = .init(.initialize(string: "with", color: grayColor, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .center)
+            self.prizeDescription = .init(.initialize(string: prizeDescription, color: textColor, font: .normal(.text)), alignment: .center)
+        }
+        var size: NSSize {
+            return NSMakeSize(width, self.with.layoutSize.height + self.prizeDescription.layoutSize.height + 3)
+        }
+    }
+    
     let headerText: TextViewLayout
+    let prizesInfo: TextViewLayout
+
     let participantsText: TextViewLayout
     let winnerText: TextViewLayout
     let countryText: TextViewLayout?
+    let additionalPrizes: AdditionalPrizes?
     let badge: BadgeNode
     
     let media: TelegramMediaGiveaway
@@ -64,14 +88,28 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         let media = object.message!.media.first! as! TelegramMediaGiveaway
         self.media = media
+        
+        
+        
+        if let prizeDescription = media.prizeDescription {
+            self.additionalPrizes = .init(prizeDescription: prizeDescription, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), grayColor: theme.chat.grayText(isIncoming, object.renderType == .bubble))
+        } else {
+            self.additionalPrizes = nil
+        }
+        
         let header_attr = NSMutableAttributedString()
         _ = header_attr.append(string: strings().chatGiveawayMessagePrizeTitle, color: wpPresentation.text, font: .medium(.text))
-        _ = header_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = header_attr.append(string: strings().chatGiveawayMessageSubscriptionsCountable(Int(media.quantity)), color: wpPresentation.text, font: .normal(.text))
-        _ = header_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = header_attr.append(string: strings().chatGiveawayMessageMonthsCountable(Int(media.months)), color: wpPresentation.text, font: .normal(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
+        
+        
+        let prizes_info = NSMutableAttributedString()
+        _ = prizes_info.append(string: strings().chatGiveawayMessageSubscriptionsCountable(Int(media.quantity)), color: wpPresentation.text, font: .normal(.text))
+        _ = prizes_info.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
+        _ = prizes_info.append(string: strings().chatGiveawayMessageMonthsCountable(Int(media.months)), color: wpPresentation.text, font: .normal(.text))
+        prizes_info.detectBoldColorInString(with: .medium(.text))
+        self.prizesInfo = .init(prizes_info, alignment: .center, alwaysStaticItems: true)
+        
         
         let participants_attr = NSMutableAttributedString()
         if media.flags.contains(.onlyNewSubscribers) {
@@ -198,6 +236,12 @@ final class ChatGiveawayRowItem : ChatRowItem {
             var openSlug:(String)->Void = { slug in
                 execute(inapp: .gift(link: "", slug: slug, context: context))
             }
+            
+            var additionalPrize: String = ""
+            
+            if let prize = self.media.prizeDescription {
+                additionalPrize = "**\(peerName)** also included 5 iPhone 14 Pro Max in the prizes. Admins of the channel are responsible for delivering these prizes.\n\n"
+            }
   
             switch info {
             case let .ongoing(start, status):
@@ -263,7 +307,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
                     participation = "\n\n\(participation)"
                 }
                 
-                text = "\(intro)\n\n\(ending)\(participation)"
+                text = "\(intro)\n\n\(additionalPrize)\(ending)\(participation)"
             case let .finished(status, start, finish, _, activatedCount):
                 let startDate = stringForFullDate(timestamp: start)
                 let finishDate = stringForFullDate(timestamp: finish)
@@ -308,7 +352,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
                     prizeSlug = slug
                 }
                 
-                text = "\(intro)\n\n\(ending)\(result)"
+                text = "\(intro)\n\n\(additionalPrize)\(ending)\(result)"
             }
 
             if let cancel = cancel, let prizeSlug = prizeSlug {
@@ -328,20 +372,34 @@ final class ChatGiveawayRowItem : ChatRowItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
         
+        let width = min(width, 300)
         
         headerText.measure(width: width)
+        prizesInfo.measure(width: width)
+
         participantsText.measure(width: width)
         winnerText.measure(width: width)
         
-        let w = max(headerText.layoutSize.width, participantsText.layoutSize.width, winnerText.layoutSize.width)
+        let w = max(headerText.layoutSize.width, prizesInfo.layoutSize.width, participantsText.layoutSize.width, winnerText.layoutSize.width)
 
         
         countryText?.measure(width: w)
 
         
         var height: CGFloat = 100
+        
         height += headerText.layoutSize.height
+        height += 5
+        
+        
+        if let additionalPrizes = additionalPrizes {
+            additionalPrizes.makeSize(width: w)
+            height += additionalPrizes.size.height + 5
+        }
+        
+        height += prizesInfo.layoutSize.height
         height += 10
+        
         height += participantsText.layoutSize.height
         height += 5
         
@@ -481,10 +539,57 @@ private final class ChatGiveawayRowView: ChatRowView {
             textView.centerY(x: avatar.frame.maxX + 5)
         }
     }
+    
+    final class AdditionalPrizesView : View {
+        private let text = TextView()
+        private let with = TextView()
+        private var prizes: ChatGiveawayRowItem.AdditionalPrizes? = nil
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.addSubview(text)
+            addSubview(with)
+            text.userInteractionEnabled = false
+            text.isSelectable = false
+            with.userInteractionEnabled = false
+            with.isSelectable = false
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(_ prizes: ChatGiveawayRowItem.AdditionalPrizes) {
+            self.prizes = prizes
+            self.text.update(prizes.prizeDescription)
+            self.with.update(prizes.with)
+            needsLayout = true
+        }
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            super.draw(layer, in: ctx)
+            
+            guard let prizes = self.prizes else {
+                return
+            }
+            
+            ctx.setFillColor(prizes.grayColor.withAlphaComponent(0.5).cgColor)
+            ctx.fill(NSMakeRect(0, with.frame.midY, with.frame.minX - 5, .borderSize))
+            ctx.fill(NSMakeRect(with.frame.maxX + 5, with.frame.midY, with.frame.minX - 10, .borderSize))
+
+        }
+        
+        override func layout() {
+            super.layout()
+            self.text.centerX(y: 0)
+            self.with.centerX(y: self.text.frame.maxY + 3)
+        }
+    }
 
     
     private let mediaView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 90, 90))
     private let headerTextView = TextView()
+    private let prizezTextView = TextView()
+
     private let participantsTextView = TextView()
     private let winnerTextView = TextView()
     private var countryText: TextView?
@@ -493,11 +598,13 @@ private final class ChatGiveawayRowView: ChatRowView {
     
     private let action = TextButton()
     private let channels = View()
+    private var additionalPrizes: AdditionalPrizesView?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(mediaView)
         addSubview(headerTextView)
+        addSubview(prizezTextView)
         addSubview(participantsTextView)
         addSubview(winnerTextView)
         addSubview(channels)
@@ -531,9 +638,25 @@ private final class ChatGiveawayRowView: ChatRowView {
             return
         }
         
+        if let additionalPrizes = item.additionalPrizes {
+            let current: AdditionalPrizesView
+            if let view = self.additionalPrizes {
+                current = view
+            } else {
+                current = AdditionalPrizesView(frame: additionalPrizes.size.bounds)
+                addSubview(current)
+                self.additionalPrizes = current
+            }
+            current.set(additionalPrizes)
+        } else if let view = self.additionalPrizes {
+            performSubviewRemoval(view, animated: animated)
+            self.additionalPrizes = nil
+        }
+        
         mediaView.update(with: item.giftAnimation.file, size: mediaView.frame.size, context: item.context, table: item.table, parameters: item.giftAnimation.parameters, animated: animated)
         
         headerTextView.update(item.headerText)
+        prizezTextView.update(item.prizesInfo)
         participantsTextView.update(item.participantsText)
         winnerTextView.update(item.winnerText)
         
@@ -586,9 +709,22 @@ private final class ChatGiveawayRowView: ChatRowView {
         super.updateLayout(size: size, transition: transition)
         mediaView.centerX(y: 0)
         badgeView.centerX(y: mediaView.frame.maxY - badgeView.frame.height + 5)
-        headerTextView.centerX(y: mediaView.frame.maxY + 10)
-        participantsTextView.centerX(y: headerTextView.frame.maxY + 10)
-        channels.centerX(y: participantsTextView.frame.maxY + 5)
+        
+        var currentY: CGFloat = mediaView.frame.maxY + 10
+
+        headerTextView.centerX(y: currentY)
+        currentY = headerTextView.frame.maxY + 5
+        
+        if let additionalPrizes = self.additionalPrizes {
+            additionalPrizes.centerX(y: currentY)
+            currentY = additionalPrizes.frame.maxY + 5
+        }
+        self.prizezTextView.centerX(y: currentY)
+        currentY = self.prizezTextView.frame.maxY + 10
+        
+        participantsTextView.centerX(y: currentY)
+        currentY = participantsTextView.frame.maxY + 5
+        channels.centerX(y: currentY)
         
         var y: CGFloat = channels.frame.maxY + 10
         if let countryText = countryText {

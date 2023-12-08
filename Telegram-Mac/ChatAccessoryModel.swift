@@ -227,12 +227,14 @@ class ChatAccessoryView : Button {
                 patternTarget = .init(account: model.context.account, inlinePacksContext: model.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: model.presentation.colors.main)
                 patternTarget?.noDelayBeforeplay = true
                 patternTarget?.isPlayable = true
+                self.updatePatternLayerImages()
             }
             patternTarget?.contentDidUpdate = { [weak self] content in
                 self?.updatePatternLayerImages()
             }
         } else {
             patternTarget = nil
+            self.updatePatternLayerImages()
         }
         
         if model.presentation.pattern != nil {
@@ -307,6 +309,8 @@ class ChatAccessoryView : Button {
         self.updateListeners()
         
         self.updateTheme()
+        self.updatePatternLayerImages()
+
     }
     
     private func updatePatternLayerImages() {
