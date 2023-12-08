@@ -939,15 +939,16 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
             }
             
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
+                c.clear(drawingRect)
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
                     switch color {
                     case let .color(color):
                         c.setFillColor(color.cgColor)
+                        c.fill(drawingRect)
                     default:
                         break
                     }
-                    c.fill(drawingRect)
                 } else {
                     c.setBlendMode(.copy)
                 }
@@ -960,10 +961,13 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
                 
                 if let fullSizeImage = fullSizeImage {
                     let cgImage = fullSizeImage
-                    c.setBlendMode(.normal)
-                    c.interpolationQuality = .medium
-                    
-                    c.draw(cgImage, in: fittedRect)
+                    if case let .fill(color) = arguments.emptyColor {
+                        c.clip(to: fittedRect, mask: cgImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(fittedRect)
+                    } else {
+                        c.draw(cgImage, in: fittedRect)
+                    }
                 }
             })
             

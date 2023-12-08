@@ -746,8 +746,8 @@ final class InlineStickerItemLayer : SimpleLayer {
                 })
                 if self.playerState != .playing {
                     self.contents = result?.image
-
                     if let image = result?.image {
+                        self.contentDidUpdate?(image)
                         self.preview = image
                         self.isPreviousPreview = false
                     }

@@ -244,7 +244,8 @@ private final class Arguments {
     let addChannel:()->Void
     let deleteChannel:(PeerId)->Void
     let toggleShowWinners:(Bool)->Void
-    init(context: AccountContext, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void, toggleShowWinners:@escaping(Bool)->Void) {
+    let toggleAdditionalPrizes:(Bool)->Void
+    init(context: AccountContext, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void, toggleShowWinners:@escaping(Bool)->Void, toggleAdditionalPrizes:@escaping(Bool)->Void) {
         self.context = context
         self.updateQuantity = updateQuantity
         self.updateReceiver = updateReceiver
@@ -255,6 +256,7 @@ private final class Arguments {
         self.addChannel = addChannel
         self.deleteChannel = deleteChannel
         self.toggleShowWinners = toggleShowWinners
+        self.toggleAdditionalPrizes = toggleAdditionalPrizes
     }
 }
 
@@ -329,6 +331,7 @@ private struct State : Equatable {
     var quantity: Int32 = 10
     
     var showWinners: Bool = false
+    var additionalPrizes: Bool = false
     var prizeDescription: String?
     
     var selectedMonths: Int32 = 12
@@ -344,6 +347,14 @@ private struct State : Equatable {
     var canMakePayment: Bool = true
     
     var countries: [Country] = []
+    
+    var prizeDescriptionValue: String? {
+        if let prizeDescription = prizeDescription, additionalPrizes {
+            return prizeDescription
+        } else {
+            return nil
+        }
+    }
 }
 
 private let _id_star = InputDataIdentifier("_id_star")
@@ -356,6 +367,7 @@ private let _id_receiver_all = InputDataIdentifier("_id_receiver_all")
 private let _id_receiver_new = InputDataIdentifier("_id_receiver_new")
 private let _id_show_winners = InputDataIdentifier("_id_show_winners")
 private let _id_prize_description = InputDataIdentifier("_id_prize_description")
+private let _id_additional_prizes = InputDataIdentifier("_id_additional_prizes")
 
 private let _id_select_date = InputDataIdentifier("_id_select_date")
 private let _id_prepaid = InputDataIdentifier("_id_prepaid")
@@ -549,14 +561,26 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+        
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADDITIONAL PRIZES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .singleItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Prize Description", filter: { $0 }, limit: 100))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_additional_prizes, data: .init(name: "Additional Prizes", color: theme.colors.text, type: .switchable(state.additionalPrizes), viewType: state.additionalPrizes ? .firstItem : .singleItem, action: {
+            arguments.toggleAdditionalPrizes(state.additionalPrizes)
+        })))
         
+        if state.additionalPrizes {
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Enter Your Prize", filter: { $0 }, limit: 100))
+            
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("All prizes: \(state.quantity) Telegram Premium subscriptions for 3 months."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            index += 1
+        } else {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Turn this on if you want to give the winners your own prizes in addition to Premium subscriptions."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            index += 1
+            
+        }
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Provide description of any additional prizes you plan to award to the winners, in addition to Telegram Premium."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
         #endif
         
         
@@ -825,6 +849,12 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             current.showWinners = !value
             return current
         }
+    }, toggleAdditionalPrizes: { value in
+        updateState { current in
+            var current = current
+            current.additionalPrizes = !value
+            return current
+        }
     })
     
     let products: Signal<[InAppPurchaseManager.Product], NoError>
@@ -1021,6 +1051,12 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     }
     
     controller.validateData = { _ in
+        let state = stateValue.with { $0 }
+        if state.additionalPrizes {
+            if state.prizeDescription == nil || state.prizeDescription == "" {
+                return .fail(.fields([_id_prize_description : .shake]))
+            }
+        }
         
         verifyAlert(for: context.window, header: strings().boostGiftStartConfirmationTitle, information: strings().boostGiftStartConfirmationText, ok: strings().boostGiftStartConfirmationStart, successHandler: { _ in
             if let prepaid = prepaid {

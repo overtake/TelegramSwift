@@ -13517,6 +13517,8 @@ public final class L10n {
   public static var storyAlertNoViews: String  { return L10n.tr("Localizable", "Story.Alert.NoViews") }
   /// List of viewers isn't available after 24 hours of story expiration.
   public static var storyAlertViewsExpired: String  { return L10n.tr("Localizable", "Story.Alert.ViewsExpired") }
+  /// Nobody has reacted or reposted your story.
+  public static var storyAlertNoReactionsChannels: String  { return L10n.tr("Localizable", "Story.Alert.NoReactions.Channels") }
   /// Open Channel
   public static var storyAvatarContextOpenChannel: String  { return L10n.tr("Localizable", "Story.AvatarContext.OpenChannel") }
   /// Send Message
@@ -13973,6 +13975,8 @@ public final class L10n {
   }
   /// No views yet
   public static var storyViewsTitleZeroValueHolder: String  { return L10n.tr("Localizable", "StoryViews.Title_ZeroValueHolder") }
+  /// Reactions
+  public static var storyViewsTitleChannel: String  { return L10n.tr("Localizable", "StoryViews.Title.Channel") }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.

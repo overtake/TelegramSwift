@@ -1298,9 +1298,14 @@ private final class StoryViewController: Control, Notifable {
         
         if updated {
             self.closeTooltip()
-            if let peerId = state.slice?.peer.id, state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
-                self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
-                self.storyViewList?.loadMore()
+            if let peerId = state.slice?.peer.id, let story = state.slice?.item.storyItem {
+                let accept = state.slice?.peer.id == context.peerId || state.slice?.peer._asPeer().isAdmin == true
+                if accept {
+                    self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
+                    self.storyViewList?.loadMore()
+                } else {
+                    self.storyViewList = nil
+                }
             } else {
                 self.storyViewList = nil
             }
@@ -1952,8 +1957,12 @@ private final class StoryViewController: Control, Notifable {
                         self.close.send(event: .Click)
                     }
                 } else if scrollDeltaY < -50 {
-                    if let peerId = current.id, peerId == arguments?.context.peerId, let story = current.story {
-                        arguments?.showViewers(story)
+                    if let peerId = current.id, let story = current.story {
+                        if peerId == arguments?.context.peerId {
+                            arguments?.showViewers(story)
+                        } else if let peer = self.storyContext?.stateValue?.slice?.peer._asPeer() as? TelegramChannel {
+                            arguments?.showViewers(story)
+                        }
                         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                     } else {
                         if self.reactions != nil {
@@ -2508,7 +2517,7 @@ final class StoryModalController : ModalViewController, Notifable {
             } else {
                 if let peerId = story.peer?.id {
                     if let list = self?.genericView.storyViewList {
-                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: darkAppearance, callback: { peerId in
+                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, isChannel: story.peer?._asPeer().isChannel == true, story: story.storyItem, presentation: darkAppearance, callback: { peerId in
                             openPeerInfo(peerId, nil)
                         }), for: context.window)
                     }

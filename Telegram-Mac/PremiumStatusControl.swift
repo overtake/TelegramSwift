@@ -138,7 +138,7 @@ final class PremiumStatusControl : Control {
             if let layer = self.animateLayer, layer.file?.fileId.id == fileId && !updated {
                 current = layer
                 if isDefaultStatusesPackId(layer.file?.emojiReference), color != nil {
-                    self.layer?.opacity = 0.4
+                    self.layer?.opacity = 1.0
                 } else {
                     self.layer?.opacity = 1.0
                 }
