@@ -748,6 +748,7 @@ class ChatRowItem: TableRowItem {
             }
         }
     }
+    
     func showExpiredStoryError() {
         showModalText(for: context.window, text: strings().chatReplyExpiredStoryError)
     }
@@ -1928,23 +1929,32 @@ class ChatRowItem: TableRowItem {
                     if renderType == .bubble {
                         
                         let text: String
+                        let linkString: String
                         if let psaType = message.forwardInfo?.psaType {
-                            text = localizedPsa("psa.title.bubbles", type: psaType, args: [attr.string])
+                            text = localizedPsa("psa.title.bubbles_new", type: psaType, args: [attr.string])
+                            linkString = psaType
                         } else {
                             var fullName = attr.string
                             if let signature = message.forwardInfo?.authorSignature, message.isAnonymousMessage {
                                 fullName += " (\(signature))"
                             }
-                            text = strings().chatBubblesForwardedFrom(fullName)
+                            text = strings().chatBubblesForwardedFromNew(fullName)
+                            linkString = fullName
+                        }
+                        if !attr.string.isEmpty, let link = attr.attribute(NSAttributedString.Key.link, at: 0, effectiveRange: nil) {
+                            let newAttr = NSAttributedString.initialize(string: text, color: forwardNameColor, font: .normal(.short))
+                            attr = newAttr.mutableCopy() as! NSMutableAttributedString
+
+                            let range = attr.string.nsstring.range(of: linkString)
+
+                            if range.location != NSNotFound {
+                                attr.addAttribute(.link, value: link, range: range)
+                            }
+                        } else {
+                            let newAttr = NSAttributedString.initialize(string: text, color: forwardNameColor, font: .normal(.short))
+                            attr = newAttr.mutableCopy() as! NSMutableAttributedString
                         }
                         
-                        let newAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: forwardNameColor), link: MarkdownAttributeSet(font: hasBubble && info.author != nil ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { [weak attr] contents in
-                            if let attr = attr, !attr.string.isEmpty, let link = attr.attribute(NSAttributedString.Key.link, at: 0, effectiveRange: nil) {
-                                return (NSAttributedString.Key.link.rawValue, link)
-                            }
-                            return nil
-                        }))
-                        attr = newAttr.mutableCopy() as! NSMutableAttributedString
                     } else {
                         _ = attr.append(string: " ")
                         _ = attr.append(string: DateUtils.string(forLastSeen: info.date), color: renderType == .bubble ? forwardNameColor : presentation.colors.grayText, font: .normal(.short))
@@ -2179,6 +2189,9 @@ class ChatRowItem: TableRowItem {
                     if let threadId = message.effectiveReplyThreadMessageId, threadId == attribute.messageId, message.associatedThreadInfo != nil {
                         ignore = true
                     }
+                    if message.media.first is TelegramMediaGiveawayResults {
+                        ignore = true
+                    }
                     if !ignore {
                         if replyMessage.isExpiredStory, let media = replyMessage.media.first as? TelegramMediaStory {
                             self.replyModel = ExpiredStoryReplyModel(message: message, storyId: media.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
@@ -2325,7 +2338,9 @@ class ChatRowItem: TableRowItem {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
                     return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
                 }
-                if message.media.first is TelegramMediaGiveaway {
+                if message.media.first is TelegramMediaGiveawayResults {
+                    return ChatGiveawayResultRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                } else if message.media.first is TelegramMediaGiveaway {
                     return ChatGiveawayRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 }
                 if let action = message.media[0] as? TelegramMediaAction {

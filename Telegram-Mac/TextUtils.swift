@@ -91,7 +91,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             } else {
                 messageText = strings().messageGiveawayStarted
             }
-
+        case _ as TelegramMediaGiveawayResults:
+            messageText = strings().messageGiveawayResult
         case let fileMedia as TelegramMediaFile:
             if fileMedia.probablySticker {
                 messageText = strings().chatListSticker(fileMedia.stickerText?.normalizedEmoji ?? "")

@@ -82,7 +82,7 @@ private class ProfilePreviewRowItem : GeneralRowItem {
     fileprivate let nameLayout: TextViewLayout
     fileprivate let statusLayout: TextViewLayout
     fileprivate let getColor:(PeerNameColor)->PeerNameColors.Colors
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, nameColor: PeerNameColor?, backgroundEmojiId: Int64?, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType, getColor:@escaping(PeerNameColor)->PeerNameColors.Colors) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, subscribers: Int?, nameColor: PeerNameColor?, backgroundEmojiId: Int64?, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType, getColor:@escaping(PeerNameColor)->PeerNameColors.Colors) {
         self.theme = theme
         self.peer = peer
         self.getColor = getColor
@@ -100,8 +100,15 @@ private class ProfilePreviewRowItem : GeneralRowItem {
         }
 
         
+        let status: String
+        if let subscribers = subscribers {
+            status = strings().peerStatusSubscribersCountable(subscribers)
+        } else {
+            status = strings().peerStatusRecently
+        }
+        
         self.nameLayout = .init(.initialize(string: peer.displayTitle, color: textColor, font: .medium(18)), maximumNumberOfLines: 1)
-        self.statusLayout = .init(.initialize(string: strings().peerStatusRecently, color: grayText, font: .normal(15)))
+        self.statusLayout = .init(.initialize(string: status, color: grayText, font: .normal(15)))
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
@@ -721,7 +728,7 @@ private struct State : Equatable {
     var selected: PeerNameColor?
     var backgroundEmojiId: Int64? = nil
     var saving: Bool = false
-    
+    var subscribers: Int?
     var icon: CGImage?
 }
 
@@ -758,7 +765,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
     case .profile:
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return ProfilePreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, nameColor: state.selected, backgroundEmojiId: state.backgroundEmojiId, context: arguments.context, theme: theme, viewType: .firstItem, getColor: arguments.getColor)
+            return ProfilePreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, subscribers: state.subscribers, nameColor: state.selected, backgroundEmojiId: state.backgroundEmojiId, context: arguments.context, theme: theme, viewType: .firstItem, getColor: arguments.getColor)
         }))
     }
     
@@ -928,6 +935,7 @@ enum SelectColorSource {
 
 final class SelectColorCallback {
     var getState:(()->(PeerNameColor?, Int64?))? = nil
+    var validate:(()->Void)? = nil
     init() {
         
     }
@@ -1003,7 +1011,15 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, t
     let selectedBg: EmojiesSectionRowItem.SelectedItem? = source.backgroundIcon(type).flatMap {
         .init(source: .custom($0), type: .normal)
     }
+    let subscribers = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.ParticipantCount(id: source.peerId))
     
+    actionsDisposable.add(subscribers.start(next: { value in
+        updateState { current in
+            var current = current
+            current.subscribers = value
+            return current
+        }
+    }))
 
     
     let nameColor = source.nameColor(type)
@@ -1089,54 +1105,9 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, t
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
-
-    let channel_color_level_min = context.appConfiguration.getGeneralValue("channel_color_level_min", orElse: 1)
     
     controller.validateData = { _ in
-        if case let .channel(peer) = source {
-            
-            let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: context.window)
-            
-            _ = signal.start(next: { stats, myStatus in
-                if let stats = stats {
-                    if stats.level < channel_color_level_min {
-                        showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .color(channel_color_level_min)), for: context.window)
-                    } else {
-                        _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: stateValue.with { $0.selected ?? .blue }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }, profileColor: nil, profileBackgroundEmojiId: nil).start()
-                        close?()
-                        showModalText(for: context.window, text: strings().selectColorSuccessChannel)
-                    }
-                }
-            })
-        } else {
-            if context.isPremium {
-                let nameColor: PeerNameColor
-                let backgroundEmojiId: Int64?
-                let profileColor: PeerNameColor?
-                let profileBackgroundEmojiId: Int64?
-                
-                switch type {
-                case .name:
-                    nameColor = stateValue.with { $0.selected ?? .blue }
-                    backgroundEmojiId = stateValue.with { $0.backgroundEmojiId }
-                    profileColor = context.myPeer?.profileColor
-                    profileBackgroundEmojiId = context.myPeer?.profileBackgroundEmojiId
-                case .profile:
-                    profileColor = stateValue.with { $0.selected }
-                    profileBackgroundEmojiId = stateValue.with { $0.backgroundEmojiId }
-                    nameColor = context.myPeer?.nameColor ?? .init(rawValue: Int32(context.peerId.id._internalGetInt64Value() % 7))
-                    backgroundEmojiId = context.myPeer?.backgroundEmojiId
-                }
-                
-                _ = context.engine.accountData.updateNameColorAndEmoji(nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId).start()
-                close?()
-                showModalText(for: context.window, text: strings().selectColorSuccessUser)
-            } else {
-                showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
-                })
-            }
-        }
+        callback?.validate?()
         return .none
     }
     

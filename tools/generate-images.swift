@@ -243,6 +243,7 @@ func initialize() -> [String] {
     array.append("settingsUpdate")
     array.append("settingsFilters")
     array.append("settingsPremium")
+    array.append("settingsGiftPremium")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
     array.append("settingsStoriesActive")

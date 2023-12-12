@@ -562,6 +562,13 @@ extension Peer {
                     name += lastName
                 }
                 if name.isEmpty {
+                    if let phone = user.phone {
+                        if !phone.isEmpty {
+                            name = phone
+                        }
+                    }
+                }
+                if name.isEmpty {
                     return " "
                 }
                 return name

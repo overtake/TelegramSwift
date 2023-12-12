@@ -111,6 +111,8 @@ public final class L10n {
   public static var accountSettingsFilters: String  { return L10n.tr("Localizable", "AccountSettings.Filters") }
   /// General
   public static var accountSettingsGeneral: String  { return L10n.tr("Localizable", "AccountSettings.General") }
+  /// Premium Gifting
+  public static var accountSettingsGiftPremium: String  { return L10n.tr("Localizable", "AccountSettings.GiftPremium") }
   /// Language
   public static var accountSettingsLanguage: String  { return L10n.tr("Localizable", "AccountSettings.Language") }
   /// Logout
@@ -2444,6 +2446,10 @@ public final class L10n {
   /// Forwarded from: [%@]()
   public static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)
+  }
+  /// Forwarded from: %@
+  public static func chatBubblesForwardedFromNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom_New", p1)
   }
   /// Forwarded Story From: [%@]()
   public static func chatBubblesForwardedStory(_ p1: String) -> String {
@@ -7093,12 +7099,18 @@ public final class L10n {
   public static var giftLinkRowReasonGiveaway: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway") }
   /// Incomplete Giveaway
   public static var giftLinkRowReasonGiveawayIncomplete: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway.Incomplete") }
+  /// **%1$@** also included **%2$@** in the prizes. Admins of the channel are responsible for delivering these prizes.
+  public static func giveawayAdditionalPrize(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Giveaway.AdditionalPrize", p1, p2)
+  }
   /// Start Giveaway
   public static var giveawayStartGiveaway: String  { return L10n.tr("Localizable", "Giveaway.StartGiveaway") }
   /// Boosts via Gifts
   public static var giveawayTitle: String  { return L10n.tr("Localizable", "Giveaway.Title") }
   /// Date limit reached.
   public static var giveawayTooLongDate: String  { return L10n.tr("Localizable", "Giveaway.TooLongDate") }
+  /// with
+  public static var giveawayWith: String  { return L10n.tr("Localizable", "Giveaway.with") }
   /// Giveaway created
   public static var giveawayAlertCreated: String  { return L10n.tr("Localizable", "Giveaway.Alert.Created") }
   /// 🎁 Gift
@@ -7149,34 +7161,8 @@ public final class L10n {
   public static var giveawayChannelsContextRemove: String  { return L10n.tr("Localizable", "Giveaway.Channels.Context.Remove") }
   /// Ends
   public static var giveawayDateEnds: String  { return L10n.tr("Localizable", "Giveaway.Date.Ends") }
-  /// %d
-  public static func giveawayDateInfoCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_Countable", p1)
-  }
-  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static func giveawayDateInfoFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_few", p1)
-  }
-  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static func giveawayDateInfoMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_many", p1)
-  }
-  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static func giveawayDateInfoOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_one", p1)
-  }
-  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static func giveawayDateInfoOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_other", p1)
-  }
-  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static func giveawayDateInfoTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_two", p1)
-  }
-  /// Choose when %d subscribers of your channel will be randomly selected to receive Telegram Premium.
-  public static func giveawayDateInfoZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Giveaway.Date.Info_zero", p1)
-  }
+  /// Choose when subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static var giveawayDateInfo: String  { return L10n.tr("Localizable", "Giveaway.Date.Info") }
   /// Giveaway
   public static var giveawayDateSelectDate: String  { return L10n.tr("Localizable", "Giveaway.Date.SelectDate") }
   /// DATE WHEN GIVEAWAY ENDS
@@ -8373,6 +8359,8 @@ public final class L10n {
   public static func messageGiveawayOngoing(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Message.GiveawayOngoing", p1, p2)
   }
+  /// Giveaway Result
+  public static var messageGiveawayResult: String  { return L10n.tr("Localizable", "Message.GiveawayResult") }
   /// Channel started a giveaway
   public static var messageGiveawayStarted: String  { return L10n.tr("Localizable", "Message.GiveawayStarted") }
   /// %@ started a giveaway
@@ -13939,6 +13927,8 @@ public final class L10n {
   public static var storyViewersReactionsFirst: String  { return L10n.tr("Localizable", "StoryViewers.ReactionsFirst") }
   /// Newest first
   public static var storyViewersRecentFirst: String  { return L10n.tr("Localizable", "StoryViewers.RecentFirst") }
+  /// Repost first
+  public static var storyViewersRepostFirst: String  { return L10n.tr("Localizable", "StoryViewers.RepostFirst") }
   /// Viewers
   public static var storyViewersViewers: String  { return L10n.tr("Localizable", "StoryViewers.Viewers") }
   /// Learn More
@@ -15844,6 +15834,10 @@ public final class L10n {
   /// PSA Notification\nfrom: [%@]()
   public static func psaTitleBubbles(_ p1: String) -> String {
     return L10n.tr("Localizable", "psa.title.bubbles", p1)
+  }
+  /// PSA Notification\nfrom: %@
+  public static func psaTitleBubblesNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "psa.title.bubbles_new", p1)
   }
   /// Check Spelling While Typing
   public static var rbDRhWINTitle: String  { return L10n.tr("Localizable", "rbD-Rh-wIN.title") }

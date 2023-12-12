@@ -255,13 +255,20 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
         if #available(macOS 14.0, *), let material = node.geometry?.materials.first {
             material.metalness.intensity = 0.2
         }
-
+    }
+    
+    func hideStar() {
+        guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
+            return
+        }
+        node.isHidden = true
     }
     
     private func playAppearanceAnimation(velocity: CGFloat? = nil, smallAngle: Bool = false, mirror: Bool = false, explode: Bool = false) {
         guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
             return
         }
+        
         
         if explode, let node = scene.rootNode.childNode(withName: "swirl", recursively: false), let particles = scene.rootNode.childNode(withName: "particles", recursively: false) {
             let particleSystem = particles.particleSystems?.first

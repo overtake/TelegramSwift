@@ -58,11 +58,13 @@ final class CustomizeAccountController : SectionViewController {
     private let profile: ViewController
     private let context: AccountContext
     private let peerId: PeerId
+    private let peer: Peer
     private let profileState: SelectColorCallback = .init()
     private let nameState: SelectColorCallback = .init()
     init(_ context: AccountContext, peer: Peer) {
         self.context = context
         self.peerId = peer.id
+        self.peer = peer
         self.name = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .name, callback: nameState)
         self.profile = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .profile, callback: profileState)
 
@@ -102,31 +104,57 @@ final class CustomizeAccountController : SectionViewController {
         }
         let context = self.context
         
-        self.rightBarView.set(handler:{ [weak self] _ in
-            
+        let channel_color_level_min = context.appConfiguration.getGeneralValue("channel_color_level_min", orElse: 1)
+
+        
+        let invoke:()->Void = { [weak self] in
             let nameState = self?.nameState.getState?()
             let profileState = self?.profileState.getState?()
             
-            if context.isPremium {
-                let nameColor = nameState?.0 ?? .blue
-                let backgroundEmojiId = nameState?.1
-                let profileColor = profileState?.0
-                let profileBackgroundEmojiId = profileState?.1
-
+            
+            let nameColor = nameState?.0 ?? .blue
+            let backgroundEmojiId = nameState?.1
+            let profileColor = profileState?.0
+            let profileBackgroundEmojiId = profileState?.1
+            
+            if let peer = self?.peer, peer.isChannel {
+                let peerId = peer.id
+                let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: context.window)
                 
-                _ = context.engine.accountData.updateNameColorAndEmoji(nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId).start()
-                showModalText(for: context.window, text: strings().selectColorSuccessUser)
-                self?.navigationController?.back()
-
-            } else {
-                showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                _ = signal.start(next: { stats, myStatus in
+                    if let stats = stats {
+                        if stats.level < channel_color_level_min {
+                            showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .color(channel_color_level_min)), for: context.window)
+                        } else {
+                            _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId).start()
+                            self?.navigationController?.back()
+                            showModalText(for: context.window, text: strings().selectColorSuccessChannel)
+                        }
+                    }
                 })
+            } else {
+                if context.isPremium {
+                    _ = context.engine.accountData.updateNameColorAndEmoji(nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId).start()
+                    showModalText(for: context.window, text: strings().selectColorSuccessUser)
+                    self?.navigationController?.back()
+                } else {
+                    showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
+                        showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    })
+                }
             }
-
-//            let controller = self?.selectedSection.controller as? InputDataController
-//            controller?.validateInputValues()
+        }
+        
+        self.rightBarView.set(handler:{ _ in
+            invoke()
         }, for: .Click)
+        
+        nameState.validate = {
+            invoke()
+        }
+        profileState.validate = {
+            invoke()
+        }
     }
     
     private var centerView: CenterView {
