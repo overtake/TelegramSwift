@@ -192,7 +192,7 @@ private final class StoryViewerEmptyRowView : TableRowView {
 private final class StoryViewerRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peer: Peer
-    fileprivate let reaction: MessageReaction.Reaction?
+    fileprivate let item: EngineStoryViewListContext.Item
     fileprivate let storyStats: PeerStoryStats?
     fileprivate let avatarComponent: AvatarStoryIndicatorComponent?
     fileprivate let presentation: TelegramPresentationTheme
@@ -200,8 +200,9 @@ private final class StoryViewerRowItem : GeneralRowItem {
     fileprivate let dateLayout: TextViewLayout
     fileprivate let callback: (PeerId)->Void
     fileprivate let openStory:(PeerId)->Void
+    fileprivate let openRepostStory:(StoryId)->Void
     fileprivate let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, reaction: MessageReaction.Reaction?, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, item: EngineStoryViewListContext.Item, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>, openRepostStory:@escaping(StoryId)->Void) {
         self.context = context
         self.peer = peer
         self.openStory = openStory
@@ -209,7 +210,8 @@ private final class StoryViewerRowItem : GeneralRowItem {
         self.callback = callback
         self.presentation = presentation
         self.contextMenu = contextMenu
-        self.reaction = reaction
+        self.item = item
+        self.openRepostStory = openRepostStory
         self.nameLayout = .init(.initialize(string: peer.displayTitle, color: presentation.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
         
@@ -239,10 +241,32 @@ private final class StoryViewerRowItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        nameLayout.measure(width: width - 36 - 16 - 16 - 10 - (peer.isPremium ? 20 : 0) - (reaction != nil ? 30 : 0))
-        dateLayout.measure(width: width - 36 - 16 - 16 - 10 - 18 - (reaction != nil ? 30 : 0))
+        var addition: CGFloat = 0
+        switch item {
+        case .forward, .repost:
+            addition += 30
+        case let .view(view):
+            if view.reaction != nil {
+                addition += 30
+
+            }
+        }
+        nameLayout.measure(width: width - 36 - 16 - 16 - 10 - (peer.isPremium ? 20 : 0) - addition)
+        dateLayout.measure(width: width - 36 - 16 - 16 - 10 - 18 - addition)
 
         return true
+    }
+    
+    var reaction: MessageReaction.Reaction? {
+        return item.reaction
+    }
+    var isRepost: Bool {
+        switch item {
+        case .repost:
+            return true
+        default:
+            return false
+        }
     }
     
     override var height: CGFloat {
@@ -252,6 +276,10 @@ private final class StoryViewerRowItem : GeneralRowItem {
     override func viewClass() -> AnyClass {
         return StoryViewerRowView.self
     }
+}
+
+private var repost_story: CGImage {
+    NSImage(named: "Icon_StoryRepostFrom")!.precomposed(darkAppearance.colors.greenUI)
 }
 
 private final class StoryViewerRowView: GeneralRowView {
@@ -264,6 +292,7 @@ private final class StoryViewerRowView: GeneralRowView {
     private let content = Control()
     private var statusControl: PremiumStatusControl?
     private var reaction: InlineStickerItemLayer?
+    fileprivate var storyPreview: StoryLayoutView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(content)
@@ -325,7 +354,7 @@ private final class StoryViewerRowView: GeneralRowView {
             self.statusControl = nil
         }
         
-        stateIcon.image = item.presentation.icons.story_view_read
+        stateIcon.image = item.isRepost ? repost_story : item.presentation.icons.story_view_read
         stateIcon.sizeToFit()
         
         self.date.update(item.dateLayout)
@@ -359,6 +388,33 @@ private final class StoryViewerRowView: GeneralRowView {
             self.myReaction = nil
         }
         
+        if case let .repost(repost) = item.item {
+            let current: StoryLayoutView
+            if let view = self.storyPreview, view.story == repost.story {
+                current = view
+            } else {
+                if let view = self.storyPreview {
+                    performSubviewRemoval(view, animated: false)
+                    self.storyPreview = nil
+                }
+                current = StoryLayoutView.makeView(for: repost.story, peerId: repost.peer.id, peer: repost.peer._asPeer(), context: item.context, frame: NSMakeRect(0, 0, 30, 40))
+                current.layer?.cornerRadius = .cornerRadius
+                current.scaleOnClick = true
+                self.storyPreview = current
+                addSubview(current)
+                
+                current.set(handler: { [weak item] _ in
+                    item?.openRepostStory(.init(peerId: repost.peer.id, id: repost.story.id))
+                }, for: .Click)
+            }
+            
+        } else {
+            if let view = self.storyPreview {
+                performSubviewRemoval(view, animated: animated)
+                self.storyPreview = nil
+            }
+        }
+        
         if let component = item.avatarComponent {
             self.avatar.update(component: component, availableSize: NSMakeSize(30, 30), transition: transition)
         } else {
@@ -366,6 +422,8 @@ private final class StoryViewerRowView: GeneralRowView {
         }
         
         self.container.userInteractionEnabled = item.avatarComponent != nil
+        
+        needsLayout = true
     }
     
     private func makeView(_ reaction: MessageReaction.Reaction, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
@@ -416,6 +474,10 @@ private final class StoryViewerRowView: GeneralRowView {
         stateIcon.setFrameOrigin(NSMakePoint(contentX, frame.height - stateIcon.frame.height - 10))
         
         borderView.frame = NSMakeRect(contentX, frame.height - .borderSize, frame.width - contentX, .borderSize)
+        
+        if let storyPreview = storyPreview {
+            storyPreview.centerY(x: frame.width - container.frame.minX - storyPreview.frame.width)
+        }
     }
 }
 
@@ -427,7 +489,8 @@ private final class Arguments {
     let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
     let toggleListMode:(EngineStoryViewListContext.ListMode)->Void
     let openPremium:()->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>, toggleListMode:@escaping(EngineStoryViewListContext.ListMode)->Void, openPremium:@escaping()->Void) {
+    let openRepostStory:(StoryId)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>, toggleListMode:@escaping(EngineStoryViewListContext.ListMode)->Void, openPremium:@escaping()->Void, openRepostStory:@escaping(StoryId)->Void) {
         self.context = context
         self.presentation = presentation
         self.callback = callback
@@ -435,6 +498,7 @@ private final class Arguments {
         self.contextMenu = contextMenu
         self.toggleListMode = toggleListMode
         self.openPremium = openPremium
+        self.openRepostStory = openRepostStory
     }
 }
 
@@ -453,7 +517,7 @@ private struct State : Equatable {
 
 
 private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_peer_\(id.toInt64())")
+    return InputDataIdentifier("_id_peer_\(id.toInt64())_\(arc4random64())")
 }
 private func _id_miss(_ id: Int) -> InputDataIdentifier {
     return InputDataIdentifier("_id_miss\(id)")
@@ -471,7 +535,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     struct Tuple: Equatable {
         let peer: PeerEquatable
-        let reaction: MessageReaction.Reaction?
+        let item: EngineStoryViewListContext.Item
         let storyStats: PeerStoryStats?
         let timestamp: Int32
         let viewType: GeneralViewType
@@ -493,13 +557,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
         } else {
             for item in list.items {
-                items.append(.init(peer: .init(item.peer._asPeer()), reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
+                items.append(.init(peer: .init(item.peer._asPeer()), item: item, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
             }
         }
         
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu)
+                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, item: item.item, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu, openRepostStory: arguments.openRepostStory)
             }))
             index += 1
         }
@@ -530,7 +594,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
         } else {
             var additionHeight: CGFloat = 0
-            if state.listMode == .everyone, state.query.isEmpty {
+            if state.listMode == .everyone, state.query.isEmpty, !state.isChannel {
                 if list.totalCount == items.count, state.item.views?.seenCount != list.totalCount {
                     let text: String
                     if arguments.context.isPremium {
@@ -694,7 +758,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     var close:(()->Void)? = nil
     
-    var getControl:((PeerId)->NSView?)? = nil
+    var getControl:((PeerId, Int32?)->NSView?)? = nil
     var setProgress:((PeerId, Signal<Never, NoError>)->Void)? = nil
 
     let arguments = Arguments(context: context, presentation: presentation, callback: { peerId in
@@ -702,7 +766,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         close?()
     }, openStory: { peerId in
         StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: { [] peerId, _, _ in
-            return getControl?(peerId)
+            return getControl?(peerId, nil)
         }, setProgress: { value in
             setProgress?(peerId, value)
         }), singlePeer: true)
@@ -756,6 +820,10 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         }
     }, openPremium: {
         showModal(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: darkAppearance), for: context.window)
+    }, openRepostStory: { storyId in
+        StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: storyId.peerId, id: storyId.id, messageId: nil, takeControl: { [] peerId, _, storyId in
+            return getControl?(peerId, storyId)
+        }))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -827,7 +895,18 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             }
         }, itemImage: stateValue.with { $0.sortMode == .reactionsFirst } ? MenuAnimation.menu_check_selected.value : nil))
         
-        menu.addItem(ContextMenuItem(strings().storyViewersRecentFirst, handler: {
+       // if isChannel {
+        menu.addItem(ContextMenuItem(strings().storyViewersRepostFirst, handler: {
+            updateState { current in
+                var current = current
+                current.sortMode = .repostsFirst
+                return current
+            }
+        }, itemImage: stateValue.with { $0.sortMode == .repostsFirst } ? MenuAnimation.menu_check_selected.value : nil))
+        //}
+        
+        menu.addItem(ContextMenuItem(
+            strings().storyViewersRecentFirst, handler: {
             updateState { current in
                 var current = current
                 current.sortMode = .recentFirst
@@ -928,11 +1007,18 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         }
         
         
-        getControl = { [weak controller] peerId in
+        getControl = { [weak controller] peerId, storyId in
             var control: NSView?
             controller?.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? StoryViewerRowItem, item.peer.id == peerId {
-                    control = (item.view as? StoryViewerRowView)?.avatar
+                    if let storyId = storyId {
+                        let story = (item.view as? StoryViewerRowView)?.storyPreview
+                        if story?.story?.id == storyId {
+                            control = story
+                        }
+                    } else {
+                        control = (item.view as? StoryViewerRowView)?.avatar
+                    }
                 }
                 return control == nil
             })

@@ -2271,6 +2271,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
                                                settingsFilters: { generateSettingsIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(flipVertical: true)) },
                                                settingsPremium: { generatePremiumIcon(NSImage(named: "Icon_Premium_Settings")!.precomposed(flipVertical: true)) },
+                                               settingsGiftPremium: { generateSettingsIcon(NSImage(named: "Icon_Settings_GiftPremium")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsStoriesActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },

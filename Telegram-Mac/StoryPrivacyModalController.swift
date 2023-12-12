@@ -386,27 +386,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         break
     }
     
-    if state.reveal {
         
-        switch arguments.reason {
-        case .share:
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyPostStoryAs), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
-            index += 1
-            let sendAs = state.privacy.sendAsPeerId ?? arguments.context.peerId
+    switch arguments.reason {
+    case .share:
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyPostStoryAs), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        let sendAs = state.privacy.sendAsPeerId ?? arguments.context.peerId
+        
+        let sendAsPeer = state.sendAsPeers.first(where: { $0.peer.id == sendAs })?.peer ?? state.peers[arguments.context.peerId]?._asPeer()
+        if let peer = sendAsPeer {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: presentation.colors.text, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: presentation.colors.grayText), status: strings().storyPrivacyPersonalAccount, inset: NSEdgeInsets(left: 20, right: 20), generalType: .next, viewType: .singleItem, action: arguments.showSendAs, customTheme: rowTheme)
+            }))
             
-            let sendAsPeer = state.sendAsPeers.first(where: { $0.peer.id == sendAs })?.peer ?? state.peers[arguments.context.peerId]?._asPeer()
-            if let peer = sendAsPeer {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: presentation.colors.text, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: presentation.colors.grayText), status: strings().storyPrivacyPersonalAccount, inset: NSEdgeInsets(left: 20, right: 20), generalType: .next, viewType: .singleItem, action: arguments.showSendAs, customTheme: rowTheme)
-                }))
-                
-                entries.append(.sectionId(sectionId, type: .normal))
-                sectionId += 1
-            }
-        case .settings:
-            break
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
         }
-        
+    case .settings:
+        break
+    }
+    
+    if state.reveal {
+
         if state.sendAsPeerId == arguments.context.peerId || state.sendAsPeerId == nil {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyWhoCanViewStory), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
             index += 1
@@ -912,7 +913,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 target = .myStories
             }
             
-            actionsDisposable.add(context.engine.messages.checkStoriesUploadAvailability(target: target).start(next: { availability in
+            actionsDisposable.add((context.engine.messages.checkStoriesUploadAvailability(target: target) |> deliverOnMainQueue).start(next: { availability in
                 
                 switch availability {
                 case .available:

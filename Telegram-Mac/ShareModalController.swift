@@ -1345,6 +1345,11 @@ final class ForwardMessagesObject : ShareObject {
     }
 }
 
+
+class GiftPremiumShareObject : ShareObject {
+    
+}
+
 enum SelectablePeersEntryStableId : Hashable {
     case plain(PeerId, ChatListIndex)
     case emptySearch

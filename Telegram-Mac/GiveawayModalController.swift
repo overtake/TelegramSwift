@@ -261,7 +261,7 @@ private final class Arguments {
 }
 
 
-private struct PremiumGiftProduct: Equatable {
+struct PremiumGiftProduct: Equatable {
     let giftOption: PremiumGiftCodeOption
     let storeProduct: InAppPurchaseManager.Product?
     
@@ -540,50 +540,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayReceiverTypeInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
-       
-        
-        
-        
-        #if DEBUG
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        
-        //WINNERS
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WINNERS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-        index += 1
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_winners, data: .init(name: "Show Winners", color: theme.colors.text, type: .switchable(state.showWinners), viewType: .singleItem, action: {
-            arguments.toggleShowWinners(state.showWinners)
-        })))
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose wether to make the list of winners public when the giveaway ends."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADDITIONAL PRIZES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-        index += 1
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_additional_prizes, data: .init(name: "Additional Prizes", color: theme.colors.text, type: .switchable(state.additionalPrizes), viewType: state.additionalPrizes ? .firstItem : .singleItem, action: {
-            arguments.toggleAdditionalPrizes(state.additionalPrizes)
-        })))
-        
-        if state.additionalPrizes {
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Enter Your Prize", filter: { $0 }, limit: 128))
-            
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("All prizes: \(state.quantity) Telegram Premium subscriptions for 3 months."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-            index += 1
-        } else {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Turn this on if you want to give the winners your own prizes in addition to Premium subscriptions."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-            index += 1
-            
-        }
-        
-        #endif
-        
-        
+
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
@@ -594,12 +551,54 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_select_date, data: .init(name: strings().giveawayDateEnds, color: theme.colors.text, type: .nextContext(stringForFullDate(timestamp: Int32(state.date.timeIntervalSince1970))), viewType: .singleItem, action: arguments.selectDate)))
         
         if state.quantity > 0 {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateInfoCountable(Int(state.quantity))), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
             index += 1
         }
     case .specific:
         break
     }
+    
+    
+    
+    
+    #if DEBUG
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    //WINNERS
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WINNERS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_winners, data: .init(name: "Show Winners", color: theme.colors.text, type: .switchable(state.showWinners), viewType: .singleItem, action: {
+        arguments.toggleShowWinners(state.showWinners)
+    })))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose wether to make the list of winners public when the giveaway ends."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADDITIONAL PRIZES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_additional_prizes, data: .init(name: "Additional Prizes", color: theme.colors.text, type: .switchable(state.additionalPrizes), viewType: state.additionalPrizes ? .firstItem : .singleItem, action: {
+        arguments.toggleAdditionalPrizes(state.additionalPrizes)
+    })))
+    
+    if state.additionalPrizes {
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Enter Your Prize", filter: { $0 }, limit: 128))
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("All prizes: \(state.quantity) Telegram Premium subscriptions for 3 months."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+    } else {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Turn this on if you want to give the winners your own prizes in addition to Premium subscriptions."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        
+    }
+    
+    #endif
     
 
     if state.type == .random || state.type == .specific {
@@ -1058,7 +1057,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             }
         }
         
-        verifyAlert(for: context.window, header: strings().boostGiftStartConfirmationTitle, information: strings().boostGiftStartConfirmationText, ok: strings().boostGiftStartConfirmationStart, successHandler: { _ in
+        let buy:()->Void = {
             if let prepaid = prepaid {
                 let state = stateValue.with { $0 }
                 let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
@@ -1072,7 +1071,14 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             } else {
                 buyAppStore()
             }
-        })
+        }
+        if let _ = prepaid {
+            verifyAlert(for: context.window, header: strings().boostGiftStartConfirmationTitle, information: strings().boostGiftStartConfirmationText, ok: strings().boostGiftStartConfirmationStart, successHandler: { _ in
+                buy()
+            })
+        } else {
+            buy()
+        }
        
         return .none
     }

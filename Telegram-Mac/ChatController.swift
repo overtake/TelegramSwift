@@ -2375,7 +2375,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             if let peerView = peerView as? PeerView {
-                return (peerView.cachedData as? CachedUserData)?.wallpaper
+                if let data = peerView.cachedData as? CachedUserData {
+                    return data.wallpaper
+                } else if let data = peerView.cachedData as? CachedChannelData {
+                    return data.wallpaper
+                }
             }
             return nil
         } |> distinctUntilChanged

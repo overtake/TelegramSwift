@@ -509,15 +509,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     
     static func nameColor(_ peer: Peer?) -> PeerNameColor? {
-        if let peer = peer as? TelegramUser {
-            if peer.isPremium {
-                return peer.profileColor
-            } else {
-                return nil
-            }
-        } else {
-            return nil
-        }
+        return peer?.profileColor
     }
     static func textColor(_ peer: Peer?, threadId: Int64?, context: AccountContext) -> NSColor {
         if let nameColor = PeerInfoHeadItem.nameColor(peer), threadId == nil {

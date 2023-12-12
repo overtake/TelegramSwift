@@ -394,15 +394,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     var nameColor:  PeerNameColor? {
-        if let peer = peer as? TelegramUser {
-            if peer.isPremium {
-                return peer.profileColor
-            } else {
-                return nil
-            }
-        } else {
-            return nil
-        }
+        return peer.profileColor
     }
     
     override var barHeight: CGFloat {

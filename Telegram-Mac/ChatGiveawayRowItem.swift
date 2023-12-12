@@ -51,8 +51,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         }
         init(prizeDescription: String, textColor: NSColor, grayColor: NSColor) {
             self.grayColor = grayColor
-            //TODOLANG
-            self.with = .init(.initialize(string: "with", color: grayColor, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .center)
+            self.with = .init(.initialize(string: strings().giveawayWith, color: grayColor, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .center)
             
             let attr = NSMutableAttributedString()
             attr.append(string: prizeDescription, color: textColor, font: .normal(.text))
@@ -243,8 +242,8 @@ final class ChatGiveawayRowItem : ChatRowItem {
             
             var additionalPrize: String = ""
             
-            if let prize = self.media.prizeDescription {
-                additionalPrize = "**\(peerName)** also included 5 iPhone 14 Pro Max in the prizes. Admins of the channel are responsible for delivering these prizes.\n\n"
+            if let prize = giveaway.prizeDescription {
+                additionalPrize = strings().giveawayAdditionalPrize(peerName, "\(giveaway.quantity) \(prize)") + "\n\n"
             }
   
             switch info {
@@ -619,6 +618,9 @@ private final class ChatGiveawayRowView: ChatRowView {
         
         headerTextView.userInteractionEnabled = false
         headerTextView.isSelectable = false
+        
+        prizezTextView.userInteractionEnabled = false
+        prizezTextView.isSelectable = false
         
         participantsTextView.userInteractionEnabled = false
         participantsTextView.isSelectable = false

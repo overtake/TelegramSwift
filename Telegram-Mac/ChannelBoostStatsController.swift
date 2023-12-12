@@ -83,7 +83,7 @@ private final class BoosterRowItem : GeneralRowItem {
             } else {
                 color = theme.colors.peerColors(3)
             }
-            self.empty = .icon(colors: color, icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(36, 36), cornerRadius: nil)
+            self.empty = .icon(colors: color, icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         } else {
             self.empty = nil
         }
