@@ -498,11 +498,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             channelItems.append(.init(peer: channel, quantity: state.quantity, viewType: viewType, deletable: i != 0))
         }
+        let perSentGift = arguments.context.appConfiguration.getGeneralValue("boosts_per_sent_gift", orElse: 4)
+
         
         for item in channelItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: item.peer.peer.id == state.channels[0].peer.id ? strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity * 4)) : nil, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: item.peer.peer.id == state.channels[0].peer.id ? strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity * perSentGift)) : nil, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
                     var items: [ContextMenuItem] = []
                     if item.deletable {
                         items.append(ContextMenuItem(strings().giveawayChannelsContextRemove, handler: {

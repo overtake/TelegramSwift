@@ -1338,6 +1338,7 @@ open class ModalController : ModalViewController {
     public init(_ controller: NavigationViewController) {
         self.controller = controller
         super.init(frame: controller._frameRect)
+        bar = controller.bar
     }
 
     open override var handleEvents: Bool {

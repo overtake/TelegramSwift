@@ -1318,7 +1318,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         var index: Int = textView.hashValue
 
         for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source, item.rect.width > 10 {
                 
                 let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
                 validIds.append(id)

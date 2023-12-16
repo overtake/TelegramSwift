@@ -654,6 +654,7 @@ class ChatServiceItem: ChatRowItem {
                     let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .giftPremium(currency, amount, months, cryptoCurrency, cryptoCurrencyAmount):
                     
+                    
                     let info = NSMutableAttributedString()
                     _ = info.append(string: strings().chatServicePremiumGiftInfoCountable(Int(months)), color: grayTextColor, font: .normal(theme.fontSize))
                     info.detectBoldColorInString(with: .medium(theme.fontSize))

@@ -265,6 +265,8 @@ extension MediaArea {
             return strings().storyViewMediaAreaViewLocation
         case .reaction:
             return ""
+        case .channelMessage:
+            return strings().storyViewMediaAreaViewMessage
         }
     }
     var menu: MenuAnimation {
@@ -273,11 +275,15 @@ extension MediaArea {
             return MenuAnimation.menu_location
         case .reaction:
             return MenuAnimation.menu_reactions
+        case .channelMessage:
+            return MenuAnimation.menu_show_message
         }
     }
     var canDraw: Bool {
         switch self {
         case .venue:
+            return false
+        case .channelMessage:
             return false
         case .reaction:
             return true
@@ -289,6 +295,8 @@ extension MediaArea {
             return nil
         case let .reaction(_, reaction, _):
             return reaction
+        case .channelMessage:
+            return nil
         }
     }
     var isDark: Bool {
@@ -297,6 +305,8 @@ extension MediaArea {
             return false
         case let .reaction(_, _, flags):
             return flags.contains(.isDark)
+        case .channelMessage:
+            return false
         }
     }
 }
@@ -1750,6 +1760,8 @@ final class StoryListView : Control, Notifable {
                 index += 1
             case .venue:
                 break
+            case .channelMessage:
+                break
             }
         }
         self.layoutInteractiveMedia(transition: .immediate)
@@ -1771,6 +1783,8 @@ final class StoryListView : Control, Notifable {
                 interactiveMedias.addSubview(view)
                 interactiveMedias_values.append(view)
             case .venue:
+                break
+            case .channelMessage:
                 break
             }
         }

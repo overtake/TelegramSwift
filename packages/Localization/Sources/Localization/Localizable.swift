@@ -1803,6 +1803,12 @@ public final class L10n {
   public static func channelBoostEnableStoriesText(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.EnableStoriesText", p1)
   }
+  /// Enable Wallpapers
+  public static var channelBoostEnableWallpapers: String  { return L10n.tr("Localizable", "ChannelBoost.EnableWallpapers") }
+  /// Your channel needs **%1$@ level** to change wallpaper.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableWallpapersText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableWallpapersText", p1)
+  }
   /// Help Upgrade This Channel
   public static var channelBoostHelpUpgradeChannel: String  { return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeChannel") }
   /// **%1$@** needs %2$@ to be able to post %3$@.
@@ -4059,6 +4065,8 @@ public final class L10n {
   public static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
   /// You disabled the chat theme
   public static var chatServiceDisabledThemeYou: String  { return L10n.tr("Localizable", "Chat.Service.DisabledTheme.You") }
+  /// You sent a gift
+  public static var chatServiceGiftLinkSent: String  { return L10n.tr("Localizable", "Chat.Service.GiftLink.Sent") }
   /// %1$@ invited %2$@
   public static func chatServiceGroupAddedMembers1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers1", p1, p2)
@@ -4675,8 +4683,18 @@ public final class L10n {
   public static func chatGiftInfoUnclaimed(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ChatGift.Info.Unclaimed", p1, p2)
   }
+  /// You gifted **Telegram Premium** subscription for **%1$@** months.
+  public static func chatGiftInfoUnclaimedGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.Unclaimed.Gift", p1)
+  }
+  /// You received **Telegram Premium** subscription for **%1$@** months.
+  public static func chatGiftInfoUnclaimedGiftYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.Unclaimed.Gift.You", p1)
+  }
   /// **Congratulations!**
   public static var chatGiftTitleClaimed: String  { return L10n.tr("Localizable", "ChatGift.Title.Claimed") }
+  /// **Gift**
+  public static var chatGiftTitleGift: String  { return L10n.tr("Localizable", "ChatGift.Title.Gift") }
   /// **Unclaimed Prize**
   public static var chatGiftTitleUnclaimed: String  { return L10n.tr("Localizable", "ChatGift.Title.Unclaimed") }
   /// Restart Topic
@@ -9543,6 +9561,8 @@ public final class L10n {
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
   /// Add To Group or Channel
   public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
+  /// Appearance
+  public static var peerInfoChannelAppearance: String  { return L10n.tr("Localizable", "PeerInfo.ChannelAppearance") }
   /// Channel Color
   public static var peerInfoChannelColor: String  { return L10n.tr("Localizable", "PeerInfo.ChannelColor") }
   /// Thank you! Your report will be reviewed by our team soon.
@@ -12023,6 +12043,8 @@ public final class L10n {
   public static var selectColorMessage2PreviewTitle: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Title") }
   /// PROFILE PREVIEW
   public static var selectColorPreviewProfile: String  { return L10n.tr("Localizable", "SelectColor.Preview.Profile") }
+  /// PROFILE PAGE COLOR
+  public static var selectColorProfilePageTitle: String  { return L10n.tr("Localizable", "SelectColor.ProfilePage.Title") }
   /// Your channel name color has been updated!
   public static var selectColorSuccessChannel: String  { return L10n.tr("Localizable", "SelectColor.Success.Channel") }
   /// Your name color has been updated!
@@ -13897,6 +13919,8 @@ public final class L10n {
   public static var storyViewContextMenuUnblock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Unblock") }
   /// View Location
   public static var storyViewMediaAreaViewLocation: String  { return L10n.tr("Localizable", "StoryView.MediaArea.ViewLocation") }
+  /// View Message
+  public static var storyViewMediaAreaViewMessage: String  { return L10n.tr("Localizable", "StoryView.MediaArea.ViewMessage") }
   /// %@ was blocked.
   public static func storyViewTooltipBlock(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryView.Tooltip.Block", p1)

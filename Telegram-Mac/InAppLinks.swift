@@ -1241,15 +1241,20 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
 
 private func updateAppAsYouWish(text: String, updateApp: Bool) {
     //
-    verifyAlert_button(for: mainWindow, header: appName, information: text, ok: updateApp ? strings().alertButtonOKUpdateApp : strings().modalOK, cancel: updateApp ? strings().modalCancel : "", option: nil, successHandler: { _ in
-        if updateApp {
-            #if APP_STORE
-            execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
-            #else
-            (NSApp.delegate as? AppDelegate)?.checkForUpdates(updateApp)
-            #endif
-        }
-    })
+    if updateApp {
+        verifyAlert_button(for: mainWindow, header: appName, information: text, ok: strings().alertButtonOKUpdateApp, cancel: strings().modalCancel, option: nil, successHandler: { _ in
+            if updateApp {
+                #if APP_STORE
+                execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
+                #else
+                (NSApp.delegate as? AppDelegate)?.checkForUpdates(updateApp)
+                #endif
+            }
+        })
+    } else {
+        alert(for: mainWindow, info: text, ok: strings().modalOK)
+    }
+    
 }
 
 func escape(with link:String, addPercent: Bool = true) -> String {

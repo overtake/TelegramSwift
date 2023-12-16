@@ -740,8 +740,12 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
-        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months):
-            text = strings().chatServiceGiftLink
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
+            if authorId == account.peerId {
+                text = strings().chatServiceGiftLinkSent
+            } else {
+                text = strings().chatServiceGiftLink
+            }
         case .giveawayLaunched:
             text = strings().chatServiceGiveawayStarted(authorName)
         case let .topicEdited(components):

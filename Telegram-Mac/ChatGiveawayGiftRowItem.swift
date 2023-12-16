@@ -52,7 +52,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         
         switch media.action {
-        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months):
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
             self.data = .init(slug: slug, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed)
         default:
             fatalError()
@@ -71,12 +71,16 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         let header_attr = NSMutableAttributedString()
         
         let title: String
-        if data.unclaimed {
-            title = strings().chatGiftTitleUnclaimed
+        if data.fromGiveaway {
+            if data.unclaimed {
+                title = strings().chatGiftTitleUnclaimed
+            } else {
+                title = strings().chatGiftTitleClaimed
+            }
         } else {
-            title = strings().chatGiftTitleClaimed
+            title = strings().chatGiftTitleGift
         }
-
+        
         _ = header_attr.append(string: title, color: wpPresentation.text, font: .normal(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
@@ -86,13 +90,22 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         let monthsValue = data.months
         
         let infoText: String
-        if data.unclaimed {
-            infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
-        } else if data.fromGiveaway {
-            infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+        if data.fromGiveaway {
+            if data.unclaimed {
+                infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
+            } else if data.fromGiveaway {
+                infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+            } else {
+                infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
+            }
         } else {
-            infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
+            if isIncoming {
+                infoText = strings().chatGiftInfoUnclaimedGiftYou("\(monthsValue)")
+            } else {
+                infoText = strings().chatGiftInfoUnclaimedGift("\(monthsValue)")
+            }
         }
+        
 
         _ = info_attr.append(string: infoText, color: wpPresentation.text, font: .normal(.text))
         info_attr.detectBoldColorInString(with: .medium(.text))
@@ -131,7 +144,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
-        let width = min(width, 250)
+        let width = min(width, 240)
         
         headerText.measure(width: width)
         infoText.measure(width: width)

@@ -134,8 +134,12 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
 }
 
 func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage {
+    return generateTextIcon_AccentBadge(text: "NEW", bgColor: bgColor, textColor: textColor)
+}
+
+func generateTextIcon_AccentBadge(text: String, bgColor: NSColor, textColor: NSColor) -> CGImage {
     
-    let textNode = TextNode.layoutText(.initialize(string: "NEW", color: textColor, font: .avatar(.small)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .avatar(.small)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     var size = textNode.0.size
     size.width += 6
     size.height += 4
@@ -2805,7 +2809,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_stats_likes: { NSImage(named: "Icon_ChannelStats_Likes")!.precomposed(palette.grayIcon) },
                               channel_stats_shares: { NSImage(named: "Icon_ChannelStats_Shares")!.precomposed(palette.grayIcon) },
                               story_repost_from_white: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.listGrayText) },
-                              story_repost_from_green: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.greenUI) }
+                              story_repost_from_green: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.greenUI) },
+                              channel_feature_background: { NSImage(named: "Icon_ChannelFeature_Background")!.precomposed(palette.accent) },
+                              channel_feature_background_photo: { NSImage(named: "Icon_ChannelFeature_Photo")!.precomposed(palette.accent) },
+                              channel_feature_cover_color: { NSImage(named: "Icon_ChannelFeature_CoverColor")!.precomposed(palette.accent) },
+                              channel_feature_link_color: { NSImage(named: "Icon_ChannelFeature_LinkColor")!.precomposed(palette.accent) },
+                              channel_feature_link_icon: { NSImage(named: "Icon_ChannelFeature_LinkIcon")!.precomposed(palette.accent) },
+                              channel_feature_name_color: { NSImage(named: "Icon_ChannelFeature_NameColor")!.precomposed(palette.accent) },
+                              channel_feature_reaction: { NSImage(named: "Icon_ChannelFeature_Reaction")!.precomposed(palette.accent) },
+                              channel_feature_status: { NSImage(named: "Icon_ChannelFeature_Status")!.precomposed(palette.accent) },
+                              channel_feature_stories: { NSImage(named: "Icon_ChannelFeature_Stories")!.precomposed(palette.accent) }
 
     )
 }

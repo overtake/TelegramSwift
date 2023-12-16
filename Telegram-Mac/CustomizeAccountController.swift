@@ -65,8 +65,8 @@ final class CustomizeAccountController : SectionViewController {
         self.context = context
         self.peerId = peer.id
         self.peer = peer
-        self.name = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .name, callback: nameState)
-        self.profile = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), type: .profile, callback: profileState)
+        self.name = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), callback: nameState)
+        self.profile = SelectColorController(context: context, source: peer.isChannel ? .channel(peer) : .account(peer), callback: profileState)
 
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title: { "" }, controller: name))

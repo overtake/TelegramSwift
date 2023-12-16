@@ -634,8 +634,8 @@ class FastSettings {
         return perks.filter { !dismissedPerks.contains($0) }
     }
     static func dismissPremiumPerk(_ string: String) {
-        var dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String]
-        dismissedPerks?.append(string)
+        var dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
+        dismissedPerks.append(string)
         UserDefaults.standard.setValue(dismissedPerks, forKey: "dismissedPerks")
     }
     

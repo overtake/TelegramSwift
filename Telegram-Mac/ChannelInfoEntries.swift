@@ -235,8 +235,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     func openNameColor(peer: Peer) {
-        
-        pushViewController(CustomizeAccountController(context, peer: peer))
+        pushViewController(SelectColorController(context: context, source: .channel(peer)))
     }
     
     func openRequests() {
@@ -1132,7 +1131,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
             })
         case let .color(_, peer, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelColor, icon: theme.icons.profile_channel_color, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: peer.peer, context: arguments.context), ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelAppearance, icon: theme.icons.profile_channel_color, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: peer.peer, context: arguments.context), ""), viewType: viewType, action: {
                 arguments.openNameColor(peer: peer.peer)
             })
         case let .stats(_, datacenterId, viewType):

@@ -154,6 +154,7 @@
 		2744018526E6344E0035C55D /* WidgetRecentPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */; };
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
+		2745B0652B2C831400EF8623 /* BoostFeatureRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2745B0642B2C831400EF8623 /* BoostFeatureRowItem.swift */; };
 		2745FEC9274F943E00546B05 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2745FECB274F947000546B05 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 2745FECA274F947000546B05 /* BuildConfig */; };
 		2745FECD274F948600546B05 /* NumberPluralization in Frameworks */ = {isa = PBXBuildFile; productRef = 2745FECC274F948600546B05 /* NumberPluralization */; };
@@ -1670,6 +1671,7 @@
 		2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRecentPeersController.swift; sourceTree = "<group>"; };
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
 		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
+		2745B0642B2C831400EF8623 /* BoostFeatureRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostFeatureRowItem.swift; sourceTree = "<group>"; };
 		2746926B26A99DD800B67817 /* WallpaperCheckboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperCheckboxView.swift; sourceTree = "<group>"; };
 		27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_3.tgs; sourceTree = "<group>"; };
 		2747968B28F5983D00A891F3 /* menu_play.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_play.tgs; sourceTree = "<group>"; };
@@ -3321,6 +3323,7 @@
 				27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */,
 				27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */,
 				27867A282AE2876100E25BB8 /* BoostReassignController.swift */,
+				2745B0642B2C831400EF8623 /* BoostFeatureRowItem.swift */,
 			);
 			name = boost;
 			sourceTree = "<group>";
@@ -7589,6 +7592,7 @@
 				271FB884289014CE001C25DC /* CustomEmojiController.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				D0530D4224E69459003273BC /* CallTooltipView.swift in Sources */,
+				2745B0652B2C831400EF8623 /* BoostFeatureRowItem.swift in Sources */,
 				27D6044E2959E33400588C21 /* StorageUsage_Block_MediaList.swift in Sources */,
 				C251FB4C1FEDCC750035E5D7 /* ChatPresentationUtils.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,

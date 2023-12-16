@@ -10015,6 +10015,123 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_feature_background: CGImage {
+      if let image = cached.with({ $0["channel_feature_background"] }) {
+          return image
+      } else {
+          let image = _channel_feature_background()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_background"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_background_photo: CGImage {
+      if let image = cached.with({ $0["channel_feature_background_photo"] }) {
+          return image
+      } else {
+          let image = _channel_feature_background_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_background_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_cover_color: CGImage {
+      if let image = cached.with({ $0["channel_feature_cover_color"] }) {
+          return image
+      } else {
+          let image = _channel_feature_cover_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_cover_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_link_color: CGImage {
+      if let image = cached.with({ $0["channel_feature_link_color"] }) {
+          return image
+      } else {
+          let image = _channel_feature_link_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_link_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_link_icon: CGImage {
+      if let image = cached.with({ $0["channel_feature_link_icon"] }) {
+          return image
+      } else {
+          let image = _channel_feature_link_icon()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_link_icon"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_name_color: CGImage {
+      if let image = cached.with({ $0["channel_feature_name_color"] }) {
+          return image
+      } else {
+          let image = _channel_feature_name_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_name_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_reaction: CGImage {
+      if let image = cached.with({ $0["channel_feature_reaction"] }) {
+          return image
+      } else {
+          let image = _channel_feature_reaction()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_reaction"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_status: CGImage {
+      if let image = cached.with({ $0["channel_feature_status"] }) {
+          return image
+      } else {
+          let image = _channel_feature_status()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_status"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_stories: CGImage {
+      if let image = cached.with({ $0["channel_feature_stories"] }) {
+          return image
+      } else {
+          let image = _channel_feature_stories()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_stories"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10786,6 +10903,15 @@ public final class TelegramIconsTheme {
   private let _channel_stats_shares: ()->CGImage
   private let _story_repost_from_white: ()->CGImage
   private let _story_repost_from_green: ()->CGImage
+  private let _channel_feature_background: ()->CGImage
+  private let _channel_feature_background_photo: ()->CGImage
+  private let _channel_feature_cover_color: ()->CGImage
+  private let _channel_feature_link_color: ()->CGImage
+  private let _channel_feature_link_icon: ()->CGImage
+  private let _channel_feature_name_color: ()->CGImage
+  private let _channel_feature_reaction: ()->CGImage
+  private let _channel_feature_status: ()->CGImage
+  private let _channel_feature_stories: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11557,7 +11683,16 @@ public final class TelegramIconsTheme {
       channel_stats_likes: @escaping()->CGImage,
       channel_stats_shares: @escaping()->CGImage,
       story_repost_from_white: @escaping()->CGImage,
-      story_repost_from_green: @escaping()->CGImage
+      story_repost_from_green: @escaping()->CGImage,
+      channel_feature_background: @escaping()->CGImage,
+      channel_feature_background_photo: @escaping()->CGImage,
+      channel_feature_cover_color: @escaping()->CGImage,
+      channel_feature_link_color: @escaping()->CGImage,
+      channel_feature_link_icon: @escaping()->CGImage,
+      channel_feature_name_color: @escaping()->CGImage,
+      channel_feature_reaction: @escaping()->CGImage,
+      channel_feature_status: @escaping()->CGImage,
+      channel_feature_stories: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12329,5 +12464,14 @@ public final class TelegramIconsTheme {
       self._channel_stats_shares = channel_stats_shares
       self._story_repost_from_white = story_repost_from_white
       self._story_repost_from_green = story_repost_from_green
+      self._channel_feature_background = channel_feature_background
+      self._channel_feature_background_photo = channel_feature_background_photo
+      self._channel_feature_cover_color = channel_feature_cover_color
+      self._channel_feature_link_color = channel_feature_link_color
+      self._channel_feature_link_icon = channel_feature_link_icon
+      self._channel_feature_name_color = channel_feature_name_color
+      self._channel_feature_reaction = channel_feature_reaction
+      self._channel_feature_status = channel_feature_status
+      self._channel_feature_stories = channel_feature_stories
   }
 }

@@ -202,7 +202,8 @@ private final class Arguments {
     let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void
     let openFeature:(PremiumValue, Bool)->Void
     let togglePeriod:(PremiumPeriod)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void) {
+    let execute:(String)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void, execute:@escaping(String)->Void) {
         self.context = context
         self.presentation = presentation
         self.showPrivacy = showPrivacy
@@ -210,6 +211,7 @@ private final class Arguments {
         self.openInfo = openInfo
         self.openFeature = openFeature
         self.togglePeriod = togglePeriod
+        self.execute = execute
     }
 }
 
@@ -478,6 +480,24 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
+    } else {
+        
+        entries.append(.sectionId(sectionId, type: .customModern(15)))
+        sectionId += 1
+
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingAboutTitle.uppercased()), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_about"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text))
+        }))
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { _ in
+            
+        }), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
     }
     
     
@@ -992,6 +1012,8 @@ final class PremiumBoardingController : ModalViewController {
                 current.period = period
                 return current
             }
+        }, execute: { link in
+            execute(inapp: .external(link: "https://telegram.org/tos", false))
         })
         
         self.arguments = arguments

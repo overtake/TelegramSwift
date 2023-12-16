@@ -334,9 +334,15 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
         return controller
     }
     
-    let fromPeer: Signal<TelegramEngine.EngineData.Item.Peer.Peer.Result, NoError> = context.engine.data.get(
-        TelegramEngine.EngineData.Item.Peer.Peer(id: info.fromPeerId)
-    )
+    
+    let fromPeer: Signal<TelegramEngine.EngineData.Item.Peer.Peer.Result, NoError>
+    if let fromPeerId = info.fromPeerId {
+        fromPeer = context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.Peer(id: fromPeerId)
+        )
+    } else {
+        fromPeer = .single(nil)
+    }
     let toPeer: Signal<TelegramEngine.EngineData.Item.Peer.Peer.Result, NoError>
     
     if let toPeerId = info.toPeerId {

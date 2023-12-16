@@ -217,6 +217,8 @@ private struct State : Equatable {
                     title = strings().channelBoostEnableColors
                 case .reactions:
                     title = strings().channelBoostEnableReactions
+                case .wallpaper:
+                    title = strings().channelBoostEnableWallpapers
                 default:
                     if level == 0 {
                         title = strings().channelBoostEnableStories
@@ -283,6 +285,8 @@ private final class BoostRowItem : TableRowItem {
                     switch state.source {
                     case let .color(level):
                         string = strings().channelBoostEnableColorsText("\(level)")
+                    case let .wallpaper(level):
+                        string = strings().channelBoostEnableWallpapersText("\(level)")
                     case .reactions:
                         string = strings().channelBoostEnableReactionsText("\(level + 1)", "\(level)")
                     default:
@@ -906,6 +910,7 @@ enum BoostChannelSource : Equatable {
     case story
     case reactions
     case color(Int32)
+    case wallpaper(Int32)
 }
 
 func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {

@@ -261,6 +261,7 @@ open class TextButton: ImageButton {
     override func prepare() {
         super.prepare()
         text.alignment = .center
+        text.isEventLess = true
         self.addSubview(text)
     }
     

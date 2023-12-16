@@ -6327,17 +6327,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case let .InitialSearch(location, _):
                 switch location {
                 case let .id(messageId, _):
-                    var found: Bool = false
-                    self.genericView.tableView.enumerateItems(with: { item in
-                        if let item = item as? ChatRowItem {
-                            found = item.messages.contains(where: { $0.id == messageId })
-                        }
-                        return !found
-                    })
                     checkMessageExists = false
-                    if !found {
-                        showModalText(for: context.window, text: strings().chatOpenMessageNotExist, title: nil)
-                    }
+
+                    delay(1.5, closure: { [weak self] in
+                        guard let `self` = self else {
+                            return
+                        }
+                        var found: Bool = false
+                        self.genericView.tableView.enumerateItems(with: { item in
+                            if let item = item as? ChatRowItem {
+                                found = item.messages.contains(where: { $0.id == messageId })
+                            }
+                            return !found
+                        })
+                        if !found {
+                            showModalText(for: context.window, text: strings().chatOpenMessageNotExist, title: nil)
+                        }
+                    })
                 default:
                     break
                 }
@@ -6519,6 +6525,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }, itemImage: MenuAnimation.menu_create_group.value))
                             }
                             if !isServicePeer(peer) {
+                                items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
+                                    self?.showChatThemeSelector()
+                                }, itemImage: MenuAnimation.menu_change_colors.value))
+                            }
+                        } else if let peer = peer as? TelegramChannel {
+                            if peer.hasPermission(.changeInfo) {
                                 items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
                                     self?.showChatThemeSelector()
                                 }, itemImage: MenuAnimation.menu_change_colors.value))
@@ -8099,6 +8111,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return
         }
         
+        let context = self.context
+        
+        if let peer = chatInteraction.presentation.peer, peer.isChannel {
+            
+            let installed = self.uiState.with({ $0.bespoke_wallpaper?.wallpaper })
+            let base = self.uiState.with({ $0.presentation.wallpaper.wallpaper })
+
+            let channel_wallpaper_level_min = context.appConfiguration.getGeneralValue("channel_wallpaper_level_min", orElse: 0)
+            let combined = combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peer.id), context.engine.peers.getMyBoostStatus())
+            let signal = showModalProgress(signal: combined, for: context.window)
+            
+            _ = signal.start(next: { stats, myStatus in
+               if let stats = stats {
+                   if stats.level < channel_wallpaper_level_min {
+                       showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .wallpaper(channel_wallpaper_level_min)), for: context.window)
+                   } else {
+                       showModal(with: ChatWallpaperModalController(context, selected: installed ?? base, source: .chat(peer, nil), onComplete: {
+                         
+                       }), for: context.window)
+                   }
+               }
+           })
+            
+            
+            
+            return
+        }
         self.themeSelector = ChatThemeSelectorController(context, installedTheme: self.uiState.with { $0.presentation_emoticon }, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
         self.themeSelector?.onReady = { [weak self] controller in
             self?.genericView.showChatThemeSelector(controller.view, animated: true)
