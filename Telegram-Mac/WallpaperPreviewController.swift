@@ -491,11 +491,12 @@ private final class WallpaperPreviewView: View {
         
         switch source {
         case let .chat(peer, _):
-            let applyForPeer = WallpaperActionButton(frame: .zero)
-            applyForPeer.update(text: strings().channelWallpaperApplyBoth(peer.compactDisplayTitle), lottie: context.isPremium ? nil : LocalAnimatedSticker.menu_lock)
-            self.addSubview(applyForPeer)
-            self.applyForPeer = applyForPeer
-            
+            if peer.isUser {
+                let applyForPeer = WallpaperActionButton(frame: .zero)
+                applyForPeer.update(text: strings().channelWallpaperApplyBoth(peer.compactDisplayTitle), lottie: context.isPremium ? nil : LocalAnimatedSticker.menu_lock)
+                self.addSubview(applyForPeer)
+                self.applyForPeer = applyForPeer
+            }
         default:
             break
         }
@@ -503,8 +504,6 @@ private final class WallpaperPreviewView: View {
     }
     
     private func addTableItems(_ context: AccountContext, source: WallpaperSource) {
-        
-        
         
         
         switch wallpaper {

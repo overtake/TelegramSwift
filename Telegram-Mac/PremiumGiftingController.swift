@@ -14,14 +14,140 @@ import TelegramCore
 import Postbox
 import InAppPurchaseManager
 
+private final class BoostText : GeneralRowItem {
+    fileprivate let textLayout: TextViewLayout
+    fileprivate let context: AccountContext
+    init(_ initialSize: NSSize, stableId: AnyHashable, count: Int, context: AccountContext) {
+        let attr = NSMutableAttributedString()
+        //TODOLANG
+        
+        let perSentGift = context.appConfiguration.getGeneralValue("boosts_per_sent_gift", orElse: 4)
+        _ = attr.append(string: "You will receive \(clown)\(Int32(count) * perSentGift) boosts", color: theme.colors.text, font: .normal(.text))
+
+        let range = attr.string.nsstring.range(of: clown)
+        attr.replaceCharacters(in: range, with: NSAttributedString.embedded(name: "Icon_Boost_Lighting_Small", color: theme.colors.accent, resize: false))
+        attr.addAttribute(.font, value: NSFont.medium(.text), range: NSMakeRange(range.max, attr.length - range.max))
+        //attr.detectBoldColorInString(with: .medium(.text))
+
+        self.context = context
+        self.textLayout = .init(attr, maximumNumberOfLines: 1, alignment: .center)
+        super.init(initialSize, stableId: stableId)
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        textLayout.measure(width: .greatestFiniteMagnitude)
+        return true
+    }
+    
+    override var height: CGFloat {
+        return 30
+    }
+    
+    override func viewClass() -> AnyClass {
+        return BoostTextView.self
+    }
+}
+
+private final class BoostTextView: GeneralRowView {
+    private let textView = TextView()
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? BoostText else {
+            return
+        }
+        textView.update(item.textLayout)
+        updateInlineStickers(context: item.context, view: textView, textLayout: item.textLayout)
+    }
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+
+        
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                validIds.append(id)
+                
+                
+                var rect: NSRect
+                if textLayout.isBigEmoji {
+                    rect = item.rect
+                } else {
+                    rect = item.rect.insetBy(dx: -2, dy: -2)
+                }
+                if let item = self.item as? ChatServiceItem, item.isBubbled {
+                    rect = rect.offsetBy(dx: 9, dy: 2)
+                }
+                
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: theme.colors.accent)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                view.isPlayable = true
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.centerX(y: frame.height - textView.frame.height)
+    }
+    
+}
 
 private final class HeaderStarRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peers: [EnginePeer]
+    fileprivate let badge: BadgeNode?
     init(_ initialSize: NSSize, stableId: AnyHashable, peers: [EnginePeer], context: AccountContext) {
         self.context = context
-        self.peers = peers
-        super.init(initialSize, height: 100, stableId: stableId)
+        if peers.count > 3 {
+            let under = theme.colors.underSelectedColor
+            self.badge = .init(.initialize(string: "+\(peers.count - 3)", color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: theme.colors.listBackground, additionSize: NSMakeSize(16, 7))
+        } else {
+            self.badge = nil
+        }
+        //assert(!peers.isEmpty)
+        self.peers = Array(peers.prefix(3))
+        super.init(initialSize, height: 80, stableId: stableId)
     }
     override func viewClass() -> AnyClass {
         return HeaderStarRowItemView.self
@@ -31,9 +157,13 @@ private final class HeaderStarRowItem : GeneralRowItem {
 private final class HeaderStarRowItemView : TableRowView {
     
     private let scene: PremiumStarSceneView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 340, 180))
+    private let avatars = View()
+    private var badgeView: View?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(scene)
+        addSubview(avatars)
+        avatars.frame = NSMakeRect(0, 0, 100, 65)
         scene.updateLayout(size: scene.frame.size, transition: .immediate)
         
         scene.hideStar()
@@ -43,6 +173,8 @@ private final class HeaderStarRowItemView : TableRowView {
     override func layout() {
         super.layout()
         scene.center()
+        avatars.center()
+        badgeView?.setFrameOrigin(avatars.frame.maxX - 22, avatars.frame.maxY - 18)
     }
     
     required init?(coder: NSCoder) {
@@ -51,6 +183,52 @@ private final class HeaderStarRowItemView : TableRowView {
     
     override var backdorColor: NSColor {
         return .clear
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        guard let item = item as? HeaderStarRowItem else {
+            return
+        }
+        
+        while avatars.subviews.count > item.peers.count {
+            avatars.subviews.last?.removeFromSuperview()
+        }
+        while avatars.subviews.count < item.peers.count {
+            avatars.addSubview(AvatarControl(font: .avatar(15)))
+        }
+        
+        var x: CGFloat = 0
+        for (i, peer) in item.peers.enumerated() {
+            let control = avatars.subviews[i] as! AvatarControl
+            control.setFrameSize(NSMakeSize(65, 65))
+            control.setPeer(account: item.context.account, peer: peer._asPeer())
+            control.layer?.zPosition = CGFloat(1000 - i)
+            control.setFrameOrigin(x, 0)
+            control.layer?.cornerRadius = control.frame.height / 2
+            control.layer?.borderWidth = 2
+            control.layer?.borderColor = theme.colors.listBackground.cgColor
+            x += control.frame.width / 2
+        }
+        avatars.setFrameSize(NSMakeSize(avatars.frame.height + (CGFloat(item.peers.count - 1) * avatars.frame.height / 2), avatars.frame.height))
+        needsLayout = true
+        
+        if let badge = item.badge {
+            let current: View
+            if let view = self.badgeView {
+                current = view
+            } else {
+                current = View()
+                addSubview(current)
+                self.badgeView = current
+            }
+            badge.view = current
+            current.setFrameSize(badge.size)
+            badge.setNeedDisplay()
+        } else if let view = self.badgeView {
+            performSubviewRemoval(view, animated: animated)
+            self.badgeView = nil
+        }
     }
 }
 
@@ -218,10 +396,11 @@ private final class Arguments {
     let context: AccountContext
     let execute:(String)->Void
     let toggleOption:(State.PaymentOption)->Void
-
-    init(context: AccountContext, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void) {
+    let openFeature:(PremiumValue)->Void
+    init(context: AccountContext, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, openFeature:@escaping(PremiumValue)->Void) {
         self.context = context
         self.execute = execute
+        self.openFeature = openFeature
         self.toggleOption = toggleOption
     }
 }
@@ -243,13 +422,17 @@ private struct State : Equatable {
     var defaultPrice: DefaultPrice = .init(intergal: 1, decimal: 1)
     var selectedMonths: Int32 = 12
     var newPerks: [String] = []
-
+    var premiumConfiguration: PremiumPromoConfiguration = .defaultValue
+    var stickers: [TelegramMediaFile] = []
+    
     var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
 
 }
 
 
 private let _id_header: InputDataIdentifier = .init("_id_header")
+private let _id_boost: InputDataIdentifier = .init("_id_boost")
+
 private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
     return .init("_id_peer_\(id.toInt64())")
 }
@@ -268,13 +451,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Gift Telegram Premium"), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 18, centerViewAlignment: true, alignment: .center)))
-    index += 1
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Gift Telegram Premium"), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 18, centerViewAlignment: true, alignment: .center)))
+//    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     let names: String
     if state.peers.count > 3 {
         let displayNames = state.peers.prefix(3).map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
-        names = "Get **\(displayNames)** and \(state.peers.count - 3) more access to exclusive features with **Telegram Premium**."
+        names = "Get **\(displayNames)** and **\(state.peers.count - 3)** more access to exclusive features with **Telegram Premium**."
     } else {
         let displayNames = state.peers.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
         names = "Get **\(displayNames)** access to exclusive features with **Telegram Premium**."
@@ -282,6 +468,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(names), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_boost, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        return BoostText(initialSize, stableId: stableId, count: state.peers.count, context: arguments.context)
+    }))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -358,12 +548,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: theme, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in
-                //arguments.openFeature(value, true)
-            })
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: theme, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: arguments.openFeature)
         }))
         index += 1
     }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("By gifting Telegram Premium you agree to the Telegram [Terms of Service](tos) and [Privacy Policy](pp).", linkHandler: { link in
+        arguments.execute(link)
+    }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+    //
           
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -377,9 +570,13 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
 
     let initialState = State(values: context.premiumOrder.premiumValues)
     
-    var close:(()->Void)? = nil
+    let paymentDisposable = MetaDisposable()
+    actionsDisposable.add(paymentDisposable)
     
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    var close:(()->Void)? = nil
+    var openFeature:((PremiumValue)->Void)? = nil
+    
+    let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
@@ -395,13 +592,6 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         return peers
     }
     
-    actionsDisposable.add(peers.start(next: { peers in
-        updateState { current in
-            var current = current
-            current.peers = peers
-            return current
-        }
-    }))
     let inAppPurchaseManager = context.inAppPurchaseManager
 
     
@@ -415,7 +605,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
     #endif
     
     let productsAndDefaultPrice: Signal<([PremiumGiftProduct], (Int64, NSDecimalNumber)), NoError> = combineLatest(
-        context.engine.payments.premiumGiftCodeOptions(peerId: context.peerId),
+        context.engine.payments.premiumGiftCodeOptions(peerId: nil),
         products
     )
     |> map { options, products in
@@ -435,31 +625,63 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         return (gifts, defaultPrice)
     }
     
+    let premiumPromo = context.engine.data.get(TelegramEngine.EngineData.Item.Configuration.PremiumPromo())
+    |> deliverOnMainQueue
     
-    actionsDisposable.add(productsAndDefaultPrice.start(next: { products in
+    let stickersKey: PostboxViewKey = .orderedItemList(id: Namespaces.OrderedItemList.CloudPremiumStickers)
+
+    let stickers: Signal<[TelegramMediaFile], NoError> = context.account.postbox.combinedView(keys: [stickersKey])
+    |> map { views -> [OrderedItemListEntry] in
+        if let view = views.views[stickersKey] as? OrderedItemListView, !view.items.isEmpty {
+            return view.items
+        } else {
+            return []
+        }
+    }
+    |> map { items in
+        var result: [TelegramMediaFile] = []
+        for item in items {
+            if let mediaItem = item.contents.get(RecentMediaItem.self) {
+                result.append(mediaItem.media)
+            }
+        }
+        return result
+    }
+    |> take(1)
+    |> deliverOnMainQueue
+
+    
+    actionsDisposable.add(combineLatest(productsAndDefaultPrice, peers, premiumPromo, stickers).start(next: { products, peers, premiumPromo, stickers in
             updateState { current in
                 var current = current
                 current.products = products.0
                 current.defaultPrice = .init(intergal: products.1.0, decimal: products.1.1)
+                current.peers = peers
+                current.premiumConfiguration = premiumPromo
+                current.stickers = stickers
                 return current
             }
     }))
+    
+    
 
     let arguments = Arguments(context: context, execute: { link in
-        
+        execute(inapp: .external(link: "https://telegram.org/tos", false))
     }, toggleOption: { value in
         updateState { current in
             var current = current
             current.selectedMonths = value.months
             return current
         }
+    }, openFeature: { value in
+        openFeature?(value)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "")
+    let controller = InputDataController(dataSignal: signal, title: "Gift Telegram Premium")
     
     controller.didLoaded = { controller, _ in
         controller.genericView.layer?.masksToBounds = false
@@ -471,10 +693,136 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    
+    let buyNonStore:()->Void = {
+        let state = stateValue.with { $0 }
+        
+        var selectedProduct: PremiumGiftProduct?
+        let selectedMonths = state.selectedMonths
+        if let product = state.products.first(where: { $0.months == selectedMonths }) {
+            selectedProduct = product
+        }
+        
+        guard let premiumProduct = selectedProduct else {
+            return
+        }
+        
+        let source =  BotPaymentInvoiceSource.giftCode(users: state.peers.map { $0.id }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
+                        
+        let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
 
-    let modalInteractions = ModalInteractions(acceptTitle: "OK", accept: { [weak controller] in
+        actionsDisposable.add(invoice.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+            
+                switch status {
+                case .paid:
+                    PlayConfetti(for: context.window)
+                    showModalText(for: context.window, text: "Gift Sent")
+                    close?()
+                default:
+                    break
+                }
+                
+            }), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        }))
+        
+    }
+    
+    let buyAppStore = {
+        
+        let state = stateValue.with { $0 }
+        
+        var selectedProduct: PremiumGiftProduct?
+        let selectedMonths = state.selectedMonths
+        if let product = state.products.first(where: { $0.months == selectedMonths }) {
+            selectedProduct = product
+        }
+        
+        guard let premiumProduct = selectedProduct else {
+            return
+        }
+
+        guard let storeProduct = premiumProduct.storeProduct else {
+            buyNonStore()
+            return
+        }
+        
+        let lockModal = PremiumLockModalController()
+        
+        var needToShow = true
+        delay(0.2, closure: {
+            if needToShow {
+                showModal(with: lockModal, for: context.window)
+            }
+        })
+        let purpose: AppStoreTransactionPurpose = .giftCode(peerIds: state.peers.map { $0.id }, boostPeer: nil, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
+        
+                
+        let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
+        |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+            if available {
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, quantity: premiumProduct.giftOption.storeQuantity, purpose: purpose)
+                |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+    
+                    lockModal?.close()
+                    needToShow = false
+                    
+                    close?()
+                    inAppPurchaseManager.finishAllTransactions()
+                    delay(0.2, closure: {
+                        PlayConfetti(for: context.window)
+                        showModalText(for: context.window, text: "Gift Sent")
+                        let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                    })
+                    
+                }, error: { [weak lockModal] error in
+                    let errorText: String
+                    switch error {
+                        case .generic:
+                            errorText = strings().premiumPurchaseErrorUnknown
+                        case .network:
+                            errorText =  strings().premiumPurchaseErrorNetwork
+                        case .notAllowed:
+                            errorText =  strings().premiumPurchaseErrorNotAllowed
+                        case .cantMakePayments:
+                            errorText =  strings().premiumPurchaseErrorCantMakePayments
+                        case .assignFailed:
+                            errorText =  strings().premiumPurchaseErrorUnknown
+                        case .cancelled:
+                            errorText = strings().premiumBoardingAppStoreCancelled
+                    }
+                    lockModal?.close()
+                    showModalText(for: context.window, text: errorText)
+                    inAppPurchaseManager.finishAllTransactions()
+                }))
+            } else {
+                lockModal?.close()
+                needToShow = false
+            }
+        })
+    }
+    
+    controller.validateData = { _ in
+        #if APP_STORE || DEBUG
+        buyAppStore()
+        #else
+        buyNonStore()
+        #endif
+        return .none
+    }
+
+    let modalInteractions = ModalInteractions(acceptTitle: "Gift Telegram Premium", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, singleButton: true)
+    }, singleButton: true, customTheme: {
+        .init(text: theme.colors.text, grayText: theme.colors.grayText, background: .clear, border: .clear, accent: theme.colors.accent, grayForeground: .clear, activeBackground: .clear, activeBorder: theme.colors.border, listBackground: .clear)
+    })
+    
+    /*
+     
+     */
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(380, 350))
     
@@ -482,9 +830,54 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         modalController?.close()
     })
     
+    
     close = { [weak modalController] in
         modalController?.modal?.close()
     }
+    
+    var _features: ViewController?
+    
+    openFeature = { [weak controller] value in
+        guard let controller = controller, controller.isLoaded() else {
+            return
+        }
+        var closeFeatures:(()->Void)? = nil
+        let features = PremiumBoardingFeaturesController(context, presentation: theme, value: value, stickers: [], configuration: stateValue.with { $0.premiumConfiguration }, back: {
+            closeFeatures?()
+        }, makeAcceptView: {
+            return nil
+        })
+        features._frameRect = NSMakeRect(0, 100, controller.bounds.width, controller.bounds.height - 40)
+
+        features.view.layer?.animatePosition(from: NSMakePoint(0, controller.bounds.maxY), to: NSMakePoint(0, features._frameRect.minY), duration: 0.2, timingFunction: .spring)
+        features.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        
+        let background: Control = Control(frame: controller.bounds.insetBy(dx: 0, dy: -50))
+        background.backgroundColor = NSColor.black.withAlphaComponent(0.7)
+        
+        background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        
+        background.set(handler: { _ in
+            closeFeatures?()
+        }, for: .Click)
+        
+        let bgColorView = View(frame: NSMakeRect(0, features._frameRect.maxY, features._frameRect.width, 50))
+
+        closeFeatures = { [weak features, weak background] in
+            if let background = background {
+                performSubviewRemoval(background, animated: true)
+            }
+            if let features = features {
+                performSubviewPosRemoval(features.view, pos: NSMakePoint(0, features.view.frame.maxY), animated: true)
+            }
+            _features = nil
+        }
+        controller.view.addSubview(background)
+        controller.view.addSubview(features.view)
+        _features = features
+    }
+    
+    modalController._hasBorder = false
     
     return modalController
 }

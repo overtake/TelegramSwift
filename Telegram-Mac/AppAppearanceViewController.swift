@@ -713,7 +713,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
             return current
         }
     }, userNameColor: {
-        context.bindings.rootNavigation().push(CustomizeAccountController(context, peer: context.myPeer!))
+        context.bindings.rootNavigation().push(SelectColorController(context: context, source: .account(context.myPeer!)))
     })
     
     

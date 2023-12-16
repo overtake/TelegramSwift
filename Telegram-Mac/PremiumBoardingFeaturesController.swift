@@ -95,8 +95,7 @@ final class PremiumBoardingFeaturesView: View {
             view.initialize(context: context, initialSize: bounds.size)
             return view
         })
-        slideView.addSlide(stories)
-
+        
         stories.appear = { [weak self] in
             self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
         }
@@ -104,6 +103,8 @@ final class PremiumBoardingFeaturesView: View {
             self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
         }
         
+        slideView.addSlide(stories)
+ 
         
         let double_limits = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         

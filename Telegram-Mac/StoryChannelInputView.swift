@@ -71,7 +71,6 @@ final class StoryChannelInputView : Control, StoryInput {
         
         self.layer?.masksToBounds = false
         
-        viewsText.userInteractionEnabled = false
         viewsText.isSelectable = false
         
         repost.scaleOnClick = true
@@ -111,6 +110,13 @@ final class StoryChannelInputView : Control, StoryInput {
             }
             arguments.showLikePanel(control, story)
         }, for: .RightDown)
+        
+        viewsText.set(handler: { [weak self ] _ in
+            guard let arguments = self?.arguments, let story = self?.story else {
+                return
+            }
+            arguments.showViewers(story)
+        }, for: .Click)
         
         self.views.userInteractionEnabled = false
         self.views.scaleOnClick = true
@@ -154,6 +160,7 @@ final class StoryChannelInputView : Control, StoryInput {
             let layout = TextViewLayout(text)
             layout.measure(width: .greatestFiniteMagnitude)
             self.viewsText.update(layout)
+            
             
             self.likeAction.update(story, state: state, context: arguments.context, animated: animated)
             

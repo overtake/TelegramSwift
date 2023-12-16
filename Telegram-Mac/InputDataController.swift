@@ -31,8 +31,10 @@ public class InputDataModalController : ModalViewController {
         }
     }
     
-    
-    
+    var _hasBorder: Bool = true
+    public override var hasBorder: Bool {
+        return _hasBorder
+    }
     
     var getHeaderColor: (()->NSColor)? = nil
     public override var headerBackground: NSColor {

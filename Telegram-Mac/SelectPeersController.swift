@@ -245,7 +245,7 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     
     if let linkInvation = linkInvation {
@@ -271,6 +271,27 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                 
                 entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
                 index += 1
+            }
+        }
+        
+        if let recentPeers = recentPeers {
+            switch recentPeers {
+            case let .peers(recent):
+                if !recent.isEmpty {
+                    entries.append(.separator(index, theme, "FREQUENT CONTACTS"))
+                    for peer in recent {
+                        if !peer.isEqual(accountPeer), isset[peer.id] == nil {
+                            isset[peer.id] = peer.id
+                            entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
+                            index += 1
+                        }
+                    }
+                    if !peers.isEmpty {
+                        entries.append(.separator(index, theme, "CONTACTS"))
+                    }
+                }
+            default:
+                break
             }
         }
         
@@ -906,11 +927,12 @@ class SelectContactsBehavior : SelectPeersBehavior {
                     TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
                 )
                 
-                return combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true)), account.postbox.multiplePeersView(inSearch), accountPeer)
+                
+                return combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true)), account.postbox.multiplePeersView(inSearch), accountPeer, context.engine.peers.recentPeers())
                     |> deliverOn(prepareQueue)
-                    |> map { view, searchView, accountPeer -> ([SelectPeerEntry], Bool) in
+                    |> map { view, searchView, accountPeer, recentPeers -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, excludeIds: excludePeerIds, linkInvation: linkInvation, theme: theme), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, linkInvation: linkInvation, theme: theme), updatedSearch)
                 }
                 
             } else  {

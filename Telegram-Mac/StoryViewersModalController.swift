@@ -281,6 +281,9 @@ private final class StoryViewerRowItem : GeneralRowItem {
 private var repost_story: CGImage {
     NSImage(named: "Icon_StoryRepostFrom")!.precomposed(darkAppearance.colors.greenUI)
 }
+private var forward_story: CGImage {
+    NSImage(named: "Icon_Story_Forwarded")!.precomposed(darkAppearance.colors.greenUI)
+}
 
 private final class StoryViewerRowView: GeneralRowView {
     fileprivate let avatar = AvatarStoryControl(font: .avatar(12), size: NSMakeSize(36, 36))
@@ -354,7 +357,14 @@ private final class StoryViewerRowView: GeneralRowView {
             self.statusControl = nil
         }
         
-        stateIcon.image = item.isRepost ? repost_story : item.presentation.icons.story_view_read
+        switch item.item {
+        case .view:
+            stateIcon.image = item.presentation.icons.story_view_read
+        case .repost:
+            stateIcon.image = repost_story
+        case .forward:
+            stateIcon.image = forward_story
+        }
         stateIcon.sizeToFit()
         
         self.date.update(item.dateLayout)
@@ -887,13 +897,15 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     view.filter.contextMenu = {
         let menu = ContextMenu(presentation: .current(darkAppearance.colors))
-        menu.addItem(ContextMenuItem(strings().storyViewersReactionsFirst, handler: {
-            updateState { current in
-                var current = current
-                current.sortMode = .reactionsFirst
-                return current
-            }
-        }, itemImage: stateValue.with { $0.sortMode == .reactionsFirst } ? MenuAnimation.menu_check_selected.value : nil))
+         if !isChannel {
+             menu.addItem(ContextMenuItem(strings().storyViewersReactionsFirst, handler: {
+                 updateState { current in
+                     var current = current
+                     current.sortMode = .reactionsFirst
+                     return current
+                 }
+             }, itemImage: stateValue.with { $0.sortMode == .reactionsFirst } ? MenuAnimation.menu_check_selected.value : nil))
+         }
         
        // if isChannel {
         menu.addItem(ContextMenuItem(strings().storyViewersRepostFirst, handler: {
