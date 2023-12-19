@@ -16,7 +16,7 @@ import Postbox
 
 enum PaymentProvider : Equatable {
     case stripe
-    case smartglocal
+    case smartglocal(String?)
 }
 
 
@@ -102,7 +102,13 @@ func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, Payme
             return nil
         }
         
-        return (publishableKey, [], .smartglocal)
+        var customTokenizeUrl: String?
+        if let value = nativeParams["public_token"] as? String, let url = URL(string: value), let host = url.host {
+            if url.scheme == "https" && (host == "smart-glocal.com" || host.hasSuffix(".smart-glocal.com")) {
+                customTokenizeUrl = value
+            }
+        }
+        return (publishableKey, [], .smartglocal(customTokenizeUrl))
     }
     return nil
 }

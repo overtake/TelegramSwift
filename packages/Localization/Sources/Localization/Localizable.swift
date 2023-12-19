@@ -3495,6 +3495,8 @@ public final class L10n {
   public static var chatMessageViewBot: String  { return L10n.tr("Localizable", "Chat.Message.ViewBot") }
   /// VIEW CHANNEL
   public static var chatMessageViewChannel: String  { return L10n.tr("Localizable", "Chat.Message.ViewChannel") }
+  /// View
+  public static var chatMessageViewGiftLink: String  { return L10n.tr("Localizable", "Chat.Message.ViewGiftLink") }
   /// VIEW GROUP
   public static var chatMessageViewGroup: String  { return L10n.tr("Localizable", "Chat.Message.ViewGroup") }
   /// Read More
@@ -7115,6 +7117,8 @@ public final class L10n {
   public static var giftLinkRowReasonGift: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Gift") }
   /// Giveaway
   public static var giftLinkRowReasonGiveaway: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway") }
+  /// Gift
+  public static var giftLinkRowReasonGiftJustGift: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Gift.JustGift") }
   /// Incomplete Giveaway
   public static var giftLinkRowReasonGiveawayIncomplete: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway.Incomplete") }
   /// **%1$@** also included **%2$@** in the prizes. Admins of the channel are responsible for delivering these prizes.
@@ -12011,6 +12015,14 @@ public final class L10n {
   public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
   /// Reset Color
   public static var selectColorResetColor: String  { return L10n.tr("Localizable", "SelectColor.ResetColor") }
+  /// Channel Emoji Status
+  public static var selectColorEmojiStatusChannel: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Channel") }
+  /// Emoji Status
+  public static var selectColorEmojiStatusUser: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.User") }
+  /// Choose status that will be shown next to the channel's name.
+  public static var selectColorEmojiStatusInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Info.Channel") }
+  /// Choose status that will be shown next to your profile.
+  public static var selectColorEmojiStatusInfoUser: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Info.User") }
   /// REMOVE ICON
   public static var selectColorIconRemoveIcon: String  { return L10n.tr("Localizable", "SelectColor.Icon.RemoveIcon") }
   /// Icon
@@ -12027,6 +12039,10 @@ public final class L10n {
   public static var selectColorIconInfoUserProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.User.Profile") }
   /// Not Selected
   public static var selectColorIconSelectOff: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select.Off") }
+  /// Profile Logo
+  public static var selectColorIconSelectProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select.Profile") }
+  /// Replies Logo
+  public static var selectColorIconSelectReplies: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select.Replies") }
   /// ADD ICON TO PROFILE BACKGROUND
   public static var selectColorIconTitleProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Title.Profile") }
   /// You can choose and individual color to tint your channel name, the links channel send, and replies to channel messages.

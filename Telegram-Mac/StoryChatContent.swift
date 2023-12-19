@@ -308,7 +308,12 @@ final class StoryContentContextImpl: StoryContentContext {
                                                 }
                                             }
                                         }
+                                    } else if case let .channelMessage(_, messageId) = mediaArea {
+                                        if let peer = transaction.getPeer(messageId.peerId) {
+                                            peers[peer.id] = peer
+                                        }
                                     }
+
                                 }
                             }
                         }
@@ -412,6 +417,17 @@ final class StoryContentContextImpl: StoryContentContext {
                     guard let media = item.media else {
                         return nil
                     }
+                    
+                    var forwardInfo = item.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, peers: peers) }
+                    if forwardInfo == nil {
+                        for mediaArea in item.mediaAreas {
+                            if case let .channelMessage(_, messageId) = mediaArea, let peer = peers[messageId.peerId] {
+                                forwardInfo = .known(peer: EnginePeer(peer), storyId: 0, isModified: false)
+                                break
+                            }
+                        }
+                    }
+
                     return EngineStoryItem(
                         id: item.id,
                         timestamp: item.timestamp,
@@ -444,7 +460,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         isEdited: item.isEdited,
                         isMy: item.isMy,
                         myReaction: item.myReaction,
-                        forwardInfo: item.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, peers: peers) }
+                        forwardInfo: forwardInfo
                     )
                 }
                 var totalCount = peerStoryItemsView.items.count
@@ -1313,6 +1329,10 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                                         }
                                     }
                                 }
+                            } else if case let .channelMessage(_, messageId) = mediaArea {
+                                if let peer = transaction.getPeer(messageId.peerId) {
+                                    peers[peer.id] = peer
+                                }
                             }
                         }
                     }
@@ -1368,6 +1388,17 @@ final class SingleStoryContentContextImpl: StoryContentContext {
             }
             
             if let item = item, case let .item(itemValue) = item, let media = itemValue.media {
+                
+                var forwardInfo = itemValue.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, peers: peers) }
+                if forwardInfo == nil {
+                    for mediaArea in itemValue.mediaAreas {
+                        if case let .channelMessage(_, messageId) = mediaArea, let peer = peers[messageId.peerId] {
+                            forwardInfo = .known(peer: EnginePeer(peer), storyId: 0, isModified: false)
+                            break
+                        }
+                    }
+                }
+
                 let mappedItem = EngineStoryItem(
                     id: itemValue.id,
                     timestamp: itemValue.timestamp,

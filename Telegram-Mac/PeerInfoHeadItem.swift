@@ -468,7 +468,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let nameColor = nameColor, threadId == nil, !editing {
             return context.peerNameColors.getProfile(nameColor).main
         } else {
-            return theme.colors.background
+            return theme.colors.text
         }
     }
     var backgroundGradient: [NSColor] {

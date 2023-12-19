@@ -139,11 +139,13 @@ private struct State : Equatable {
     }
 }
 
-private func validateSmartGlobal(_ publicToken: String, isTesting: Bool, state: State) -> Signal<BotCheckoutPaymentMethod, Error> {
+private func validateSmartGlobal(_ publicToken: String, isTesting: Bool, state: State, customTokenizeUrl: String?) -> Signal<BotCheckoutPaymentMethod, Error> {
     return Signal { subscriber in
         
         let url: String
-        if isTesting {
+        if let customTokenizeUrl {
+            url = customTokenizeUrl
+        } else if isTesting {
             url = "https://tgb-playground.smart-glocal.com/cds/v1/tokenize/card"
         } else {
             url = "https://tgb.smart-glocal.com/cds/v1/tokenize/card"
@@ -480,8 +482,8 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                 }
                 return nil
             }
-        case .smartglocal:
-            tokenSignal = validateSmartGlobal(publishableKey, isTesting: isTesting, state: stateValue.with { $0 }) |> map(Optional.init)
+        case let .smartglocal(customTokenizeUrl):
+            tokenSignal = validateSmartGlobal(publishableKey, isTesting: isTesting, state: stateValue.with { $0 }, customTokenizeUrl: customTokenizeUrl) |> map(Optional.init)
         }
         _ = showModalProgress(signal: tokenSignal, for: context.window).start(next: { token in
             if let token = token {

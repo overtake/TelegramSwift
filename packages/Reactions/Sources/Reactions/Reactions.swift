@@ -67,7 +67,7 @@ public final class Reactions {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
     
-    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?) {
+    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?, handleInteractive: Bool = true) {
         
         let emojiStatus = (peer as? TelegramUser)?.emojiStatus
         
@@ -78,18 +78,25 @@ public final class Reactions {
             expiryDate = nil
         }
         if file.mimeType.hasPrefix("bundle") {
-            if emojiStatus != nil {
-                _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))
-            } else {
-                _ = _interactiveStatus.swap(nil)
+            if handleInteractive {
+                if emojiStatus != nil {
+                    _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                } else {
+                    _ = _interactiveStatus.swap(nil)
+                }
             }
+            
             _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
         } else {
             if file.fileId.id == emojiStatus?.fileId {
-                _ = _interactiveStatus.swap(nil)
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(nil)
+                }
                 _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
             } else {
-                _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                }
                 _ = engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
             }
         }

@@ -111,6 +111,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case topic
         case backgroundIcon
         case channelReactions
+        case channelStatus
     }
     let mode: Mode
     let color: NSColor?
@@ -156,7 +157,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 } else {
                     self.unlockText = nil
                 }
-            case .channelReactions:
+            case .channelReactions, .channelStatus:
                 self.unlockText = nil
             case .preview:
                 if stableId != AnyHashable(0) {
@@ -279,10 +280,16 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if context.isPremium {
             if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
-                setStatus = .init(strings().emojiContextSetStatus, handler: {
-                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
-                    showModalText(for: context.window, text: strings().emojiContextSetStatusSuccess)
-                }, itemImage: MenuAnimation.menu_smile.value)
+                switch mode {
+                case .panel:
+                    setStatus = .init(strings().emojiContextSetStatus, handler: {
+                        _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                        showModalText(for: context.window, text: strings().emojiContextSetStatusSuccess)
+                    }, itemImage: MenuAnimation.menu_smile.value)
+                default:
+                    setStatus = nil
+                }
+                
             }
         }
         
@@ -408,6 +415,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             case .channelReactions:
                 self.installPack?(info, self.stickerItems)
             case .preview:
+                self.installPack?(info, self.stickerItems)
+            case .channelStatus:
                 self.installPack?(info, self.stickerItems)
             }
             

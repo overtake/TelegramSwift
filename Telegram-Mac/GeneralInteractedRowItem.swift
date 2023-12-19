@@ -86,9 +86,10 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let rightIcon: CGImage?
     let switchAction:(()->Void)?
     let descClick:(()->Void)?
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, nameAttributed: NSAttributedString? = nil, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: (()-> Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil, switchAction:(()->Void)? = nil, descClick:(()->Void)? = nil) {
+    let afterNameImage: CGImage?
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, nameAttributed: NSAttributedString? = nil, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: (()-> Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil, switchAction:(()->Void)? = nil, descClick:(()->Void)? = nil, afterNameImage: CGImage? = nil) {
         
-        
+        self.afterNameImage = afterNameImage
         self.name = name
         self.nameAttributed = nameAttributed
         self.switchAction = switchAction
@@ -96,7 +97,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         self.menuItems = menuItems
         self.disableBorder = disableBorder
         if let description = description {
-            descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)), maximumNumberOfLines: 1)
+            descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)), maximumNumberOfLines: 4)
         } else {
             descLayout = nil
         }

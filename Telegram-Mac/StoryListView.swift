@@ -45,7 +45,7 @@ private final class StoryRepostView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(forwardInfo: EngineStoryItem.ForwardInfo, context: AccountContext, arguments: StoryArguments) {
+    func set(forwardInfo: EngineStoryItem.ForwardInfo, story: EngineStoryItem, context: AccountContext, arguments: StoryArguments) {
         let colors: PeerNameColor?
         let nameText: String
         let text = "Story"
@@ -103,29 +103,58 @@ private final class StoryRepostView : Control {
         } else {
             borderLayer.colors = .init(main: NSColor(0xffffff), secondary: nil, tertiary: nil)
         }
-        let height: CGFloat
-        if let storyId = storyId {
+        var height: CGFloat
+        if let storyId = storyId, !text.isEmpty {
             self.borderLayer.isHidden = false
             self.textView.isHidden = false
             height = 36
             layer?.cornerRadius = .cornerRadius
             let signal = arguments.loadForward(storyId).get() |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] item in
+                guard let `self` = self else {
+                    return
+                }
                 if let item = item {
                     let textLayout = TextViewLayout(.initialize(string: item.text, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
                     textLayout.measure(width: .greatestFiniteMagnitude)
-                    self?.textView.update(textLayout)
+                    self.textView.update(textLayout)
+                }
+                self.textView.isHidden = item?.text.isEmpty == true || item == nil
+                height = self.textView.isHidden ? 20.0 : 36.0
+                self.setFrameSize(NSMakeSize(self.frame.width, height))
+                self.updateLayout(size: self.frame.size, transition: .immediate)
+
+                borderLayer.isHidden = self.textView.isHidden
+                if height == 20 {
+                    self.layer?.cornerRadius = height / 2
+                } else {
+                    self.layer?.cornerRadius = .cornerRadius
                 }
             }))
-            self.set(handler: { [weak arguments] _ in
-                arguments?.openStory(storyId)
-            }, for: .Click)
         } else {
-            self.removeAllHandlers()
             height = 20
             borderLayer.isHidden = true
             self.textView.isHidden = true
             layer?.cornerRadius = height / 2
+        }
+        
+        self.removeAllHandlers()
+
+        if let storyId = storyId {
+            self.set(handler: { [weak arguments] _ in
+                if storyId.id != 0 {
+                    arguments?.openStory(storyId)
+                } else {
+                    for media in story.mediaAreas {
+                        switch media {
+                        case let .channelMessage(_, messageId):
+                            arguments?.openChat(messageId.peerId, messageId, nil)
+                        default:
+                            break
+                        }
+                    }
+                }
+            }, for: .Click)
         }
         
         self.setFrameSize(NSMakeSize(self.frame.width, height))
@@ -757,7 +786,7 @@ final class StoryListView : Control, Notifable {
             self.updateLayout(size: frame.size, transition: .immediate)
         }
         
-        func update(text: String, entities: [MessageTextEntity], forwardInfo: EngineStoryItem.ForwardInfo?, context: AccountContext, state: State, transition: ContainedViewLayoutTransition, toggleState: @escaping(State)->Void, arguments: StoryArguments?) -> NSSize {
+        func update(text: String, entities: [MessageTextEntity], story: EngineStoryItem, forwardInfo: EngineStoryItem.ForwardInfo?, context: AccountContext, state: State, transition: ContainedViewLayoutTransition, toggleState: @escaping(State)->Void, arguments: StoryArguments?) -> NSSize {
             
             self.state = state
             self.arguments = arguments
@@ -895,7 +924,7 @@ final class StoryListView : Control, Notifable {
                     self.repostView = current
                     self.addSubview(current)
                 }
-                current.set(forwardInfo: forwardInfo, context: context, arguments: arguments)
+                current.set(forwardInfo: forwardInfo, story: story, context: context, arguments: arguments)
             } else if let view = self.repostView {
                 performSubviewRemoval(view, animated: false)
             }
@@ -1826,7 +1855,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 transition = .immediate
             }
-            let size = current.update(text: text, entities: entities, forwardInfo: story.forwardInfo, context: context, state: state, transition: transition, toggleState: { [weak self] state in
+            let size = current.update(text: text, entities: entities, story: story, forwardInfo: story.forwardInfo, context: context, state: state, transition: transition, toggleState: { [weak self] state in
                 self?.arguments?.interaction.update { current in
                     var current = current
                     current.readingText = state == .revealed

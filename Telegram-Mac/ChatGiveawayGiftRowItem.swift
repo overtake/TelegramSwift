@@ -42,7 +42,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
         
-        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
+        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
 
         
         
@@ -230,7 +230,11 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         
         action.set(font: .medium(.text), for: .Normal)
         action.set(color: item.wpPresentation.activity.main, for: .Normal)
-        action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
+        if item.data.fromGiveaway {
+            action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
+        } else {
+            action.set(text: strings().chatMessageViewGiftLink, for: .Normal)
+        }
         action.layer?.borderWidth = System.pixel
         action.scaleOnClick = true
         action.layer?.borderColor = item.wpPresentation.activity.main.cgColor

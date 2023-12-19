@@ -521,7 +521,7 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         hasRecent = true
     case .backgroundIcon:
         hasRecent = true
-    case .channelReactions:
+    case .channelReactions, .channelStatus:
         hasRecent = true
     }
     if hasRecent {
@@ -1933,6 +1933,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case backgroundIcon
         case stories
         case channelReactions
+        case channelStatus
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1947,6 +1948,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .backgroundIcon
             case .channelReactions:
                 return .channelReactions
+            case .channelStatus:
+                return .channelStatus
             default:
                 return .panel
             }

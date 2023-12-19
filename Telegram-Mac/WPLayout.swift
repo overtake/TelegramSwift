@@ -21,6 +21,7 @@ struct WPLayoutPresentation {
     let selectText: NSColor
     let ivIcon: CGImage
     let renderType: ChatItemRenderType
+    let pattern: Int64?
 }
 
 class WPLayout: Equatable {

@@ -32,7 +32,7 @@ final class PremiumStatusControl : Control {
     
     private var lite: Bool = false
     
-    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = false, isLite: Bool) {
+    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = true, isLite: Bool) {
         
         
         self.lite = isLite
@@ -42,7 +42,7 @@ final class PremiumStatusControl : Control {
         }
         self.layer?.opacity = color != nil && peer.emojiStatus != nil ? 0.4 : 1
 
-        if peer.isFake || peer.isScam || peer.isVerified || (peer.isPremium && peer.emojiStatus == nil)  {
+        if peer.isFake || peer.isScam || (peer.isPremium && peer.emojiStatus == nil) || (peer.emojiStatus == nil && peer.isVerified)  {
             if let animateLayer = animateLayer {
                 performSublayerRemoval(animateLayer, animated: animated)
                 self.animateLayer = nil
