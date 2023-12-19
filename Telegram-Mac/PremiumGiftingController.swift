@@ -596,7 +596,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
 
     
     let products: Signal<[InAppPurchaseManager.Product], NoError>
-    #if APP_STORE || DEBUG
+    #if APP_STORE //|| DEBUG
     products = inAppPurchaseManager.availableProducts |> map {
         $0
     }
@@ -806,7 +806,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
     }
     
     controller.validateData = { _ in
-        #if APP_STORE || DEBUG
+        #if APP_STORE
         buyAppStore()
         #else
         buyNonStore()

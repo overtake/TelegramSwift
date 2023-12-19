@@ -156,7 +156,11 @@ private struct State : Equatable {
                 reasonText = strings().giftLinkRowReasonGiveaway
             }
         } else {
-            reasonText = strings().giftLinkRowReasonGift
+            if info.fromPeerId == nil {
+                reasonText = strings().giftLinkRowReasonGiftJustGift
+            } else {
+                reasonText = strings().giftLinkRowReasonGift
+            }
         }
 
         let reasonLink: String
@@ -200,25 +204,36 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     let headerText: String
-    if state.info.usedDate == nil {
-        headerText = strings().giftLinkInfoNotUsed
+    if state.info.fromPeerId != nil || state.info.toPeerId == arguments.context.peerId {
+        if state.info.usedDate == nil {
+            headerText = strings().giftLinkInfoNotUsed
+        } else {
+            headerText = strings().giftLinkInfoUsed
+        }
     } else {
-        headerText = strings().giftLinkInfoUsed
+        let duration: String = state.info.months == 12 ? strings().giftLinkPremiumDurationYear : strings().giftLinkPremiumDurationMonths(Int(state.info.months))
+        headerText = duration
     }
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(headerText), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: {
-            arguments.copyLink(state.link)
-        }), singleLine: true)
-    }))
-    index += 1
+    if state.info.fromPeerId != nil || state.info.toPeerId == arguments.context.peerId {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: {
+                arguments.copyLink(state.link)
+            }), singleLine: true)
+        }))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+    }
+    
   
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_rows, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -226,8 +241,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-//    entries.append(.sectionId(sectionId, type: .normal))
-//    sectionId += 1
+
     
     if let usedDate = state.info.usedDate {
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().giftLinkInfoUsedInfo(stringForFullDate(timestamp: usedDate)), linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
@@ -239,7 +253,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
     }
     
-    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
     return entries
 }
 

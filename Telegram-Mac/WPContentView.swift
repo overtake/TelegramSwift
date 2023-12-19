@@ -28,6 +28,9 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     var textView:TextView = TextView()
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
+    private var patternContentLayers: [SimpleLayer] = []
+    private var patternTarget: InlineStickerItemLayer?
+
     
     private(set) var containerView:View = View()
     private(set) var content:WPLayout?
@@ -168,6 +171,91 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             self.closeAdView = nil
         }
         
+        if let pattern = layout.presentation.pattern {
+            if patternTarget?.textColor != layout.presentation.activity.main {
+                patternTarget = .init(account: layout.context.account, inlinePacksContext: layout.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: layout.presentation.activity.main)
+                patternTarget?.noDelayBeforeplay = true
+                patternTarget?.isPlayable = true
+                self.updatePatternLayerImages()
+            }
+            patternTarget?.contentDidUpdate = { [weak self] content in
+                self?.updatePatternLayerImages()
+            }
+        } else {
+            patternTarget = nil
+            self.updatePatternLayerImages()
+        }
+        
+        if layout.presentation.pattern != nil {
+            var maxIndex = 0
+            
+            struct Placement {
+                var position: CGPoint
+                var size: CGFloat
+                
+                init(_ position: CGPoint, _ size: CGFloat) {
+                    self.position = position
+                    self.size = size
+                }
+            }
+            
+            let placements: [Placement] = [
+                Placement(CGPoint(x: 176.0, y: 13.0), 38.0),
+                Placement(CGPoint(x: 51.0, y: 45.0), 58.0),
+                Placement(CGPoint(x: 349.0, y: 36.0), 58.0),
+                Placement(CGPoint(x: 132.0, y: 64.0), 46.0),
+                Placement(CGPoint(x: 241.0, y: 64.0), 54.0),
+                Placement(CGPoint(x: 68.0, y: 121.0), 44.0),
+                Placement(CGPoint(x: 178.0, y: 122.0), 47.0),
+                Placement(CGPoint(x: 315.0, y: 122.0), 47.0),
+            ]
+            
+            for placement in placements {
+                let patternContentLayer: SimpleLayer
+                if maxIndex < self.patternContentLayers.count {
+                    patternContentLayer = self.patternContentLayers[maxIndex]
+                } else {
+                    patternContentLayer = SimpleLayer()
+                    patternContentLayer.layerTintColor = layout.presentation.activity.main.cgColor
+                    self.layer?.addSublayer(patternContentLayer)
+                    self.patternContentLayers.append(patternContentLayer)
+                }
+               // patternContentLayer.contents = patternTarget?.contents // self.patternContentsTarget?.contents
+                
+                var start = NSMakePoint(layout.size.width, 0)
+                
+                if let article = layout as? WPArticleLayout {
+                    if let arguments = article.imageArguments {
+                        if !article.isFullImageSize {
+                            start.x -= (arguments.boundingSize.width + 5)
+                        }
+                    }
+                    
+                }
+                
+                let itemSize = CGSize(width: placement.size / 3.0, height: placement.size / 3.0)
+                patternContentLayer.frame = CGRect(origin: CGPoint(x: start.x - placement.position.x / 3.0 - itemSize.width * 0.5, y: start.y + placement.position.y / 3.0 - itemSize.height * 0.5), size: itemSize)
+                
+                var alphaFraction = abs(placement.position.x) / 400.0
+                alphaFraction = min(1.0, max(0.0, alphaFraction))
+                patternContentLayer.opacity = 0.3 * Float(1.0 - alphaFraction)
+                
+                maxIndex += 1
+            }
+            
+            if maxIndex < self.patternContentLayers.count {
+                for i in maxIndex ..< self.patternContentLayers.count {
+                    self.patternContentLayers[i].removeFromSuperlayer()
+                }
+                self.patternContentLayers.removeSubrange(maxIndex ..< self.patternContentLayers.count)
+            }
+        } else {
+            for patternContentLayer in self.patternContentLayers {
+                patternContentLayer.removeFromSuperlayer()
+            }
+            self.patternContentLayers.removeAll()
+        }
+        
         self.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.1) //color
         self.needsLayout = true
         
@@ -175,6 +263,13 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         
         if let textLayout = layout.textLayout {
             updateInlineStickers(context: layout.context, view: self.textView, textLayout: textLayout)
+        }
+    }
+    
+    private func updatePatternLayerImages() {
+        let image = self.patternTarget?.contents
+        for patternContentLayer in self.patternContentLayers {
+            patternContentLayer.contents = image
         }
     }
     

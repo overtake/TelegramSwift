@@ -2214,11 +2214,33 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void = { [weak self] peerId, messageId, initial in
-            let controller = context.bindings.rootNavigation().controller as? ChatController
-            if controller?.chatLocation.peerId != peerId {
-                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initial))
+            
+            let open:()->Void = { [weak self] in
+                let controller = context.bindings.rootNavigation().controller as? ChatController
+                if controller?.chatLocation.peerId != peerId {
+                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initial))
+                }
+                self?.close()
             }
-            self?.close()
+            
+            if let messageId = messageId {
+                let _ = ((context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .local)
+                          |> mapToSignal { result -> Signal<Message?, NoError> in
+                              if case let .result(messages) = result {
+                                  return .single(messages.first)
+                              }
+                              return .single(nil)
+                          })
+                          |> deliverOnMainQueue).startStandalone(next: { message in
+                              if let _ = message {
+                                  open()
+                              } else {
+                                  showModalText(for: context.window, text: strings().chatOpenMessageNotExist)
+                              }
+                          })
+            } else {
+                open()
+            }
         }
         
         let openPeerInfo:(PeerId, NSView?)->Void = { [weak self] peerId, view in
@@ -2733,6 +2755,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 } else {
                     execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
                 }
+            case let .channelMessage(_, messageId):
+                openChat(messageId.peerId, messageId, nil)
             default:
                 break
             }

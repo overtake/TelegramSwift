@@ -45,6 +45,45 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
     })!
 }
 
+#if !SHARE
+public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImage {
+    let attributedText = NSAttributedString(string: text, attributes: [
+        .font: NSFont.medium(12.0),
+        .foregroundColor: NSColor.white
+    ])
+    let bounds = attributedText.boundingRect(with: CGSize(width: 100.0, height: 100.0), options: .usesLineFragmentOrigin, context: nil)
+    let leftInset: CGFloat = 16.0
+    let rightInset: CGFloat = 4.0
+    let size = CGSize(width: leftInset + rightInset + ceil(bounds.width), height: 20.0)
+    return generateImage(size, rotatedContext: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+        let path = CGMutablePath()
+        path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: 4, cornerHeight: 4)
+        context.addPath(path)
+        context.clip()
+        
+        var locations: [CGFloat] = [0.0, 1.0]
+        let colors: [CGColor] = [NSColor(rgb: 0x9076FF).cgColor, NSColor(rgb: 0xB86DEA).cgColor]
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+        context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
+        
+        context.resetClip()
+        
+        let image = NSImage(named: "Icon_EmojiLock")?.precomposed()
+        
+        if let image = generateTintedImage(image: image, color: .white) {
+            let imageFit: CGFloat = 14.0
+            let imageSize = image.size.aspectFitted(CGSize(width: imageFit, height: imageFit))
+            let imageRect = CGRect(origin: CGPoint(x: 2.0, y: floorToScreenPixels((size.height - imageSize.height) * 0.5)), size: imageSize)
+            context.draw(image, in: imageRect)
+        }
+        
+        attributedText.draw(at: CGPoint(x: leftInset, y: floorToScreenPixels((size.height - bounds.height) * 0.5)))
+    })!
+}
+#endif
+
 func chatReplyLineDashTemplateImage(_ colors: PeerNameColors.Colors, flipped: Bool) -> CGImage? {
     let radius: CGFloat = 3.0
     var offset: CGFloat = 5.0

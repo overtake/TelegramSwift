@@ -586,7 +586,18 @@ final class TelegramChatColors {
     
     
     func replyPattern(_ item: ChatRowItem) -> Int64? {
-        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+        return replyPattern(item.message)
+    }
+    
+    func replyPattern(_ message: Message?) -> Int64? {
+        if let message = message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+            return author.backgroundEmojiId
+        }
+        return nil
+    }
+    
+    func webPreviewPattern(_ message: Message?) -> Int64? {
+        if let message = message, let author = message.author {
             return author.backgroundEmojiId
         }
         return nil
