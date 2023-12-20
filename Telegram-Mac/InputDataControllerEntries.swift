@@ -239,7 +239,8 @@ final class InputDataGeneralData : Equatable {
     let theme: GeneralRowItem.Theme?
     let disableBorder: Bool
     let descTextColor: NSColor?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, descTextColor: NSColor? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, switchAction: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, descClick: (()->Void)? = nil, theme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, nameAttributed: NSAttributedString? = nil) {
+    let afterNameImage: CGImage?
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, descTextColor: NSColor? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, switchAction: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, descClick: (()->Void)? = nil, theme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, nameAttributed: NSAttributedString? = nil, afterNameImage: CGImage? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -257,10 +258,11 @@ final class InputDataGeneralData : Equatable {
         self.disableBorder = disableBorder
         self.nameAttributed = nameAttributed
         self.descTextColor = descTextColor
+        self.afterNameImage = afterNameImage
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate && lhs.theme == rhs.theme && lhs.disableBorder == rhs.disableBorder && lhs.nameAttributed == rhs.nameAttributed && lhs.descTextColor == rhs.descTextColor
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate && lhs.theme == rhs.theme && lhs.disableBorder == rhs.disableBorder && lhs.nameAttributed == rhs.nameAttributed && lhs.descTextColor == rhs.descTextColor && lhs.afterNameImage == rhs.afterNameImage
     }
 }
 
@@ -494,7 +496,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .general(_, _, value, error, identifier, data):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, nameAttributed: data.nameAttributed, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, descTextColor: data.descTextColor ?? data.theme?.grayTextColor ?? theme.colors.text, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
-            }, enabled: data.enabled, switchAppearance: data.theme?.switchAppearance ?? switchViewAppearance, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, customTheme: data.theme, disableBorder: data.disableBorder, switchAction: data.switchAction, descClick: data.descClick)
+            }, enabled: data.enabled, switchAppearance: data.theme?.switchAppearance ?? switchViewAppearance, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, customTheme: data.theme, disableBorder: data.disableBorder, switchAction: data.switchAction, descClick: data.descClick, afterNameImage: data.afterNameImage)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):

@@ -1771,6 +1771,8 @@ public final class L10n {
   public static func channelBoostBoostedChannelReachedLevel(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel", p1, p2)
   }
+  /// Use Emoji Statuses
+  public static var channelBoostEmojiStatus: String  { return L10n.tr("Localizable", "ChannelBoost.EmojiStatus") }
   /// Enable Colors
   public static var channelBoostEnableColors: String  { return L10n.tr("Localizable", "ChannelBoost.EnableColors") }
   /// Your channel needs **%1$@ level** to change channel color.\n\nAsk your **Premium** subscribers to boost your channel with this link:
@@ -1779,6 +1781,22 @@ public final class L10n {
   }
   /// This channel reached **Level 1** and can now post stories.
   public static var channelBoostEnabledStoriesForChannelText: String  { return L10n.tr("Localizable", "ChannelBoost.EnabledStoriesForChannelText") }
+  /// Your channel needs **Level %1$@** to use emoji statuses.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableEmojiStatusLevelText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableEmojiStatusLevelText", p1)
+  }
+  /// Your channel needs **Level %1$@** to change link icon.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableNameIconLevelText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableNameIconLevelText", p1)
+  }
+  /// Your channel needs **Level %1$@** to change channel cover color.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableProfileColorLevelText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableProfileColorLevelText", p1)
+  }
+  /// Your channel needs **Level %1$@** to change channel cover icon.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableProfileIconLevelText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableProfileIconLevelText", p1)
+  }
   /// Custom Reactions
   public static var channelBoostEnableReactions: String  { return L10n.tr("Localizable", "ChannelBoost.EnableReactions") }
   /// Your channel needs to reach **%1$@ level** to add %2$@ custom emoji as reactions.\n\nAsk your **Premium** subscribers to boost your channel with this link:
@@ -1863,6 +1881,12 @@ public final class L10n {
   public static func channelBoostMoreBoostsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_zero", p1)
   }
+  /// Set Link Icon
+  public static var channelBoostNameIcon: String  { return L10n.tr("Localizable", "ChannelBoost.NameIcon") }
+  /// Set Cover Color
+  public static var channelBoostProfileColor: String  { return L10n.tr("Localizable", "ChannelBoost.ProfileColor") }
+  /// Set Cover Icon
+  public static var channelBoostProfileIcon: String  { return L10n.tr("Localizable", "ChannelBoost.ProfileIcon") }
   /// Replace
   public static var channelBoostReplace: String  { return L10n.tr("Localizable", "ChannelBoost.Replace") }
   /// You currently boost **%1$@**. Do you want to boost **%2$@** instead?
@@ -12013,8 +12037,6 @@ public final class L10n {
   public static var selectColorPremium: String  { return L10n.tr("Localizable", "SelectColor.Premium") }
   /// COLOR PREVIEW
   public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
-  /// Reset Color
-  public static var selectColorResetColor: String  { return L10n.tr("Localizable", "SelectColor.ResetColor") }
   /// Channel Emoji Status
   public static var selectColorEmojiStatusChannel: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Channel") }
   /// Emoji Status
@@ -12061,6 +12083,10 @@ public final class L10n {
   public static var selectColorPreviewProfile: String  { return L10n.tr("Localizable", "SelectColor.Preview.Profile") }
   /// PROFILE PAGE COLOR
   public static var selectColorProfilePageTitle: String  { return L10n.tr("Localizable", "SelectColor.ProfilePage.Title") }
+  /// Reset Name Color
+  public static var selectColorResetColorName: String  { return L10n.tr("Localizable", "SelectColor.ResetColor.Name") }
+  /// Reset Profile Color
+  public static var selectColorResetColorProfile: String  { return L10n.tr("Localizable", "SelectColor.ResetColor.Profile") }
   /// Your channel name color has been updated!
   public static var selectColorSuccessChannel: String  { return L10n.tr("Localizable", "SelectColor.Success.Channel") }
   /// Your name color has been updated!

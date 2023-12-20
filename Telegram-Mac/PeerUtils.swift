@@ -683,16 +683,7 @@ extension Peer {
             return []
         }
     }
-    
-    var isVerified: Bool {
-        if let peer = self as? TelegramUser {
-            return peer.flags.contains(.isVerified)
-        } else if let peer = self as? TelegramChannel {
-            return peer.flags.contains(.isVerified)
-        } else {
-            return false
-        }
-    }
+
     
     
     var isPremium: Bool {

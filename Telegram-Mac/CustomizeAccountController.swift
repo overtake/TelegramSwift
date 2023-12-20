@@ -124,7 +124,7 @@ final class CustomizeAccountController : SectionViewController {
                 _ = signal.start(next: { stats, myStatus in
                     if let stats = stats {
                         if stats.level < channel_color_level_min {
-                            showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .color(channel_color_level_min)), for: context.window)
+                            showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .nameColor(channel_color_level_min)), for: context.window)
                         } else {
                             _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId).start()
                             self?.navigationController?.back()

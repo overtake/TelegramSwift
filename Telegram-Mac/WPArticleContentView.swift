@@ -373,7 +373,7 @@ class WPArticleContentView: WPContentView {
                 }
                 
             } else if let palette = layout.content.crossplatformPalette, let wallpaper = layout.content.crossplatformWallpaper, let settings = layout.content.themeSettings {
-                updateImageSignal = crossplatformPreview(account: layout.context.account, palette: palette, wallpaper: wallpaper, mode: .thumbnail)
+                updateImageSignal = crossplatformPreview(accountContext: layout.context, palette: palette, wallpaper: wallpaper, mode: .thumbnail)
                 
                 
                 self.playIcon?.removeFromSuperview()

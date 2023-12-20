@@ -245,7 +245,7 @@ private func cloudThemeCrossplatformData(context: AccountContext, settings: Tele
 }
 
 
-private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
+private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper, emoticonThemes: [(String, TelegramPresentationTheme)]) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
         let image = generateImage(NSMakeSize(80, 55), rotatedContext: { size, ctx in
             let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -282,6 +282,12 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                         backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
                         backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
+                    }
+                case let .emoticon(emoticon):
+                    if let first = emoticonThemes.first(where: { $0.0.emojiUnmodified == emoticon.emojiUnmodified }) {
+                        backgroundMode = first.1.backgroundMode
+                    } else {
+                        backgroundMode = .plain
                     }
                 }
             } else {
@@ -364,7 +370,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
 }
 
 
-private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
+private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper, emoticonThemes: [(String, TelegramPresentationTheme)]) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
         let image = generateImage(NSMakeSize(132, 86), rotatedContext: { size, ctx in
             let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -401,6 +407,12 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
                         backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
                         backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
+                    }
+                case let .emoticon(emoticon):
+                    if let first = emoticonThemes.first(where: { $0.0.emojiUnmodified == emoticon.emojiUnmodified }) {
+                        backgroundMode = first.1.backgroundMode
+                    } else {
+                        backgroundMode = .plain
                     }
                 }
             } else {
@@ -629,7 +641,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, parent:
     case let .cloud(cloud):
         if let file = cloud.file {
             return cloudThemeData(context: context, theme: cloud, file: file) |> mapToSignal { data in
-                return thumbGenerator(data.0, bubbled, data.1) |> map { image in
+                return thumbGenerator(data.0, bubbled, data.1, context.emoticonThemes) |> map { image in
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2)))
                 }
             }
@@ -646,7 +658,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, parent:
                     .installDefaultWallpaper()
                 return (settings.wallpaper.wallpaper, settings.palette)
             } |> mapToSignal { wallpaper, palette in
-                return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
+                return thumbGenerator(palette, bubbled, wallpaper, context.emoticonThemes) |> map { image in
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper)))
                 }
             }
@@ -665,11 +677,11 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, parent:
             return (settings.wallpaper.wallpaper, settings.palette)
         } |> mapToSignal { wallpaper, palette in
             if let cloud = cloud {
-                return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
+                return thumbGenerator(palette, bubbled, wallpaper, context.emoticonThemes) |> map { image in
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper)))
                 }
             } else {
-                return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
+                return thumbGenerator(palette, bubbled, wallpaper, context.emoticonThemes) |> map { image in
                     return (TransformImageResult(image, true), .local(palette))
                 }
             }

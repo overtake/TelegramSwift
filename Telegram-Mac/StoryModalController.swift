@@ -2225,7 +2225,7 @@ final class StoryModalController : ModalViewController, Notifable {
             
             if let messageId = messageId {
                 let _ = ((context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .local)
-                          |> mapToSignal { result -> Signal<Message?, NoError> in
+                          |> mapToSignal { result -> Signal<Message?, GetMessagesError> in
                               if case let .result(messages) = result {
                                   return .single(messages.first)
                               }
