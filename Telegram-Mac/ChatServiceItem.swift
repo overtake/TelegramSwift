@@ -99,7 +99,7 @@ class ChatServiceItem: ChatRowItem {
         }
         
         var height: CGFloat {
-            return 160
+            return peerId.namespace == Namespaces.Peer.CloudChannel ? 140 : 160
         }
     }
     struct StoryData {
@@ -852,8 +852,9 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     let cachedData = entry.additionalData.cachedData?.data as? CachedUserData
-                    
-                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId, forBoth: forBoth, installed: cachedData?.wallpaper)
+                    if message.id.peerId.namespace != Namespaces.Peer.CloudChannel {
+                        self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId, forBoth: forBoth, installed: cachedData?.wallpaper)
+                    }
                 case .setSameChatWallpaper:
                     let text: String
                     if authorId == context.peerId {
@@ -1572,6 +1573,8 @@ class ChatServiceRowView: TableRowView {
             
             viewButton.set(text: text, for: .Normal)
             viewButton.sizeToFit(NSMakeSize(20, 12))
+            
+            viewButton.isHidden = data.peerId.namespace == Namespaces.Peer.CloudChannel
             
             viewButton.layer?.cornerRadius = viewButton.frame.height / 2
             needsLayout = true
