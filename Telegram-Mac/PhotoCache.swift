@@ -186,6 +186,9 @@ enum PhotoCacheKeyEntry : Hashable {
                 hasher.combine("custom")
                 hasher.combine("\(rep.resource.id.hashValue)")
                 hasher.combine("\(blurred)")
+            case let .emoticon(emoticon):
+                hasher.combine("emoticon")
+                hasher.combine("\(emoticon)")
             case let .file(slug, file, settings, isPattern):
                 hasher.combine("file")
                 hasher.combine("\(slug)")

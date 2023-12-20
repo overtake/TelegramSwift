@@ -3639,6 +3639,8 @@ extension TelegramWallpaper {
             t = .gradient(gradient.id, gradient.colors, gradient.settings.rotation)
         case let .image(reps, settings):
             t = .image(reps, settings: settings)
+        case let .emoticon(emoticon):
+            t = .emoticon(emoticon)
         }
         return t
     }
@@ -3775,6 +3777,9 @@ extension Peer {
     }
     var emojiStatus: PeerEmojiStatus? {
         if let peer = self as? TelegramUser {
+            return peer.emojiStatus
+        }
+        if let peer = self as? TelegramChannel {
             return peer.emojiStatus
         }
         return nil

@@ -2473,7 +2473,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         
       
-        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal).start(next: { [weak self] presentation, wallpaper, translate, storyState in
+        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal, context.chatThemes).start(next: { [weak self] presentation, wallpaper, translate, storyState, emoticonThemes in
             let emoticon = presentation.emoticon
             let theme = presentation.theme
             let genuie = presentation.genuie
@@ -2493,9 +2493,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     if current.presentation.wallpaper != current.bespoke_wallpaper {
                         if let wallpaper = current.bespoke_wallpaper {
-                            current.presentation = current.presentation.withUpdatedWallpaper(wallpaper)
+                            current.presentation = current.presentation.withUpdatedEmoticonThemes(emoticonThemes).withUpdatedWallpaper(wallpaper)
                         } else {
-                            current.presentation = current.presentation.withUpdatedWallpaper(theme.wallpaper)
+                            current.presentation = current.presentation.withUpdatedEmoticonThemes(emoticonThemes).withUpdatedWallpaper(theme.wallpaper)
                         }
                     }
                 case .loading:
@@ -6529,13 +6529,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     self?.showChatThemeSelector()
                                 }, itemImage: MenuAnimation.menu_change_colors.value))
                             }
-                        } else if let peer = peer as? TelegramChannel {
-                            if peer.hasPermission(.changeInfo) {
-                                items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
-                                    self?.showChatThemeSelector()
-                                }, itemImage: MenuAnimation.menu_change_colors.value))
-                            }
                         }
+                        /*
+                         else if let peer = peer as? TelegramChannel {
+                             if peer.hasPermission(.changeInfo) {
+                                 items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
+                                     self?.showChatThemeSelector()
+                                 }, itemImage: MenuAnimation.menu_change_colors.value))
+                             }
+                         }
+                         */
                         
                         let deleteChat = { [weak self] in
                             guard let `self` = self else {return}

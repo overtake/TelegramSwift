@@ -3148,14 +3148,14 @@ enum PatternWallpaperDrawMode {
 }
 
 
-func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
+func crossplatformPreview(accountContext: AccountContext, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: accountContext.account.postbox, wallpaper: wallpaper)
     
     return signal |> map { wallpaper in
         return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
             
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
-            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600))))
+            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)), emoticonThemes: accountContext.emoticonThemes))
             
             context.withContext { ctx in
                 ctx.draw(preview, in: arguments.drawingRect)
@@ -3168,14 +3168,14 @@ func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wa
     }
 }
 
-func wallpaperPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
+func wallpaperPreview(accountContext: AccountContext, palette: ColorPalette, wallpaper: Wallpaper, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: accountContext.account.postbox, wallpaper: wallpaper)
     
     return signal |> map { wallpaper in
         return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
             
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
-            let preview = generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(arguments.boundingSize))
+            let preview = generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(arguments.boundingSize), emoticonThemes: accountContext.emoticonThemes)
             
             
             context.withContext { ctx in

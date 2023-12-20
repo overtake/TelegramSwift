@@ -1538,7 +1538,7 @@ class ChatServiceRowView: TableRowView {
                 self.visualEffect = nil
                 self.backgroundColor = item.presentation.chatServiceItemColor
             }
-            let updateImageSignal = wallpaperPreview(account: item.context.account, palette: item.presentation.colors, wallpaper: data.wallpaper, mode: .thumbnail)
+            let updateImageSignal = wallpaperPreview(accountContext: item.context, palette: item.presentation.colors, wallpaper: data.wallpaper, mode: .thumbnail)
             
             let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
             

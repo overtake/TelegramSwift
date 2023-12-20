@@ -366,7 +366,13 @@ class GeneralInteractedRowView: GeneralRowView {
                     }
                     
                     nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    
+                    if let afterNameImage = item.afterNameImage {
+                        ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.backingSize.width, height: afterNameImage.backingSize.height))
+                    }
                 }
+                
+               
                 
                 if case let .colorSelector(stateback) = item.type {
                     ctx.setFillColor(stateback.cgColor)

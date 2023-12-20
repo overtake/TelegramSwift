@@ -213,8 +213,16 @@ private struct State : Equatable {
         if isAdmin {
             if let _ = remaining {
                 switch source {
-                case .color:
+                case .nameColor:
                     title = strings().channelBoostEnableColors
+                case .nameIcon:
+                    title = strings().channelBoostNameIcon
+                case .profileColor:
+                    title = strings().channelBoostProfileColor
+                case .profileIcon:
+                    title = strings().channelBoostProfileIcon
+                case .emojiStatus:
+                    title = strings().channelBoostEmojiStatus
                 case .reactions:
                     title = strings().channelBoostEnableReactions
                 case .wallpaper:
@@ -283,8 +291,16 @@ private final class BoostRowItem : TableRowItem {
                 if let remaining = remaining {
                     let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     switch state.source {
-                    case let .color(level):
+                    case let .nameColor(level):
                         string = strings().channelBoostEnableColorsText("\(level)")
+                    case let .nameIcon(level):
+                        string = strings().channelBoostEnableNameIconLevelText("\(level)")
+                    case let .profileIcon(level):
+                        string = strings().channelBoostEnableProfileIconLevelText("\(level)")
+                    case let .profileColor(level):
+                        string = strings().channelBoostEnableProfileColorLevelText("\(level)")
+                    case let .emojiStatus(level):
+                        string = strings().channelBoostEnableEmojiStatusLevelText("\(level)")
                     case let .wallpaper(level):
                         string = strings().channelBoostEnableWallpapersText("\(level)")
                     case .reactions:
@@ -909,7 +925,11 @@ enum BoostChannelSource : Equatable {
     case basic
     case story
     case reactions
-    case color(Int32)
+    case nameColor(Int32)
+    case nameIcon(Int32)
+    case profileColor(Int32)
+    case profileIcon(Int32)
+    case emojiStatus(Int32)
     case wallpaper(Int32)
 }
 

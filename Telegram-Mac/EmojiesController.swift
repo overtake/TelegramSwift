@@ -2467,14 +2467,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                             if mode == .backgroundIcon {
                                 return value.file.isCustomTemplateEmoji
                             } else {
-                                return false
+                                return true
                             }
                         }
                         let items = item.topItems.filter({ value in
                             if mode == .backgroundIcon {
                                 return value.file.isCustomTemplateEmoji
                             } else {
-                                return false
+                                return true
                             }
                         })
                         if !items.isEmpty {
