@@ -2873,6 +2873,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_feature_background: { NSImage(named: "Icon_ChannelFeature_Background")!.precomposed(palette.accent) },
                               channel_feature_background_photo: { NSImage(named: "Icon_ChannelFeature_BackgroundPhoto")!.precomposed(palette.accent) },
                               channel_feature_cover_color: { NSImage(named: "Icon_ChannelFeature_CoverColor")!.precomposed(palette.accent) },
+                              channel_feature_cover_icon: { NSImage(named: "Icon_ChannelFeature_CoverIcon")!.precomposed(palette.accent) },
                               channel_feature_link_color: { NSImage(named: "Icon_ChannelFeature_LinkColor")!.precomposed(palette.accent) },
                               channel_feature_link_icon: { NSImage(named: "Icon_ChannelFeature_LinkIcon")!.precomposed(palette.accent) },
                               channel_feature_name_color: { NSImage(named: "Icon_ChannelFeature_NameColor")!.precomposed(palette.accent) },

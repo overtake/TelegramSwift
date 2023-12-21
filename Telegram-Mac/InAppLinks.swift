@@ -1235,6 +1235,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 alert(for: context.window, info: strings().unknownError)
             }
         })
+    case let .multigift(_, context):
+        let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
+        
+        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour).start(next: { peerIds in
+            
+            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+        })
     }
     
 }
@@ -1381,6 +1388,7 @@ enum inAppLink {
     case story(link: String, username: String, storyId: Int32, messageId: MessageId?, context: AccountContext)
     case boost(link: String, username: String, context: AccountContext)
     case gift(link: String, slug: String, context: AccountContext)
+    case multigift(link: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1446,6 +1454,8 @@ enum inAppLink {
             return link
         case let .gift(link, _, _):
             return link
+        case let .multigift(link, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1458,7 +1468,8 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift"]
+
 
 let ton_scheme:String = "ton://"
 
@@ -2187,6 +2198,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[20]:
                     if let slug = vars[keyURLSlug], let context = context {
                         return .gift(link: urlString, slug: slug, context: context)
+                    }
+                case known_scheme[21]:
+                    if let context = context {
+                        return .multigift(link: urlString, context: context)
                     }
                 default:
                     break

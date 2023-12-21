@@ -905,12 +905,14 @@ func initialize() -> [String] {
     array.append("channel_feature_background")
     array.append("channel_feature_background_photo")
     array.append("channel_feature_cover_color")
+    array.append("channel_feature_cover_icon")
     array.append("channel_feature_link_color")
     array.append("channel_feature_link_icon")
     array.append("channel_feature_name_color")
     array.append("channel_feature_reaction")
     array.append("channel_feature_status")
     array.append("channel_feature_stories")
+    
 
     return array
 }

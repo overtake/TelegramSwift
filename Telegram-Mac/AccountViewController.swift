@@ -869,15 +869,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             
             let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
             
-            //TODOLANG
-            _ = selectModalPeers(window: context.window, context: context, title: "Gift Telegram Premium", behavior: behaviour).start(next: { peerIds in
-                
-//                let navigation = MajorNavigationController(InputDataController.self, PremiumGiftingController(context: context, peerIds: peerIds), context.window)
-//                navigation.alwaysAnimate = true
-//                navigation.bar = .init(height: 0)
-//                navigation._frameRect = NSMakeRect(0, 0, 350, 600)
-//                navigation.readyOnce()
-//                showModal(with: navigation, for: context.window)
+            _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour).start(next: { peerIds in
                 
                 showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
             })
