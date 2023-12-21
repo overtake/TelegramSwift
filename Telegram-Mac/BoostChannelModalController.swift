@@ -15,6 +15,53 @@ import TelegramCore
 import Postbox
 
 
+func requiredBoostSubjectLevel(subject: BoostSubject, context: AccountContext, configuration: PremiumConfiguration) -> Int32 {
+    switch subject {
+    case .stories:
+        return 1
+    case let .channelReactions(reactionCount):
+        return reactionCount
+    case let .nameColors(colors):
+        if let value = context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[colors.rawValue] {
+            return value
+        } else {
+            return 1
+        }
+    case .nameIcon:
+        return configuration.minChannelNameIconLevel
+    case .profileColors:
+        return configuration.minChannelProfileColorLevel
+    case .profileIcon:
+        return configuration.minChannelProfileIconLevel
+    case .emojiStatus:
+        return configuration.minChannelEmojiStatusLevel
+    case .wallpaper:
+        return configuration.minChannelWallpaperLevel
+    case .customWallpaper:
+        return configuration.minChannelCustomWallpaperLevel
+    }
+}
+
+
+
+enum BoostSubject: Equatable {
+    case stories
+    case channelReactions(reactionCount: Int32)
+    case nameColors(colors: PeerNameColor)
+    case nameIcon
+    case profileColors
+    case profileIcon
+    case emojiStatus
+    case wallpaper
+    case customWallpaper
+    
+    func requiredLevel(context: AccountContext, configuration: PremiumConfiguration) -> Int32 {
+        return requiredBoostSubjectLevel(subject: self, context: context, configuration: configuration)
+    }
+}
+
+
+
 private func generateBadgePath(rectSize: CGSize, tailPosition: CGFloat = 0.5) -> CGPath {
     let cornerRadius: CGFloat = rectSize.height / 2.0
     let tailWidth: CGFloat = 20.0
@@ -424,7 +471,7 @@ private final class BoostRowItemView : TableRowView {
         func update(_ peer: Peer, context: AccountContext, presentation: TelegramPresentationTheme, maxWidth: CGFloat) {
             self.avatar.setPeer(account: context.account, peer: peer)
             
-            let layout = TextViewLayout.init(.initialize(string: peer.displayTitle, color: presentation.colors.text, font: .medium(.text)))
+            let layout = TextViewLayout(.initialize(string: peer.displayTitle, color: presentation.colors.text, font: .medium(.text)))
             layout.measure(width: maxWidth - 40)
             textView.update(layout)
             self.backgroundColor = presentation.colors.background
@@ -877,6 +924,14 @@ private final class AcceptRowView : TableRowView {
 
 private let _id_accept = InputDataIdentifier("accept")
 
+private func _id_perk(_ perk: BoostChannelPerk, _ level: Int32) -> InputDataIdentifier {
+    return .init("perk_\(perk.title().hashValue)_\(level)")
+}
+private func _id_perk_level(_ level: Int32) -> InputDataIdentifier {
+    return .init("perk_level_\(level)")
+}
+
+
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -888,6 +943,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    var noLastSection = false
     
     if state.isAdmin, state.status.nextLevelBoosts != nil {
         
@@ -908,15 +964,102 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.openGiveaway()
         }), data: .init(color: arguments.presentation.colors.text, viewType: .textBottomItem, fontSize: 13, centerViewAlignment: true, alignment: .center, linkColor: arguments.presentation.colors.link)))
         
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
+        
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_accept, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return AcceptRowItem(initialSize, state: state, context: arguments.context, presentation: arguments.presentation, boost: arguments.boost)
         }))
         index += 1
+        noLastSection = true
     }
-   
+    
+    var nextLevels: ClosedRange<Int32>?
+    if state.status.level < 10 {
+        nextLevels = Int32(state.status.level) + 1 ... 10
+    }
+
+    let premiumConfiguration = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration)
+    
+    var nameColorsAtLevel: [(Int32, Int32)] = []
+    var nameColorsCountMap: [Int32: Int32] = [:]
+    for color in arguments.context.peerNameColors.displayOrder {
+        if let level = arguments.context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[color] {
+            if let current = nameColorsCountMap[level] {
+                nameColorsCountMap[level] = current + 1
+            } else {
+                nameColorsCountMap[level] = 1
+            }
+        }
+    }
+    for (key, value) in nameColorsCountMap {
+        nameColorsAtLevel.append((key, value))
+    }
+
+    
+    if let nextLevels = nextLevels, state.infoOnly {
+        for level in nextLevels {
+            var perks: [BoostChannelPerk] = []
+            perks.append(.story(level))
+            perks.append(.reaction(level))
+                         
+            var nameColorsCount: Int32 = 0
+            for (colorLevel, count) in nameColorsAtLevel {
+                if level >= colorLevel && colorLevel == 1 {
+                    nameColorsCount = count
+                }
+            }
+            if nameColorsCount > 0 {
+                perks.append(.nameColor(nameColorsCount))
+            }
+            
+            if level >= premiumConfiguration.minChannelProfileColorLevel {
+                let delta = min(level - premiumConfiguration.minChannelProfileColorLevel + 1, 2)
+                perks.append(.profileColor(8 * delta))
+            }
+            if level >= premiumConfiguration.minChannelProfileIconLevel {
+                perks.append(.profileIcon)
+            }
+            
+            var linkColorsCount: Int32 = 0
+            for (colorLevel, count) in nameColorsAtLevel {
+                if level >= colorLevel {
+                    linkColorsCount += count
+                }
+            }
+            if linkColorsCount > 0 {
+                perks.append(.linkColor(linkColorsCount))
+            }
+                                
+            if level >= premiumConfiguration.minChannelNameIconLevel {
+                perks.append(.linkIcon)
+            }
+            if level >= premiumConfiguration.minChannelEmojiStatusLevel {
+                perks.append(.emojiStatus)
+            }
+            if level >= premiumConfiguration.minChannelWallpaperLevel {
+                perks.append(.wallpaper(8))
+            }
+            if level >= premiumConfiguration.minChannelCustomWallpaperLevel {
+                perks.append(.customWallpaper)
+            }
+            
+            // header
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_perk_level(level), equatable: .init(level), comparable: nil, item: { initialSize, stableId in
+                return BoostPerkLevelHeaderItem(initialSize, stableId: stableId, level: level)
+            }))
+            
+            for perk in perks {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_perk(perk, level), equatable: .init(perk), comparable: nil, item: { initialSize, stableId in
+                    return BoostFeatureRowItem(initialSize, stableId: stableId, perk: perk)
+                }))
+            }
+        }
+    }
+    if !noLastSection {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+    }
+    
     
     return entries
 }
