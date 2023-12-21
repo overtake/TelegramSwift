@@ -1421,10 +1421,6 @@ public final class L10n {
   public static var channelEventLogEmptySearch: String  { return L10n.tr("Localizable", "Channel.EventLog.EmptySearch") }
   /// **No events here yet**\n\nThere were no service actions taken by the channel's members and admins for the last 48 hours.
   public static var channelEventLogEmptyText: String  { return L10n.tr("Localizable", "Channel.EventLog.EmptyText") }
-  /// %1$@ set background emoji to %2$@
-  public static func channelEventLogMessageChangedBackgroundEmojiSet(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedBackgroundEmojiSet", p1, p2)
-  }
   /// %@ linked this group to %@
   public static func channelEventLogMessageChangedLinkedChannel(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedLinkedChannel", p1, p2)
@@ -1433,9 +1429,9 @@ public final class L10n {
   public static func channelEventLogMessageChangedLinkedGroup(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedLinkedGroup", p1, p2)
   }
-  /// %1$@ set name color to %2$@
-  public static func channelEventLogMessageChangedNameColorSet(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedNameColorSet", p1, p2)
+  /// %1$@ updated channel color and background emoji
+  public static func channelEventLogMessageChangedNameAndBackground(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedNameAndBackground", p1)
   }
   /// %@ unlinked this group from %@
   public static func channelEventLogMessageChangedUnlinkedChannel(_ p1: String, _ p2: String) -> String {
@@ -1471,6 +1467,14 @@ public final class L10n {
   public static var channelEventLogAlertHeader: String  { return L10n.tr("Localizable", "Channel.EventLog.Alert.Header") }
   /// This is a list of all service actions taken by the group's members and admins in the last 48 hours.
   public static var channelEventLogAlertInfo: String  { return L10n.tr("Localizable", "Channel.EventLog.Alert.Info") }
+  /// %1$@ updated channel background emoji
+  public static func channelEventLogMessageChangedBackgroundEmojiSetNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedBackgroundEmojiSet.New", p1)
+  }
+  /// %1$@ updated channel color
+  public static func channelEventLogMessageChangedNameColorSetNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedNameColorSet.New", p1)
+  }
   /// %@ removed this channel's description:
   public static func channelEventLogServiceAboutRemoved(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.AboutRemoved", p1)
@@ -4221,6 +4225,10 @@ public final class L10n {
   public static func chatServicePeerRequestConfirmPlain(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PeerRequest.Confirm.Plain", p1, p2)
   }
+  /// You shared %1$@ with %2$@.
+  public static func chatServicePeerRequestedMultiple(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PeerRequested.Multiple", p1, p2)
+  }
   /// %d
   public static func chatServicePremiumGiftInfoCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_countable", p1)
@@ -5711,6 +5719,10 @@ public final class L10n {
   public static var choosePeerTitleGroup: String  { return L10n.tr("Localizable", "ChoosePeer.Title.Group") }
   /// Choose User
   public static var choosePeerTitleUser: String  { return L10n.tr("Localizable", "ChoosePeer.Title.User") }
+  /// Choose Bots
+  public static var choosePeerTitleBotMultiple: String  { return L10n.tr("Localizable", "ChoosePeer.Title.Bot.Multiple") }
+  /// Choose Users
+  public static var choosePeerTitleUserMultiple: String  { return L10n.tr("Localizable", "ChoosePeer.Title.User.Multiple") }
   /// Create
   public static var composeCreate: String  { return L10n.tr("Localizable", "Compose.Create") }
   /// Next
@@ -10315,6 +10327,8 @@ public final class L10n {
   public static var preHistorySettingsDescriptionVisible: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Visible") }
   /// New members won't see more than 100 previous messages.
   public static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
+  /// WHAT'S INCLUDED
+  public static var premiumWhatsIncluded: String  { return L10n.tr("Localizable", "Premium.WhatsIncluded") }
   /// Go **beyond the limits**, get **exclusive features** and support us by subscribing to **Telegram Premium**.
   public static var premiumBoardingInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Info") }
   /// Subscribe for %@ per month
@@ -10507,12 +10521,44 @@ public final class L10n {
   public static var premiumBoardingWallpapersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Wallpapers.Title") }
   /// Double the Limit
   public static var premiumGetPremiumDouble: String  { return L10n.tr("Localizable", "Premium.GetPremium.Double") }
+  /// You will receive %@ boosts
+  public static func premiumGiftReceiveBoost(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.ReceiveBoost", p1)
+  }
+  /// By gifting Telegram Premium, you agree to the Telegram [Terms of Service](terms) and [Privacy Policy](privacy).
+  public static var premiumGiftTerms: String  { return L10n.tr("Localizable", "Premium.Gift.Terms") }
   /// Let **%@** enjoy exclusive features of Telegram with **Telegram Premium**.
   public static func premiumGiftText(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Gift.Text", p1)
   }
   /// Gift Telegram Premium
   public static var premiumGiftTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Title") }
+  /// Get **(%1$@)** and **(%2$@)** more access to exclusive features with **Telegram Premium**.
+  public static func premiumGiftGetAccessMoreThanThree(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.GetAccess.MoreThanThree", p1, p2)
+  }
+  /// Get **(%1$@)** access to exclusive features with **Telegram Premium**.
+  public static func premiumGiftGetAccessOneToThree(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.GetAccess.OneToThree", p1)
+  }
+  /// Close
+  public static var premiumGiftSentClose: String  { return L10n.tr("Localizable", "Premium.Gift.Sent.Close") }
+  /// **%1$@** and %2$@ more have been notified about the gift you purchased.\n\nThey now have access to additional features.
+  public static func premiumGiftSentMultipleMoreThanThree(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.Sent.Multiple.MoreThanThree", p1, p2)
+  }
+  /// **%1$@** have been notified about the gift you purchased.\n\nThey now have access to additional features.
+  public static func premiumGiftSentMultipleOneToThree(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.Sent.Multiple.OneToThree", p1)
+  }
+  /// Gifts Sent!
+  public static var premiumGiftSentMultipleTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Sent.Multiple.Title") }
+  /// **%@** has been notified about the gift you purchased.\n\nThey now have access to additional features.
+  public static func premiumGiftSentOneText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.Sent.One.Text", p1)
+  }
+  /// Gift Sent!
+  public static var premiumGiftSentOneTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Sent.One.Title") }
   /// Free
   public static var premiumLimitFree: String  { return L10n.tr("Localizable", "Premium.Limit.Free") }
   /// Increase Limit
@@ -12099,6 +12145,10 @@ public final class L10n {
   public static var selectCountriesOK: String  { return L10n.tr("Localizable", "SelectCountries.OK") }
   /// Select Countries
   public static var selectCountriesTitle: String  { return L10n.tr("Localizable", "SelectCountries.Title") }
+  /// Sorry, you can't select more than %@ users
+  public static func selectPeersLimitReached(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SelectPeers.LimitReached", p1)
+  }
   /// Search Members
   public static var selectPeersTitleSearchMembers: String  { return L10n.tr("Localizable", "SelectPeers.Title.SearchMembers") }
   /// Add to Channel

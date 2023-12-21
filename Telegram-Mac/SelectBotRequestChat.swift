@@ -168,11 +168,15 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
     var createChannel:(()->Void)?
 
     
-    init(peerType: ReplyMarkupButtonRequestPeerType, context: AccountContext) {
+     init(peerType: ReplyMarkupButtonRequestPeerType, context: AccountContext, limit: Int32) {
         self.peerType = peerType
         self.context = context
-        super.init(settings: [.remote, .contacts], limit: 1)
+        super.init(settings: [.remote, .contacts], limit: limit)
     }
+     
+     override func limitReached() {
+         alert(for: context.window, info: strings().selectPeersLimitReached("\(limit)"))
+     }
     
     override func filterPeer(_ peer: Peer) -> Bool {
         switch peerType {
@@ -190,6 +194,8 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
                         return false
                     }
                 }
+            } else if peer.isBot {
+                return false
             }
             if let isPremium = user.isPremium {
                 if isPremium {
@@ -455,18 +461,30 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
     }
 }
 
-func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequestPeerType, messageId: MessageId, buttonId: Int32) {
+func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequestPeerType, messageId: MessageId, buttonId: Int32, maxQuantity: Int32) {
     let title: String
     switch peerType {
     case let .user(user):
         if let isBot = user.isBot {
             if isBot {
-                title = strings().choosePeerTitleBot
+                if maxQuantity > 1 {
+                    title = strings().choosePeerTitleBotMultiple
+                } else {
+                    title = strings().choosePeerTitleBot
+                }
+            } else {
+                if maxQuantity > 1 {
+                    title = strings().choosePeerTitleUserMultiple
+                } else {
+                    title = strings().choosePeerTitleUser
+                }
+            }
+        } else {
+            if maxQuantity > 1 {
+                title = strings().choosePeerTitleUserMultiple
             } else {
                 title = strings().choosePeerTitleUser
             }
-        } else {
-            title = strings().choosePeerTitleUser
         }
     case .group:
         title = strings().choosePeerTitleGroup
@@ -474,45 +492,17 @@ func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequ
         title = strings().choosePeerTitleChannel
     }
     
-    let invoke:(PeerId)->Void = { peerId in
+    let invoke:([PeerId])->Void = { peerIds in
         
-        let peers:Signal<(Peer, Peer), NoError> = combineLatest(queue: .mainQueue(), context.account.postbox.loadedPeerWithId(peerId), context.account.postbox.loadedPeerWithId(messageId.peerId))
-        
-        
-        _ = peers.start(next: { chatPeer, botPeer in
-//            let text: String
-//            switch peerType {
-//            case let .group(group):
-//                if let botRights = group.botAdminRights {
-//                    let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canEditMessages, .canDeleteMessages, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
-//
-//                     var texts: [String] = []
-//                     for right in all {
-//                         if botRights.rights.contains(right) {
-//                             texts.append(stringForRight(right: right, isGroup: true, defaultBannedRights: nil))
-//                         }
-//                     }
-//                    text = strings().chatServicePeerRequestConfirmPermission(chatPeer.displayTitle, botPeer.displayTitle, botPeer.displayTitle, chatPeer.displayTitle, texts.joined(separator: ", "))
-//                } else {
-//                    text = strings().chatServicePeerRequestConfirmPlain(chatPeer.displayTitle, botPeer.displayTitle)
-//                }
-//            default:
-//                text = strings().chatServicePeerRequestConfirmPlain(chatPeer.displayTitle, botPeer.displayTitle)
-//            }
-            let signal = context.engine.peers.sendBotRequestedPeer(messageId: messageId, buttonId: buttonId, requestedPeerId: peerId)
-            _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
-                showModalText(for: context.window, text: strings().unknownError)
-            })
-
-//            confirm(for: context.window, information: text, okTitle: strings().chatServicePeerRequestConfirmOk, successHandler: { _ in
-//            })
-            
+        let signal = context.engine.peers.sendBotRequestedPeer(messageId: messageId, buttonId: buttonId, requestedPeerIds: peerIds)
+        _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+            showModalText(for: context.window, text: strings().unknownError)
         })
         
         
     }
     
-    let behaviour = SelectChatComplicated(peerType: peerType, context: context)
+    let behaviour = SelectChatComplicated(peerType: peerType, context: context, limit: maxQuantity)
     
     behaviour.createGroup = {
         var requires: CreateGroupRequires = []
@@ -532,7 +522,9 @@ func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequ
             break
         }
         closeAllModals(window: context.window)
-        createGroupDirectly(with: context, selectedPeers: [messageId.peerId], requires: requires, onCreate: invoke)
+        createGroupDirectly(with: context, selectedPeers: [messageId.peerId], requires: requires, onCreate: { peerId in
+            invoke([peerId])
+        })
     }
     behaviour.createChannel = {
         var requires: CreateChannelRequires = []
@@ -549,14 +541,13 @@ func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequ
         context.bindings.rootNavigation().push(CreateChannelController(context: context, requires: requires, onComplete: { peerId, completed in
             if completed {
                 context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
-                invoke(peerId)
+                invoke([peerId])
             }
         }))
         closeAllModals(window: context.window)
     }
-    _ = selectModalPeers(window: context.window, context: context, title: title, limit: 1, behavior: behaviour ).start(next: { peerIds in
-        if let peerId = peerIds.first {
-            invoke(peerId)
-        }
+    _ = selectModalPeers(window: context.window, context: context, title: title, limit: maxQuantity, behavior: behaviour).start(next: { peerIds in
+        invoke(peerIds)
+
     })
 }

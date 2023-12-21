@@ -1287,7 +1287,11 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
                 interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, expirationDate, fromRect in
                     updateState { current in
                         var current = current
-                        current.emojiStatus = .init(fileId: sticker.file.fileId.id, expirationDate: expirationDate)
+                        if sticker.file.mimeType.hasPrefix("bundle") {
+                            current.emojiStatus = nil
+                        } else {
+                            current.emojiStatus = .init(fileId: sticker.file.fileId.id, expirationDate: expirationDate)
+                        }
                         return current
                     }
                     emojis?.closePopover()

@@ -395,7 +395,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                     if let singleAction = singleAction {
                         singleAction(peer.peer)
                     }
-                }, customTheme: peer.customTheme)
+                }, highlightVerified: true, customTheme: peer.customTheme)
             case let .searchEmpty(theme, icon):
                 return SearchEmptyRowItem(initialSize, stableId: entry.stableId, icon: icon, customTheme: theme)
             case let .empty(_, _, callback):
@@ -513,7 +513,7 @@ class SelectPeersBehavior {
     
     fileprivate let settings:SelectPeerSettings
     fileprivate let excludePeerIds:[PeerId]
-    fileprivate let limit:Int32
+    let limit:Int32
     let customTheme:()->GeneralRowItem.Theme
     init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
         self.settings = settings
@@ -522,6 +522,9 @@ class SelectPeersBehavior {
         self.customTheme = customTheme
     }
     
+    func limitReached() {
+        NSSound.beep()
+    }
     
     func filterPeer(_ peer: Peer) -> Bool {
         
@@ -1392,17 +1395,32 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 let added = value.selected.subtracting(oldValue.selected)
                 let removed = oldValue.selected.subtracting(value.selected)
                 
-                let tokens = added.map {
-                    return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? strings().peerDeletedUser, uniqueId: $0.toInt64())
-                }
-                genericView.tokenView.addTokens(tokens: tokens, animated: animated)
                 
-                let idsToRemove:[Int64] = removed.map {
-                    $0.toInt64()
-                }
-                genericView.tokenView.removeTokens(uniqueIds: idsToRemove, animated: animated)                
                 
-                modal?.interactions?.updateEnables(true)
+                if value.selected.count > behavior.limit, let first = added.first {
+                    behavior.limitReached()
+                    DispatchQueue.main.async {
+                        if let peer = value.peers[first] {
+                            self.interactions.toggleSelection(peer)
+                        }
+                    }
+                } else {
+                    
+                    let tokens = added.map {
+                        return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? strings().peerDeletedUser, uniqueId: $0.toInt64())
+                    }
+                    
+                    genericView.tokenView.addTokens(tokens: tokens, animated: animated)
+                    
+                    let idsToRemove:[Int64] = removed.map {
+                        $0.toInt64()
+                    }
+                    genericView.tokenView.removeTokens(uniqueIds: idsToRemove, animated: animated)
+                    
+                    modal?.interactions?.updateEnables(true)
+                }
+                
+               
             }
         }
     }

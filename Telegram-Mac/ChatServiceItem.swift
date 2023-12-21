@@ -274,8 +274,14 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                case .customText(let text, _):
+                case let .customText(text, _, additionalAttributes):
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    if let additionalAttributes = additionalAttributes {
+                        for (range, key, value) in additionalAttributes.attributes {
+                            attributedString.addAttribute(key, value: value, range: range)
+                        }
+                    }
+
                 case let .botDomainAccessGranted(domain):
                     let _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .botAppAccessGranted(appName, _):
@@ -822,14 +828,39 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case .attachMenuBotAllowed:
                     _ = attributedString.append(string: strings().chatServiceBotWriteAllowed, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .requestedPeer(_, peerId):
-                    if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
-                        let name = peer.displayTitle
-                        _ = attributedString.append(string: strings().chatServicePeerRequested(name, botPeer.displayTitle), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                        let range = attributedString.string.nsstring.range(of: name)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
-                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                case let .requestedPeer(_, peerIds):
+                    
+                    if let botPeer = message.peers[message.id.peerId] {
+                        let botName = botPeer.displayTitle
+                        let resultTitleString: String
+                        if peerIds.count == 1 {
+                            if let peer = message.peers[peerIds[0]] {
+                                resultTitleString = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
+                            } else {
+                                resultTitleString = ""
+                            }
+                        } else {
+                            let peers: [String] = peerIds.compactMap { message.peers[$0]?.displayTitle }
+                            resultTitleString = strings().chatServicePeerRequestedMultiple(peers.joined(separator: ", "), botPeer.displayTitle)
+                        }
+
+                        _ = attributedString.append(string: resultTitleString, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        
+                        for peerId in peerIds {
+                            if let peer = message.peers[peerId] {
+                                let range = attributedString.string.nsstring.range(of: peer.displayTitle)
+                                if range.location != NSNotFound {
+                                    attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
+                                    attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                                }
+                            }
+
+                        }
+                        
+
                     }
+                    
+                    
                 case let .setChatWallpaper(wallpaper, forBoth):
                     
                     let text: String

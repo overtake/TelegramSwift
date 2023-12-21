@@ -634,7 +634,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             text = strings().chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
         case .unknown:
             break
-        case .customText(let value, _):
+        case .customText(let value, _, _):
             text = value
         case let .botDomainAccessGranted(domain):
             text = strings().chatServiceBotPermissionAllowed(domain)
@@ -861,9 +861,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case .attachMenuBotAllowed:
             text = strings().chatServiceBotWriteAllowed
-        case let .requestedPeer(_, peerId):
-            if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
-                text = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
+        case let .requestedPeer(_, peerIds):
+            if let botPeer = message.peers[message.id.peerId] {
+                if peerIds.count == 1, let peer = message.peers[peerIds[0]] {
+                    text = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
+                } else {
+                    let string: String = peerIds.compactMap { message.peers[$0]?.displayTitle }.joined(separator: ", ")
+                    text = strings().chatServicePeerRequestedMultiple(string, botPeer.displayTitle)
+                }
             }
         case .setChatWallpaper:
             if authorId == account.peerId {

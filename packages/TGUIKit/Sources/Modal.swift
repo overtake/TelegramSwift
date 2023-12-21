@@ -57,7 +57,7 @@ private var activeModals:[WeakReference<Modal>] = []
 public class ModalInteractions {
     let accept:(()->Void)?
     let cancel:(()->Void)?
-    let acceptTitle:String
+    public var acceptTitle:String
     let cancelTitle:String?
     let drawBorder:Bool
     let height:CGFloat

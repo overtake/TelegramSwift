@@ -433,6 +433,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         timestamp: item.timestamp,
                         expirationTimestamp: item.expirationTimestamp,
                         media: EngineMedia(media),
+                        alternativeMedia: item.alternativeMedia.flatMap(EngineMedia.init),
                         mediaAreas: item.mediaAreas,
                         text: item.text,
                         entities: item.entities,
@@ -478,7 +479,8 @@ final class StoryContentContextImpl: StoryContentContext {
                                 id: item.stableId,
                                 timestamp: item.timestamp,
                                 expirationTimestamp: Int32.max,
-                                media: EngineMedia(item.media),
+                                media: EngineMedia(item.media), 
+                                alternativeMedia: nil,
                                 mediaAreas: item.mediaAreas,
                                 text: item.text,
                                 entities: item.entities,
@@ -1129,6 +1131,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     peer: peerReference,
                     storyId: item.id,
                     media: item.media,
+                    alternativeMedia: item.alternativeMedia,
                     reactions: reactions,
                     priority: .top(position: nextPriority)
                 )
@@ -1404,6 +1407,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     timestamp: itemValue.timestamp,
                     expirationTimestamp: itemValue.expirationTimestamp,
                     media: EngineMedia(media),
+                    alternativeMedia: itemValue.alternativeMedia.flatMap(EngineMedia.init),
                     mediaAreas: itemValue.mediaAreas,
                     text: itemValue.text,
                     entities: itemValue.entities,
@@ -1713,6 +1717,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                                 peer: peerReference,
                                 storyId: item.id,
                                 media: item.media,
+                                alternativeMedia: item.alternativeMedia,
                                 reactions: reactions,
                                 priority: .top(position: nextPriority)
                             )
@@ -2219,6 +2224,7 @@ private func getCachedStory(storyId: StoryId, transaction: Transaction) -> Engin
             timestamp: item.timestamp,
             expirationTimestamp: item.expirationTimestamp,
             media: EngineMedia(media),
+            alternativeMedia: item.alternativeMedia.flatMap(EngineMedia.init),
             mediaAreas: item.mediaAreas,
             text: item.text,
             entities: item.entities,

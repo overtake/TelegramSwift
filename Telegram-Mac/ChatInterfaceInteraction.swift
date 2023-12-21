@@ -869,8 +869,8 @@ final class ChatInteraction : InterfaceObserver  {
                         if let bot = bot {
                             strongSelf.openWebview(bot: bot, title: bot.displayTitle, buttonText: button.title, url: hashUrl, simple: simple, inline: false)
                         }
-                    case let .requestPeer(peerType, buttonId):
-                        selectSpecificPeer(context: context, peerType: peerType, messageId: keyboardMessage.id, buttonId: buttonId)
+                    case let .requestPeer(peerType, buttonId, maxQuantity):
+                        selectSpecificPeer(context: context, peerType: peerType, messageId: keyboardMessage.id, buttonId: buttonId, maxQuantity: maxQuantity)
                     default:
                         break
                     }

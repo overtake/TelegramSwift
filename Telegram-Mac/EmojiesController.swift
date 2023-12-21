@@ -839,7 +839,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             
-            if key == .Recent, arguments.mode == .status || arguments.mode == .backgroundIcon {
+            if key == .Recent, arguments.mode == .status || arguments.mode == .backgroundIcon || arguments.mode == .channelStatus {
                 
                 if arguments.mode == .status {
                     let string: String
