@@ -76,7 +76,8 @@ public class PeerNameColors: Equatable {
             profilePaletteDarkColors: [:],
             profileStoryColors: [:],
             profileStoryDarkColors: [:],
-            profileDisplayOrder: []
+            profileDisplayOrder: [],
+            nameColorsChannelMinRequiredBoostLevel: [:]
         )
     }
     
@@ -91,7 +92,7 @@ public class PeerNameColors: Equatable {
     public let profileStoryColors: [Int32: Colors]
     public let profileStoryDarkColors: [Int32: Colors]
     public let profileDisplayOrder: [Int32]
-    
+    public let nameColorsChannelMinRequiredBoostLevel: [Int32: Int32]
    
     
     public init(
@@ -104,7 +105,9 @@ public class PeerNameColors: Equatable {
         profilePaletteDarkColors: [Int32: Colors],
         profileStoryColors: [Int32: Colors],
         profileStoryDarkColors: [Int32: Colors],
-        profileDisplayOrder: [Int32]
+        profileDisplayOrder: [Int32],
+        nameColorsChannelMinRequiredBoostLevel: [Int32: Int32]
+
     ) {
         self.colors = colors
         self.darkColors = darkColors
@@ -116,6 +119,7 @@ public class PeerNameColors: Equatable {
         self.profileStoryColors = profileStoryColors
         self.profileStoryDarkColors = profileStoryDarkColors
         self.profileDisplayOrder = profileDisplayOrder
+        self.nameColorsChannelMinRequiredBoostLevel = nameColorsChannelMinRequiredBoostLevel
     }
     
     public static func == (lhs: PeerNameColors, rhs: PeerNameColors) -> Bool {
@@ -147,6 +151,9 @@ public class PeerNameColors: Equatable {
             return false
         }
         if lhs.profileDisplayOrder != rhs.profileDisplayOrder {
+            return false
+        }
+        if lhs.nameColorsChannelMinRequiredBoostLevel != rhs.nameColorsChannelMinRequiredBoostLevel {
             return false
         }
         return true

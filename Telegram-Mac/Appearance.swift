@@ -2871,7 +2871,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               story_repost_from_white: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.listGrayText) },
                               story_repost_from_green: { NSImage(named: "Icon_StoryRepostFrom")!.precomposed(palette.greenUI) },
                               channel_feature_background: { NSImage(named: "Icon_ChannelFeature_Background")!.precomposed(palette.accent) },
-                              channel_feature_background_photo: { NSImage(named: "Icon_ChannelFeature_Photo")!.precomposed(palette.accent) },
+                              channel_feature_background_photo: { NSImage(named: "Icon_ChannelFeature_BackgroundPhoto")!.precomposed(palette.accent) },
                               channel_feature_cover_color: { NSImage(named: "Icon_ChannelFeature_CoverColor")!.precomposed(palette.accent) },
                               channel_feature_link_color: { NSImage(named: "Icon_ChannelFeature_LinkColor")!.precomposed(palette.accent) },
                               channel_feature_link_icon: { NSImage(named: "Icon_ChannelFeature_LinkIcon")!.precomposed(palette.accent) },

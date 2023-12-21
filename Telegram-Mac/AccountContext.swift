@@ -438,7 +438,7 @@ final class AccountContext {
         if let replyColors = self.replyColors, let profileColors = self.profileColors {
             return .with(availableReplyColors: replyColors, availableProfileColors: profileColors)
         } else {
-            return .init(colors: [:], darkColors: [:], displayOrder: [], profileColors: [:], profileDarkColors: [:], profilePaletteColors: [:], profilePaletteDarkColors: [:], profileStoryColors: [:], profileStoryDarkColors: [:], profileDisplayOrder: [])
+            return .init(colors: [:], darkColors: [:], displayOrder: [], profileColors: [:], profileDarkColors: [:], profilePaletteColors: [:], profilePaletteDarkColors: [:], profileStoryColors: [:], profileStoryDarkColors: [:], profileDisplayOrder: [], nameColorsChannelMinRequiredBoostLevel: [:])
         }
     }
     

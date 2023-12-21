@@ -1955,6 +1955,210 @@ public final class L10n {
   public static var channelBoostErrorPremiumNeededTitle: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededTitle") }
   /// Read More
   public static var channelBoostErrorPremiumNeededTextOK: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededText.OK") }
+  /// %d
+  public static func channelBoostTableCustomReactionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_countable", p1)
+  }
+  /// %d Custom Reactions
+  public static func channelBoostTableCustomReactionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_few", p1)
+  }
+  /// %d Custom Reactions
+  public static func channelBoostTableCustomReactionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_many", p1)
+  }
+  /// %d Custom Reaction
+  public static func channelBoostTableCustomReactionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_one", p1)
+  }
+  /// %d Custom Reactions
+  public static func channelBoostTableCustomReactionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_other", p1)
+  }
+  /// %d Custom Reactions
+  public static func channelBoostTableCustomReactionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_two", p1)
+  }
+  /// %d Custom Reactions
+  public static func channelBoostTableCustomReactionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_zero", p1)
+  }
+  /// Custom Channel Background
+  public static var channelBoostTableCustomWallpaper: String  { return L10n.tr("Localizable", "ChannelBoost.Table.CustomWallpaper") }
+  /// 1000+ Emoji Statuses
+  public static var channelBoostTableEmojiStatus: String  { return L10n.tr("Localizable", "ChannelBoost.Table.EmojiStatus") }
+  /// Custom Logo for Links and Quotes
+  public static var channelBoostTableHeadersLogo: String  { return L10n.tr("Localizable", "ChannelBoost.Table.HeadersLogo") }
+  /// %d
+  public static func channelBoostTableLevelUnlocksCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_countable", p1)
+  }
+  /// Level %d Unlocks:
+  public static func channelBoostTableLevelUnlocksFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_few", p1)
+  }
+  /// Level %d Unlocks:
+  public static func channelBoostTableLevelUnlocksMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_many", p1)
+  }
+  /// Level %d Unlock:
+  public static func channelBoostTableLevelUnlocksOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_one", p1)
+  }
+  /// Level %d Unlocks:
+  public static func channelBoostTableLevelUnlocksOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_other", p1)
+  }
+  /// Level %d Unlocks:
+  public static func channelBoostTableLevelUnlocksTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_two", p1)
+  }
+  /// Level %d Unlocks:
+  public static func channelBoostTableLevelUnlocksZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_zero", p1)
+  }
+  /// %d
+  public static func channelBoostTableNameColorCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_countable", p1)
+  }
+  /// %d Channel Name Colors
+  public static func channelBoostTableNameColorFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_few", p1)
+  }
+  /// %d Channel Name Colors
+  public static func channelBoostTableNameColorMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_many", p1)
+  }
+  /// %d Channel Name Color
+  public static func channelBoostTableNameColorOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_one", p1)
+  }
+  /// %d Channel Name Colors
+  public static func channelBoostTableNameColorOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_other", p1)
+  }
+  /// %d Channel Name Colors
+  public static func channelBoostTableNameColorTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_two", p1)
+  }
+  /// %d Channel Name Colors
+  public static func channelBoostTableNameColorZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.NameColor_zero", p1)
+  }
+  /// %d
+  public static func channelBoostTableProfileColorCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_countable", p1)
+  }
+  /// %d Color for Channel Covers
+  public static func channelBoostTableProfileColorFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_few", p1)
+  }
+  /// %d Color for Channel Covers
+  public static func channelBoostTableProfileColorMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_many", p1)
+  }
+  /// %d Color for Channel Cover
+  public static func channelBoostTableProfileColorOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_one", p1)
+  }
+  /// %d Color for Channel Covers
+  public static func channelBoostTableProfileColorOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_other", p1)
+  }
+  /// %d Color for Channel Covers
+  public static func channelBoostTableProfileColorTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_two", p1)
+  }
+  /// %d Color for Channel Covers
+  public static func channelBoostTableProfileColorZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor_zero", p1)
+  }
+  /// Custom Logo for Channel Cover
+  public static var channelBoostTableProfileLogo: String  { return L10n.tr("Localizable", "ChannelBoost.Table.ProfileLogo") }
+  /// %d
+  public static func channelBoostTableStoriesPerDayCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_countable", p1)
+  }
+  /// %d Stories Per Day
+  public static func channelBoostTableStoriesPerDayFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_few", p1)
+  }
+  /// %d Stories Per Day
+  public static func channelBoostTableStoriesPerDayMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_many", p1)
+  }
+  /// %d Story Per Day
+  public static func channelBoostTableStoriesPerDayOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_one", p1)
+  }
+  /// %d Stories Per Day
+  public static func channelBoostTableStoriesPerDayOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_other", p1)
+  }
+  /// %d Stories Per Day
+  public static func channelBoostTableStoriesPerDayTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_two", p1)
+  }
+  /// %d Stories Per Day
+  public static func channelBoostTableStoriesPerDayZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StoriesPerDay_zero", p1)
+  }
+  /// %d
+  public static func channelBoostTableStyleForHeadersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_countable", p1)
+  }
+  /// %d Style for Links and Quotes
+  public static func channelBoostTableStyleForHeadersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_few", p1)
+  }
+  /// %d Style for Links and Quotes
+  public static func channelBoostTableStyleForHeadersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_many", p1)
+  }
+  /// %d Style for Links and Quotes
+  public static func channelBoostTableStyleForHeadersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_one", p1)
+  }
+  /// %d Style for Links and Quotes
+  public static func channelBoostTableStyleForHeadersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_other", p1)
+  }
+  /// %d Style for Links and Quotes
+  public static func channelBoostTableStyleForHeadersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_two", p1)
+  }
+  /// %d Style for Links and Quotes
+  public static func channelBoostTableStyleForHeadersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.StyleForHeaders_zero", p1)
+  }
+  /// %d
+  public static func channelBoostTableWallpaperCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_countable", p1)
+  }
+  /// %d Channel Backgrounds
+  public static func channelBoostTableWallpaperFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_few", p1)
+  }
+  /// %d Channel Backgrounds
+  public static func channelBoostTableWallpaperMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_many", p1)
+  }
+  /// %d Channel Background
+  public static func channelBoostTableWallpaperOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_one", p1)
+  }
+  /// %d Channel Backgrounds
+  public static func channelBoostTableWallpaperOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_other", p1)
+  }
+  /// %d Channel Backgrounds
+  public static func channelBoostTableWallpaperTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_two", p1)
+  }
+  /// %d Channel Backgrounds
+  public static func channelBoostTableWallpaperZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_zero", p1)
+  }
   /// Channel Info
   public static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -10533,11 +10737,11 @@ public final class L10n {
   }
   /// Gift Telegram Premium
   public static var premiumGiftTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Title") }
-  /// Get **(%1$@)** and **(%2$@)** more access to exclusive features with **Telegram Premium**.
+  /// Get **%1$@** and **%2$@** more access to exclusive features with **Telegram Premium**.
   public static func premiumGiftGetAccessMoreThanThree(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Gift.GetAccess.MoreThanThree", p1, p2)
   }
-  /// Get **(%1$@)** access to exclusive features with **Telegram Premium**.
+  /// Get **%1$@** access to exclusive features with **Telegram Premium**.
   public static func premiumGiftGetAccessOneToThree(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Gift.GetAccess.OneToThree", p1)
   }

@@ -41,15 +41,8 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
-        
-        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
-
-        
-        
-        
         let media = object.message!.media.first! as! TelegramMediaAction
-        
-        
+
         
         switch media.action {
         case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
@@ -57,6 +50,17 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         default:
             fatalError()
         }
+        
+        let textColor = data.fromGiveaway ? theme.chat.textColor(isIncoming, object.renderType == .bubble) : theme.chatServiceItemTextColor
+        
+        self.wpPresentation = WPLayoutPresentation(text: textColor, activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
+
+        
+        
+        
+        
+        
+      
         
         let channelName: String
         let channelId: PeerId?
@@ -175,6 +179,16 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     override func viewClass() -> AnyClass {
         return ChatGiveawayGiftRowItemView.self
     }
+    
+    override var shouldBlurService: Bool {
+        if data.fromGiveaway {
+            return false
+        }
+        if context.isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
+    }
 }
 
 
@@ -186,6 +200,8 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
     
     private let container: View = View()
     
+    private var visualEffect: VisualEffect?
+
     
     private let action = TextButton()
     
@@ -224,12 +240,38 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         headerTextView.update(item.headerText)
         infoTextView.update(item.infoText)
         
-        container.backgroundColor = theme.colors.background
+        if item.shouldBlurService {
+            let current: VisualEffect
+            if let view = self.visualEffect {
+                current = view
+            } else {
+                current = VisualEffect(frame: container.bounds)
+                self.visualEffect = current
+                container.addSubview(current, positioned: .below, relativeTo: container.subviews.first)
+            }
+            current.bgColor = item.presentation.blurServiceColor
+            
+            container.backgroundColor = .clear
+            
+        } else if let view = visualEffect {
+            performSubviewRemoval(view, animated: animated)
+            self.visualEffect = nil
+            container.backgroundColor = item.presentation.chatServiceItemColor
+        }
+        
+//        container.backgroundColor = theme.colors.background
         
         container.layer?.cornerRadius = 10
         
         action.set(font: .medium(.text), for: .Normal)
-        action.set(color: item.wpPresentation.activity.main, for: .Normal)
+        if item.shouldBlurService {
+            action.set(color: item.wpPresentation.text, for: .Normal)
+            action.layer?.borderColor = item.wpPresentation.text.cgColor
+        } else {
+            action.set(color: item.wpPresentation.activity.main, for: .Normal)
+            action.layer?.borderColor = item.wpPresentation.activity.main.cgColor
+        }
+
         if item.data.fromGiveaway {
             action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
         } else {
@@ -237,7 +279,6 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         }
         action.layer?.borderWidth = System.pixel
         action.scaleOnClick = true
-        action.layer?.borderColor = item.wpPresentation.activity.main.cgColor
         action.sizeToFit(NSMakeSize(20, 10))
         
         action.layer?.cornerRadius = action.frame.height / 2
@@ -257,6 +298,7 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         headerTextView.centerX(y: mediaView.frame.maxY + 10)
         infoTextView.centerX(y: headerTextView.frame.maxY + 10)
         action.centerX(y: infoTextView.frame.maxY + 10)
+        visualEffect?.frame = container.bounds
     }
     
     override var backdorColor: NSColor {

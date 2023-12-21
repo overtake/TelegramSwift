@@ -91,8 +91,14 @@ extension PeerNameColors {
         var profileStoryDarkColors: [Int32: Colors] = [:]
         var profileDisplayOrder: [Int32] = []
         
+        var nameColorsChannelMinRequiredBoostLevel: [Int32: Int32] = [:]
+
+        
         if !availableReplyColors.options.isEmpty {
             for option in availableReplyColors.options {
+                if let requiredChannelMinBoostLevel = option.value.requiredChannelMinBoostLevel {
+                    nameColorsChannelMinRequiredBoostLevel[option.key] = requiredChannelMinBoostLevel
+                }
                 if let parsedLight = PeerNameColors.Colors(colors: option.value.light.background) {
                     colors[option.key] = parsedLight
                 }
@@ -151,7 +157,8 @@ extension PeerNameColors {
             profilePaletteDarkColors: profilePaletteDarkColors,
             profileStoryColors: profileStoryColors,
             profileStoryDarkColors: profileStoryDarkColors,
-            profileDisplayOrder: profileDisplayOrder
+            profileDisplayOrder: profileDisplayOrder,
+            nameColorsChannelMinRequiredBoostLevel: nameColorsChannelMinRequiredBoostLevel
         )
     }
 }
