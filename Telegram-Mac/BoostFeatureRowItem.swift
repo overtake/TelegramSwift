@@ -58,7 +58,7 @@ enum BoostChannelPerk: Equatable {
         case .profileColor:
             return theme.icons.channel_feature_cover_color
         case .profileIcon:
-            return theme.icons.channel_feature_cover_color
+            return theme.icons.channel_feature_cover_icon
         case .linkColor:
             return theme.icons.channel_feature_link_color
         case .linkIcon:
@@ -199,8 +199,8 @@ private final class BoostPerkLevelHeaderView: GeneralRowView {
             return
         }
         
-        left.backgroundColor = theme.colors.listGrayText.withAlphaComponent(0.5)
-        right.backgroundColor = theme.colors.listGrayText.withAlphaComponent(0.5)
+        left.backgroundColor = theme.colors.listGrayText.withAlphaComponent(0.25)
+        right.backgroundColor = theme.colors.listGrayText.withAlphaComponent(0.25)
 
         textView.update(item.textLayout)
         

@@ -10054,6 +10054,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_feature_cover_icon: CGImage {
+      if let image = cached.with({ $0["channel_feature_cover_icon"] }) {
+          return image
+      } else {
+          let image = _channel_feature_cover_icon()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_cover_icon"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var channel_feature_link_color: CGImage {
       if let image = cached.with({ $0["channel_feature_link_color"] }) {
           return image
@@ -10906,6 +10919,7 @@ public final class TelegramIconsTheme {
   private let _channel_feature_background: ()->CGImage
   private let _channel_feature_background_photo: ()->CGImage
   private let _channel_feature_cover_color: ()->CGImage
+  private let _channel_feature_cover_icon: ()->CGImage
   private let _channel_feature_link_color: ()->CGImage
   private let _channel_feature_link_icon: ()->CGImage
   private let _channel_feature_name_color: ()->CGImage
@@ -11687,6 +11701,7 @@ public final class TelegramIconsTheme {
       channel_feature_background: @escaping()->CGImage,
       channel_feature_background_photo: @escaping()->CGImage,
       channel_feature_cover_color: @escaping()->CGImage,
+      channel_feature_cover_icon: @escaping()->CGImage,
       channel_feature_link_color: @escaping()->CGImage,
       channel_feature_link_icon: @escaping()->CGImage,
       channel_feature_name_color: @escaping()->CGImage,
@@ -12467,6 +12482,7 @@ public final class TelegramIconsTheme {
       self._channel_feature_background = channel_feature_background
       self._channel_feature_background_photo = channel_feature_background_photo
       self._channel_feature_cover_color = channel_feature_cover_color
+      self._channel_feature_cover_icon = channel_feature_cover_icon
       self._channel_feature_link_color = channel_feature_link_color
       self._channel_feature_link_icon = channel_feature_link_icon
       self._channel_feature_name_color = channel_feature_name_color
