@@ -257,6 +257,12 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
         }
     }
     
+    func showStar() {
+        guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
+            return
+        }
+        node.isHidden = false
+    }
     func hideStar() {
         guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
             return

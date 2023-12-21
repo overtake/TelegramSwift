@@ -22,7 +22,7 @@ private final class BoostText : GeneralRowItem {
         //TODOLANG
         
         let perSentGift = context.appConfiguration.getGeneralValue("boosts_per_sent_gift", orElse: 4)
-        _ = attr.append(string: "You will receive \(clown)\(Int32(count) * perSentGift) boosts", color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: strings().premiumGiftReceiveBoost("\(clown)\(Int32(count) * perSentGift)"), color: theme.colors.text, font: .normal(.text))
 
         let range = attr.string.nsstring.range(of: clown)
         attr.replaceCharacters(in: range, with: NSAttributedString.embedded(name: "Icon_Boost_Lighting_Small", color: theme.colors.accent, resize: false))
@@ -137,9 +137,11 @@ private final class HeaderStarRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peers: [EnginePeer]
     fileprivate let badge: BadgeNode?
-    init(_ initialSize: NSSize, stableId: AnyHashable, peers: [EnginePeer], context: AccountContext) {
+    fileprivate let isGifted: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, peers: [EnginePeer], context: AccountContext, isGifted: Bool) {
         self.context = context
-        if peers.count > 3 {
+        self.isGifted = isGifted
+        if peers.count > 3, !isGifted {
             let under = theme.colors.underSelectedColor
             self.badge = .init(.initialize(string: "+\(peers.count - 3)", color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: theme.colors.listBackground, additionSize: NSMakeSize(16, 7))
         } else {
@@ -166,7 +168,6 @@ private final class HeaderStarRowItemView : TableRowView {
         avatars.frame = NSMakeRect(0, 0, 100, 65)
         scene.updateLayout(size: scene.frame.size, transition: .immediate)
         
-        scene.hideStar()
         self.layer?.masksToBounds = false
     }
     
@@ -189,6 +190,14 @@ private final class HeaderStarRowItemView : TableRowView {
         super.set(item: item, animated: animated)
         guard let item = item as? HeaderStarRowItem else {
             return
+        }
+        
+        if item.isGifted {
+            self.scene.showStar()
+            self.avatars.change(opacity: 0, animated: animated)
+        } else {
+            self.scene.hideStar()
+            self.avatars.change(opacity: 1, animated: animated)
         }
         
         while avatars.subviews.count > item.peers.count {
@@ -425,6 +434,8 @@ private struct State : Equatable {
     var premiumConfiguration: PremiumPromoConfiguration = .defaultValue
     var stickers: [TelegramMediaFile] = []
     
+    var isGifted: Bool = false
+    
     var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
 
 }
@@ -446,32 +457,47 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return HeaderStarRowItem(initialSize, stableId: stableId, peers: state.peers, context: arguments.context)
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state.isGifted), comparable: nil, item: { initialSize, stableId in
+        return HeaderStarRowItem(initialSize, stableId: stableId, peers: state.peers, context: arguments.context, isGifted: state.isGifted)
     }))
     index += 1
     
-//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Gift Telegram Premium"), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 18, centerViewAlignment: true, alignment: .center)))
-//    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     let names: String
-    if state.peers.count > 3 {
-        let displayNames = state.peers.prefix(3).map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
-        names = "Get **\(displayNames)** and **\(state.peers.count - 3)** more access to exclusive features with **Telegram Premium**."
+    
+    if state.isGifted {
+        if state.peers.count == 1 {
+            names = strings().premiumGiftSentOneText(state.peers[0]._asPeer().compactDisplayTitle)
+        } else if state.peers.count > 3 {
+            let displayNames = state.peers.prefix(3).map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
+            names = strings().premiumGiftSentMultipleMoreThanThree(displayNames, "\(state.peers.count - 3)")
+        } else {
+            let displayNames = state.peers.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
+            names = strings().premiumGiftSentMultipleOneToThree(displayNames)
+        }
     } else {
-        let displayNames = state.peers.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
-        names = "Get **\(displayNames)** access to exclusive features with **Telegram Premium**."
+        if state.peers.count > 3 {
+            let displayNames = state.peers.prefix(3).map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
+            names = strings().premiumGiftGetAccessMoreThanThree(displayNames, "\(state.peers.count - 3)")
+        } else {
+            let displayNames = state.peers.map { $0._asPeer().compactDisplayTitle }.joined(separator: ", ")
+            names = strings().premiumGiftGetAccessOneToThree(displayNames)
+        }
     }
+    
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(names), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_boost, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return BoostText(initialSize, stableId: stableId, count: state.peers.count, context: arguments.context)
-    }))
+    if !state.isGifted {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_boost, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return BoostText(initialSize, stableId: stableId, count: state.peers.count, context: arguments.context)
+        }))
+    }
+   
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -526,16 +552,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     }
     
-    for option in paymentOptions {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.title), equatable: .init(option), comparable: nil, item: { initialSize, stableId in
-            return DurationOptionItem(initialSize, stableId: stableId, option: option.option, selected: option.selected, viewType: option.viewType, toggleOption: arguments.toggleOption)
-        }))
+    if !state.isGifted {
+        for option in paymentOptions {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.title), equatable: .init(option), comparable: nil, item: { initialSize, stableId in
+                return DurationOptionItem(initialSize, stableId: stableId, option: option.option, selected: option.selected, viewType: option.viewType, toggleOption: arguments.toggleOption)
+            }))
+        }
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WHAT'S INCLUDED"), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumWhatsIncluded), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     for (i, value) in state.values.enumerated() {
@@ -552,7 +580,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         index += 1
     }
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("By gifting Telegram Premium you agree to the Telegram [Terms of Service](tos) and [Privacy Policy](pp).", linkHandler: { link in
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumGiftTerms, linkHandler: { link in
         arguments.execute(link)
     }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
@@ -681,7 +709,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Gift Telegram Premium")
+    let controller = InputDataController(dataSignal: signal, title: strings().premiumGiftTitle)
     
     controller.didLoaded = { controller, _ in
         controller.genericView.layer?.masksToBounds = false
@@ -718,8 +746,11 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
                 switch status {
                 case .paid:
                     PlayConfetti(for: context.window)
-                    showModalText(for: context.window, text: "Gift Sent")
-                    close?()
+                    updateState { current in
+                        var current = current
+                        current.isGifted = true
+                        return current
+                    }
                 default:
                     break
                 }
@@ -770,13 +801,13 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
                     lockModal?.close()
                     needToShow = false
                     
-                    close?()
                     inAppPurchaseManager.finishAllTransactions()
-                    delay(0.2, closure: {
-                        PlayConfetti(for: context.window)
-                        showModalText(for: context.window, text: "Gift Sent")
-                        let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
-                    })
+                    PlayConfetti(for: context.window)
+                    updateState { current in
+                        var current = current
+                        current.isGifted = true
+                        return current
+                    }
                     
                 }, error: { [weak lockModal] error in
                     let errorText: String
@@ -806,6 +837,11 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
     }
     
     controller.validateData = { _ in
+        let isGifted = stateValue.with { $0.isGifted }
+        if isGifted {
+            close?()
+            return .none
+        }
         #if APP_STORE
         buyAppStore()
         #else
@@ -814,7 +850,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         return .none
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Gift Telegram Premium", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().premiumGiftTitle, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true, customTheme: {
         .init(text: theme.colors.text, grayText: theme.colors.grayText, background: .clear, border: .clear, accent: theme.colors.accent, grayForeground: .clear, activeBackground: .clear, activeBorder: theme.colors.border, listBackground: .clear)
@@ -830,6 +866,26 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         modalController?.close()
     })
     
+    controller.getTitle = {
+        let isGifted = stateValue.with { $0.isGifted }
+        let isMultiple = stateValue.with { $0.peers.count > 1 }
+        
+        if isGifted {
+            return isMultiple ? strings().premiumGiftSentOneTitle : strings().premiumGiftSentMultipleTitle
+        } else {
+            return strings().premiumGiftTitle
+        }
+    }
+    
+    controller.afterTransaction = { [weak modalInteractions, weak modalController] controller in
+        let isGifted = stateValue.with { $0.isGifted }
+        let text: String = isGifted ? strings().premiumGiftSentClose : strings().premiumGiftTitle
+        modalInteractions?.updateDone { button in
+            button.set(text: text, for: .Normal)
+        }
+        modalInteractions?.acceptTitle = text
+        modalController?.updateLocalizationAndTheme(theme: theme)
+    }
     
     close = { [weak modalController] in
         modalController?.modal?.close()
