@@ -126,6 +126,9 @@ class DiceCache {
     var background_icons: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
     }
+    var channel_statuses: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudIconChannelStatusEmoji], aroundIndex: nil, count: 8000)
+    }
     var emojies: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
     }

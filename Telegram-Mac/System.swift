@@ -15,9 +15,9 @@ import Postbox
 import CoreMediaIO
 import Localization
 
-public let resourcesQueue = Queue(name: "ResourcesQueue", qos: .userInteractive)
-public let prepareQueue = Queue(name: "PrepareQueue", qos: .userInteractive)
-public let messagesViewQueue = Queue(name: "messagesViewQueue", qos: .userInteractive)
+public let resourcesQueue = Queue(name: "ResourcesQueue", qos: .utility)
+public let prepareQueue = Queue(name: "PrepareQueue", qos: .utility)
+public let messagesViewQueue = Queue(name: "messagesViewQueue", qos: .utility)
 
 public let appName = "Telegram"
 public let kMediaImageExt = "jpg";
