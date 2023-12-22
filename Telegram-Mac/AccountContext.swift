@@ -422,8 +422,9 @@ final class AccountContext {
     private let checkSidebarShouldEnable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
-    private var replyColors: EngineAvailableColorOptions?
-    private var profileColors: EngineAvailableColorOptions?
+    
+    private var _peerNameColors: PeerNameColors?
+    
     var limitConfiguration: LimitsConfiguration {
         return _limitConfiguration.with { $0 }
     }
@@ -434,12 +435,13 @@ final class AccountContext {
         return _appConfiguration.with { $0 }
     }
     
+    private var cached: PeerNameColors?
+    
     var peerNameColors: PeerNameColors {
-        if let replyColors = self.replyColors, let profileColors = self.profileColors {
-            return .with(availableReplyColors: replyColors, availableProfileColors: profileColors)
-        } else {
-            return .init(colors: [:], darkColors: [:], displayOrder: [], profileColors: [:], profileDarkColors: [:], profilePaletteColors: [:], profilePaletteDarkColors: [:], profileStoryColors: [:], profileStoryDarkColors: [:], profileDisplayOrder: [], nameColorsChannelMinRequiredBoostLevel: [:])
+        if let _peerNameColors = _peerNameColors {
+            return _peerNameColors
         }
+        return .init(colors: [:], darkColors: [:], displayOrder: [], profileColors: [:], profileDarkColors: [:], profilePaletteColors: [:], profilePaletteDarkColors: [:], profileStoryColors: [:], profileStoryDarkColors: [:], profileDisplayOrder: [], nameColorsChannelMinRequiredBoostLevel: [:])
     }
     
     
@@ -709,8 +711,7 @@ final class AccountContext {
         #endif
         
         actionsDisposable.add(combineLatest(queue: .mainQueue(), engine.accountData.observeAvailableColorOptions(scope: .profile), engine.accountData.observeAvailableColorOptions(scope: .replies)).start(next: { [weak self] profile, replies in
-            self?.replyColors = replies
-            self?.profileColors = profile
+            self?._peerNameColors = .with(availableReplyColors: replies, availableProfileColors: profile)
         }))
         
         actionsDisposable.add((self.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: account.peerId))
