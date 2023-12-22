@@ -29,7 +29,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         
         let title: NSAttributedString
         if let peer = peer {
-            if case let .gift(from, _, months) = source {
+            if case let .gift(from, _, months, _, _) = source {
                 let text: String
                 if from == context.peerId {
                     text = strings().premiumBoardingPeerGiftYouTitle(peer.displayTitle, "\(months)")
@@ -80,12 +80,16 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         var info = NSMutableAttributedString()
         if let _ = peer {
             
-            if case let .gift(from, _, _) = source {
+            if case let .gift(from, _, _, slug, _) = source {
                 let text: String
                 if from == context.peerId {
                     text = strings().premiumBoardingPeerGiftYouInfo
                 } else {
-                    text = strings().premiumBoardingPeerGiftInfo
+                    if let _ = slug {
+                        text = strings().premiumBoardingPeerGiftLinkInfo
+                    } else {
+                        text = strings().premiumBoardingPeerGiftInfo
+                    }
                 }
                 _ = info.append(string: text, color: presentation.colors.text, font: .normal(.text))
             } else if let _ = peer?.emojiStatus {

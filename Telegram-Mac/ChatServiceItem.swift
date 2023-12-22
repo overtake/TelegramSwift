@@ -2031,7 +2031,7 @@ class ChatServiceRowView: TableRowView {
                 addSubview(current)
                 
                 current.set(handler: { _ in 
-                    showModal(with: PremiumBoardingController(context: item.context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months)), for: context.window)
+                    showModal(with: PremiumBoardingController(context: item.context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months, slug: nil, unclaimed: false)), for: context.window)
                 }, for: .Click)
             }
             

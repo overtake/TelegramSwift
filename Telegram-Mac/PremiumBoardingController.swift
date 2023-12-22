@@ -50,7 +50,7 @@ enum PremiumLogEventsSource : Equatable {
     case premium_stickers
     case premium_emoji
     case profile(PeerId)
-    case gift(from: PeerId, to: PeerId, months: Int32)
+    case gift(from: PeerId, to: PeerId, months: Int32, slug: String?, unclaimed: Bool)
     case story_viewers
     case send_as
     case translations
@@ -203,7 +203,8 @@ private final class Arguments {
     let openFeature:(PremiumValue, Bool)->Void
     let togglePeriod:(PremiumPeriod)->Void
     let execute:(String)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void, execute:@escaping(String)->Void) {
+    let copyLink:(String)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void, execute:@escaping(String)->Void, copyLink:@escaping(String)->Void) {
         self.context = context
         self.presentation = presentation
         self.showPrivacy = showPrivacy
@@ -212,6 +213,7 @@ private final class Arguments {
         self.openFeature = openFeature
         self.togglePeriod = togglePeriod
         self.execute = execute
+        self.copyLink = copyLink
     }
 }
 
@@ -418,6 +420,27 @@ private struct State : Equatable {
     var periods: [PremiumPeriod] = []
     
     var newPerks: [String] = []
+    
+    func activateForFree(_ accountPeerId: PeerId) -> Bool {
+        switch source {
+        case let .gift(_, toId, _, slug, unclaimed):
+            if let _ = slug, unclaimed {
+                return accountPeerId == toId
+            } else {
+                return false
+            }
+        default:
+            return false
+        }
+    }
+    var slug: String? {
+        switch source {
+        case let .gift(_, _, _, slug, _):
+            return slug
+        default:
+            return nil
+        }
+    }
 
 }
 
@@ -441,6 +464,24 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    
+    switch state.source {
+    case let .gift(fromId, toId, _, slug, unclaimed):
+        if fromId != arguments.context.peerId, let slug = slug, unclaimed {
+            let link = "t.me/giftcode/\(slug.prefixWithDots(20))"
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(link), comparable: nil, item: { initialSize, stableId in
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: {
+                    arguments.copyLink("t.me/giftcode/\(slug)")
+                }), customTheme: .initialize(arguments.presentation))
+            }))
+            index += 1
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
+    default:
+        break
+    }
     
     
     if !state.periods.isEmpty, !state.isPremium {
@@ -547,7 +588,7 @@ private final class PremiumBoardingView : View {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(animated: Bool, state: State) -> NSSize {
+        func update(animated: Bool, state: State, context: AccountContext) -> NSSize {
             
             let option = state.period
             guard let option = state.period else {
@@ -555,11 +596,16 @@ private final class PremiumBoardingView : View {
             }
 
             let text: String
-            if state.canMakePayment {
-                text = option.buyString
+            if state.activateForFree(context.peerId) {
+                text = strings().premiumBoardingActivateForFree
             } else {
-                text = strings().premiumBoardingPaymentNotAvailalbe
+                if state.canMakePayment {
+                    text = option.buyString
+                } else {
+                    text = strings().premiumBoardingPaymentNotAvailalbe
+                }
             }
+            
             
             let layout = TextViewLayout(.initialize(string: text, color: NSColor.white, font: .medium(.text)))
             layout.measure(width: .greatestFiniteMagnitude)
@@ -572,9 +618,9 @@ private final class PremiumBoardingView : View {
 
             needsLayout = true
             
-            self.userInteractionEnabled = state.canMakePayment
+            self.userInteractionEnabled = state.canMakePayment || state.activateForFree(context.peerId)
             
-            self.alphaValue = state.canMakePayment ? 1.0 : 0.7
+            self.alphaValue = state.canMakePayment || state.activateForFree(context.peerId) ? 1.0 : 0.7
             
             return size
         }
@@ -646,6 +692,7 @@ private final class PremiumBoardingView : View {
     var accept:(()->Void)?
     
     private var state: State?
+    private var arguments: Arguments?
     let presentation: TelegramPresentationTheme
 
     init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
@@ -734,7 +781,8 @@ private final class PremiumBoardingView : View {
     func update(animated: Bool, arguments: Arguments, state: State) {
         let previousState = self.state
         self.state = state
-        let size = acceptView.update(animated: animated, state: state)
+        self.arguments = arguments
+        let size = acceptView.update(animated: animated, state: state, context: arguments.context)
         acceptView.setFrameSize(NSMakeSize(frame.width - 40, size.height))
         acceptView.layer?.cornerRadius = 10
         let transition: ContainedViewLayoutTransition
@@ -745,8 +793,8 @@ private final class PremiumBoardingView : View {
         }
         
         
-        if state.isPremium != previousState?.isPremium {
-            if !state.isPremium {
+        if state.isPremium != previousState?.isPremium || state.activateForFree(arguments.context.peerId) {
+            if !state.isPremium || state.activateForFree(arguments.context.peerId) {
                 let bottomView = View(frame: NSMakeRect(0, frame.height - bottomHeight, frame.width, bottomHeight))
                 containerView.addSubview(bottomView)
                 
@@ -776,9 +824,9 @@ private final class PremiumBoardingView : View {
     }
     
     func makeAcceptView() -> Control? {
-        if let state = self.state, !state.isPremium {
+        if let state = self.state, !state.isPremium, let arguments = self.arguments {
             let acceptView = AcceptView(frame: .zero)
-            let size = acceptView.update(animated: false, state: state)
+            let size = acceptView.update(animated: false, state: state, context: arguments.context)
             acceptView.setFrameSize(NSMakeSize(frame.width - 40, size.height))
             acceptView.layer?.cornerRadius = 10
             acceptView.set(handler: { [weak self] _ in
@@ -1014,6 +1062,9 @@ final class PremiumBoardingController : ModalViewController {
             }
         }, execute: { link in
             execute(inapp: .external(link: "https://telegram.org/tos", false))
+        }, copyLink: { link in
+            copyToClipboard(link)
+            showModalText(for: context.window, text: strings().shareLinkCopied)
         })
         
         self.arguments = arguments
@@ -1054,7 +1105,7 @@ final class PremiumBoardingController : ModalViewController {
                     return .single((peer, nil))
                 }
             }
-        case let .gift(from, to, _):
+        case let .gift(from, to, _, _, _):
             if from == context.peerId {
                 peer = context.account.postbox.transaction { ($0.getPeer(to), nil) }
             } else {
@@ -1285,13 +1336,27 @@ final class PremiumBoardingController : ModalViewController {
         }
         genericView.accept = {
             
-            addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
             
-            #if APP_STORE || DEBUG
-            buyAppStore()
-            #else
-            buyNonStore()
-            #endif
+            let state = stateValue.with { $0 }
+            if state.activateForFree(context.peerId), let slug = state.slug {
+                if state.isPremium {
+                    showModalText(for: context.window, text: strings().premiumBoardingActivateForFreeAlready)
+                } else {
+                    _ = context.engine.payments.applyPremiumGiftCode(slug: slug).start()
+                    PlayConfetti(for: context.window)
+                    showModalText(for: context.window, text: strings().giftLinkUseSuccess)
+                    close()
+                }
+                
+            } else {
+                addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
+                
+                #if APP_STORE || DEBUG
+                buyAppStore()
+                #else
+                buyNonStore()
+                #endif
+            }
         }
                 
         self.onDeinit = {

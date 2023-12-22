@@ -143,7 +143,14 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     }
     
     func openLink() {
-        execute(inapp: .gift(link: "", slug: data.slug, context: context))
+        guard let fromId = message?.author?.id, let toId = message?.id.peerId else {
+            return
+        }
+        if data.fromGiveaway {
+            execute(inapp: .gift(link: "", slug: data.slug, context: context))
+        } else {
+            showModal(with: PremiumBoardingController(context: context, source: .gift(from: fromId, to: toId, months: data.months, slug: data.slug, unclaimed: data.unclaimed)), for: context.window)
+        }
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -198,7 +205,7 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
     private let headerTextView = TextView()
     private let infoTextView = TextView()
     
-    private let container: View = View()
+    private let container: Control = Control()
     
     private var visualEffect: VisualEffect?
 
@@ -218,13 +225,20 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         headerTextView.isSelectable = false
         
         infoTextView.isSelectable = false
-
+        infoTextView.isEventLess = true
+        
+        container.scaleOnClick = true
 
         action.set(handler: { [weak self] _ in
             if let item = self?.item as? ChatGiveawayGiftRowItem {
                 item.openLink()
             }
         }, for: .Click)
+        
+        container.set(handler: { [weak self] _ in
+            self?.action.send(event: .Click)
+        }, for: .Click)
+        
     }
     
 
@@ -240,6 +254,10 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         headerTextView.update(item.headerText)
         infoTextView.update(item.infoText)
         
+        
+        infoTextView.userInteractionEnabled = item.data.fromGiveaway
+
+
         if item.shouldBlurService {
             let current: VisualEffect
             if let view = self.visualEffect {

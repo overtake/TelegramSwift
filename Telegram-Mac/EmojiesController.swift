@@ -390,7 +390,7 @@ private struct State : Equatable {
     var recentReactionsItems: [RecentReactionItem] = []
     var topReactionsItems: [RecentReactionItem] = []
     var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
- 
+    var featuredChannelStatusEmojiItems: [RecentMediaItem] = []
     var recent: RecentUsedEmoji = .defaultSettings
     var reactionSettings: ReactionSettings = .default
     
@@ -457,6 +457,9 @@ private struct State : Equatable {
             return false
         }
         if lhs.featuredBackgroundIconEmojiItems != rhs.featuredBackgroundIconEmojiItems {
+            return false
+        }
+        if lhs.featuredChannelStatusEmojiItems != rhs.featuredChannelStatusEmojiItems {
             return false
         }
         if lhs.color != rhs.color {
@@ -654,7 +657,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             })
             
-            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media } + state.featuredBackgroundIconEmojiItems.map { $0.media }
+            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media } + state.featuredBackgroundIconEmojiItems.map { $0.media } + state.featuredChannelStatusEmojiItems.map { $0.media }
             
             
             var contains:Set<MediaId> = Set()
@@ -2300,6 +2303,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             emojies = context.diceCache.emojies_status
         case .backgroundIcon:
             emojies = context.diceCache.background_icons
+        case .channelStatus:
+            emojies = context.diceCache.channel_statuses
         default:
             emojies = context.diceCache.emojies
         }
@@ -2364,6 +2369,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var recentReactionsView: OrderedItemListView?
             var topReactionsView: OrderedItemListView?
             var featuredBackgroundIconEmoji: OrderedItemListView?
+            var featuredChannelStatusEmoji: OrderedItemListView?
 
             for orderedView in view.orderedItemListsViews {
                 if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
@@ -2376,6 +2382,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     topReactionsView = orderedView
                 } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji {
                     featuredBackgroundIconEmoji = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji {
+                    featuredChannelStatusEmoji = orderedView
                 }
             }
             var recentStatusItems:[RecentMediaItem] = []
@@ -2383,6 +2391,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var recentReactionsItems:[RecentReactionItem] = []
             var topReactionsItems:[RecentReactionItem] = []
             var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
+            var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
             if let recentStatusEmoji = recentStatusEmoji {
                 for item in recentStatusEmoji.items {
                     guard let item = item.contents.get(RecentMediaItem.self) else {
@@ -2405,6 +2414,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         continue
                     }
                     featuredBackgroundIconEmojiItems.append(item)
+                }
+            }
+            if let featuredChannelStatusEmoji = featuredChannelStatusEmoji {
+                for item in featuredChannelStatusEmoji.items {
+                    guard let item = item.contents.get(RecentMediaItem.self) else {
+                        continue
+                    }
+                    featuredChannelStatusEmojiItems.append(item)
                 }
             }
             
@@ -2497,6 +2514,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.topReactionsItems = topReactionsItems
                 current.recentReactionsItems = recentReactionsItems
                 current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
+                current.featuredChannelStatusEmojiItems = featuredChannelStatusEmojiItems
                 current.reactionSettings = reactionSettings
                 current.iconStatusEmoji = iconStatusEmoji
                 current.searchCategories = searchCategories

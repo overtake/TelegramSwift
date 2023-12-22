@@ -1993,27 +1993,27 @@ public final class L10n {
   public static func channelBoostTableLevelUnlocksCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_countable", p1)
   }
-  /// Level %d Unlocks:
+  /// Level %d
   public static func channelBoostTableLevelUnlocksFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_few", p1)
   }
-  /// Level %d Unlocks:
+  /// Level %d
   public static func channelBoostTableLevelUnlocksMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_many", p1)
   }
-  /// Level %d Unlock:
+  /// Level %d Unlocks:
   public static func channelBoostTableLevelUnlocksOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_one", p1)
   }
-  /// Level %d Unlocks:
+  /// Level %d
   public static func channelBoostTableLevelUnlocksOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_other", p1)
   }
-  /// Level %d Unlocks:
+  /// Level %d
   public static func channelBoostTableLevelUnlocksTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_two", p1)
   }
-  /// Level %d Unlocks:
+  /// Level %d
   public static func channelBoostTableLevelUnlocksZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.LevelUnlocks_zero", p1)
   }
@@ -10663,6 +10663,8 @@ public final class L10n {
   }
   ///  You now have access to additional features.
   public static var premiumBoardingPeerGiftInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.Info") }
+  ///  This link allows you or anyone you choose to activate a **Telegram Premium** subscription.
+  public static var premiumBoardingPeerGiftLinkInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.LinkInfo") }
   /// [%1$@](profile) has gifted you a %2$@-month subscription for Telegram Premium
   public static func premiumBoardingPeerGiftTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.Title", p1, p2)
@@ -10913,6 +10915,10 @@ public final class L10n {
   public static var premiumRestoreErrorUnknown: String  { return L10n.tr("Localizable", "Premium.Restore.ErrorUnknown") }
   /// Done
   public static var premiumRestoreSuccess: String  { return L10n.tr("Localizable", "Premium.Restore.Success") }
+  /// Activate For Free
+  public static var premiumBoardingActivateForFree: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree") }
+  /// You are already Telegram Premium subscriber.
+  public static var premiumBoardingActivateForFreeAlready: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree.Already") }
   /// Set custom expiration durations like 6 or 48 hours for your stories.
   public static var premiumBoardingStoriesExpirationDurationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.ExpirationDuration.Info") }
   /// Expiration Options
