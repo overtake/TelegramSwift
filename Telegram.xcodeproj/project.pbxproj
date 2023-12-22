@@ -155,6 +155,7 @@
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
 		2745B0652B2C831400EF8623 /* BoostFeatureRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2745B0642B2C831400EF8623 /* BoostFeatureRowItem.swift */; };
+		2745B0692B35691600EF8623 /* SavedPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2745B0682B35691600EF8623 /* SavedPeersController.swift */; };
 		2745FEC9274F943E00546B05 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2745FECB274F947000546B05 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 2745FECA274F947000546B05 /* BuildConfig */; };
 		2745FECD274F948600546B05 /* NumberPluralization in Frameworks */ = {isa = PBXBuildFile; productRef = 2745FECC274F948600546B05 /* NumberPluralization */; };
@@ -1672,6 +1673,7 @@
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
 		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
 		2745B0642B2C831400EF8623 /* BoostFeatureRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostFeatureRowItem.swift; sourceTree = "<group>"; };
+		2745B0682B35691600EF8623 /* SavedPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPeersController.swift; sourceTree = "<group>"; };
 		2746926B26A99DD800B67817 /* WallpaperCheckboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperCheckboxView.swift; sourceTree = "<group>"; };
 		27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_3.tgs; sourceTree = "<group>"; };
 		2747968B28F5983D00A891F3 /* menu_play.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_play.tgs; sourceTree = "<group>"; };
@@ -4526,6 +4528,7 @@
 				D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */,
 				D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */,
 				271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */,
+				2745B0682B35691600EF8623 /* SavedPeersController.swift */,
 			);
 			name = list;
 			sourceTree = "<group>";
@@ -7151,6 +7154,7 @@
 				C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */,
 				9FC8ADA6206925F60094F7B4 /* PassportWindowController.swift in Sources */,
 				A7393D372407CD7A00CE44CA /* ChatDiceContentView.swift in Sources */,
+				2745B0692B35691600EF8623 /* SavedPeersController.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				27903958271D7662001C647A /* RecentCallsLocation.swift in Sources */,
 				9FC4DA9621DD0B35003E2A62 /* PeerChannelMemberCategoriesContextsManager.swift in Sources */,

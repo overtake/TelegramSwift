@@ -2781,6 +2781,8 @@ public final class L10n {
   public static var chatConnectingStatusUpdating: String  { return L10n.tr("Localizable", "Chat.ConnectingStatus.updating") }
   /// Waiting for network
   public static var chatConnectingStatusWaitingNetwork: String  { return L10n.tr("Localizable", "Chat.ConnectingStatus.waitingNetwork") }
+  /// Send Message
+  public static var chatContactSendMessage: String  { return L10n.tr("Localizable", "Chat.Contact.SendMessage") }
   /// Add to Favorites
   public static var chatContextAddFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.AddFavoriteSticker") }
   /// Archive
