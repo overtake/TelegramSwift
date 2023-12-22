@@ -650,6 +650,18 @@ class FastSettings {
         }
     }
     
+    static func isDefaultAccount(_ id: Int64) -> Bool {
+        let accountId = UserDefaults.standard.value(forKey: "_default_account_id")
+        
+        if let accountId = accountId as? Int64 {
+            return accountId == id
+        } else {
+            UserDefaults.standard.setValue(id, forKey: "_default_account_id")
+            return true
+        }
+
+    }
+    
     static func clear_uuid(_ id: Int64) {
 //#if DEBUG
         if #available(macOS 14.0, *) {

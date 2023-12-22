@@ -796,6 +796,10 @@ class ServiceEventLogItem: TableRowItem {
                     text = strings().channelEventLogMessageChangedNameAndBackground(peer.displayTitle)
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
+            case let .changeWallpaper(prev, new):
+                let text = strings().channelEventLogMessageChangedWallpaper(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+
             default:
                 break
             }
