@@ -798,7 +798,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         colors.append(PeerNameColor(rawValue: index))
     }
     
-    
     let colorsViewType: GeneralViewType
     colorsViewType = .firstItem
   
@@ -868,11 +867,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         
         
-        colors = []
+        var colors: [PeerNameColor] = []
         for index in arguments.context.peerNameColors.profileDisplayOrder {
             colors.append(PeerNameColor(rawValue: index))
         }
-        
         
        
         let colorsViewType: GeneralViewType
@@ -1190,13 +1188,14 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
             }
             return current
         }
-        let colors = getColor(value, type)
     }, showEmojiPanel: { type in
         
         let selectedBg: EmojiesSectionRowItem.SelectedItem? = backgroundIcon(type).flatMap {
             .init(source: .custom($0), type: .normal)
         }
-        let nameColor = source.nameColor(type)
+        let nameColor: PeerNameColor? = stateValue.with { state in
+            return type == .name ? state.selected : state.selected_profile
+        }
         let colors: PeerNameColors.Colors? = nameColor != nil ? getColor(nameColor!, type) : nil
         let emojis = EmojiesController(context, mode: .backgroundIcon, selectedItems: selectedBg != nil ? [selectedBg!] : [], color: colors?.main ?? theme.colors.text)
         emojis._frameRect = NSMakeRect(0, 0, 350, 300)
@@ -1252,9 +1251,11 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
             var current = current
             switch type {
             case .name:
-                current.selected = nil
+                current.selected = current.peer.nameColor
+                current.backgroundEmojiId = nil
             case .profile:
                 current.selected_profile = nil
+                current.backgroundEmojiId_profile = nil
             }
             return current
         }

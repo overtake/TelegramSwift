@@ -526,8 +526,17 @@ private struct State : Equatable {
 }
 
 
-private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_peer_\(id.toInt64())_\(arc4random64())")
+private func _id_peer(_ id:PeerId, _ item: EngineStoryViewListContext.Item) -> InputDataIdentifier {
+    let type: String
+    switch item {
+    case .view:
+        type = "view"
+    case .repost:
+        type = "report"
+    case .forward:
+        type = "forward"
+    }
+    return InputDataIdentifier("_id_peer_\(id.toInt64())_\(type)")
 }
 private func _id_miss(_ id: Int) -> InputDataIdentifier {
     return InputDataIdentifier("_id_miss\(id)")
@@ -572,7 +581,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         for item in items {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id, item.item), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                 return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, item: item.item, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu, openRepostStory: arguments.openRepostStory)
             }))
             index += 1
@@ -758,7 +767,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(item: story, views: nil, previous: nil, listMode: .everyone, sortMode: .reactionsFirst, isChannel: isChannel)
+    let initialState = State(item: story, views: nil, previous: nil, listMode: .everyone, sortMode: isChannel ? .repostsFirst : .reactionsFirst, isChannel: isChannel)
     
     let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

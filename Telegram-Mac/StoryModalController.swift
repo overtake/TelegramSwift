@@ -1235,8 +1235,8 @@ private final class StoryViewController: Control, Notifable {
         
         self.storyContext = storyContext
        
+        let slice: StoryContentContextState.FocusedSlice?
         if let current = self.current {
-            let slice: StoryContentContextState.FocusedSlice?
             if state.slice?.peer.id == current.id {
                 slice = state.slice
             } else if state.nextSlice?.peer.id == current.id {
@@ -1299,9 +1299,10 @@ private final class StoryViewController: Control, Notifable {
         if updated {
             self.closeTooltip()
             if let peerId = state.slice?.peer.id, let story = state.slice?.item.storyItem {
-                let accept = state.slice?.peer.id == context.peerId || state.slice?.peer._asPeer().isAdmin == true
+                let accept = state.slice?.peer.id == context.peerId || state.slice?.additionalPeerData.canViewStats == true
+                let isChannel = state.slice?.peer.id.namespace == Namespaces.Peer.CloudChannel
                 if accept {
-                    self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
+                    self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false), listMode: .everyone, sortMode: isChannel ? .repostsFirst : .reactionsFirst)
                     self.storyViewList?.loadMore()
                 } else {
                     self.storyViewList = nil

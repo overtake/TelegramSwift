@@ -591,6 +591,104 @@ public final class L10n {
   }
   /// More Boosts Needed
   public static var boostGiftToGetMoreTitle: String  { return L10n.tr("Localizable", "Boost.GiftToGetMore.Title") }
+  /// Additional Prizes
+  public static var boostGiftAdditionalPrizes: String  { return L10n.tr("Localizable", "BoostGift.AdditionalPrizes") }
+  /// %d
+  public static func boostGiftAdditionalPrizesInfoForMonthsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_countable", p1)
+  }
+  /// for **%d** months
+  public static func boostGiftAdditionalPrizesInfoForMonthsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_few", p1)
+  }
+  /// for **%d** months
+  public static func boostGiftAdditionalPrizesInfoForMonthsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_many", p1)
+  }
+  /// for **%d** month
+  public static func boostGiftAdditionalPrizesInfoForMonthsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_one", p1)
+  }
+  /// for **%d** months
+  public static func boostGiftAdditionalPrizesInfoForMonthsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_other", p1)
+  }
+  /// for **%d** months
+  public static func boostGiftAdditionalPrizesInfoForMonthsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_two", p1)
+  }
+  /// for **%d** months
+  public static func boostGiftAdditionalPrizesInfoForMonthsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoForMonths_zero", p1)
+  }
+  /// Turn this on if you want to give the winners your own prizes in addition to Premium subscriptions.
+  public static var boostGiftAdditionalPrizesInfoOff: String  { return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoOff") }
+  /// All prizes: **%1$@** %2$@ %3$@.
+  public static func boostGiftAdditionalPrizesInfoOn(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoOn", p1, p2, p3)
+  }
+  /// %d
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_countable", p1)
+  }
+  /// %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_few", p1)
+  }
+  /// %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_many", p1)
+  }
+  /// %d Telegram Premium subscription
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_one", p1)
+  }
+  /// %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_other", p1)
+  }
+  /// %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_two", p1)
+  }
+  /// %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoSubscriptionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoSubscriptions_zero", p1)
+  }
+  /// %d
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_countable", p1)
+  }
+  /// with %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_few", p1)
+  }
+  /// with %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_many", p1)
+  }
+  /// with %d Telegram Premium subscription
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_one", p1)
+  }
+  /// with %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_other", p1)
+  }
+  /// with %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_two", p1)
+  }
+  /// with %d Telegram Premium subscriptions
+  public static func boostGiftAdditionalPrizesInfoWithSubscriptionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "BoostGift.AdditionalPrizesInfoWithSubscriptions_zero", p1)
+  }
+  /// Enter Your Prize
+  public static var boostGiftAdditionalPrizesPlaceholder: String  { return L10n.tr("Localizable", "BoostGift.AdditionalPrizesPlaceholder") }
+  /// Show Winners
+  public static var boostGiftWinners: String  { return L10n.tr("Localizable", "BoostGift.Winners") }
+  /// Choose whether to make the list of winners public when the giveaway ends.
+  public static var boostGiftWinnersInfo: String  { return L10n.tr("Localizable", "BoostGift.WinnersInfo") }
   /// Start
   public static var boostGiftStartConfirmationStart: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Start") }
   /// Are you sure you want to start giveaway now?

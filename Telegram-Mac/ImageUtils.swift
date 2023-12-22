@@ -106,10 +106,8 @@ extension PeerNameColors {
                     darkColors[option.key] = parsedDark
                 }
                 
-                for option in availableReplyColors.options {
-                    if !displayOrder.contains(option.key) {
-                        displayOrder.append(option.key)
-                    }
+                if !displayOrder.contains(option.key) {
+                    displayOrder.append(option.key)
                 }
             }
         } else {
@@ -139,10 +137,8 @@ extension PeerNameColors {
                 if let parsedStoryDark = (option.value.dark?.stories).flatMap(PeerNameColors.Colors.init(colors:)) {
                     profileStoryDarkColors[option.key] = parsedStoryDark
                 }
-                for option in availableProfileColors.options {
-                    if !profileDisplayOrder.contains(option.key) {
-                        profileDisplayOrder.append(option.key)
-                    }
+                if !profileDisplayOrder.contains(option.key) {
+                    profileDisplayOrder.append(option.key)
                 }
             }
         }

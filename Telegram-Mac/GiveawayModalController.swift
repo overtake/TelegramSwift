@@ -561,46 +561,50 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     
-    
-    
-    #if DEBUG
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
     //WINNERS
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WINNERS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_winners, data: .init(name: "Show Winners", color: theme.colors.text, type: .switchable(state.showWinners), viewType: .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_winners, data: .init(name: strings().boostGiftWinners, color: theme.colors.text, type: .switchable(state.showWinners), viewType: .singleItem, action: {
         arguments.toggleShowWinners(state.showWinners)
     })))
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose wether to make the list of winners public when the giveaway ends."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().boostGiftWinnersInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADDITIONAL PRIZES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().boostGiftAdditionalPrizes.uppercased()), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_additional_prizes, data: .init(name: "Additional Prizes", color: theme.colors.text, type: .switchable(state.additionalPrizes), viewType: state.additionalPrizes ? .firstItem : .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_additional_prizes, data: .init(name: strings().boostGiftAdditionalPrizes, color: theme.colors.text, type: .switchable(state.additionalPrizes), viewType: state.additionalPrizes ? .firstItem : .singleItem, action: {
         arguments.toggleAdditionalPrizes(state.additionalPrizes)
     })))
     
     if state.additionalPrizes {
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: "Enter Your Prize", filter: { $0 }, limit: 128))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.prizeDescription), error: nil, identifier: _id_prize_description, mode: .plain, data: .init(viewType: .lastItem), placeholder: .init("\(state.quantity)"), inputPlaceholder: strings().boostGiftAdditionalPrizesPlaceholder, filter: { $0 }, limit: 128))
         
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("All prizes: \(state.quantity) Telegram Premium subscriptions for 3 months."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        let prizeDescription = state.prizeDescription ?? ""
+        let prizeDescriptionInfoText: String
+        let monthsString = strings().boostGiftAdditionalPrizesInfoForMonthsCountable(Int(state.selectedMonths))
+        if prizeDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let subscriptionsString = strings().boostGiftAdditionalPrizesInfoSubscriptionsCountable(Int(state.quantity)).replacingOccurrences(of: "\(state.quantity) ", with: "")
+            prizeDescriptionInfoText = strings().boostGiftAdditionalPrizesInfoOn("\(state.quantity)", subscriptionsString, monthsString)
+        } else {
+            let subscriptionsString = strings().boostGiftAdditionalPrizesInfoWithSubscriptionsCountable(Int(state.quantity)).replacingOccurrences(of: "\(state.quantity) ", with: "")
+            let description = "\(prizeDescription) \(subscriptionsString)"
+            prizeDescriptionInfoText = strings().boostGiftAdditionalPrizesInfoOn("\(state.quantity)", description, monthsString)
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(prizeDescriptionInfoText), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
     } else {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Turn this on if you want to give the winners your own prizes in addition to Premium subscriptions."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().boostGiftAdditionalPrizesInfoOff), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
     }
-    
-    #endif
     
 
     if state.type == .random || state.type == .specific {
