@@ -2485,7 +2485,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.storyState = storyState
                 switch wallpaper {
                 case let .result(result):
-                    current.presentation = theme
+                    current.presentation = theme.withUpdatedEmoticonThemes(emoticonThemes)
                     if let wallpaper = result {
                         current.bespoke_wallpaper = .init(wallpaper: wallpaper, associated: nil)
                     } else {
@@ -2493,9 +2493,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     if current.presentation.wallpaper != current.bespoke_wallpaper {
                         if let wallpaper = current.bespoke_wallpaper {
-                            current.presentation = current.presentation.withUpdatedEmoticonThemes(emoticonThemes).withUpdatedWallpaper(wallpaper)
+                            current.presentation = current.presentation.withUpdatedWallpaper(wallpaper)
                         } else {
-                            current.presentation = current.presentation.withUpdatedEmoticonThemes(emoticonThemes).withUpdatedWallpaper(theme.wallpaper)
+                            current.presentation = current.presentation.withUpdatedWallpaper(theme.wallpaper)
                         }
                     }
                 case .loading:

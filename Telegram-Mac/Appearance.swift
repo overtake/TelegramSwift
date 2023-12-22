@@ -1995,7 +1995,14 @@ class TelegramPresentationTheme : PresentationTheme {
                 backgroundMode = cached
             } else {
                 backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize, emoticonThemes: self.emoticonThemes)
-                cacheBackground(wallpaper.wallpaper, palette: colors, background: backgroundMode)
+                switch wallpaper.wallpaper {
+                case .emoticon:
+                    if backgroundMode != .plain {
+                        cacheBackground(wallpaper.wallpaper, palette: colors, background: backgroundMode)
+                    }
+                default:
+                    cacheBackground(wallpaper.wallpaper, palette: colors, background: backgroundMode)
+                }
             }
             
             self._backgroundMode = backgroundMode
