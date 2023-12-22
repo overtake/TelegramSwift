@@ -75,7 +75,7 @@ class ChatContactRowItem: ChatRowItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         nameLayout.measure(width: width - 50)
         phoneLayout.measure(width: width - 50)
-        return NSMakeSize(max(nameLayout.layoutSize.width, phoneLayout.layoutSize.width) + 50 + 20, 5 + 40 + (contact.peerId != nil ? 36 : 5))
+        return NSMakeSize(max(nameLayout.layoutSize.width, phoneLayout.layoutSize.width) + 50 + 20, 8 + 40 + (contact.peerId != nil ? 40 : 8))
     }
     
     override func viewClass() -> AnyClass {
@@ -146,10 +146,10 @@ class ChatContactRowView : ChatRowView {
         
         override func layout() {
             super.layout()
-            contactPhotoView.setFrameOrigin(NSMakePoint(10, 5))
+            contactPhotoView.setFrameOrigin(NSMakePoint(10, 8))
             nameView.setFrameOrigin(60, contactPhotoView.frame.minY + 3)
             phoneView.setFrameOrigin(60, nameView.frame.maxY + 1)
-            actionButton?.setFrameOrigin(0, contactPhotoView.frame.maxY + 6)
+            actionButton?.setFrameOrigin(0, contactPhotoView.frame.maxY + 8)
             if let actionButton = self.actionButton {
                 borderView.frame = NSMakeRect(10, actionButton.frame.minY, frame.width - 20, .borderSize)
             }
