@@ -298,15 +298,21 @@ private final class PreviewRowView : GeneralContainableRowView {
         
         self.layout()
         
-        self.itemsView.removeAllSubviews()
         
     
         var y: CGFloat = item.viewType.innerInset.top
-        for item in item.items {
+        for (i, item) in item.items.enumerated() {
             let vz = item.viewClass() as! TableRowView.Type
-            let view = vz.init(frame:NSMakeRect(0, y, self.backgroundView.frame.width, item.height))
+            let view: TableRowView
+            if self.itemsView.subviews.count > i {
+                view = self.itemsView.subviews[i] as! TableRowView
+            } else {
+                view = vz.init(frame:NSMakeRect(0, y, self.backgroundView.frame.width, item.height))
+            }
             view.set(item: item, animated: false)
-            self.itemsView.addSubview(view)
+            if view.superview == nil {
+                self.itemsView.addSubview(view)
+            }
             
             if let view = view as? ChatRowView {
                 view.updateBackground(animated: false, item: view.item, rotated: true)

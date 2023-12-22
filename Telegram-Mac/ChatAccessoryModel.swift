@@ -223,11 +223,10 @@ class ChatAccessoryView : Button {
         }
         
         if let pattern = model.presentation.pattern {
-            if patternTarget?.textColor != model.presentation.colors.main {
+            if patternTarget?.textColor != model.presentation.colors.main || patternTarget?.fileId != pattern {
                 patternTarget = .init(account: model.context.account, inlinePacksContext: model.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: model.presentation.colors.main)
                 patternTarget?.noDelayBeforeplay = true
                 patternTarget?.isPlayable = true
-                self.updatePatternLayerImages()
             }
             patternTarget?.contentDidUpdate = { [weak self] content in
                 self?.updatePatternLayerImages()
@@ -267,10 +266,10 @@ class ChatAccessoryView : Button {
                     patternContentLayer = self.patternContentLayers[maxIndex]
                 } else {
                     patternContentLayer = SimpleLayer()
-                    patternContentLayer.layerTintColor = model.presentation.colors.main.cgColor
                     self.layer?.addSublayer(patternContentLayer)
                     self.patternContentLayers.append(patternContentLayer)
                 }
+                patternContentLayer.layerTintColor = model.presentation.colors.main.cgColor
                // patternContentLayer.contents = patternTarget?.contents // self.patternContentsTarget?.contents
                 
                 let itemSize = CGSize(width: placement.size / 3.0, height: placement.size / 3.0)
@@ -309,12 +308,15 @@ class ChatAccessoryView : Button {
         self.updateListeners()
         
         self.updateTheme()
-        self.updatePatternLayerImages()
 
     }
     
     private func updatePatternLayerImages() {
         let image = self.patternTarget?.contents
+        if image == nil {
+            var bp = 0
+            bp += 1
+        }
         for patternContentLayer in self.patternContentLayers {
             patternContentLayer.contents = image
         }

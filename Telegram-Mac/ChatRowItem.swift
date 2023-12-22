@@ -379,9 +379,6 @@ class ChatRowItem: TableRowItem {
         }
         var id: String = super.identifier
         id += "_message"
-        if self.replyModel != nil {
-            id += "_reply"
-        }
         if self.topicLinkLayout != nil {
             id += "_topicLinkLayout"
         }
