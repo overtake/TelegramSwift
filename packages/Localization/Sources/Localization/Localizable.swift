@@ -1539,6 +1539,10 @@ public final class L10n {
   public static func channelEventLogMessageChangedUnlinkedGroup(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedUnlinkedGroup", p1)
   }
+  /// %1$@ updated channel wallpaper
+  public static func channelEventLogMessageChangedWallpaper(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedWallpaper", p1)
+  }
   /// changed custom title for %@: %@
   public static func channelEventLogMessageRankName(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageRankName", p1, p2)
