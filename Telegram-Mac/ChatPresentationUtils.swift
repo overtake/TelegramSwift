@@ -384,6 +384,31 @@ final class TelegramChatColors {
 
         return .init(main: color, secondary: secondary, tertiary: tertiary)
     }
+    
+    func contactActivity(_ colors: PeerNameColors, contactPeer: Peer?, account: Account, isIncoming: Bool, bubbled: Bool) -> PeerNameColors.Colors {
+        
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
+
+        
+        if let author = contactPeer {
+            if let nameColor = author.nameColor {
+                let color = colors.get(nameColor)
+                if isIncoming {
+                    return colors.get(nameColor)
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
+            }
+        }
+        let color = bubbled ? isIncoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
+        
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
+    }
+    
     func pollOptionBorder(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return (bubbled ? incoming ?  grayText(incoming, bubbled) : grayText(incoming, bubbled) : palette.grayText).withAlphaComponent(0.2)
     }

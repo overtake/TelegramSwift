@@ -386,6 +386,7 @@ private let themeThums = PhotoCache(200)
 private let wallpaperCache = WallpaperCache(20)
 
 private let stickersCache = PhotoCache(200)
+private let emojiCache = PhotoCache(10000)
 
 
 func clearImageCache() -> Signal<Void, NoError> {
@@ -514,10 +515,10 @@ func cacheSlot(_ result: TransformImageResult, value: SlotMachineValue, argument
 }
 
 func cacheEmoji(_ image: CGImage, emoji: String, scale: CGFloat) -> Void {
-    stickersCache.cacheImage(image, sampleBuffer: nil, for: .emoji(emoji, scale))
+    emojiCache.cacheImage(image, sampleBuffer: nil, for: .emoji(emoji, scale))
 }
 func cachedEmoji(emoji: String, scale: CGFloat) -> CGImage? {
-    return stickersCache.cachedImage(for: .emoji(emoji, scale))?.0
+    return emojiCache.cachedImage(for: .emoji(emoji, scale))?.0
 }
 
 func cacheMedia(_ result: TransformImageResult, media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {

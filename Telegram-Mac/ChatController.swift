@@ -5768,7 +5768,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
-                        if message == nil {
+                        let height = item.view?.visibleRect.height ?? 0
+                        if message == nil, height >= (item.height - 10) {
                             message = item.lastMessage
                         }
                         
