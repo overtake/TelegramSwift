@@ -1801,6 +1801,7 @@
 		276B5985261C79940029FD3F /* GroupCallControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallControlsView.swift; sourceTree = "<group>"; };
 		276B5988261C7AC60029FD3F /* GroupCallSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSchedule.swift; sourceTree = "<group>"; };
 		276C1EBE261B451500FE41C9 /* Currency.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
+		276E76422B373E1B00440A4F /* libswiftAppKit.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftAppKit.tbd; path = usr/lib/swift/libswiftAppKit.tbd; sourceTree = SDKROOT; };
 		276F9B872931155D00E35997 /* menu_bio.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_bio.tgs; sourceTree = "<group>"; };
 		276F9B892935FD7800E35997 /* pirate_flag.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = pirate_flag.tgs; sourceTree = "<group>"; };
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
@@ -6067,6 +6068,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				276E76422B373E1B00440A4F /* libswiftAppKit.tbd */,
 				270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */,
 				270D04492AEA742F00EFF1E1 /* libCodeSyntax.a */,
 				2795578D2AB86A5C007EC996 /* libsharpyuv.a */,
@@ -7933,6 +7935,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 278926CF2755222700923087 /* Release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
@@ -8008,6 +8011,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 278926CE27551B5600923087 /* Debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -8054,6 +8058,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 278926CF2755222700923087 /* Release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
@@ -8145,6 +8150,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 278926CE27551B5600923087 /* Debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
