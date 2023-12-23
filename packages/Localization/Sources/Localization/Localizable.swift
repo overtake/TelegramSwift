@@ -585,6 +585,14 @@ public final class L10n {
   public static var blockedPeersEmptyDescrpition: String  { return L10n.tr("Localizable", "BlockedPeers.EmptyDescrpition") }
   /// Boost your channel by gifting your subscribers Telegram Premium. [Get boosts]()
   public static var boostGetBoosts: String  { return L10n.tr("Localizable", "Boost.GetBoosts") }
+  /// Level %d
+  public static func boostBadgeLevel(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Boost.Badge.Level", p1)
+  }
+  /// Level %d+
+  public static func boostBadgeLevelPLus(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Boost.Badge.LevelPLus", p1)
+  }
   /// To boost **%@**, get more boosts by gifting **Telegram Premium** to a friend.
   public static func boostGiftToGetMoreInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Boost.GiftToGetMore.Info", p1)

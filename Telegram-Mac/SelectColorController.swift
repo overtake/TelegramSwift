@@ -778,17 +778,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if state.peer._asPeer().isChannel {
         if let _ = state.emojiStatus {
             if state.boostLevel < arguments.premiumConfiguration.minChannelEmojiStatusLevel {
-                afterNameImage_emojiStatus = generateDisclosureActionBoostLevelBadgeImage(text: "Level \(arguments.premiumConfiguration.minChannelEmojiStatusLevel)")
+                afterNameImage_emojiStatus = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minChannelEmojiStatusLevel)))
             }
         }
         if let _ = state.backgroundEmojiId {
             if state.boostLevel < arguments.premiumConfiguration.minChannelNameIconLevel {
-                afterNameImage_NameIcon = generateDisclosureActionBoostLevelBadgeImage(text: "Level \(arguments.premiumConfiguration.minChannelNameIconLevel)")
+                afterNameImage_NameIcon = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minChannelNameIconLevel)))
             }
         }
         if let _ = state.backgroundEmojiId_profile {
             if state.boostLevel < arguments.premiumConfiguration.minChannelProfileIconLevel {
-                afterNameImage_ProfileIcon = generateDisclosureActionBoostLevelBadgeImage(text: "Level \(arguments.premiumConfiguration.minChannelProfileIconLevel)")
+                afterNameImage_ProfileIcon = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minChannelProfileIconLevel)))
             }
         }
     }
