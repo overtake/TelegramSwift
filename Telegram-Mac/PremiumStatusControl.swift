@@ -110,7 +110,8 @@ final class PremiumStatusControl : Control {
             }
             if let image = image {
                 current.contents = image
-                current.contentsGravity = .center
+                current.contentsScale = System.backingScale
+                current.contentsGravity = .resizeAspectFill
                 var rect = focus(image.backingSize)
                 rect.origin.x = 0
                 current.frame = rect
