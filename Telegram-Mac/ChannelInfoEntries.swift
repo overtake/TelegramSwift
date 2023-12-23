@@ -244,13 +244,9 @@ class ChannelInfoArguments : PeerInfoArguments {
         }))
     }
     func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
-        #if DEBUG
         if let availableReactions = availableReactions {
             showModal(with: ChannelReactionsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions), for: context.window)
         }
-        #else
-        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
-        #endif
     }
     
     func enableTranslate() {
