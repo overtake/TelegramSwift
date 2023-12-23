@@ -1134,7 +1134,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             let level = (peer.peer as? TelegramChannel)?.approximateBoostLevel ?? 0
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelAppearance, icon: theme.icons.profile_channel_color, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: peer.peer, context: arguments.context), ""), viewType: viewType, action: {
                 arguments.openNameColor(peer: peer.peer)
-            }, afterNameImage: level == 0 ? generateDisclosureActionBoostLevelBadgeImage(text: "Level 1+") : nil)
+            }, afterNameImage: level == 0 ? generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(1)) : nil)
         case let .stats(_, datacenterId, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoStatAndBoosts, icon: theme.icons.profile_channel_stats, type: .next, viewType: viewType, action: {
                 arguments.stats(datacenterId)

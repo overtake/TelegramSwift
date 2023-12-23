@@ -280,7 +280,7 @@ private final class BoostRowItemView : TableRowView {
             let width = frame.width * state.percentToNext
 
             
-            var normalCountLayout = TextViewLayout(.initialize(string: "Level \(state.currentLevel)", color: theme.colors.text, font: .medium(13)))
+            var normalCountLayout = TextViewLayout(.initialize(string:  strings().boostBadgeLevel((state.currentLevel), color: theme.colors.text, font: .medium(13)))
             normalCountLayout.measure(width: .greatestFiniteMagnitude)
             
             if width >= 10 + normalCountLayout.layoutSize.width {
@@ -290,7 +290,7 @@ private final class BoostRowItemView : TableRowView {
 
             currentLevel.update(normalCountLayout)
 
-            var premiumCountLayout = TextViewLayout(.initialize(string: "Level \(state.currentLevel + 1)", color: theme.colors.text, font: .medium(13)))
+            var premiumCountLayout = TextViewLayout(.initialize(string: strings().boostBadgeLevel(\(state.currentLevel + 1), color: theme.colors.text, font: .medium(13)))
             premiumCountLayout.measure(width: .greatestFiniteMagnitude)
             
             if width >= frame.width - 10 {
