@@ -2220,6 +2220,10 @@ final class StoryModalController : ModalViewController, Notifable {
                 let controller = context.bindings.rootNavigation().controller as? ChatController
                 if controller?.chatLocation.peerId != peerId {
                     context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initial))
+                } else {
+                    if let target = ChatFocusTarget(messageId: messageId) {
+                        controller?.chatInteraction.focusMessageId(nil, target, .CenterEmpty)
+                    }
                 }
                 self?.close()
             }

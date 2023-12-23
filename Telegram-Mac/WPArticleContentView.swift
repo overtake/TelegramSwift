@@ -87,10 +87,12 @@ class WPArticleContentView: WPContentView {
                 showInstantPage(InstantPageViewController(layout.context, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))
                 return
             }
-            
-            if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
-                showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
-            } else if layout.isGalleryAssemble {
+            /*
+             if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
+                 showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
+             } else
+             */
+            if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if layout.isStory {
                 layout.openStory()
