@@ -985,6 +985,7 @@ private final class NameContainer : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(nameView)
+        layer?.masksToBounds = false
     }
     
     func update(_ item: PeerInfoHeadItem, animated: Bool) {
