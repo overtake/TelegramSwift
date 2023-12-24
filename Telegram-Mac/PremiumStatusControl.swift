@@ -58,13 +58,14 @@ final class PremiumStatusControl : Control {
         }
         self.layer?.opacity = color != nil && peer.emojiStatus != nil ? 0.4 : 1
 
-        if peer.isFake || peer.isScam || peer.isPremium || peer.isVerified, (peer.isPremium && peer.emojiStatus == nil) || peer.isChannel || peer.isBot || peer.isVerified {
+        if peer.isFake || peer.isScam || peer.isPremium || peer.isVerified, (peer.isPremium && peer.emojiStatus == nil) || !peer.isPremium {
 
             let current: SimpleLayer
             if let layer = self.imageLayer {
                 current = layer
             } else {
                 current = SimpleLayer()
+                current.masksToBounds = false
                 self.imageLayer = current
                 self.layer?.addSublayer(current)
             }
