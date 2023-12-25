@@ -5019,6 +5019,8 @@ public final class L10n {
   public static func chatWebpageMediaCount1(_ p1: Int, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Chat.Webpage.MediaCount1", p1, p2)
   }
+  /// No Saved Messages
+  public static var chatEmptySavedMessages: String  { return L10n.tr("Localizable", "ChatEmpty.SavedMessages") }
   /// Send first message to start this topic.
   public static var chatEmptyTopic: String  { return L10n.tr("Localizable", "ChatEmpty.Topic") }
   /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **Telegram Premium** subscription for **%2$@** months.
@@ -5051,6 +5053,8 @@ public final class L10n {
   public static var chatHeaderRestartTopic: String  { return L10n.tr("Localizable", "ChatHeader.RestartTopic") }
   /// Menu
   public static var chatInputBotMenu: String  { return L10n.tr("Localizable", "ChatInput.BotMenu") }
+  /// Open Chat
+  public static var chatInputOpenChat: String  { return L10n.tr("Localizable", "ChatInput.OpenChat") }
   /// Show Next
   public static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
   /// Above the Message
@@ -9755,6 +9759,8 @@ public final class L10n {
   }
   /// Calendar
   public static var peerMediaCalendarTitle: String  { return L10n.tr("Localizable", "Peer.Media.Calendar.Title") }
+  /// Media will appear hear.
+  public static var peerMediaShareMediaSavedMessages: String  { return L10n.tr("Localizable", "Peer.Media.ShareMedia.SavedMessages") }
   /// channel
   public static var peerStatusChannel: String  { return L10n.tr("Localizable", "Peer.Status.channel") }
   /// forum
@@ -10333,6 +10339,8 @@ public final class L10n {
   public static var peerMediaMusic: String  { return L10n.tr("Localizable", "PeerMedia.Music") }
   /// Posts
   public static var peerMediaPosts: String  { return L10n.tr("Localizable", "PeerMedia.Posts") }
+  /// Chats
+  public static var peerMediaSavedMessages: String  { return L10n.tr("Localizable", "PeerMedia.SavedMessages") }
   /// Shared Media
   public static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
   /// Similar Channels

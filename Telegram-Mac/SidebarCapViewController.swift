@@ -110,7 +110,7 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
                     }
                 case let .thread(message):
                     return combineLatest(getPeerView(peerId: value.peerId, postbox: postbox), postbox.transaction {
-                        $0.getMessageHistoryThreadInfo(peerId: value.peerId, threadId: makeMessageThreadId(message.messageId))
+                        $0.getMessageHistoryThreadInfo(peerId: value.peerId, threadId: message.threadId)
                     }) |> map { peer, data in
                         let data = data?.data.get(MessageHistoryThreadData.self)
                         return peer?.canSendMessage(true, threadData: data) ?? false

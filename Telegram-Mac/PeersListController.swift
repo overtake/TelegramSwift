@@ -1319,7 +1319,9 @@ class PeerListContainerView : Control {
         guard let state = self.state else {
             return 50
         }
-        
+        if state.mode == .savedMessagesChats {
+            return 0
+        }
         if case .forum = state.mode, state.splitState != .minimisize {
             return 0
         }
@@ -1410,6 +1412,7 @@ enum PeerListMode : Equatable {
     case folder(EngineChatList.Group)
     case filter(Int32)
     case forum(PeerId, Bool, Bool)
+    case savedMessagesChats
     var isPlain:Bool {
         switch self {
         case .plain:
@@ -1458,6 +1461,8 @@ enum PeerListMode : Equatable {
             return .forum(peerId: peerId)
         case let .filter(filterId):
             return .chatList(groupId: .group(filterId))
+        case .savedMessagesChats:
+            return .savedMessagesChats
         }
     }
 }
@@ -2230,13 +2235,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 case .peer:
                     id = .chatId(.chatList(location.peerId), location.peerId, -1)
                 case let .thread(data):
-                    let threadId = makeMessageThreadId(data.messageId)
+                    let threadId = data.threadId
                     
                     switch self.mode {
                     case .plain, .filter, .folder:
                         id = .forum(location.peerId)
                     case .forum:
                         id = .chatId(.forum(threadId), location.peerId, -1)
+                    case .savedMessagesChats:
+                        id = .empty
                     }
                 }
                 if self.genericView.tableView.item(stableId: id) == nil {
@@ -2374,6 +2381,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         guard context.layout != .minimisize else {
             return .invoked
         }
+        if self.mode == .savedMessagesChats {
+            return .rejected
+        }
         if genericView.tableView.highlightedItem() != nil {
             genericView.tableView.cancelHighlight()
             return .invoked
@@ -2459,19 +2469,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
-        case .systemDeprecated:
-            break
-        case .sharedFolderUpdated:
-            break
-        case .reveal:
-            break
-        case .empty:
-            break
-        case .loading:
-            break
-        case .space:
-            break
-        case .suspicious:
+        case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:
             break
         }
         if close {

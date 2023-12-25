@@ -564,7 +564,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         modalController?.close()
     })
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         getControl = { [weak controller] in
             let view = controller?.tableView.item(stableId: InputDataEntryId.general(_id_add))?.view as? GeneralInteractedRowView
             return view?.textView

@@ -251,7 +251,7 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
     }
     
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.getBackgroundColor = {
             return theme.colors.background
         }

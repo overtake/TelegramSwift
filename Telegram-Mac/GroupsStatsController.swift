@@ -434,7 +434,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId) -> View
     let controller = InputDataController(dataSignal: signal, title: strings().groupStatsTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.contextObject = statsContext
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true
     }

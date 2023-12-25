@@ -1425,7 +1425,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
             }
         }
     }
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         getControl = { [weak controller] type in
             let id: InputDataIdentifier
             if let type = type {

@@ -470,7 +470,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
               return self?.mediaController
         })
         if let threadInfo = threadInfo {
-            _topicArguments = TopicInfoArguments(context: context, peerId: peerId, state: TopicInfoState(threadId: makeMessageThreadId(threadInfo.message.messageId)), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+            _topicArguments = TopicInfoArguments(context: context, peerId: peerId, state: TopicInfoState(threadId: threadInfo.message.threadId), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
                 return self?.navigationController
             }, mediaController: { [weak self] in
                   return self?.mediaController
@@ -596,7 +596,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let peerId = self.peerId
         let initialSize = atomicSize
         let onMainQueue: Atomic<Bool> = Atomic(value: true)
-        let threadId = threadInfo?.message.messageId
+        let threadId = threadInfo?.message.threadId
                 
         mediaController.navigationController = self.navigationController
         mediaController._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height)
@@ -723,7 +723,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             
             let threadData: Signal<MessageHistoryThreadData?, NoError>
             if let threadId = threadId {
-                let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: makeMessageThreadId(threadId))
+                let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: threadId)
                 threadData = context.account.postbox.combinedView(keys: [key]) |> map { views in
                     let view = views.views[key] as? MessageHistoryThreadInfoView
                     let data = view?.info?.data.get(MessageHistoryThreadData.self)

@@ -762,7 +762,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         }
     }
     
-    controller.didLoaded = { [weak manager] controller, _ in
+    controller.didLoad = { [weak manager] controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:

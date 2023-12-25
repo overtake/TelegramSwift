@@ -252,6 +252,9 @@ class ChatListRowItem: TableRowItem {
         if groupId != .root {
             return false
         }
+        if entryId.savedMessages {
+            return false
+        }
         if context.peerId == peerId {
             return false
         }
@@ -1205,7 +1208,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     var markAsUnread: Bool {
-        return !isSecret && !isUnreadMarked && badgeNode == nil && mentionsCount == nil
+        return !isSecret && !isUnreadMarked && badgeNode == nil && mentionsCount == nil && !entryId.savedMessages
     }
     
     func collapseOrExpandArchive() {
@@ -1384,7 +1387,7 @@ class ChatListRowItem: TableRowItem {
         let mode = self.mode
         let isClosedTopic = self.isClosedTopic
         let isForum = self.isForum
-        
+        let entryId = self.entryId
        
         let deleteChat:()->Void = {
             if let peerId = peerId {
@@ -1504,7 +1507,7 @@ class ChatListRowItem: TableRowItem {
                     }, itemImage: associatedGroupId == .root && !isArchived ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
                 }
                 
-                if context.peerId != peer.id, !isAd {
+                if context.peerId != peer.id, !isAd, !entryId.savedMessages {
                     let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value)
                     
                     let sound: ContextMenuItem = ContextMenuItem(strings().chatListContextSound, handler: {
@@ -1641,7 +1644,7 @@ class ChatListRowItem: TableRowItem {
                     firstGroup.append(muteItem)
                 }
                 
-                if mainPeer is TelegramUser {
+                if mainPeer is TelegramUser, !entryId.savedMessages {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer._asPeer(), mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_clear_history.value))
@@ -1666,12 +1669,12 @@ class ChatListRowItem: TableRowItem {
                         context.bindings.mainController().chatList.hidePromoItem(peerId)
                     }, itemImage: MenuAnimation.menu_archive.value))
                 }
-                if let peer = peer._asPeer() as? TelegramGroup, !isAd {
+                if let peer = peer._asPeer() as? TelegramGroup, !isAd, !entryId.savedMessages {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_delete.value))
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                } else if let peer = peer._asPeer() as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
+                } else if let peer = peer._asPeer() as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo), !entryId.savedMessages {
                     
                     if case .broadcast = peer.info {
                         thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveChannel, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_leave.value))
@@ -1691,7 +1694,7 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus {
+            if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus, !entryId.savedMessages {
                 switch hideStatus {
                 case .collapsed:
                     firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
@@ -1705,7 +1708,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             var submenu: [ContextMenuItem] = []
-            if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat {
+            if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat, !entryId.savedMessages {
                 for item in filters.list {
                     inner: switch item {
                     case .allChats:

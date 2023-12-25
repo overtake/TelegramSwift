@@ -251,7 +251,7 @@ func ChatCalendarModalController(context: AccountContext, sparseCalendar: Sparse
     
     
         
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.updateAfterInitialize(isFlipped: false, bottomInset: 0, drawBorder: false)
 //        controller.tableView.set(stickClass: ChatCalendarHeaderRowItem.self, handler: { item in
 //            

@@ -585,6 +585,11 @@ class ChatPresentationInterfaceState: Equatable {
                 return .block("")
             }
 
+            if chatMode.isSavedMessagesThread, let threadId64 = chatMode.threadId64 {
+                return .action(strings().chatInputOpenChat, { chatInteraction in
+                    chatInteraction.openInfo(PeerId(threadId64), true, nil, nil)
+                }, nil)
+            }
             
             switch chatMode {
             case .pinned:

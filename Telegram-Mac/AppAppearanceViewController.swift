@@ -803,7 +803,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         }
     }
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         if let focusOnItemTag = focusOnItemTag {
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
         }

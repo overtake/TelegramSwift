@@ -676,7 +676,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         return true
     }
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.verticalScrollElasticity = .none
     }
 

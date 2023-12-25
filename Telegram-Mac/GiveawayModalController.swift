@@ -1039,7 +1039,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     
     let controller = InputDataController(dataSignal: signal, title: strings().giveawayTitle)
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.genericView.layer?.masksToBounds = false
         controller.tableView.layer?.masksToBounds = false
         controller.tableView.documentView?.layer?.masksToBounds = false

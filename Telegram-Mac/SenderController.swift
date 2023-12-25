@@ -486,7 +486,7 @@ class Sender: NSObject {
         let threadId: Int64?
 
         if let replyId = replyId {
-            threadId = makeMessageThreadId(replyId.messageId)
+            threadId = Int64(replyId.messageId.id)
         } else {
             threadId = nil
         }

@@ -345,7 +345,7 @@ func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerI
     let joined = context.joined
     let requested = context.requested
     
-    controller.didLoaded = { [weak requested, weak joined] controller, _ in
+    controller.didLoad = { [weak requested, weak joined] controller, _ in
         controller.tableView.setScrollHandler { [weak joined, weak requested] position in
             switch position.direction {
             case .bottom:

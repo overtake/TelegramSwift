@@ -378,7 +378,7 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
     
     controller.contextObject = anyStatsContext
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true
     }
