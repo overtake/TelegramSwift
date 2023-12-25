@@ -441,7 +441,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     }
     
     
-    controller.didLoaded = { [weak manager] controller, _ in
+    controller.didLoad = { [weak manager] controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:

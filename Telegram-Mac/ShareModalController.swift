@@ -1100,7 +1100,7 @@ final class ReplyForwardMessageObject : ShareObject {
                             let initialAction: ChatInitialAction = .reply(subject, behavior: .automatic)
                             
                             if let threadId = threadId {
-                                return ForumUI.openTopic(makeMessageThreadId(threadId), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
+                                return ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
                                 |> take(1)
                                 |> ignoreValues
                                 |> castError(String.self)
@@ -1245,7 +1245,7 @@ final class ForwardMessagesObject : ShareObject {
                                 let initialAction: ChatInitialAction = .forward(messageIds: messageIds, text: comment, behavior: .automatic)
                                 
                                 if let threadId = threadId {
-                                    return ForumUI.openTopic(makeMessageThreadId(threadId), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
+                                    return ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
                                     |> take(1)
                                     |> ignoreValues
                                     |> castError(String.self)

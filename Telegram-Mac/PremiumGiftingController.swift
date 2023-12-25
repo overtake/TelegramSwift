@@ -711,7 +711,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
     
     let controller = InputDataController(dataSignal: signal, title: strings().premiumGiftTitle)
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.genericView.layer?.masksToBounds = false
         controller.tableView.layer?.masksToBounds = false
         controller.tableView.documentView?.layer?.masksToBounds = false

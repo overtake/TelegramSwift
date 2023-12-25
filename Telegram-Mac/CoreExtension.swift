@@ -25,11 +25,15 @@ import InputView
 
 func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
     if let messageId = messageId {
-        return makeMessageThreadId(messageId)
+        return Int64(messageId.id)
     } else {
         return nil
     }
-    
+}
+
+func makeThreadIdMessageId(peerId: PeerId, threadId: Int64) -> MessageId {
+    let messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId))
+    return messageId
 }
 
 
@@ -1126,7 +1130,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
             case let .thread(data, mode):
                 switch mode {
                 case .comments, .replies, .topic:
-                    if message.id == data.messageId {
+                    if message.id.id == data.threadId {
                         return false
                     }
                     if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
@@ -1134,6 +1138,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                     } else {
                         return peer.canSendMessage(false, threadData: threadData)
                     }
+                case .savedMessages:
+                    return false
                 }
             case .pinned:
                 return false
@@ -2653,11 +2659,11 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                     }
                 case let .thread(data):
                     if threadId == nil {
-                        if data.messageId.peerId == peerId {
+                        if data.peerId == peerId {
                             context.bindings.rootNavigation().close()
                         }
                     } else {
-                        if makeMessageThreadId(data.messageId) == threadId {
+                        if data.threadId == threadId {
                             context.bindings.rootNavigation().close()
                         }
                     }

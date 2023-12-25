@@ -57,11 +57,21 @@ enum UIChatListEntryId : Hashable {
     case forum(PeerId)
     case reveal
     case empty
+    case savedMessageIndex(EngineChatList.Item.Id)
     case loading
     case systemDeprecated
     case sharedFolderUpdated
     case space
     case suspicious
+    
+    var savedMessages: Bool {
+        switch self {
+        case .savedMessageIndex:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 
@@ -1145,6 +1155,8 @@ class ChatListController : PeersListController {
             case .forum:
                 navigationController?.back()
                 return
+            case .savedMessagesChats:
+                return
             }
         }
         
@@ -1624,8 +1636,18 @@ class ChatListController : PeersListController {
                     if let modalAction = navigation.modalAction {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }
-                    controller.clearReplyStack()
-                    controller.scrollUpOrToUnread()
+                    if controller.chatInteraction.mode.isSavedMessagesThread {
+                        navigation.removeUntil(ChatController.self)
+                        let controller = navigation.first {
+                            $0.className == NSStringFromClass(ChatController.self)
+                        }
+                        if let controller = controller {
+                            navigation.push(controller)
+                        }
+                    } else {
+                        controller.clearReplyStack()
+                        controller.scrollUpOrToUnread()
+                    }
                 case .scheduled, .pinned:
                     navigation.back()
                 }

@@ -16,6 +16,11 @@ import InAppSettings
 import ObjcUtils
 import ThemeSettings
 
+struct ChatTitleCounters : Equatable {
+    var replies: Int32?
+    var online: Int32?
+}
+
 struct ChatFocusTarget {
     var messageId: MessageId
     var string: String?
@@ -40,9 +45,10 @@ enum ReplyThreadMode : Equatable {
     case replies(origin: MessageId)
     case comments(origin: MessageId)
     case topic(origin: MessageId)
+    case savedMessages(origin: MessageId)
     var originId: MessageId {
         switch self {
-        case let .replies(id), let .comments(id), let .topic(id):
+        case let .replies(id), let .comments(id), let .topic(id), let .savedMessages(id):
             return id
         }
     }
@@ -56,7 +62,7 @@ enum ChatMode : Equatable {
     var threadId: MessageId? {
         switch self {
         case let .thread(data, _):
-            return data.messageId
+            return data.effectiveTopId
         default:
             return nil
         }
@@ -69,11 +75,25 @@ enum ChatMode : Equatable {
             return nil
         }
     }
+    var isSavedMessagesThread: Bool {
+        switch self {
+        case let .thread(_, mode):
+            switch mode {
+            case .savedMessages:
+                return true
+            default:
+                return false
+            }
+        default:
+            return false
+        }
+    }
     
     var threadId64: Int64? {
-        if let threadId = threadId {
-            return makeMessageThreadId(threadId)
-        } else {
+        switch self {
+        case let .thread(data, _):
+            return data.threadId
+        default:
             return nil
         }
     }
@@ -101,7 +121,7 @@ enum ChatMode : Equatable {
         switch self {
         case let .thread(_, mode):
             switch mode {
-            case .topic:
+            case .topic, .savedMessages:
                 return false
             default:
                 return true
@@ -394,12 +414,12 @@ class ChatControllerView : View, ChatInputDelegate {
             case let .peer(peerId):
                 switch chatInteraction.mode {
                 case .pinned:
-                    location = .peer(peerId: peerId, fromId: fromId, tags: .pinned, topMsgId: chatInteraction.mode.threadId, minDate: nil, maxDate: nil)
+                    location = .peer(peerId: peerId, fromId: fromId, tags: .pinned, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
                 default:
-                    location = .peer(peerId: peerId, fromId: fromId, tags: nil, topMsgId: chatInteraction.mode.threadId, minDate: nil, maxDate: nil)
+                    location = .peer(peerId: peerId, fromId: fromId, tags: nil, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
                 }
             case let .thread(data):
-                location = .peer(peerId: data.messageId.peerId, fromId: fromId, tags: nil, topMsgId: data.messageId, minDate: nil, maxDate: nil)
+                location = .peer(peerId: data.peerId, fromId: fromId, tags: nil, threadId: data.threadId, minDate: nil, maxDate: nil)
             }
             return context.engine.messages.searchMessages(location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.extendedMedia is TelegramMediaAction) }), $0.1)}
         })
@@ -1580,6 +1600,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let liveTranslateDisposable = MetaDisposable()
     private let presentationDisposable = DisposableSet()
     private let storiesDisposable = MetaDisposable()
+    private let answersAndOnlineDisposable = MetaDisposable()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     
@@ -1671,6 +1692,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     
     private struct State : Equatable {
+        
+       
+        
         var transribe: [MessageId: TranscribeAudioState] = [:]
         var pollAnswers: [MessageId : ChatPollStateData] = [:]
         var topicCreatorId: PeerId?
@@ -1682,6 +1706,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var presentation_genuie:TelegramPresentationTheme = theme
         var bespoke_wallpaper: ThemeWallpaper?
         var presentation_emoticon: String? = nil
+        
+        var answersAndOnline: ChatTitleCounters = .init()
     }
     private func updateState(_ f:(State)->State) -> Void {
         stateValue.set(uiState.modify(f))
@@ -1871,7 +1897,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var hasPhotos: Bool = false
     private func updateHasPhotos(_ theme: TelegramPresentationTheme) {
         if let peer = self.chatInteraction.peer {
-            let peerAccept = peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId
+            let peerAccept = peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId || mode.isSavedMessagesThread
             self.hasPhotos = peerAccept && theme.bubbled
         } else {
             self.hasPhotos = false
@@ -2026,7 +2052,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let peerId = self.chatInteraction.peerId
         let threadId = chatInteraction.mode.threadId
         let threadId64 = chatInteraction.mode.threadId64
-        
+        let isThread = chatInteraction.mode.isThreadMode
+
         let takeReplyId:()->EngineMessageReplySubject? = { [weak self] in
             var reply = self?.chatInteraction.presentation.interfaceState.replyMessageId
             if reply == nil, let threadId = threadId {
@@ -2034,9 +2061,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             return reply
         }
-        if let id = threadId {
-            let threadId = makeMessageThreadId(id)
-            keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: peerId, threadId: threadId).start()
+        if let threadId64 = threadId64 {
+            keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: peerId, threadId: threadId64).start()
         }
 
         
@@ -2088,7 +2114,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
             let _ = context.engine.peers.checkPeerChatServiceActions(peerId: peerId).start()
         case let .thread(data):
-            self.peerView.set(context.account.viewTracker.peerView(data.messageId.peerId) |> map {Optional($0)})
+            var peerId: PeerId = data.peerId
+            if let threadMode = mode.threadMode {
+                switch threadMode {
+                case .savedMessages:
+                    peerId = PeerId(data.threadId)
+                default:
+                    break
+                }
+            }
+            self.peerView.set(context.account.viewTracker.peerView(peerId) |> map {Optional($0)})
         }
         
         
@@ -2187,7 +2222,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 switch chatLocation {
                 case let .thread(data):
                     if mode.isThreadMode {
-                        additionalData.append(.message(data.messageId))
+                        additionalData.append(.message(data.effectiveTopId))
                     }
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
@@ -2470,7 +2505,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             recommendedChannels = .single(nil)
         }
                 
-
+        
         
       
         presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal, context.chatThemes).start(next: { [weak self] presentation, wallpaper, translate, storyState, emoticonThemes in
@@ -2624,7 +2659,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case let .thread(data):
                         if mode.isThreadMode {
                             if view.earlierId == nil, !view.isLoading, !view.holeEarlier {
-                                topMessages = initialData.cachedDataMessages?[data.messageId]
+                                topMessages = initialData.cachedDataMessages?[data.effectiveTopId]
                             } else {
                                 topMessages = nil
                             }
@@ -3472,12 +3507,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             strongSelf.chatInteraction.invokeInitialAction()
                         }
                     } else {
-                        strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+                        if mode.isSavedMessagesThread {
+                            strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+                        } else {
+                            strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+                        }
                     }
                 } else {
                     
                     let threadInfo: ThreadInfo?
-                    if strongSelf.mode.isTopicMode, peerId == strongSelf.chatInteraction.peerId {
+                    if (strongSelf.mode.isTopicMode && peerId == strongSelf.chatInteraction.peerId) || strongSelf.mode.isSavedMessagesThread {
                         switch strongSelf.mode {
                         case let .thread(data, _):
                             threadInfo = .init(message: data, isChannelPost: false, isEmpty: false, contextHolder: strongSelf.chatLocationContextHolder)
@@ -3494,7 +3533,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         stories = nil
                     }
                     if let navigation = strongSelf.navigationController {
-                        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories)
+                        if mode.isSavedMessagesThread {
+                            let controller = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo)
+                            navigation.push(controller)
+                        } else {
+                            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories)
+                        }
                     }
                 }
             }
@@ -4377,7 +4421,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.restartTopic = {
             switch mode {
             case let .thread(data, _):
-                _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: makeMessageThreadId(data.messageId), isClosed: false).start()
+                _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: data.threadId, isClosed: false).start()
             default:
                 break
             }
@@ -5125,7 +5169,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 |> distinctUntilChanged
         case let .thread(data, _):
             if mode.isThreadMode {
-                topPinnedMessage = context.account.postbox.messageView(data.messageId) |> map { view in
+                topPinnedMessage = context.account.postbox.messageView(data.effectiveTopId) |> map { view in
                     if let message = view.message {
                         return ChatPinnedMessage(messageId: message.id, message: message, others: [message.id], isLatest: true, index: 0, totalCount: 1)
                     } else {
@@ -5290,7 +5334,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         case .peer:
             threadInfo = .single(nil)
         case .thread(let data):
-            let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: makeMessageThreadId(data.messageId))
+            let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: data.threadId)
             threadInfo = context.account.postbox.combinedView(keys: [key]) |> map { views in
                 let view = views.views[key] as? MessageHistoryThreadInfoView
                 let data = view?.info?.data.get(MessageHistoryThreadData.self)
@@ -5313,7 +5357,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
             guard let `self` = self else {return}
             let title = (self.centerBarView as? ChatTitleBarView)
-            title?.update(postboxView as? PeerView, story: uiState.storyState, animated: !isFirst.swap(false))
+            title?.update(postboxView as? PeerView, story: uiState.storyState, counters: uiState.answersAndOnline, animated: !isFirst.swap(false))
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
@@ -6025,6 +6069,100 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .single(Void())
         }
         
+        let counters: Signal<ChatTitleCounters, NoError> = peerView.get() |> mapToSignal { peerView in
+            let peerView = peerView as? PeerView
+            
+            let answersCount: Signal<Int32?, NoError>
+            let onlineMemberCount:Signal<Int32?, NoError>
+
+            
+            if let threadId = threadId64 {
+                switch mode {
+                case let .thread(data, _):
+                    if mode.isSavedMessagesThread {
+                        let savedMessagesPeerId: PeerId = PeerId(data.threadId)
+                        
+                        let threadPeerId = savedMessagesPeerId
+                        let basicPeerKey: PostboxViewKey = .basicPeer(threadPeerId)
+                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: savedMessagesPeerId.toInt64(), namespace: Namespaces.Message.Cloud)
+                        answersCount = context.account.postbox.combinedView(keys: [basicPeerKey, countViewKey])
+                        |> map { views -> Int32? in
+                            let peer = ((views.views[basicPeerKey] as? BasicPeerView)?.peer).flatMap(EnginePeer.init)
+                            
+                            var messageCount = 0
+                            if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                messageCount += Int(count)
+                            }
+                            
+                            return Int32(messageCount)
+                        }
+
+                    } else if isThread {
+                        answersCount = context.account.postbox.messageView(data.effectiveTopId)
+                            |> map {
+                                $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
+                            }
+                            |> map {
+                                $0?.count
+                            }
+                            |> deliverOnMainQueue
+                    } else {
+                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud)
+                        let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local)
+                        
+                        answersCount = context.account.postbox.combinedView(keys: [countViewKey, localCountViewKey])
+                        |> map { views -> Int32 in
+                            var messageCount = 0
+                            if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                if threadId == 1 {
+                                    messageCount += Int(count)
+                                } else {
+                                    messageCount += max(Int(count) - 1, 0)
+                                }
+                            }
+                            if let summaryView = views.views[localCountViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                messageCount += Int(count)
+                            }
+                            return Int32(messageCount)
+                        } |> map(Optional.init) |> deliverOnMainQueue
+                    }
+                default:
+                    answersCount = .single(nil)
+                }
+            } else {
+                answersCount = .single(nil)
+            }
+            
+            
+            if let peerView = peerView, let peer = peerViewMainPeer(peerView), peer.isSupergroup || peer.isGigagroup {
+                if let cachedData = peerView.cachedData as? CachedChannelData {
+                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    } else {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    }
+
+                } else {
+                    onlineMemberCount = .single(nil)
+                }
+            } else {
+                onlineMemberCount = .single(nil)
+            }
+            
+            return combineLatest(answersCount, onlineMemberCount) |> map {
+                return .init(replies: $0, online: $1)
+            }
+        } |> deliverOnMainQueue
+        
+       
+        
+        self.answersAndOnlineDisposable.set(counters.start(next: { [weak self] counters in
+            self?.updateState { current in
+                var current = current
+                current.answersAndOnline = counters
+                return current
+            }
+        }))
         
         pollChannelDiscussionDisposable.set(discussion.start())
         
@@ -7418,7 +7556,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.context.globalPeerHandler.set(.single(chatLocation))
+        if !mode.isSavedMessagesThread {
+            self.context.globalPeerHandler.set(.single(chatLocation))
+        }
         self.genericView.tableView.notifyScrollHandlers()
         self.genericView.updateHeader(chatInteraction.presentation, false, false)
         if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {

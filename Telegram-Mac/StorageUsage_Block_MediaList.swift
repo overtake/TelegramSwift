@@ -298,7 +298,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
     
     let controller = InputDataController(dataSignal: signal, title: " ")
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         gallery = .init(tableView: controller.tableView)
         getTableView = { [weak controller] in
             return controller?.tableView

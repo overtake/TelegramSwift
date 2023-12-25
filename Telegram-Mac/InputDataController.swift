@@ -430,7 +430,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var validateData:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
     var afterDisappear: ()->Void
     var updateDatas:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
-    var didLoaded:(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void
+    var didLoad:(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void
     private let _removeAfterDisappear: Bool
     private let hasDone: Bool
     var updateDoneValue:([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void
@@ -457,6 +457,8 @@ class InputDataController: GenericViewController<InputDataView> {
     var _becomeFirstResponder:(()->Bool)?
     var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
+    var didDisappear: ((InputDataController)->Void)?
+
     var afterViewDidLoad:(()->Void)?
     
     var _abolishWhenNavigationSame: Bool = false
@@ -467,13 +469,13 @@ class InputDataController: GenericViewController<InputDataView> {
     
     var autoInputAction: Bool = false
     
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
         self.updateDatas = updateDatas
         self.doneString = doneString
-        self.didLoaded = didLoaded
+        self.didLoad = didLoad
         self.identifier = identifier
         self._removeAfterDisappear = removeAfterDisappear
         self.hasDone = hasDone
@@ -723,7 +725,7 @@ class InputDataController: GenericViewController<InputDataView> {
             let wasReady: Bool = self.didSetReady
             self.readyOnce()
             if !wasReady {
-                self.didLoaded(self, self.fetchData())
+                self.didLoad(self, self.fetchData())
             }
         }))
     }
@@ -862,6 +864,11 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func backKeyAction() -> KeyHandlerResult {
         return .invokeNext
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.didDisappear?(self)
     }
     
     override func viewDidAppear(_ animated: Bool) {

@@ -523,7 +523,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(MetalEngineTestController())
+            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
+            //context.bindings.rootNavigation().push(MetalEngineTestController())
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
@@ -642,7 +643,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 if let fromId = fromId {
                     context.navigateToThread(threadId, fromId: fromId)
                 } else if let _ = threadData {
-                    _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context).start()
+                    _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: context).start()
                 }
             }
         } else {

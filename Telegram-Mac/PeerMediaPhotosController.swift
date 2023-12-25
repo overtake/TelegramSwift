@@ -413,7 +413,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         let mode: ChatMode
         let contextHolder: Atomic<ChatLocationContextHolder?>
         if let threadInfo = threadInfo {
-            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
             contextHolder = threadInfo.contextHolder
         } else {
             mode = .history
@@ -456,7 +456,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 return .single((nil, SearchResult(result: externalSearch.messages), search, nil))
             } else if !search.request.isEmpty {
                 
-                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, topMsgId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
+                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, threadId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
                 
                 return .single((nil, SearchResult(result: nil), search, nil)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search, nil) })
             } else {

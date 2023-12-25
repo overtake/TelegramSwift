@@ -95,6 +95,8 @@
     private let separator:View = View()
     
     fileprivate let view: PeerMediaControllerView
+    fileprivate var emptyView: PeerMediaEmptyRowView?
+    fileprivate var emptyItem: PeerMediaEmptyRowItem?
     init(frame frameRect: NSRect, isSegmentHidden: Bool) {
         view = PeerMediaControllerView(frame: NSMakeRect(0, sectionOffset, min(600, frameRect.width - sectionOffset * 2), frameRect.height - sectionOffset), isSegmentHidden: isSegmentHidden)
         super.init(frame: frameRect)
@@ -133,7 +135,7 @@
         let inset:CGFloat = view.isSelectionState ? 50 : 0
         actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
         separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
-        
+        emptyView?.frame = bounds
     }
     
     var mainView:NSView? {
@@ -166,6 +168,31 @@
     func updateSearchState(_ state: MediaSearchState, updateSearchState:@escaping(SearchState)->Void, toggle:@escaping()->Void) {
         self.view.updateSearchState(state, updateSearchState: updateSearchState, toggle: toggle)
     }
+     
+     func updateEmpty(_ isEmpty: Bool, animated: Bool) {
+         self.topPanelView.isHidden = isEmpty
+         if isEmpty {
+             let current: PeerMediaEmptyRowView
+             if let view = self.emptyView {
+                 current = view
+             } else {
+                 current = .init(frame: self.bounds)
+                 self.emptyView = current
+                 self.addSubview(current)
+                 if animated {
+                     self.emptyView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                 }
+             }
+             
+             let item = self.emptyItem ?? PeerMediaEmptyRowItem(bounds.size, tags: nil)
+             self.emptyItem = item
+             current.set(item: item, animated: animated)
+         } else if let view = emptyView {
+             performSubviewRemoval(view, animated: animated)
+             self.emptyView = nil
+             self.emptyItem = nil
+         }
+     }
     
     func changeState(selectState:Bool, animated:Bool) {
         self.view.changeState(selectState: selectState, animated: animated)
@@ -182,6 +209,9 @@
     fileprivate var segmentPanelView: SegmentContainerView {
         return self.view.segmentPanelView
     }
+     fileprivate var topPanelView: NSView {
+         return self.view.topPanelView
+     }
     fileprivate var searchPanelView: SearchContainerView? {
         return self.view.searchPanelView
     }
@@ -193,7 +223,7 @@
  
  class PeerMediaControllerView : View {
     
-    private let topPanelView = GeneralRowContainerView(frame: .zero)
+    fileprivate let topPanelView = GeneralRowContainerView(frame: .zero)
     fileprivate let segmentPanelView: SegmentContainerView
     fileprivate var searchPanelView: SearchContainerView?
     
@@ -403,6 +433,9 @@
                 return strings().peerMediaStories
             }
         }
+         if self == .savedMessages {
+             return strings().peerMediaSavedMessages
+         }
         return ""
     }
  }
@@ -485,11 +518,12 @@
     private let mediaGrid:PeerMediaPhotosController
     private let gifs: PeerMediaPhotosController
     private let stories: StoryMediaController
+    private var savedMessages: InputDataController?
 
     private let listControllers:[PeerMediaListController]
     private let members: ViewController
     private let commonGroups: ViewController
-     private let similarChannels: ViewController
+    private let similarChannels: ViewController
     
      private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups, .similarChannels]
     
@@ -543,6 +577,11 @@
         self.peerId = peerId
         self.threadInfo = threadInfo
         self.isProfileIntended = isProfileIntended
+        if peerId == context.peerId {
+            self.savedMessages = SavedPeersController(context: context)
+        } else {
+            self.savedMessages = nil
+        }
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
         self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
@@ -582,6 +621,19 @@
     var unableToHide: Bool {
         return self.genericView.activePanel is SearchContainerView || self.state != .Normal || !onTheTop
     }
+     
+     var hasSearch: Bool {
+         switch mode {
+         case .commonGroups:
+             return false
+         case .stories:
+             return false
+         case .savedMessages:
+             return false
+         default:
+             return self.externalSearchData == nil
+         }
+     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -593,7 +645,7 @@
         
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .commonGroups, self.mode != .stories, self.externalSearchData == nil else {
+            guard let `self` = self, !self.hasSearch else {
                 return .rejected
             }
             if self.mode == .members {
@@ -814,6 +866,7 @@
         let storiesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let similarChannels:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+        let savedTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
 
         membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
             if threadInfo != nil {
@@ -836,6 +889,9 @@
         }
         
         commonGroupsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
+            if threadInfo != nil {
+                return (exist: false, loaded: true)
+            }
             if view.peerId.namespace == Namespaces.Peer.SecretChat {
                 return (exist: false, loaded: false)
             }
@@ -848,7 +904,7 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
-        if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
+        if threadInfo == nil, peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
                 return (exist: state.totalCount > 0, loaded: true)
             } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -858,7 +914,7 @@
             storiesTab = .single((tag: .stories, exists: false, hasLoaded: true))
         }
         
-        if peerId.namespace == Namespaces.Peer.CloudChannel {
+        if threadInfo == nil, peerId.namespace == Namespaces.Peer.CloudChannel {
             similarChannels = context.engine.peers.recommendedChannels(peerId: peerId) |> map { channels -> (exist: Bool, loaded: Bool) in
                 return (exist: (channels?.channels.count ?? 0) > 0, loaded: true)
             } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -866,6 +922,21 @@
             }
         } else {
             similarChannels = .single((tag: .similarChannels, exists: false, hasLoaded: true))
+        }
+        
+        if threadInfo == nil, peerId == context.peerId {
+            let savedKeyId = PostboxViewKey.savedMessagesIndex(peerId: context.peerId)
+            let viewSignal: Signal<Int, NoError> = context.account.postbox.combinedView(keys: [savedKeyId]) |> map {
+                return ($0.views[savedKeyId] as? MessageHistorySavedMessagesIndexView)?.items.count ?? 0
+            }
+
+            savedTab = viewSignal |> map { state -> (exist: Bool, loaded: Bool) in
+                return (exist: state > 0, loaded: true)
+            } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                return (tag: .savedMessages, exists: data.exist, hasLoaded: data.loaded)
+            }
+        } else {
+            savedTab = .single((tag: .savedMessages, exists: false, hasLoaded: true))
         }
         
         
@@ -879,18 +950,19 @@
         let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
             return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(location, count: 3, tagMask: tags.tagsValue)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
-                let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
+                let hasLoaded = view.entries.count >= 1 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
             }
             
         }
         
-        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab, similarChannels) |> map { members, general, commonGroups, stories, similarChannels -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab, similarChannels, savedTab) |> map { members, general, commonGroups, stories, similarChannels, savedTab -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
             var general = general
             general.insert(members, at: 0)
             general.append(commonGroups)
             general.insert(stories, at: 0)
             general.append(similarChannels)
+            general.insert(savedTab, at: 0)
             return general
         }
         
@@ -972,6 +1044,17 @@
                     return self.stories.ready.get() |> map { ready in
                         return data
                     }
+                case .savedMessages:
+                    if let savedMessages = self.savedMessages {
+                        if !savedMessages.isLoaded() {
+                            savedMessages.loadViewIfNeeded(self.genericView.view.bounds)
+                        }
+                        return savedMessages.ready.get() |> map { ready in
+                            return data
+                        }
+                    } else {
+                        return .single(data)
+                    }
                 default:
                     if !self.listControllers[Int(selected.rawValue)].isLoaded() {
                         if let externalSearchData = self.externalSearchData {
@@ -1022,7 +1105,7 @@
             let mode: ChatMode
             if let threadInfo = threadInfo, peerId == id {
                 location = .thread(threadInfo.message)
-                mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+                mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
             } else {
                 location = .peer(id)
                 mode = .history
@@ -1187,6 +1270,7 @@
                     items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
+                self.genericView.updateEmpty(items.isEmpty, animated: !firstTabAppear)
                 if let selected = selected {
                     self.toggle(with: selected, animated: !firstTabAppear)
                 }
@@ -1247,7 +1331,7 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .commonGroups && mode != .similarChannels && mode != .stories && externalSearchData == nil)
+        centerBar.updateSearchVisibility(self.hasSearch)
         
         
         if let controller = controller as? PeerMediaSearchable {
@@ -1290,6 +1374,12 @@
             return self.gifs
         case .stories:
             return stories
+        case .savedMessages:
+            if let savedMessages = self.savedMessages {
+                return savedMessages
+            } else {
+                return ViewController()
+            }
         default:
             return self.listControllers[Int(mode.rawValue)]
         }

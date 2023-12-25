@@ -365,8 +365,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                         for attr in message.attributes {
                             if let attribute = attr as? ReplyMessageAttribute {
                                 if let threadId = attribute.threadMessageId {
-                                    let id = makeMessageThreadId(threadId)
-                                    threadData = transaction.getMessageHistoryThreadInfo(peerId: message.id.peerId, threadId: id)?.data.get(MessageHistoryThreadData.self)
+                                    threadData = transaction.getMessageHistoryThreadInfo(peerId: message.id.peerId, threadId: Int64(threadId.id))?.data.get(MessageHistoryThreadData.self)
                                 }
                             }
                         }

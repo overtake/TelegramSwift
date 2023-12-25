@@ -1066,6 +1066,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isForum && !item.isTopic, !isResorting {
                 return .clear
             }
+            if item.entryId.savedMessages {
+                return theme.colors.background
+            }
             if item.isCollapsed {
                 return theme.colors.grayBackground
             }

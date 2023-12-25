@@ -164,7 +164,7 @@ func SearchSettingsController(context: AccountContext, searchQuery: Signal<Searc
     
     let controller = InputDataController(dataSignal: entries, title: "")
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.genericView.tableView.needUpdateVisibleAfterScroll = true
         controller.genericView.tableView.border = [.Right]
         controller.tableView.emptyItem = SearchSettingsEmptyItem(NSZeroSize)

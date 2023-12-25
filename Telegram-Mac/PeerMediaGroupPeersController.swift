@@ -584,7 +584,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         theme.colors.listBackground
     }
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.setScrollHandler { position in
             if let loadMoreControl = loadMoreControl {
                 switch position.direction {

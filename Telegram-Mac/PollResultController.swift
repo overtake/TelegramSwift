@@ -359,13 +359,13 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         }
     }
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.set(stickClass: PollResultStickItem.self, handler: { _ in
             
         })
     }
     
-//    controller.didLoaded = { controller, _ in
+//    controller.didLoad = { controller, _ in
 //        controller.tableView.setScrollHandler { position in
 //            switch position.direction {
 //            case .bottom:

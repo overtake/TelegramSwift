@@ -425,7 +425,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
         modalController?.close()
     })
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak controller] position in
             guard let controller = controller else {
                 return

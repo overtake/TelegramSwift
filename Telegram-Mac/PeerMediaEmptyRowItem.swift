@@ -14,24 +14,30 @@ import Postbox
 
 class PeerMediaEmptyRowItem: TableRowItem {
     let textLayout:TextViewLayout
-    let tags:MessageTags
+    let tags:MessageTags?
     let image:CGImage
-    init(_ initialSize:NSSize, tags:MessageTags) {
+    init(_ initialSize:NSSize, tags:MessageTags?) {
         self.tags = tags
         let attr:NSAttributedString
-        if tags.contains(.file) {
-            image = theme.icons.mediaEmptyFiles
-            attr = .initialize(string: strings().peerMediaSharedFilesEmptyList1, color: theme.colors.grayText, font: .normal(.header))
-        } else if tags.contains(.music) || tags.contains(.voiceOrInstantVideo) {
-            image = theme.icons.mediaEmptyMusic
-            attr = .initialize(string: tags.contains(.voiceOrInstantVideo) ? strings().peerMediaSharedVoiceEmptyList : strings().peerMediaSharedMusicEmptyList, color: theme.colors.grayText, font: .normal(.header))
-        } else if tags.contains(.webPage) {
-            image = theme.icons.mediaEmptyLinks
-            attr = .initialize(string: strings().peerMediaSharedLinksEmptyList, color: theme.colors.grayText, font: .normal(.header))
+        if let tags = tags {
+            if tags.contains(.file) {
+                image = theme.icons.mediaEmptyFiles
+                attr = .initialize(string: strings().peerMediaSharedFilesEmptyList1, color: theme.colors.grayText, font: .normal(.header))
+            } else if tags.contains(.music) || tags.contains(.voiceOrInstantVideo) {
+                image = theme.icons.mediaEmptyMusic
+                attr = .initialize(string: tags.contains(.voiceOrInstantVideo) ? strings().peerMediaSharedVoiceEmptyList : strings().peerMediaSharedMusicEmptyList, color: theme.colors.grayText, font: .normal(.header))
+            } else if tags.contains(.webPage) {
+                image = theme.icons.mediaEmptyLinks
+                attr = .initialize(string: strings().peerMediaSharedLinksEmptyList, color: theme.colors.grayText, font: .normal(.header))
+            } else {
+                image = theme.icons.mediaEmptyShared
+                attr = .initialize(string: strings().peerMediaSharedMediaEmptyList, color: theme.colors.grayText, font: .normal(.header))
+            }
         } else {
             image = theme.icons.mediaEmptyShared
-            attr = .initialize(string: strings().peerMediaSharedMediaEmptyList, color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: strings().peerMediaShareMediaSavedMessages, color: theme.colors.grayText, font: .normal(.header))
         }
+        
         textLayout = TextViewLayout(attr, alignment: .center)
         super.init(initialSize)
     }

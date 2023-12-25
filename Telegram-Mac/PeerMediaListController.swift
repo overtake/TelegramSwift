@@ -416,7 +416,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let historyPromise: Promise<PeerMediaUpdate> = Promise()
         let context = self.context
         let peerId = self.peerId
-        let threadId = self.threadInfo?.message.messageId
+        let threadId = self.threadInfo?.message.threadId
         
         let chatLocationInput = self.chatLocationInput
 
@@ -445,7 +445,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                     }
                 } else {
                     let searchMessagesLocation: SearchMessagesLocation
-                    searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask, topMsgId: threadId, minDate: nil, maxDate: nil)
+                    searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask, threadId: threadId, minDate: nil, maxDate: nil)
                     
                     let signal = context.engine.messages.searchMessages(location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil, searchState: searchState, contentSettings: context.contentSettings)
@@ -478,7 +478,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let mode: ChatMode
         let contextHolder: Atomic<ChatLocationContextHolder?>
         if let threadInfo = threadInfo {
-            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
             contextHolder = threadInfo.contextHolder
         } else {
             mode = .history

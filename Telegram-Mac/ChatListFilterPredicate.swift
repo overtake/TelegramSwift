@@ -99,6 +99,7 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
 public enum ChatListControllerLocation {
     case chatList(groupId: PeerGroupId)
     case forum(peerId: PeerId)
+    case savedMessagesChats
 }
 
 struct ChatListViewUpdate {
@@ -251,6 +252,70 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                     storyStats: nil
                 ))
 
+            }
+            
+            let list = EngineChatList(
+                items: items.reversed(),
+                groupItems: [],
+                additionalItems: [],
+                hasEarlier: false,
+                hasLater: false,
+                isLoading: view.isLoading
+            )
+            
+            let type: ViewUpdateType
+            if isFirst {
+                type = .Initial
+            } else {
+                type = .Generic
+            }
+            isFirst = false
+            return ChatListViewUpdate(list: list, type: type, scroll: nil, removeNextAnimation: false)
+        }
+    case .savedMessagesChats:
+        let viewKey: PostboxViewKey = .savedMessagesIndex(peerId: account.peerId)
+        
+        var isFirst = true
+        return account.postbox.combinedView(keys: [viewKey])
+        |> map { views -> ChatListViewUpdate in
+            guard let view = views.views[viewKey] as? MessageHistorySavedMessagesIndexView else {
+                preconditionFailure()
+            }
+            
+            var items: [EngineChatList.Item] = []
+            for item in view.items {
+                guard let sourcePeer = item.peer else {
+                    continue
+                }
+                
+                let sourceId = PeerId(item.id)
+                
+                var messages: [EngineMessage] = []
+                if let topMessage = item.topMessage {
+                    messages.append(EngineMessage(topMessage))
+                }
+                
+                let mappedMessageIndex = MessageIndex(id: MessageId(peerId: sourceId, namespace: item.index.id.namespace, id: item.index.id.id), timestamp: item.index.timestamp)
+                
+                items.append(EngineChatList.Item(
+                    id: .chatList(sourceId),
+                    index: .chatList(ChatListIndex(pinningIndex: item.pinnedIndex.flatMap(UInt16.init), messageIndex: mappedMessageIndex)),
+                    messages: messages,
+                    readCounters: nil,
+                    isMuted: false,
+                    draft: nil,
+                    threadData: nil,
+                    renderedPeer: EngineRenderedPeer(peer: EnginePeer(sourcePeer)),
+                    presence: nil,
+                    hasUnseenMentions: false,
+                    hasUnseenReactions: false,
+                    forumTopicData: nil,
+                    topForumTopicItems: [],
+                    hasFailed: false,
+                    isContact: false,
+                    autoremoveTimeout: nil,
+                    storyStats: nil
+                ))
             }
             
             let list = EngineChatList(

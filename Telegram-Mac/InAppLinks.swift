@@ -485,9 +485,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             let navigation = context.bindings.rootNavigation()
             let current = navigation.controller as? ChatController
             
-            if let current = current, current.chatInteraction.mode.threadId == result.message.messageId {
+            if let current = current, current.chatInteraction.mode.threadId64 == result.message.threadId {
                 if let commentId = commentId {
-                    let commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
+                    let commentMessageId = MessageId(peerId: result.message.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                     current.chatInteraction.focusMessageId(nil, .init(messageId: commentMessageId, string: nil), .CenterEmpty)
                 }
             } else {
@@ -501,7 +501,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
                 var commentMessageId: MessageId? = nil
                 if let commentId = commentId {
-                    commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
+                    commentMessageId = MessageId(peerId: result.message.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
                 navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), focusTarget: .init(messageId: commentMessageId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
@@ -589,11 +589,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         case .progress:
                             break
                         case let .result(messages):
-                            _ = ForumUI.openTopic(messages.first?.threadId ?? makeMessageThreadId(messageId), peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
-                                if !result {
-                                    ForumUI.open(peer.id, context: context)
-                                }
-                            })
+                            if let threadId = messages.first?.threadId {
+                                _ = ForumUI.openTopic(threadId, peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
+                                    if !result {
+                                        ForumUI.open(peer.id, context: context)
+                                    }
+                                })
+                            }
                         }
                         
                     })
@@ -1906,7 +1908,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if let range = userAndPost[1].range(of: "?") {
                                     appname = String(userAndPost[1][..<range.lowerBound])
                                 }
-                                action = .makeWebview(appname: appname, command: params[keyURLStartapp])
+                                if !appname.isEmpty {
+                                    action = .makeWebview(appname: appname, command: params[keyURLStartapp])
+                                }
                             }
                             
                             if action == nil, let messageId = messageId {

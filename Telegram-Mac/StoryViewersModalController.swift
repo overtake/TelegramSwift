@@ -1017,7 +1017,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         }
     }
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
