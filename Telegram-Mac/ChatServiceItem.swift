@@ -2085,7 +2085,7 @@ class ChatServiceRowView: TableRowView {
                         } else {
                             if data.isIncoming {
                                 let chatInteraction = item.chatInteraction
-                                showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] in
+                                showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] _ in
                                     chatInteraction?.closeChatThemes()
                                 }), for: item.context.window)
                             } else {

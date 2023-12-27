@@ -104,8 +104,8 @@ class ChatWallpaperModalController: ModalViewController {
     private var disposable: Disposable?
     private let selected: Wallpaper
     private let source: WallpaperSource
-    private let onComplete:(()->Void)?
-    init(_ context: AccountContext, selected: Wallpaper = theme.wallpaper.wallpaper, source: WallpaperSource = .none, onComplete:(()->Void)? = nil) {
+    private let onComplete:((TelegramWallpaper?)->Void)?
+    init(_ context: AccountContext, selected: Wallpaper = theme.wallpaper.wallpaper, source: WallpaperSource = .none, onComplete:((TelegramWallpaper?)->Void)? = nil) {
         self.context = context
         self.selected = selected
         self.source = source

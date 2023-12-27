@@ -12405,6 +12405,8 @@ public final class L10n {
   public static var selectAreaControlDimensionSquare: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Square") }
   /// Apply
   public static var selectColorApply: String  { return L10n.tr("Localizable", "SelectColor.Apply") }
+  /// Channel Wallpaper
+  public static var selectColorChannelWallpaper: String  { return L10n.tr("Localizable", "SelectColor.ChannelWallpaper") }
   /// Reply to your message
   public static var selectColorMessage1: String  { return L10n.tr("Localizable", "SelectColor.Message1") }
   /// Your name and replies to your messages will be shown in the selected color.
@@ -12413,6 +12415,8 @@ public final class L10n {
   public static var selectColorPremium: String  { return L10n.tr("Localizable", "SelectColor.Premium") }
   /// COLOR PREVIEW
   public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
+  /// Set a wallpaper that will be visible to everyone reading your channel.
+  public static var selectColorChannelWallpaperInfo: String  { return L10n.tr("Localizable", "SelectColor.ChannelWallpaper.Info") }
   /// Channel Emoji Status
   public static var selectColorEmojiStatusChannel: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Channel") }
   /// Emoji Status
