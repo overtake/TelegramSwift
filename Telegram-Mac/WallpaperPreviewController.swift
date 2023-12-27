@@ -589,7 +589,7 @@ private final class WallpaperPreviewView: View {
     
     var croppedRect: NSRect {
         let fittedSize = WallpaperDimensions.aspectFitted(imageSize)
-        return fittedSize.bounds
+        return imageSize.bounds.focus(fittedSize)
     }
     
     deinit {
@@ -1013,7 +1013,7 @@ enum WallpaperSource {
     case message(MessageId, TelegramWallpaper?)
     case gallery(TelegramWallpaper)
     case none
-    
+    case custom(TelegramWallpaper?)
     var peerId: PeerId? {
         switch self {
         case let .chat(peer, _):
@@ -1037,6 +1037,8 @@ enum WallpaperSource {
             return .gallery(wallpaper)
         case .link:
             return .link(wallpaper)
+        case .custom:
+            return .custom(wallpaper)
         }
     }
 }
@@ -1336,8 +1338,8 @@ class WallpaperPreviewController: ModalViewController {
     private let context: AccountContext
 
     let source: WallpaperSource
-    let onComplete:(()->Void)?
-    init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource, onComplete:(()->Void)? = nil) {
+    let onComplete:((TelegramWallpaper?)->Void)?
+    init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource, onComplete:((TelegramWallpaper?)->Void)? = nil) {
         self.wallpaper = wallpaper.isSemanticallyEqual(to: theme.wallpaper.wallpaper) ? wallpaper.withUpdatedBlurrred(theme.wallpaper.wallpaper.isBlurred) : wallpaper
         self.context = context
         self.source = source
@@ -1486,11 +1488,18 @@ class WallpaperPreviewController: ModalViewController {
         }
         
         let context = self.context
-        closeAllModals()
-        self.onComplete?()
         
+        switch source {
+        case .custom:
+            close()
+        default:
+            closeAllModals()
+        }
         let current = self.genericView.wallpaper
+
+        
         let source = self.source
+        let onComplete = self.onComplete
         
         switch source {
         case .gallery, .link, .none:
@@ -1512,6 +1521,7 @@ class WallpaperPreviewController: ModalViewController {
                         break
                     }
                     let _ = combineLatest(stats).start()
+                    onComplete?(wallpaper.cloudWallpaper)
                 })
             })
         case .chat, .message:
@@ -1539,6 +1549,14 @@ class WallpaperPreviewController: ModalViewController {
                 }
                                 
                 let _ = complete.start()
+                onComplete?(current.cloudWallpaper)
+            })
+        case .custom:
+            let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
+                return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
+            }
+            _ = signal.start(next: { wallpaper in
+                onComplete?(wallpaper.cloudWallpaper)
             })
         }
     }

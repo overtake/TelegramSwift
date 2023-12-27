@@ -369,7 +369,7 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         
         genericView.selectBackground.set(handler: { [weak self] _ in
             if let wallpaper = self?.genericView.wallpaper {
-                showModal(with: ChatWallpaperModalController(context, selected: wallpaper.wallpaper, source: .chat(peer, nil), onComplete: { [weak self] in
+                showModal(with: ChatWallpaperModalController(context, selected: wallpaper.wallpaper, source: .chat(peer, nil), onComplete: { [weak self] _ in
                     self?.close(true)
                 }), for: context.window)
             }

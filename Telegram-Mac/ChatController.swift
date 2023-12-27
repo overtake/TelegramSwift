@@ -8257,31 +8257,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let context = self.context
         
-        if let peer = chatInteraction.presentation.peer, peer.isChannel {
-            
-            let installed = self.uiState.with({ $0.bespoke_wallpaper?.wallpaper })
-            let base = self.uiState.with({ $0.presentation.wallpaper.wallpaper })
-
-            let channel_wallpaper_level_min = context.appConfiguration.getGeneralValue("channel_wallpaper_level_min", orElse: 0)
-            let combined = combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peer.id), context.engine.peers.getMyBoostStatus())
-            let signal = showModalProgress(signal: combined, for: context.window)
-            
-            _ = signal.start(next: { stats, myStatus in
-               if let stats = stats {
-                   if stats.level < channel_wallpaper_level_min {
-                       showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .wallpaper(channel_wallpaper_level_min)), for: context.window)
-                   } else {
-                       showModal(with: ChatWallpaperModalController(context, selected: installed ?? base, source: .chat(peer, nil), onComplete: {
-                         
-                       }), for: context.window)
-                   }
-               }
-           })
-            
-            
-            
-            return
-        }
         self.themeSelector = ChatThemeSelectorController(context, installedTheme: self.uiState.with { $0.presentation_emoticon }, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
         self.themeSelector?.onReady = { [weak self] controller in
             self?.genericView.showChatThemeSelector(controller.view, animated: true)
