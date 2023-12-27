@@ -16,7 +16,7 @@
  
  
  
- protocol PeerMediaSearchable : ViewController {
+protocol PeerMediaSearchable : AnyObject {
     func toggleSearch()
     func setSearchValue(_ value: Signal<SearchState, NoError>)
     func setExternalSearch(_ value: Signal<ExternalSearchMessages?, NoError>, _ loadMore: @escaping()->Void)
@@ -628,8 +628,6 @@
              return false
          case .stories:
              return false
-         case .savedMessages:
-             return false
          default:
              return self.externalSearchData == nil
          }
@@ -652,11 +650,9 @@
                 self.searchGroupUsers()
                 return .invoked
             }
-            if self.mode == .photoOrVideo {
-                (self.controller(for: .photoOrVideo) as? PeerMediaPhotosController)?.toggleSearch()
-                return .invoked
+            if let mode = self.mode {
+                (self.controller(for: mode) as? PeerMediaSearchable)?.toggleSearch()
             }
-            self.listControllers[self.currentTagListIndex].toggleSearch()
             return .invoked
         }, with: self, for: .F, modifierFlags: [.command])
         
@@ -1352,7 +1348,7 @@
         var firstUpdate: Bool = true
         genericView.mainTable?.updatedItems = { [weak self] items in
             let filter = items.filter {
-                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem") && !($0 is SearchEmptyRowItem)
+                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem")
             }
             self?.genericView.updateCorners(filter.isEmpty ? .all : [.topLeft, .topRight], animated: !firstUpdate)
             firstUpdate = false
@@ -1428,14 +1424,12 @@
     
     override func escapeKeyAction() -> KeyHandlerResult {
         if genericView.searchPanelView != nil {
-            if self.mode == .photoOrVideo {
-                if let currentController = currentController as? PeerMediaPhotosController {
-                    currentController.toggleSearch()
-                    return .invoked
-                }
+            if let mode = self.mode {
+                (self.controller(for: mode) as? PeerMediaSearchable)?.toggleSearch()
+                return .invoked
+            } else {
+                return super.escapeKeyAction()
             }
-            self.listControllers[self.currentTagListIndex].toggleSearch()
-            return .invoked
         } else if interactions.presentation.state == .selecting {
             interactions.update { $0.withoutSelectionState() }
             return .invoked
@@ -1470,18 +1464,12 @@
             guard let `self` = self else {
                 return
             }
-            if let mode = self.mode {
+            if let mode = self.mode, self.hasSearch {
                 switch mode {
                 case .members:
                     self.searchGroupUsers()
-                case .commonGroups:
-                    break
-                case .stories:
-                    break
-                case .photoOrVideo:
-                    (self.controller(for: mode) as? PeerMediaPhotosController)?.toggleSearch()
                 default:
-                    (self.controller(for: mode) as? PeerMediaListController)?.toggleSearch()
+                    (self.controller(for: mode) as? PeerMediaSearchable)?.toggleSearch()
                 }
             }
         })
