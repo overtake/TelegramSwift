@@ -37,7 +37,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) && !(view is VoiceTranscriptionControl) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) && !(view is VoiceTranscriptionControl) && !(view is SingleTimeVoiceBadgeView) {
                     view.background = newValue
                 }
             }

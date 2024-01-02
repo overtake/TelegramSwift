@@ -233,7 +233,7 @@ class ChatInputView: View, Notifable {
                 return strings().messagesPlaceholderReply
             case .topic:
                 return strings().messagesPlaceholderSentMessage
-            case .savedMessages:
+            case .savedMessages, .saved:
                 return ""
             }
         }

@@ -913,6 +913,7 @@ func initialize() -> [String] {
     array.append("channel_feature_status")
     array.append("channel_feature_stories")
     
+    array.append("chat_hidden_author")
 
     return array
 }

@@ -360,11 +360,15 @@ public class RadialProgressView: Control {
         }
     }
     
+    public override func setNeedsDisplay() {
+        super.setNeedsDisplay()
+        _layer.setNeedsDisplay()
+        overlay.setNeedsDisplay()
+    }
+    
     public override func viewDidMoveToSuperview() {
         overlay.mayAnimate(superview != nil)
     }
-    
-    
     
     
     required public init?(coder aDecoder: NSCoder) {
@@ -386,9 +390,11 @@ public class RadialProgressView: Control {
                 self.overlay.frame = CGRect(origin: CGPoint(), size: value.size)
                 self.setNeedsDisplay()
                 self.overlay.setNeedsDisplay()
+                self._layer.frame = self.overlay.frame
             }
         }
     }
+    private let _layer = SimpleLayer()
     
     public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil), twist: Bool = true, size: NSSize = NSMakeSize(40, 40)) {
         self.theme = theme
@@ -396,18 +402,22 @@ public class RadialProgressView: Control {
         super.init()
         self.overlay.contentsScale = backingScaleFactor
         self.frame = NSMakeRect(0, 0, size.width, size.height)
-    
+        self.layer?.addSublayer(_layer)
+        _layer.frame = self.bounds
+        _layer.onDraw = { [weak self] _, ctx in
+            self?.draw(context: ctx)
+        }
+        _layer.setNeedsDisplay()
     }
     
     public override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-    //    overlay.mayAnimate(superview != nil && window != nil)
     }
     
     
     
     
-    public override func draw(_ layer: CALayer, in context: CGContext) {
+    func draw(context: CGContext) {
         context.setFillColor(parameters.theme.backgroundColor.cgColor)
         context.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: parameters.diameter, height: parameters.diameter)))
         
@@ -493,7 +503,7 @@ public class RadialProgressView: Control {
            
         case .Remote:
             let color = parameters.theme.foregroundColor
-            let diameter = layer.frame.height
+            let diameter = _layer.frame.height
             
             context.setStrokeColor(color.cgColor)
             var lineWidth: CGFloat = 2.0
@@ -520,7 +530,7 @@ public class RadialProgressView: Control {
             context.strokePath()
         case .Play:
             let color = parameters.theme.foregroundColor
-            let diameter = layer.frame.height
+            let diameter = _layer.frame.height
             context.setFillColor(color.cgColor)
             
             let factor = diameter / 50.0
@@ -560,7 +570,6 @@ public class RadialProgressView: Control {
         view.frame = self.frame
         view.layer?.contents = progressInteractiveThumb(backgroundColor: parameters.theme.backgroundColor, foregroundColor: parameters.theme.foregroundColor)
         return view
-
     }
     
     public override func apply(state: ControlState) {

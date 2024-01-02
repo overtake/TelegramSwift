@@ -248,7 +248,10 @@ class ShortPeerRowItem: GeneralRowItem {
         
         
         let tAttr:NSMutableAttributedString = NSMutableAttributedString()
-        if isLookSavedMessage && account.peerId == peer.id {
+        if isLookSavedMessage && peer.id.isAnonymousSavedMessages {
+            let icon = theme.icons.chat_hidden_author
+            photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 5, photoSize.height - 5)), cornerRadius: nil)) |> map {($0, false)}
+        } else if isLookSavedMessage && account.peerId == peer.id {
             let icon = theme.icons.searchSaved
             photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 15, photoSize.height - 15)), cornerRadius: nil)) |> map {($0, false)}
         } else if isLookSavedMessage && peer.id == repliesPeerId {

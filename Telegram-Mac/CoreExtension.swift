@@ -963,6 +963,9 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if message.adAttribute != nil {
         return false
     }
+    if mode.isSavedMode {
+        return false
+    }
     
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
@@ -1139,6 +1142,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                         return peer.canSendMessage(false, threadData: threadData)
                     }
                 case .savedMessages:
+                    return false
+                case .saved:
                     return false
                 }
             case .pinned:
@@ -2584,7 +2589,11 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
 
             if let _ = threadId {
                 okTitle = strings().confirmDelete
-                text = strings().chatContextDeleteTopic
+                if context.peerId == peerId {
+                    text = strings().chatContextDeleteSaved
+                } else {
+                    text = strings().chatContextDeleteTopic
+                }
             } else {
                 if let peer = peer as? TelegramChannel {
                     switch peer.info {
@@ -2655,7 +2664,9 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 switch location {
                 case let .peer(id):
                     if id == peerId {
-                        context.bindings.rootNavigation().close()
+                        if threadId == nil {
+                            context.bindings.rootNavigation().close()
+                        }
                     }
                 case let .thread(data):
                     if threadId == nil {

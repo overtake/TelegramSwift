@@ -43,9 +43,8 @@ final class PremiumGiftHeaderItem : GeneralRowItem {
             text.detectBoldColorInString(with: .medium(.text))
             textLayout = .init(text, alignment: .center)
         case .giftLink:
-            //TODO:LANG
             let text = NSMutableAttributedString()
-            _ = text.append(string: "This link allows you to activate a **Telegram Premium** subscription.", color: theme.colors.text, font: .normal(.text))
+            _ = text.append(string: strings().giftLinkInfoNotUsed, color: theme.colors.text, font: .normal(.text))
             text.detectBoldColorInString(with: .medium(.text))
             textLayout = .init(text, alignment: .center)
             self.titleLayout = nil

@@ -988,7 +988,9 @@ class ChatRowItem: TableRowItem {
     let isIncoming: Bool
     
     var canHasFloatingPhoto: Bool {
-        if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
+        if chatInteraction.mode.isSavedMode {
+            return false
+        } else if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
             return false
         } else {
             return isIncoming && self.hasPhoto
@@ -1205,6 +1207,8 @@ class ChatRowItem: TableRowItem {
         if self.renderType != .bubble {
             return true
         } else if chatInteraction.isLogInteraction {
+            return true
+        } else if chatInteraction.mode.isSavedMode {
             return true
         }
         return false
@@ -2333,7 +2337,9 @@ class ChatRowItem: TableRowItem {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
-                    return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                    if let media = message.media.first, media is TelegramMediaImage || media.isVideoFile {
+                        return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                    }
                 }
                 if message.media.first is TelegramMediaGiveawayResults {
                     return ChatGiveawayResultRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)

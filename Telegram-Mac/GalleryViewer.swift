@@ -33,6 +33,8 @@ final class GalleryInteractions {
     var rotateLeft:()->Void = {}
     
     var fastSave:()->Void = {}
+    
+    var canShare:()->Bool = { true }
 }
 private(set) var viewer:GalleryViewer?
 
@@ -349,6 +351,13 @@ class GalleryViewer: NSResponder {
         }
         interactions.fastSave = { [weak self] in
             self?.saveAs(true)
+        }
+        interactions.canShare = {
+            if let chatMode = chatMode {
+                return !chatMode.isSavedMode
+            } else {
+                return true
+            }
         }
         window.set(handler: { [weak self] event in
             guard let `self` = self else {return .rejected}
@@ -911,7 +920,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 
-                if canDeleteMessage(message, account: context.account, mode: .history) {
+                if canDeleteMessage(message, account: context.account, mode: chatMode) {
                     if !items.isEmpty {
                         items.append(ContextSeparatorItem())
                     }

@@ -15,6 +15,7 @@ import SwiftSignalKit
 import InAppSettings
 import ObjcUtils
 import ThemeSettings
+import DustLayer
 
 struct ChatTitleCounters : Equatable {
     var replies: Int32?
@@ -46,9 +47,10 @@ enum ReplyThreadMode : Equatable {
     case comments(origin: MessageId)
     case topic(origin: MessageId)
     case savedMessages(origin: MessageId)
+    case saved(origin: MessageId)
     var originId: MessageId {
         switch self {
-        case let .replies(id), let .comments(id), let .topic(id), let .savedMessages(id):
+        case let .replies(id), let .comments(id), let .topic(id), let .savedMessages(id), let .saved(id):
             return id
         }
     }
@@ -80,6 +82,19 @@ enum ChatMode : Equatable {
         case let .thread(_, mode):
             switch mode {
             case .savedMessages:
+                return true
+            default:
+                return false
+            }
+        default:
+            return false
+        }
+    }
+    var isSavedMode: Bool {
+        switch self {
+        case let .thread(_, mode):
+            switch mode {
+            case .saved:
                 return true
             default:
                 return false
@@ -1696,9 +1711,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
         
         var transribe: [MessageId: TranscribeAudioState] = [:]
-        var pollAnswers: [MessageId : ChatPollStateData] = [:]
         var topicCreatorId: PeerId?
         var threadLoading: MessageId?
+        var pollAnswers: [MessageId : ChatPollStateData] = [:]
         var mediaRevealed: Set<MessageId> = Set()
         var translate: ChatLiveTranslateContext.State?
         var storyState: PeerExpiringStoryListContext.State?
@@ -2493,7 +2508,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
         if let stories = self.stories {
-            storiesSignal = stories.state |> map(Optional.init)
+            storiesSignal = .single(nil) |> then(stories.state |> map(Optional.init))
         } else {
             storiesSignal = .single(nil)
         }
@@ -6339,13 +6354,105 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.updateBackgroundColor(backgroundMode)
         genericView.updateBackground(backgroundMode, navigationView: self.navigationController?.view)
     }
+    
+    private var currentDeleteAnimationCorrelationIds = Set<AnyHashable>()
+    func setCurrentDeleteAnimationCorrelationIds(_ value: Set<AnyHashable>) {
+        self.currentDeleteAnimationCorrelationIds = value
+    }
+
+    private weak var dustLayerView: DustLayerView? = nil
+    
+    private func checkMessageDeletions(_ previous: ChatHistoryView?, _ currentView: ChatHistoryView) {
+        CATransaction.begin()
+        var expiredMessageStableIds = Set<AnyHashable>()
+        if let previousHistoryView = self.historyView {
+            var existingStableIds = Set<AnyHashable>()
+            for entry in currentView.filteredEntries {
+                switch entry.entry {
+                case .MessageEntry:
+                    if let message = entry.entry.message {
+                        existingStableIds.insert(entry.stableId)
+                    }
+                case .groupedPhotos:
+                    existingStableIds.insert(entry.stableId)
+                default:
+                    break
+                }
+            }
+            let currentTimestamp = Int32(CFAbsoluteTimeGetCurrent())
+            var maybeRemovedInteractivelyMessageIds: [(AnyHashable, EngineMessage.Id)] = []
+            for entry in previousHistoryView.filteredEntries {
+                switch entry.entry {
+                case let .MessageEntry(message, _, _, _, _, _, _):
+                    if !existingStableIds.contains(entry.stableId) {
+                        if let autoremoveAttribute = message.autoremoveAttribute, let countdownBeginTime = autoremoveAttribute.countdownBeginTime {
+                            let exipiresAt = countdownBeginTime + autoremoveAttribute.timeout
+                            if exipiresAt >= currentTimestamp - 1 {
+                                expiredMessageStableIds.insert(entry.stableId)
+                            }
+                        } else {
+                            maybeRemovedInteractivelyMessageIds.append((entry.stableId, message.id))
+                        }
+                    }
+                case .groupedPhotos:
+                    var isRemoved = existingStableIds.contains(entry.stableId)
+                    if isRemoved, let message = entry.entry.message {
+                        if let autoremoveAttribute = message.autoremoveAttribute, let countdownBeginTime = autoremoveAttribute.countdownBeginTime {
+                            let exipiresAt = countdownBeginTime + autoremoveAttribute.timeout
+                            if exipiresAt >= currentTimestamp - 1 {
+                                expiredMessageStableIds.insert(entry.stableId)
+                            }
+                        } else {
+                            maybeRemovedInteractivelyMessageIds.append((entry.stableId, message.id))
+                        }
+                    }
+                default:
+                    break
+                }
+            }
+            
+            var testIds: [MessageId] = []
+            if !maybeRemovedInteractivelyMessageIds.isEmpty {
+                for (_, id) in maybeRemovedInteractivelyMessageIds {
+                    testIds.append(id)
+                }
+            }
+            for id in self.context.engine.messages.synchronouslyIsMessageDeletedInteractively(ids: testIds) {
+                inner: for (stableId, listId) in maybeRemovedInteractivelyMessageIds {
+                    if listId == id {
+                        expiredMessageStableIds.insert(stableId)
+                        break inner
+                    }
+                }
+            }
+        }
+        self.currentDeleteAnimationCorrelationIds.formUnion(expiredMessageStableIds)
+        var appliedDeleteAnimationCorrelationIds = Set<AnyHashable>()
+
+        if !self.currentDeleteAnimationCorrelationIds.isEmpty {
+            var foundItemViews: [NSView] = []
+            self.genericView.tableView.enumerateViews(with: { view in
+                if let view = view as? ChatRowView, let item = view.item as? ChatRowItem {
+                    if self.currentDeleteAnimationCorrelationIds.contains(item.stableId) {
+                        appliedDeleteAnimationCorrelationIds.insert(item.stableId)
+                        self.currentDeleteAnimationCorrelationIds.remove(item.stableId)
+                        foundItemViews.append(view.rowView)
+                    }
+                }
+                return true
+            })
+            self.dustLayerView = ApplyDustAnimations(for: foundItemViews, superview: self.dustLayerView)
+
+        }
+        CATransaction.commit()
+    }
 
     private var prevIsLoading: Bool = false
+    private var historyView: ChatHistoryView?
+    
     func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool, processedView: ChatHistoryView) {
         
-        
-        CATransaction.begin()
-        
+                
         let wasEmpty = genericView.tableView.isEmpty
         self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
 
@@ -6377,6 +6484,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 break
             }
         }
+        
+        
+        checkMessageDeletions(self.historyView, processedView)
+        
+        
         prevIsLoading = isLoading
       
         self.currentAnimationRows = []
@@ -6409,6 +6521,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             delay(0.1, closure: afterNextTransaction)
             self.afterNextTransaction = nil
         }
+        
+        
         
         
         
@@ -6534,8 +6648,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if !didSetReady {
             self.genericView.inputView.updateInterface(with: self.chatInteraction)
         }
-        CATransaction.commit()
         self.didSetReady = true
+        
+        
+        
+
+        
+        
+        self.historyView = processedView
                 
     }
     
@@ -6603,7 +6723,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             let chatInteraction = self.chatInteraction
             let menu = ContextMenu(betterInside: true)
-            
+            let mode = self.mode
             var items:[ContextMenuItem] = []
             let peerId = chatLocation.peerId
             switch self.mode {
@@ -6799,11 +6919,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let threadId = chatInteraction.mode.threadId64
                 if let threadId = threadId, let threadData = chatInteraction.presentation.threadInfo, let peer = chatInteraction.peer {
                     if threadData.isOwnedByMe || peer.isAdmin {
-                        items.append(ContextMenuItem(!threadData.isClosed ? strings().chatListContextPause : strings().chatListContextStart, handler: {
-                            _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !threadData.isClosed).start()
-                        }, itemImage: !threadData.isClosed ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
-                        
-                        items.append(ContextSeparatorItem())
+                        if !mode.isSavedMessagesThread {
+                            items.append(ContextMenuItem(!threadData.isClosed ? strings().chatListContextPause : strings().chatListContextStart, handler: {
+                                _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !threadData.isClosed).start()
+                            }, itemImage: !threadData.isClosed ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
+                            
+                            items.append(ContextSeparatorItem())
+                        }
                         items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
                             _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
@@ -8256,6 +8378,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         let context = self.context
+        
+        if let peer = chatInteraction.peer as? TelegramChannel {
+            if peer.hasPermission(.changeInfo) {
+                navigationController?.push(SelectColorController(context: context, source: .channel(peer)))
+            }
+            return
+        }
         
         self.themeSelector = ChatThemeSelectorController(context, installedTheme: self.uiState.with { $0.presentation_emoticon }, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
         self.themeSelector?.onReady = { [weak self] controller in

@@ -54,8 +54,10 @@ open class SimpleShapeLayer : CAShapeLayer {
 open class SimpleLayer: CALayer {
     public var didEnterHierarchy: (() -> Void)?
     public var didExitHierarchy: (() -> Void)?
-    public private(set) var isInHierarchy: Bool = false
+    public var isInHierarchy: Bool = false
     
+    public var onDraw: ((CALayer, CGContext) -> Void)?
+
     override open func action(forKey event: String) -> CAAction? {
         if event == kCAOnOrderIn {
             self.isInHierarchy = true
@@ -83,6 +85,11 @@ open class SimpleLayer: CALayer {
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    open override func draw(in ctx: CGContext) {
+        super.draw(in: ctx)
+        onDraw?(self, ctx)
     }
     
 }

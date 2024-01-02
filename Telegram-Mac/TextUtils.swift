@@ -355,6 +355,10 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                 text = strings().serviceMessageExpiredPhoto
             case .file:
                 text = strings().serviceMessageExpiredVideo
+            case .voiceMessage:
+                text = strings().serviceMessageExpiredVoiceMessage
+            case .videoMessage:
+                text = strings().serviceMessageExpiredVideoMessage
             }
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor,range: attributedText.range)
@@ -507,6 +511,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             text = strings().chatListPhoto
         case .file:
             text = strings().chatListVideo
+        case .voiceMessage:
+            text = strings().chatListVoice
+        case .videoMessage:
+            text = strings().chatListInstantVideo
         }
         return (text, [], [:])
     }

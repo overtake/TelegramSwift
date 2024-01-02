@@ -201,6 +201,11 @@ enum ChatLocation: Equatable {
 }
 
 extension ChatLocation {
+    
+    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId) -> ChatLocation {
+        return .thread(.init(peerId: accountPeerId, threadId: peerId.toInt64(), channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
+    }
+    
     var unreadMessageCountsItem: UnreadMessageCountsItem {
         switch self {
         case let .peer(peerId):
@@ -250,6 +255,14 @@ extension ChatLocation {
             return nil
         case let .thread(replyThreadMessage):
             return replyThreadMessage.effectiveTopId
+        }
+    }
+    var threadMessage: ChatReplyThreadMessage? {
+        switch self {
+        case .peer:
+            return nil
+        case let .thread(replyThreadMessage):
+            return replyThreadMessage
         }
     }
 

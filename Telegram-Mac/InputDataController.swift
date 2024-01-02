@@ -418,6 +418,47 @@ final class InputDataView : BackgroundView {
     }
 }
 
+
+final class InputDataMediaSearchContext {
+    let searchState:Promise<SearchState> = Promise()
+    let mediaSearchState:ValuePromise<MediaSearchState> = ValuePromise(ignoreRepeated: true)
+    var inSearch: Bool = false
+}
+
+extension InputDataController : PeerMediaSearchable {
+    func toggleSearch() {
+        guard let context = self.searchContext else {
+            return
+        }
+        context.inSearch = !context.inSearch
+        if context.inSearch {
+            context.searchState.set(.single(.init(state: .Focus, request: nil)))
+        } else {
+            context.searchState.set(.single(.init(state: .None, request: nil)))
+        }
+    }
+    
+    fileprivate var searchContext: InputDataMediaSearchContext? {
+        return self.contextObject as? InputDataMediaSearchContext
+    }
+    
+    func setSearchValue(_ value: Signal<SearchState, NoError>) {
+        self.searchContext?.searchState.set(value)
+    }
+    
+    func setExternalSearch(_ value: Signal<ExternalSearchMessages?, NoError>, _ loadMore: @escaping () -> Void) {
+        
+    }
+    
+    var mediaSearchValue: Signal<MediaSearchState, NoError> {
+        if let context = self.searchContext {
+            return context.mediaSearchState.get()
+        }
+        return .complete()
+    }
+    
+}
+
 class InputDataController: GenericViewController<InputDataView> {
 
     fileprivate var modalTransitionHandler:((Bool)->Void)? = nil

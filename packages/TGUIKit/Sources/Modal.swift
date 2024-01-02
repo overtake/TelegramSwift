@@ -980,7 +980,7 @@ public class Modal: NSObject {
                         if case .alpha = strongSelf.animationType {
                         } else if case .animateBackground = strongSelf.animationType {
                         } else {
-                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.25, timingFunction: .spring)
                         }
                         if !controller.isFullScreen {
                             switch strongSelf.animationType {
@@ -1012,6 +1012,11 @@ public class Modal: NSObject {
                     }
                     
                     if controller.isFullScreen {
+                        
+                        if case .animateBackground = strongSelf.animationType {
+                            strongSelf.visualEffectView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                        
                         strongSelf.background.customHandler.size = { [weak strongSelf] size in
                             strongSelf?.resize(with: size, animated: false)
                         }

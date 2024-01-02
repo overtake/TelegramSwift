@@ -13,7 +13,8 @@ import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
 import InputView
-
+import MetalEngine
+import DustLayer
 
 class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate, RevealTableView {
     
@@ -375,6 +376,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         renderLayoutType(item, animated: true)
 
         updateColors()
+        updateMouse()
         item.chatInteraction.focusInputField()
         super.onCloseContextMenu()
     }
@@ -383,6 +385,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {return}
         renderLayoutType(item, animated: true)
         updateColors()
+        updateMouse()
         super.onCloseContextMenu()
     }
     
@@ -440,10 +443,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func updateMouse() {
         if let shareView = self.shareView, let item = item as? ChatRowItem {
-            shareView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
+            shareView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() && contextMenu == nil ? 1.0 : 0.0, animated: true)
         }
         if let commentsView = self.channelCommentsBubbleSmallControl, let item = item as? ChatRowItem {
-            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
+            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() && contextMenu == nil  ? 1.0 : 0.0, animated: true)
         }
     }
     
@@ -565,7 +568,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var rect = NSMakeRect(item.leftInset, 6, 36, 36)
 
         if item.isBubbled {
-            rect.origin.y = frame.height - 36
+            rect.origin.y = item.height - 36
         }
         
         return rect
@@ -1896,7 +1899,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func forceClick(in location: NSPoint) {
             
+       
+        
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state != .editing {
+            
+            let table = item.table!
+            let rect = item.context.window.contentView!.bounds
+            let metalLayer = DustLayer()
+            let view = View(frame: rect)
+            view.layer?.addSublayer(metalLayer)
+            item.context.window.contentView?.addSubview(view)
+            metalLayer.frame = rect
+            metalLayer.isInHierarchy = true
+
+            
+            metalLayer.addItem(frame: CGRect(origin: view.focus(rowView.frame.size).origin, size: rowView.frame.size), image: self.rowView.snapshot)
+            metalLayer.becameEmpty = { [weak view] in
+                view?.removeFromSuperview()
+            }
+            
+            return
+            
             let result: Bool
             switch FastSettings.forceTouchAction {
             case .edit:

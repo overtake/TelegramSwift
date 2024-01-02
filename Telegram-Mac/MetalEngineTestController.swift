@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import MetalEngine
+import DustLayer
 
 
 private var metalLibraryValue: MTLLibrary?
@@ -74,13 +75,17 @@ private final class EdgeTestLayer: MetalEngineSubjectLayer, MetalEngineSubject {
 }
 
 final class MetalEngineTestView: View {
-    private let metalLayer: EdgeTestLayer = .init()
+    private let metalLayer = DustLayer()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         background = .gray
         metalLayer.frame = frameRect.size.bounds
         self.layer?.addSublayer(metalLayer)
+        metalLayer.isInHierarchy = true
+
+        metalLayer.addItem(frame: NSMakeRect(100, 100, 100, 100), image: NSImage(named: "icon_YouTubePlay")!)
         metalLayer.setNeedsUpdate()
+
     }
     
     required init?(coder: NSCoder) {
@@ -92,5 +97,9 @@ final class  MetalEngineTestController : GenericViewController<MetalEngineTestVi
     override func viewDidLoad() {
         super.viewDidLoad()
         readyOnce()
+        
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
     }
 }

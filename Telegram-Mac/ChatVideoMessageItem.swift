@@ -75,7 +75,7 @@ class ChatVideoMessageItem: ChatMediaItem {
     }
     
     var canTranscribe: Bool {
-        return canTranscribeFile(media as! TelegramMediaFile, context: context)
+        return canTranscribeMessage(message!, context: context)
     }
     
     override var instantlyResize: Bool {

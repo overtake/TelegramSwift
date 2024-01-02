@@ -178,7 +178,7 @@ private final class WallpaperView : View {
                 self.addSubview(current, positioned: .below, relativeTo: overlay)
                 self.noText = current
             }
-            let attributedString: NSAttributedString = .initialize(string: "No\nWallpaper", color: theme.colors.grayText, font: .normal(13))
+            let attributedString: NSAttributedString = .initialize(string: strings().channelWallpaperNoWallpaper, color: theme.colors.grayText, font: .normal(13))
 
             let layout: TextViewLayout = .init(attributedString, alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
@@ -282,10 +282,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
   
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_choose, data: .init(name: "Choose from File", color: theme.colors.accent, icon: NSImage(named: "Icon_AttachPhoto")?.precomposed(theme.colors.accent, flipVertical: true), type: .none, viewType: hasCustom ? .firstItem : .singleItem, enabled: true, action: arguments.custom, afterNameImage: afterNameImage_WallpaperIcon)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_choose, data: .init(name: strings().channelWallpaperChooseFromFile, color: theme.colors.accent, icon: NSImage(named: "Icon_AttachPhoto")?.precomposed(theme.colors.accent, flipVertical: true), type: .none, viewType: hasCustom ? .firstItem : .singleItem, enabled: true, action: arguments.custom, afterNameImage: afterNameImage_WallpaperIcon)))
     
     if hasCustom {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_remove, data: .init(name: "Remove Wallpaper", color: theme.colors.redUI, icon: NSImage(named: "Icon_Editor_Delete")?.precomposed(theme.colors.redUI, flipVertical: true), type: .none, viewType: .lastItem, enabled: true, action: arguments.remove)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_remove, data: .init(name: strings().channelWallpaperRemoveWallpaper, color: theme.colors.redUI, icon: NSImage(named: "Icon_Editor_Delete")?.precomposed(theme.colors.redUI, flipVertical: true), type: .none, viewType: .lastItem, enabled: true, action: arguments.remove)))
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -449,7 +449,7 @@ func ChannelWallpapersController(context: AccountContext, peerId: PeerId, boostL
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Channel Wallpaper")
+    let controller = InputDataController(dataSignal: signal, title: strings().channelWallpaperTitle)
     
     controller.validateData = { _ in
         callback(stateValue.with { $0.selected?.wallpaper })
