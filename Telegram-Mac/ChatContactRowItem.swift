@@ -113,6 +113,8 @@ class ChatContactRowView : ChatRowView {
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             
+            isDynamicColorUpdateLocked = true
+            
             self.layer?.addSublayer(dashLayer)
             
             addSubview(contactPhotoView)

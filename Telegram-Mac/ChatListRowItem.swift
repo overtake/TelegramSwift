@@ -127,7 +127,12 @@ class ChatListRowItem: TableRowItem {
     
     let chatListIndex:ChatListIndex?
     var peerId:PeerId? {
-        return renderedPeer?.peerId
+        switch mode {
+        case .savedMessages:
+            return context.peerId
+        default:
+            return renderedPeer?.peerId
+        }
     }
     
     let photo: AvatarNodeState
@@ -165,7 +170,7 @@ class ChatListRowItem: TableRowItem {
         switch self.mode {
         case .topic:
             return true
-        case .chat:
+        case .chat, .savedMessages:
             return false
         }
     }
@@ -364,6 +369,9 @@ class ChatListRowItem: TableRowItem {
     var isSavedMessage: Bool {
         return peer?.id == context.peerId
     }
+    var isAnonynousSavedMessage: Bool {
+        return peer?.id.isAnonymousSavedMessages == true
+    }
     var isRepliesChat: Bool {
         return peer?.id == repliesPeerId
     }
@@ -561,11 +569,14 @@ class ChatListRowItem: TableRowItem {
     
     enum Mode {
         case chat
+        case savedMessages(Int64)
         case topic(Int64, MessageHistoryThreadData)
         
         var threadId: Int64? {
             switch self {
             case let .topic(threadId, _):
+                return threadId
+            case let .savedMessages(threadId):
                 return threadId
             default:
                 return nil
@@ -709,7 +720,7 @@ class ChatListRowItem: TableRowItem {
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let isTopic: Bool
         switch mode {
-        case .chat:
+        case .chat, .savedMessages:
             let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
             isTopic = false
         case let .topic(_, data):
@@ -881,10 +892,11 @@ class ChatListRowItem: TableRowItem {
         switch mode {
         case .topic:
             isEmpty = titleMode == .normal
-        case .chat:
+        case .chat, .savedMessages:
             isEmpty = false
         }
-        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !isEmpty {
+        
+        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !peer.id.isAnonymousSavedMessages, !isEmpty {
             self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum)
         } else {
             self.photo = .Empty
@@ -995,7 +1007,7 @@ class ChatListRowItem: TableRowItem {
         switch self.mode {
         case let .topic(_, threadData):
             return threadData.isClosed
-        case .chat:
+        case .chat, .savedMessages:
             return false
         }
     }
@@ -1119,7 +1131,7 @@ class ChatListRowItem: TableRowItem {
     
     var leftInset:CGFloat {
         switch mode {
-        case .chat:
+        case .chat, .savedMessages:
             return 50 + (10 * 2.0)
         case .topic:
             if titleMode == .forumInfo {
@@ -1234,6 +1246,8 @@ class ChatListRowItem: TableRowItem {
                 _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: nil).start()
             case .topic:
                 break
+            case .savedMessages:
+                break
             }
         }
     }
@@ -1294,6 +1308,16 @@ class ChatListRowItem: TableRowItem {
         switch mode {
         case let .topic(threadId, _):
             let signal = context.engine.peers.toggleForumChannelTopicPinned(id: peerId, threadId: threadId) |> deliverOnMainQueue
+            _ = signal.start(error: { error in
+                switch error {
+                case let .limitReached(count):
+                    alert(for: context.window, info: strings().chatListContextPinErrorTopicsCountable(count))
+                default:
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        case .savedMessages:
+            let signal = context.engine.peers.toggleForumChannelTopicPinned(id: context.peerId, threadId: peerId.toInt64()) |> deliverOnMainQueue
             _ = signal.start(error: { error in
                 switch error {
                 case let .limitReached(count):
@@ -1694,6 +1718,11 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
+            if entryId.savedMessages {
+                thirdGroup.append(ContextSeparatorItem())
+                thirdGroup.append(ContextMenuItem(strings().chatListContextDelete, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            }
+            
             if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus, !entryId.savedMessages {
                 switch hideStatus {
                 case .collapsed:
@@ -1881,7 +1910,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         switch mode {
-        case .chat:
+        case .chat, .savedMessages:
             return 70
         case .topic:
             return 53 + (displayLayout?.layoutSize.height ?? 17)

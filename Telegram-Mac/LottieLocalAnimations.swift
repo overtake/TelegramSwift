@@ -126,6 +126,8 @@ enum LocalAnimatedSticker : String {
     case premium_gift_6
     case premium_gift_3
     
+    case single_voice_fire
+    
     
     case menu_add_to_folder
     case menu_archive

@@ -523,8 +523,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
-            //context.bindings.rootNavigation().push(MetalEngineTestController())
+//            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
+            context.bindings.rootNavigation().push(MetalEngineTestController())
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

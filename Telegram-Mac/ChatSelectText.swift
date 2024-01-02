@@ -243,6 +243,7 @@ class ChatSelectText : NSObject {
     private var lastPressureEventStage = 0
     private var inPressedState = false
     private var locationInWindow: NSPoint? = nil
+    private var reversible: Bool = false
     
     private var lastSelectdMessageId: MessageId?
     
@@ -256,6 +257,8 @@ class ChatSelectText : NSObject {
     }
     
     func initializeHandlers(for window:Window, chatInteraction:ChatInteraction) {
+        
+        self.reversible = chatInteraction.mode.isSavedMode
         
         selectManager.chatInteraction = chatInteraction
         
@@ -526,32 +529,51 @@ class ChatSelectText : NSObject {
                             }
                             
                            
-                            
+                            let fillEnd = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude)
                             
                             if (i > startIndex && i < endIndex) {
                                 startPoint = NSMakePoint(0, 0);
-                                endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                endPoint = fillEnd;
                             } else if(i == startIndex) {
                                 if(!isMultiple) {
                                     startPoint = beginViewLocation;
                                     endPoint = endViewLocation;
                                 } else {
                                     if(!reversed) {
-                                        startPoint = beginViewLocation
-                                        endPoint = NSMakePoint(0, 0);
+                                        if reversible {
+                                            startPoint = beginViewLocation
+                                            endPoint = fillEnd;
+                                        } else {
+                                            startPoint = beginViewLocation
+                                            endPoint = NSMakePoint(0, 0);
+                                        }
                                     } else {
-                                        startPoint = NSMakePoint(0, 0);
-                                        endPoint = endViewLocation;
+                                        if reversible {
+                                            startPoint = fillEnd;
+                                            endPoint = endViewLocation;
+                                        } else {
+                                            startPoint = NSMakePoint(0, 0);
+                                            endPoint = endViewLocation;
+                                        }
                                     }
                                 }
                                 
                             } else if(i == endIndex) {
                                 if(!reversed) {
-                                    startPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
-                                    endPoint = endViewLocation;
+                                    if reversible {
+                                        startPoint = .zero;
+                                        endPoint = endViewLocation;
+                                    } else {
+                                        startPoint = fillEnd;
+                                        endPoint = endViewLocation;
+                                    }
                                 } else {
                                     startPoint = beginViewLocation;
-                                    endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                    if reversible {
+                                        endPoint = .zero
+                                    } else {
+                                        endPoint = fillEnd;
+                                    }
                                 }
                             }
                             

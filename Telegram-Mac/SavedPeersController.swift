@@ -52,45 +52,6 @@ private func _id_search(_ peerId: PeerId) -> InputDataIdentifier {
 }
 
 
-private final class SavedPeersSearchContext {
-    let searchState:Promise<SearchState> = Promise()
-    let mediaSearchState:ValuePromise<MediaSearchState> = ValuePromise(ignoreRepeated: true)
-    var inSearch: Bool = false
-}
-
-extension InputDataController : PeerMediaSearchable {
-    func toggleSearch() {
-        guard let context = self.searchContext else {
-            return
-        }
-        context.inSearch = !context.inSearch
-        if context.inSearch {
-            context.searchState.set(.single(.init(state: .Focus, request: nil)))
-        } else {
-            context.searchState.set(.single(.init(state: .None, request: nil)))
-        }
-    }
-    
-    fileprivate var searchContext: SavedPeersSearchContext? {
-        return self.contextObject as? SavedPeersSearchContext
-    }
-    
-    func setSearchValue(_ value: Signal<SearchState, NoError>) {
-        self.searchContext?.searchState.set(value)
-    }
-    
-    func setExternalSearch(_ value: Signal<ExternalSearchMessages?, NoError>, _ loadMore: @escaping () -> Void) {
-        
-    }
-    
-    var mediaSearchValue: Signal<MediaSearchState, NoError> {
-        if let context = self.searchContext {
-            return context.mediaSearchState.get()
-        }
-        return .complete()
-    }
-    
-}
 
 private final class TableDelegate : TableViewDelegate {
     
@@ -160,7 +121,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_item(item.item), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 let stableId: UIChatListEntryId = .savedMessageIndex(item.item.id)
                 
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: stableId, mode: .chat, messages: item.item.messages.map { $0._asMessage() }, index: nil, readState: nil, draft: nil, pinnedType: item.item.chatListIndex.pinningIndex != nil ? .some : .none, renderedPeer: item.item.renderedPeer, peerPresence: nil, forumTopicData: nil, forumTopicItems: [], activities: [], highlightText: nil, associatedGroupId: .root, isMuted: item.item.isMuted, filter: .allChats, hideStatus: nil, titleMode: .normal, appearMode: .normal)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: stableId, mode: .savedMessages(item.item.renderedPeer.peerId.toInt64()), messages: item.item.messages.map { $0._asMessage() }, index: nil, readState: nil, draft: nil, pinnedType: item.item.chatListIndex.pinningIndex != nil ? .some : .none, renderedPeer: item.item.renderedPeer, peerPresence: nil, forumTopicData: nil, forumTopicItems: [], activities: [], highlightText: nil, associatedGroupId: .root, isMuted: item.item.isMuted, filter: .allChats, hideStatus: nil, titleMode: .normal, appearMode: .normal)
             }))
         }
     }
@@ -177,6 +138,9 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
+    let reorderDisposable = MetaDisposable()
+    actionsDisposable.add(reorderDisposable)
+    
     let initialState = State()
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -184,7 +148,6 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
-    let key = PostboxViewKey.savedMessagesIndex(peerId: context.peerId)
     
     let view = chatListViewForLocation(chatListLocation: .savedMessagesChats, location: .Initial(0, nil), filter: nil, account: context.account)
     
@@ -212,7 +175,7 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
     
     let controller = InputDataController(dataSignal: signal, title: " ")
     
-    let search = SavedPeersSearchContext()
+    let search = InputDataMediaSearchContext()
     
     controller.contextObject = search
     
@@ -231,6 +194,50 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
     controller.didDisappear = { controller in
         controller.tableView.cancelSelection()
     }
+    
+    controller.afterTransaction = { controller in
+        var pinnedCount: Int = 0
+        controller.tableView.enumerateItems { item -> Bool in
+            guard let item = item as? ChatListRowItem, item.isFixedItem else {return false}
+            if item.canResortPinned {
+                pinnedCount += 1
+            }
+            return item.isFixedItem
+        }
+        
+        controller.tableView.resortController = TableResortController(resortRange: NSMakeRange(0, pinnedCount), start: { row in
+            
+        }, resort: { row in
+            
+        }, complete: { [weak controller] from, to in
+            var items:[Int64] = []
+
+            var offset: Int = 0
+                       
+            controller?.tableView.enumerateItems { item -> Bool in
+                guard let item = item as? ChatListRowItem else {
+                    offset += 1
+                    return true
+                }
+                if item.isAd {
+                    offset += 1
+                }
+                switch item.pinnedType {
+                case .some, .last:
+                    if let threadId = item.mode.threadId {
+                        items.append(threadId)
+                    }
+                default:
+                    break
+                }
+               
+                return item.isFixedItem || item.groupId != .root
+            }
+            items.move(at: from - offset, to: to - offset)
+            let signal = context.engine.peers.setForumChannelPinnedTopics(id: context.peerId, threadIds: items) |> deliverOnMainQueue
+            reorderDisposable.set(signal.start())
+
+        })}
     
     struct Tuple {
         let peers: [EnginePeer]?

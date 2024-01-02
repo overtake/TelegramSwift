@@ -548,6 +548,9 @@ extension Peer {
     public var displayTitle: String {
         switch self {
         case let user as TelegramUser:
+            if user.id.isAnonymousSavedMessages {
+                return strings().chatListAuthorHidden
+            }
             if user.firstName == nil && user.lastName == nil {
                 return strings().peerDeletedUser
             } else {
@@ -626,6 +629,9 @@ extension Peer {
     public var compactDisplayTitle: String {
         switch self {
         case let user as TelegramUser:
+            if user.id.isAnonymousSavedMessages {
+                return strings().chatListAuthorHidden
+            }
             if let firstName = user.firstName {
                 if !firstName.isEmpty {
                     return firstName

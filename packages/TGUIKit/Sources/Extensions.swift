@@ -567,9 +567,9 @@ public extension CALayer {
         self.add(animation, forKey: "backgroundColor")
     }
     
-    func animatePath() {
+    func animatePath(duration: Double = 0.2) {
         let animation = CABasicAnimation(keyPath: "path")
-        animation.duration = 0.2
+        animation.duration = duration
         self.add(animation, forKey: "path")
     }
     func animateShadow() {
@@ -620,12 +620,11 @@ public extension CALayer {
 public extension NSView {
     
     var snapshot: NSImage {
-        guard let bitmapRep = bitmapImageRepForCachingDisplay(in: bounds) else { return NSImage() }
-        cacheDisplay(in: bounds, to: bitmapRep)
-        let image = NSImage()
-        image.addRepresentation(bitmapRep)
-        bitmapRep.size = bounds.size
-        return NSImage(data: dataWithPDF(inside: bounds))!
+        guard let rep = bitmapImageRepForCachingDisplay(in: bounds) else { return NSImage() }
+        self.cacheDisplay(in: bounds, to: rep)
+        let image = NSImage(size: bounds.size)
+        image.addRepresentation(rep)
+        return image
     }
     
     func setCenterScale(_ scale: CGFloat) {

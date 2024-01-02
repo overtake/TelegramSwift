@@ -21,7 +21,11 @@ import SwiftSignalKit
 import Postbox
 
 
-func canTranscribeFile(_ file: TelegramMediaFile, context: AccountContext) -> Bool {
+func canTranscribeMessage(_ message: Message, context: AccountContext) -> Bool {
+    if message.autoclearTimeout != nil {
+        return false
+    }
+    let file = message.media.first! as! TelegramMediaFile
     if context.isPremium {
         return true
     } else {
@@ -154,7 +158,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         self.parameters = parameters
         
         
-        let canTranscribe = canTranscribeFile(file, context: context)
+        let canTranscribe = canTranscribeMessage(object.message!, context: context)
 
         if canTranscribe, let message = object.message {
             var pending: Bool
@@ -256,7 +260,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)
             
-            let canTranscribe = canTranscribeFile(media as! TelegramMediaFile, context: context)
+            let canTranscribe = canTranscribeMessage(message!, context: context)
 
             
             let maxVoiceWidth:CGFloat = min(min(250, blockWidth), width - 50 - (canTranscribe ? 35 : 0))

@@ -589,7 +589,7 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
 
 let InputDataEmptyIdentifier = InputDataIdentifier("")
 
-struct InputDataIdentifier : Hashable {
+class InputDataIdentifier : Hashable {
     let identifier: String
     init(_ identifier: String) {
         self.identifier = identifier
@@ -597,10 +597,17 @@ struct InputDataIdentifier : Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(identifier)
     }
+    func isEqual(to: InputDataIdentifier) -> Bool {
+        if self.identifier == to.identifier {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 func ==(lhs: InputDataIdentifier, rhs: InputDataIdentifier) -> Bool {
-    return lhs.identifier == rhs.identifier
+    return lhs.isEqual(to: rhs)
 }
 
 enum InputDataValue : Equatable {

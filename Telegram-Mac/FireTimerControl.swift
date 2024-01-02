@@ -46,8 +46,8 @@ class FireTimerControl: Control {
     
     private struct Params: Equatable {
         var color: NSColor
-        var timeout: Int32
-        var deadlineTimestamp: Int32?
+        var timeout: Double
+        var deadlineTimestamp: Double?
     }
     
     private var animator: ConstantDisplayLinkAnimator?
@@ -79,7 +79,7 @@ class FireTimerControl: Control {
         }
     }
     
-    func update(color: NSColor, timeout: Int32, deadlineTimestamp: Int32?) {
+    func update(color: NSColor, timeout: Double, deadlineTimestamp: Double?) {
         let params = Params(
             color: color,
             timeout: timeout,
@@ -104,7 +104,7 @@ class FireTimerControl: Control {
         
         if let deadlineTimestamp = params.deadlineTimestamp {
             let fractionalTimestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            fractionalTimeout = min(Double(params.timeout), max(0.0, Double(deadlineTimestamp) + 1.0 - fractionalTimestamp))
+            fractionalTimeout = min(Double(params.timeout), max(0.0, Double(deadlineTimestamp) - fractionalTimestamp))
         } else {
             fractionalTimeout = Double(params.timeout)
         }
@@ -118,13 +118,12 @@ class FireTimerControl: Control {
             fraction = CGFloat(fractionalTimeout) / CGFloat(params.timeout)
             fraction = max(0.0, min(0.99, fraction))
             contentState = .timeout(color, 1.0 - fraction)
-            
             self.updateValue?(fraction)
         } else {
             contentState = .clock(color)
         }
         
-        if let deadlineTimestamp = params.deadlineTimestamp, Int32(Double(deadlineTimestamp) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)) < params.timeout / 2 {
+        if let deadlineTimestamp = params.deadlineTimestamp, deadlineTimestamp - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970) < params.timeout / 2 {
             if let reachedHalf = self.reachedHalf, !reachedHalfNotified {
                 reachedHalf()
                 reachedHalfNotified = true
@@ -135,7 +134,7 @@ class FireTimerControl: Control {
             self.currentContentState = contentState
             let image: CGImage?
             
-            let diameter: CGFloat = 42
+            let diameter: CGFloat = frame.width - 8
             let inset: CGFloat = 7
             let lineWidth: CGFloat = 2
             

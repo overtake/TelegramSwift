@@ -162,7 +162,7 @@ private final class ProgressView : View {
         if let expiryDate = link.expireDate, !link.isExpired && !link.isRevoked {
             let startDate = link.startDate ?? link.date
             let timeout = expiryDate - startDate
-            progressView.update(color: updateBackgroundColor(), timeout: timeout, deadlineTimestamp: expiryDate)
+            progressView.update(color: updateBackgroundColor(), timeout: Double(timeout), deadlineTimestamp: Double(expiryDate))
 
             progressView.reachedTimeout = {
                 _ = updateBackgroundColor()

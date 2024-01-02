@@ -99,7 +99,7 @@ class ChatServiceItem: ChatRowItem {
         }
         
         var height: CGFloat {
-            return peerId.namespace == Namespaces.Peer.CloudChannel ? 140 : 160
+            return 160
         }
     }
     struct StoryData {
@@ -883,9 +883,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     let cachedData = entry.additionalData.cachedData?.data as? CachedUserData
-                    if message.id.peerId.namespace != Namespaces.Peer.CloudChannel {
-                        self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId, forBoth: forBoth, installed: cachedData?.wallpaper)
-                    }
+                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId, forBoth: forBoth, installed: cachedData?.wallpaper)
                 case .setSameChatWallpaper:
                     let text: String
                     if authorId == context.peerId {
@@ -952,6 +950,10 @@ class ChatServiceItem: ChatRowItem {
                 } else {
                     text = strings().serviceMessageExpiredVideo
                 }
+            case .voiceMessage:
+                text = strings().serviceMessageExpiredVoiceMessage
+            case .videoMessage:
+                text = strings().serviceMessageExpiredVideoMessage
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
             
@@ -1531,7 +1533,6 @@ class ChatServiceRowView: TableRowView {
                 return
             }
             
-            viewButton.isHidden = messageId.namespace == Namespaces.Message.Local
             
             self.message = item.message
             
@@ -1604,15 +1605,16 @@ class ChatServiceRowView: TableRowView {
             
             viewButton.set(text: text, for: .Normal)
             viewButton.sizeToFit(NSMakeSize(20, 12))
-            
-            viewButton.isHidden = data.peerId.namespace == Namespaces.Peer.CloudChannel
-            
+                        
             viewButton.layer?.cornerRadius = viewButton.frame.height / 2
             needsLayout = true
         }
         
         
         private func updateProgress(_ progress: Float?, messageId: MessageId, item: ChatServiceItem, context: AccountContext) {
+                        
+            self.viewButton.isHidden = progress != nil
+
             if let progress = progress {
                 let current: RadialProgressView
                 if let view = self.progressView {

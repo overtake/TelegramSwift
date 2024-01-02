@@ -2489,6 +2489,14 @@ public final class L10n {
   public static var channelVisibiltiyContextCopy: String  { return L10n.tr("Localizable", "ChannelVisibiltiy.Context.Copy") }
   /// Revoke
   public static var channelVisibiltiyContextRevoke: String  { return L10n.tr("Localizable", "ChannelVisibiltiy.Context.Revoke") }
+  /// Choose from File
+  public static var channelWallpaperChooseFromFile: String  { return L10n.tr("Localizable", "ChannelWallpaper.ChooseFromFile") }
+  /// No\nWallpaper
+  public static var channelWallpaperNoWallpaper: String  { return L10n.tr("Localizable", "ChannelWallpaper.NoWallpaper") }
+  /// Remove Wallpaper
+  public static var channelWallpaperRemoveWallpaper: String  { return L10n.tr("Localizable", "ChannelWallpaper.RemoveWallpaper") }
+  /// Channel Wallpaper
+  public static var channelWallpaperTitle: String  { return L10n.tr("Localizable", "ChannelWallpaper.Title") }
   /// admin
   public static var chatAdminBadge: String  { return L10n.tr("Localizable", "Chat.AdminBadge") }
   /// ADD PROXY
@@ -2919,6 +2927,8 @@ public final class L10n {
   public static var chatContextCopyText: String  { return L10n.tr("Localizable", "Chat.Context.CopyText") }
   /// Create Group
   public static var chatContextCreateGroup: String  { return L10n.tr("Localizable", "Chat.Context.CreateGroup") }
+  /// Are you sure you want to delete saved messaged?
+  public static var chatContextDeleteSaved: String  { return L10n.tr("Localizable", "Chat.Context.DeleteSaved") }
   /// Are you sure you want to delete this topic?
   public static var chatContextDeleteTopic: String  { return L10n.tr("Localizable", "Chat.Context.DeleteTopic") }
   /// Unmute
@@ -5071,6 +5081,8 @@ public final class L10n {
   public static var chatInputReplyReplyToAnother: String  { return L10n.tr("Localizable", "ChatInput.Reply.ReplyToAnother") }
   /// Archived Chats
   public static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
+  /// Author Hidden
+  public static var chatListAuthorHidden: String  { return L10n.tr("Localizable", "ChatList.AuthorHidden") }
   /// Show All
   public static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// All
@@ -10339,6 +10351,8 @@ public final class L10n {
   public static var peerMediaMusic: String  { return L10n.tr("Localizable", "PeerMedia.Music") }
   /// Posts
   public static var peerMediaPosts: String  { return L10n.tr("Localizable", "PeerMedia.Posts") }
+  /// Saved
+  public static var peerMediaSaved: String  { return L10n.tr("Localizable", "PeerMedia.Saved") }
   /// Chats
   public static var peerMediaSavedMessages: String  { return L10n.tr("Localizable", "PeerMedia.SavedMessages") }
   /// Shared Media
@@ -12513,6 +12527,10 @@ public final class L10n {
   public static var serviceMessageExpiredPhoto: String  { return L10n.tr("Localizable", "ServiceMessage.ExpiredPhoto") }
   /// video has expired
   public static var serviceMessageExpiredVideo: String  { return L10n.tr("Localizable", "ServiceMessage.ExpiredVideo") }
+  /// video message has expired
+  public static var serviceMessageExpiredVideoMessage: String  { return L10n.tr("Localizable", "ServiceMessage.ExpiredVideoMessage") }
+  /// voice message has expired
+  public static var serviceMessageExpiredVoiceMessage: String  { return L10n.tr("Localizable", "ServiceMessage.ExpiredVoiceMessage") }
   /// %@ sent a self-destructing photo.
   public static func serviceMessageDesturctingPhotoYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "ServiceMessage.DesturctingPhoto.You", p1)

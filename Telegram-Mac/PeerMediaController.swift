@@ -433,9 +433,12 @@ protocol PeerMediaSearchable : AnyObject {
                 return strings().peerMediaStories
             }
         }
-         if self == .savedMessages {
-             return strings().peerMediaSavedMessages
-         }
+        if self == .savedMessages {
+            return strings().peerMediaSavedMessages
+        }
+        if self == .saved {
+            return strings().peerMediaSaved
+        }
         return ""
     }
  }
@@ -518,6 +521,7 @@ protocol PeerMediaSearchable : AnyObject {
     private let mediaGrid:PeerMediaPhotosController
     private let gifs: PeerMediaPhotosController
     private let stories: StoryMediaController
+    private let saved: InputDataController
     private var savedMessages: InputDataController?
 
     private let listControllers:[PeerMediaListController]
@@ -525,7 +529,7 @@ protocol PeerMediaSearchable : AnyObject {
     private let commonGroups: ViewController
     private let similarChannels: ViewController
     
-     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups, .similarChannels]
+     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .photoOrVideo, .saved, .file, .webpage, .music, .voice, .gifs, .commonGroups, .similarChannels]
     
     
     private var currentTagListIndex: Int {
@@ -585,6 +589,8 @@ protocol PeerMediaSearchable : AnyObject {
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
         self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
+         self.saved = PeerMediaSavedMessagesController(context: context, peerId: peerId)
+         
         var updateTitle:((ExternalSearchMessages)->Void)? = nil
         
         if let external = externalSearchData {
@@ -862,8 +868,11 @@ protocol PeerMediaSearchable : AnyObject {
         let storiesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let similarChannels:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+        let savedMessagesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+
         let savedTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
 
+        
         membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
             if threadInfo != nil {
                 return (exist: false, loaded: true)
@@ -926,14 +935,25 @@ protocol PeerMediaSearchable : AnyObject {
                 return ($0.views[savedKeyId] as? MessageHistorySavedMessagesIndexView)?.items.count ?? 0
             }
 
-            savedTab = viewSignal |> map { state -> (exist: Bool, loaded: Bool) in
+            savedMessagesTab = viewSignal |> map { state -> (exist: Bool, loaded: Bool) in
                 return (exist: state > 0, loaded: true)
             } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 return (tag: .savedMessages, exists: data.exist, hasLoaded: data.loaded)
             }
         } else {
-            savedTab = .single((tag: .savedMessages, exists: false, hasLoaded: true))
+            savedMessagesTab = .single((tag: .savedMessages, exists: false, hasLoaded: true))
         }
+        
+        if peerId != context.peerId {
+            savedTab = context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: context.peerId, threadId: peerId.toInt64()), count: 3, tagMask: nil)
+            |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                let hasLoaded = view.entries.count >= 1 || (!view.isLoading)
+                return (tag: .saved, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
+            }
+        } else {
+            savedTab = .single((tag: .saved, exists: false, hasLoaded: true))
+        }
+        
         
         
         let location: ChatLocationInput
@@ -949,16 +969,23 @@ protocol PeerMediaSearchable : AnyObject {
                 let hasLoaded = view.entries.count >= 1 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
             }
-            
         }
         
-        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab, similarChannels, savedTab) |> map { members, general, commonGroups, stories, similarChannels, savedTab -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab, similarChannels, savedMessagesTab, savedTab) |> map { members, general, commonGroups, stories, similarChannels, savedMessagesTab, savedTab -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
             var general = general
+            var bestIndex: Int = 0
+            for general in general {
+                if general.tag == .photoOrVideo && general.exists {
+                    bestIndex += 1
+                    break
+                }
+            }
+            general.insert(savedTab, at: bestIndex)
             general.insert(members, at: 0)
             general.append(commonGroups)
             general.insert(stories, at: 0)
             general.append(similarChannels)
-            general.insert(savedTab, at: 0)
+            general.insert(savedMessagesTab, at: 0)
             return general
         }
         
@@ -1050,6 +1077,13 @@ protocol PeerMediaSearchable : AnyObject {
                         }
                     } else {
                         return .single(data)
+                    }
+                case .saved:
+                    if !saved.isLoaded() {
+                        saved.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return saved.ready.get() |> map { ready in
+                        return data
                     }
                 default:
                     if !self.listControllers[Int(selected.rawValue)].isLoaded() {
@@ -1376,6 +1410,8 @@ protocol PeerMediaSearchable : AnyObject {
             } else {
                 return ViewController()
             }
+        case .saved:
+            return saved
         default:
             return self.listControllers[Int(mode.rawValue)]
         }
@@ -1483,7 +1519,11 @@ protocol PeerMediaSearchable : AnyObject {
     }
     
     override var defaultBarTitle: String {
-        return super.defaultBarTitle
+        if peerId == context.peerId {
+            return strings().peerSavedMessages
+        } else {
+            return super.defaultBarTitle
+        }
     }
     
     
@@ -1496,7 +1536,6 @@ protocol PeerMediaSearchable : AnyObject {
     override func initializer() -> PeerMediaContainerView {
         return PeerMediaContainerView(frame: initializationRect, isSegmentHidden: self.externalSearchData != nil)
     }
-
     
  }
  

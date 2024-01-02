@@ -421,6 +421,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
+            controller.view.shake(beep: true)
             return
         }
         let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue

@@ -459,7 +459,7 @@ func ==(lhs:APHistoryLocation, rhs:APHistoryLocation) -> Bool {
     }
 }
 
-protocol APDelegate : class {
+protocol APDelegate : AnyObject {
     func songDidChanged(song:APSongItem, for controller:APController, animated: Bool)
     func songDidChangedState(song:APSongItem, for controller:APController, animated: Bool)
     func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool)

@@ -114,6 +114,8 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: strings().chatEmptyTopic, color: textColor, font: .medium(.text))
             case .savedMessages:
                 _ = attr.append(string: strings().chatEmptySavedMessages, color: textColor, font: .medium(.text))
+            case .saved:
+                _ = attr.append(string: strings().chatEmptySavedMessages, color: textColor, font: .medium(.text))
             }
         case .pinned:
             lineSpacing = nil

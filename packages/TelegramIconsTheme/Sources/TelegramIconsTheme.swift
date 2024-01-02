@@ -10145,6 +10145,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_hidden_author: CGImage {
+      if let image = cached.with({ $0["chat_hidden_author"] }) {
+          return image
+      } else {
+          let image = _chat_hidden_author()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_hidden_author"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10926,6 +10939,7 @@ public final class TelegramIconsTheme {
   private let _channel_feature_reaction: ()->CGImage
   private let _channel_feature_status: ()->CGImage
   private let _channel_feature_stories: ()->CGImage
+  private let _chat_hidden_author: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11707,7 +11721,8 @@ public final class TelegramIconsTheme {
       channel_feature_name_color: @escaping()->CGImage,
       channel_feature_reaction: @escaping()->CGImage,
       channel_feature_status: @escaping()->CGImage,
-      channel_feature_stories: @escaping()->CGImage
+      channel_feature_stories: @escaping()->CGImage,
+      chat_hidden_author: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12489,5 +12504,6 @@ public final class TelegramIconsTheme {
       self._channel_feature_reaction = channel_feature_reaction
       self._channel_feature_status = channel_feature_status
       self._channel_feature_stories = channel_feature_stories
+      self._chat_hidden_author = chat_hidden_author
   }
 }

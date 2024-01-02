@@ -292,8 +292,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView?.autoresizingMask = [.width, .height]
         window.contentView?.autoresizesSubviews = true
         
-//        v.layer?.addSublayer(MetalEngine.shared.rootLayer)
 
+//        delay(2.0, closure: {
+            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+//        })
         
 //        let ctxLayer = CtxInstallLayer()
 //        self.ctxLayer = ctxLayer

@@ -247,7 +247,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let appConfiguration = data.chatInteraction.context.appConfiguration
         let context = data.chatInteraction.context
         let account = context.account
-        var isService = data.message.extendedMedia is TelegramMediaAction
+        let mode = chatInteraction.mode
+        var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode
         
         if !isService, let story = data.message.media.first as? TelegramMediaStory {
             isService = story.isMention
@@ -264,7 +265,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var sixBlock:[ContextMenuItem] = []
         
         
-        if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, chatInteraction.mode != .pinned, chatInteraction.mode != .scheduled {
+        if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, mode != .pinned, mode != .scheduled, !mode.isSavedMode {
             firstBlock.append(ContextMenuItem(strings().chatMessageContextQuote, handler: {
                 
                 let quote_length_max = context.appConfiguration.getGeneralValue("quote_length_max", orElse: 1024)
@@ -442,7 +443,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let language = Translate.detectLanguage(for: text)
                 
                 let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
-                if language == nil || !toLang.contains(language!), !muteTranslate {
+                if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                         showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
@@ -505,7 +506,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         let text = selectedText.string
                         let language = Translate.detectLanguage(for: text)
                         let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
-                        if language == nil || !toLang.contains(language!), !muteTranslate {
+                        if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                                 showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                                 data.chatInteraction.enableTranslatePaywall()
@@ -543,7 +544,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let text = state.text
                 let language = Translate.detectLanguage(for: text)
                 let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
-                if language == nil || !toLang.contains(language!) {
+                if language == nil || !toLang.contains(language!), !isService {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                         showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
@@ -787,7 +788,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
      
         
-        if let resourceData = data.resourceData, !protected, !isService {
+        if let resourceData = data.resourceData, !protected {
             if let file = data.file {
                 if file.isVideo && file.isAnimated {
                     if data.recentMedia.contains(where: {$0.media.id == file.fileId}) {
@@ -1023,7 +1024,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 //#endif
 
         
-        if let attr = message.textEntities {
+        if let attr = message.textEntities, !isService {
             var references: [StickerPackReference] = attr.entities.compactMap({ value in
                 if case let .CustomEmoji(reference, _) = value.type {
                     return reference

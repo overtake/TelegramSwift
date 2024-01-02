@@ -349,7 +349,7 @@ class GalleryModernControls: GenericViewController<GalleryModernControlsView> {
                 self.genericView.updateControlsVisible(item.entry)
                 peerDisposable.set((context.account.postbox.loadedPeerWithId(interfaceState.0) |> deliverOnMainQueue).start(next: { [weak self, weak item] peer in
                     guard let `self` = self, let item = item else {return}
-                    self.genericView.updatePeer(peer, timestamp: interfaceState.1 == 0 ? 0 : interfaceState.1 - self.context.timeDifference, account: self.context.account, canShare: item.entry.canShare)
+                    self.genericView.updatePeer(peer, timestamp: interfaceState.1 == 0 ? 0 : interfaceState.1 - self.context.timeDifference, account: self.context.account, canShare: item.entry.canShare && self.interactions.canShare())
                 }))
                 zoomControlsDisposable.set((item.magnify.get() |> deliverOnMainQueue).start(next: { [weak self, weak item] value in
                     if let item = item {
