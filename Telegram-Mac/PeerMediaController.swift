@@ -929,7 +929,7 @@ protocol PeerMediaSearchable : AnyObject {
             similarChannels = .single((tag: .similarChannels, exists: false, hasLoaded: true))
         }
         
-        if threadInfo == nil, peerId == context.peerId {
+        if threadInfo == nil, peerId == context.peerId, !isProfileIntended {
             let savedKeyId = PostboxViewKey.savedMessagesIndex(peerId: context.peerId)
             let viewSignal: Signal<Int, NoError> = context.account.postbox.combinedView(keys: [savedKeyId]) |> map {
                 return ($0.views[savedKeyId] as? MessageHistorySavedMessagesIndexView)?.items.count ?? 0
