@@ -15,6 +15,12 @@ import Reactions
 import AppKit
 import SwiftSignalKit
 
+private func tagImage(_ color: NSColor)->NSImage? {
+    let image = NSImage(named: "Icon_ReactionTagBackground")!
+    return NSImage(cgImage: generateTintedImage(image: image._cgImage, color: color)!, size: image.size)
+}
+
+
 extension MessageReaction.Reaction {
     var isEmpty: Bool {
         switch self {
@@ -78,6 +84,7 @@ final class ChatReactionsLayout {
         let isIncoming: Bool
         let isOutOfBounds: Bool
         let hasWallpaper: Bool
+        let tagBackground: NSImage?
         
         static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, mode: ChatReactionsLayout.Mode) -> Theme {
             let bgColor: NSColor
@@ -86,7 +93,7 @@ final class ChatReactionsLayout {
             let borderColor: NSColor
             let selectedColor: NSColor
             switch mode {
-            case .full:
+            case .full, .tag:
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
@@ -125,23 +132,15 @@ final class ChatReactionsLayout {
                     selectedColor = theme.colors.accent
                     textSelectedColor = theme.colors.underSelectedColor
                 }
-            case .short:
-                bgColor = .clear
-                textColor = stateOverlayTextColor
-                borderColor = .clear
-                selectedColor = .clear
-                textSelectedColor = .clear
             }
            
             let size: NSSize
             switch mode {
-            case .full:
+            case .full, .tag:
                 size = NSMakeSize(16, 16)
-            case .short:
-                size = NSMakeSize(12, 12)
             }
             
-            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, textSelectedColor: textSelectedColor, reactionSize: size, avatarSize: NSMakeSize(20, 20), insetOuter: 10, insetInner: mode == .short ? 1 : 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
+            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, textSelectedColor: textSelectedColor, reactionSize: size, avatarSize: NSMakeSize(20, 20), insetOuter: 10, insetInner: 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, tagBackground: mode == .tag ? tagImage(selectedColor) : nil)
 
         }
     }
@@ -199,10 +198,8 @@ final class ChatReactionsLayout {
                 return .init(account: context.account, file: reaction.centerAnimation ?? reaction.selectAnimation, size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             case let .custom(fileId, file, _):
                 var reactionSize: NSSize = presentation.reactionSize
-                if mode == .full {
-                    reactionSize.width += 3
-                    reactionSize.height += 3
-                }
+                reactionSize.width += 3
+                reactionSize.height += 3
                 let textColor = value.isSelected ? presentation.textSelectedColor : presentation.textColor
                 return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize, getColors: { file in
                     var colors: [LottieColor] = []
@@ -268,14 +265,14 @@ final class ChatReactionsLayout {
             self.openInfo = openInfo
             self.runEffect = runEffect
             switch mode {
-            case .full:
+            case .full, .tag:
                 let height = presentation.reactionSize.height + presentation.insetInner * 2
                 if self.value.value.isEmpty {
                     self.minimumSize = NSMakeSize(34, height)
                     self.avatars = []
                     self.text = nil
                 } else {
-                    if recentPeers.isEmpty {
+                    if recentPeers.isEmpty, mode != .tag {
                         self.text = .init(.initialize(string: Int(value.count).prettyNumber, color: value.isSelected ? presentation.textSelectedColor : presentation.textColor, font: .normal(.text)))
                         self.text?.measure(width: .greatestFiniteMagnitude)
                     } else {
@@ -302,6 +299,8 @@ final class ChatReactionsLayout {
                             width += 4
                         }
                         width += presentation.insetOuter
+                    } else if mode == .tag {
+                        width += 15
                     }
                     
                     var index: Int = 0
@@ -312,22 +311,6 @@ final class ChatReactionsLayout {
                     }
                     self.minimumSize = NSMakeSize(width, height)
                 }
-
-            case .short:
-                var width: CGFloat = presentation.reactionSize.width
-                let height = presentation.reactionSize.height
-                if value.count > 1 {
-                    
-                    let text: TextViewLayout = .init(.initialize(string: "\(value.count)", color: presentation.textColor, font: .italic(.short)))
-                    text.measure(width: .greatestFiniteMagnitude)
-                    self.text = text
-                    width += text.layoutSize.width + 2
-                } else {
-                    self.text = nil
-                    width += 2
-                }
-                self.avatars = []
-                self.minimumSize = NSMakeSize(width, height)
             }
         }
         
@@ -445,7 +428,7 @@ final class ChatReactionsLayout {
     
     enum Mode {
         case full
-        case short
+        case tag
     }
     
     let mode: Mode
@@ -453,9 +436,9 @@ final class ChatReactionsLayout {
     
     init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
         
-        var mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
-        if mode == .short {
-            mode = .full
+        var mode: Mode = .full
+        if message.id.peerId == context.peerId {
+            mode = .tag
         }
         self.message = message
         self.context = context
@@ -514,6 +497,9 @@ final class ChatReactionsLayout {
                     recentPeers = []
                 }
                 if reactions.reactions.reduce(0, { $0 + $1.count }) > 3 {
+                    recentPeers = []
+                }
+                if mode == .tag {
                     recentPeers = []
                 }
                 
@@ -635,7 +621,7 @@ final class ChatReactionsLayout {
     }
 }
 
-protocol ReactionViewImpl : class {
+protocol ReactionViewImpl : AnyObject {
     func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool)
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
     func playEffect()
@@ -1033,74 +1019,54 @@ final class ChatReactionsView : View {
         }
     }
     
-    
-    final class ShortReactionView: Control, ReactionViewImpl {
-        
+    final class TagReactionView: Control, ReactionViewImpl {
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
-        fileprivate let imageView = AnimationLayerContainer(frame: .zero)
-        private var textView: TextView?
-        private var first = true
+        fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
+        private var first: Bool = true
+        private var backgroundView: NinePathImage? = nil
+        
         private var effetView: LottiePlayerView?
         private let effectDisposable = MetaDisposable()
-        
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            self.userInteractionEnabled = false
-            self.addSubview(imageView)
-        }
-        
-        func getView() -> NSView {
-            return self.imageView
-        }
-        
-        func lockVisibility() {
-            self.imageView.isHidden = true
-        }
-        func unlockVisibility() {
-            self.imageView.isHidden = false
-        }
-        
-        func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
-            let updated = self.reaction?.source != reaction.source
-            self.reaction = reaction
-                        
-            if updated {
-                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite(.emoji), animated: animated)
+            
+            addSubview(imageView)
+            scaleOnClick = true
+            
+            self.set(handler: { [weak self] _ in
+                if let reaction = self?.reaction {
+                    reaction.action(reaction.value.value, false)
+                }
+            }, for: .Click)
+            
+            
+            self.contextMenu = { [weak self] in
+                if let reaction = self?.reaction {
+                    return reaction.loadMenu()
+                }
+                return nil
             }
             
-            if let text = reaction.text {
-                let current: TextView
-                if let view = self.textView {
-                    current = view
-                } else {
-                    current = TextView()
-                    current.userInteractionEnabled = false
-                    current.isSelectable = false
-                    self.textView = current
-                    addSubview(current)
-                    
-                    var text_r = focus(text.layoutSize)
-                    text_r.origin.x = 2
-                    current.frame = text_r
-                }
-                current.update(text)
-                
-            } else {
-                if let view = self.textView {
-                    performSubviewRemoval(view, animated: animated)
-                    self.textView = nil
-                }
-            }
             
-            if first {
-                updateLayout(size: reaction.rect.size, transition: .immediate)
-                first = false
-            }
+            self.set(handler: { [weak self] _ in
+                self?.reaction?.cancelMenu()
+            }, for: .Normal)
+            
+            
+        }
+        
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            imageView.updateAnimatableContent()
+        }
+        override func viewDidMoveToSuperview() {
+            super.viewDidMoveToSuperview()
+            imageView.updateAnimatableContent()
         }
         
         func playEffect() {
             let size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
-
+            
             guard let reaction = reaction, let file = reaction.source.effect else {
                 return
             }
@@ -1133,20 +1099,16 @@ final class ChatReactionsView : View {
         }
         
         private func runAnimationEffect(_ animation: LottieAnimation) {
-            var rect = NSMakeRect(-4, -6, animation.size.width, animation.size.height)
-            if textView != nil {
-                rect.origin.x += 8
-            }
-            let player = LottiePlayerView(frame: rect)
+            let player = LottiePlayerView(frame: NSMakeRect(2, -3, animation.size.width, animation.size.height))
 
             player.set(animation, reset: true)
-
+            
             self.effetView = player
-
+            
             addSubview(player)
-
+            
             self.imageView._change(opacity: 0, animated: false)
-
+            
             animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak self, weak player] in
                 self?.imageView._change(opacity: 1, animated: false)
                 if let player = player {
@@ -1158,41 +1120,107 @@ final class ChatReactionsView : View {
             }, {})
         }
         
-        func isOwner(of reaction: ChatReactionsLayout.Reaction) -> Bool {
-            return self.reaction?.value.value == reaction.value.value
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
+        func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
+            let layerUpdated = reaction.source != self.reaction?.source
+            let selectedUpdated = self.reaction?.value.isSelected != reaction.value.isSelected
+            let reactionUpdated = self.reaction?.value.value != reaction.value.value
+            self.reaction = reaction
+            
+            self.imageView.layer?.cornerRadius = reaction.value.value.string == "" ? 4 : 0
+            
+            let presentation = reaction.presentation
+            
+            self.backgroundColor = .clear
+
+            if selectedUpdated {
+                if reaction.value.isSelected {
+                    if backgroundView == nil {
+                        let view = NinePathImage(frame: bounds)
+                        self.backgroundView = view
+                        self.backgroundView?.capInsets = NSEdgeInsets(top: 3, left: 5, bottom: 3, right: 15)
+                        self.addSubview(view, positioned: .below, relativeTo: subviews.first)
+                        
+                        if animated {
+                            view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
+                            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                    }
+                } else {
+                    if let view = backgroundView {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.backgroundView = nil
+                    }
+                }
+            }
+            self.backgroundView?.image = reaction.presentation.tagBackground
+            
+            if animated {
+                self.layer?.animateBorder()
+                self.layer?.animateBackground()
+            }
+            
+            if !first, reactionUpdated, animated {
+                self.imageView.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+            }
+
+            if first {
+                updateLayout(size: reaction.rect.size, transition: .immediate)
+                first = false
+            }
+
+            if layerUpdated {
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite(.emoji), animated: animated)
+            }
         }
         
         deinit {
             effectDisposable.dispose()
         }
         
+        func isOwner(of reaction: ChatReactionsLayout.Reaction) -> Bool {
+            return self.reaction?.value.value == reaction.value.value
+        }
+        
+        func getView() -> NSView {
+            return self.imageView
+        }
+        
+        func lockVisibility() {
+            self.imageView.isHidden = true
+        }
+        func unlockVisibility() {
+            self.imageView.isHidden = false
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
         func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
             guard let reaction = reaction else {
                 return
             }
-            if let textView = textView, let text = reaction.text {
-                var text_r = focus(text.layoutSize)
-                text_r.origin.x = 2
-                var img_r = focus(reaction.presentation.reactionSize)
-                img_r.origin.x = text_r.maxX
-                transition.updateFrame(view: textView, frame: text_r)
-                transition.updateFrame(view: self.imageView, frame: img_r)
-            } else {
-                var img_r = focus(reaction.presentation.reactionSize)
-                img_r.origin.x = 2
-                transition.updateFrame(view: self.imageView, frame: img_r)
+            
+            if let backgroundView = backgroundView {
+                transition.updateFrame(view: backgroundView, frame: size.bounds)
             }
+            
+            let presentation = reaction.presentation
+            
+            var reactionSize = presentation.reactionSize
+            
+            if case .custom = reaction.value.value {
+                reactionSize.width += 3
+                reactionSize.height += 3
+            }
+            
+            transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - reactionSize.height) / 2), size: reactionSize))
         }
         override func layout() {
             super.layout()
             updateLayout(size: frame.size, transition: .immediate)
         }
     }
-
     
     private var currentLayout: ChatReactionsLayout?
     private var reactions:[ChatReactionsLayout.Reaction] = []
@@ -1212,10 +1240,9 @@ final class ChatReactionsView : View {
             }).first(where: { $0.reaction?.value.value == value })
             
             return view
-
-        case .short:
+        case .tag:
             let view = self.views.compactMap({
-                $0 as? ShortReactionView
+                $0 as? TagReactionView
             }).first(where: { $0.reaction?.value.value == value })
             
             return view
@@ -1234,10 +1261,9 @@ final class ChatReactionsView : View {
             }).first(where: { $0.reaction?.value.value == value })
             
             return view?.imageView
-
-        case .short:
+        case .tag:
             let view = self.views.compactMap({
-                $0 as? ShortReactionView
+                $0 as? TagReactionView
             }).first(where: { $0.reaction?.value.value == value })
             
             return view?.imageView
@@ -1289,11 +1315,11 @@ final class ChatReactionsView : View {
                     } else {
                         return ReactionView(frame: item.rect)
                     }
-                case .short:
-                    if let prev = prev as? ShortReactionView {
+                case .tag:
+                    if let prev = prev as? TagReactionView {
                         return prev
                     } else {
-                        return ShortReactionView(frame: item.rect)
+                        return TagReactionView(frame: item.rect)
                     }
                 }
             }

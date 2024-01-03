@@ -39,25 +39,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                         
             var x: CGFloat = item.isStateOverlayLayout ? 4 : 0
             
-            if let reactions = item.reactionsLayout {
-                switch reactions.mode {
-                case .short:
-                    var rect = size.bounds.focus(reactions.size)
-                    if item.isBubbled {
-                        rect.origin.y -= 1
-                    }
-                    rect.origin.x = x
-                    self.reactions = rect
-                    if item.isBubbled {
-                        x = rect.maxX + 1
-                    } else {
-                        x = rect.maxX + 3
-                    }
-                    
-                default:
-                    break
-                }
-            }
+            
             
             if let views = item.replyCount {
                 var rect_i = size.bounds.focus(item.presentation.chat.repliesCountIcon(item).backingSize)
@@ -279,22 +261,9 @@ class ChatRightView: View, ViewDisplayDelegate {
             return nil
         }
         
-        
-        if let reactionsLayout = item.reactionsLayout, reactionsLayout.mode == .short, let reactionsRect = frames.reactions {
-            if self.reactionsView == nil {
-                self.reactionsView = ChatReactionsView(frame: reactionsRect)
-                addSubview(self.reactionsView!)
-                if animated {
-                    self.reactionsView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    self.reactionsView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
-                }
-            }
-            self.reactionsView?.update(with: reactionsLayout, animated: animated)
-        } else {
-            if let view = self.reactionsView {
-                self.reactionsView = nil
-                performSubviewRemoval(view, animated: animated, scale: true)
-            }
+        if let view = self.reactionsView {
+            self.reactionsView = nil
+            performSubviewRemoval(view, animated: animated, scale: true)
         }
         if let sendingRect = frames.sending {
             if self.sendingView == nil {
