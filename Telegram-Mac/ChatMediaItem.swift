@@ -782,7 +782,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
         if let item:ChatMediaItem = item as? ChatMediaItem {
-            if contentNode == nil || !contentNode!.isKind(of: item.contentNode())  {
+            if contentNode == nil || !contentNode!.isKind(of: item.contentNode()) || contentNode?.parent?.id != item.message?.id  {
                 if let view = self.contentNode {
                     performSubviewRemoval(view, animated: animated)
                 }
