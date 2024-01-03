@@ -6486,7 +6486,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
-//        checkMessageDeletions(self.historyView, processedView)
+        checkMessageDeletions(self.historyView, processedView)
         
         
         prevIsLoading = isLoading

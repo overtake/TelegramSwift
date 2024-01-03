@@ -26,7 +26,7 @@ public final class DustLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         let frame: CGRect
         let texture: MTLTexture
         
-        var phase: Float = 0
+        var phase: Float = 0.35
         var particleBufferIsInitialized: Bool = false
         var particleBuffer: SharedBuffer?
         
@@ -99,7 +99,7 @@ public final class DustLayer: MetalEngineSubjectLayer, MetalEngineSubject {
     
     private var updateLink: SharedDisplayLinkDriver.Link?
     private var items: [Item] = []
-    private var lastTimeStep: Double = 0.0
+    private var lastTimeStep: Double = 0.02
     
     public var animationSpeed: Float = 1.0
     
@@ -173,15 +173,14 @@ public final class DustLayer: MetalEngineSubjectLayer, MetalEngineSubject {
     private func updateNeedsAnimation() {
         if !self.items.isEmpty && self.isInHierarchy {
             if self.updateLink == nil {
-//                var delta = CACurrentMediaTime()
                 self.updateLink = SharedDisplayLinkDriver.shared.add(framesPerSecond: .max, { [weak self] deltaTime in
                     guard let self else {
                         return
                     }
                     self.updateItems(deltaTime: deltaTime)
                     self.setNeedsUpdate()
-//                    NSLog("\(CACurrentMediaTime() - delta)")
                 })
+                self.setNeedsUpdate()
             }
         } else {
             if self.updateLink != nil {
@@ -198,7 +197,12 @@ public final class DustLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         }
     }
     
+    private var delta = CACurrentMediaTime()
+    
     public func update(context: MetalEngineSubjectContext) {
+        
+        delta = CACurrentMediaTime()
+        
         if self.bounds.isEmpty {
             return
         }
@@ -334,7 +338,7 @@ public func ApplyDustAnimation(for currentView: NSView) {
     guard let window = currentView.window else {
         return
     }
-    #if arch(arm64)
+    #if arch(arm64) && (DEBUG || BETA)
 //    if MetalEngine.shared.rootLayer.superlayer == nil {
 //        window.contentView?.layer?.addSublayer(MetalEngine.shared.rootLayer)
 //    }
@@ -358,20 +362,25 @@ public func ApplyDustAnimations(for views: [NSView], superview: DustLayerView? =
     guard let window = views.first?.window else {
         return nil
     }
-    #if arch(arm64)
+    #if arch(arm64) && (DEBUG || BETA)
 //    if MetalEngine.shared.rootLayer.superlayer == nil {
 //        window.contentView?.layer?.addSublayer(MetalEngine.shared.rootLayer)
 //    }
 
-    let view = superview ?? DustLayerView(frame: window.contentView!.bounds)
+    let isNew = superview == nil
+    
+    let view = DustLayerView(frame: window.contentView!.bounds)
     window.contentView?.addSubview(view)
 
     for subview in views {
         view.metalLayer.addItem(frame: CGRect(origin: subview.convert(.zero, to: view), size: subview.frame.size), image: subview.snapshot)
     }
-    view.metalLayer.becameEmpty = { [weak view] in
-        view?.removeFromSuperview()
+    if isNew {
+        view.metalLayer.becameEmpty = { [weak view] in
+            view?.removeFromSuperview()
+        }
     }
+   
     return view
     #endif
     return nil
