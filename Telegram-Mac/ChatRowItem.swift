@@ -338,7 +338,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if let reactions = self.reactionsLayout, reactions.mode == .full {
+        if let reactions = self.reactionsLayout {
             height += defaultReactionsInset
             height += reactions.size.height
         }
@@ -2452,15 +2452,7 @@ class ChatRowItem: TableRowItem {
         channelViews?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
         replyCount?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
        
-        if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .short:
-                reactions.measure(for: .greatestFiniteMagnitude)
-            default:
-                break
-            }
-        }
-        
+       
         self.rightFrames = ChatRightView.Frames(self, size: NSMakeSize(.greatestFiniteMagnitude, rightHeight))
         
         var widthForContent: CGFloat = blockWidth
@@ -2482,27 +2474,22 @@ class ChatRowItem: TableRowItem {
         }
         
         if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .full:
-                if isBubbled {
-                    if !hasBubble {
-                        reactions.measure(for: min(320, blockWidth))
-                    } else if reactions.presentation.isOutOfBounds {
-                        reactions.measure(for: _contentSize.width + 40)
-                    } else {
-                        var w = widthForContent
-                        if let item = self as? ChatMessageItem {
-                            if item.webpageLayout != nil {
-                                w = _contentSize.width
-                            }
-                        }
-                        reactions.measure(for: w)
-                    }
+            if isBubbled {
+                if !hasBubble {
+                    reactions.measure(for: min(320, blockWidth))
+                } else if reactions.presentation.isOutOfBounds {
+                    reactions.measure(for: _contentSize.width + 40)
                 } else {
-                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+                    var w = widthForContent
+                    if let item = self as? ChatMessageItem {
+                        if item.webpageLayout != nil {
+                            w = _contentSize.width
+                        }
+                    }
+                    reactions.measure(for: w)
                 }
-            default:
-                break
+            } else {
+                reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
             }
         }
        
@@ -2748,7 +2735,7 @@ class ChatRowItem: TableRowItem {
 
         
         if let reactions = self.reactionsLayout {
-            if reactions.presentation.isOutOfBounds, reactions.mode == .full {
+            if reactions.presentation.isOutOfBounds {
                 rect.size.height -= defaultReactionsInset
                 rect.size.height -= reactions.size.height
             }
@@ -2792,7 +2779,7 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(rect.width, topicLinkWidth + bubbleDefaultInnerInset)
 
-        if let reactions = reactionsLayout, reactions.mode == .full, !reactions.presentation.isOutOfBounds {
+        if let reactions = reactionsLayout, !reactions.presentation.isOutOfBounds {
             rect.size.width = max(reactions.size.width + bubbleDefaultInnerInset, rect.width)
         }
         
@@ -3375,19 +3362,14 @@ class ChatRowItem: TableRowItem {
     }
     var lastLineContentWidth: LastLineData? {
         if let reactionsLayout = reactionsLayout {
-            switch reactionsLayout.mode {
-            case .full:
-                var oneLine = reactionsLayout.oneLine
-                if let item = self as? ChatMessageItem {
-                    if item.webpageLayout != nil {
-                        oneLine = false
-                    }
+            var oneLine = reactionsLayout.oneLine
+            if let item = self as? ChatMessageItem {
+                if item.webpageLayout != nil {
+                    oneLine = false
                 }
-                if !reactionsLayout.presentation.isOutOfBounds {
-                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
-                }
-            default:
-                break
+            }
+            if !reactionsLayout.presentation.isOutOfBounds {
+                return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
             }
         }
         if captionLayouts.count == 1 {
