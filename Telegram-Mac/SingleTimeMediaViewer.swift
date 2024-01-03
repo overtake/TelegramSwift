@@ -290,6 +290,9 @@ final class SingleTimeMediaViewer : ModalViewController {
         genericView.close.set(handler: { [weak self] _ in
             self?.genericView.stopAndClose()
         }, for: .Click)
+        
+        _ = context.engine.messages.markMessageContentAsConsumedInteractively(messageId: message.id).start()
+
         readyOnce()
     }
     
