@@ -42,6 +42,10 @@ final class ChatMediaPresentation : Equatable {
         self.waveformForeground = waveformForeground
     }
     
+    var blendingMode: CGBlendMode {
+        return !self.isIncoming && self.isBubble ? .clear : .normal
+    }
+    
     static func make(for message: Message, account: Account, renderType: ChatItemRenderType, theme: TelegramPresentationTheme) -> ChatMediaPresentation {
         let isIncoming: Bool = message.isIncoming(account, renderType == .bubble)
         

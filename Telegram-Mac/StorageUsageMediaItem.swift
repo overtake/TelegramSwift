@@ -440,14 +440,14 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
         if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: item.message), case .playing = song.state {
                 audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: pause, iconInset: inset)
-                audio.state = .Icon(image: pause, mode: .normal)
+                audio.state = .Icon(image: pause)
             } else {
                 audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: play, iconInset: inset)
-                audio.state = .Icon(image: play, mode: .normal)
+                audio.state = .Icon(image: play)
             }
         } else {
             audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: play, iconInset: inset)
-            audio.state = .Icon(image: play, mode: .normal)
+            audio.state = .Icon(image: play)
         }
     }
     

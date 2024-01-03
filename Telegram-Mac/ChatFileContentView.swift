@@ -410,20 +410,20 @@ class ChatFileContentView: ChatMediaContentView {
                         }
                     }
                     progress = max(progress, 0.1)
-                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
+                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil, blendMode: presentation.blendingMode)
                     
                     let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                     if progress == 1.0, sentGrouped {
                         progressView.state = .Success
                     } else {
-                        progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Fetching(progress: progress, force: false)
+                        progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb) : .Fetching(progress: progress, force: false)
                     }
                 case .Local:
-                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil)
-                    progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb, mode: .normal)
+                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil, blendMode: presentation.blendingMode)
+                    progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb)
                 case .Remote:
-                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
-                    progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Remote
+                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil, blendMode: presentation.blendingMode)
+                    progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb) : .Remote
                 }
                 
                 progressView.userInteractionEnabled = status != .Local
