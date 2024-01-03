@@ -158,7 +158,7 @@ public final class DustLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         for i in (0 ..< self.items.count).reversed() {
             self.items[i].phase += Float(deltaTimeValue) * self.animationSpeed / Float(NSView.animationDurationFactor())
             
-            if self.items[i].phase >= 4.0 {
+            if self.items[i].phase >= 3.0 {
                 self.items.remove(at: i)
                 didRemoveItems = true
             }
