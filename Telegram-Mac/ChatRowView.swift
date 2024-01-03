@@ -1903,22 +1903,22 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state != .editing {
             
-            let table = item.table!
-            let rect = item.context.window.contentView!.bounds
-            let metalLayer = DustLayer()
-            let view = View(frame: rect)
-            view.layer?.addSublayer(metalLayer)
-            item.context.window.contentView?.addSubview(view)
-            metalLayer.frame = rect
-            metalLayer.isInHierarchy = true
-
-            
-            metalLayer.addItem(frame: CGRect(origin: view.focus(rowView.frame.size).origin, size: rowView.frame.size), image: self.rowView.snapshot)
-            metalLayer.becameEmpty = { [weak view] in
-                view?.removeFromSuperview()
-            }
-            
-            return
+//            let table = item.table!
+//            let rect = item.context.window.contentView!.bounds
+//            let metalLayer = DustLayer()
+//            let view = View(frame: rect)
+//            view.layer?.addSublayer(metalLayer)
+//            item.context.window.contentView?.addSubview(view)
+//            metalLayer.frame = rect
+//            metalLayer.isInHierarchy = true
+//
+//            
+//            metalLayer.addItem(frame: CGRect(origin: view.focus(rowView.frame.size).origin, size: rowView.frame.size), image: self.rowView.snapshot)
+//            metalLayer.becameEmpty = { [weak view] in
+//                view?.removeFromSuperview()
+//            }
+//            
+//            return
             
             let result: Bool
             switch FastSettings.forceTouchAction {
