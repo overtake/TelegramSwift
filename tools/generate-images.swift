@@ -914,6 +914,7 @@ func initialize() -> [String] {
     array.append("channel_feature_stories")
     
     array.append("chat_hidden_author")
+    array.append("chat_my_notes")
 
     return array
 }

@@ -49,7 +49,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     
     override func open() {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
-            if parent.autoclearTimeout != nil, !parent.id.peerId.isSecretChat {
+            if parent.autoclearTimeout != nil, parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
                 SingleTimeMediaViewer.show(context: context, message: parent)
             } else if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
                 
