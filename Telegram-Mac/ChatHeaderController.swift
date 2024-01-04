@@ -20,15 +20,18 @@ import Localization
 
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
-    
     func remove(animated: Bool)
+}
+
+struct EmojiTag {
+    let emoji: String
 }
 
 
 struct ChatHeaderState : Identifiable, Equatable {
     enum Value : Equatable {
         case none
-        case search(ChatSearchInteractions, Peer?, String?)
+        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag])
         case addContact(block: Bool, autoArchived: Bool)
         case requestChat(String, String)
         case shareInfo
@@ -131,8 +134,11 @@ struct ChatHeaderState : Identifiable, Equatable {
         switch main {
         case .none:
             height += 0
-        case .search:
+        case let .search(_, _, _, emojiTags):
             height += 44
+            if !emojiTags.isEmpty {
+                height += 30
+            }
         case let .report(_, status):
             if let _ = status {
                 height += 30
@@ -1333,7 +1339,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
         switch state.main {
-        case let .search(interactions, _, initialString):
+        case let .search(interactions, _, initialString, _):
             self.interactions = interactions
             self.parentInteractions = chatInteraction
             self.calendarController = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
@@ -1376,7 +1382,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             self?.searchView.isLoading = loading
         }))
         switch state.main {
-        case let .search(_, initialPeer, _):
+        case let .search(_, initialPeer, _, _):
             if let initialPeer = initialPeer {
                 self.chatInteraction.movePeerToInput(initialPeer)
             }
