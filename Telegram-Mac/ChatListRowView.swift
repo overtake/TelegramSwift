@@ -1760,6 +1760,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let icon = theme.icons.chat_hidden_author
                 photo.setState(account: item.context.account, state: .Empty)
                 photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 5, photo.frame.size.height - 5)), cornerRadius: nil)) |> map {($0, false)})
+            } else if item.isSavedMessage, case .savedMessages = item.mode {
+                self.archivedPhoto?.removeFromSuperview()
+                self.archivedPhoto = nil
+                let icon = theme.icons.chat_my_notes
+                photo.setState(account: item.context.account, state: .Empty)
+                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 5, photo.frame.size.height - 5)), cornerRadius: nil)) |> map {($0, false)})
             } else if item.isSavedMessage {
                 self.archivedPhoto?.removeFromSuperview()
                 self.archivedPhoto = nil

@@ -681,6 +681,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 } else if peer.id.isAnonymousSavedMessages {
                     let icon = theme.icons.chat_hidden_author
                     avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil)) |> map {($0, false)})
+                } else if peer.id == chatInteraction.context.peerId, chatInteraction.mode.isSavedMessagesThread {
+                    let icon = theme.icons.chat_my_notes
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil)) |> map {($0, false)})
                 } else if peer.id == chatInteraction.context.peerId {
                     let icon = theme.icons.searchSaved
                     avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil)) |> map {($0, false)})
@@ -798,7 +801,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                             .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
                     }
                     if PeerId(data.threadId) == chatInteraction.context.peerId {
-                        result = result.withUpdatedTitle(strings().peerSavedMessages)
+                        result = result.withUpdatedTitle(strings().peerMyNotes)
                     }
                 case .saved:
                     break

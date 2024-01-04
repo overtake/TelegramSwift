@@ -5103,6 +5103,8 @@ public final class L10n {
   public static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
   public static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
+  /// My Notes
+  public static var chatListMyNotes: String  { return L10n.tr("Localizable", "ChatList.MyNotes") }
   /// Proxy Sponsor
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Story
@@ -9629,6 +9631,8 @@ public final class L10n {
   }
   /// Deleted Account
   public static var peerDeletedUser: String  { return L10n.tr("Localizable", "Peer.DeletedUser") }
+  /// My Notes
+  public static var peerMyNotes: String  { return L10n.tr("Localizable", "Peer.MyNotes") }
   /// Replies Notifications
   public static var peerRepliesNotifications: String  { return L10n.tr("Localizable", "Peer.RepliesNotifications") }
   /// Saved Messages
