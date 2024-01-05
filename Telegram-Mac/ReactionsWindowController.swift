@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
-import TelegramUI
+import TelegramMedia
 
 protocol StickerFramesCollector {
     func collect() -> [Int : LottiePlayerView]

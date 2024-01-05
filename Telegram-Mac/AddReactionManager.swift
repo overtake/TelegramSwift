@@ -13,7 +13,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import ObjcUtils
-import TelegramUI
+import TelegramMedia
 
 func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil) {
     

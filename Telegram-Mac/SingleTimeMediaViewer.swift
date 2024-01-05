@@ -12,7 +12,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import DustLayer
-import TelegramUI
+import TelegramMedia
 
 
 private final class VoiceView : View, APDelegate {
@@ -56,6 +56,27 @@ private final class VoiceView : View, APDelegate {
     
     func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
         
+        let path = CGMutablePath()
+        let endAngle = -CGFloat.pi / 2.0
+        let startAngle = CGFloat(0.01) * 2.0 * CGFloat.pi + endAngle
+
+        path.addArc(center: CGPointMake(self.progress.frame.width / 2, self.progress.frame.height / 2), radius: self.progress.frame.height / 2, startAngle: -(.pi / 2), endAngle: (.pi * 2) - (.pi / 2), clockwise: false)
+        
+        self.progress.path = path
+        self.progress.transform = CATransform3DScale(CATransform3DIdentity, -1, 1, 1)
+
+        
+        let duration = song.duration ?? 0
+        
+        let text = String.durationTransformed(elapsed: duration)
+        
+        let value = DynamicCounterTextView.make(for: text, count: text, font: .normal(.short), textColor: theme.colors.grayText, width: .greatestFiniteMagnitude)
+        self.durationView.update(value, animated: true)
+        self.durationView.change(size: value.size, animated: true)
+        
+        let deadline = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+        
+        fireControl.update(color: activityColor, timeout: duration, deadlineTimestamp: .infinity)
     }
     private var once: Bool = false
     func songDidChangedState(song:APSongItem, for controller:APController, animated: Bool) {
@@ -76,8 +97,6 @@ private final class VoiceView : View, APDelegate {
             
             self.progress.path = path
             self.progress.transform = CATransform3DScale(CATransform3DIdentity, -1, 1, 1)
-
-            setProgressWithAnimation(duration: duration, value: 0)
             
             let tickValue = 1 / 60 / duration
             
@@ -130,15 +149,6 @@ private final class VoiceView : View, APDelegate {
         didFinish?(self)
     }
 
-    private func setProgressWithAnimation(duration: TimeInterval, value: Float) {
-        let animation = CABasicAnimation(keyPath: "strokeEnd")
-        animation.duration = duration
-        animation.fromValue = self.progress.strokeEnd
-        animation.toValue = value
-        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        progress.strokeEnd = CGFloat(value)
-        progress.add(animation, forKey: "animateprogress")
-    }
     
     private var progressValue: Double = 0
     
@@ -185,6 +195,9 @@ private final class VoiceView : View, APDelegate {
         player.start()
         
         player.add(listener: self)
+        if let song = player.currentSong {
+            songDidChanged(song: song, for: player, animated: true)
+        }
         
         self.player = player
         

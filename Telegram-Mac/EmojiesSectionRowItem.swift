@@ -15,7 +15,7 @@ import Postbox
 import FastBlur
 import ObjcUtils
 import Accelerate
-import TelegramUI
+import TelegramMedia
 
 final class EmojiesSectionRowItem : GeneralRowItem {
     

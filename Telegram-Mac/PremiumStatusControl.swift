@@ -13,7 +13,7 @@ import TelegramCore
 import Postbox
 import QuartzCore
 import AppKit
-import TelegramUI
+import TelegramMedia
 
 
 final class PremiumStatusControl : Control {

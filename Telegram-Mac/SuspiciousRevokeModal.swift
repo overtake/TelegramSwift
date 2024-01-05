@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import TelegramUI
+import TelegramMedia
 import Cocoa
 import TGUIKit
 import SwiftSignalKit

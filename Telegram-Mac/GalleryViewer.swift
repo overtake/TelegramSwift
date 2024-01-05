@@ -204,15 +204,6 @@ private final class GalleryTouchBarController : ViewController {
         self.transition = transition
         super.init()
     }
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = GalleryTouchBar(interactions: interactions, selectedItemChanged: selectedItemChanged, transition: transition)
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
     
     deinit {
         var bp:Int = 0

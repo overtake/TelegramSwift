@@ -9,12 +9,12 @@
 import Foundation
 import OpusBinding
 
-final class DataItem : TGDataItem {
+public final class DataItem : TGDataItem {
     let path: String
-    init(path: String) {
+    public init(path: String) {
         self.path = path
     }
-    override func appendData(_ data: Data!) {
+    public override func appendData(_ data: Data!) {
          do {
             if !FileManager.default.fileExists(atPath: self.path) {
                 FileManager.default.createFile(atPath: self.path, contents: self.data(), attributes: nil)

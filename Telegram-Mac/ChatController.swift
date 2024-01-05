@@ -184,8 +184,6 @@ extension ChatHistoryLocation {
 }
 
 
-private var temporaryTouchBar: Any?
-
 
 final class ChatWrapperEntry : Comparable, Identifiable {
     let appearance: AppearanceWrapperEntry<ChatHistoryEntry>
@@ -6228,29 +6226,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.navigationController?.push(ChatScheduleController(context: context, chatLocation: self.chatLocation))
     }
     
-    @available(macOS 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        if let temporaryTouchBar = temporaryTouchBar as? ChatTouchBar {
-            temporaryTouchBar.updateChatInteraction(self.chatInteraction, textView: self.genericView.inputView.textView.inputView)
-        } else {
-            temporaryTouchBar = ChatTouchBar(chatInteraction: self.chatInteraction, textView: self.genericView.inputView.textView.inputView)
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
-    
     override func windowDidBecomeKey() {
         super.windowDidBecomeKey()
-        if #available(OSX 10.12.2, *) {
-            (temporaryTouchBar as? ChatTouchBar)?.updateByKeyWindow()
-        }
         updateInteractiveReading()
         chatInteraction.saveState(scrollState: immediateScrollState())
     }
     override func windowDidResignKey() {
         super.windowDidResignKey()
-        if #available(OSX 10.12.2, *) {
-            (temporaryTouchBar as? ChatTouchBar)?.updateByKeyWindow()
-        }
         updateInteractiveReading()
         chatInteraction.saveState(scrollState:immediateScrollState())
     }
@@ -7851,10 +7833,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 updateFloatingPhotos(self.genericView.scroll, animated: animated)
             }
-            
-//            if #available(OSX 10.12.2, *) {
-//                self.context.window.touchBar = self.context.window.makeTouchBar()
-//            }
+
             
             if oldValue.recordingState == nil && value.recordingState != nil {
                 if let pause = context.sharedContext.getAudioPlayer()?.pause() {

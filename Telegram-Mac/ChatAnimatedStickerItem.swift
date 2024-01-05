@@ -11,7 +11,7 @@ import TelegramCore
 import InAppSettings
 import SwiftSignalKit
 import Postbox
-import TelegramUI
+import TelegramMedia
 
 final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters {
     let playPolicy: LottiePlayPolicy?

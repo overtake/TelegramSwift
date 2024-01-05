@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TGUIKit
 import Postbox
 import AppKit
-import TelegramUI
+import TelegramMedia
 
 final class MessageReadMenuRowItem : AppMenuRowItem {
     

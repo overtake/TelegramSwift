@@ -14,7 +14,7 @@ import SwiftSignalKit
 import TGUIKit
 import AVKit
 import RangeSet
-import TelegramUI
+import TelegramMedia
 
 
 class APSingleWrapper {

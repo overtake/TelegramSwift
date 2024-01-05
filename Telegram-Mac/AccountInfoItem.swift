@@ -12,7 +12,7 @@ import Postbox
 import TelegramCore
 import Reactions
 import SwiftSignalKit
-import TelegramUI
+import TelegramMedia
 
 
 class AccountInfoItem: GeneralRowItem {

@@ -7,7 +7,7 @@
 //
 
 import TGUIKit
-import TelegramUI
+import TelegramMedia
 
 enum LButtonAutoplaySide {
     case left

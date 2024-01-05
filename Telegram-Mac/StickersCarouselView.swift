@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
-import TelegramUI
+import TelegramMedia
 
 private let itemSize = CGSize(width: 220.0, height: 220.0)
 

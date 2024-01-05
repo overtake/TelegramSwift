@@ -12,7 +12,7 @@ import Postbox
 import TelegramCore
 import TextRecognizing
 import TGUIKit
-import TelegramUI
+import TelegramMedia
 import MediaPlayer
 
 extension AutoremoveTimeoutMessageAttribute : Equatable {

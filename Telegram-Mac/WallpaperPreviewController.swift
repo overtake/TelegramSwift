@@ -15,7 +15,7 @@ import ThemeSettings
 import Postbox
 import InAppSettings
 import CoreGraphics
-import TelegramUI
+import TelegramMedia
 
 private final class WallpaperActionButton : Control {
     private let gradient: VisualEffect = VisualEffect(frame: .zero)

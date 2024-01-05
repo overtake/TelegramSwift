@@ -4,13 +4,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "TelegramUI",
+    name: "TelegramMedia",
     platforms: [.macOS(.v10_13)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
-            name: "TelegramUI",
-            targets: ["TelegramUI"]),
+            name: "TelegramMedia",
+            targets: ["TelegramMedia"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -18,6 +18,7 @@ let package = Package(
         .package(name: "SSignalKit", path: "../../submodules/telegram-ios/submodules/SSignalKit"),
         .package(name: "TelegramCore", path: "../../submodules/telegram-ios/submodules/TelegramCore"),
         .package(name: "Postbox", path: "../../submodules/telegram-ios/submodules/Postbox"),
+        .package(name: "OpusBinding", path: "../../submodules/telegram-ios/submodules/OpusBinding"),
         .package(name: "ColorPalette", path: "../ColorPalette"),
         .package(name: "KeyboardKey", path: "../KeyboardKey"),
         .package(name: "GZIP", path: "../GZIP"),
@@ -32,7 +33,7 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
-            name: "TelegramUI",
+            name: "TelegramMedia",
             dependencies: [.product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil),
                            .product(name: "ColorPalette", package: "ColorPalette", condition: nil),
                            .product(name: "KeyboardKey", package: "KeyboardKey", condition: nil),
@@ -44,6 +45,7 @@ let package = Package(
                            .product(name: "ApiCredentials", package: "ApiCredentials", condition: nil),
                            .product(name: "ObjcUtils", package: "ObjcUtils", condition: nil),
                            .product(name: "MediaPlayer", package: "MediaPlayer", condition: nil),
+                           .product(name: "OpusBinding", package: "OpusBinding", condition: nil),
                           ],
             path: "Sources"),
     ]
