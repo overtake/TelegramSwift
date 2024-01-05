@@ -339,8 +339,9 @@ public func ApplyDustAnimation(for currentView: NSView) {
         return
     }
     #if arch(arm64) && (DEBUG || BETA)
+//    if MetalEngine.shared.rootLayer.superlayer == nil {
     window.contentView?.layer?.addSublayer(MetalEngine.shared.rootLayer)
-
+//    }
     let metalLayer = DustLayer()
     metalLayer.isInHierarchy = true
     metalLayer.frame = window.contentView!.bounds

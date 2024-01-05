@@ -49,7 +49,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     
     override func open() {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
-            if parent.autoclearTimeout != nil, !parent.id.peerId.isSecretChat {
+            if parent.autoclearTimeout != nil, parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
                 SingleTimeMediaViewer.show(context: context, message: parent)
             } else if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
                 
@@ -230,6 +230,30 @@ class ChatVoiceContentView: ChatAudioContentView {
                         download?.removeFromSuperview()
                     })
                 }
+                
+                if let parent = parent, let _ = parent.autoclearTimeout, parent.id.namespace == Namespaces.Message.Cloud, status == .Local, let parameters = parameters {
+                    let current: SingleTimeVoiceBadgeView
+                    if let view = strongSelf.badgeView {
+                        current = view
+                    } else {
+                        current = SingleTimeVoiceBadgeView(frame: NSMakeRect(strongSelf.progressView.frame.maxX - 15, strongSelf.waveformView.frame.maxY + 2, 20, 20))
+                        strongSelf.addSubview(current)
+                        strongSelf.badgeView = current
+                        current.isEventLess = true
+                        current.update(size: NSMakeSize(30, 30), text: "1", foreground: parameters.presentation.activityForeground, background: parameters.presentation.activityBackground, blendMode: parameters.presentation.blendingMode)
+                        
+                        if animated {
+                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                        }
+                    }
+                    strongSelf.progressView.badge = NSMakeRect(24, 19, 22, 22)
+                } else if let view = strongSelf.badgeView {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    strongSelf.badgeView = nil
+                    strongSelf.progressView.badge = nil
+                }
+                strongSelf.needsLayout = true
             }
         }))
         
@@ -264,26 +288,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                 self.unreadView = nil
             }
             
-            if let parent = parent, let _ = parent.autoclearTimeout, parent.id.namespace == Namespaces.Message.Cloud {
-                let current: SingleTimeVoiceBadgeView
-                if let view = self.badgeView {
-                    current = view
-                } else {
-                    current = SingleTimeVoiceBadgeView(frame: NSMakeRect(10, waveformView.frame.maxY + 10, 20, 20))
-                    self.addSubview(current)
-                    self.badgeView = current
-                    current.isEventLess = true
-                    current.update(size: NSMakeSize(30, 30), text: "1", foreground: parameters.presentation.activityForeground, background: parameters.presentation.activityBackground)
-                    
-                    if animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                        current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
-                    }
-                }
-            } else if let view = self.badgeView {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                self.badgeView = nil
-            }
+           
 
         }
         
