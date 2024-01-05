@@ -13,7 +13,6 @@ import SwiftSignalKit
 import CoreMedia
 import AVFoundation
 import TelegramCore
-import TelegramUI
 
 private final class CustomAudioConverter {
     struct Format: Equatable {
@@ -140,7 +139,7 @@ private func converterComplexInputDataProc(inAudioConverter: AudioConverterRef, 
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
 
-func audioRecorderNativeStreamDescription(_ sampleRate:Float64) -> AudioStreamBasicDescription {
+public func audioRecorderNativeStreamDescription(_ sampleRate:Float64) -> AudioStreamBasicDescription {
     var canonicalBasicStreamDescription = AudioStreamBasicDescription()
     canonicalBasicStreamDescription.mSampleRate = sampleRate
     canonicalBasicStreamDescription.mFormatID = kAudioFormatLinearPCM
@@ -154,11 +153,11 @@ func audioRecorderNativeStreamDescription(_ sampleRate:Float64) -> AudioStreamBa
 }
 
 private var nextRecorderContextId: Int32 = 0
-func getNextRecorderContextId() -> Int32 {
+public func getNextRecorderContextId() -> Int32 {
     return OSAtomicIncrement32(&nextRecorderContextId)
 }
 
-protocol RecoderContextRenderer : class {
+public protocol RecoderContextRenderer : AnyObject {
     func processAndDisposeAudioBuffer(_ buffer: AudioBuffer)
 }
 
@@ -183,15 +182,15 @@ final class AudioUnitHolder {
 private var audioRecorderContexts: [Int32: RecorderContextHolder] = [:]
 private var audioUnitHolders = Atomic<[Int32: AudioUnitHolder]>(value: [:])
 
-func addAudioRecorderContext(_ id: Int32, _ context: RecoderContextRenderer) {
+public func addAudioRecorderContext(_ id: Int32, _ context: RecoderContextRenderer) {
     audioRecorderContexts[id] = RecorderContextHolder(context: context)
 }
 
-func removeAudioRecorderContext(_ id: Int32) {
+public func removeAudioRecorderContext(_ id: Int32) {
     audioRecorderContexts.removeValue(forKey: id)
 }
 
-func addAudioUnitHolder(_ id: Int32, _ queue: Queue, _ audioUnit: Atomic<AudioUnit?>) {
+public func addAudioUnitHolder(_ id: Int32, _ queue: Queue, _ audioUnit: Atomic<AudioUnit?>) {
     _ = audioUnitHolders.modify { dict in
         var dict = dict
         dict[id] = AudioUnitHolder(queue: queue, audioUnit: audioUnit)
@@ -199,7 +198,7 @@ func addAudioUnitHolder(_ id: Int32, _ queue: Queue, _ audioUnit: Atomic<AudioUn
     }
 }
 
-func removeAudioUnitHolder(_ id: Int32) {
+public func removeAudioUnitHolder(_ id: Int32) {
     _ = audioUnitHolders.modify { dict in
         var dict = dict
         dict.removeValue(forKey: id)
@@ -228,7 +227,7 @@ func withAudioUnitHolder(_ id: Int32, _ f: (Atomic<AudioUnit?>, Queue) -> Void) 
     }
 }
 
-func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
+public func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
     let id = Int32(intptr_t(bitPattern: refCon))
     
     withAudioUnitHolder(id, { (holder, queue) in
@@ -267,13 +266,13 @@ func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMut
     return noErr
 }
 
-struct RecordedAudioData {
-    let compressedData: Data
-    let duration: Double
-    let waveform: Data?
-    let id:Int64?
-    let path: String
-    init(compressedData: Data, duration: Double, waveform: Data?, id: Int64?, path: String) {
+public struct RecordedAudioData {
+    public let compressedData: Data
+    public let duration: Double
+    public let waveform: Data?
+    public let id:Int64?
+    public let path: String
+    public init(compressedData: Data, duration: Double, waveform: Data?, id: Int64?, path: String) {
         self.compressedData = compressedData
         self.duration = duration
         self.waveform = waveform
@@ -746,11 +745,11 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
     }
 }
 
-enum AudioRecordingState: Equatable {
+public enum AudioRecordingState: Equatable {
     case paused(duration: Double)
     case recording(duration: Double, durationMediaTimestamp: Double)
     
-    static func ==(lhs: AudioRecordingState, rhs: AudioRecordingState) -> Bool {
+    public static func ==(lhs: AudioRecordingState, rhs: AudioRecordingState) -> Bool {
         switch lhs {
         case let .paused(duration):
             if case .paused(duration) = rhs {
@@ -768,20 +767,20 @@ enum AudioRecordingState: Equatable {
     }
 }
 
-final class ManagedAudioRecorder {
+public final class ManagedAudioRecorder {
     private let queue = Queue()
     private var contextRef: Unmanaged<ManagedAudioRecorderContext>?
     private let micLevelValue = ValuePromise<Float>(0.0)
     private let recordingStateValue = ValuePromise<AudioRecordingState>(.paused(duration: 0.0))
-    var micLevel: Signal<Float, NoError> {
+    public var micLevel: Signal<Float, NoError> {
         return self.micLevelValue.get()
     }
     
-    var recordingState: Signal<AudioRecordingState, NoError> {
+    public var recordingState: Signal<AudioRecordingState, NoError> {
         return self.recordingStateValue.get()
     }
     
-    init(liveUploading: PreUploadManager?, dataItem: DataItem) {
+    public init(liveUploading: PreUploadManager?, dataItem: DataItem) {
         
         self.queue.async {
             let context = ManagedAudioRecorderContext(queue: self.queue, micLevel: self.micLevelValue, recordingState: self.recordingStateValue, liveUploading: liveUploading, dataItem: dataItem)
@@ -789,7 +788,7 @@ final class ManagedAudioRecorder {
         }
     }
     
-    func start() {
+    public func start() {
         self.queue.async {
             if let context = self.contextRef?.takeUnretainedValue() {
                 context.start()
@@ -797,7 +796,7 @@ final class ManagedAudioRecorder {
         }
     }
     
-    func stop() {
+    public func stop() {
         self.queue.async {
             if let context = self.contextRef?.takeUnretainedValue() {
                 context.stop()
@@ -805,7 +804,7 @@ final class ManagedAudioRecorder {
         }
     }
     
-    func takenRecordedData() -> Signal<RecordedAudioData?, NoError> {
+    public func takenRecordedData() -> Signal<RecordedAudioData?, NoError> {
         return Signal { subscriber in
             self.queue.async {
                 if let context = self.contextRef?.takeUnretainedValue() {

@@ -2769,3 +2769,74 @@ public extension NSImage {
         self.init(cgImage: cgImage, size: cgImage.systemSize)
     }
 }
+
+
+
+public extension CGImage {
+    var cvPixelBuffer: CVPixelBuffer? {
+        let cgImage = self
+
+        var maybePixelBuffer: CVPixelBuffer? = nil
+        let ioSurfaceProperties = NSMutableDictionary()
+        let options = NSMutableDictionary()
+        options.setObject(ioSurfaceProperties, forKey: kCVPixelBufferIOSurfacePropertiesKey as NSString)
+
+        let _ = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width * self.scale), Int(size.height * self.scale), kCVPixelFormatType_32ARGB, options as CFDictionary, &maybePixelBuffer)
+        guard let pixelBuffer = maybePixelBuffer else {
+            return nil
+        }
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        }
+
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+
+        let context = CGContext(
+            data: baseAddress,
+            width: Int(self.size.width * self.scale),
+            height: Int(self.size.height * self.scale),
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue,
+            releaseCallback: nil,
+            releaseInfo: nil
+        )!
+        context.clear(CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+        context.draw(cgImage, in: CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+
+        return pixelBuffer
+    }
+
+    
+    var cmSampleBuffer: CMSampleBuffer? {
+           guard let pixelBuffer = self.cvPixelBuffer else {
+               return nil
+           }
+           var newSampleBuffer: CMSampleBuffer? = nil
+
+           var timingInfo = CMSampleTimingInfo(
+               duration: CMTimeMake(value: 1, timescale: 30),
+               presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
+               decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
+           )
+
+           var videoInfo: CMVideoFormatDescription? = nil
+           CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+           guard let videoInfo = videoInfo else {
+               return nil
+           }
+           CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
+
+           if let newSampleBuffer = newSampleBuffer {
+               let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
+               let dict = attachments[0] as! NSMutableDictionary
+
+               dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
+           }
+
+           return newSampleBuffer
+       }
+
+}

@@ -10,9 +10,9 @@ import Cocoa
 import OpusBinding
 import Postbox
 import TelegramCore
-
 import TGUIKit
 import SwiftSignalKit
+import TelegramMedia
 
 enum ChatPresentationInputContext {
     case none
@@ -211,7 +211,7 @@ final class ChatRecordingVideoState : ChatRecordingState {
     init(context: AccountContext, liveUpload:Bool, autohold: Bool) {
         let id:Int64 = arc4random64()
         self.path = NSTemporaryDirectory() + "video_message\(id).mp4"
-        self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), config: VideoMessageConfig.with(appConfiguration: context.appConfiguration), liveUploading: liveUpload ? PreUploadManager(path, context: context, id: id) : nil)
+        self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), config: VideoMessageConfig.with(appConfiguration: context.appConfiguration), liveUploading: liveUpload ? PreUploadManager(path, engine: context.engine, id: id) : nil)
         super.init(autohold: autohold)
     }
     
@@ -289,7 +289,7 @@ final class ChatRecordingAudioState : ChatRecordingState {
     init(context: AccountContext, liveUpload: Bool, autohold: Bool) {
         let id = arc4random64()
         let path = NSTemporaryDirectory() + "voice_message\(id).ogg"
-        let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, context: context, id: id) : nil
+        let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, engine: context.engine, id: id) : nil
         let dataItem = DataItem(path: path)
         recorder = ManagedAudioRecorder(liveUploading: uploadManager, dataItem: dataItem)
         super.init(autohold: autohold)

@@ -14,7 +14,7 @@ import MergeLists
 import Reactions
 import AppKit
 import SwiftSignalKit
-import TelegramUI
+import TelegramMedia
 
 private func tagImage(_ color: NSColor)->NSImage? {
     let image = NSImage(named: "Icon_ReactionTagBackground")!

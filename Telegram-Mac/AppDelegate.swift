@@ -26,7 +26,7 @@ import WebKit
 import System
 import CodeSyntax
 import MetalEngine
-import TelegramUI
+import TelegramMedia
 import RLottie
 
 #if !APP_STORE
@@ -280,10 +280,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         makeRLottie = { json, key in
             return RLottieBridge(json: json, key: key)
-        }
-                
-        if #available(OSX 10.12.2, *) {
-            NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
         }
         
         guard let containerUrl = ApiEnvironment.containerURL else {

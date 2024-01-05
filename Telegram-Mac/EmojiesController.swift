@@ -13,7 +13,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import ColorPalette
-import TelegramUI
+import TelegramMedia
 
 //private final class WarpView: View {
 //    private final class WarpPartView: View {

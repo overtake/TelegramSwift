@@ -17,7 +17,7 @@ import TGUIKit
 import libwebp
 import TGGifConverter
 import InAppSettings
-
+import TelegramMedia
 
 class MediaSenderContainer : Equatable {
     let path:String

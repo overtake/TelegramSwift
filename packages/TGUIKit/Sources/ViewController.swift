@@ -667,21 +667,7 @@ open class ViewController : NSObject {
         return {}
     }
     
-    
-    @available(OSX 10.12.2, *)
-    open func makeTouchBar() -> NSTouchBar? {
-        return nil//window?.firstResponder?.makeTouchBar()
-    }
-    
-    @available(OSX 10.12.2, *)
-    @objc public var touchBar: NSTouchBar? {
-        return window?.touchBar
-    }
-    @available(OSX 10.12.2, *)
-    open func layoutTouchBar() {
-        
-    }
-    
+
     
     open func requestUpdateBackBar() {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
@@ -925,16 +911,10 @@ open class ViewController : NSObject {
     
     @objc open func windowDidBecomeKey() {
         isKeyWindow.set(.single(true))
-        if #available(OSX 10.12.2, *) {
-            window?.touchBar = window?.makeTouchBar()
-        }
     }
     
     @objc open func windowDidResignKey() {
         isKeyWindow.set(.single(false))
-        if #available(OSX 10.12.2, *) {
-            window?.touchBar = nil
-        }
     }
     
     open var canBecomeResponder: Bool {
@@ -1217,21 +1197,6 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         return true
     }
     
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    open override func makeTouchBar() -> NSTouchBar? {
-        guard let modal = modal, let interactions = modal.interactions else {
-            if temporaryTouchBar == nil {
-                temporaryTouchBar = NSTouchBar()
-            }
-            return temporaryTouchBar as? NSTouchBar
-        }
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = ModalTouchBar(interactions, modal: modal)
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
     
     open var hasOwnTouchbar: Bool {
         return true

@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import AVKit
 import SwiftSignalKit
-import TelegramUI
+import TelegramMedia
 
 private let pipFrameKey: String = "kPipFrameKey3"
 

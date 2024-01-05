@@ -12,7 +12,7 @@ import MediaPlayer
 import TGUIKit
 import Postbox
 import SwiftSignalKit
-import TelegramUI
+import TelegramMedia
 
 protocol MediaCellLayoutable {
     var context: AccountContext { get }

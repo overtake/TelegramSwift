@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import Accelerate
-import TelegramUI
+import TelegramMedia
 
 private let badgeDiameter = floor(15.0 * 20.0 / 17.0)
 private let avatarBadgeDiameter: CGFloat = floor(floor(15.0 * 22.0 / 17.0))

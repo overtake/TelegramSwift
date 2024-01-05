@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import TelegramUI
+import TelegramMedia
 
 struct CallControlData {
     enum Mode: Equatable {

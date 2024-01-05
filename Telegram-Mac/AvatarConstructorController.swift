@@ -15,7 +15,7 @@ import ThemeSettings
 import ColorPalette
 import ObjcUtils
 import AppKit
-import TelegramUI
+import TelegramMedia
 
 private final class Arguments {
     let context: AccountContext

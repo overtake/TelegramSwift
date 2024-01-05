@@ -8,7 +8,7 @@
 
 import Foundation
 import TGUIKit
-import TelegramUI
+import TelegramMedia
 
 final class TranscribeAudioTextView : View {
     private let textView = TextView()

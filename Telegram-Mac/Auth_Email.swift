@@ -9,7 +9,7 @@
 import TGUIKit
 import AppKit
 import TelegramCore
-import TelegramUI
+import TelegramMedia
 
 private final class Auth_EmailHeaderView : View {
     private let playerView:LottiePlayerView = LottiePlayerView()

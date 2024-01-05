@@ -14,7 +14,7 @@ import SwiftSignalKit
 import Postbox
 import RangeSet
 import IOKit.pwr_mgt
-import TelegramUI
+import TelegramMedia
 
 enum SVideoStyle {
     case regular

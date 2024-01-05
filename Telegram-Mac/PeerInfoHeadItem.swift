@@ -12,7 +12,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 import ColorPalette
-import TelegramUI
+import TelegramMedia
 
 fileprivate final class ActionButton : Control {
     fileprivate let imageView: ImageView = ImageView()

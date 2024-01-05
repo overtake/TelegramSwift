@@ -576,26 +576,6 @@ open class Window: NSWindow {
         return self.isPushToTalkEquaivalent?(event) ?? super.performKeyEquivalent(with: event)
     }
     
-    @available(OSX 10.12.2, *)
-    open override func makeTouchBar() -> NSTouchBar? {
-        if !sheets.isEmpty {
-            for sheet in sheets.reversed() {
-                if let sheet = sheet as? Window {
-                    if hasModals(sheet) {
-                        return Modal.topModalController(self)?.makeTouchBar() ?? sheet.makeTouchBar()
-                    }
-                }
-                return sheet.makeTouchBar()
-            }
-        }
-        if let topModal = Modal.topModalController(self) {
-            if topModal.hasOwnTouchbar {
-                return topModal.makeTouchBar() ?? super.makeTouchBar()
-            }
-        }
-        return self.rootViewController?.makeTouchBar() ?? super.makeTouchBar()
-    }
-    
     open override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
         if let responder = responder, responder.responds(to: NSSelectorFromString("window")) {
             let window:NSWindow? = responder.value(forKey: "window") as? NSWindow

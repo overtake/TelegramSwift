@@ -19,7 +19,7 @@ import TelegramCore
 import InAppSettings
 import SwiftSignalKit
 import Postbox
-import TelegramUI
+import TelegramMedia
 
 
 func canTranscribeMessage(_ message: Message, context: AccountContext) -> Bool {

@@ -14,7 +14,7 @@ import TGUIKit
 import SwiftSignalKit
 import TGModernGrowingTextView
 import InputView
-import TelegramUI
+import TelegramMedia
 
 class ChatMediaLayoutParameters : Equatable {
     

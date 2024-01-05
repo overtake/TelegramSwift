@@ -15,7 +15,7 @@ import SwiftSignalKit
 import InAppSettings
 import CurrencyFormat
 import ThemeSettings
-import TelegramUI
+import TelegramMedia
 import MediaPlayer
 
 class ChatServiceItem: ChatRowItem {

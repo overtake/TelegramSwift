@@ -12,7 +12,7 @@ import TelegramCore
 import Postbox
 import CoreMediaIO
 import InAppSettings
-import TelegramUI
+import TelegramMedia
 
 struct IODevices {
     let camera: [AVCaptureDevice]

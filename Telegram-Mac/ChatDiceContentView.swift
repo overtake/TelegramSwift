@@ -12,7 +12,7 @@ import TelegramCore
 import InAppSettings
 import TGUIKit
 import SwiftSignalKit
-import TelegramUI
+import TelegramMedia
 
 let diceSide1: String = "1⃣"
 let diceSide2: String = "2⃣"

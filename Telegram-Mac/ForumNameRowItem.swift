@@ -9,7 +9,7 @@
 import Foundation
 import TGUIKit
 import TelegramCore
-import TelegramUI
+import TelegramMedia
 
 final class ForumNameRowItem : InputDataRowItem {
     

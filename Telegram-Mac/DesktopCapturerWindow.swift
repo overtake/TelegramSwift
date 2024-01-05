@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import TgVoipWebrtc
 import SwiftSignalKit
-import TelegramUI
+import TelegramMedia
 
 
 
