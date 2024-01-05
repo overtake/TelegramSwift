@@ -4963,6 +4963,10 @@ public final class L10n {
   public static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
   /// Outgoing Video Call
   public static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
+  /// Close
+  public static var chatVoiceSingleClose: String  { return L10n.tr("Localizable", "Chat.Voice.Single.Close") }
+  /// Delete and Close
+  public static var chatVoiceSingleDeleteAndClose: String  { return L10n.tr("Localizable", "Chat.Voice.Single.DeleteAndClose") }
   /// No speech detected
   public static var chatVoiceTransribeError: String  { return L10n.tr("Localizable", "Chat.Voice.Transribe.Error") }
   /// Join

@@ -688,11 +688,7 @@ class APController : NSResponder {
     }
     fileprivate var _commandCenter: Any? = nil
     
-    @available(macOS 10.12.2, *)
-    private func commandCenter()->AudioCommandCenter? {
-        return self._commandCenter as? AudioCommandCenter
-    }
-    
+
     init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
         self.state.volume = volume
@@ -1249,9 +1245,6 @@ class APChatMusicController : APChatController {
 
     init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, volume: Float = 1.0, messages: [Message] = []) {
         super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index: index, streamable: true, baseRate: baseRate, volume: volume, messages: messages)
-        if #available(macOS 10.12.2, *) {
-            self._commandCenter = AudioCommandCenter(self)
-        }
     }
 
     required init?(coder: NSCoder) {
