@@ -14,6 +14,7 @@ import Postbox
 import SwiftSignalKit
 import Contacts
 import ColorPalette
+import TelegramUI
 
 class ChatContactRowItem: ChatRowItem {
 

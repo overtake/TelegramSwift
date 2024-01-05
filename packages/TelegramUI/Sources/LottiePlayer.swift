@@ -1,6 +1,5 @@
 import SwiftSignalKit
 import Postbox
-import RLottie
 import TGUIKit
 import Metal
 import TelegramCore
@@ -8,6 +7,19 @@ import GZIP
 import libwebp
 import Accelerate
 import QuartzCore
+import MediaPlayer
+import CoreMedia
+
+public protocol R_LottieBridge: NSObject {
+    func renderFrame(with index: Int32, into buffer: UnsafeMutablePointer<UInt8>, width: Int32, height: Int32, bytesPerRow: Int32)
+    func startFrame() -> Int32
+    func endFrame() -> Int32
+    func fps() -> Int32
+    func setColor(_ color: NSColor, forKeyPath keyPath: String)
+}
+
+public var makeRLottie:((String, String)->R_LottieBridge?)? = nil
+
 
 final class RenderAtomic<T> {
     private var lock: pthread_mutex_t
@@ -51,12 +63,12 @@ final class RenderAtomic<T> {
 }
 
 
-let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
-let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .utility)
+public let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
+public let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .utility)
 
 
 
-enum LottiePlayerState : Equatable {
+public enum LottiePlayerState : Equatable {
     case initializing
     case failed
     case playing
@@ -64,7 +76,7 @@ enum LottiePlayerState : Equatable {
     case finished
 }
 
-protocol RenderedFrame {
+public protocol RenderedFrame {
     var duration: TimeInterval { get }
     var data: Data? { get }
     var image: CGImage? { get }
@@ -458,24 +470,24 @@ private final class RendererState  {
     }
 }
 
-final class LottieSoundEffect {
+public final class LottieSoundEffect {
     private let player: MediaPlayer
     let triggerOn: Int32?
     
     private(set) var isPlayable: Bool = false
     
-    init(file: TelegramMediaFile, postbox: Postbox, triggerOn: Int32?) {
+    public init(file: TelegramMediaFile, postbox: Postbox, triggerOn: Int32?) {
         self.player = MediaPlayer(postbox: postbox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: file.resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
         self.triggerOn = triggerOn
     }
-    func play() {
+    public func play() {
         if isPlayable {
             self.player.play()
             isPlayable = false
         }
     }
     
-    func markAsPlayable() -> Void {
+    public func markAsPlayable() -> Void {
         isPlayable = true
     }
 }
@@ -848,10 +860,10 @@ private final class PlayerRenderer {
     
 }
 
-final class AnimationPlayerContext {
+public final class AnimationPlayerContext {
     private let rendererRef: QueueLocalObject<PlayerRenderer>
     fileprivate let animation: LottieAnimation
-    init(_ animation: LottieAnimation, maxRefreshRate: Int = 60, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
+    public init(_ animation: LottieAnimation, maxRefreshRate: Int = 60, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
         self.rendererRef = QueueLocalObject(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
@@ -866,7 +878,7 @@ final class AnimationPlayerContext {
         }
     }
     
-    func playAgain() {
+    public func playAgain() {
         self.rendererRef.with { renderer in
             if renderer.finished {
                 renderer.playAgain()
@@ -874,30 +886,30 @@ final class AnimationPlayerContext {
         }
     }
     
-    func setColors(_ colors: [LottieColor]) {
+    public func setColors(_ colors: [LottieColor]) {
         self.rendererRef.with { renderer in
             renderer.setColors(colors)
         }
     }
     
-    func playSoundEffect() {
+    public func playSoundEffect() {
         self.rendererRef.with { renderer in
             renderer.playSoundEffect()
         }
     }
-    func updateSize(_ size: NSSize) {
+    public func updateSize(_ size: NSSize) {
         self.rendererRef.syncWith { renderer in
             renderer.updateSize(size)
         }
     }
-    var currentFrame:Int32? {
+    public var currentFrame:Int32? {
         var currentFrame:Int32? = nil
         self.rendererRef.syncWith { renderer in
             currentFrame = renderer.currentFrame
         }
         return currentFrame
     }
-    var totalFrames:Int32? {
+    public var totalFrames:Int32? {
         var totalFrames:Int32? = nil
         self.rendererRef.syncWith { renderer in
             totalFrames = renderer.totalFrames
@@ -905,7 +917,7 @@ final class AnimationPlayerContext {
         return totalFrames
     }
     
-    func jump(to frame: Int32) -> Void {
+    public func jump(to frame: Int32) -> Void {
         self.rendererRef.with { renderer in
             renderer.jump(to: frame)
         }
@@ -913,25 +925,25 @@ final class AnimationPlayerContext {
 }
 
 
-enum ASLiveTime : Int {
+public enum ASLiveTime : Int {
     case chat = 3_600
     case thumb = 259200
     case effect = 241_920 // 7 days
 }
 
-enum ASCachePurpose {
+public enum ASCachePurpose {
     case none
     case temporaryLZ4(ASLiveTime)
 }
 
-struct LottieAnimationEntryKey : Hashable {
-    let size: CGSize
-    let backingScale: Int
-    let key:LottieAnimationKey
-    let fitzModifier: EmojiFitzModifier?
-    let colors: [LottieColor]
-    let mirror: Bool
-    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil, colors: [LottieColor] = [], mirror: Bool = false) {
+public struct LottieAnimationEntryKey : Hashable {
+    public let size: CGSize
+    public let backingScale: Int
+    public let key:LottieAnimationKey
+    public let fitzModifier: EmojiFitzModifier?
+    public let colors: [LottieColor]
+    public let mirror: Bool
+    public init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil, colors: [LottieColor] = [], mirror: Bool = false) {
         self.key = key
         self.size = size
         self.backingScale = backingScale
@@ -940,17 +952,17 @@ struct LottieAnimationEntryKey : Hashable {
         self.mirror = mirror
     }
     
-    func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimationEntryKey {
+    public func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimationEntryKey {
         return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors, mirror: mirror)
     }
-    func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
+    public func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
         return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors, mirror: mirror)
     }
-    func withUpdatedSize(_ size: CGSize) -> LottieAnimationEntryKey {
+    public func withUpdatedSize(_ size: CGSize) -> LottieAnimationEntryKey {
         return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors, mirror: mirror)
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(size.width)
         hasher.combine(size.height)
         hasher.combine(backingScale)
@@ -966,11 +978,11 @@ struct LottieAnimationEntryKey : Hashable {
     }
 }
 
-enum LottieAnimationKey : Hashable {
+public enum LottieAnimationKey : Hashable {
     case media(MediaId?)
     case bundle(String)
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         switch self {
         case let .bundle(value):
             hasher.combine("bundle")
@@ -984,7 +996,7 @@ enum LottieAnimationKey : Hashable {
     }
 }
 
-enum LottiePlayPolicy : Hashable {
+public enum LottiePlayPolicy : Hashable {
     case loop
     case loopAt(firstStart:Int32?, range: ClosedRange<Int32>)
     case once
@@ -996,7 +1008,7 @@ enum LottiePlayPolicy : Hashable {
     case playCount(Int32)
     
     
-    static func ==(lhs: LottiePlayPolicy, rhs: LottiePlayPolicy) -> Bool {
+    public static func ==(lhs: LottiePlayPolicy, rhs: LottiePlayPolicy) -> Bool {
         switch lhs {
         case .loop:
             if case .loop = rhs {
@@ -1040,18 +1052,22 @@ enum LottiePlayPolicy : Hashable {
 
 }
 
-struct LottieColor : Equatable {
-    let keyPath: String
-    let color: NSColor
+public struct LottieColor : Equatable {
+    public let keyPath: String
+    public let color: NSColor
+    public init(keyPath: String, color: NSColor) {
+        self.keyPath = keyPath
+        self.color = color
+    }
 }
 
-enum LottiePlayerTriggerFrame : Equatable {
+public enum LottiePlayerTriggerFrame : Equatable {
     case first
     case last
     case custom(Int32)
 }
 
-protocol RenderContainer : AnyObject {
+public protocol RenderContainer : AnyObject {
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame?
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame)
     func markFinished()
@@ -1204,10 +1220,10 @@ private final class WebmRenderer : RenderContainer {
 private final class LottieRenderer : RenderContainer {
     
     private let animation: LottieAnimation
-    private let bridge: RLottieBridge?
+    private let bridge: R_LottieBridge?
     private let fileSupplyment: TRLotFileSupplyment?
     
-    init(animation: LottieAnimation, bridge: RLottieBridge?, fileSupplyment: TRLotFileSupplyment?) {
+    init(animation: LottieAnimation, bridge: R_LottieBridge?, fileSupplyment: TRLotFileSupplyment?) {
         self.animation = animation
         self.bridge = bridge
         self.fileSupplyment = fileSupplyment
@@ -1277,20 +1293,20 @@ private final class LottieRenderer : RenderContainer {
     }
 }
 
-enum LottieAnimationType {
+public enum LottieAnimationType {
     case lottie
     case webp
     case webm
 }
 
-final class LottieAnimation : Equatable {
-    static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
+public final class LottieAnimation : Equatable {
+    public static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
         return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
     }
     
-    let type: LottieAnimationType
+    public let type: LottieAnimationType
     
-    var liveTime: Int {
+    public var liveTime: Int {
         switch cache {
         case .none:
             return 0
@@ -1299,7 +1315,7 @@ final class LottieAnimation : Equatable {
         }
     }
     
-    var supportsMetal: Bool {
+    public var supportsMetal: Bool {
         switch type {
         case .lottie:
             return self.metalSupport
@@ -1310,19 +1326,19 @@ final class LottieAnimation : Equatable {
         }
     }
     
-    let compressed: Data
-    let key: LottieAnimationEntryKey
-    let cache: ASCachePurpose
-    let maximumFps: Int
-    let playPolicy: LottiePlayPolicy
-    let colors:[LottieColor]
-    let soundEffect: LottieSoundEffect?
-    let metalSupport: Bool
-    let postbox: Postbox?
-    let runOnQueue: Queue
-    var onFinish:(()->Void)?
+    public let compressed: Data
+    public let key: LottieAnimationEntryKey
+    public let cache: ASCachePurpose
+    public let maximumFps: Int
+    public let playPolicy: LottiePlayPolicy
+    public let colors:[LottieColor]
+    public let soundEffect: LottieSoundEffect?
+    public let metalSupport: Bool
+    public let postbox: Postbox?
+    public let runOnQueue: Queue
+    public var onFinish:(()->Void)?
 
-    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? {
+    public var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? {
         didSet {
             var bp = 0
             bp += 1
@@ -1330,7 +1346,7 @@ final class LottieAnimation : Equatable {
     }
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = lottieStateQueue, metalSupport: Bool = false) {
+    public init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = lottieStateQueue, metalSupport: Bool = false) {
         self.compressed = compressed
         self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
@@ -1344,27 +1360,27 @@ final class LottieAnimation : Equatable {
         self.metalSupport = metalSupport
     }
     
-    var size: NSSize {
+    public var size: NSSize {
         let size = key.size
         return size
     }
-    var viewSize: NSSize {
+    public var viewSize: NSSize {
         return key.size
     }
-    var backingScale: Int {
+    public var backingScale: Int {
         return key.backingScale
     }
     
-    func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
+    public func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
         return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), type: self.type, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
-    func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
+    public func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
         return LottieAnimation(compressed: self.compressed, key: self.key, type: self.type, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
-    func withUpdatedPolicy(_ playPolicy: LottiePlayPolicy) -> LottieAnimation {
+    public func withUpdatedPolicy(_ playPolicy: LottiePlayPolicy) -> LottieAnimation {
         return LottieAnimation(compressed: self.compressed, key: self.key, type: self.type, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
-    func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
+    public func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
         return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), type: self.type, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     
@@ -1393,7 +1409,7 @@ final class LottieAnimation : Equatable {
     }
     
     
-    func initialize() -> RenderContainer? {
+    public func initialize() -> RenderContainer? {
         switch type {
         case .lottie:
             let decompressed = TGGUnzipData(self.compressed, 8 * 1024 * 1024)
@@ -1423,7 +1439,7 @@ final class LottieAnimation : Equatable {
                         modified = transformedWithFitzModifier(data: data, fitzModifier: self.key.fitzModifier)
                     }
                     if let json = String(data: modified, encoding: .utf8) {
-                        if let bridge = RLottieBridge(json: json, key: self.cacheKey) {
+                        if let bridge = makeRLottie?(json, self.cacheKey) {
                             for color in self.colors {
                                 bridge.setColor(color.color, forKeyPath: color.keyPath)
                             }
@@ -1680,10 +1696,10 @@ private final class ContextHolder {
 private var holder: ContextHolder?
 
 
-struct LottieRunLoop : Hashable {
-    let fps: Int
+public struct LottieRunLoop : Hashable {
+    public let fps: Int
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(fps)
     }
 }
@@ -1800,28 +1816,28 @@ private final class LottieFallbackView: NSView {
     }
 }
 
-class LottiePlayerView : View {
+open class LottiePlayerView : View {
     private var context: AnimationPlayerContext?
     private var _ignoreCachedContext: Bool = false
     private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
-    var currentState: LottiePlayerState {
+    public var currentState: LottiePlayerState {
         return _currentState.with { $0 }
     }
     
     private let stateValue: ValuePromise<LottiePlayerState> = ValuePromise(.initializing, ignoreRepeated: true)
-    var state: Signal<LottiePlayerState, NoError> {
+    public var state: Signal<LottiePlayerState, NoError> {
         return stateValue.get()
     }
-    required init(frame frameRect: NSRect) {
+    public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
     }
     
-    required override init() {
+    public required override init() {
         super.init()
     }
     
     private var temporary: LottieAnimation?
-    func updateVisible() {
+    public func updateVisible() {
         if self.visibleRect == .zero {
             self.temporary = self.animation
         } else {
@@ -1832,22 +1848,22 @@ class LottiePlayerView : View {
         }
     }
     
-    var animation: LottieAnimation?
+    public var animation: LottieAnimation?
     
-    var contextAnimation: LottieAnimation? {
+    public var contextAnimation: LottieAnimation? {
         return context?.animation
     }
     
-    override var isFlipped: Bool {
+    public override var isFlipped: Bool {
         return true
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
+    public override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         update(size: newSize, transition: .immediate)
     }
     
-    func update(size: NSSize, transition: ContainedViewLayoutTransition) {
+    public func update(size: NSSize, transition: ContainedViewLayoutTransition) {
         for subview in subviews {
             transition.updateFrame(view: subview, frame: size.bounds)
         }
@@ -1863,17 +1879,17 @@ class LottiePlayerView : View {
         bp += 1
     }
     
-    required init?(coder decoder: NSCoder) {
+    public required init?(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidChangeBackingProperties() {
+    public override func viewDidChangeBackingProperties() {
         if let context = context {
             self.set(context.animation.withUpdatedBackingScale(Int(backingScaleFactor)))
         }
     }
     
-    func playIfNeeded(_ playSound: Bool = false) {
+    public func playIfNeeded(_ playSound: Bool = false) {
         if let context = self.context, context.animation.playPolicy == .once {
             context.playAgain()
             if playSound {
@@ -1884,11 +1900,11 @@ class LottiePlayerView : View {
         }
     }
     
-    func playAgain() {
+    public func playAgain() {
         self.context?.playAgain()
     }
     
-    var currentFrame: Int32? {
+    public var currentFrame: Int32? {
         if _ignoreCachedContext {
             return nil
         }
@@ -1899,11 +1915,11 @@ class LottiePlayerView : View {
         }
     }
     
-    func ignoreCachedContext() {
+    public func ignoreCachedContext() {
         _ignoreCachedContext = true
     }
     
-    var totalFrames: Int32? {
+    public var totalFrames: Int32? {
         if _ignoreCachedContext {
             return nil
         }
@@ -1914,13 +1930,13 @@ class LottiePlayerView : View {
         }
     }
     
-    func setColors(_ colors: [LottieColor]) {
+    public func setColors(_ colors: [LottieColor]) {
         context?.setColors(colors)
     }
     
     
     
-    func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false, animated: Bool = false) {
+    public func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false, animated: Bool = false) {
         assertOnMainThread()
         _ignoreCachedContext = false
         

@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import TelegramUI
 
 fileprivate class AudioWaveformContainerView : SimpleLayer {
     var color:NSColor = .accent {

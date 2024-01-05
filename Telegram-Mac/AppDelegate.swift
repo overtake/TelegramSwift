@@ -26,7 +26,8 @@ import WebKit
 import System
 import CodeSyntax
 import MetalEngine
-
+import TelegramUI
+import RLottie
 
 #if !APP_STORE
 import AppCenter
@@ -148,6 +149,10 @@ private final class CtxInstallLayer : SimpleLayer {
 //            DeviceGraphicsContextSettings.install(nil)
 //        }
     }
+}
+
+extension RLottieBridge : R_LottieBridge {
+   
 }
 
 
@@ -272,6 +277,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         initializeSelectManager()
         startLottieCacheCleaner()
+        
+        makeRLottie = { json, key in
+            return RLottieBridge(json: json, key: key)
+        }
                 
         if #available(OSX 10.12.2, *) {
             NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true

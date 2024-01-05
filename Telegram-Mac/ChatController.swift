@@ -733,7 +733,14 @@ class ChatControllerView : View, ChatInputDelegate {
         
         var value:ChatHeaderState.Value
         if interfaceState.isSearchMode.0 {
-            value = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2, [.init(emoji: clown)])
+            var tags: [EmojiTag] = []
+            if chatInteraction.context.peerId == chatInteraction.peerId, let reactions = chatInteraction.context.reactions.available {
+                tags = reactions.enabled.map {
+                    .init(emoji: $0.value.string, file: $0.activateAnimation)
+                }
+            }
+            
+            value = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2, tags)
         } else if let threadData = interfaceState.threadInfo, threadData.isClosed, let peer = interfaceState.peer as? TelegramChannel, peer.adminRights != nil || peer.flags.contains(.isCreator) || threadData.isOwnedByMe {
             value = .restartTopic
         } else if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty, interfaceState.threadInfo == nil {

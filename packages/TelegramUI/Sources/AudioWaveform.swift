@@ -36,16 +36,16 @@ private func setBits(data: UnsafeMutableRawPointer, bitOffset: Int, numBits: Int
     normalizedData.assumingMemoryBound(to: Int32.self).pointee |= value << Int32(normalizedBitOffset)
 }
 
-final class AudioWaveform: Equatable {
-    let samples: Data
-    let peak: Int32
+public final class AudioWaveform: Equatable {
+    public let samples: Data
+    public let peak: Int32
     
-    init(samples: Data, peak: Int32) {
+    public init(samples: Data, peak: Int32) {
         self.samples = samples
         self.peak = peak
     }
     
-    convenience init(bitstream: Data, bitsPerSample: Int) {
+    public convenience init(bitstream: Data, bitsPerSample: Int) {
         let numSamples = Int(Float(bitstream.count * 8) / Float(bitsPerSample))
         var result = Data()
         result.count = numSamples * 2
@@ -64,7 +64,7 @@ final class AudioWaveform: Equatable {
         self.init(samples: result, peak: 31)
     }
     
-    func makeBitstream() -> Data {
+    public func makeBitstream() -> Data {
         let numSamples = self.samples.count / 2
         let bitstreamLength = (numSamples * 5) / 8 + (((numSamples * 5) % 8) == 0 ? 0 : 1)
         var result = Data()
@@ -84,7 +84,7 @@ final class AudioWaveform: Equatable {
         return result
     }
     
-    static func ==(lhs: AudioWaveform, rhs: AudioWaveform) -> Bool {
+    public static func ==(lhs: AudioWaveform, rhs: AudioWaveform) -> Bool {
         return lhs.peak == rhs.peak && lhs.samples == rhs.samples
     }
 }

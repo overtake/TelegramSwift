@@ -12,7 +12,7 @@ import TGUIKit
 import InputView
 import ColorPalette
 import SwiftSignalKit
-
+import TelegramUI
 
 
 extension Updated_ChatTextInputState : Equatable {

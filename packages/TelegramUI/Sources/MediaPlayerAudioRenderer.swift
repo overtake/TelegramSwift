@@ -3,7 +3,7 @@ import SwiftSignalKit
 import CoreMedia
 import AVFoundation
 import TelegramCore
-
+import MediaPlayer
 
 private enum AudioPlayerRendererState {
     case paused
@@ -644,43 +644,43 @@ enum MediaPlayerAudioSessionControl {
     case custom((MediaPlayerAudioSessionCustomControl) -> Disposable)
 }
 
-struct AudioAddress {
-    static var outputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+public struct AudioAddress {
+    public static var outputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultOutputDevice,
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
     
-    static var nominalSampleRates = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyStreamFormat,
+    public static var nominalSampleRates = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyStreamFormat,
                                                          mScope: kAudioObjectPropertyScopeOutput,
                                                          mElement: kAudioObjectPropertyElementMaster)
 
     
-    static var inputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
+    public static var inputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
 
 }
 
-enum AudioNotification: String {
+public enum AudioNotification: String {
     case audioDevicesDidChange
     case audioInputDeviceDidChange
     case audioOutputDeviceDidChange
     case mixStereo
     
-    var stringValue: String {
+    public var stringValue: String {
         return "Audio" + rawValue
     }
     
-    var notificationName: NSNotification.Name {
+    public var notificationName: NSNotification.Name {
         return NSNotification.Name(stringValue)
     }
 }
 
-struct AudioListener {
-    static var output: AudioObjectPropertyListenerProc = { _, _, _, _ in
+public struct AudioListener {
+    public static var output: AudioObjectPropertyListenerProc = { _, _, _, _ in
         NotificationCenter.default.post(name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
         return 0
     }
-    static var input: AudioObjectPropertyListenerProc = { _, _, _, _ in
+    public static var input: AudioObjectPropertyListenerProc = { _, _, _, _ in
         NotificationCenter.default.post(name: AudioNotification.audioInputDeviceDidChange.notificationName, object: nil)
         return 0
     }

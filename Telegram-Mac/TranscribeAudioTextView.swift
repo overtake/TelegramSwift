@@ -8,6 +8,7 @@
 
 import Foundation
 import TGUIKit
+import TelegramUI
 
 final class TranscribeAudioTextView : View {
     private let textView = TextView()

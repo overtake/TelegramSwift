@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-
+import TelegramUI
 
 let demoPhoneSize = CGSize(width: 262.0, height: 539.0)
 private var phoneBorderImage = {

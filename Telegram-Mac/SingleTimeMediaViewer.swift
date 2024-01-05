@@ -12,7 +12,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import DustLayer
-
+import TelegramUI
 
 
 private final class VoiceView : View, APDelegate {

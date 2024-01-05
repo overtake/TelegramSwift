@@ -3219,8 +3219,8 @@ class ChatRowItem: TableRowItem {
                 
                 let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
                 
-                
-                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20)
+                let aboveText: String? = peerId == context.peerId ? strings().chatReactionsTagMessage : nil
+                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20 + (aboveText != nil ? 20 : 0))
                 
                 
                 let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
@@ -3232,7 +3232,7 @@ class ChatRowItem: TableRowItem {
                 panel.hasShadow = false
                 
 
-                let reveal:((NSView & StickerFramesCollector)->Void)?
+                let reveal:((ContextAddReactionsListView & StickerFramesCollector)->Void)?
                 
                 
                 var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
@@ -3268,6 +3268,9 @@ class ChatRowItem: TableRowItem {
                                 context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
                             }
                         })
+//                        let transition = ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeOut)
+//                        transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: NSMakeSize(view.frame.width, 60)))
+//                        view.updateLayout(size: view.frame.size, transition: transition)
                         window.show(view)
                     }
                 } else {
@@ -3277,7 +3280,7 @@ class ChatRowItem: TableRowItem {
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
                     context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), fromRect: fromRect, storeAsRecentlyUsed: true)
-                }, radiusLayer: nil, revealReactions: reveal)
+                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveText)
                 
                 
                 panel.contentView?.addSubview(view)

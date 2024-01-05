@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import SwiftSignalKit
-
+import TelegramUI
 
 final class StickerPremiumHolderView: NSVisualEffectView {
     private let dismiss:ImageButton = ImageButton()

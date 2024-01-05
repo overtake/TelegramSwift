@@ -13,6 +13,7 @@ import Postbox
 import TGUIKit
 import Accelerate
 import AppKit
+import TelegramUI
 
 class InlineStickerLockLayer : SimpleLayer {
     private let lockedView: SimpleLayer = SimpleLayer()

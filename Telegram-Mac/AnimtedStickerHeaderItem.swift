@@ -8,7 +8,7 @@
 
 import TGUIKit
 import Foundation
-
+import TelegramUI
 
 class AnimatedStickerHeaderItem: GeneralRowItem {
     fileprivate let context: AccountContext

@@ -9,6 +9,7 @@
 import Foundation
 import TelegramCore
 import TGUIKit
+import TelegramUI
 
 final class SearchTopicRowItem: GeneralRowItem {
     let item: EngineChatList.Item

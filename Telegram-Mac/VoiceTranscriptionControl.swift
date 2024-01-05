@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import QuartzCore
 import AppKit
+import TelegramUI
 
 final class VoiceTranscriptionControl: Control {
     

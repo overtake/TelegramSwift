@@ -3,8 +3,9 @@ import SwiftSignalKit
 import Postbox
 import CoreMedia
 import TelegramCore
-
+import MediaPlayer
 import Postbox
+import AppKit
 
 private let traceEvents = false
 
@@ -48,7 +49,7 @@ private enum MediaPlayerState {
     case playing(MediaPlayerLoadedState)
 }
 
-enum MediaPlayerActionAtEnd {
+public enum MediaPlayerActionAtEnd {
     case loop((() -> Void)?)
     case action(() -> Void)
     case loopDisablingSound(() -> Void)
@@ -841,12 +842,12 @@ private final class MediaPlayerContext {
     }
 }
 
-enum MediaPlayerPlaybackStatus: Equatable {
+public enum MediaPlayerPlaybackStatus: Equatable {
     case playing
     case paused
     case buffering(initial: Bool, whilePlaying: Bool)
     
-    static func ==(lhs: MediaPlayerPlaybackStatus, rhs: MediaPlayerPlaybackStatus) -> Bool {
+    public static func ==(lhs: MediaPlayerPlaybackStatus, rhs: MediaPlayerPlaybackStatus) -> Bool {
         switch lhs {
         case .playing:
             if case .playing = rhs {
@@ -870,37 +871,60 @@ enum MediaPlayerPlaybackStatus: Equatable {
     }
 }
 
-struct MediaPlayerStatus: Equatable {
-    let generationTimestamp: Double
-    let duration: Double
-    let dimensions: CGSize
-    let timestamp: Double
-    let baseRate: Double
-    let volume: Float
-    let seekId: Int
-    let status: MediaPlayerPlaybackStatus
+public struct MediaPlayerStatus: Equatable {
+    public let generationTimestamp: Double
+    public let duration: Double
+    public let dimensions: CGSize
+    public let timestamp: Double
+    public let baseRate: Double
+    public let volume: Float
+    public let seekId: Int
+    public let status: MediaPlayerPlaybackStatus
+    public init(generationTimestamp: Double, duration: Double, dimensions: CGSize, timestamp: Double, baseRate: Double, volume: Float, seekId: Int, status: MediaPlayerPlaybackStatus) {
+        self.generationTimestamp = generationTimestamp
+        self.duration = duration
+        self.dimensions = dimensions
+        self.timestamp = timestamp
+        self.baseRate = baseRate
+        self.volume = volume
+        self.seekId = seekId
+        self.status = status
+    }
+}
+
+
+public extension MediaPlayerStatus {
+    func withUpdatedVolume(_ volume: Float) -> MediaPlayerStatus {
+        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: volume, seekId: self.seekId, status: self.status)
+    }
+    func withUpdatedTimestamp(_ timestamp: Double) -> MediaPlayerStatus {
+        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
+    }
+    func withUpdatedDuration(_ duration: Double) -> MediaPlayerStatus {
+        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
+    }
 }
 
 let playerQueue = Queue()
 
 
-final class MediaPlayer {
+public final class MediaPlayer {
         
     private var contextRef: QueueLocalObject<MediaPlayerContext>
     
     private let timebasePromise:Promise<CMTimebase?> = Promise()
     
-    var timebase: Signal<CMTimebase?, NoError> {
+    public var timebase: Signal<CMTimebase?, NoError> {
         return timebasePromise.get()
     }
     
     private let statusValue = ValuePromise<MediaPlayerStatus>(ignoreRepeated: true)
     
-    var status: Signal<MediaPlayerStatus, NoError> {
+    public var status: Signal<MediaPlayerStatus, NoError> {
         return self.statusValue.get()
     }
     
-    var actionAtEnd: MediaPlayerActionAtEnd = .stop {
+    public var actionAtEnd: MediaPlayerActionAtEnd = .stop {
         didSet {
             let value = self.actionAtEnd
             contextRef.with { context in
@@ -909,7 +933,7 @@ final class MediaPlayer {
         }
     }
     
-    init(postbox: Postbox, userLocation: MediaResourceUserLocation, userContentType: MediaResourceUserContentType, reference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, isSeekable: Bool = true, playAutomatically: Bool = false, enableSound: Bool, baseRate: Double = 1.0, volume: Float = 0.8, fetchAutomatically: Bool, playAndRecord: Bool = false, keepAudioSessionWhilePaused: Bool = true, initialTimebase: CMTimebase? = nil) {
+    public init(postbox: Postbox, userLocation: MediaResourceUserLocation, userContentType: MediaResourceUserContentType, reference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, isSeekable: Bool = true, playAutomatically: Bool = false, enableSound: Bool, baseRate: Double = 1.0, volume: Float = 0.8, fetchAutomatically: Bool, playAndRecord: Bool = false, keepAudioSessionWhilePaused: Bool = true, initialTimebase: CMTimebase? = nil) {
         
         self.statusValue.set(MediaPlayerStatus(generationTimestamp: 0.0, duration: 0.0, dimensions: CGSize(), timestamp: 0.0, baseRate: baseRate, volume: volume, seekId: 0, status: .paused))
         
@@ -933,86 +957,86 @@ final class MediaPlayer {
         
     }
     
-    func play() {
+    public func play() {
         contextRef.with {
             $0.play()
         }
     }
     
-    func playOnceWithSound(playAndRecord: Bool) {
+    public func playOnceWithSound(playAndRecord: Bool) {
         contextRef.with {
             $0.playOnceWithSound(playAndRecord: playAndRecord)
         }
     }
     
-    func toggleSoundEnabled() {
+    public func toggleSoundEnabled() {
         contextRef.with {
             $0.toggleSoundEnabled()
         }
     }
     
-    func continuePlayingWithoutSound() {
+    public func continuePlayingWithoutSound() {
         contextRef.with {
             $0.continuePlayingWithoutSound()
         }
     }
     
-    func setForceAudioToSpeaker(_ value: Bool) {
+    public func setForceAudioToSpeaker(_ value: Bool) {
         contextRef.with { context in
             context.setForceAudioToSpeaker(value)
         }
     }
     
-    func setKeepAudioSessionWhilePaused(_ value: Bool) {
+    public func setKeepAudioSessionWhilePaused(_ value: Bool) {
         contextRef.with { context in
             context.setKeepAudioSessionWhilePaused(value)
         }
     }
     
-    func pause() {
+    public func pause() {
         contextRef.with { context in
             context.pause(lostAudioSession: false)
         }
     }
     
-    func togglePlayPause() {
+    public func togglePlayPause() {
         contextRef.with { context in
             context.togglePlayPause()
         }
     }
     
-    func setVolume(_ volume: Float) {
+    public func setVolume(_ volume: Float) {
         contextRef.with { context in
             context.setVolume(volume)
         }
     }
     
-    func toggleVolumeOnOff() {
+    public func toggleVolumeOnOff() {
         contextRef.with { context in
             context.toggleVolumeOnOff()
         }
     }
     
-    func getVolume(_ completion: @escaping(Float) -> Void) {
+    public func getVolume(_ completion: @escaping(Float) -> Void) {
         contextRef.with { context in
             context.getVolume(completion)
         }
     }
     
-    func seek(timestamp: Double) {
+    public func seek(timestamp: Double) {
         contextRef.with { context in
             context.seek(timestamp: timestamp)
         }
     }
     
     
-    func setBaseRate(_ baseRate: Double) {
+    public func setBaseRate(_ baseRate: Double) {
         contextRef.with { context in
             context.setBaseRate(baseRate)
         }
     }
     
-    func attachPlayerView(_ node: MediaPlayerView) {
+    public func attachPlayerView(_ node: MediaPlayerView) {
         let nodeRef: Unmanaged<MediaPlayerView> = Unmanaged.passRetained(node)
         contextRef.with { context in
             context.videoRenderer.attachNodeAndRelease(nodeRef)

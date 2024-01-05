@@ -12,7 +12,7 @@ import TelegramCore
 import InAppSettings
 import TGUIKit
 import SwiftSignalKit
-
+import TelegramUI
 
 
 class SlotsMediaContentView: ChatMediaContentView {

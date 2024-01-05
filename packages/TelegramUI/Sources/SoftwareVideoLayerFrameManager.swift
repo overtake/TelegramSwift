@@ -14,13 +14,13 @@ import TelegramCore
 
 import SwiftSignalKit
 import CoreMedia
-
+import MediaPlayer
 
 private let applyQueue = Queue()
 private let workers = ThreadPool(threadCount: 3, threadPriority: 0.2)
 private var nextWorker = 0
 
-final class SoftwareVideoLayerFrameManager {
+public final class SoftwareVideoLayerFrameManager {
     private var dataDisposable = MetaDisposable()
     private let source = Atomic<SoftwareVideoSource?>(value: nil)
     
@@ -42,12 +42,12 @@ final class SoftwareVideoLayerFrameManager {
     
     private let hintVP9: Bool
     
-    var onRender:(()->Void)?
+    public var onRender:(()->Void)?
     
-    init(account: Account, fileReference: FileMediaReference, layerHolder: SampleBufferLayer) {
+    public init(account: Account, fileReference: FileMediaReference, layerHolder: SampleBufferLayer) {
         var resource = fileReference.media.resource
         var secondaryResource: MediaResource?
-        self.hintVP9 = fileReference.media.isWebm
+        self.hintVP9 = fileReference.media.mimeType == "video/webm"
         for attribute in fileReference.media.attributes {
             if case .Video = attribute {
                 if let thumbnail = fileReference.media.videoThumbnails.first {
@@ -69,7 +69,7 @@ final class SoftwareVideoLayerFrameManager {
         self.dataDisposable.dispose()
     }
     
-    func start() {
+    public func start() {
         let secondarySignal: Signal<String?, NoError>
         if let secondaryResource = self.secondaryResource {
             secondarySignal = self.account.postbox.mediaBox.resourceData(secondaryResource, option: .complete(waitUntilFetchStatus: false))
@@ -105,7 +105,7 @@ final class SoftwareVideoLayerFrameManager {
         }))
     }
     
-    func tick(timestamp: Double) {
+    public func tick(timestamp: Double) {
         applyQueue.async {
             if self.baseTimestamp == nil && !self.frames.isEmpty {
                 self.baseTimestamp = timestamp
