@@ -674,7 +674,6 @@
 		27D91322283BC0EB007CF40F /* particles.png in Resources */ = {isa = PBXBuildFile; fileRef = 27D9131D283BC0EA007CF40F /* particles.png */; };
 		27D91323283BC0EB007CF40F /* star in Resources */ = {isa = PBXBuildFile; fileRef = 27D9131E283BC0EB007CF40F /* star */; };
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
-		27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
 		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
 		27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */; };
@@ -2152,7 +2151,6 @@
 		27D9131D283BC0EA007CF40F /* particles.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = particles.png; sourceTree = "<group>"; };
 		27D9131E283BC0EB007CF40F /* star */ = {isa = PBXFileReference; lastKnownFileType = file; path = star; sourceTree = "<group>"; };
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
-		27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCommandCenter.swift; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
 		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
 		27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSendAsMenuItem.swift; sourceTree = "<group>"; };
@@ -5158,7 +5156,6 @@
 				C253E2301DE34FBB0022A29F /* AudioPlayerController.swift */,
 				C28BAB261DF980DE0027CE3A /* AudioRecorder.swift */,
 				C28BAB281DF981320027CE3A /* AudioWaveform.swift */,
-				27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */,
 			);
 			name = audio;
 			sourceTree = "<group>";
@@ -7066,7 +7063,6 @@
 				C2DF47E91DE892E3003AA6C0 /* ChatToasterView.swift in Sources */,
 				C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
-				27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */,
 				27EF749529C3161E009FA57B /* SharedFolderClosureController.swift in Sources */,
 				C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */,
 				D048EDDE24FFEC5600977606 /* ChannelCommentsControls.swift in Sources */,
