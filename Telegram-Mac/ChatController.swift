@@ -6377,16 +6377,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             for entry in currentView.filteredEntries {
                 switch entry.entry {
                 case .MessageEntry:
-                    if let message = entry.entry.message {
-                        existingStableIds.insert(entry.stableId)
-                    }
+                    existingStableIds.insert(entry.stableId)
                 case .groupedPhotos:
                     existingStableIds.insert(entry.stableId)
                 default:
                     break
                 }
             }
-            let currentTimestamp = Int32(CFAbsoluteTimeGetCurrent())
+            let currentTimestamp = Int32(context.timestamp)
             var maybeRemovedInteractivelyMessageIds: [(AnyHashable, EngineMessage.Id)] = []
             for entry in previousHistoryView.filteredEntries {
                 switch entry.entry {
@@ -6394,20 +6392,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if !existingStableIds.contains(entry.stableId) {
                         if let autoremoveAttribute = message.autoremoveAttribute, let countdownBeginTime = autoremoveAttribute.countdownBeginTime {
                             let exipiresAt = countdownBeginTime + autoremoveAttribute.timeout
-                            if exipiresAt >= currentTimestamp - 1 {
+                            if exipiresAt <= currentTimestamp - 1 {
                                 expiredMessageStableIds.insert(entry.stableId)
+                            } else {
+                                maybeRemovedInteractivelyMessageIds.append((entry.stableId, message.id))
                             }
                         } else {
                             maybeRemovedInteractivelyMessageIds.append((entry.stableId, message.id))
                         }
                     }
-                case .groupedPhotos:
-                    var isRemoved = existingStableIds.contains(entry.stableId)
-                    if isRemoved, let message = entry.entry.message {
+                case let .groupedPhotos(entries, _):
+                    var isRemoved = !existingStableIds.contains(entry.stableId)
+                    if isRemoved, let message = entries.first?.message {
                         if let autoremoveAttribute = message.autoremoveAttribute, let countdownBeginTime = autoremoveAttribute.countdownBeginTime {
                             let exipiresAt = countdownBeginTime + autoremoveAttribute.timeout
-                            if exipiresAt >= currentTimestamp - 1 {
+                            if exipiresAt <= currentTimestamp - 1 {
                                 expiredMessageStableIds.insert(entry.stableId)
+                            } else {
+                                maybeRemovedInteractivelyMessageIds.append((entry.stableId, message.id))
                             }
                         } else {
                             maybeRemovedInteractivelyMessageIds.append((entry.stableId, message.id))
@@ -6492,9 +6494,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        
-        checkMessageDeletions(self.historyView, processedView)
-        
+        if case .none = transition.state {
+            checkMessageDeletions(self.historyView, processedView)
+        }
         
         prevIsLoading = isLoading
       

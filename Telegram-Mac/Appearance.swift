@@ -2887,7 +2887,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_feature_name_color: { NSImage(named: "Icon_ChannelFeature_NameColor")!.precomposed(palette.accent) },
                               channel_feature_reaction: { NSImage(named: "Icon_ChannelFeature_Reaction")!.precomposed(palette.accent) },
                               channel_feature_status: { NSImage(named: "Icon_ChannelFeature_Status")!.precomposed(palette.accent) },
-                              channel_feature_stories: { NSImage(named: "Icon_ChannelFeature_Stories")!.precomposed(palette.accent) }, chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) }
+                              channel_feature_stories: { NSImage(named: "Icon_ChannelFeature_Stories")!.precomposed(palette.accent) },
+                              chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) },
+                              chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) }
 
     )
 }

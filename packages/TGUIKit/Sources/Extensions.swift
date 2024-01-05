@@ -1358,7 +1358,7 @@ public enum ImageOrientation {
 public extension CGImage {
     
     var backingSize:NSSize {
-        return NSMakeSize(CGFloat(width) / 2.0, CGFloat(height) / 2.0)
+        return NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
     }
     
     var size:NSSize {

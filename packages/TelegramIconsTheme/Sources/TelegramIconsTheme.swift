@@ -10158,6 +10158,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_my_notes: CGImage {
+      if let image = cached.with({ $0["chat_my_notes"] }) {
+          return image
+      } else {
+          let image = _chat_my_notes()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_my_notes"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10940,6 +10953,7 @@ public final class TelegramIconsTheme {
   private let _channel_feature_status: ()->CGImage
   private let _channel_feature_stories: ()->CGImage
   private let _chat_hidden_author: ()->CGImage
+  private let _chat_my_notes: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11722,7 +11736,8 @@ public final class TelegramIconsTheme {
       channel_feature_reaction: @escaping()->CGImage,
       channel_feature_status: @escaping()->CGImage,
       channel_feature_stories: @escaping()->CGImage,
-      chat_hidden_author: @escaping()->CGImage
+      chat_hidden_author: @escaping()->CGImage,
+      chat_my_notes: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12505,5 +12520,6 @@ public final class TelegramIconsTheme {
       self._channel_feature_status = channel_feature_status
       self._channel_feature_stories = channel_feature_stories
       self._chat_hidden_author = chat_hidden_author
+      self._chat_my_notes = chat_my_notes
   }
 }

@@ -721,7 +721,15 @@ class ChatListRowItem: TableRowItem {
         let isTopic: Bool
         switch mode {
         case .chat, .savedMessages:
-            let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+            let text: String?
+            if case .savedMessages = mode, peer?.id == context.peerId {
+                text = strings().peerMyNotes
+            } else if peer?.id == context.peerId {
+                text = strings().peerSavedMessages
+            } else {
+                text = peer?.displayTitle
+            }
+            let _ = titleText.append(string: text, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
             isTopic = false
         case let .topic(_, data):
             let _ = titleText.append(string: data.info.title, color: theme.chatList.textColor, font: .medium(.title))
