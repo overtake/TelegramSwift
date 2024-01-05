@@ -13,6 +13,7 @@ import TelegramCore
 import SwiftSignalKit
 import TGModernGrowingTextView
 import InputView
+import TelegramUI
 
 final class ChatInputAnimatedEmojiAttach: View {
     

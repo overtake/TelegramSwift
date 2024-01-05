@@ -23,13 +23,13 @@ private final class SampleBufferLayerImpl: AVSampleBufferDisplayLayer {
     }
 }
 
-final class SampleBufferLayer {
-    let layer: AVSampleBufferDisplayLayer
+public final class SampleBufferLayer {
+    public let layer: AVSampleBufferDisplayLayer
     private let enqueue: (AVSampleBufferDisplayLayer) -> Void
     
     
     var isFreed: Bool = false
-    fileprivate init(layer: AVSampleBufferDisplayLayer, enqueue: @escaping (AVSampleBufferDisplayLayer) -> Void) {
+    public init(layer: AVSampleBufferDisplayLayer, enqueue: @escaping (AVSampleBufferDisplayLayer) -> Void) {
         self.layer = layer
         self.enqueue = enqueue
     }
@@ -47,15 +47,8 @@ func clearSampleBufferLayerPoll() {
     let _ = pool.modify { _ in return [] }
 }
 
-func takeSampleBufferLayer() -> SampleBufferLayer {
+public func takeSampleBufferLayer() -> SampleBufferLayer {
     var layer: AVSampleBufferDisplayLayer?
-//    let _ = pool.modify { list in
-//        var list = list
-//        if !list.isEmpty {
-//            layer = list.removeLast()
-//        }
-//        return list
-//    }
     if layer == nil {
         layer = SampleBufferLayerImpl()
     }
@@ -63,11 +56,6 @@ func takeSampleBufferLayer() -> SampleBufferLayer {
         Queue.mainQueue().async {
             layer.flushAndRemoveImage()
             layer.setAffineTransform(CGAffineTransform.identity)
-//            let _ = pool.modify { list in
-//                var list = list
-//                list.append(layer)
-//                return list
-//            }
         }
     })
 }

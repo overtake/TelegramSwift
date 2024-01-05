@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import AVFoundation
+import MediaPlayer
 
 private func findContentsLayer(_ sublayers: [CALayer]) -> CALayer? {
     for sublayer in sublayers {
@@ -55,7 +56,7 @@ private enum PollStatus: CustomStringConvertible {
     }
 }
 
-final class MediaPlayerView: View {
+public final class MediaPlayerView: View {
     var videoInHierarchy: Bool = false
     var updateVideoInHierarchy: ((Bool) -> Void)?
     
@@ -64,7 +65,7 @@ final class MediaPlayerView: View {
     private var videoLayer: AVSampleBufferDisplayLayer?
         
     
-    var preventsCapture: Bool = false {
+    public var preventsCapture: Bool = false {
         didSet {
             if #available(macOS 10.15, *) {
                 videoLayer?.preventsCapture = preventsCapture
@@ -72,7 +73,7 @@ final class MediaPlayerView: View {
         }
     }
     
-    func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
+    public func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
         videoLayer?.videoGravity = gravity
     }
     
@@ -83,7 +84,7 @@ final class MediaPlayerView: View {
     var currentRotationAngle = 0.0
     var currentAspect = 1.0
     
-    var state: (timebase: CMTimebase, requestFrames: Bool, rotationAngle: Double, aspect: Double)? {
+    public var state: (timebase: CMTimebase, requestFrames: Bool, rotationAngle: Double, aspect: Double)? {
         didSet {
             self.updateState()
         }
@@ -91,9 +92,9 @@ final class MediaPlayerView: View {
     
     private let maskLayer = SimpleShapeLayer()
     
-    var cornerRadius: CGFloat = .cornerRadius
+    public var cornerRadius: CGFloat = .cornerRadius
     
-    var positionFlags: LayoutPositionFlags? {
+    public var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
                 let path = CGMutablePath()
@@ -274,13 +275,13 @@ final class MediaPlayerView: View {
         }
     }
     
-    var transformArguments: TransformImageArguments? {
+    public var transformArguments: TransformImageArguments? {
         didSet {
             self.updateLayout()
         }
     }
     
-    init(backgroundThread: Bool = false) {
+    public init(backgroundThread: Bool = false) {
         self.videoNode = MediaPlayerViewDisplayView()
         
         
@@ -331,7 +332,7 @@ final class MediaPlayerView: View {
         self.videoLayer?.flushAndRemoveImage()
     }
     
-    override var frame: CGRect {
+    public override var frame: CGRect {
         didSet {
             if !oldValue.size.equalTo(self.frame.size) {
                 self.updateLayout()
@@ -339,7 +340,7 @@ final class MediaPlayerView: View {
         }
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
+    public override func setFrameSize(_ newSize: NSSize) {
         let oldValue = self.frame
         super.setFrameSize(newSize)
         if !oldValue.size.equalTo(self.frame.size) {
@@ -347,7 +348,7 @@ final class MediaPlayerView: View {
         }
     }
     
-    func updateLayout() {
+    public func updateLayout() {
         let bounds = self.bounds
         
         let fittedRect: CGRect
@@ -372,7 +373,7 @@ final class MediaPlayerView: View {
         }
     }
     
-    func reset() {
+    public func reset() {
         self.videoLayer?.flush()
     }
 }

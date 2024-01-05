@@ -9,6 +9,7 @@
 import Foundation
 import CoreText
 import AppKit
+import ObjcUtils
 
 public typealias UIImage = NSImage
 
@@ -2697,4 +2698,74 @@ public func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFl
     )
     
     return path
+}
+
+
+public extension FileManager {
+    
+    func modificationDateForFileAtPath(path:String) -> NSDate? {
+        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
+        return attributes[.modificationDate] as? NSDate
+    }
+    
+    func creationDateForFileAtPath(path:String) -> NSDate? {
+        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
+        return attributes[.creationDate] as? NSDate
+    }
+    
+    
+}
+
+
+
+
+public extension NSCursor  {
+    static var set_windowResizeNorthWestSouthEastCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthWestSouthEastCursor()
+    }
+    static var set_windowResizeNorthEastSouthWestCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthEastSouthWestCursor()
+    }
+}
+
+public extension NSImage {
+    var _cgImage: CGImage? {
+        return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+    
+    var jpegCGImage: CGImage? {
+        guard let tiffData = self.tiffRepresentation,
+              let bitmapImageRep = NSBitmapImageRep(data: tiffData) else {
+            return nil
+        }
+
+        let compressionFactor: CGFloat = 1.0
+        
+        guard let jpegData = bitmapImageRep.representation(using: .jpeg, properties: [.compressionFactor: compressionFactor]),
+              let dataProvider = CGDataProvider(data: jpegData as CFData),
+              let cgImage = CGImage(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else {
+            return nil
+        }
+        
+        return cgImage
+    }
+}
+
+
+public func truncate(double: Double, places : Int)-> Double
+{
+    return Double(floor(pow(10.0, Double(places)) * double)/pow(10.0, Double(places)))
+}
+
+
+public extension NSImage {
+    
+    enum Orientation {
+        case up
+        case down
+    }
+    
+    convenience init(cgImage: CGImage, scale: CGFloat, orientation: UIImage.Orientation) {
+        self.init(cgImage: cgImage, size: cgImage.systemSize)
+    }
 }

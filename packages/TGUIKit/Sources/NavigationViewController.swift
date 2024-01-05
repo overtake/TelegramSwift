@@ -1174,7 +1174,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             if let view = window.contentView!.hitTest(window.contentView!.convert(window.mouseLocationOutsideOfEventStream, from: nil))?.superview {
                 if view is HorizontalRowView || view.superview is HorizontalRowView {
                     return .failed
-                } else if view.enclosingScrollView is HorizontalScrollView {
+                } else if view.enclosingScrollView is HorizontalScrollView || view.enclosingScrollView is HorizontalTableView {
                     return .failed
                 }
             }

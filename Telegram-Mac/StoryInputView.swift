@@ -14,6 +14,7 @@ import Postbox
 import TelegramCore
 import ColorPalette
 import InputView
+import TelegramUI
 
 extension MessageReaction.Reaction {
     static var defaultStoryLike: MessageReaction.Reaction {

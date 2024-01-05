@@ -1,6 +1,7 @@
 import Foundation
 import SwiftSignalKit
 import AVFoundation
+import MediaPlayer
 
 private final class VideoPlayerProxyContext {
     private let queue: Queue

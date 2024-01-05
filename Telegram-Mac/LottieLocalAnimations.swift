@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import TelegramUI
 import Postbox
 
 enum LocalAnimatedSticker : String {

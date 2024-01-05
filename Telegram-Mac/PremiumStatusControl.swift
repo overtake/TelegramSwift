@@ -13,6 +13,8 @@ import TelegramCore
 import Postbox
 import QuartzCore
 import AppKit
+import TelegramUI
+
 
 final class PremiumStatusControl : Control {
     private var imageLayer: SimpleLayer?

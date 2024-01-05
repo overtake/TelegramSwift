@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
+import TelegramUI
 
 protocol StickerFramesCollector {
     func collect() -> [Int : LottiePlayerView]
@@ -101,7 +102,14 @@ final class ReactionsWindowController : NSObject {
             
             var rect = from.size.bounds.offsetBy(dx: offset.x, dy: offset.y)
             rect.size.width -= 20
-            rect.size.height = 40
+            rect.size.height = 20
+            
+            if from.height > 60 {
+                rect.size.height += (from.height - 60)
+                offset.y -= (from.height - 60) / 2
+            }
+            
+           // rect.size.height += 20
 
             let mask = SimpleShapeLayer()
             self.mask = mask
@@ -148,7 +156,14 @@ final class ReactionsWindowController : NSObject {
         
         let v = V(content, theme: theme)
         
-        let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+        var wAdd: CGFloat = 0
+        var initialAdd: CGFloat = 0
+        if initialView.frame.height != 60 {
+            wAdd = (initialView.frame.height - 60) + 18 // (18 is reaction offset y in parent)
+            initialAdd = 18 // (18 is reaction offset y in parent)
+        }
+        
+        let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36 - wAdd, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
@@ -168,8 +183,8 @@ final class ReactionsWindowController : NSObject {
         v.frame = v.frame.offsetBy(dx: 20, dy: 20)
         contentView.addSubview(v)
         
-        initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - (48 + 36), initialView.frame.width, initialView.frame.height)
-//        initialView.background = .red
+        initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - (48 + 36) + initialAdd, initialView.frame.width, initialView.frame.height)
+       // initialView.background = .red
 //        initialView.layer?.opacity = 0.5
         initialView.removeFromSuperview()
         contentView.addSubview(initialView)

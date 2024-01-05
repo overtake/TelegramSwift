@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import AppKit
 import SwiftSignalKit
-//
+import TelegramUI
 
 final class PremiumDemoLegacyPhoneView : View {
     private let phoneView = ImageView()

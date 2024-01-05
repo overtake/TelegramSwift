@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import TGModernGrowingTextView
-
+import TelegramUI
 
 private final class StoryRepostView : Control {
     private let borderLayer = DashLayer()

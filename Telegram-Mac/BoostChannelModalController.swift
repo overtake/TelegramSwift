@@ -13,7 +13,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-
+import TelegramUI
 
 func requiredBoostSubjectLevel(subject: BoostSubject, context: AccountContext, configuration: PremiumConfiguration) -> Int32 {
     switch subject {

@@ -435,7 +435,7 @@ private final class CacheRemovable {
 }
 private let cleaner = CacheRemovable()
 
-func startLottieCacheCleaner() {
+public func startLottieCacheCleaner() {
     cleaner.start()
 }
 

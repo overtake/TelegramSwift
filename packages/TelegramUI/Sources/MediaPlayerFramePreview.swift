@@ -2,8 +2,8 @@ import Foundation
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
-
+import MediaPlayer
+import AppKit
 
 private final class FramePreviewContext {
     let source: UniversalSoftwareVideoSource

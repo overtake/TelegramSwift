@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
@@ -253,31 +253,6 @@ final class CachedSlotMachineRepresentation: CachedMediaResourceRepresentation {
 }
 
 
-
-public enum EmojiFitzModifier: Int32, Equatable {
-    case type12
-    case type3
-    case type4
-    case type5
-    case type6
-    
-    public init?(emoji: String) {
-        switch emoji.unicodeScalars.first?.value {
-        case 0x1f3fb:
-            self = .type12
-        case 0x1f3fc:
-            self = .type3
-        case 0x1f3fd:
-            self = .type4
-        case 0x1f3fe:
-            self = .type5
-        case 0x1f3ff:
-            self = .type6
-        default:
-            return nil
-        }
-    }
-}
 
 
 

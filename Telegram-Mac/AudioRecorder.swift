@@ -13,7 +13,7 @@ import SwiftSignalKit
 import CoreMedia
 import AVFoundation
 import TelegramCore
-
+import TelegramUI
 
 private final class CustomAudioConverter {
     struct Format: Equatable {

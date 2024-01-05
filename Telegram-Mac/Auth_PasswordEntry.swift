@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import AppKit
 import TelegramCore
+import TelegramUI
 
 private final class Auth_PasswordEntryHeaderView : View {
     private let playerView:LottiePlayerView = LottiePlayerView()

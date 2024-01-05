@@ -13,6 +13,7 @@ import TelegramCore
 import Postbox
 import InAppPurchaseManager
 import CurrencyFormat
+import MediaPlayer
 
 struct PremiumEmojiStatusInfo : Equatable {
     let status: PeerEmojiStatus
