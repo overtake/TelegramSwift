@@ -100,7 +100,7 @@ func ArchiveSettingsController(context: AccountContext, privacy: GlobalPrivacySe
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(settings: privacy ?? .init(automaticallyArchiveAndMuteNonContacts: false, keepArchivedUnmuted: false, keepArchivedFolders: false), isPremium: context.isPremium)
+    let initialState = State(settings: privacy ?? .init(automaticallyArchiveAndMuteNonContacts: false, keepArchivedUnmuted: false, keepArchivedFolders: false, hideReadTime: false, nonContactChatsRequirePremium: false), isPremium: context.isPremium)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

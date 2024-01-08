@@ -25,6 +25,7 @@ protocol ChatHeaderProtocol {
 
 struct EmojiTag : Equatable {
     let emoji: String
+    let tag: SavedMessageTags.Tag
     let file: TelegramMediaFile
 }
 
@@ -410,7 +411,8 @@ struct ChatSearchInteractions {
     let results:(String)->Void
     let calendarAction:(Date)->Void
     let cancel:()->Void
-    let searchRequest:(String, PeerId?, SearchMessagesState?) -> Signal<([Message], SearchMessagesState?), NoError>
+    let searchRequest:(String, PeerId?, SearchMessagesState?, [EmojiTag]) -> Signal<([Message], SearchMessagesState?), NoError>
+    let searchTags:(String, SearchMessagesState?, [EmojiTag]) -> Void
 }
 
 private class ChatSponsoredModel: ChatAccessoryModel {
@@ -1466,7 +1468,7 @@ private final class ChatSearchTagsView: View {
         addSubview(tableView)
     }
     
-    var selected: EmojiTag? = nil {
+    var selected: [EmojiTag] = [] {
         didSet {
             self.updateLocalizationAndTheme(theme: theme)
         }
@@ -1497,7 +1499,7 @@ private final class ChatSearchTagsView: View {
         var entries: [EmojiTagEntry] = []
         var index: Int = 0
         for tag in tags {
-            entries.append(.init(tag: tag, index: index, theme: theme, selected: self.selected == tag))
+            entries.append(.init(tag: tag, index: index, theme: theme, selected: self.selected.contains(tag)))
             index += 1
         }
         
@@ -1661,7 +1663,6 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                 }
                 switch value.tokenState {
                 case .none:
-                    tagsView?.selected = nil
                     from.isHidden = !fromAbility
                     calendar.isHidden = !calendarAbility
                     needsLayout = true
@@ -1749,12 +1750,12 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                             }
                         }
                     }
-                case let .emojiTag(tag):
+                case .emojiTag:
                     from.isHidden = true
                     calendar.isHidden = true
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
                     needsLayout = true
-                    self.tagsView?.selected = tag
+                //    self.tagsView?.selected = tag
                     inputInteraction.update(animated: animated, { state in
                         return state.updatedInputQueryResult { previousResult in
                             let result = state.searchState.responder ? state.messages : ([], nil)
@@ -1847,20 +1848,21 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     
                     var request = query
                     
+                    var tags: [EmojiTag] = []
+                    
                     let emptyRequest: Bool
-                    if case let .emojiTag(tag) = self.inputInteraction.state.tokenState {
-                        request = "@#\(tag.emoji)" + request
+                    if let tagsView = self.tagsView, !tagsView.selected.isEmpty {
                         emptyRequest = true
+                        tags = tagsView.selected
                     } else if case .from = self.inputInteraction.state.tokenState {
                         emptyRequest = true
                     } else {
                         emptyRequest = !query.isEmpty
                     }
                     if emptyRequest {
-                        return self.interactions.searchRequest(request, self.inputInteraction.state.peerId, state) |> map { ($0.0, $0.1, request) }
-                    } else {
-                        return .single(([], nil, ""))
+                        return self.interactions.searchRequest(request, self.inputInteraction.state.peerId, state, tags) |> map { ($0.0, $0.1, request) }
                     }
+                    return .single(([], nil, ""))
                 }
             } else {
                 return .single(([], nil, ""))
@@ -1949,12 +1951,13 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     addSubview(current, positioned: .below, relativeTo: separator)
                 }
                 current.set(tags: tags, context: chatInteraction.context, animated: false, callback: { [weak self] tag in
-                    if let context = self?.chatInteraction.context {
-                        if self?.tagsView?.selected != tag {
-                            self?.searchView.completeEmojiToken(tag, context: context)
+                    if let `self` = self, let tagsView = self.tagsView {
+                        if tagsView.selected.contains(tag) {
+                            tagsView.selected.removeAll(where: { $0 == tag })
                         } else {
-                            self?.searchView.cancelEmojiToken()
+                            tagsView.selected.append(tag)
                         }
+                        self.query.set(.init(self.searchView.query, self.inputInteraction.state.messages.1))
                     }
                 })
             } else if let tagsView = tagsView {

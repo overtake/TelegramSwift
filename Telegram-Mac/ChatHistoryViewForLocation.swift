@@ -35,7 +35,7 @@ enum ChatHistoryLocation: Equatable {
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)
     case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int, side: TableSavingSide)
     case Scroll(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, sourceIndex: MessageHistoryAnchorIndex, scrollPosition: TableScrollState, count: Int, animated: Bool)
-    
+    case SearchTags(SearchMessagesLocation, String, SearchMessagesState?)
     var count: Int {
         switch self {
         case let .Initial(count):
@@ -46,6 +46,8 @@ enum ChatHistoryLocation: Equatable {
             return count
         case let .Scroll(_, _, _, _, count, _):
             return count
+        case .SearchTags:
+            return 100
         }
     }
     
@@ -91,14 +93,14 @@ func ==(lhs: ChatHistoryViewScrollPosition, rhs: ChatHistoryViewScrollPosition) 
 }
 
 public struct ChatHistoryCombinedInitialData {
-    let initialData: InitialMessageHistoryData?
-    let buttonKeyboardMessage: Message?
-    let cachedData: CachedPeerData?
-    let cachedDataMessages:[MessageId: [Message]]?
-    let readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
-    let limitsConfiguration: LimitsConfiguration
-    let autoplayMedia: AutoplayMediaPreferences
-    let autodownloadSettings: AutomaticMediaDownloadSettings
+    var initialData: InitialMessageHistoryData? = nil
+    var buttonKeyboardMessage: Message? = nil
+    var cachedData: CachedPeerData? = nil
+    var cachedDataMessages:[MessageId: [Message]]? = nil
+    var readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]? = nil
+    var limitsConfiguration: LimitsConfiguration = .defaultValue
+    var autoplayMedia: AutoplayMediaPreferences = .defaultSettings
+    var autodownloadSettings: AutomaticMediaDownloadSettings = .defaultSettings
 }
 
 enum ChatHistoryViewUpdateType : Equatable {
@@ -151,7 +153,6 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
-        
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
             let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: _chatLocation)
@@ -385,6 +386,13 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             }
             return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: scrollPosition, initialData: combinedInitialData)
         }
+    case let .SearchTags(location, query, state):
+        return .single(.Loading(initialData: .init(), type: .Generic(type: .Generic))) |> then(context.engine.messages.searchMessages(location: location, query: query, state: state) |> map { (result, state) in
+            let entries = result.messages.map {
+                MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: .init(authorIsContact: true))
+            }
+            return .HistoryView(view: .init(tagMask: nil, namespaces: .all, entries: entries, holeEarlier: false, holeLater: false, isLoading: false), type: .Generic(type: .Generic), scrollPosition: nil, initialData: .init())
+        })
     }
 }
 

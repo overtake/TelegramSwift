@@ -55,6 +55,7 @@ enum RelativeUserPresenceStatus {
     case recently
     case lastWeek
     case lastMonth
+    case hidden
 }
 
 func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32) -> RelativeUserPresenceStatus {
@@ -81,6 +82,8 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
         return .lastWeek
     case .lastMonth:
         return .lastMonth
+    case .hidden:
+        return .hidden
     }
 }
 
@@ -146,6 +149,8 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
         return (strings().peerStatusLastWeek, false, customTheme?.grayTextColor ?? theme.colors.grayText)
     case .lastMonth:
         return (strings().peerStatusLastMonth, false, customTheme?.grayTextColor ?? theme.colors.grayText)
+    case .hidden:
+        return (strings().peerStatusHidden, false, customTheme?.grayTextColor ?? theme.colors.grayText)
     }
 }
 
@@ -179,7 +184,7 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, timeDiff
             return Double.infinity
         }
 
-    case .none, .lastWeek, .lastMonth:
+    case .none, .lastWeek, .lastMonth, .hidden:
         return Double.infinity
     }
 }

@@ -154,8 +154,8 @@ private final class VoiceView : View, APDelegate {
     
     func set(media: TelegramMediaFile, isIncoming: Bool, context: AccountContext) {
         
-        let activityColor = theme.chat.activityForeground(isIncoming, true)
-        let activityBackground = theme.chat.activityBackground(isIncoming, true)
+        let activityColor = theme.chat.activityForeground(false, true)
+        let activityBackground = theme.chat.activityBackground(false, true)
         
         self.activityColor = activityColor
         self.activityBackground = activityBackground
@@ -187,7 +187,7 @@ private final class VoiceView : View, APDelegate {
         hood.backgroundColor = activityBackground
         progress.strokeColor = activityColor.cgColor
 
-        backgroundColor = theme.chat.bubbleBackgroundColor(isIncoming, true)
+        backgroundColor = theme.chat.bubbleBackgroundColor(false, true)
         
         sparkView.layer?.masksToBounds = false
         
@@ -228,18 +228,18 @@ private final class SingleTimeMediaView : View {
     fileprivate let close = TextButton()
     func update(context: AccountContext, message: Message) {
         let media = message.media.first! as! TelegramMediaFile
-        
+        let isIncoming = message.isIncoming(context.account, true)
         if media.isVoice {
             let voiceView = VoiceView(frame: NSMakeRect(0, 0, 220, 60))
             addSubview(voiceView)
             self.voiceView = voiceView
             
-            voiceView.set(media: media, isIncoming: message.isIncoming(context.account, true), context: context)
+            voiceView.set(media: media, isIncoming: isIncoming, context: context)
         }
         close.set(font: .medium(.text), for: .Normal)
         close.set(color: theme.colors.text, for: .Normal)
         close.set(background: NSColor.black.withAlphaComponent(0.6), for: .Normal)
-        close.set(text: strings().navigationClose, for: .Normal)
+        close.set(text: isIncoming ? strings().chatVoiceSingleDeleteAndClose : strings().chatVoiceSingleClose, for: .Normal)
         close.scaleOnClick = true
         close.sizeToFit(NSMakeSize(20, 20))
         close.layer?.cornerRadius = close.frame.height / 2

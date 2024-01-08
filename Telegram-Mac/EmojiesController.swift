@@ -517,7 +517,7 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         hasRecent = !state.recentStatusItems.isEmpty || !state.featuredStatusItems.isEmpty
     case .emoji, .stories:
         hasRecent = true
-    case .reactions, .quickReaction:
+    case .reactions, .quickReaction, .defaultTags:
         hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
     case .selectAvatar:
         hasRecent = true
@@ -718,7 +718,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else {
         for key in seglist {
             
-            if key == .Recent, arguments.mode == .reactions || arguments.mode == .quickReaction {
+            if key == .Recent, arguments.mode == .reactions || arguments.mode == .quickReaction || arguments.mode == .defaultTags {
                 
                 
                 var reactionsRecent:[StickerPackItem] = []
@@ -734,7 +734,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     if arguments.context.isPremium {
                         return true
                     } else {
-                        return !value.content.reaction.string.isEmpty
+                        if arguments.mode == .defaultTags {
+                            return true
+                        } else {
+                            return !value.content.reaction.string.isEmpty
+                        }
                     }
                 }
                 popular = Array(top.prefix(perline * 2))
@@ -1938,6 +1942,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case stories
         case channelReactions
         case channelStatus
+        case defaultTags
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1954,6 +1959,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .channelReactions
             case .channelStatus:
                 return .channelStatus
+            case .defaultTags:
+                return .reactions
             default:
                 return .panel
             }
@@ -2309,7 +2316,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
  
         let emojies: Signal<ItemCollectionsView, NoError>
         switch mode {
-        case .reactions, .quickReaction:
+        case .reactions, .quickReaction, .defaultTags:
             emojies = context.diceCache.emojies_reactions
         case .status:
             emojies = context.diceCache.emojies_status
@@ -2382,6 +2389,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var topReactionsView: OrderedItemListView?
             var featuredBackgroundIconEmoji: OrderedItemListView?
             var featuredChannelStatusEmoji: OrderedItemListView?
+            var defaultTagReactions: OrderedItemListView?
 
             for orderedView in view.orderedItemListsViews {
                 if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
@@ -2396,6 +2404,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     featuredBackgroundIconEmoji = orderedView
                 } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji {
                     featuredChannelStatusEmoji = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                    defaultTagReactions = orderedView
                 }
             }
             var recentStatusItems:[RecentMediaItem] = []
@@ -2404,6 +2414,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var topReactionsItems:[RecentReactionItem] = []
             var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
             var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
+            var defaultTagReactionsItems: [RecentReactionItem] = []
+            
             if let recentStatusEmoji = recentStatusEmoji {
                 for item in recentStatusEmoji.items {
                     guard let item = item.contents.get(RecentMediaItem.self) else {
@@ -2452,6 +2464,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         continue
                     }
                     topReactionsItems.append(item)
+                }
+            }
+            if let defaultTagReactions = defaultTagReactions {
+                for item in defaultTagReactions.items {
+                    guard let item = item.contents.get(RecentReactionItem.self) else {
+                        continue
+                    }
+                    defaultTagReactionsItems.append(item)
                 }
             }
             
@@ -2523,8 +2543,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.search = search
                 current.reactions = reactions
                 current.recent = recentEmoji
-                current.topReactionsItems = topReactionsItems
-                current.recentReactionsItems = recentReactionsItems
+                current.topReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : topReactionsItems
+                current.recentReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : recentReactionsItems
                 current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
                 current.featuredChannelStatusEmojiItems = featuredChannelStatusEmojiItems
                 current.reactionSettings = reactionSettings

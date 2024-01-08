@@ -36,8 +36,8 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             }
         }
         
-        func isLoading(_ message: Message) -> Bool {
-            return self.text(message).isEmpty
+        func isLoading(_ message: Message, context: AccountContext) -> Bool {
+            return self.text(message, context: context).isEmpty
         }
         
         var emojiReferences: [StickerPackReference] {
@@ -55,6 +55,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 return []
             case let .stats(read, _, reactions, _):
                 var photos:[Peer] = []
+                if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                    return []
+                }
                 if let reactions = reactions {
                     photos = Array(reactions.items.map { $0.peer._asPeer() }.prefix(3))
                 }
@@ -95,9 +98,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         }
  
         
-        func text(_ message: Message) -> String {
+        func text(_ message: Message, context: AccountContext) -> String {
             switch self {
-            case let .stats(read, _, reactions, _):
+            case let .stats(read, readTimestamps, reactions, _):
                 if let reactions = reactions, !reactions.items.isEmpty {
                     if let read = read, read.count > reactions.totalCount {
                         return strings().chatContextReacted("\(reactions.totalCount)", "\(read.count)")
@@ -108,6 +111,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                     if peers.isEmpty {
                         return strings().chatMessageReadStatsEmptyViews
                     } else if peers.count == 1 {
+                        if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let readTimestamp = readTimestamps[peers[0].id] {
+                            return stringForRelativeTimestamp(relativeTimestamp: readTimestamp, relativeTo: context.timestamp)
+                        }
                         return peers[0].compactDisplayTitle.prefixWithDots(20)
                     } else {
                         if let media = message.anyMedia as? TelegramMediaFile {
@@ -147,6 +153,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         if self.state.isEmpty {
             return value
         }
+        if state.photos(message).isEmpty {
+            return value
+        }
         return value - 60
     }
     
@@ -174,9 +183,13 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         self.load()
     }
     
+    var isTags: Bool {
+        return self.chatInteraction.peerId == context.peerId
+    }
+    
     func load() {
         
-        let customIds:[Int64] = message.effectiveReactions?.compactMap { value in
+        let customIds:[Int64] = message.effectiveReactions(isTags: isTags)?.compactMap { value in
             switch value.value {
             case let .custom(fileId):
                 return fileId
@@ -258,7 +271,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let hasReactions = state.peers.contains(where: { $0.1 != nil })
         let hasRead = state.peers.contains(where: { $0.2 != nil })
 
-        if items.count > 1 || hasReactions || hasRead {
+        if items.count > 1 || hasReactions || hasRead, message.id.peerId.namespace != Namespaces.Peer.CloudUser {
             
             let references:[StickerPackReference] = state.emojiReferences.uniqueElements
             
@@ -311,7 +324,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             
         }
         
-        self.item.title = state.text(self.message)
+        self.item.title = state.text(self.message, context: context)
         
     }
     
@@ -442,7 +455,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
         guard let item = item as? MessageReadMenuRowItem else {
             return
         }
-        if item.state.isLoading(item.message) {
+        if item.state.isLoading(item.message, context: item.context) {
             if loadingView == nil {
                 loadingView = View(frame: NSMakeRect(0, 0, 20, 6))
                 loadingView?.layer?.cornerRadius = 3
@@ -460,9 +473,9 @@ private final class MessageReadMenuItemView : AppMenuRowView {
         let photos = item.state.photos(item.message)
         
         let updated = photos.map { $0.id }
-        if updated != self.photos || self.isLoading != item.state.isLoading(item.message) {
+        if updated != self.photos || self.isLoading != item.state.isLoading(item.message, context: item.context), item.message.id.peerId.namespace != Namespaces.Peer.CloudUser {
             self.photos = updated
-            self.isLoading = item.state.isLoading(item.message)
+            self.isLoading = item.state.isLoading(item.message, context: item.context)
             if self.isLoading {
                 avatars = .init(context: item.context, message: item.message, peers: nil, size: NSMakeSize(18, 18))
             } else {
@@ -596,6 +609,14 @@ final class MessageReadMenuItem : ContextMenuItem {
             
         case let group as TelegramGroup:
             if group.participantCount > maxParticipantCount {
+                return false
+            }
+        case _ as TelegramUser:
+            if let cachedData = chatInteraction.presentation.cachedData as? CachedUserData {
+                if cachedData.flags.contains(.readDatesPrivate) {
+                    return false
+                }
+            } else {
                 return false
             }
         default:

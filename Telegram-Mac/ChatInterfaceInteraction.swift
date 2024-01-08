@@ -202,6 +202,7 @@ final class ChatInteraction : InterfaceObserver  {
     var setupChatThemes:()->Void = { }
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
+    var searchTags:(SearchMessagesLocation, String, SearchMessagesState?)->Void = { _, _, _ in }
     
     var toggleUnderMouseMessage:()->Void = { }
     

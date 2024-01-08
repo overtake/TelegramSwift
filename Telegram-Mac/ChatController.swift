@@ -418,7 +418,7 @@ class ChatControllerView : View, ChatInputDelegate {
             chatInteraction.jumpToDate(date)
         }, cancel: {
             chatInteraction.update({$0.updatedSearchMode((false, nil, nil))})
-        }, searchRequest: { [weak chatInteraction] query, fromId, state in
+        }, searchRequest: { [weak chatInteraction] query, fromId, state, tags in
             guard let chatInteraction = chatInteraction else {
                 return .never()
             }
@@ -427,14 +427,20 @@ class ChatControllerView : View, ChatInputDelegate {
             case let .peer(peerId):
                 switch chatInteraction.mode {
                 case .pinned:
-                    location = .peer(peerId: peerId, fromId: fromId, tags: .pinned, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
+                    location = .peer(peerId: peerId, fromId: fromId, tags: .pinned, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
                 default:
-                    location = .peer(peerId: peerId, fromId: fromId, tags: nil, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
+                    location = .peer(peerId: peerId, fromId: fromId, tags: nil, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
                 }
             case let .thread(data):
-                location = .peer(peerId: data.peerId, fromId: fromId, tags: nil, threadId: data.threadId, minDate: nil, maxDate: nil)
+                location = .peer(peerId: data.peerId, fromId: fromId, tags: nil, reactions: tags.map { $0.tag.reaction }, threadId: data.threadId, minDate: nil, maxDate: nil)
             }
             return context.engine.messages.searchMessages(location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.extendedMedia is TelegramMediaAction) }), $0.1)}
+        }, searchTags: { [weak chatInteraction] query, state, tags in
+            guard let chatInteraction = chatInteraction else {
+                return
+            }
+            let location: SearchMessagesLocation = .peer(peerId: context.peerId, fromId: nil, tags: nil, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
+            chatInteraction.searchTags(location, query, state)
         })
         
         
@@ -732,9 +738,19 @@ class ChatControllerView : View, ChatInputDelegate {
         var value:ChatHeaderState.Value
         if interfaceState.isSearchMode.0 {
             var tags: [EmojiTag] = []
-            if chatInteraction.context.peerId == chatInteraction.peerId, let reactions = chatInteraction.context.reactions.available {
-                tags = reactions.enabled.map {
-                    .init(emoji: $0.value.string, file: $0.activateAnimation)
+           
+            if chatInteraction.context.peerId == chatInteraction.peerId, let savedMessageTags = interfaceState.savedMessageTags {
+                for tag in savedMessageTags.tags {
+                    switch tag.reaction {
+                    case .builtin:
+                        if let file = chatInteraction.context.reactions.available?.enabled.first(where: { $0.value == tag.reaction })?.activateAnimation {
+                            tags.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
+                        }
+                    case let .custom(fileId):
+                        if let file = savedMessageTags.files[fileId] {
+                            tags.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
+                        }
+                    }
                 }
             }
             
@@ -1491,7 +1507,8 @@ private final class ChatAdData {
                     flags: initialMessage.flags,
                     tags: initialMessage.tags,
                     globalTags: initialMessage.globalTags,
-                    localTags: initialMessage.localTags,
+                    localTags: initialMessage.localTags, 
+                    customTags: initialMessage.customTags,
                     forwardInfo: initialMessage.forwardInfo,
                     author: initialMessage.author,
                     text: initialMessage.text,
@@ -5097,6 +5114,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        chatInteraction.searchTags = { [weak self] location, query, state in
+            self?.setLocation(.init(content: .SearchTags(location, query, state), id: getNextId()))
+        }
+        
         
         let getPinned:()-> Signal<ChatPinnedMessage?, NoError> = { [weak self] in
             guard let `self` = self else {
@@ -5372,7 +5393,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let isFirst = Atomic(value: true)
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState in
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), context.engine.stickers.savedMessageTags()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags in
             
                         
             guard let `self` = self else {return}
@@ -5536,6 +5557,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedInviteRequestsPending(inviteRequestsPending)
                         present = present.withUpdatedCurrentSendAsPeerId(sendAsPeerId)
                         present = present.withUpdatedIsNotAccessible(isNotAccessible)
+                        present = present.withUpdatedSavedMessageTags(.init(tags: savedMessageTags.0, files: savedMessageTags.1))
 
                         present = present.updatedGroupCall { current in
                             if let call = activeCall {
@@ -6104,7 +6126,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                         let threadPeerId = savedMessagesPeerId
                         let basicPeerKey: PostboxViewKey = .basicPeer(threadPeerId)
-                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: savedMessagesPeerId.toInt64(), namespace: Namespaces.Message.Cloud)
+                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: savedMessagesPeerId.toInt64(), namespace: Namespaces.Message.Cloud, customTag: nil)
                         answersCount = context.account.postbox.combinedView(keys: [basicPeerKey, countViewKey])
                         |> map { views -> Int32? in
                             let peer = ((views.views[basicPeerKey] as? BasicPeerView)?.peer).flatMap(EnginePeer.init)
@@ -6127,8 +6149,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                             |> deliverOnMainQueue
                     } else {
-                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud)
-                        let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local)
+                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud, customTag: nil)
+                        let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local, customTag: nil)
                         
                         answersCount = context.account.postbox.combinedView(keys: [countViewKey, localCountViewKey])
                         |> map { views -> Int32 in
@@ -7993,7 +8015,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             
-            if value.isSearchMode.0 != oldValue.isSearchMode.0 || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState {
+            if value.isSearchMode.0 != oldValue.isSearchMode.0 || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags {
                 genericView.updateHeader(value, animated, value.hidePinnedMessage != oldValue.hidePinnedMessage)
                 (centerBarView as? ChatTitleBarView)?.updateStatus(true, presentation: value)
             }
