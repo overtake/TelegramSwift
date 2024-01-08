@@ -4173,8 +4173,6 @@ public final class L10n {
   public static func chatQuizTooltipVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_zero", p1)
   }
-  /// Tag the message with an emoji for quick search
-  public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "Chat.Reactions.TagMessage") }
   /// Are you sure you want to cancel recording?
   public static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   /// This chat helps you keep track of replies to your comments in Channels.
@@ -4965,6 +4963,10 @@ public final class L10n {
   public static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
   /// Outgoing Video Call
   public static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
+  /// Close
+  public static var chatVoiceSingleClose: String  { return L10n.tr("Localizable", "Chat.Voice.Single.Close") }
+  /// Delete and Close
+  public static var chatVoiceSingleDeleteAndClose: String  { return L10n.tr("Localizable", "Chat.Voice.Single.DeleteAndClose") }
   /// No speech detected
   public static var chatVoiceTransribeError: String  { return L10n.tr("Localizable", "Chat.Voice.Transribe.Error") }
   /// Join
@@ -5703,6 +5705,8 @@ public final class L10n {
   public static var chatMessageSponsoredTitle: String  { return L10n.tr("Localizable", "ChatMessage.Sponsored.Title") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
+  /// Tag the message with an emoji for quick search
+  public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage") }
   /// %1$@ set the same wallpaper for this chat
   public static func chatServiceChangedToSameWallpaper(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.ChangedToSameWallpaper", p1)
@@ -9785,6 +9789,8 @@ public final class L10n {
   public static var peerStatusForum: String  { return L10n.tr("Localizable", "Peer.Status.forum") }
   /// group
   public static var peerStatusGroup: String  { return L10n.tr("Localizable", "Peer.Status.group") }
+  /// last seen hidden
+  public static var peerStatusHidden: String  { return L10n.tr("Localizable", "Peer.Status.hidden") }
   /// last seen just now
   public static var peerStatusJustNow: String  { return L10n.tr("Localizable", "Peer.Status.justNow") }
   /// last seen within a month
@@ -9857,6 +9863,8 @@ public final class L10n {
   public static var peerStatusOnline: String  { return L10n.tr("Localizable", "Peer.Status.online") }
   /// last seen recently
   public static var peerStatusRecently: String  { return L10n.tr("Localizable", "Peer.Status.recently") }
+  /// show
+  public static var peerStatusShow: String  { return L10n.tr("Localizable", "Peer.Status.show") }
   /// %d
   public static func peerStatusSubscribersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Peer.Status.Subscribers_countable", p1)
@@ -11055,6 +11063,36 @@ public final class L10n {
   public static var premiumRestoreErrorUnknown: String  { return L10n.tr("Localizable", "Premium.Restore.ErrorUnknown") }
   /// Done
   public static var premiumRestoreSuccess: String  { return L10n.tr("Localizable", "Premium.Restore.Success") }
+  /// or
+  public static var premiumShowStatusOr: String  { return L10n.tr("Localizable", "Premium.ShowStatus.Or") }
+  /// Show my Read Time
+  public static var premiumShowStatusShowMyReadTime: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowMyReadTime") }
+  /// Show my Last Seen
+  public static var premiumShowStatusShowMyStatus: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowMyStatus") }
+  /// Show Your Last Seen
+  public static var premiumShowStatusShowYourLastSeen: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowYourLastSeen") }
+  /// Show Your Read Date
+  public static var premiumShowStatusShowYourReadDate: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowYourReadDate") }
+  /// Subscribe to Telegram Premium
+  public static var premiumShowStatusSubscribe: String  { return L10n.tr("Localizable", "Premium.ShowStatus.Subscribe") }
+  /// Upgrade to Premium
+  public static var premiumShowStatusUpgradeToPremium: String  { return L10n.tr("Localizable", "Premium.ShowStatus.UpgradeToPremium") }
+  /// To see %@'s Last Seen time, either start showing your own Last Seen time...
+  public static func premiumShowStatusShowYourLastSeenInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.ShowStatus.ShowYourLastSeen.Info", p1)
+  }
+  /// To see when %@ read the message, either start showing your own read time...
+  public static func premiumShowStatusShowYourReadDateInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.ShowStatus.ShowYourReadDate.Info", p1)
+  }
+  /// Subscription will let you see %@'s Last Seen status without showing yours.
+  public static func premiumShowStatusUpgradeToPremiumLastSeenInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.ShowStatus.UpgradeToPremium.LastSeen.Info", p1)
+  }
+  /// Subscription will let you see %@'s read time without showing yours.
+  public static func premiumShowStatusUpgradeToPremiumReadInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.ShowStatus.UpgradeToPremium.Read.Info", p1)
+  }
   /// Activate For Free
   public static var premiumBoardingActivateForFree: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree") }
   /// You are already Telegram Premium subscriber.
@@ -11387,6 +11425,8 @@ public final class L10n {
   }
   /// Groups and Channels
   public static var privacySettingsGroups: String  { return L10n.tr("Localizable", "PrivacySettings.Groups") }
+  /// Hide Read Time
+  public static var privacySettingsHideReadTime: String  { return L10n.tr("Localizable", "PrivacySettings.HideReadTime") }
   /// Last Seen
   public static var privacySettingsLastSeen: String  { return L10n.tr("Localizable", "PrivacySettings.LastSeen") }
   /// My Contacts (-%@)
@@ -11413,6 +11453,8 @@ public final class L10n {
   public static var privacySettingsPasscode: String  { return L10n.tr("Localizable", "PrivacySettings.Passcode") }
   /// Phone Number
   public static var privacySettingsPhoneNumber: String  { return L10n.tr("Localizable", "PrivacySettings.PhoneNumber") }
+  /// Subscribe to Telegram Premium
+  public static var privacySettingsPremium: String  { return L10n.tr("Localizable", "PrivacySettings.Premium") }
   /// PRIVACY
   public static var privacySettingsPrivacyHeader: String  { return L10n.tr("Localizable", "PrivacySettings.PrivacyHeader") }
   /// Profile Photo
@@ -11437,10 +11479,14 @@ public final class L10n {
   public static var privacySettingsGlobalTimerInfo: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Info") }
   /// Off
   public static var privacySettingsGlobalTimerNever: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Never") }
+  /// Do not show the time when you read a message to people you hid your last seen from.
+  public static var privacySettingsHideReadTimeInfo: String  { return L10n.tr("Localizable", "PrivacySettings.HideReadTime.Info") }
   /// Add New
   public static var privacySettingsPeerSelectAddNew: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddNew") }
   /// Add Users or Groups
   public static var privacySettingsPeerSelectAddUserOrGroup: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddUserOrGroup") }
+  /// If you subscribe to Telegram Premium, you will still see other users' last seen and read time even if you hid yours from them (unless they specifically restricted it).
+  public static var privacySettingsPremiumInfo: String  { return L10n.tr("Localizable", "PrivacySettings.Premium.Info") }
   /// Only of subscribers of [Telegram Premium]() can restrict receiving Voice and Video Messages.
   public static var privacySettingsVoicePremiumError: String  { return L10n.tr("Localizable", "PrivacySettings.Voice.PremiumError") }
   /// Add Users

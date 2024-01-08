@@ -383,7 +383,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     
     
     
-    let messagesLocation: SearchMessagesLocation = .peer(peerId: context.peerId, fromId: nil, tags: nil, threadId: peerId.toInt64(), minDate: nil, maxDate: nil)
+    let messagesLocation: SearchMessagesLocation = .peer(peerId: context.peerId, fromId: nil, tags: nil, reactions: nil, threadId: peerId.toInt64(), minDate: nil, maxDate: nil)
     
     
     let searchResult:Signal<SearchMessagesTuple?, NoError> = search.searchState.get() |> mapToSignal { searchState in

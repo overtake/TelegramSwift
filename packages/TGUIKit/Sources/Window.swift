@@ -1018,7 +1018,7 @@ open class Window: NSWindow {
         occlusionStateValue.set(self.occlusionState)
         isOpaque = true
         
-        self.contentView?.acceptsTouchEvents = true
+        self.contentView?.allowedTouchTypes = [.direct]
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         

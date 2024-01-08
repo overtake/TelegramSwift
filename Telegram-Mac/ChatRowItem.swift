@@ -1541,7 +1541,7 @@ class ChatRowItem: TableRowItem {
             if unsupported {
                 return nil
             }
-            let reactions = message.effectiveReactions(context.peerId)
+            let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == chatInteraction.peerId)
             let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
@@ -3026,7 +3026,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
             if let reaction = reaction {
-                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate()))
+                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate(), isTags: context.peerId == message.id.peerId))
             }
         }
         return false
@@ -3055,24 +3055,24 @@ class ChatRowItem: TableRowItem {
             }
             |> take(1)
             
-            var orderedItemListCollectionIds: [Int32] = []
             
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
-     
-            let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.emojies_reactions |> map { view in
+            let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.top_reactions |> map { view in
                 
                 var recentReactionsView: OrderedItemListView?
                 var topReactionsView: OrderedItemListView?
+                var defaultTagReactions: OrderedItemListView?
                 for orderedView in view.orderedItemListsViews {
                     if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
                         recentReactionsView = orderedView
                     } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
                         topReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                        defaultTagReactions = orderedView
                     }
                 }
                 var recentReactionsItems:[RecentReactionItem] = []
                 var topReactionsItems:[RecentReactionItem] = []
+                var defaultTagReactionsItems:[RecentReactionItem] = []
 
                 if let recentReactionsView = recentReactionsView {
                     for item in recentReactionsView.items {
@@ -3082,6 +3082,14 @@ class ChatRowItem: TableRowItem {
                         recentReactionsItems.append(item)
                     }
                 }
+                if let defaultTagReactions = defaultTagReactions {
+                    for item in defaultTagReactions.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        defaultTagReactionsItems.append(item)
+                    }
+                }
                 if let topReactionsView = topReactionsView {
                     for item in topReactionsView.items {
                         guard let item = item.contents.get(RecentReactionItem.self) else {
@@ -3089,6 +3097,9 @@ class ChatRowItem: TableRowItem {
                         }
                         topReactionsItems.append(item)
                     }
+                }
+                if !defaultTagReactionsItems.isEmpty, message.id.peerId == context.peerId {
+                    return defaultTagReactionsItems
                 }
                 return topReactionsItems.filter { value in
                     if context.isPremium {
@@ -3117,7 +3128,7 @@ class ChatRowItem: TableRowItem {
                 var accessToAll: Bool
                 
                 let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
-                    return message.effectiveReactions?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
+                    return message.effectiveReactions(isTags: context.peerId == message.id.peerId)?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
                 }
 
                 
@@ -3182,7 +3193,7 @@ class ChatRowItem: TableRowItem {
                     uniqueLimit = Int(value)
                 }
                             
-                if let reactions = message.effectiveReactions, reactions.count >= uniqueLimit {
+                if let reactions = message.effectiveReactions(isTags: context.peerId == message.id.peerId), reactions.count >= uniqueLimit {
                     available = reactions.compactMap { reaction in
                         switch reaction.value {
                         case let .custom(fileId):
@@ -3237,7 +3248,7 @@ class ChatRowItem: TableRowItem {
                 
                 var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
 
-                if let reactions = message.effectiveReactions {
+                if let reactions = message.effectiveReactions(isTags: context.peerId == message.id.peerId) {
                     for reaction in reactions {
                         if reaction.isSelected {
                             switch reaction.value {
@@ -3264,7 +3275,7 @@ class ChatRowItem: TableRowItem {
                                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                                 })
                             } else {
-                                let updated = message.newReactions(with: value)
+                                let updated = message.newReactions(with: value, isTags: context.peerId == message.id.peerId)
                                 context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
                             }
                         })
@@ -3279,7 +3290,7 @@ class ChatRowItem: TableRowItem {
                 
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
-                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), fromRect: fromRect, storeAsRecentlyUsed: true)
+                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: context.peerId == message.id.peerId), fromRect: fromRect, storeAsRecentlyUsed: true)
                 }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveText)
                 
                 

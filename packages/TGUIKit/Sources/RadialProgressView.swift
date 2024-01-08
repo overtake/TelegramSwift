@@ -206,13 +206,13 @@ private class RadialProgressOverlayLayer {
         self.twist = twist
     }
     
-    func draw(in ctx: CGContext) {
+    func draw(in ctx: CGContext, diameter: CGFloat) {
         ctx.setStrokeColor(theme.foregroundColor.cgColor)
         let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2 + rotation
         let endAngle = -(CGFloat.pi / 2) + rotation
         
-        let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
-        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
+        let pathDiameter = !twist ? diameter - parameters.theme.lineWidth : diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
+        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(System.backingScale, diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
         
         ctx.setLineWidth(parameters.theme.lineWidth);
         ctx.setLineCap(.round);
@@ -420,13 +420,13 @@ public class RadialProgressView: Control {
                 }
                 
                 context.setBlendMode(parameters.theme.blendMode)
-                overlay.draw(in: context)
+                overlay.draw(in: context, diameter: parameters.diameter)
                 
             } else {
                 
                 context.setBlendMode(parameters.theme.blendMode)
 
-                overlay.draw(in: context)
+                overlay.draw(in: context, diameter: parameters.diameter)
                 
                 context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
                 context.setLineWidth(2.0)
@@ -506,7 +506,7 @@ public class RadialProgressView: Control {
             context.translateBy(x: -(diameter - size.width) / 2.0 - 1.5, y: -(diameter - size.height) / 2.0)
         case .ImpossibleFetching:
             context.setBlendMode(parameters.theme.blendMode)
-            overlay.draw(in: context)
+            overlay.draw(in: context, diameter: parameters.diameter)
         case let .Icon(icon):
             var f = focus(icon.backingSize)
             f.origin.x += parameters.theme.iconInset.left

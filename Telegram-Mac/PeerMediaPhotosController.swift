@@ -456,7 +456,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 return .single((nil, SearchResult(result: externalSearch.messages), search, nil))
             } else if !search.request.isEmpty {
                 
-                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, threadId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
+                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, reactions: [], threadId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
                 
                 return .single((nil, SearchResult(result: nil), search, nil)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search, nil) })
             } else {

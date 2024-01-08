@@ -706,6 +706,9 @@
 		27F3B75C2739320000B81F10 /* SwiftSignalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75B2739320000B81F10 /* SwiftSignalKit */; };
 		27F3B75E2739320F00B81F10 /* TGUIKit in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75D2739320F00B81F10 /* TGUIKit */; };
 		27F3BB772B48375800BC37C2 /* TelegramMedia in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3BB762B48375800BC37C2 /* TelegramMedia */; };
+		27F3BB8E2B4C399400BC37C2 /* PremiumShowStatusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F3BB8D2B4C399400BC37C2 /* PremiumShowStatusController.swift */; };
+		27F3BB912B4C3D6600BC37C2 /* show_status_profile.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F3BB8F2B4C3D6500BC37C2 /* show_status_profile.tgs */; };
+		27F3BB922B4C3D6600BC37C2 /* show_status_read.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F3BB902B4C3D6600BC37C2 /* show_status_read.tgs */; };
 		27F4F1782844D91E00A3B4D4 /* EmojiesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1772844D91E00A3B4D4 /* EmojiesController.swift */; };
 		27F4F17A2844F7C700A3B4D4 /* EmojiesSectionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1792844F7C700A3B4D4 /* EmojiesSectionRowItem.swift */; };
 		27F4F18128463BF100A3B4D4 /* premium_addone.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */; };
@@ -2142,6 +2145,9 @@
 		27F3B75F273933C800B81F10 /* GraphUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GraphUI; path = packages/GraphUI; sourceTree = "<group>"; };
 		27F3B7632739360100B81F10 /* GraphCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GraphCore; path = "submodules/telegram-ios/submodules/GraphCore"; sourceTree = "<group>"; };
 		27F3BB752B48373A00BC37C2 /* TelegramMedia */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramMedia; path = packages/TelegramMedia; sourceTree = "<group>"; };
+		27F3BB8D2B4C399400BC37C2 /* PremiumShowStatusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumShowStatusController.swift; sourceTree = "<group>"; };
+		27F3BB8F2B4C3D6500BC37C2 /* show_status_profile.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = show_status_profile.tgs; sourceTree = "<group>"; };
+		27F3BB902B4C3D6600BC37C2 /* show_status_read.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = show_status_read.tgs; sourceTree = "<group>"; };
 		27F4F1772844D91E00A3B4D4 /* EmojiesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiesController.swift; sourceTree = "<group>"; };
 		27F4F1792844F7C700A3B4D4 /* EmojiesSectionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiesSectionRowItem.swift; sourceTree = "<group>"; };
 		27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_addone.tgs; sourceTree = "<group>"; };
@@ -3195,6 +3201,7 @@
 				2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */,
 				2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */,
 				275E85532B284AF0007A72CA /* PremiumGiftingController.swift */,
+				27F3BB8D2B4C399400BC37C2 /* PremiumShowStatusController.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -5695,6 +5702,8 @@
 				27C50ADC2AC6F87000FED2E4 /* premium_gift_12.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
 				275C14122A61780F000DDACF /* expired_story.tgs */,
+				27F3BB8F2B4C3D6500BC37C2 /* show_status_profile.tgs */,
+				27F3BB902B4C3D6600BC37C2 /* show_status_read.tgs */,
 				27994ED92A5EF7C30084D982 /* stories_archive.tgs */,
 				27F67415297680DC0014DCB9 /* duck_empty.tgs */,
 				27C6B65C29DC123500F7E7AC /* share_folder.tgs */,
@@ -6287,6 +6296,7 @@
 				27CE1569297966D8001F8CE8 /* emoji_category_study.tgs in Resources */,
 				2738A2E228A124F700EC1010 /* gift.scn in Resources */,
 				27D6043B2955A20A00588C21 /* menu_add.tgs in Resources */,
+				27F3BB912B4C3D6600BC37C2 /* show_status_profile.tgs in Resources */,
 				D0D1391B2521FBD5005FCF35 /* discussion.tgs in Resources */,
 				D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */,
 				27D91322283BC0EB007CF40F /* particles.png in Resources */,
@@ -6339,6 +6349,7 @@
 				27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */,
 				27916F2B287D77660046DB44 /* food.tgs in Resources */,
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
+				27F3BB922B4C3D6600BC37C2 /* show_status_read.tgs in Resources */,
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
 				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
 				27CE156C297966D8001F8CE8 /* emoji_category_hi.tgs in Resources */,
@@ -6861,6 +6872,7 @@
 				27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				27F67417297682880014DCB9 /* ChatLiveTranslateContext.swift in Sources */,
+				27F3BB8E2B4C399400BC37C2 /* PremiumShowStatusController.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				9F0367F0227208E000456348 /* QRCode.swift in Sources */,
 				C2A71CD71DD9EEDB00C69F73 /* WebpageModalController.swift in Sources */,

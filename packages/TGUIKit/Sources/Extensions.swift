@@ -342,6 +342,14 @@ public struct ParsingType: OptionSet {
     public static let Hashtags = ParsingType(rawValue: 8)
 }
 
+public extension NSAttributedString {
+    func detectBold(with font: NSFont) -> NSAttributedString {
+        let copy = self.mutableCopy() as! NSMutableAttributedString
+        copy.detectBoldColorInString(with: font, string: copy.string)
+        return copy
+    }
+}
+
 public extension NSMutableAttributedString {
     
     func detectBoldColorInString(with font: NSFont) {

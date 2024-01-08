@@ -128,6 +128,8 @@ enum LocalAnimatedSticker : String {
     
     case single_voice_fire
     
+    case show_status_profile
+    case show_status_read
     
     case menu_add_to_folder
     case menu_archive
@@ -417,6 +419,10 @@ enum LocalAnimatedSticker : String {
         case .premium_gift_6:
             playPolicy = .onceEnd
         case .premium_gift_12:
+            playPolicy = .onceEnd
+        case .show_status_read:
+            playPolicy = .onceEnd
+        case .show_status_profile:
             playPolicy = .onceEnd
         default:
             playPolicy = .loop
