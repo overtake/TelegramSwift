@@ -147,6 +147,10 @@ private final class HeaderItemView : GeneralRowView {
             }
         }, for: .Click)
         
+        let shimmer = ShimmerEffectView()
+        shimmer.isStatic = true
+        self.premiumButton.addSubview(shimmer)
+        
     }
     
     override func layout() {
@@ -159,6 +163,15 @@ private final class HeaderItemView : GeneralRowView {
         premiumHeader.centerX(y: separator.frame.maxY)
         premiumInfo.centerX(y: premiumHeader.frame.maxY + 10)
         premiumButton.frame = NSMakeRect(20, premiumInfo.frame.maxY + 10, frame.width - 40, 40)
+        
+        for subview in premiumButton.subviews {
+            if let shimmer = subview as? ShimmerEffectView {
+                subview.frame = premiumButton.bounds
+                shimmer.updateAbsoluteRect(premiumButton.bounds, within: premiumButton.frame.size)
+                shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: premiumButton.bounds, cornerRadius: premiumButton.frame.height / 2)], horizontal: true, size: premiumButton.frame.size)
+
+            }
+        }
     }
     
     override var backdorColor: NSColor {

@@ -484,6 +484,10 @@
 		27ABFD302858C838006C3301 /* badge.scn in Resources */ = {isa = PBXBuildFile; fileRef = 27ABFD2E2858C838006C3301 /* badge.scn */; };
 		27ABFD312858C838006C3301 /* badgestar.png in Resources */ = {isa = PBXBuildFile; fileRef = 27ABFD2F2858C838006C3301 /* badgestar.png */; };
 		27ABFD332858DF9E006C3301 /* PremiumStickersDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */; };
+		27B6AF8E2B4D6E0B001D0983 /* MessagesPrivacyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */; };
+		27B6AFA72B4FB317001D0983 /* menu_tag_filter.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */; };
+		27B6AFA82B4FB317001D0983 /* menu_tag_remove.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B6AFA62B4FB317001D0983 /* menu_tag_remove.tgs */; };
+		27B6AFAA2B510442001D0983 /* StoryPremRequiredInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B6AFA92B510442001D0983 /* StoryPremRequiredInput.swift */; };
 		27B6D0492739388600C785C7 /* TelegramApi in Frameworks */ = {isa = PBXBuildFile; productRef = 27B6D0482739388600C785C7 /* TelegramApi */; };
 		27B6D04B2739388600C785C7 /* TelegramCore in Frameworks */ = {isa = PBXBuildFile; productRef = 27B6D04A2739388600C785C7 /* TelegramCore */; };
 		27B6D04D2739388C00C785C7 /* Postbox in Frameworks */ = {isa = PBXBuildFile; productRef = 27B6D04C2739388C00C785C7 /* Postbox */; };
@@ -1938,6 +1942,10 @@
 		27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStickersDemoView.swift; sourceTree = "<group>"; };
 		27B15D2E259B2DA700C7F280 /* DesktopCaptureListUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListUI.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
+		27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesPrivacyController.swift; sourceTree = "<group>"; };
+		27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_tag_filter.tgs; sourceTree = "<group>"; };
+		27B6AFA62B4FB317001D0983 /* menu_tag_remove.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_tag_remove.tgs; sourceTree = "<group>"; };
+		27B6AFA92B510442001D0983 /* StoryPremRequiredInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPremRequiredInput.swift; sourceTree = "<group>"; };
 		27B6D0452739379900C785C7 /* Postbox */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Postbox; path = "submodules/telegram-ios/submodules/Postbox"; sourceTree = "<group>"; };
 		27B6D0462739382800C785C7 /* TelegramCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramCore; path = "submodules/telegram-ios/submodules/TelegramCore"; sourceTree = "<group>"; };
 		27B6D0472739387500C785C7 /* TelegramApi */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramApi; path = "submodules/telegram-ios/submodules/TelegramApi"; sourceTree = "<group>"; };
@@ -3166,6 +3174,7 @@
 				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
 				272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */,
 				275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */,
+				27B6AFA92B510442001D0983 /* StoryPremRequiredInput.swift */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -3545,6 +3554,8 @@
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
 				27307E972ADDA40A00D970EE /* menu_quote.tgs */,
+				27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */,
+				27B6AFA62B4FB317001D0983 /* menu_tag_remove.tgs */,
 				279B03582A4F1CB3007D2AB9 /* menu_stories.tgs */,
 				276790AE2AFE52A000E9975C /* menu_unlock.tgs */,
 				27D48B452A72739F00721995 /* menu_download_circle_lock.tgs */,
@@ -5536,6 +5547,7 @@
 			children = (
 				C2E52A0C1EB8C385009AF87D /* SelectivePrivacySettingsController.swift */,
 				C271EB8F1EB8E6A40034792D /* SelectivePrivacySettingsPeersController.swift */,
+				27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */,
 			);
 			name = "selective-privacy";
 			sourceTree = "<group>";
@@ -6254,6 +6266,7 @@
 				27CE1561297966D8001F8CE8 /* emoji_category_search_to_arrow.tgs in Resources */,
 				275549162747C24F0098A3CD /* device_safari.tgs in Resources */,
 				27803C0227A3E944007B0FA9 /* menu_folder_folder.tgs in Resources */,
+				27B6AFA82B4FB317001D0983 /* menu_tag_remove.tgs in Resources */,
 				27867A272AE0364200E25BB8 /* bot_menu_web_app.tgs in Resources */,
 				27F4F18228463BF100A3B4D4 /* premium_double.tgs in Resources */,
 				2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */,
@@ -6280,6 +6293,7 @@
 				27803BFF27A3E944007B0FA9 /* menu_folder_math.tgs in Resources */,
 				27672EBD26F8D64900297DB4 /* 105.m4a in Resources */,
 				27672EBE26F8D64E00297DB4 /* 106.m4a in Resources */,
+				27B6AFA72B4FB317001D0983 /* menu_tag_filter.tgs in Resources */,
 				27672EBF26F8D65100297DB4 /* 107.m4a in Resources */,
 				27CE1563297966D8001F8CE8 /* emoji_category_angry.tgs in Resources */,
 				27672EC026F8D65200297DB4 /* 108.m4a in Resources */,
@@ -7205,6 +7219,7 @@
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
 				C2DE5D401F3CB0380081EC1E /* InstantPageTileView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
+				27B6AFAA2B510442001D0983 /* StoryPremRequiredInput.swift in Sources */,
 				9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */,
 				27D6043329532EB700588C21 /* StorageUsageCategoryItem.swift in Sources */,
 				A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */,
@@ -7411,6 +7426,7 @@
 				270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */,
+				27B6AF8E2B4D6E0B001D0983 /* MessagesPrivacyController.swift in Sources */,
 				D0C39EC5233A6077003CD402 /* GeneralBlockTextRowItem.swift in Sources */,
 				C253A96D1D92F69C00CDC850 /* ReplyModel.swift in Sources */,
 				D076F891229823DA004F895A /* ChannelDiscussionInputView.swift in Sources */,

@@ -70,6 +70,50 @@ private final class LockControl : View {
     
 }
 
+
+private final class SingleTimeControl : Control {
+    private let head: ImageView = ImageView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer?.cornerRadius = frameRect.width / 2
+        addSubview(head)
+        updateLocalizationAndTheme(theme: theme)
+        isSelected = false
+        
+        scaleOnClick = true
+        set(handler: { control in
+            control.isSelected = !control.isSelected
+        }, for: .Click)
+    }
+    
+    override var isSelected: Bool {
+        didSet {
+            head.animates = true
+            head.image = NSImage(named: isSelected ? "Icon_OnceView_Filled" : "Icon_OnceView")?.precomposed(theme.colors.accent)
+            head.sizeToFit()
+            needsLayout = true
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        backgroundColor = theme.colors.background
+        layer?.borderColor = theme.colors.grayIcon.withAlphaComponent(0.4).cgColor
+        layer?.borderWidth = .borderSize
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        head.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+}
+
 private class ChatRecorderOverlayView : Control {
     private let innerContainer: Control = Control()
     private let outerContainer: Control = Control()
@@ -175,13 +219,19 @@ class ChatRecorderOverlayWindowController : NSObject {
         window.backgroundColor = .clear
         window.contentView = ChatRecorderOverlayView(frame: NSMakeRect(0, 0, size.width, size.height))
         
-        lockWindow = Window(contentRect: NSMakeRect(window.frame.midX - 12.5, parent.frame.minY + 160, 26, 50), styleMask: [], backing: .buffered, defer: true)
-        lockWindow.contentView?.addSubview(LockControl(frame: NSMakeRect(0, 0, 26, 50)))
+        lockWindow = Window(contentRect: NSMakeRect(window.frame.midX - 12.5 - 5, parent.frame.minY + 160, 36, 50), styleMask: [], backing: .buffered, defer: true)
+        lockWindow.contentView?.wantsLayer = true
+        lockWindow.contentView?.layer?.masksToBounds = false
+        lockWindow.contentView?.addSubview(LockControl(frame: NSMakeRect(5, 0, 26, 50)))
+        lockWindow.contentView?.addSubview(SingleTimeControl(frame: NSMakeRect(0, 0, 36, 36)))
+
         lockWindow.backgroundColor = .clear
         startMouseLocation = window.mouseLocationOutsideOfEventStream
         super.init()
         self.view.updateState(state)
         window.setFrameOrigin(NSMakePoint(minX, window.frame.minY))
+        
+        singleTimeControl.layer?.opacity = 0
     }
     
     private var view: ChatRecorderOverlayView {
@@ -191,6 +241,7 @@ class ChatRecorderOverlayWindowController : NSObject {
     func stopAndSend() {
         if let recorder = chatInteraction.presentation.recordingState {
             recorder.stop()
+            recorder.isOneTime = singleTimeControl.isSelected
             delay(0.1, closure: {
                 self.chatInteraction.mediaPromise.set(recorder.data)
                 closeAllModals()
@@ -240,7 +291,7 @@ class ChatRecorderOverlayWindowController : NSObject {
             let dm: CGFloat = 30
             let percent = 1.0 - dif / 100
             let h = max(dm, min(dh, dm + percent * dm))
-            view.frame = NSMakeRect(0, view.superview!.frame.height - h, view.frame.width, h)
+            view.frame = NSMakeRect(5, view.superview!.frame.height - h, view.frame.width, h)
             view.updatePercent(percent)
         }
     }
@@ -270,15 +321,23 @@ class ChatRecorderOverlayWindowController : NSObject {
         parent.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseDown, priority: .modal)
         window.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseDown, priority: .modal)
         
-        parent.removeChildWindow(lockWindow)
+        
+        lockWindow.setFrame(NSMakeRect(lockWindow.frame.minX, lockWindow.frame.minY - 40, lockWindow.frame.width, lockWindow.frame.height), display: true, animate: animated)
+        
+        singleTimeControl.change(opacity: 1, animated: animated)
+        
+        //parent.removeChildWindow(lockWindow)
         
         lockControl.change(opacity: 0, animated: animated) { [weak self] _ in
-            self?.lockWindow.orderOut(nil)
+          //  self?.lockWindow.orderOut(nil)
         }
     }
     
     private var lockControl: LockControl {
         return lockWindow.contentView!.subviews.first! as! LockControl
+    }
+    private var singleTimeControl: SingleTimeControl {
+        return lockWindow.contentView!.subviews.last! as! SingleTimeControl
     }
     
     private func proccessMouseUp()-> KeyHandlerResult {

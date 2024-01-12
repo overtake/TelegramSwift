@@ -180,7 +180,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             let members: Signal<[Peer], NoError> = searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: query)
             
             let participants = combineLatest(inlineSignal, members |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tag: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         if entry.message.extendedMedia is TelegramMediaAction {
                             return nil
@@ -375,7 +375,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         
         let participants: Signal<[Peer], NoError> = combineLatest(chatLocations.map { chatLocation in
             searchPeerMembers(context: context, peerId: chatLocation.peerId, chatLocation: chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: chatLocation.peerId, threadId: chatLocation.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: chatLocation.peerId, threadId: chatLocation.threadId), count: 100, tag: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         if entry.message.extendedMedia is TelegramMediaAction {
                             return nil

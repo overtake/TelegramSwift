@@ -23,14 +23,16 @@ class MediaSenderContainer : Equatable {
     let path:String
     let caption:String
     let isFile:Bool
-    public init(path:String, caption:String = "", isFile:Bool = false) {
+    let isOneTime: Bool
+    public init(path:String, caption:String = "", isFile:Bool = false, isOneTime: Bool = false) {
         self.path = path
         self.caption = caption
         self.isFile = isFile
+        self.isOneTime = isOneTime
     }
     
     static func ==(lhs: MediaSenderContainer, rhs: MediaSenderContainer) -> Bool {
-        return lhs.path == rhs.path && lhs.caption == rhs.caption && lhs.isFile == rhs.isFile
+        return lhs.path == rhs.path && lhs.caption == rhs.caption && lhs.isFile == rhs.isFile && lhs.isOneTime == rhs.isOneTime
     }
 }
 
@@ -38,7 +40,7 @@ class ArchiverSenderContainer : MediaSenderContainer {
     let files: [URL]
     public init(path:String, caption:String = "", isFile:Bool = true, files: [URL] = []) {
         self.files = files
-        super.init(path: path, caption: caption, isFile: isFile)
+        super.init(path: path, caption: caption, isFile: isFile, isOneTime: false)
     }
     
     static func ==(lhs: ArchiverSenderContainer, rhs: ArchiverSenderContainer) -> Bool {
@@ -50,11 +52,11 @@ class ArchiverSenderContainer : MediaSenderContainer {
 class VoiceSenderContainer : MediaSenderContainer {
     fileprivate let data:RecordedAudioData
     fileprivate let id:Int64?
-    public init(data:RecordedAudioData, id: Int64?) {
+    public init(data:RecordedAudioData, id: Int64?, isOneTime: Bool) {
         self.data = data
         self.id = id
         let path: String = data.path
-        super.init(path: path)
+        super.init(path: path, isOneTime: isOneTime)
         
     }
 }
@@ -63,11 +65,11 @@ class VideoMessageSenderContainer : MediaSenderContainer {
     fileprivate let duration:Int
     fileprivate let size: CGSize
     fileprivate let id:Int64?
-    public init(path:String, duration: Int, size: CGSize, id: Int64?) {
+    public init(path:String, duration: Int, size: CGSize, id: Int64?, isOneTime: Bool) {
         self.duration = duration
         self.size = size
         self.id = id
-        super.init(path: path, caption: "", isFile: false)
+        super.init(path: path, caption: "", isFile: false, isOneTime: isOneTime)
     }
 }
 
@@ -513,26 +515,32 @@ class Sender: NSObject {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
-        var attributes:[MessageAttribute] = []
-        if FastSettings.isChannelMessagesMuted(peerId) || silent {
-            attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
-        }
-        if let date = atDate {
-            attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
-        }
-        if let sendAsPeerId = sendAsPeerId {
-            attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
-        }
-        if let query = query, !query.isEmpty {
-            attributes.append(EmojiSearchQueryMessageAttribute(query: query))
-        }
-        
-        if isSpoiler {
-            attributes.append(MediaSpoilerMessageAttribute())
-        }
-        
+       
         
         for path in media {
+            
+            var attributes:[MessageAttribute] = []
+            if FastSettings.isChannelMessagesMuted(peerId) || silent {
+                attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+            }
+            if let date = atDate {
+                attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+            }
+            if let sendAsPeerId = sendAsPeerId {
+                attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
+            }
+            if let query = query, !query.isEmpty {
+                attributes.append(EmojiSearchQueryMessageAttribute(query: query))
+            }
+            
+            if isSpoiler {
+                attributes.append(MediaSpoilerMessageAttribute())
+            }
+            
+            if path.isOneTime {
+                attributes.append(AutoremoveTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: 0))
+            }
+            
             senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
                 return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
             })

@@ -1549,6 +1549,8 @@ class ChatRowItem: TableRowItem {
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId, source: .reaction(message.id))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
+                }, tagAction: { [weak chatInteraction] reaction in
+                    chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction)))
                 })
                 
                 _reactionsLayout = layout
@@ -2187,9 +2189,11 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if let threadId = message.threadId, threadId == attribute.messageId.id, message.associatedThreadInfo != nil {
+                    if let threadId = message.threadId, threadId == attribute.messageId.id {
                         ignore = true
                     }
+              
+                    
                     if message.media.first is TelegramMediaGiveawayResults {
                         ignore = true
                     }
@@ -2337,7 +2341,7 @@ class ChatRowItem: TableRowItem {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
-                    if let media = message.media.first, media is TelegramMediaImage || media.isVideoFile {
+                    if let media = message.media.first, media is TelegramMediaImage || (media.isVideoFile && !media.isInstantVideo) {
                         return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
                     }
                 }
@@ -3270,7 +3274,19 @@ class ChatRowItem: TableRowItem {
                             } else {
                                 value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
                             }
-                            if case .custom = value, !context.isPremium {
+                            var contains: Bool = false
+                            for reaction in reactions {
+                                switch reaction.content {
+                                case let .custom(file):
+                                    if file.fileId == sticker.file.fileId {
+                                        contains = true
+                                        break
+                                    }
+                                default:
+                                    break
+                                }
+                            }
+                            if case .custom = value, !context.isPremium && sticker.file.isPremiumEmoji, !contains {
                                 showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
                                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                                 })

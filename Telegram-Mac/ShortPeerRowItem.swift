@@ -19,7 +19,7 @@ final class SelectPeerPresentation : Equatable {
         let string: String
         let range: NSRange
     }
-    
+    let premiumRequired:Set<PeerId>
     let selected:Set<PeerId>
     let peers:[PeerId: Peer]
     let limit:Int32
@@ -28,10 +28,10 @@ final class SelectPeerPresentation : Equatable {
     let multipleSelection: Bool
     private let someFlagsAsNotice: Bool
     static func ==(lhs:SelectPeerPresentation, rhs:SelectPeerPresentation) -> Bool {
-        return lhs.selected == rhs.selected && lhs.limit == rhs.limit && lhs.someFlagsAsNotice == rhs.someFlagsAsNotice && lhs.inputQueryResult == rhs.inputQueryResult && lhs.comment == rhs.comment && lhs.multipleSelection == rhs.multipleSelection
+        return lhs.selected == rhs.selected && lhs.limit == rhs.limit && lhs.someFlagsAsNotice == rhs.someFlagsAsNotice && lhs.inputQueryResult == rhs.inputQueryResult && lhs.comment == rhs.comment && lhs.multipleSelection == rhs.multipleSelection && lhs.premiumRequired == rhs.premiumRequired
     }
     
-    init(_ selected:Set<PeerId> = Set(), peers:[PeerId: Peer] = [:], limit: Int32 = 0, someFlagsAsNotice:Bool = false, inputQueryResult: ChatPresentationInputQueryResult? = nil, comment: Comment = Comment(string: "", range: NSMakeRange(0, 0)), multipleSelection: Bool = true) {
+    init(_ selected:Set<PeerId> = Set(), peers:[PeerId: Peer] = [:], limit: Int32 = 0, someFlagsAsNotice:Bool = false, inputQueryResult: ChatPresentationInputQueryResult? = nil, comment: Comment = Comment(string: "", range: NSMakeRange(0, 0)), multipleSelection: Bool = true, premiumRequired: Set<PeerId> = Set()) {
         self.selected = selected
         self.peers = peers
         self.limit = limit
@@ -39,6 +39,7 @@ final class SelectPeerPresentation : Equatable {
         self.inputQueryResult = inputQueryResult
         self.comment = comment
         self.multipleSelection = multipleSelection
+        self.premiumRequired = premiumRequired
     }
     
     func deselect(peerId:PeerId) -> SelectPeerPresentation {
@@ -47,7 +48,7 @@ final class SelectPeerPresentation : Equatable {
         selectedIds.formUnion(selected)
         let _ = selectedIds.remove(peerId)
         peers.removeValue(forKey: peerId)
-        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: self.multipleSelection)
+        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: self.multipleSelection, premiumRequired: premiumRequired)
     }
     
     var isLimitReached: Bool {
@@ -55,18 +56,22 @@ final class SelectPeerPresentation : Equatable {
     }
     
     func withUpdateLimit(_ limit: Int32) -> SelectPeerPresentation {
-        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection)
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection, premiumRequired: premiumRequired)
     }
     func withUpdatedMultipleSelection(_ multipleSelection: Bool) -> SelectPeerPresentation {
-        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection)
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection, premiumRequired: premiumRequired)
     }
     
     func updatedInputQueryResult(_ f: (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?) -> SelectPeerPresentation {
-        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: f(inputQueryResult), comment: comment, multipleSelection: multipleSelection)
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: f(inputQueryResult), comment: comment, multipleSelection: multipleSelection, premiumRequired: premiumRequired)
     }
     
     func withUpdatedComment(_ comment: Comment) -> SelectPeerPresentation {
-        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection)
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection, premiumRequired: premiumRequired)
+    }
+    
+    func withUpdatedPremiumRequired(_ premiumRequired: Set<PeerId>) -> SelectPeerPresentation {
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection, premiumRequired: premiumRequired)
     }
     
     func withToggledSelected(_ peerId: PeerId, peer:Peer, toggle: Bool? = nil) -> SelectPeerPresentation {
@@ -85,7 +90,7 @@ final class SelectPeerPresentation : Equatable {
                 someFlagsAsNotice = !someFlagsAsNotice
             }
         }
-        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection)
+        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection, premiumRequired: premiumRequired)
     }
     
 }
@@ -98,6 +103,7 @@ final class SelectPeerInteraction : InterfaceObserver {
     var singleUpdater:((SelectPeerPresentation)->Void)? = nil
     
     var updateFolder:((ChatListFilter)->Void)? = nil
+    var premiumRequiredAction:((PeerId)->Void)? = nil
     
     func update(animated:Bool = true, _ f:(SelectPeerPresentation)->SelectPeerPresentation)->Void {
         let oldValue = self.presentation
@@ -110,12 +116,20 @@ final class SelectPeerInteraction : InterfaceObserver {
     }
     
     func toggleSelection( _ peer: Peer) {
+        if presentation.premiumRequired.contains(peer.id) {
+            self.premiumRequiredAction?(peer.id)
+            return
+        }
         self.update(animated: true, {
             $0.withToggledSelected(peer.id, peer: peer)
                 .withUpdatedMultipleSelection(true)
         })
     }
     func toggleSelection( _ peerId: PeerId) {
+        if presentation.premiumRequired.contains(peerId) {
+            self.premiumRequiredAction?(peerId)
+            return
+        }
         if let peer = self.presentation.peers[peerId] {
             self.toggleSelection(peer)
         }
@@ -142,6 +156,7 @@ enum ShortPeerItemInteractionType {
     case plain
     case deletable(onRemove:(PeerId)->Void, deletable:Bool)
     case selectable(SelectPeerInteraction, side: Side)
+    case interactable(SelectPeerInteraction)
 }
 
 
@@ -191,6 +206,7 @@ class ShortPeerRowItem: GeneralRowItem {
     let highlightOnHover: Bool
     let alwaysHighlight: Bool
     let drawPhotoOuter: Bool
+    let photoBadge: CGImage?
     private let contextMenuItems:()->Signal<[ContextMenuItem], NoError>
     fileprivate let _peerId: PeerId?
     let disabledAction: (()->Void)?
@@ -203,7 +219,7 @@ class ShortPeerRowItem: GeneralRowItem {
     let openStory:(StoryInitialIndex?)->Void
     let menuOnAction: Bool
     
-    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, menuOnAction: Bool = false) {
+    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, menuOnAction: Bool = false, photoBadge: CGImage? = nil) {
         self.peer = peer
         self.drawPhotoOuter = drawPhotoOuter
         self.contextMenuItems = contextMenuItems
@@ -214,6 +230,7 @@ class ShortPeerRowItem: GeneralRowItem {
         self.openStory = openStory
         self.photoSize = photoSize
         self.leftImage = leftImage
+        self.photoBadge = photoBadge
         self.disabledAction = disabledAction
         self.inputActivity = inputActivity
         self.menuOnAction = menuOnAction

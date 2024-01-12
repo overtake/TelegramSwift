@@ -301,7 +301,7 @@ final class ChatReactionsLayout {
                         }
                         width += presentation.insetOuter
                     } else if mode == .tag {
-                        width += 15
+                        width += 22
                     }
                     
                     var index: Int = 0
@@ -329,11 +329,36 @@ final class ChatReactionsLayout {
         }
         
         func loadMenu() -> ContextMenu? {
+            
+            if message.id.peerId == context.peerId {
+                if let menu = menu {
+                    return menu
+                } else {
+                    let menu = ContextMenu()
+                    self.menu = menu
+                    
+                    menu.addItem(ContextMenuItem(strings().chatReactionContextFilterByTag, handler: { [weak self] in
+                        if let `self` = self {
+                            self.action(self.value.value, false)
+                        }
+                    }, itemImage: MenuAnimation.menu_tag_filter.value))
+                    menu.addItem(ContextMenuItem(strings().chatReactionContextRemoveTag, handler: { [weak self] in
+                        if let `self` = self {
+                            self.action(self.value.value, true)
+                        }
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_tag_remove.value))
+                    
+                    return menu
+                }
+            }
+            
             if let peer = self.message.peers[message.id.peerId] {
                 guard peer.isGroup || peer.isSupergroup else {
                     return nil
                 }
             }
+            
+
             if !self.canViewList {
                 return nil
             }
@@ -435,7 +460,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void) {
         
         var mode: Mode = .full
         if message.id.peerId == context.peerId {
@@ -523,10 +548,12 @@ final class ChatReactionsLayout {
                         }
                     }
                 }
-                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, checkPrem in
-                    
-                    engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
-                    
+                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, isFilterTag in
+                    if message.id.peerId == context.peerId, !isFilterTag {
+                        tagAction(value)
+                    } else {
+                        engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
+                    }
                 }, openInfo: openInfo, runEffect: runEffect)
             } else {
                 return nil

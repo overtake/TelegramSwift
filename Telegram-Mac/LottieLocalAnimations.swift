@@ -307,7 +307,9 @@ enum LocalAnimatedSticker : String {
     case emoji_category_what
     case emoji_category_work
     
-    
+    case menu_tag_filter
+    case menu_tag_remove
+
     
     case forum_topic
     

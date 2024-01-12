@@ -351,13 +351,13 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     }
     
     func setInitialLocation() {
-        setLocation(.init(content: .Navigation(index: .upperBound, anchorIndex: .upperBound, count: 100, side: .upper), id: getNextId()))
+        setLocation(.init(content: .Navigation(index: .upperBound, anchorIndex: .upperBound, count: 100, side: .upper), tag: nil, id: getNextId()))
     }
     
     let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
     
     let history = historyLocation.get() |> mapToSignal { historyLocation in
-        return chatHistoryViewForLocation(historyLocation.content, context: context, chatLocation: location, fixedCombinedReadStates: { nil }, tagMask: nil, mode: mode, additionalData: [], chatLocationContextHolder: chatLocationContextHolder)
+        return chatHistoryViewForLocation(historyLocation.content, context: context, chatLocation: location, fixedCombinedReadStates: { nil }, tag: nil, mode: mode, additionalData: [], chatLocationContextHolder: chatLocationContextHolder)
     }
     
     let wallpaper: Signal<TelegramWallpaper?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
@@ -571,7 +571,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
                     guard location != locationValue?.content else {
                         return
                     }
-                    setLocation(.init(content: location, id: getNextId()))
+                    setLocation(.init(content: location, tag: nil, id: getNextId()))
                 }
             }
         }

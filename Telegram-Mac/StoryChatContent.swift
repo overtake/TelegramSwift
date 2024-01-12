@@ -35,7 +35,7 @@ final class StoryContentItem {
     let peer: EnginePeer?
     let storyItem: EngineStoryItem
     let entityFiles: [EngineMedia.Id: TelegramMediaFile]
-
+    
 
     
     var peerId: EnginePeer.Id? {
@@ -99,27 +99,26 @@ final class StoryContentItemSlice {
 
 final class StoryContentContextState {
     
-    final class AdditionalPeerData: Equatable {
-            static func == (lhs: StoryContentContextState.AdditionalPeerData, rhs: StoryContentContextState.AdditionalPeerData) -> Bool {
-                return lhs.isMuted == rhs.isMuted && lhs.areVoiceMessagesAvailable == rhs.areVoiceMessagesAvailable && lhs.presence == rhs.presence
-            }
-            
-            let isMuted: Bool
-            let areVoiceMessagesAvailable: Bool
-            let presence: EnginePeer.Presence?
-            let canViewStats: Bool
-            init(
-                isMuted: Bool,
-                areVoiceMessagesAvailable: Bool,
-                presence: EnginePeer.Presence?,
-                canViewStats: Bool
-            ) {
-                self.isMuted = isMuted
-                self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
-                self.presence = presence
-                self.canViewStats = canViewStats
-            }
+    struct AdditionalPeerData: Equatable {
+        let isMuted: Bool
+        let areVoiceMessagesAvailable: Bool
+        let presence: EnginePeer.Presence?
+        let canViewStats: Bool
+        let premiumRequired: Bool
+        init(
+            isMuted: Bool,
+            areVoiceMessagesAvailable: Bool,
+            presence: EnginePeer.Presence?,
+            canViewStats: Bool,
+            premiumRequired: Bool
+        ) {
+            self.isMuted = isMuted
+            self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
+            self.presence = presence
+            self.canViewStats = canViewStats
+            self.premiumRequired = premiumRequired
         }
+    }
 
     final class FocusedSlice: Equatable {
         let peer: EnginePeer
@@ -382,21 +381,24 @@ final class StoryContentContextImpl: StoryContentContext {
                             isMuted: isMuted,
                             areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
-                            canViewStats: false
+                            canViewStats: false,
+                            premiumRequired: cachedUserData.flags.contains(.premiumRequired)
                         )
                     } else if let cachedChannelData = cachedPeerDataView.cachedPeerData as? CachedChannelData {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
                             isMuted: true,
                             areVoiceMessagesAvailable: true,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
-                            canViewStats: cachedChannelData.flags.contains(.canViewStats)
+                            canViewStats: cachedChannelData.flags.contains(.canViewStats), 
+                            premiumRequired: false
                         )
                     } else {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
                             isMuted: true,
                             areVoiceMessagesAvailable: true,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
-                            canViewStats: false
+                            canViewStats: false,
+                            premiumRequired: false
                         )
                     }
                 }
@@ -405,7 +407,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isMuted: true,
                         areVoiceMessagesAvailable: true,
                         presence: peerPresence.flatMap { EnginePeer.Presence($0) },
-                        canViewStats: false
+                        canViewStats: false,
+                        premiumRequired: false
                     )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
@@ -1283,7 +1286,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.AreVoiceMessagesAvailable(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.CanViewStats(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: storyId.peerId),
-                TelegramEngine.EngineData.Item.NotificationSettings.Global()
+                TelegramEngine.EngineData.Item.NotificationSettings.Global(),
+                TelegramEngine.EngineData.Item.Peer.PremiumRequired(id: storyId.peerId)
             ),
             item |> mapToSignal { item -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]), NoError> in
                 return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]) in
@@ -1348,7 +1352,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired) = data
             let (item, peers, allEntityFiles, forwardInfoStories) = itemAndPeers
             
             guard let peer = peer else {
@@ -1361,7 +1365,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 isMuted: isMuted,
                 areVoiceMessagesAvailable: areVoiceMessagesAvailable,
                 presence: presence,
-                canViewStats: canViewStats
+                canViewStats: canViewStats,
+                premiumRequired: false
             )
             
             for (storyId, story) in forwardInfoStories {
@@ -1537,7 +1542,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.AreVoiceMessagesAvailable(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.CanViewStats(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: peerId),
-                TelegramEngine.EngineData.Item.NotificationSettings.Global()
+                TelegramEngine.EngineData.Item.NotificationSettings.Global(),
+                TelegramEngine.EngineData.Item.Peer.PremiumRequired(id: peerId)
             ),
             listContext.state,
             self.focusedIdUpdated.get()
@@ -1547,7 +1553,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired) = data
             
             guard let peer = peer else {
                 return
@@ -1559,7 +1565,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 isMuted: isMuted,
                 areVoiceMessagesAvailable: areVoiceMessagesAvailable,
                 presence: presence,
-                canViewStats: canViewStats
+                canViewStats: canViewStats,
+                premiumRequired: premiumRequired
             )
             
             self.listState = state

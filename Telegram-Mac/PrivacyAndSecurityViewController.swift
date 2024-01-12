@@ -63,6 +63,7 @@ private final class PrivacyAndSecurityControllerArguments {
     let openForwardPrivacy: () -> Void
     let openPhoneNumberPrivacy: () -> Void
     let openVoicePrivacy: () -> Void
+    let openMessagesPrivacy: () -> Void
     let openPasscode: () -> Void
     let openTwoStepVerification: (TwoStepVeriticationAccessConfiguration?) -> Void
     let openActiveSessions: ([RecentAccountSession]?) -> Void
@@ -75,7 +76,7 @@ private final class PrivacyAndSecurityControllerArguments {
     let toggleSensitiveContent:(Bool)->Void
     let toggleSecretChatWebPreview: (Bool)->Void
     let toggleAutoArchive: (Bool)->Void
-    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openBioPrivacy: @escaping()->Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openVoicePrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, setupGlobalAutoremove: @escaping()->Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void, toggleSecretChatWebPreview: @escaping(Bool)->Void, toggleAutoArchive: @escaping(Bool)->Void) {
+    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openBioPrivacy: @escaping()->Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openVoicePrivacy: @escaping() -> Void, openMessagesPrivacy: @escaping()->Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, setupGlobalAutoremove: @escaping()->Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void, toggleSecretChatWebPreview: @escaping(Bool)->Void, toggleAutoArchive: @escaping(Bool)->Void) {
         self.context = context
         self.openBlockedUsers = openBlockedUsers
         self.openLastSeenPrivacy = openLastSeenPrivacy
@@ -95,6 +96,7 @@ private final class PrivacyAndSecurityControllerArguments {
         self.openForwardPrivacy = openForwardPrivacy
         self.openPhoneNumberPrivacy = openPhoneNumberPrivacy
         self.openVoicePrivacy = openVoicePrivacy
+        self.openMessagesPrivacy = openMessagesPrivacy
         self.toggleSensitiveContent = toggleSensitiveContent
         self.toggleSecretChatWebPreview = toggleSecretChatWebPreview
         self.toggleAutoArchive = toggleAutoArchive
@@ -114,6 +116,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case forwardPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case voiceCallPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case voiceMessagesPrivacy(sectionId: Int, String, Bool, viewType: GeneralViewType)
+    case messagesPrivacy(sectionId: Int, String, Bool, viewType: GeneralViewType)
     case bioPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case securityHeader(sectionId:Int)
     case globalTimer(sectionId: Int, String, viewType: GeneralViewType)
@@ -162,6 +165,8 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .voiceCallPrivacy(sectionId, _, _):
             return sectionId
         case let .voiceMessagesPrivacy(sectionId, _, _, _):
+            return sectionId
+        case let .messagesPrivacy(sectionId, _, _, _):
             return sectionId
         case let .bioPrivacy(sectionId, _, _):
             return sectionId
@@ -253,50 +258,52 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return 12
         case .voiceMessagesPrivacy:
             return 13
-        case .bioPrivacy:
+        case .messagesPrivacy:
             return 14
-        case .securityHeader:
+        case .bioPrivacy:
             return 15
-        case .autoArchiveHeader:
+        case .securityHeader:
             return 16
-        case .autoArchiveToggle:
+        case .autoArchiveHeader:
             return 17
-        case .autoArchiveDesc:
+        case .autoArchiveToggle:
             return 18
-        case .accountHeader:
+        case .autoArchiveDesc:
             return 19
-        case .accountTimeout:
+        case .accountHeader:
             return 20
-        case .accountInfo:
+        case .accountTimeout:
             return 21
-        case .webAuthorizationsHeader:
+        case .accountInfo:
             return 22
-        case .webAuthorizations:
+        case .webAuthorizationsHeader:
             return 23
-        case .proxyHeader:
+        case .webAuthorizations:
             return 24
-        case .proxySettings:
+        case .proxyHeader:
             return 25
-        case .togglePeerSuggestions:
+        case .proxySettings:
             return 26
-        case .togglePeerSuggestionsDesc:
+        case .togglePeerSuggestions:
             return 27
-        case .clearCloudDraftsHeader:
+        case .togglePeerSuggestionsDesc:
             return 28
-        case .clearCloudDrafts:
+        case .clearCloudDraftsHeader:
             return 29
-        case .sensitiveContentHeader:
+        case .clearCloudDrafts:
             return 30
-        case .sensitiveContentToggle:
+        case .sensitiveContentHeader:
             return 31
-        case .sensitiveContentDesc:
+        case .sensitiveContentToggle:
             return 32
-        case .secretChatWebPreviewHeader:
+        case .sensitiveContentDesc:
             return 33
-        case .secretChatWebPreviewToggle:
+        case .secretChatWebPreviewHeader:
             return 34
-        case .secretChatWebPreviewDesc:
+        case .secretChatWebPreviewToggle:
             return 35
+        case .secretChatWebPreviewDesc:
+            return 36
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -356,6 +363,8 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             })
         case let .voiceMessagesPrivacy(_, text, locked, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsVoiceMessages, type: .nextContext(text), viewType: viewType, action: arguments.openVoicePrivacy, rightIcon: locked ? theme.icons.premium_lock_gray : nil)
+        case let .messagesPrivacy(_, text, locked, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsMessages, type: .nextContext(text), viewType: viewType, action: arguments.openMessagesPrivacy, rightIcon: locked ? theme.icons.premium_lock_gray : nil)
         case let .bioPrivacy(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsBio, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openBioPrivacy()
@@ -570,6 +579,8 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         entries.append(.profilePhotoPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.profilePhoto), viewType: .innerItem))
         entries.append(.forwardPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.forwards), viewType: .innerItem))
         entries.append(.voiceMessagesPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceMessages), !context.isPremium, viewType: .innerItem))
+        entries.append(.messagesPrivacy(sectionId: sectionId, privacySettings.globalSettings.nonContactChatsRequirePremium ? strings().privacySettingsMessagesMyContacts : strings().privacySettingsMessagesAll, false, viewType: .innerItem))
+
         entries.append(.bioPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.bio), viewType: .lastItem))
 
         
@@ -893,7 +904,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         }, openVoicePrivacy: {
             
             if !context.isPremium {
-                showModalText(for: context.window, text: strings().privacySettingsVoicePremiumError, callback: { _ in
+                showModalText(for: context.window, text: strings().privacySettingsVoicePremiumError, button: strings().alertView, callback: { _ in
                     showModal(with: PremiumBoardingController(context: context), for: context.window)
                 })
                 return
@@ -918,6 +929,17 @@ class PrivacyAndSecurityViewController: TableViewController {
                             }
                             currentInfoDisposable.set(applySetting.start())
                         }
+                    }))
+                }
+            }))
+        }, openMessagesPrivacy: {
+            let signal = privacySettingsPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+            currentInfoDisposable.set(signal.start(next: { info in
+                if let info = info {
+                    pushControllerImpl(MessagesPrivacyController(context: context, globalSettings: info.globalSettings, updated: { updated in
+                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: info.presence, groupInvitations: info.groupInvitations, voiceCalls: info.voiceCalls, voiceCallsP2P: info.voiceCallsP2P, profilePhoto: info.profilePhoto, forwards: info.forwards, phoneNumber: info.phoneNumber, phoneDiscoveryEnabled: info.phoneDiscoveryEnabled, voiceMessages: info.voiceMessages, bio: info.bio, globalSettings: updated, accountRemovalTimeout: info.accountRemovalTimeout, messageAutoremoveTimeout: info.messageAutoremoveTimeout)))
                     }))
                 }
             }))
