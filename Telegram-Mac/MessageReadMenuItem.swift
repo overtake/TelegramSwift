@@ -109,7 +109,11 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                     }
                 } else if let peers = read {
                     if peers.isEmpty {
-                        return strings().chatMessageReadStatsEmptyViews
+                        if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                            return strings().chatMessageReadStatsShowDate
+                        } else {
+                            return strings().chatMessageReadStatsEmptyViews
+                        }
                     } else if peers.count == 1 {
                         if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let readTimestamp = readTimestamps[peers[0].id] {
                             return stringForRelativeTimestamp(relativeTimestamp: readTimestamp, relativeTo: context.timestamp)
@@ -129,7 +133,11 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                         }
                     }
                 } else {
-                    return strings().chatMessageReadStatsEmptyViews
+                    if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                        return strings().chatMessageReadStatsShowDate
+                    } else {
+                        return strings().chatMessageReadStatsEmptyViews
+                    }
                 }
             case .loading:
                 if let attr = message.reactionsAttribute {
@@ -326,6 +334,8 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         
         self.item.title = state.text(self.message, context: context)
         
+        
+        
     }
     
     deinit {
@@ -338,7 +348,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let viewSize = NSMakeSize(15 * CGFloat(3) - (CGFloat(3) - 1) * 1, 15)
         size.width += viewSize.width + 6
 
-        size.width += 80
+        size.width += 100
         
         return size
     }
@@ -519,6 +529,16 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             loadingView.centerY(x: self.textX)
         }
     }
+    
+    override func invokeClick() {
+        guard let item = self.item as? MessageReadMenuRowItem else {
+            return
+        }
+        if item.state.isEmpty, !item.state.isLoading(item.message, context: item.context), item.message.id.peerId.namespace == Namespaces.Peer.CloudUser, let peer = item.message.peers[item.message.id.peerId] {
+            showModal(with: PremiumShowStatusController(context: item.context, peer: .init(peer), source: .read), for: item.context.window)
+            item.interaction?.close()
+        }
+    }
 }
 
 
@@ -652,6 +672,25 @@ extension ContextMenuItem {
 }
 
 
+
+extension ContextMenuItem {
+    static func checkPremiumRequired(_ item: ContextMenuItem, context: AccountContext, peer: Peer) {
+        if let peer = peer as? TelegramUser {
+            if peer.flags.contains(.requirePremium), !peer.flags.contains(.mutualContact), !context.isPremium {
+                let premRequired = getCachedDataView(peerId: peer.id, postbox: context.account.postbox)
+                |> map { $0 as? CachedUserData }
+                |> filter { $0 != nil }
+                |> take(1)
+                |> map { $0!.flags.contains(.premiumRequired) }
+                
+                _ = premRequired.startStandalone(next: { [weak item] value in
+                    item?.isEnabled = !value
+                })
+            }
+        }
+    }
+}
+
 final class ReactionPeerMenu : ContextMenuItem {
     enum Source : Equatable {
         case builtin(TelegramMediaFile)
@@ -701,6 +740,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                                 }
                             })
                             ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
+                            ContextMenuItem.checkPremiumRequired(menuItem, context: context, peer: peer)
                             menu.addItem(menuItem)
                         }
                        
@@ -709,6 +749,8 @@ final class ReactionPeerMenu : ContextMenuItem {
                 self?.submenu = menu
             }))
         }
+        
+        ContextMenuItem.checkPremiumRequired(self, context: context, peer: peer)
     }
     
     deinit {
@@ -812,7 +854,7 @@ func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo timestamp: 
     if dayDifference == 0 {
         return strings().timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
     } else {
-        return DateSelectorUtil.mediaMediumDate.string(from: Date.init(timeIntervalSince1970: TimeInterval(relativeTimestamp)))
+        return DateSelectorUtil.chatFullDateFormatter.string(from: Date.init(timeIntervalSince1970: TimeInterval(relativeTimestamp)))
     }
 }
 
@@ -966,6 +1008,8 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
         }
+        
+        statusControl?.alphaValue = item.item.isEnabled ? 1 : 0.6
         
         self.imageView.isHidden = item.reaction == nil
         

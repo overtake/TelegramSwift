@@ -325,6 +325,7 @@ class GIFPlayerView: TransformImageView {
     
     required convenience init(frame frameRect: NSRect) {
         self.init()
+        self.frame = frameRect
     }
     
 }

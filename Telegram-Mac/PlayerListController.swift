@@ -644,7 +644,7 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
                 
                 guard let `self` = self else {return .complete()}
                 
-                return chatHistoryViewForLocation(location, context: self.chatInteraction.context, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: [], chatLocationInput: chatLocationInput) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
+                return chatHistoryViewForLocation(location, context: self.chatInteraction.context, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tag: .tag(.music), additionalData: [], chatLocationInput: chatLocationInput) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
                     switch view {
                     case .Loading:
                         return .single((PeerMediaUpdate(), nil))

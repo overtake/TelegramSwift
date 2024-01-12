@@ -1621,6 +1621,8 @@ final class StoryListView : Control, Notifable {
                     self.inputView = StoryChannelInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else if entry.peer.isService {
                     self.inputView = StoryNoReplyInput(frame: NSMakeRect(0, 0, aspect.width, 50))
+                } else if entry.additionalPeerData.premiumRequired && !arguments.context.isPremium {
+                    self.inputView = StoryPremRequiredInput(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else if entry.peer.id == context.peerId {
                     self.inputView = StoryMyInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else {

@@ -1342,6 +1342,12 @@ extension Media {
         }
         return false
     }
+    var isInstantVideo: Bool {
+        if let media = self as? TelegramMediaFile {
+            return media.isInstantVideo
+        }
+        return false
+    }
     var hasNoSound: Bool {
         if let media = self as? TelegramMediaFile {
             for attr in media.attributes {

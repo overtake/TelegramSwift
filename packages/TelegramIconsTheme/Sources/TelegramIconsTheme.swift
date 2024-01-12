@@ -10171,6 +10171,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var premium_required_forward: CGImage {
+      if let image = cached.with({ $0["premium_required_forward"] }) {
+          return image
+      } else {
+          let image = _premium_required_forward()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_required_forward"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10954,6 +10967,7 @@ public final class TelegramIconsTheme {
   private let _channel_feature_stories: ()->CGImage
   private let _chat_hidden_author: ()->CGImage
   private let _chat_my_notes: ()->CGImage
+  private let _premium_required_forward: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11737,7 +11751,8 @@ public final class TelegramIconsTheme {
       channel_feature_status: @escaping()->CGImage,
       channel_feature_stories: @escaping()->CGImage,
       chat_hidden_author: @escaping()->CGImage,
-      chat_my_notes: @escaping()->CGImage
+      chat_my_notes: @escaping()->CGImage,
+      premium_required_forward: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12521,5 +12536,6 @@ public final class TelegramIconsTheme {
       self._channel_feature_stories = channel_feature_stories
       self._chat_hidden_author = chat_hidden_author
       self._chat_my_notes = chat_my_notes
+      self._premium_required_forward = premium_required_forward
   }
 }
