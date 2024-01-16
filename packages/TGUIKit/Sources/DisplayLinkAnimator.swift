@@ -25,7 +25,7 @@ class DisplayLink
        
        var timerRef : CVDisplayLink? = nil
        
-       var successLink = CVDisplayLinkCreateWithActiveCGDisplays(&timerRef)
+       var successLink = CVDisplayLinkCreateWithCGDisplay(CGMainDisplayID(), &timerRef)
        
        if let timer = timerRef
        {
