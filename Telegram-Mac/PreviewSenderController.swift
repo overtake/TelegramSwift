@@ -1394,6 +1394,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                     let collages = medias.chunks(10)
                     for collage in collages {
                         self.chatInteraction.sendMedias(collage, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
+                        additionalMessage = nil
                     }
                 } else {
                     self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)

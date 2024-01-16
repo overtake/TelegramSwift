@@ -86,7 +86,7 @@ func MessagesPrivacyController(context: AccountContext, globalSettings: GlobalPr
 
     let arguments = Arguments(context: context, alert: {
         if !context.isPremium {
-            showModalText(for: context.window, text: strings().privacySettingsMessagesPremiumError, button: strings().alertView, callback: { _ in
+            showModalText(for: context.window, text: strings().privacySettingsMessagesPremiumError, button: strings().alertLearnMore, callback: { _ in
                 showModal(with: PremiumBoardingController(context: context, source: .messages_privacy), for: context.window)
             })
             return

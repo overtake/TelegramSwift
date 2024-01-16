@@ -89,6 +89,10 @@ class GIFPlayerView: TransformImageView {
         case pause
     }
     
+    var sampleBufferLayer: AVSampleBufferDisplayLayer {
+        return sampleLayer
+    }
+    
     private let sampleLayer:TAVSampleBufferDisplayLayer = TAVSampleBufferDisplayLayer()
     
     private var _reader:Atomic<AVAssetReader?> = Atomic(value:nil)

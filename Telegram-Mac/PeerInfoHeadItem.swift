@@ -575,8 +575,8 @@ class PeerInfoHeadItem: GeneralRowItem {
     var statusIsHidden: Bool {
         if let presence = peerView.peerPresences[arguments.peerId] as? TelegramUserPresence {
             switch presence.status {
-            case .hidden:
-                return true
+            case let .lastMonth(isHidden), let .lastWeek(isHidden), let .recently(isHidden):
+                return isHidden
             default:
                 return false
             }

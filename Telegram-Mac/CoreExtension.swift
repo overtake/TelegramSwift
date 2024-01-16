@@ -1005,7 +1005,7 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
     }
     
     
-    if message.consumableContent != nil, let autoclear = message.autoclearTimeout, autoclear.timeout <= 60 {
+    if message.consumableContent != nil, let autoclear = message.autoclearTimeout, autoclear.timeout <= 60 || autoclear.timeout == viewOnceTimeout {
         return false
     }
     
@@ -3707,6 +3707,12 @@ extension Peer {
         return nil
     }
     
+    var maybePremiumRequired: Bool {
+        if let peer = self as? TelegramUser {
+            return peer.flags.contains(.requirePremium) && !peer.flags.contains(.mutualContact)
+        }
+        return false
+    }
 }
 
 

@@ -133,7 +133,7 @@ func ArchiveSettingsController(context: AccountContext, privacy: GlobalPrivacySe
         _ = context.engine.privacy.updateGlobalPrivacySettings(settings: stateValue.with { $0.settings }).start()
         update(stateValue.with { $0.settings })
     }, showPremium: {
-        showModalText(for: context.window, text: strings().archiveNewChatsPremium, button: strings().alertView, callback: { value in
+        showModalText(for: context.window, text: strings().archiveNewChatsPremium, button: strings().alertLearnMore, callback: { value in
             showModal(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
         })
     })

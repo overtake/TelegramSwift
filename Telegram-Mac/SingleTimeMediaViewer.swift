@@ -237,6 +237,10 @@ private final class VideoView : View, MediaView {
         addSubview(durationView)
         hood.addSubview(fireControl)
         
+        if #available(macOS 10.15, *) {
+            playerView.sampleBufferLayer.preventsCapture = true
+        } 
+        
         hood.layer?.masksToBounds = false
         hood.layer?.cornerRadius = hood.frame.height / 2
         layer?.cornerRadius = 20

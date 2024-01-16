@@ -201,6 +201,8 @@ public final class L10n {
   public static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
   /// Discard
   public static var alertDiscard: String  { return L10n.tr("Localizable", "Alert.Discard") }
+  /// Learn More...
+  public static var alertLearnMore: String  { return L10n.tr("Localizable", "Alert.LearnMore") }
   /// No
   public static var alertNO: String  { return L10n.tr("Localizable", "Alert.NO") }
   /// OK
@@ -9893,7 +9895,7 @@ public final class L10n {
   public static var peerStatusOnline: String  { return L10n.tr("Localizable", "Peer.Status.online") }
   /// last seen recently
   public static var peerStatusRecently: String  { return L10n.tr("Localizable", "Peer.Status.recently") }
-  /// show
+  /// when?
   public static var peerStatusShow: String  { return L10n.tr("Localizable", "Peer.Status.show") }
   /// %d
   public static func peerStatusSubscribersCountable(_ p1: Int) -> String {
@@ -11095,9 +11097,9 @@ public final class L10n {
   public static var premiumRestoreSuccess: String  { return L10n.tr("Localizable", "Premium.Restore.Success") }
   /// or
   public static var premiumShowStatusOr: String  { return L10n.tr("Localizable", "Premium.ShowStatus.Or") }
-  /// Show my Read Time
+  /// Show my Read Time to Everyone
   public static var premiumShowStatusShowMyReadTime: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowMyReadTime") }
-  /// Show my Last Seen
+  /// Show my Last Seen to Everyone
   public static var premiumShowStatusShowMyStatus: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowMyStatus") }
   /// Show Your Last Seen
   public static var premiumShowStatusShowYourLastSeen: String  { return L10n.tr("Localizable", "Premium.ShowStatus.ShowYourLastSeen") }
@@ -11115,6 +11117,10 @@ public final class L10n {
   public static func premiumShowStatusShowYourReadDateInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.ShowStatus.ShowYourReadDate.Info", p1)
   }
+  /// Your last seen time is now visible.
+  public static var premiumShowStatusSuccessLastSeen: String  { return L10n.tr("Localizable", "Premium.ShowStatus.Success.LastSeen") }
+  /// Your read time is now visible.
+  public static var premiumShowStatusSuccessReadTime: String  { return L10n.tr("Localizable", "Premium.ShowStatus.Success.ReadTime") }
   /// Subscription will let you see **%@'s** Last Seen status without showing yours.
   public static func premiumShowStatusUpgradeToPremiumLastSeenInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.ShowStatus.UpgradeToPremium.LastSeen.Info", p1)

@@ -613,10 +613,15 @@ class ChatPresentationInterfaceState: Equatable {
                 }, nil)
             }
             
-            if let peer = peer as? TelegramUser, peer.flags.contains(.requirePremium), !peer.flags.contains(.mutualContact) {
+            if let peer = peer, peer.maybePremiumRequired {
                 if let cachedData = cachedData as? CachedUserData, cachedData.flags.contains(.premiumRequired), accountPeer?.isPremium == false {
                     return .block(strings().chatInputPremiumRequiredState(peer.compactDisplayTitle))
                 }
+            }
+            if chatLocation.peerId == repliesPeerId {
+                return .action(notificationSettings?.isMuted ?? false ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
+                    chatInteraction.toggleNotifications(nil)
+                }, nil)
             }
 
             if chatMode.isSavedMessagesThread, let threadId64 = chatMode.threadId64 {

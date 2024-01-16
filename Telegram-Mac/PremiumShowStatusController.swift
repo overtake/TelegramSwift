@@ -329,8 +329,21 @@ func PremiumShowStatusController(context: AccountContext, peer: EnginePeer, sour
     let arguments = Arguments(context: context, updatePrivacy: {
         let privacySignal: Signal<AccountPrivacySettings, NoError>
         privacySignal = context.engine.privacy.requestAccountPrivacySettings() |> deliverOnMainQueue
-        let _ = privacySignal.start(next: { info in
-            context.bindings.rootNavigation().push(SelectivePrivacySettingsController(context, kind: .presence, current: info.presence, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, updatedCallSettings, _ in }))
+        
+        let _ = privacySignal.startStandalone(next: { info in
+            let text: String
+            switch source {
+            case .status:
+                text = strings().premiumShowStatusSuccessLastSeen
+                _ = context.engine.privacy.updateSelectiveAccountPrivacySettings(type: .presence, settings: .enableEveryone(disableFor: [:])).start()
+            case .read:
+                text = strings().premiumShowStatusSuccessReadTime
+                var settings = info.globalSettings
+                settings.hideReadTime = false
+                _ = context.engine.privacy.updateGlobalPrivacySettings(settings: settings).start()
+
+            }
+            showModalText(for: context.window, text: text)
         })
         close?()
     }, premium: {

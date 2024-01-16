@@ -73,7 +73,7 @@ open class ContextMenuItem : NSMenuItem {
     
     public internal(set) var redraw:(()->Void)?
     
-    public var stateOnImage: CGImage? {
+    public var stateOnImage: NSImage? {
         didSet {
             redraw?()
         }

@@ -406,9 +406,9 @@ class ChatEmptyPeerView : TableRowView {
             }
             
             if imageView == nil && premRequiredImageView == nil {
-                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
+                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 10
             } else {
-                bgView.layer?.cornerRadius = 8
+                bgView.layer?.cornerRadius = 10
             }
         }
     }

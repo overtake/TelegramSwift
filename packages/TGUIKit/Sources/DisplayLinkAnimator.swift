@@ -394,7 +394,7 @@ private func solveEps(_ duration: Float) -> Float {
 }
 
 public final class DisplayLinkAnimator {
-    private var displayLink: SwiftSignalKit.Timer!
+    private var displayLink: SharedDisplayLinkDriver.Link!
     private let duration: Double
     private let fromValue: CGFloat
     private let toValue: CGFloat
@@ -425,21 +425,20 @@ public final class DisplayLinkAnimator {
         }
         self.startTime = CACurrentMediaTime()
         
-        self.displayLink = SwiftSignalKit.Timer(timeout: 0.032, repeat: true, completion: { [weak self] in
+        self.displayLink = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(60), { [weak self] _ in
             self?.tick(false)
-        }, queue: .mainQueue())
+        })
         
-        self.displayLink.start()
 
         self.tick(true)
     }
     
     deinit {
-        self.displayLink.invalidate()
+        self.displayLink = nil
     }
     
     public func invalidate() {
-        self.displayLink.invalidate()
+        self.displayLink = nil
     }
     
     @objc private func tick(_ isFirst: Bool) {
@@ -468,7 +467,7 @@ public final class DisplayLinkAnimator {
 }
 
 public final class ConstantDisplayLinkAnimator {
-    private var displayLink: SwiftSignalKit.Timer?
+    private var displayLink: SharedDisplayLinkDriver.Link?
     private let update: () -> Void
     private var completed = false
     private let fps: TimeInterval
@@ -478,14 +477,11 @@ public final class ConstantDisplayLinkAnimator {
         didSet {
             if self.isPaused != oldValue {
                 if self.isPaused {
-                    self.displayLink?.invalidate()
+                    self.displayLink = nil
                 } else {
-                    
-                    self.displayLink = SwiftSignalKit.Timer(timeout: 1 / fps, repeat: true, completion: { [weak self] in
+                    self.displayLink = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(Int(fps)), { [weak self] _ in
                         self?.tick()
-                    }, queue: .mainQueue())
-                    
-                    self.displayLink?.start()
+                    })
                 }
             }
         }

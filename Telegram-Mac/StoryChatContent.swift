@@ -1287,7 +1287,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.CanViewStats(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global(),
-                TelegramEngine.EngineData.Item.Peer.PremiumRequired(id: storyId.peerId)
+                TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: storyId.peerId)
             ),
             item |> mapToSignal { item -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]), NoError> in
                 return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]) in
@@ -1543,7 +1543,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.CanViewStats(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global(),
-                TelegramEngine.EngineData.Item.Peer.PremiumRequired(id: peerId)
+                TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId)
             ),
             listContext.state,
             self.focusedIdUpdated.get()
