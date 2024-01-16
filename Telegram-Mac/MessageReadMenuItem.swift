@@ -676,15 +676,26 @@ extension ContextMenuItem {
 extension ContextMenuItem {
     static func checkPremiumRequired(_ item: ContextMenuItem, context: AccountContext, peer: Peer) {
         if let peer = peer as? TelegramUser {
-            if peer.flags.contains(.requirePremium), !peer.flags.contains(.mutualContact), !context.isPremium {
+            if peer.maybePremiumRequired, !context.isPremium {
                 let premRequired = getCachedDataView(peerId: peer.id, postbox: context.account.postbox)
                 |> map { $0 as? CachedUserData }
                 |> filter { $0 != nil }
                 |> take(1)
                 |> map { $0!.flags.contains(.premiumRequired) }
+                |> deliverOnMainQueue
                 
                 _ = premRequired.startStandalone(next: { [weak item] value in
-                    item?.isEnabled = !value
+                    //item?.isEnabled = !value
+                    let image = NSImage(named: "menu_lock")!
+                    item?.state = .on
+                    item?.stateOnImage = image
+                    item?.handler = {
+                        showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                        })
+                    }
+                    item?.redraw?()
+                    
                 })
             }
         }

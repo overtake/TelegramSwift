@@ -539,7 +539,7 @@ final class GroupCallMainVideoContainerView: Control {
             
             if let videoView = videoView {
                 
-                videoView.change(opacity: isPaused ? 0 : 1, animated: animated)
+                videoView._change(opacity: isPaused ? 0 : 1, animated: animated)
                 
                 let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
                 if prevIsPaused != isPaused {

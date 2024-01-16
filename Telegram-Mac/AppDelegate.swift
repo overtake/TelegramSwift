@@ -299,7 +299,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
 
 //        delay(2.0, closure: {
-//            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+        #if arch(arm64)
+            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+        #endif
 //        })
         
 //        let ctxLayer = CtxInstallLayer()

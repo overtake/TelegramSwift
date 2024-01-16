@@ -285,10 +285,17 @@ private final class TextAndLabelModalView : View {
         addSubview(self.textView)
         layer?.cornerRadius = 10
         
+        self.textView.set(handler: { [weak self] _ in
+            self?.button?.send(event: .Down)
+        }, for: .Down)
     }
 
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
     }
 
     func update(text: String, title: String?, button: String?, callback: ((String)->Void)?, maxSize: NSSize) -> NSSize {

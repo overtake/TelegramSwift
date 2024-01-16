@@ -401,7 +401,7 @@ class UserInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         
         let peer = context.account.postbox.loadedPeerWithId(peerId)
-        let premiumRequired = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.PremiumRequired(id: peerId))
+        let premiumRequired = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId))
         
         let signal = combineLatest(peer, premiumRequired) |> deliverOnMainQueue |> mapToSignal { peer, premiumRequired -> Signal<PeerId?, NoError> in
             if !context.isPremium && premiumRequired {
@@ -420,7 +420,7 @@ class UserInfoArguments : PeerInfoArguments {
                 if let peerId = peerId {
                     strongSelf.pushViewController(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
                 } else {
-                    showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(strongSelf.peer?.compactDisplayTitle ?? ""), button: strings().alertView, callback: { _ in
+                    showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(strongSelf.peer?.compactDisplayTitle ?? ""), button: strings().alertLearnMore, callback: { _ in
                         showModal(with: PremiumBoardingController(context: context), for: context.window)
                     })
                 }

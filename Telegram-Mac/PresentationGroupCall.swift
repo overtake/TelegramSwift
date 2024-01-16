@@ -6,7 +6,7 @@ import SwiftSignalKit
 import AVFoundation
 import TelegramVoip
 import TGUIKit
-
+import CallVideoLayer
 
 func groupCallLogsPath(account: Account) -> String {
     return account.basePath + "/group-calls"
@@ -1193,6 +1193,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         }
                     }
                 }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false, logPath: allocateCallLogPath(account: self.account))
+                
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
                     self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuppression)
@@ -2768,7 +2769,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     func switchVideoInput(_ deviceId: String) {
         videoCapturer?.switchVideoInput(deviceId)
     }
-
+    
+   
     func makeVideoView(endpointId: String, videoMode: GroupCallVideoMode, completion: @escaping (PresentationCallVideoView?) -> Void) {
         let context: OngoingGroupCallContext?
         switch videoMode {
@@ -2777,7 +2779,31 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         case .screencast:
             context = self.screencastCallContext
         }
-        context?.makeIncomingVideoView(endpointId: endpointId, requestClone: false, completion: { view, _ in
+        
+        guard let context = context else {
+            return
+        }
+        
+#if arch(arm64)
+        let videoView = MetalVideoMakeView(videoStreamSignal: context.video(endpointId: endpointId))
+        
+        completion(PresentationCallVideoView(holder: videoView, view: videoView, setOnFirstFrameReceived: { f in
+            f?(1)
+        }, getOrientation: {
+            .rotation0
+        }, getAspect: {
+            return 0
+        }, setVideoContentMode: { [weak videoView] gravity in
+            videoView?.setGravity(gravity)
+        }, setOnOrientationUpdated: { f in
+            
+        }, setOnIsMirroredUpdated: { f in
+        }, setIsPaused: { paused in
+        }, renderToSize: { [weak videoView] size, animated in
+            videoView?.updateLayout(size: size, transition: animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate)
+        }))
+#else
+        context.makeIncomingVideoView(endpointId: endpointId, requestClone: false, completion: { view, _ in
             if let view = view {
                 let setOnFirstFrameReceived = view.setOnFirstFrameReceived
                 let setOnOrientationUpdated = view.setOnOrientationUpdated
@@ -2787,7 +2813,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     view: view.view,
                     setOnFirstFrameReceived: { f in
                         setOnFirstFrameReceived(f)
-                        
+
                     },
                     getOrientation: { [weak view] in
                         if let view = view {
@@ -2846,6 +2872,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 completion(nil)
             }
         })
+#endif
     }
 
     func loadMore() {

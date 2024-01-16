@@ -11,10 +11,10 @@ import TGUIKit
 import SwiftSignalKit
 
 
-final class GroupVideoView: View {
+final class GroupVideoView: LayerBackedView {
     
     
-    private let videoViewContainer: View
+    private let videoViewContainer: LayerBackedView
     let videoView: PresentationCallVideoView
     var gravity: CALayerContentsGravity = .resizeAspect
     var initialGravity: CALayerContentsGravity? = nil
@@ -42,7 +42,7 @@ final class GroupVideoView: View {
     var tapped: (() -> Void)?
     
     init(videoView: PresentationCallVideoView) {
-        self.videoViewContainer = View()
+        self.videoViewContainer = LayerBackedView()
         self.videoView = videoView
         
         super.init()
@@ -104,20 +104,11 @@ final class GroupVideoView: View {
         videoRect = focus(size)
         
         transition.updateFrame(view: self.videoViewContainer, frame: videoRect)
-        
-        if transition.isAnimated {
-            let videoView = self.videoView
-                        
-            videoView.renderToSize(self.videoView.view.frame.size, true)
-            videoView.setIsPaused(true)
+                
 
-            transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView] _ in
-                videoView?.renderToSize(videoRect.size, false)
-                videoView?.setIsPaused(false)
-            })
-        } else {
-            transition.updateFrame(view: videoView.view, frame: videoRect)
-        }
+        transition.updateFrame(view: videoView.view, frame: videoRect)
+        videoView.renderToSize(videoRect.size, transition.isAnimated)
+
         
 
         for subview in self.videoView.view.subviews {

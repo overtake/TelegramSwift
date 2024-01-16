@@ -1949,7 +1949,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         selectInteraction.premiumRequiredAction = { [weak self] peerId in
             let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
             _ = peer.startStandalone(next: { peer in
-                showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertView, callback: { _ in
+                showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
                     showModal(with: PremiumBoardingController(context: context), for: context.window)
                 })
             })
@@ -2378,14 +2378,15 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             }
             return true
         })
-        let signal = context.engine.peers.isPremiumRequiredToContact(ids) |> deliverOnMainQueue
-        
-        updatePremiumRequiredDisposable.set(signal.startStrict(next: { [weak self] peerIds in
-            self?.selectInteractions.update {
-                $0.withUpdatedPremiumRequired(Set(peerIds))
-            }
-        }))
-        
+        if !context.isPremium {
+            let signal = context.engine.peers.isPremiumRequiredToContact(ids) |> deliverOnMainQueue
+            
+            updatePremiumRequiredDisposable.set(signal.startStrict(next: { [weak self] peerIds in
+                self?.selectInteractions.update {
+                    $0.withUpdatedPremiumRequired(Set(peerIds))
+                }
+            }))
+        }
     }
     
     override var canBecomeResponder: Bool {
@@ -2604,7 +2605,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     
     private func updateSize(_ width: CGFloat, animated: Bool) {
         if let contentSize = self.window?.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 100, max(300, genericView.tableView.listHeight + max(genericView.additionHeight, 88)))), animated: animated)
+            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 100, max(400, genericView.tableView.listHeight + max(genericView.additionHeight, 88)))), animated: animated)
         }
     }
     
@@ -2619,7 +2620,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 100, max(300, genericView.tableView.listHeight + max(genericView.additionHeight, 88)))), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 100, max(400, genericView.tableView.listHeight + max(genericView.additionHeight, 88)))), animated: false)
     }
     
     override var dynamicSize: Bool {

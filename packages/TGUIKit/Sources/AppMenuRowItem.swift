@@ -600,11 +600,13 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 } else {
                     current.setFrameSize(item.moreSize)
                 }
+                current.layer?.masksToBounds = false
                 current.contentGravity = .center
                 contentView.addSubview(current)
                 self.more = current
             }
-            current.image = item.item.state == .on ? item.item.stateOnImage ?? item.presentation.selected : item.presentation.more
+            let stateOnImage = item.item.stateOnImage?.precomposed(item.presentation.primaryColor(item.item))
+            current.image = item.item.state == .on ? stateOnImage ?? item.presentation.selected : item.presentation.more
             current.layer?.opacity = item.item.isEnabled ? 1 : 0.4
         } else if let view = self.more {
             self.more = nil
