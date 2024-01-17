@@ -5393,7 +5393,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let isFirst = Atomic(value: true)
         
         let tagsAndFiles: Signal<([SavedMessageTags.Tag], [Int64 : TelegramMediaFile]), NoError>
-        if peerId == context.peerId {
+        if peerId == context.peerId, tagsGloballyEnabled {
             tagsAndFiles = context.engine.data.subscribe(
                 TelegramEngine.EngineData.Item.Messages.SavedMessageTagStats(peerId: context.account.peerId)
             )
