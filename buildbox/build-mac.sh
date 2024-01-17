@@ -2,8 +2,6 @@
 set -e
 set -x
 
-fastlane
-
 BUILD_CONFIGURATION=$1
 
 PWDPATH=$PWD
