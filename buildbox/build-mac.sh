@@ -29,11 +29,11 @@ cd ..
 
 archive="./build-${BUILD_CONFIGURATION}.xcarchive"
 
-
-
 appname="Telegram.app"
-
 
 
 cp -R "${archive}/Products/Applications/Telegram.app" ${appname}
 cp -R "${archive}/dSYMs/Telegram.app.dSYM" ${appname}.dSYM
+
+
+ditto -c -k --sequesterRsrc --keepParent ${appname}.dSYM ${appname}.DSYM.zip
