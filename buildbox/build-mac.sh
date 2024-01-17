@@ -34,9 +34,9 @@ bundleVersion=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundle
 appname="Telegram-${shortVersion}.${bundleVersion}.app"
 
 
-cp -R "${archive}/Products/Applications/Telegram.app" ../${appname}.app
+cp -R "${archive}/Products/Applications/Telegram.app" ../${appname}
 cp -R "${archive}/dSYMs/Telegram.app.dSYM" ../${appname}.dSYM
 
 
-zip ../${appname}.zip ../${appname}.app/
-zip ../${appname}.DSYM.zip ../${appname}.app.dSYM/
+zip ../${appname}.zip ../${appname}
+zip ../${appname}.DSYM.zip ../${appname}.dSYM
