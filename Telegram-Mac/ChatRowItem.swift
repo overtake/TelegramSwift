@@ -3059,6 +3059,9 @@ class ChatRowItem: TableRowItem {
             }
             |> take(1)
             
+            let isTags = context.peerId == peerId && tagsGloballyEnabled
+
+            
             
             let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.top_reactions |> map { view in
                 
@@ -3102,7 +3105,7 @@ class ChatRowItem: TableRowItem {
                         topReactionsItems.append(item)
                     }
                 }
-                if !defaultTagReactionsItems.isEmpty, message.id.peerId == context.peerId {
+                if !defaultTagReactionsItems.isEmpty, isTags {
                     return defaultTagReactionsItems
                 }
                 return topReactionsItems.filter { value in
@@ -3132,7 +3135,7 @@ class ChatRowItem: TableRowItem {
                 var accessToAll: Bool
                 
                 let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
-                    return message.effectiveReactions(isTags: context.peerId == message.id.peerId)?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
+                    return message.effectiveReactions(isTags: isTags)?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
                 }
 
                 
@@ -3196,8 +3199,9 @@ class ChatRowItem: TableRowItem {
                 if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
                     uniqueLimit = Int(value)
                 }
+                
                             
-                if let reactions = message.effectiveReactions(isTags: context.peerId == message.id.peerId), reactions.count >= uniqueLimit {
+                if let reactions = message.effectiveReactions(isTags: isTags), reactions.count >= uniqueLimit {
                     available = reactions.compactMap { reaction in
                         switch reaction.value {
                         case let .custom(fileId):
@@ -3234,7 +3238,7 @@ class ChatRowItem: TableRowItem {
                 
                 let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
                 
-                let aboveText: String? = peerId == context.peerId ? strings().chatReactionsTagMessage : nil
+                let aboveText: String? = isTags ? strings().chatReactionsTagMessage : nil
                 let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20 + (aboveText != nil ? 20 : 0))
                 
                 
@@ -3252,7 +3256,7 @@ class ChatRowItem: TableRowItem {
                 
                 var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
 
-                if let reactions = message.effectiveReactions(isTags: context.peerId == message.id.peerId) {
+                if let reactions = message.effectiveReactions(isTags: isTags) {
                     for reaction in reactions {
                         if reaction.isSelected {
                             switch reaction.value {
@@ -3291,7 +3295,7 @@ class ChatRowItem: TableRowItem {
                                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                                 })
                             } else {
-                                let updated = message.newReactions(with: value, isTags: context.peerId == message.id.peerId)
+                                let updated = message.newReactions(with: value, isTags: isTags)
                                 context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
                             }
                         })
@@ -3306,7 +3310,7 @@ class ChatRowItem: TableRowItem {
                 
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
-                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: context.peerId == message.id.peerId), fromRect: fromRect, storeAsRecentlyUsed: true)
+                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
                 }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveText)
                 
                 
