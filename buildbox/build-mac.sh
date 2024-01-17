@@ -9,7 +9,7 @@ PROJECT="{$CPPATH}/telegrammacos"
 
 rsync -av --progress ../telegrammacos $CPPATH
 
-sh {$PROJECT}/scripts/configure_frameworks.sh
+sh "{$PROJECT}/scripts/configure_frameworks.sh"
 
 xcodebuild archive -workspace "{$PROJECT}/Telegram-Mac.xcworkspace" \
 -scheme Release \
