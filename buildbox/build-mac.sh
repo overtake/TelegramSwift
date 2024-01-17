@@ -25,8 +25,8 @@ cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconf
 
 archive="../build-${BUILD_CONFIGURATION}.xcarchive"
 
-cp "${archive}/Products/Applications/Telegram.app" ./Telegram.app
-cp "${archive}/dSYMs/Telegram.app.dSYM" ./Telegram.app.dSYM
+cp -R "${archive}/Products/Applications/Telegram.app" ./Telegram.app
+cp -R "${archive}/dSYMs/Telegram.app.dSYM" ./Telegram.app.dSYM
 
 
-zip ./Telegram.app ./Telegram.app.zip
+zip ./Telegram.app.zip ./Telegram.app
