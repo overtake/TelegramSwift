@@ -30,18 +30,10 @@ cd ..
 archive="./build-${BUILD_CONFIGURATION}.xcarchive"
 
 
-plist_path="${archive}/Info.plist"
 
-shortVersion=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$plist_path")
-bundleVersion=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleVersion" "$plist_path")
-
-appname="Telegram-${shortVersion}.${bundleVersion}.app"
+appname="Telegram.app"
 
 
 
 cp -R "${archive}/Products/Applications/Telegram.app" ${appname}
 cp -R "${archive}/dSYMs/Telegram.app.dSYM" ${appname}.dSYM
-
-
-zip -r ${appname}.zip ${appname}
-zip -r ${appname}.DSYM.zip ${appname}.dSYM
