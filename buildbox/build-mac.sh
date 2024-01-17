@@ -18,16 +18,19 @@ sh "scripts/configure_frameworks.sh"
 
 cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconfig"
 
-# xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
-# -scheme Release \
-# -configuration Release \
-# -archivePath ../build-${BUILD_CONFIGURATION}
+xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
+-scheme Release \
+-configuration Release \
+-archivePath ../build-${BUILD_CONFIGURATION}
 
 
 
 cd ..
 
 archive="./build-${BUILD_CONFIGURATION}.xcarchive"
+
+rm -r $(ls -A | grep -v telegrammacos)
+
 
 appname="Telegram.app"
 
