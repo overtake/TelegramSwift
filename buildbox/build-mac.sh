@@ -4,17 +4,24 @@ set -x
 
 BUILD_CONFIGURATION=$1
 
+PWDPATH=$PWD
+
 CPPATH="../../../../../build-${BUILD_CONFIGURATION}"
 PROJECT="${CPPATH}/telegrammacos"
 
+
 rsync -av --progress ../telegrammacos $CPPATH
 
-sh "${PROJECT}/scripts/configure_frameworks.sh"
+cd $PROJECT
 
-xcodebuild archive -workspace "${PROJECT}/Telegram-Mac.xcworkspace" \
+sh "scripts/configure_frameworks.sh"
+
+xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
--archivePath $CPPATH \
--xcconfig "${PROJECT}/configurations/${BUILD_CONFIGURATION}.xcconfig"
+-archivePath ../ \
+-xcconfig "configurations/${BUILD_CONFIGURATION}.xcconfig"
 
+
+cd $PWDPATH
          
