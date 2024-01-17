@@ -25,8 +25,19 @@ cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconf
 
 archive="../build-${BUILD_CONFIGURATION}.xcarchive"
 
-cp -R "${archive}/Products/Applications/Telegram.app" ./Telegram.app
-cp -R "${archive}/dSYMs/Telegram.app.dSYM" ./Telegram.app.dSYM
 
 
-zip ./Telegram.app.zip ./Telegram.app
+cp -R "${archive}/Products/Applications/Telegram.app" ../Telegram.app
+cp -R "${archive}/dSYMs/Telegram.app.dSYM" ../Telegram.app.dSYM
+
+
+plist_path="${archive}/Info.plist"
+
+# Extract CFBundleShortVersionString
+shortVersion=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$plist_path")
+bundleVersion=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleVersion" "$plist_path")
+
+appname="Telegram-${shortVersion}-${bundleVersion}.app"
+
+zip ../${appname}.zip ../Telegram.app
+zip ../${appname}.DSYM.zip ../Telegram.app.dSYM
