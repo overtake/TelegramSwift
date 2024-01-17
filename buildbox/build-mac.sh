@@ -22,6 +22,6 @@ xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
 -archivePath ../ \
-
+-clonedSourcePackagesDirPath SourcePackages \
 cd $PWDPATH
          
