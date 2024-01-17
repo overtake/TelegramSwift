@@ -4,12 +4,17 @@ set -x
 
 BUILD_CONFIGURATION=$1
 
-sh scripts/configure_frameworks.sh
+CPPATH="../../../../../build-${BUILD_CONFIGURATION}"
+PROJECT="{$CPPATH}/telegrammacos"
 
-xcodebuild archive -workspace Telegram-Mac.xcworkspace \
+rsync -av --progress ../telegrammacos $CPPATH
+
+sh {$PROJECT}/scripts/configure_frameworks.sh
+
+xcodebuild archive -workspace "{$PROJECT}/Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
--archivePath ../../../../build-${BUILD_CONFIGURATION} \
--xcconfig "configurations/${BUILD_CONFIGURATION}.xcconfig"
+-archivePath $CPPATH \
+-xcconfig "{$PROJECT}/configurations/${BUILD_CONFIGURATION}.xcconfig"
 
          
