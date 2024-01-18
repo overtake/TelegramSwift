@@ -307,7 +307,7 @@ private final class VoiceCurveLayer: SimpleLayer {
     }
 }
 
-final class CurveLayer: CAShapeLayer {
+final class CurveLayer: SimpleShapeLayer {
     let pointsCount: Int
     let smoothness: CGFloat
 
@@ -325,11 +325,8 @@ final class CurveLayer: CAShapeLayer {
             guard self.minOffset > 0.0 else {
                 return
             }
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
             let lv = minOffset + (maxOffset - minOffset) * level
             self.transform = CATransform3DMakeTranslation(0.0, lv * 16.0, 0.0)
-            CATransaction.commit()
         }
     }
 
@@ -370,11 +367,8 @@ final class CurveLayer: CAShapeLayer {
         didSet {
 
             if oldValue != frame {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
                 self.position = CGPoint(x: self.bounds.width / 2.0, y: self.bounds.height / 2.0)
                 self.bounds = self.bounds
-                CATransaction.commit()
             }
 
             if self.frame.size != oldValue.size {
@@ -428,7 +422,7 @@ final class CurveLayer: CAShapeLayer {
         fatalError("init(coder:) has not been implemented")
     }
 
-    required init(frame frameRect: NSRect) {
+    required override init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
 
