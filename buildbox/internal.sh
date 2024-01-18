@@ -4,6 +4,9 @@ set -e
 
 export PATH="$PATH:$PWD/../deploy"
 export PATH="$PATH:$HOME/.fastlane/bin"
+export PATH="$PATH:$HOME/opt/homebrew/bin"
+
+
 
 tag="$1"
 sh ./buildbox/build-mac.sh $tag
