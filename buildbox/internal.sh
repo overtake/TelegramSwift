@@ -4,7 +4,7 @@ set -e
 
 export PATH="$PATH:$PWD/../deploy"
 export PATH="$PATH:$HOME/.fastlane/bin"
-export PATH="$PATH:$HOME/opt/homebrew/bin"
+export PATH="$PATH:/opt/homebrew/bin"
 
 
 
