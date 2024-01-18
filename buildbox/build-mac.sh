@@ -32,7 +32,7 @@ xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -archivePath ./ > /dev/null
 
 
-archive="./build-${BUILD_CONFIGURATION}.xcarchive"
+archive="./telegrammacos.xcarchive"
 
 
 
