@@ -14,7 +14,7 @@ rsync -av --progress ../telegrammacos $CPPATH  > /dev/null
 
 cd $PROJECT
 cd ..
-files_to_remove=$(ls -A | grep -v telegrammacos)
+files_to_remove=$(ls -A | grep -v telegrammacos || true)
 if [ -n "$files_to_remove" ]; then
     rm -r $files_to_remove
 else
