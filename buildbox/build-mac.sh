@@ -3,11 +3,6 @@ set -e
 set -x
 
 
-cmake -G Ninja
-
-exit 1;
-
-
 BUILD_CONFIGURATION=$1
 
 PWDPATH=$PWD
