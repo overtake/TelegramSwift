@@ -21,7 +21,7 @@ cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconf
 xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
--archivePath ../build-${BUILD_CONFIGURATION}
+-archivePath ${PWDPATH}/../build-${BUILD_CONFIGURATION} > /dev/null
 
 
 
