@@ -54,7 +54,7 @@ build_target() {
 
 ARCH=$1
 if [ "$1" = "arm64" ]; then
-    local target="arm64-darwin17-gcc"
+    local target="arm64-darwin20-gcc"
 elif [ "$1" = "x86_64" ]; then
     local target="x86_64-darwin17-gcc"
 else
