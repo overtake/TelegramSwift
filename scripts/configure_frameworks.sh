@@ -44,7 +44,7 @@ do
         $COMMON_SETUP \
         -scheme "${FWNAME}" \
         -derivedDataPath "${DERIVED_DATA_PATH}" \
-        -destination 'generic/platform=macOS'
+        -destination 'generic/platform=macOS' > /dev/null
 
 done
 
