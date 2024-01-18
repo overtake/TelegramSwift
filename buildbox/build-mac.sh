@@ -20,6 +20,9 @@ if [ -n "$files_to_remove" ]; then
 else
     echo "No files to remove."
 fi
+
+rm -r telegrammacos.xcarchive || true
+
 cd telegrammacos
 
 
@@ -32,12 +35,10 @@ xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -archivePath ./ > /dev/null
 
 
+cd ..
+
 archive="./telegrammacos.xcarchive"
-
-
-
 appname="Telegram.app"
-
 
 cp -R "${archive}/Products/Applications/Telegram.app" ${appname}
 cp -R "${archive}/dSYMs/Telegram.app.dSYM" ${appname}.dSYM
