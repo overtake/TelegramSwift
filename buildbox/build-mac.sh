@@ -2,6 +2,9 @@
 set -e
 set -x
 
+cmake 
+
+
 BUILD_CONFIGURATION=$1
 
 PWDPATH=$PWD
