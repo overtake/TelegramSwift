@@ -25,10 +25,11 @@ cd telegrammacos
 
 sh "scripts/configure_frameworks.sh"
 cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconfig"
+
 xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
--archivePath ${PWDPATH}/../build-${BUILD_CONFIGURATION}  > /dev/null
+-archivePath ./../ > /dev/null
 
 
 archive="./build-${BUILD_CONFIGURATION}.xcarchive"
