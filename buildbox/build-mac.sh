@@ -29,7 +29,7 @@ cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconf
 xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
--archivePath ./../ > /dev/null
+-archivePath ./ > /dev/null
 
 
 archive="./build-${BUILD_CONFIGURATION}.xcarchive"
