@@ -10,7 +10,7 @@ CPPATH="../../../../../build-${BUILD_CONFIGURATION}"
 PROJECT="${CPPATH}/telegrammacos"
 
 
-rsync -av --progress ../telegrammacos $CPPATH &1 | grep -E "(\^error|\^fatal)"
+rsync -av --progress ../telegrammacos $CPPATH  > /dev/null
 
 cd $PROJECT
 cd ..
@@ -23,7 +23,7 @@ cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconf
 xcodebuild archive -workspace "Telegram-Mac.xcworkspace" \
 -scheme Release \
 -configuration Release \
--archivePath ${PWDPATH}/../build-${BUILD_CONFIGURATION} &1 | grep -E "(\^error|\^fatal)"
+-archivePath ${PWDPATH}/../build-${BUILD_CONFIGURATION}  > /dev/null
 
 
 archive="./build-${BUILD_CONFIGURATION}.xcarchive"
