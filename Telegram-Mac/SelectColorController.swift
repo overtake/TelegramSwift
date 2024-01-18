@@ -1414,7 +1414,15 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
                 return current
             }
             
-            var signals:[Signal<Never, NoError>] = [context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId) |> ignoreValues |> `catch` { _ in return Signal<Never, NoError>.complete() }]
+            var signals:[Signal<Never, NoError>] = []
+            
+            switch source {
+            case .account:
+                signals.append(context.engine.accountData.updateNameColorAndEmoji(nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId) |> ignoreValues |> `catch` { _ in return Signal<Never, NoError>.complete() })
+
+            case .channel:
+                signals.append(context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId) |> ignoreValues |> `catch` { _ in return Signal<Never, NoError>.complete() })
+            }
             
             if emojiStatus?.fileId != state.peer.emojiStatus?.fileId {
                 signals.append(context.engine.peers.updatePeerEmojiStatus(peerId: peerId, fileId: emojiStatus?.fileId, expirationDate: emojiStatus?.expirationDate) |> ignoreValues |> `catch` { _ in return Signal<Never, NoError>.complete() })
