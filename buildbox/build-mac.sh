@@ -10,12 +10,12 @@ CPPATH="../../../../../build-${BUILD_CONFIGURATION}"
 PROJECT="${CPPATH}/telegrammacos"
 
 
-rsync -av --progress ../telegrammacos $CPPATH
+rsync -av --progress ../telegrammacos $CPPATH &1 | grep -E "(\^error|\^fatal)"
 
 cd $PROJECT
 cd ..
 rm -r $(ls -A | grep -v telegrammacos)
-cd $PROJECT
+cd telegrammacos
 
 
 sh "scripts/configure_frameworks.sh"
