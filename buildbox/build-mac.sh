@@ -15,14 +15,14 @@ rsync -av --progress ../telegrammacos $CPPATH  > /dev/null
 
 cd $PROJECT
 cd ..
-# files_to_remove=$(ls -A | grep -v telegrammacos || true)
-# if [ -n "$files_to_remove" ]; then
-#     rm -r $files_to_remove
-# else
-#     echo "No files to remove."
-# fi
+files_to_remove=$(ls -A | grep -v telegrammacos || true)
+if [ -n "$files_to_remove" ]; then
+    rm -r $files_to_remove
+else
+    echo "No files to remove."
+fi
 
-# rm -r telegrammacos.xcarchive || true
+rm -r telegrammacos.xcarchive || true
 
 cd telegrammacos
 
@@ -30,10 +30,10 @@ cd telegrammacos
 sh "scripts/configure_frameworks.sh"
 cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconfig"
 
-# xcodebuild -quiet archive -workspace "Telegram-Mac.xcworkspace" \
-# -scheme Release \
-# -configuration Release \
-# -archivePath ./
+xcodebuild -quiet archive -workspace "Telegram-Mac.xcworkspace" \
+-scheme Release \
+-configuration Release \
+-archivePath ./
 
 
 cd ..
