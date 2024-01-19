@@ -11659,6 +11659,8 @@ public final class L10n {
   public static var privacySettingsControllerProfilePhotoNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.ProfilePhoto.NeverShareWith.Title") }
   /// You can upload a public photo for those who are restricted from viewing your real profile photo.
   public static var privacySettingsControllerSetPublicPhotoInfo: String  { return L10n.tr("Localizable", "PrivacySettingsController.SetPublicPhoto.Info") }
+  /// Subscribe to Telegram Premium to restrict who can send you voice or video messages.\n\n[What is Telegram Premium?]()
+  public static var privacySettingsControllerVoiceMessagesDescriptionNonPremium: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesDescription.NonPremium") }
   /// Cancel
   public static var privateChannelPeekCancel: String  { return L10n.tr("Localizable", "PrivateChannel.Peek.Cancel") }
   /// Join Channel
