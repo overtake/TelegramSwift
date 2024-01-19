@@ -21,7 +21,7 @@ cd build
 for ARCH in $ARCHS
 do
 
-export CFLAGS="-Wall -arch $ARCH -mmacosx-version-min=$DEPLOYMENT_TARGET -funwind-tables -destination 'generic/platform=macOS'"
+export CFLAGS="-Wall -arch $ARCH -mmacosx-version-min=$DEPLOYMENT_TARGET -funwind-tables"
 
 mkdir $ARCH
 cd $ARCH
