@@ -54,6 +54,7 @@ final class PrivateCallVideoLayer: MetalEngineSubjectLayer, MetalEngineSubject {
     let blurredLayer: MetalEngineSubjectLayer
     
     final class BlurState: ComputeState {
+        let computePipelineStateBGRAToRGBA: MTLComputePipelineState
         let computePipelineStateYUVBiPlanarToRGBA: MTLComputePipelineState
         let computePipelineStateYUVTriPlanarToRGBA: MTLComputePipelineState
         let computePipelineStateHorizontal: MTLComputePipelineState
@@ -64,6 +65,14 @@ final class PrivateCallVideoLayer: MetalEngineSubjectLayer, MetalEngineSubject {
             guard let library = metalLibrary(device: device) else {
                 return nil
             }
+            
+            guard let functionVideoBRGBAToRGBA = library.makeFunction(name: "videoBGRAToRGBA") else {
+                return nil
+            }
+            guard let computePipelineStateBGRAToRGBA = try? device.makeComputePipelineState(function: functionVideoBRGBAToRGBA) else {
+                return nil
+            }
+            self.computePipelineStateBGRAToRGBA = computePipelineStateBGRAToRGBA
             
             guard let functionVideoBiPlanarToRGBA = library.makeFunction(name: "videoBiPlanarToRGBA") else {
                 return nil
@@ -190,6 +199,10 @@ final class PrivateCallVideoLayer: MetalEngineSubjectLayer, MetalEngineSubject {
             let threadgroupCount = MTLSize(width: (rgbaTexture.width + threadgroupSize.width - 1) / threadgroupSize.width, height: (rgbaTexture.height + threadgroupSize.height - 1) / threadgroupSize.height, depth: 1)
             
             switch videoTextures.textureLayout {
+            case let .bgra(texture):
+                computeEncoder.setComputePipelineState(blurState.computePipelineStateBGRAToRGBA)
+                computeEncoder.setTexture(texture.bgra, index: 0)
+                computeEncoder.setTexture(rgbaTexture, index: 1)
             case let .biPlanar(biPlanar):
                 computeEncoder.setComputePipelineState(blurState.computePipelineStateYUVBiPlanarToRGBA)
                 computeEncoder.setTexture(biPlanar.y, index: 0)

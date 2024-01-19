@@ -253,6 +253,15 @@ kernel void videoBiPlanarToRGBA(
     outTexture.write(color, threadPosition);
 }
 
+kernel void videoBGRAToRGBA(
+    texture2d<half, access::read> inTexture [[ texture(0) ]],
+    texture2d<half, access::write> outTexture [[ texture(1) ]],
+    uint2 threadPosition [[ thread_position_in_grid ]]
+) {
+    half4 rgba = inTexture.read(threadPosition).rgba;
+    outTexture.write(rgba, threadPosition);
+}
+
 kernel void videoTriPlanarToRGBA(
     texture2d<half, access::read> inTextureY [[ texture(0) ]],
     texture2d<half, access::read> inTextureU [[ texture(1) ]],
