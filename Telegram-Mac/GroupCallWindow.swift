@@ -98,7 +98,7 @@ struct GroupCallTheme {
     static let pin_video: CGImage = NSImage(named: "Icon_VoiceChat_PinVideo")!.precomposed(.white)
     static let unpin_video: CGImage = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(.white)
     static let pin_window: CGImage = NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(.white)
-    static let unhide_peers: CGImage = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(.white)
+    static let unhide_peers: CGImage = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(.white, flipHorizontal: true)
 
     
     static var video_status_muted_red: CGImage {
@@ -218,7 +218,7 @@ struct GroupCallTheme {
         NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(GroupCallTheme.customTheme.accentColor)
     }
     static var hide_peers: CGImage {
-        NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
+        NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor, flipHorizontal: true)
     }
 
     static let smallTableWidth: CGFloat = 160
