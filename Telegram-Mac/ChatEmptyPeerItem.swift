@@ -17,6 +17,7 @@ class ChatEmptyPeerItem: TableRowItem {
 
     private(set) var textViewLayout:TextViewLayout
     private(set) var image: TelegramMediaImage?
+    private(set) var premiumRequired: Bool = false
     
     override var stableId: AnyHashable {
         return 0
@@ -131,30 +132,48 @@ class ChatEmptyPeerItem: TableRowItem {
         
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
-            peerViewDisposable.set((chatInteraction.context.account.postbox.peerView(id: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
-                if let cachedData = peerView.cachedData as? CachedUserData, let user = peerView.peers[peerView.peerId], let botInfo = cachedData.botInfo {
-                    var about = botInfo.description
-                    if about.isEmpty {
-                        about = cachedData.about ?? strings().chatEmptyChat
+            
+            let cachedData: Signal<CachedPeerData?, NoError> = .single(chatInteraction.presentation.cachedData) |> then(getCachedDataView(peerId: chatInteraction.peerId, postbox: chatInteraction.context.account.postbox)) |> deliverOnMainQueue
+            
+            let peer: Signal<Peer?, NoError> = .single(chatInteraction.presentation.mainPeer) |> then(getPeerView(peerId: chatInteraction.peerId, postbox: chatInteraction.context.account.postbox)) |> deliverOnMainQueue
+
+            
+            peerViewDisposable.set(combineLatest(cachedData, peer).start(next: { [weak self] cachedData, peer in
+                if let cachedData = cachedData as? CachedUserData, let user = peer, let self {
+                    if let botInfo = cachedData.botInfo {
+                        var about = botInfo.description
+                        if about.isEmpty {
+                            about = cachedData.about ?? strings().chatEmptyChat
+                        }
+                        if about.isEmpty {
+                            about = strings().chatEmptyChat
+                        }
+                        if user.isScam {
+                            about = strings().peerInfoScamWarning
+                        }
+                        if user.isFake {
+                            about = strings().peerInfoFakeWarning
+                        }
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        self._shouldBlurService = false
+                        self.textViewLayout = TextViewLayout(attr, alignment: .left)
+                        self.textViewLayout.interactions = globalLinkExecutor
+                        self.image = botInfo.photo
+                        self.view?.set(item: self)
+                    } else if cachedData.flags.contains(.premiumRequired), !chatInteraction.context.isPremium {
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
+                        attr.detectBoldColorInString(with: .medium(.text))
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        self._shouldBlurService = false
+                        self.textViewLayout = TextViewLayout(attr, alignment: .center)
+                        self.textViewLayout.interactions = globalLinkExecutor
+                        self.premiumRequired = true
+                        self.view?.set(item: self)
                     }
-                    if about.isEmpty {
-                        about = strings().chatEmptyChat
-                    }
-                    if user.isScam {
-                        about = strings().peerInfoScamWarning
-                    }
-                    if user.isFake {
-                        about = strings().peerInfoFakeWarning
-                    }
-                    guard let `self` = self else {return}
-                    let attr = NSMutableAttributedString()
-                    _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
-                    attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
-                    self._shouldBlurService = false
-                    self.textViewLayout = TextViewLayout(attr, alignment: .left)
-                    self.textViewLayout.interactions = globalLinkExecutor
-                    self.image = botInfo.photo
-                    self.view?.set(item: self)
+                    
                 }
             }))
         }
@@ -179,6 +198,10 @@ class ChatEmptyPeerView : TableRowView {
     private var imageView: TransformImageView? = nil
     private var visualEffect: VisualEffect?
     private var bgView: View?
+    
+    private var premRequiredImageView: ImageView?
+    private var premRequiredButton: TextButton?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.addSubview(textView)
@@ -271,6 +294,9 @@ class ChatEmptyPeerView : TableRowView {
             
             textView.update(item.textViewLayout)
             
+            var size = NSMakeSize(item.textViewLayout.layoutSize.width + 20, 300)
+
+            
             if let image = item.image, let rep = image.representationForDisplayAtSize(PixelDimensions.init(1280, 1280)) {
                 let current: TransformImageView
                 if let view = self.imageView {
@@ -285,7 +311,6 @@ class ChatEmptyPeerView : TableRowView {
                 
                 current.setSignal(signal)
                 
-                var size = NSMakeSize(item.textViewLayout.layoutSize.width + 20, 300)
                 size = rep.dimensions.size.aspectFitted(size)
                 
                 let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
@@ -298,13 +323,65 @@ class ChatEmptyPeerView : TableRowView {
                 self.imageView = nil
             }
             
+            
+            if item.premiumRequired {
+                let current: ImageView
+                if let view = self.premRequiredImageView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    current.frame = NSMakeRect(0, 0, size.width, 100)
+                    bgView.addSubview(current)
+                    self.premRequiredImageView = current
+                }
+                current.image = NSImage(named: "Icon_Chat_PremiumRequired")?.precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent)
+                current.contentGravity = .resizeAspect
+            } else if let view = self.premRequiredImageView {
+                performSubviewRemoval(view, animated: false)
+                self.premRequiredImageView = nil
+            }
+            
+            if item.premiumRequired {
+                let current: TextButton
+                if let view = self.premRequiredButton {
+                    current = view
+                } else {
+                    current = TextButton()
+                    current.frame = NSMakeRect(0, 0, size.width, 30)
+                    current.background = .random
+                    bgView.addSubview(current)
+                    self.premRequiredButton = current
+                    
+                    current.set(handler: { [weak item] _ in
+                        if let context = item?.chatInteraction.context {
+                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                        }
+                    }, for: .Click)
+                }
+                
+                
+                current.scaleOnClick = true
+                current.set(background: theme.colors.accent, for: .Normal)
+                current.set(font: .medium(.text), for: .Normal)
+                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.set(text: strings().chatEmptyPremiumRequiredAction, for: .Normal)
+                current.sizeToFit(NSMakeSize(20, 20))
+                current.layer?.cornerRadius = current.frame.height / 2
+            } else if let view = self.premRequiredButton {
+                performSubviewRemoval(view, animated: false)
+                self.premRequiredButton = nil
+            }
+            
             let singleLine = item.textViewLayout.lines.count == 1
             
-            if let imageView = imageView {
-                bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, imageView.frame.height + textView.frame.height + 20))
-            } else {
-                bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
+            var h: CGFloat = [self.imageView, premRequiredButton, premRequiredImageView].compactMap { $0 }.reduce(0, { $0 + $1.frame.height })
+            
+            if let _ = premRequiredButton {
+                h += 20
             }
+            
+            bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, h + textView.frame.height + 20))
+
             
             bgView.addSubview(self.textView)
             
@@ -317,10 +394,21 @@ class ChatEmptyPeerView : TableRowView {
                 textView.center()
             }
             
-            if imageView == nil {
-                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
+            if let view = premRequiredImageView {
+                view.centerX(y: 0)
+                textView.centerX(y: view.frame.maxY + 10)
             } else {
-                bgView.layer?.cornerRadius = 8
+                textView.center()
+            }
+            
+            if let view = premRequiredButton {
+                view.centerX(y: textView.frame.maxY + 10)
+            }
+            
+            if imageView == nil && premRequiredImageView == nil {
+                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 10
+            } else {
+                bgView.layer?.cornerRadius = 10
             }
         }
     }

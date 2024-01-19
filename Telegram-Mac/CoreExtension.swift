@@ -672,9 +672,9 @@ public extension Message {
         return media.first
     }
     
-    func newReactions(with reaction: UpdateMessageReaction) -> [UpdateMessageReaction] {
+    func newReactions(with reaction: UpdateMessageReaction, isTags: Bool) -> [UpdateMessageReaction] {
         var updated:[UpdateMessageReaction] = []
-        if let reactions = self.effectiveReactions {
+        if let reactions = self.effectiveReactions(isTags: isTags) {
             
             let sorted = reactions.sorted(by: <)
             
@@ -702,8 +702,8 @@ public extension Message {
         return updated
     }
     
-    func effectiveReactions(_ accountPeerId: PeerId) -> ReactionsMessageAttribute? {
-        return mergedMessageReactions(attributes: self.attributes)
+    func effectiveReactions(_ accountPeerId: PeerId, isTags: Bool) -> ReactionsMessageAttribute? {
+        return mergedMessageReactions(attributes: self.attributes, isTags: isTags)
     }
     
     func isCrosspostFromChannel(account: Account) -> Bool {
@@ -866,23 +866,23 @@ public extension Message {
     }
     
     func withUpdatedStableId(_ stableId:UInt32) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, customTags: [], forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     func withUpdatedId(_ messageId:MessageId) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, customTags: [], forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     func withUpdatedGroupingKey(_ groupingKey:Int64?) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, customTags: [], forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     func withUpdatedTimestamp(_ timestamp: Int32) -> Message {
-        return Message(stableId: self.stableId, stableVersion: self.stableVersion, id: self.id, globallyUniqueId: self.globallyUniqueId, groupingKey: self.groupingKey, groupInfo: self.groupInfo, threadId: threadId, timestamp: timestamp, flags: self.flags, tags: self.tags, globalTags: self.globalTags, localTags: self.localTags, forwardInfo: self.forwardInfo, author: self.author, text: self.text, attributes: self.attributes, media: self.media, peers: self.peers, associatedMessages: self.associatedMessages, associatedMessageIds: self.associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
+        return Message(stableId: self.stableId, stableVersion: self.stableVersion, id: self.id, globallyUniqueId: self.globallyUniqueId, groupingKey: self.groupingKey, groupInfo: self.groupInfo, threadId: threadId, timestamp: timestamp, flags: self.flags, tags: self.tags, globalTags: self.globalTags, localTags: self.localTags, customTags: [], forwardInfo: self.forwardInfo, author: self.author, text: self.text, attributes: self.attributes, media: self.media, peers: self.peers, associatedMessages: self.associatedMessages, associatedMessageIds: self.associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     
     func withUpdatedText(_ text:String) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, customTags: [], forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     func possibilityForwardTo(_ peer:Peer) -> Bool {
@@ -904,7 +904,7 @@ public extension Message {
     }
     
     convenience init(_ media: Media, stableId: UInt32, messageId: MessageId) {
-        self.init(stableId: stableId, stableVersion: 0, id: messageId, globallyUniqueId: nil, groupingKey: nil, groupInfo: nil, threadId: nil, timestamp: 0, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: nil, text: "", attributes: [], media: [media], peers: SimpleDictionary(), associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+        self.init(stableId: stableId, stableVersion: 0, id: messageId, globallyUniqueId: nil, groupingKey: nil, groupInfo: nil, threadId: nil, timestamp: 0, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: nil, text: "", attributes: [], media: [media], peers: SimpleDictionary(), associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
     }
 }
 
@@ -1005,7 +1005,7 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
     }
     
     
-    if message.consumableContent != nil, let autoclear = message.autoclearTimeout, autoclear.timeout <= 60 {
+    if message.consumableContent != nil, let autoclear = message.autoclearTimeout, autoclear.timeout <= 60 || autoclear.timeout == viewOnceTimeout {
         return false
     }
     
@@ -1339,6 +1339,12 @@ extension Media {
     var isVideoFile:Bool {
         if let media = self as? TelegramMediaFile {
             return media.mimeType.hasPrefix("video/mp4") || media.mimeType.hasPrefix("video/mov") || media.mimeType.hasPrefix("video/avi")
+        }
+        return false
+    }
+    var isInstantVideo: Bool {
+        if let media = self as? TelegramMediaFile {
+            return media.isInstantVideo
         }
         return false
     }
@@ -3348,20 +3354,7 @@ public func removeFile(at path: String) {
 }
 
 
-extension FileManager {
-    
-    func modificationDateForFileAtPath(path:String) -> NSDate? {
-        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
-        return attributes[.modificationDate] as? NSDate
-    }
-    
-    func creationDateForFileAtPath(path:String) -> NSDate? {
-        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
-        return attributes[.creationDate] as? NSDate
-    }
-    
-    
-}
+
 
 
 extension MessageForwardInfo {
@@ -3416,97 +3409,7 @@ struct CachedDataEquatable: Equatable {
 }
 
 
-extension CGImage {
-    var cvPixelBuffer: CVPixelBuffer? {
-        let cgImage = self
 
-        var maybePixelBuffer: CVPixelBuffer? = nil
-        let ioSurfaceProperties = NSMutableDictionary()
-        let options = NSMutableDictionary()
-        options.setObject(ioSurfaceProperties, forKey: kCVPixelBufferIOSurfacePropertiesKey as NSString)
-
-        let _ = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width * self.scale), Int(size.height * self.scale), kCVPixelFormatType_32ARGB, options as CFDictionary, &maybePixelBuffer)
-        guard let pixelBuffer = maybePixelBuffer else {
-            return nil
-        }
-        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        defer {
-            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        }
-
-        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
-
-        let context = CGContext(
-            data: baseAddress,
-            width: Int(self.size.width * self.scale),
-            height: Int(self.size.height * self.scale),
-            bitsPerComponent: 8,
-            bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue,
-            releaseCallback: nil,
-            releaseInfo: nil
-        )!
-        context.clear(CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
-        context.draw(cgImage, in: CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
-
-        return pixelBuffer
-    }
-
-    
-    var cmSampleBuffer: CMSampleBuffer? {
-           guard let pixelBuffer = self.cvPixelBuffer else {
-               return nil
-           }
-           var newSampleBuffer: CMSampleBuffer? = nil
-
-           var timingInfo = CMSampleTimingInfo(
-               duration: CMTimeMake(value: 1, timescale: 30),
-               presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
-               decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
-           )
-
-           var videoInfo: CMVideoFormatDescription? = nil
-           CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
-           guard let videoInfo = videoInfo else {
-               return nil
-           }
-           CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
-
-           if let newSampleBuffer = newSampleBuffer {
-               let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
-               let dict = attachments[0] as! NSMutableDictionary
-
-               dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
-           }
-
-           return newSampleBuffer
-       }
-
-}
-
-
-private let emojis: [String: (String, CGFloat)] = [
-    "👍": ("thumbs_up_1", 450.0),
-    "👍🏻": ("thumbs_up_2", 450.0),
-    "👍🏼": ("thumbs_up_3", 450.0),
-    "👍🏽": ("thumbs_up_4", 450.0),
-    "👍🏾": ("thumbs_up_5", 450.0),
-    "👍🏿": ("thumbs_up_6", 450.0),
-    "😂": ("lol", 350.0),
-    "😒": ("meh", 350.0),
-    "❤️": ("heart", 350.0),
-    "♥️": ("heart", 350.0),
-    "🥳": ("celeb", 430.0),
-    "😳": ("confused", 350.0)
-]
-func animatedEmojiResource(emoji: String) -> (LocalBundleResource, CGFloat)? {
-    if let (name, size) = emojis[emoji] {
-        return (LocalBundleResource(name: name, ext: "tgs"), size)
-    } else {
-        return nil
-    }
-}
 
 
 extension TelegramMediaWebpageLoadedContent {
@@ -3804,6 +3707,12 @@ extension Peer {
         return nil
     }
     
+    var maybePremiumRequired: Bool {
+        if let peer = self as? TelegramUser {
+            return peer.flags.contains(.requirePremium) && !peer.flags.contains(.mutualContact)
+        }
+        return false
+    }
 }
 
 
@@ -3830,46 +3739,6 @@ extension ChatListFilter {
             }
         }
         return theme.icons.chat_filter_custom
-    }
-}
-
-
-extension SoftwareVideoSource {
-    func preview(size: NSSize, backingScale: Int) -> CGImage? {
-        let frameAndLoop = self.readFrame(maxPts: nil)
-        if frameAndLoop.0 == nil {
-            return nil
-        }
-        
-        guard let frame = frameAndLoop.0 else {
-            return nil
-        }
-        
-        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
-        
-        let destBytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
-        let bufferSize = s.h * DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
-
-        let memoryData = malloc(bufferSize)!
-        let bytes = memoryData.assumingMemoryBound(to: UInt8.self)
-        
-        let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
-        CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
-        let width = CVPixelBufferGetWidth(imageBuffer!)
-        let height = CVPixelBufferGetHeight(imageBuffer!)
-        let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
-        
-        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
-        var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
-                   
-        let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
-        
-        CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        
-        return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
-            memcpy(pixelData, bytes, bufferSize)
-        })
     }
 }
 

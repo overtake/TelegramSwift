@@ -945,7 +945,7 @@ protocol PeerMediaSearchable : AnyObject {
         }
         
         if peerId != context.peerId {
-            savedTab = context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: context.peerId, threadId: peerId.toInt64()), count: 3, tagMask: nil)
+            savedTab = context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: context.peerId, threadId: peerId.toInt64()), count: 3, tag: nil)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 1 || (!view.isLoading)
                 return (tag: .saved, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
@@ -964,7 +964,7 @@ protocol PeerMediaSearchable : AnyObject {
         }
         
         let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(location, count: 3, tagMask: tags.tagsValue)
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(location, count: 3, tag: .tag(tags.tagsValue))
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 1 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)

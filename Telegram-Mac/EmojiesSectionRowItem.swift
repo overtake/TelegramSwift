@@ -15,6 +15,7 @@ import Postbox
 import FastBlur
 import ObjcUtils
 import Accelerate
+import TelegramMedia
 
 final class EmojiesSectionRowItem : GeneralRowItem {
     
@@ -112,6 +113,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case backgroundIcon
         case channelReactions
         case channelStatus
+        case defaultTags
     }
     let mode: Mode
     let color: NSColor?
@@ -129,7 +131,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.showAllItems = showAllItems
         self.openPremium = openPremium
         self.installPack = installPack
-        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions
+        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions //&& mode != .defaultTags
        
         
         self.context = context
@@ -145,7 +147,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             switch mode {
-            case .panel, .reactions, .statuses, .topic, .backgroundIcon:
+            case .panel, .reactions, .statuses, .topic, .backgroundIcon, .defaultTags:
                 if isPremium && !context.isPremium {
                     if installed {
                         self.unlockText = (strings().emojiPackRestore, true, true)
@@ -413,6 +415,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                     self.installPack?(info, self.stickerItems)
                 }
             case .channelReactions:
+                self.installPack?(info, self.stickerItems)
+            case .defaultTags:
                 self.installPack?(info, self.stickerItems)
             case .preview:
                 self.installPack?(info, self.stickerItems)

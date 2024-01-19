@@ -12,7 +12,7 @@ import CoreGraphics
 import QuartzCore
 import TelegramCore
 import SwiftSignalKit
-
+import TelegramMedia
 
 private enum Colors {
     static var red: NSColor {

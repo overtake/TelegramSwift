@@ -26,7 +26,8 @@ import WebKit
 import System
 import CodeSyntax
 import MetalEngine
-
+import TelegramMedia
+import RLottie
 
 #if !APP_STORE
 import AppCenter
@@ -148,6 +149,10 @@ private final class CtxInstallLayer : SimpleLayer {
 //            DeviceGraphicsContextSettings.install(nil)
 //        }
     }
+}
+
+extension RLottieBridge : R_LottieBridge {
+   
 }
 
 
@@ -272,9 +277,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         initializeSelectManager()
         startLottieCacheCleaner()
-                
-        if #available(OSX 10.12.2, *) {
-            NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
+        
+        makeRLottie = { json, key in
+            return RLottieBridge(json: json, key: key)
         }
         
         guard let containerUrl = ApiEnvironment.containerURL else {
@@ -294,7 +299,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
 
 //        delay(2.0, closure: {
-//            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+        #if arch(arm64)
+            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+        #endif
 //        })
         
 //        let ctxLayer = CtxInstallLayer()

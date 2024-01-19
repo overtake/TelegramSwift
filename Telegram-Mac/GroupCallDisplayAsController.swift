@@ -211,7 +211,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     // entries
     
-   
     
     if arguments.canBeScheduled {
         
@@ -229,6 +228,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
     return entries
 }

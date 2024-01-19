@@ -18,6 +18,9 @@ let package = Package(
         .package(name: "SSignalKit", path: "../../submodules/telegram-ios/submodules/SSignalKit"),
         .package(name: "ColorPalette", path: "../ColorPalette"),
         .package(name: "KeyboardKey", path: "../KeyboardKey"),
+        .package(name: "ObjcUtils", path: "../ObjcUtils"),
+        .package(name: "MergeLists", path: "../MergeLists"),
+        
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -27,6 +30,8 @@ let package = Package(
             dependencies: [.product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil),
                            .product(name: "ColorPalette", package: "ColorPalette", condition: nil),
                            .product(name: "KeyboardKey", package: "KeyboardKey", condition: nil),
+                           .product(name: "ObjcUtils", package: "ObjcUtils", condition: nil),
+                           .product(name: "MergeLists", package: "MergeLists", condition: nil),
                           ],
             path: "Sources"),
     ]

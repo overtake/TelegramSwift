@@ -9,6 +9,7 @@
 import Foundation
 import CoreText
 import AppKit
+import ObjcUtils
 
 public typealias UIImage = NSImage
 
@@ -339,6 +340,14 @@ public struct ParsingType: OptionSet {
     public static let Mentions = ParsingType(rawValue: 2)
     public static let Commands = ParsingType(rawValue: 4)
     public static let Hashtags = ParsingType(rawValue: 8)
+}
+
+public extension NSAttributedString {
+    func detectBold(with font: NSFont) -> NSAttributedString {
+        let copy = self.mutableCopy() as! NSMutableAttributedString
+        copy.detectBoldColorInString(with: font, string: copy.string)
+        return copy
+    }
 }
 
 public extension NSMutableAttributedString {
@@ -2697,4 +2706,145 @@ public func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFl
     )
     
     return path
+}
+
+
+public extension FileManager {
+    
+    func modificationDateForFileAtPath(path:String) -> NSDate? {
+        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
+        return attributes[.modificationDate] as? NSDate
+    }
+    
+    func creationDateForFileAtPath(path:String) -> NSDate? {
+        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
+        return attributes[.creationDate] as? NSDate
+    }
+    
+    
+}
+
+
+
+
+public extension NSCursor  {
+    static var set_windowResizeNorthWestSouthEastCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthWestSouthEastCursor()
+    }
+    static var set_windowResizeNorthEastSouthWestCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthEastSouthWestCursor()
+    }
+}
+
+public extension NSImage {
+    var _cgImage: CGImage? {
+        return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+    
+    var jpegCGImage: CGImage? {
+        guard let tiffData = self.tiffRepresentation,
+              let bitmapImageRep = NSBitmapImageRep(data: tiffData) else {
+            return nil
+        }
+
+        let compressionFactor: CGFloat = 1.0
+        
+        guard let jpegData = bitmapImageRep.representation(using: .jpeg, properties: [.compressionFactor: compressionFactor]),
+              let dataProvider = CGDataProvider(data: jpegData as CFData),
+              let cgImage = CGImage(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else {
+            return nil
+        }
+        
+        return cgImage
+    }
+}
+
+
+public func truncate(double: Double, places : Int)-> Double
+{
+    return Double(floor(pow(10.0, Double(places)) * double)/pow(10.0, Double(places)))
+}
+
+
+public extension NSImage {
+    
+    enum Orientation {
+        case up
+        case down
+    }
+    
+    convenience init(cgImage: CGImage, scale: CGFloat, orientation: UIImage.Orientation) {
+        self.init(cgImage: cgImage, size: cgImage.systemSize)
+    }
+}
+
+
+
+public extension CGImage {
+    var cvPixelBuffer: CVPixelBuffer? {
+        let cgImage = self
+
+        var maybePixelBuffer: CVPixelBuffer? = nil
+        let ioSurfaceProperties = NSMutableDictionary()
+        let options = NSMutableDictionary()
+        options.setObject(ioSurfaceProperties, forKey: kCVPixelBufferIOSurfacePropertiesKey as NSString)
+
+        let _ = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width * self.scale), Int(size.height * self.scale), kCVPixelFormatType_32ARGB, options as CFDictionary, &maybePixelBuffer)
+        guard let pixelBuffer = maybePixelBuffer else {
+            return nil
+        }
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        }
+
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+
+        let context = CGContext(
+            data: baseAddress,
+            width: Int(self.size.width * self.scale),
+            height: Int(self.size.height * self.scale),
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue,
+            releaseCallback: nil,
+            releaseInfo: nil
+        )!
+        context.clear(CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+        context.draw(cgImage, in: CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+
+        return pixelBuffer
+    }
+
+    
+    var cmSampleBuffer: CMSampleBuffer? {
+           guard let pixelBuffer = self.cvPixelBuffer else {
+               return nil
+           }
+           var newSampleBuffer: CMSampleBuffer? = nil
+
+           var timingInfo = CMSampleTimingInfo(
+               duration: CMTimeMake(value: 1, timescale: 30),
+               presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
+               decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
+           )
+
+           var videoInfo: CMVideoFormatDescription? = nil
+           CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+           guard let videoInfo = videoInfo else {
+               return nil
+           }
+           CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
+
+           if let newSampleBuffer = newSampleBuffer {
+               let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
+               let dict = attachments[0] as! NSMutableDictionary
+
+               dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
+           }
+
+           return newSampleBuffer
+       }
+
 }

@@ -11,6 +11,7 @@ import TGUIKit
 import AppKit
 import TelegramCore
 import SwiftSignalKit
+import TelegramMedia
 
 private func formatNumber(_ number: String, country: Country) -> String {
     var formatted: String = ""

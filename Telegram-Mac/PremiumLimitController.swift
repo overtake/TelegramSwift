@@ -12,7 +12,7 @@ import AppKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-
+import TelegramMedia
 
 
 extension PremiumLimitController.LimitType {

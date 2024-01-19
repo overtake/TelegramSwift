@@ -11,6 +11,8 @@ import TGUIKit
 import SwiftSignalKit
 import ColorPalette
 import RangeSet
+import TelegramMedia
+import MediaPlayer
 
 private final class SVideoPipControls : Control {
     

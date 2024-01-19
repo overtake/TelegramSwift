@@ -22,7 +22,7 @@ import InAppPurchaseManager
 import ApiCredentials
 
 let clown: String = "🤡"
-
+let tagsGloballyEnabled = false
 
 
 public struct PremiumConfiguration {

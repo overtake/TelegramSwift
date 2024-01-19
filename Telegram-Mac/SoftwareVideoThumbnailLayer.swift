@@ -20,12 +20,12 @@ private final class SoftwareVideoThumbnailLayerNullAction: NSObject, CAAction {
     }
 }
 
-final class SoftwareVideoThumbnailView: NSView {
+public final class SoftwareVideoThumbnailView: NSView {
     private var asolutePosition: (CGRect, CGSize)?
     
     var disposable = MetaDisposable()
     
-    var ready: (() -> Void)? {
+    public var ready: (() -> Void)? {
         didSet {
             if self.layer?.contents != nil {
                 self.ready?()
@@ -33,7 +33,7 @@ final class SoftwareVideoThumbnailView: NSView {
         }
     }
     
-    init(account: Account, fileReference: FileMediaReference, synchronousLoad: Bool) {
+    public init(account: Account, fileReference: FileMediaReference, synchronousLoad: Bool) {
         super.init(frame: .zero)
         
 
@@ -62,7 +62,7 @@ final class SoftwareVideoThumbnailView: NSView {
         }
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     

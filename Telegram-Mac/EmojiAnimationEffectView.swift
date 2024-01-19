@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import AppKit
+import TelegramMedia
 
 final class EmojiAnimationEffectView : View {
     enum Source {

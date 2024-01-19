@@ -13,120 +13,8 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import ColorPalette
+import TelegramMedia
 
-//private final class WarpView: View {
-//    private final class WarpPartView: View {
-//        let cloneView: PortalView
-//        
-//        init?(contentView: PortalSourceView) {
-//            guard let cloneView = PortalView(matchPosition: false) else {
-//                return nil
-//            }
-//            self.cloneView = cloneView
-//            
-//            super.init(frame: CGRect())
-//            
-//            self.layer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-//            
-//            self.clipsToBounds = true
-//            self.addSubview(cloneView.view)
-//            contentView.addPortal(view: cloneView)
-//        }
-//        
-//        required init?(coder: NSCoder) {
-//            fatalError("init(coder:) has not been implemented")
-//        }
-//        
-//        func update(containerSize: CGSize, rect: CGRect, transition: Transition) {
-//            transition.setFrame(view: self.cloneView.view, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: CGSize(width: containerSize.width, height: containerSize.height)))
-//        }
-//    }
-//    
-//    let contentView: PortalSourceView
-//    
-//    private let clippingView: UIView
-//    private let overlayView: UIView
-//    
-//    private var warpViews: [WarpPartView] = []
-//    
-//    override init(frame: CGRect) {
-//        self.contentView = PortalSourceView()
-//        self.clippingView = UIView()
-//        self.overlayView = UIView()
-//        
-//        super.init(frame: frame)
-//        
-//        self.clippingView.addSubview(self.contentView)
-//        
-//        self.clippingView.clipsToBounds = false
-//        self.addSubview(self.clippingView)
-//        
-//        self.addSubview(self.overlayView)
-//        
-//        for _ in 0 ..< 8 {
-//            if let warpView = WarpPartView(contentView: self.contentView) {
-//                self.warpViews.append(warpView)
-//                self.addSubview(warpView)
-//            }
-//        }
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//    
-//    func update(size: CGSize, topInset: CGFloat, warpHeight: CGFloat, theme: PresentationTheme, transition: Transition) {
-//        transition.setFrame(view: self.contentView, frame: CGRect(origin: CGPoint(), size: size))
-//        
-//        let frame = CGRect(origin: CGPoint(x: 0.0, y: -topInset), size: CGSize(width: size.width, height: size.height + topInset - warpHeight))
-//        transition.setPosition(view: self.clippingView, position: frame.center)
-//        transition.setBounds(view: self.clippingView, bounds: CGRect(origin: CGPoint(x: 0.0, y: -topInset + (topInset - warpHeight) * 0.5), size: size))
-//        
-//        let allItemsHeight = warpHeight * 0.5
-//        for i in 0 ..< self.warpViews.count {
-//            let itemHeight = warpHeight / CGFloat(self.warpViews.count)
-//            let itemFraction = CGFloat(i + 1) / CGFloat(self.warpViews.count)
-//            let _ = itemHeight
-//            
-//            let da = CGFloat.pi * 0.5 / CGFloat(self.warpViews.count)
-//            let alpha = CGFloat.pi * 0.5 - itemFraction * CGFloat.pi * 0.5
-//            let endPoint = CGPoint(x: cos(alpha), y: sin(alpha))
-//            let prevAngle = alpha + da
-//            let prevPt = CGPoint(x: cos(prevAngle), y: sin(prevAngle))
-//            var angle: CGFloat
-//            angle = -atan2(endPoint.y - prevPt.y, endPoint.x - prevPt.x)
-//            
-//            let itemLengthVector = CGPoint(x: endPoint.x - prevPt.x, y: endPoint.y - prevPt.y)
-//            let itemLength = sqrt(itemLengthVector.x * itemLengthVector.x + itemLengthVector.y * itemLengthVector.y) * warpHeight * 0.5
-//            let _ = itemLength
-//            
-//            var transform: CATransform3D
-//            transform = CATransform3DIdentity
-//            transform.m34 = 1.0 / 240.0
-//            
-//            transform = CATransform3DTranslate(transform, 0.0, prevPt.x * allItemsHeight, (1.0 - prevPt.y) * allItemsHeight)
-//            transform = CATransform3DRotate(transform, angle, 1.0, 0.0, 0.0)
-//            
-//            //self.warpViews[i].backgroundColor = UIColor(red: 0.0, green: 0.0, blue: CGFloat(i) / CGFloat(self.warpViews.count - 1), alpha: 1.0)
-//            //self.warpViews[i].backgroundColor = UIColor(white: 0.0, alpha: 0.5)
-//            //self.warpViews[i].backgroundColor = theme.list.plainBackgroundColor
-//            
-//            let positionY = size.height - allItemsHeight + 4.0 + /*warpHeight * cos(alpha)*/ CGFloat(i) * itemLength
-//            let rect = CGRect(origin: CGPoint(x: 0.0, y: positionY), size: CGSize(width: size.width, height: itemLength))
-//            transition.setPosition(view: self.warpViews[i], position: CGPoint(x: rect.midX, y: size.height - allItemsHeight + 4.0))
-//            transition.setBounds(view: self.warpViews[i], bounds: CGRect(origin: CGPoint(), size: CGSize(width: size.width, height: itemLength)))
-//            transition.setTransform(view: self.warpViews[i], transform: transform)
-//            self.warpViews[i].update(containerSize: size, rect: rect, transition: transition)
-//        }
-//        
-//        self.overlayView.backgroundColor = theme.list.plainBackgroundColor
-//        transition.setFrame(view: self.overlayView, frame: CGRect(origin: CGPoint(x: 0.0, y: size.height - allItemsHeight + 4.0), size: CGSize(width: size.width, height: allItemsHeight)))
-//    }
-//    
-//    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-//        return self.contentView.hitTest(point, with: event)
-//    }
-//}
 
 private extension EmojiSearchCategories.Group {
     var icon: CGImage? {
@@ -516,7 +404,7 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         hasRecent = !state.recentStatusItems.isEmpty || !state.featuredStatusItems.isEmpty
     case .emoji, .stories:
         hasRecent = true
-    case .reactions, .quickReaction:
+    case .reactions, .quickReaction, .defaultTags:
         hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
     case .selectAvatar:
         hasRecent = true
@@ -717,7 +605,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else {
         for key in seglist {
             
-            if key == .Recent, arguments.mode == .reactions || arguments.mode == .quickReaction {
+            if key == .Recent, arguments.mode == .reactions || arguments.mode == .quickReaction || arguments.mode == .defaultTags {
                 
                 
                 var reactionsRecent:[StickerPackItem] = []
@@ -733,7 +621,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     if arguments.context.isPremium {
                         return true
                     } else {
-                        return !value.content.reaction.string.isEmpty
+                        if arguments.mode == .defaultTags {
+                            return true
+                        } else {
+                            return !value.content.reaction.string.isEmpty
+                        }
                     }
                 }
                 popular = Array(top.prefix(perline * 2))
@@ -1937,6 +1829,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case stories
         case channelReactions
         case channelStatus
+        case defaultTags
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1953,6 +1846,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .channelReactions
             case .channelStatus:
                 return .channelStatus
+            case .defaultTags:
+                return .defaultTags
             default:
                 return .panel
             }
@@ -2308,7 +2203,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
  
         let emojies: Signal<ItemCollectionsView, NoError>
         switch mode {
-        case .reactions, .quickReaction:
+        case .reactions, .quickReaction, .defaultTags:
             emojies = context.diceCache.emojies_reactions
         case .status:
             emojies = context.diceCache.emojies_status
@@ -2381,6 +2276,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var topReactionsView: OrderedItemListView?
             var featuredBackgroundIconEmoji: OrderedItemListView?
             var featuredChannelStatusEmoji: OrderedItemListView?
+            var defaultTagReactions: OrderedItemListView?
 
             for orderedView in view.orderedItemListsViews {
                 if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
@@ -2395,6 +2291,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     featuredBackgroundIconEmoji = orderedView
                 } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji {
                     featuredChannelStatusEmoji = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                    defaultTagReactions = orderedView
                 }
             }
             var recentStatusItems:[RecentMediaItem] = []
@@ -2403,6 +2301,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var topReactionsItems:[RecentReactionItem] = []
             var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
             var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
+            var defaultTagReactionsItems: [RecentReactionItem] = []
+            
             if let recentStatusEmoji = recentStatusEmoji {
                 for item in recentStatusEmoji.items {
                     guard let item = item.contents.get(RecentMediaItem.self) else {
@@ -2451,6 +2351,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         continue
                     }
                     topReactionsItems.append(item)
+                }
+            }
+            if let defaultTagReactions = defaultTagReactions {
+                for item in defaultTagReactions.items {
+                    guard let item = item.contents.get(RecentReactionItem.self) else {
+                        continue
+                    }
+                    defaultTagReactionsItems.append(item)
                 }
             }
             
@@ -2522,8 +2430,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.search = search
                 current.reactions = reactions
                 current.recent = recentEmoji
-                current.topReactionsItems = topReactionsItems
-                current.recentReactionsItems = recentReactionsItems
+                current.topReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : topReactionsItems
+                current.recentReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : recentReactionsItems
                 current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
                 current.featuredChannelStatusEmojiItems = featuredChannelStatusEmojiItems
                 current.reactionSettings = reactionSettings

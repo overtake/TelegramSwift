@@ -399,18 +399,17 @@ class UserInfoArguments : PeerInfoArguments {
     func startSecretChat() {
         let context = self.context
         let peerId = self.peerId
-        let signal = context.account.postbox.transaction { transaction -> Peer? in
-            
-            return transaction.getPeer(peerId)
-            
-        } |> deliverOnMainQueue  |> mapToSignal { peer -> Signal<PeerId, NoError> in
-            if let peer = peer {
-                let confirm = verifyAlertSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), ok: strings().peerInfoConfirmSecretChatOK)
-                return confirm |> filter { $0 == .basic } |> mapToSignal { (_) -> Signal<PeerId, NoError> in
-                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window)
-                }
-            } else {
-                return .complete()
+        
+        let peer = context.account.postbox.loadedPeerWithId(peerId)
+        let premiumRequired = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId))
+        
+        let signal = combineLatest(peer, premiumRequired) |> deliverOnMainQueue |> mapToSignal { peer, premiumRequired -> Signal<PeerId?, NoError> in
+            if !context.isPremium && premiumRequired {
+                return .single(nil)
+            }
+            let confirm = verifyAlertSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), ok: strings().peerInfoConfirmSecretChatOK)
+            return confirm |> filter { $0 == .basic } |> mapToSignal { _ -> Signal<PeerId?, NoError> in
+                return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window) |> map(Optional.init)
             }
         } |> deliverOnMainQueue
         
@@ -418,7 +417,13 @@ class UserInfoArguments : PeerInfoArguments {
         
         startSecretChatDisposable.set(signal.start(next: { [weak self] peerId in
             if let strongSelf = self {
-                strongSelf.pushViewController(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+                if let peerId = peerId {
+                    strongSelf.pushViewController(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+                } else {
+                    showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(strongSelf.peer?.compactDisplayTitle ?? ""), button: strings().alertLearnMore, callback: { _ in
+                        showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    })
+                }
             }
         }))
     }

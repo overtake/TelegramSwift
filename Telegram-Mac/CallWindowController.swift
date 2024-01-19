@@ -17,7 +17,6 @@ import TelegramVoip
 import ColorPalette
 
 private let defaultWindowSize = NSMakeSize(720, 560)
-
 extension CallState {
     func videoIsAvailable(_ isVideo: Bool) -> Bool {
         switch state {

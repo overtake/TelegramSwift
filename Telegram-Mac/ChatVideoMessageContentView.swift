@@ -81,6 +81,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     private let playerDisposable = MetaDisposable()
     private let updateMouseDisposable = MetaDisposable()
     
+    private var inkView: MediaInkView? = nil
+    
+    private var badgeView: SingleTimeVoiceBadgeView?
+    
     private var durationView:ChatMessageAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
     private let videoCorner: VideoMessageCorner = VideoMessageCorner()
     private var data:AVGifData? {
@@ -146,7 +150,9 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     override func open() {
         if let parent = parent, let context = context {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
+                if parent.autoclearTimeout != nil, parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
+                    SingleTimeMediaViewer.show(context: context, message: parent)
+                } else if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
@@ -409,8 +415,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                             
                             strongSelf.data = data
                             
+                            let isSpoiler = parent?.autoclearTimeout != nil && parent?.id.peerId.isSecretChat == false
+                            
                             strongSelf.fetchStatus = status
-                            if case .Local = status {
+                            if case .Local = status, !isSpoiler {
                                 if let progressView = strongSelf.progressView {
                                     progressView.state = .Fetching(progress: 1.0, force: false)
                                     strongSelf.progressView = nil
@@ -440,10 +448,65 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                             case .Remote:
                                 strongSelf.progressView?.state = .Remote
                             }
+                            
+                            if isSpoiler {
+                                let current: MediaInkView
+                                if let view = strongSelf.inkView {
+                                    current = view
+                                } else {
+                                    current = MediaInkView(frame: size.bounds)
+                                    strongSelf.inkView = current
+                                    
+                                    let aboveView = strongSelf.progressView
+                                    if let view = aboveView {
+                                        strongSelf.addSubview(current, positioned: .below, relativeTo: view)
+                                    } else {
+                                        strongSelf.addSubview(current)
+                                    }
+                                    if animated {
+                                        current.layer?.animateAlpha(from: 0.3, to: 1, duration: 0.2)
+                                    }
+                                }
+                                
+                                let image: TelegramMediaImage = TelegramMediaImage.init(imageId: media.fileId, representations: media.previewRepresentations, immediateThumbnailData: media.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+                                let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
+                                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: approximateSynchronousValue)
+                                current.frame = size.bounds.insetBy(dx: 2, dy: 2)
+                                current.layer?.cornerRadius = current.frame.height / 2
+                                
+                                current.isEventLess = true
+                                current.userInteractionEnabled = false
+                            } else if let view = strongSelf.inkView {
+                                performSubviewRemoval(view, animated: animated)
+                                strongSelf.inkView = nil
+                            }
+                            
+                            if isSpoiler, let progressView = strongSelf.progressView, parent?.id.namespace == Namespaces.Message.Cloud {
+                                let current: SingleTimeVoiceBadgeView
+                                if let view = strongSelf.badgeView {
+                                    current = view
+                                } else {
+                                    current = SingleTimeVoiceBadgeView(frame: NSMakeRect(progressView.frame.maxX - 15, progressView.frame.midY, 20, 20))
+                                    strongSelf.addSubview(current)
+                                    strongSelf.badgeView = current
+                                    current.isEventLess = true
+                                    current.update(size: NSMakeSize(30, 30), text: "1", foreground: .white, background: .blackTransparent, blendMode: .normal)
+                                    
+                                    if animated {
+                                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                                        current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                                    }
+                                }
+                                progressView.badge = NSMakeRect(24, 19, 22, 22)
+                            } else if let view = strongSelf.badgeView {
+                                performSubviewRemoval(view, animated: animated, scale: true)
+                                strongSelf.badgeView = nil
+                                strongSelf.progressView?.badge = nil
+                            }
                         }
                     }))
                 }
-                                
+                
             }
             
         }

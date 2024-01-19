@@ -216,7 +216,7 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         }
         
         let history = location.get() |> mapToSignal { location in
-            return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: [.gif])
+            return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(.gif))
         }
         
         self.historyDisposable.set(history.start(next: { update in

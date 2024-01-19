@@ -23,10 +23,11 @@ enum ChatHistoryInitialSearchLocation : Equatable {
 struct ChatHistoryLocationInput: Equatable {
     var content: ChatHistoryLocation
     var id: Int32
-
-    init(content: ChatHistoryLocation, id: Int32) {
+    var tag: HistoryViewInputTag?
+    init(content: ChatHistoryLocation, tag: HistoryViewInputTag?, id: Int32) {
         self.content = content
         self.id = id
+        self.tag = tag
     }
 }
 
@@ -35,7 +36,6 @@ enum ChatHistoryLocation: Equatable {
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)
     case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int, side: TableSavingSide)
     case Scroll(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, sourceIndex: MessageHistoryAnchorIndex, scrollPosition: TableScrollState, count: Int, animated: Bool)
-    
     var count: Int {
         switch self {
         case let .Initial(count):
@@ -91,14 +91,14 @@ func ==(lhs: ChatHistoryViewScrollPosition, rhs: ChatHistoryViewScrollPosition) 
 }
 
 public struct ChatHistoryCombinedInitialData {
-    let initialData: InitialMessageHistoryData?
-    let buttonKeyboardMessage: Message?
-    let cachedData: CachedPeerData?
-    let cachedDataMessages:[MessageId: [Message]]?
-    let readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
-    let limitsConfiguration: LimitsConfiguration
-    let autoplayMedia: AutoplayMediaPreferences
-    let autodownloadSettings: AutomaticMediaDownloadSettings
+    var initialData: InitialMessageHistoryData? = nil
+    var buttonKeyboardMessage: Message? = nil
+    var cachedData: CachedPeerData? = nil
+    var cachedDataMessages:[MessageId: [Message]]? = nil
+    var readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]? = nil
+    var limitsConfiguration: LimitsConfiguration = .defaultValue
+    var autoplayMedia: AutoplayMediaPreferences = .defaultSettings
+    var autodownloadSettings: AutomaticMediaDownloadSettings = .defaultSettings
 }
 
 enum ChatHistoryViewUpdateType : Equatable {
@@ -120,7 +120,7 @@ enum ChatHistoryViewUpdate {
 }
 
 
-func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation _chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tagMask: MessageTags?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = [], chatLocationContextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil), chatLocationInput: ChatLocationInput? = nil) -> Signal<ChatHistoryViewUpdate, NoError> {
+func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation _chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tag: HistoryViewInputTag?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = [], chatLocationContextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil), chatLocationInput: ChatLocationInput? = nil) -> Signal<ChatHistoryViewUpdate, NoError> {
     
     
     let account = context.account
@@ -128,7 +128,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
     let chatLocationInput = chatLocationInput ?? context.chatLocationInput(for: _chatLocation, contextHolder: chatLocationContextHolder)
     
     let ignoreRelatedChats: Bool
-    if let tagMask = tagMask, case .pinned = tagMask {
+    if let tag = tag, case .tag(.pinned) = tag {
         ignoreRelatedChats = true
     } else {
         ignoreRelatedChats = false
@@ -143,15 +143,14 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         
         switch mode {
         case .history, .thread, .pinned:
-            if let tagMask = tagMask {
-                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: .upperBound, anchorIndex: .upperBound, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics)
+            if let tag = tag {
+                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: .upperBound, anchorIndex: .upperBound, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: nil, tag: tag, orderStatistics: orderStatistics)
             } else {
-                signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocationInput, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocationInput, count: count, tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
-        
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
             let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: _chatLocation)
@@ -178,7 +177,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                     canScrollToRead = false
                 }
 
-                if tagMask == nil, case let .thread(message) = _chatLocation, message.isForumPost, view.maxReadIndex == nil {
+                if tag == nil, case let .thread(message) = _chatLocation, message.isForumPost, view.maxReadIndex == nil {
                     if case let .message(index) = view.anchorIndex {
                         //index(index: .message(index), position: .bottom(0.0), directionHint: .Up)
                         scrollPosition = .index(index: .message(index), position: .top(id: AnyHashable(0), innerId: nil, animated: false, focus: .init(focus: false), inset: 0), directionHint: .Up, animated: false)
@@ -186,7 +185,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                 }
 
                 
-                if let maxReadIndex = view.maxReadIndex, tagMask == nil, canScrollToRead {
+                if let maxReadIndex = view.maxReadIndex, tag == nil, canScrollToRead {
                     let aroundIndex = maxReadIndex
                     scrollPosition = .unread(index: maxReadIndex)
                     
@@ -223,7 +222,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                             }
                         }
                     }
-                } else if view.isAddedToChatList, tagMask == nil, let opaqueState = (initialData?.storedInterfaceState).flatMap(_internal_decodeStoredChatInterfaceState) {
+                } else if view.isAddedToChatList, tag == nil, let opaqueState = (initialData?.storedInterfaceState).flatMap(_internal_decodeStoredChatInterfaceState) {
                     
                     let interfaceState = ChatInterfaceState.parse(opaqueState, peerId: _chatLocation.peerId, context: context)
                     
@@ -258,9 +257,9 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         case .history, .thread, .pinned:
             switch searchLocation {
             case let .index(index, _):
-                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: nil, tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
             case let .id(id, _):
-                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocationInput, count: count, ignoreRelatedChats: ignoreRelatedChats, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocationInput, count: count, ignoreRelatedChats: ignoreRelatedChats, messageId: id, tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
@@ -339,7 +338,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch mode {
         case .history, .thread, .pinned:
-            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: fixedCombinedReadStates?(), tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
@@ -366,7 +365,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch mode {
         case .history, .thread, .pinned:
-            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: fixedCombinedReadStates?(), tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
@@ -457,8 +456,8 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
 }
 
 
-func preloadedChatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation: ChatLocation, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>, tagMask: MessageTags?, additionalData: [AdditionalMessageHistoryViewData]) -> Signal<ChatHistoryViewUpdate, NoError> {
-    return (chatHistoryViewForLocation(location, context: context, chatLocation: chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder)
+func preloadedChatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation: ChatLocation, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>, tag: HistoryViewInputTag?, additionalData: [AdditionalMessageHistoryViewData]) -> Signal<ChatHistoryViewUpdate, NoError> {
+    return (chatHistoryViewForLocation(location, context: context, chatLocation: chatLocation, fixedCombinedReadStates: nil, tag: tag, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder)
         |> castError(Bool.self)
         |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
             switch update {
@@ -534,7 +533,7 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubj
                 context: context,
                 chatLocation: .thread(replyThreadMessage),
                 chatLocationContextHolder: chatLocationContextHolder,
-                tagMask: nil,
+                tag: nil,
                 additionalData: []
             )
             return preloadSignal

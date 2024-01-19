@@ -14,18 +14,7 @@ import SwiftSignalKit
 import Postbox
 import RangeSet
 import IOKit.pwr_mgt
-
-extension MediaPlayerStatus {
-    func withUpdatedVolume(_ volume: Float) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: volume, seekId: self.seekId, status: self.status)
-    }
-    func withUpdatedTimestamp(_ timestamp: Double) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
-    }
-    func withUpdatedDuration(_ duration: Double) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
-    }
-}
+import TelegramMedia
 
 enum SVideoStyle {
     case regular

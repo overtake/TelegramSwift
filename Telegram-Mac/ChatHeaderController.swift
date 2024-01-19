@@ -20,15 +20,20 @@ import Localization
 
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
-    
     func remove(animated: Bool)
+}
+
+struct EmojiTag : Equatable {
+    let emoji: String
+    let tag: SavedMessageTags.Tag
+    let file: TelegramMediaFile
 }
 
 
 struct ChatHeaderState : Identifiable, Equatable {
     enum Value : Equatable {
         case none
-        case search(ChatSearchInteractions, Peer?, String?)
+        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag], EmojiTag?)
         case addContact(block: Bool, autoArchived: Bool)
         case requestChat(String, String)
         case shareInfo
@@ -48,6 +53,12 @@ struct ChatHeaderState : Identifiable, Equatable {
                 }
             case let .addContact(block, autoArchive):
                 if case .addContact(block, autoArchive) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .search(_, _, _, tags, selected):
+                if case .search(_, _, _, tags, selected) = rhs {
                     return true
                 } else {
                     return false
@@ -131,8 +142,11 @@ struct ChatHeaderState : Identifiable, Equatable {
         switch main {
         case .none:
             height += 0
-        case .search:
+        case let .search(_, _, _, emojiTags, _):
             height += 44
+            if !emojiTags.isEmpty {
+                height += 35
+            }
         case let .report(_, status):
             if let _ = status {
                 height += 30
@@ -403,7 +417,7 @@ struct ChatSearchInteractions {
     let results:(String)->Void
     let calendarAction:(Date)->Void
     let cancel:()->Void
-    let searchRequest:(String, PeerId?, SearchMessagesState?) -> Signal<([Message], SearchMessagesState?), NoError>
+    let searchRequest:(String, PeerId?, SearchMessagesState?, [EmojiTag]) -> Signal<([Message], SearchMessagesState?), NoError>
 }
 
 private class ChatSponsoredModel: ChatAccessoryModel {
@@ -1304,6 +1318,252 @@ struct SearchMessagesResultState : Equatable {
     }
 }
 
+
+
+private final class ChatSearchTagsView: View {
+    
+    class Arguments {
+        let context: AccountContext
+        let callback: (EmojiTag)->Void
+        init(context: AccountContext, callback: @escaping(EmojiTag)->Void) {
+            self.context = context
+            self.callback = callback
+        }
+    }
+    
+    class Item : TableRowItem {
+        
+        class View : HorizontalRowView {
+            
+            final class TagView: Control {
+                fileprivate private(set) var item: Item?
+                fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
+                private let backgroundView: NinePathImage = NinePathImage()
+                private var countView: TextView? = nil
+                required init(frame frameRect: NSRect) {
+                    super.init(frame: frameRect)
+                    
+                    self.backgroundColor = .clear
+                    self.backgroundView.capInsets = NSEdgeInsets(top: 3, left: 5, bottom: 3, right: 15)
+
+                    
+                    addSubview(backgroundView)
+                    addSubview(imageView)
+
+                    scaleOnClick = true
+                    
+                    self.set(handler: { [weak self] _ in
+                        if let item = self?.item {
+                            item.arguments.callback(item.tag)
+                        }
+                    }, for: .Click)
+                    
+
+                }
+                
+                func update(with item: Item, selected: Bool, animated: Bool) {
+                    self.item = item
+                    
+                    let image = NSImage(named: "Icon_SearchTagTokenBackground")!
+                    let background = NSImage(cgImage: generateTintedImage(image: image._cgImage, color: selected ? theme.colors.accent : theme.colors.grayBackground)!, size: image.size)
+                    
+                    self.backgroundView.image = background
+                    
+                    let layer: InlineStickerItemLayer = .init(account: item.arguments.context.account, file: item.tag.file, size: NSMakeSize(16, 16))
+                    imageView.updateLayer(layer, isLite: true, animated: animated)
+                    
+                    if let layout = item.countViewLayout {
+                        let current: TextView
+                        if let view = self.countView {
+                            current = view
+                        } else {
+                            current = TextView()
+                            current.userInteractionEnabled = false
+                            current.isSelectable = false
+                            addSubview(current)
+                            self.countView = current
+                        }
+                        current.update(layout)
+                    } else if let view = self.countView {
+                        performSubviewRemoval(view, animated: animated)
+                        self.countView = nil
+                    }
+                }
+                
+                deinit {
+                }
+                
+    
+                
+                func getView() -> NSView {
+                    return self.imageView
+                }
+                
+                
+                required init?(coder: NSCoder) {
+                    fatalError("init(coder:) has not been implemented")
+                }
+                
+                func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+                    transition.updateFrame(view: backgroundView, frame: size.bounds)
+                    transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 5))
+                    
+                    if let countView = countView {
+                        transition.updateFrame(view: countView, frame: countView.centerFrameY(x: imageView.frame.maxX + 5))
+                    }
+                   // transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - reactionSize.height) / 2), size: reactionSize))
+                }
+                override func layout() {
+                    super.layout()
+                    updateLayout(size: frame.size, transition: .immediate)
+                }
+            }
+
+            private let tagView: TagView = TagView(frame: NSMakeRect(0, 0, 40, 26))
+            
+            required init(frame frameRect: NSRect) {
+                super.init(frame: frameRect)
+                addSubview(tagView)
+            }
+            
+            required init?(coder: NSCoder) {
+                fatalError("init(coder:) has not been implemented")
+            }
+            
+            override func set(item: TableRowItem, animated: Bool) {
+                super.set(item: item, animated: animated)
+                guard let item = item as? Item else {
+                    return
+                }
+                tagView.setFrameSize(NSMakeSize(item.height - 10, 26))
+                tagView.update(with: item, selected: item.selected, animated: animated)
+            }
+            
+            override var backdorColor: NSColor {
+                return .clear
+            }
+            
+            override func layout() {
+                super.layout()
+                tagView.center()
+            }
+        }
+        
+        override func viewClass() -> AnyClass {
+            return View.self
+        }
+        
+        override var width: CGFloat {
+            return 40
+        }
+        override var height: CGFloat {
+            return 50 + (countViewLayout != nil ? countViewLayout!.layoutSize.width + 10 : 0)
+        }
+        
+        fileprivate let tag: EmojiTag
+        fileprivate let arguments: Arguments
+        fileprivate let selected: Bool
+        fileprivate let countViewLayout: TextViewLayout?
+        init(_ initialSize: NSSize, stableId: AnyHashable, tag: EmojiTag, selected: Bool, arguments: Arguments) {
+            self.tag = tag
+            self.selected = selected
+            self.arguments = arguments
+            if tag.tag.count > 0 {
+                let layout = TextViewLayout(.initialize(string: "\(tag.tag.count)", color: selected ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.text)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                self.countViewLayout = layout
+            } else {
+                self.countViewLayout = nil
+            }
+            super.init(initialSize, stableId: stableId)
+        }
+    }
+    
+    struct EmojiTagEntry : TableItemListNodeEntry {
+        static func < (lhs: ChatSearchTagsView.EmojiTagEntry, rhs: ChatSearchTagsView.EmojiTagEntry) -> Bool {
+            return lhs.index < rhs.index
+        }
+        
+        let tag: EmojiTag
+        let index: Int
+        let theme: TelegramPresentationTheme
+        let selected: Bool
+        func item(_ arguments: ChatSearchTagsView.Arguments, initialSize: NSSize) -> TableRowItem {
+            return Item(initialSize, stableId: self.stableId, tag: self.tag, selected: selected, arguments: arguments)
+        }
+        
+        var stableId: AnyHashable {
+            return tag.file.fileId
+        }
+    }
+    
+    private let tableView = HorizontalTableView(frame: .zero)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    var selected: [EmojiTag] = [] {
+        didSet {
+            self.updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        tableView.frame = bounds
+    }
+    
+    private var entries: [EmojiTagEntry] = []
+    private var context: AccountContext?
+    private var callback:((EmojiTag)->Void)?
+    private var tags: [EmojiTag] = []
+    
+    func set(tags: [EmojiTag], context: AccountContext, animated: Bool, callback: @escaping(EmojiTag)->Void) {
+        
+        self.tags = tags
+        self.context = context
+        self.callback = callback
+        let arguments = Arguments(context: context, callback: callback)
+        
+        var entries: [EmojiTagEntry] = []
+        var index: Int = 0
+        for tag in tags {
+            entries.append(.init(tag: tag, index: index, theme: theme, selected: self.selected.contains(tag)))
+            index += 1
+        }
+        
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.entries, rightList: entries)
+        
+        for rdx in deleteIndices.reversed() {
+            tableView.remove(at: rdx, animation: animated ? .effectFade : .none)
+            self.entries.remove(at: rdx)
+        }
+        
+        for (idx, item, _) in indicesAndItems {
+            _ = tableView.insert(item: item.item(arguments, initialSize: frame.size), at: idx, animation: animated ? .effectFade : .none)
+            self.entries.insert(item, at: idx)
+        }
+        for (idx, item, _) in updateIndices {
+            let item = item
+            tableView.replace(item: item.item(arguments, initialSize: frame.size), at: idx, animated: animated)
+            self.entries[idx] = item
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        if let context = self.context, let callback = self.callback {
+            self.set(tags: self.tags, context: context, animated: false, callback: callback)
+        }
+    }
+}
+
 class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     private let searchView:ChatSearchView = ChatSearchView(frame: NSZeroRect)
@@ -1313,6 +1573,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     private let prev:ImageButton = ImageButton()
     private let next:ImageButton = ImageButton()
+    
+    private let searchContainer = View()
+    
+    private var tagsView: ChatSearchTagsView?
 
     
     private let separator:View = View()
@@ -1333,7 +1597,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
         switch state.main {
-        case let .search(interactions, _, initialString):
+        case let .search(interactions, _, initialString, _, _):
             self.interactions = interactions
             self.parentInteractions = chatInteraction
             self.calendarController = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
@@ -1365,7 +1629,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         
      
 
-        initialize()
+        initialize(state)
         
 
         
@@ -1376,7 +1640,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             self?.searchView.isLoading = loading
         }))
         switch state.main {
-        case let .search(_, initialPeer, _):
+        case let .search(_, initialPeer, _, _, _):
             if let initialPeer = initialPeer {
                 self.chatInteraction.movePeerToInput(initialPeer)
             }
@@ -1393,11 +1657,6 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         self.parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
     }
     
-    
-    func update(with state: ChatHeaderState, animated: Bool) {
-        
-    }
-
     
     func applySearchResponder(_ animated: Bool = false) {
        // _ = window?.makeFirstResponder(searchView.input)
@@ -1526,6 +1785,20 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                             }
                         }
                     }
+                case .emojiTag:
+                    from.isHidden = true
+                    calendar.isHidden = true
+                    searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
+                    needsLayout = true
+                //    self.tagsView?.selected = tag
+                    inputInteraction.update(animated: animated, { state in
+                        return state.updatedInputQueryResult { previousResult in
+                            let result = state.searchState.responder ? state.messages : ([], nil)
+                            return .searchMessages((result.0, result.1, { searchMessagesState in
+                                stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
+                            }), [], state.searchState.request)
+                        }
+                    })
                 }
             }
         }
@@ -1543,7 +1816,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     
     
-    private func initialize() {
+    private func initialize(_ state: ChatHeaderState) {
         self.from.isHidden = !fromAbility
         
         _ = self.searchView.tokenPromise.get().start(next: { [weak self] state in
@@ -1581,6 +1854,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     self.parentInteractions.loadingMessage.set(.single(true))
                     self.query.set(SearchStateQuery(state.request, nil))
                 }
+            case .emojiTag:
+                self.parentInteractions.updateSearchRequest(SearchMessagesResultState(state.request, []))
+                self.parentInteractions.loadingMessage.set(.single(true))
+                self.query.set(SearchStateQuery(state.request, nil))
             }
             
         }, responderModified: { [weak self] state in
@@ -1604,6 +1881,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     
                     guard let `self` = self else { return .single(([], nil, "")) }
                     
+                    var request = query
+                    
+                    var tags: [EmojiTag] = []
+                    
                     let emptyRequest: Bool
                     if case .from = self.inputInteraction.state.tokenState {
                         emptyRequest = true
@@ -1611,10 +1892,9 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                         emptyRequest = !query.isEmpty
                     }
                     if emptyRequest {
-                        return self.interactions.searchRequest(query, self.inputInteraction.state.peerId, state) |> map { ($0.0, $0.1, query) }
-                    } else {
-                        return .single(([], nil, ""))
+                        return self.interactions.searchRequest(request, self.inputInteraction.state.peerId, state, tags) |> map { ($0.0, $0.1, request) }
                     }
+                    return .single(([], nil, ""))
                 }
             } else {
                 return .single(([], nil, ""))
@@ -1628,6 +1908,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             self.parentInteractions.loadingMessage.set(.single(false))
         }))
         
+        
         next.autohighlight = false
         prev.autohighlight = false
 
@@ -1635,14 +1916,14 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
 
         _ = calendar.sizeToFit()
         
-        addSubview(next)
-        addSubview(prev)
+        searchContainer.addSubview(next)
+        searchContainer.addSubview(prev)
 
         
-        addSubview(from)
+        searchContainer.addSubview(from)
         
         
-        addSubview(calendar)
+        searchContainer.addSubview(calendar)
         
         calendar.isHidden = !calendarAbility
         
@@ -1676,11 +1957,60 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             showPopover(for: calendar, with: self.calendarController, edge: .maxY, inset: NSMakePoint(-160, -40))
         }, for: .Click)
 
-        addSubview(searchView)
-        addSubview(cancel)
+        searchContainer.addSubview(searchView)
+        searchContainer.addSubview(cancel)
+        
+        addSubview(searchContainer)
         addSubview(separator)
         
         updateLocalizationAndTheme(theme: theme)
+        
+        self.update(with: state, animated: false)
+    }
+    
+    
+    func update(with state: ChatHeaderState, animated: Bool) {
+        
+        switch state.main {
+        case let .search(_, _, _, tags, tag):
+            if !tags.isEmpty {
+                let current: ChatSearchTagsView
+                if let view = self.tagsView {
+                    current = view
+                } else {
+                    current = ChatSearchTagsView(frame: NSMakeRect(0, 39, frame.width, 40))
+                    self.tagsView = current
+                    addSubview(current, positioned: .below, relativeTo: separator)
+                }
+                current.selected = tag.flatMap { [$0] } ?? []
+                
+                if let tag = tag {
+                    self.searchView.completeEmojiToken(tag, context: parentInteractions.context)
+                } else {
+                    self.searchView.cancelEmojiToken()
+                }
+                
+                if current.selected.isEmpty {
+                    self.parentInteractions.setLocationTag(nil)
+                }
+                
+                current.set(tags: tags, context: chatInteraction.context, animated: false, callback: { [weak self] selected in
+                    if let `self` = self {
+                        if selected.tag.reaction == self.tagsView?.selected.first?.tag.reaction {
+                            self.parentInteractions.setLocationTag(nil)
+                        } else {
+                            self.parentInteractions.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: selected.tag.reaction)))
+                        }
+                    }
+                })
+            } else if let tagsView = tagsView {
+                performSubviewRemoval(tagsView, animated: false)
+                self.tagsView = nil
+                self.searchView.cancelEmojiToken()
+            }
+        default:
+            fatalError()
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1738,6 +2068,8 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     override func layout() {
         super.layout()
         
+        searchContainer.frame = NSMakeRect(0, 0, frame.width, 44)
+        
         
         prev.centerY(x:10)
         next.centerY(x:prev.frame.maxX)
@@ -1752,6 +2084,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         
         from.centerY(x: searchView.frame.maxX + 20)
         calendar.centerY(x: (from.isHidden ? searchView : from).frame.maxX + 20)
+        
+        if let tagsView = tagsView {
+            tagsView.frame = NSMakeRect(0, searchContainer.frame.maxY - 5, frame.width, 40)
+        }
 
     }
     
@@ -1786,15 +2122,15 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(frame frameRect: NSRect, interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
-        self.interactions = interactions
-        self.chatInteraction = chatInteraction
-        self.parentInteractions = chatInteraction
-        self.inputContextHelper = InputContextHelper(chatInteraction: chatInteraction, highlightInsteadOfSelect: true)
-        self.calendarController = CalendarController(NSMakeRect(0,0,300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
-        super.init(frame: frameRect)
-        initialize()
-    }
+//    init(frame frameRect: NSRect, interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
+//        self.interactions = interactions
+//        self.chatInteraction = chatInteraction
+//        self.parentInteractions = chatInteraction
+//        self.inputContextHelper = InputContextHelper(chatInteraction: chatInteraction, highlightInsteadOfSelect: true)
+//        self.calendarController = CalendarController(NSMakeRect(0,0,300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
+//        super.init(frame: frameRect)
+//        initialize()
+//    }
     
     required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")

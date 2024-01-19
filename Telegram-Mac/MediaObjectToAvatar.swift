@@ -18,6 +18,7 @@ import Postbox
 import ColorPalette
 import ThemeSettings
 import ObjcUtils
+import TelegramMedia
 
 private func buffer(from image: CGImage, zoom: CGFloat = 1.0, offset: CGPoint = .zero, background: CGImage? = nil) -> CVPixelBuffer? {
     let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary

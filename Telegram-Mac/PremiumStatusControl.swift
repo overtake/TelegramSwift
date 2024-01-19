@@ -13,6 +13,8 @@ import TelegramCore
 import Postbox
 import QuartzCore
 import AppKit
+import TelegramMedia
+
 
 final class PremiumStatusControl : Control {
     private var imageLayer: SimpleLayer?
@@ -155,9 +157,9 @@ final class PremiumStatusControl : Control {
             if let layer = self.animateLayer, layer.file?.fileId.id == fileId && !updated {
                 current = layer
                 if isDefaultStatusesPackId(layer.file?.emojiReference), color != nil {
-                    self.layer?.opacity = 1.0
+                    self.layer?.opacity = Float(alphaValue)
                 } else {
-                    self.layer?.opacity = 1.0
+                    self.layer?.opacity = Float(alphaValue)
                 }
                 
             } else {
@@ -172,11 +174,14 @@ final class PremiumStatusControl : Control {
                 }
                 current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig && !playTwice ? .loop : .playCount(2), checkStatus: true, getColors: getColors)
                 
-                current.fileDidUpdate = { file in
+                current.fileDidUpdate = { [weak self] file in
+                    guard let `self` = self else {
+                        return
+                    }
                     if isDefaultStatusesPackId(file?.emojiReference), color != nil {
                         self.layer?.opacity = 0.4
                     } else {
-                        self.layer?.opacity = 1.0
+                        self.layer?.opacity = Float(self.alphaValue)
                     }
                 }
                 current.fileDidUpdate?(current.file)

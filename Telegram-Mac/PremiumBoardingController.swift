@@ -13,6 +13,7 @@ import TelegramCore
 import Postbox
 import InAppPurchaseManager
 import CurrencyFormat
+import MediaPlayer
 
 struct PremiumEmojiStatusInfo : Equatable {
     let status: PeerEmojiStatus
@@ -59,6 +60,8 @@ enum PremiumLogEventsSource : Equatable {
     case channel_boost(PeerId)
     case no_ads
     case recommended_channels
+    case last_seen
+    case messages_privacy
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -99,6 +102,10 @@ enum PremiumLogEventsSource : Equatable {
             return "no_ads"
         case .recommended_channels:
             return "recommended_channels"
+        case .last_seen:
+            return "last_seen"
+        case .messages_privacy:
+            return "messages_privacy"
         }
     }
     
@@ -137,6 +144,10 @@ enum PremiumLogEventsSource : Equatable {
         case .no_ads:
             return .no_ads
         case .recommended_channels:
+            return nil
+        case .last_seen:
+            return nil
+        case .messages_privacy:
             return nil
         }
     }
@@ -931,6 +942,10 @@ final class PremiumBoardingController : ModalViewController {
         self.openFeatures = openFeatures
         self.presentation = presentation
         super.init(frame: NSMakeRect(0, 0, 380, 530))
+    }
+    
+    override var hasBorder: Bool {
+        return false
     }
     
     override func measure(size: NSSize) {

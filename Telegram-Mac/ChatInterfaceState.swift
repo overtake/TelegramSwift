@@ -497,8 +497,13 @@ final class ChatTextInputState: Codable, Equatable {
                 offset += symbols.count
 
                 if !language.isEmpty {
-                    string.insert(.initialize(string: language + "\n"), at: pre.lowerBound + offset)
-                    offset += language.length + 1
+                    if string.string.nsstring.substring(with: NSMakeRange(pre.lowerBound + offset, 1)) == "\n" {
+                        string.insert(.initialize(string: language), at: pre.lowerBound + offset)
+                        offset += language.length
+                    } else {
+                        string.insert(.initialize(string: language + "\n"), at: pre.lowerBound + offset)
+                        offset += language.length + 1
+                    }
                 }
                 string.insert(.initialize(string: symbols), at: pre.upperBound + offset)
                 offset += symbols.count
@@ -572,7 +577,7 @@ final class ChatTextInputState: Codable, Equatable {
                             if test.length == lang.length {
                                 language = lang
                                 offsetRanges.append(NSMakeRange(newLineRange.location, lang.length))
-                                text = String(text.suffix(text.length - newLineRange.location))
+                                text = String(text.nsstring.substring(with: NSMakeRange(newLineRange.location, text.length - newLineRange.location)))
                                 rawOffset -= newLineRange.location
                             }
                         }
@@ -706,9 +711,11 @@ final class ChatTextInputState: Codable, Equatable {
             let symbolLength = oldLength - newLength
             
             for (i, attr) in attributes.enumerated() {
-                let updated: ChatTextInputAttribute
-                updated = attr.updateRange(attr.range.lowerBound ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound))
-                attributes[i] = updated
+                if attr.range.upperBound == oldLength {
+                    let updated: ChatTextInputAttribute
+                    updated = attr.updateRange(attr.range.lowerBound ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound))
+                    attributes[i] = updated
+                }
             }
         }
     

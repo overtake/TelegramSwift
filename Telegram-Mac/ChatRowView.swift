@@ -1386,7 +1386,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillReactions(_ item: ChatRowItem, animated: Bool) {
-        if let reactionsLayout = item.reactionsLayout, reactionsLayout.mode == .full  {
+        if let reactionsLayout = item.reactionsLayout  {
             if reactionsView == nil {
                 reactionsView = ChatReactionsView(frame: reactionsRect(item))
                 rowView.addSubview(reactionsView!)
