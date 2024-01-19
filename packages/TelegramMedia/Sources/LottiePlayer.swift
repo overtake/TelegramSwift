@@ -219,7 +219,7 @@ private final class RenderFpsLoop {
     }
     
     private let duration: Double
-    private var timer: SwiftSignalKit.Timer?
+    private var timer: SharedDisplayLinkDriver.Link?
     private let values:QueueLocalObject<Values>
     private let queue: Queue
     init(duration: Double, queue: Queue) {
@@ -231,11 +231,14 @@ private final class RenderFpsLoop {
             return .init()
         })
         
-        self.timer = .init(timeout: duration, repeat: true, completion: { [weak self] in
+        self.timer = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(30), { [weak self] _ in
             self?.loop()
-        }, queue: queue)
+        })
         
-        self.timer?.start()
+    }
+    
+    deinit {
+        timer?.invalidate()
     }
     
     private func loop() {
@@ -250,16 +253,21 @@ private final class RenderFpsLoop {
     }
     
     func remove(_ token: RenderFpsToken) -> Bool {
-        return self.values.syncWith { current in
+        let empty = self.values.syncWith { current in
             current.values.removeValue(forKey: token)
             return current.values.isEmpty
         }
+        self.timer?.isPaused = empty
+        
+        return empty
     }
     
     func add(_ token: RenderFpsToken, callback: @escaping()->Void) {
-        self.values.with { current in
+        let isEmpty = self.values.syncWith { current in
             current.values[token] = .init(callback: callback)
+            return current.values.isEmpty
         }
+        self.timer?.isPaused = isEmpty
     }
 }
 

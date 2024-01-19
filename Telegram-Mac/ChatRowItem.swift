@@ -2189,7 +2189,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if attribute.messageId == attribute.threadMessageId || attribute.messageId == threadId, chatInteraction.mode.isThreadMode {
+                    if attribute.messageId == attribute.threadMessageId || attribute.messageId == threadId, chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode {
                         ignore = true
                     }
                     
