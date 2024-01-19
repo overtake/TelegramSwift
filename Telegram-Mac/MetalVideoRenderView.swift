@@ -212,6 +212,24 @@ private final class AdaptedCallVideoSource: VideoSource {
             AdaptedCallVideoSource.queue.async { [weak self] in
                 let output: Output
                 switch videoFrameData.buffer {
+                case let .argb(nativeBuffer):
+                    let width = CVPixelBufferGetWidth(nativeBuffer.pixelBuffer)
+                    let height = CVPixelBufferGetHeight(nativeBuffer.pixelBuffer)
+                    
+                    var cvMetalTexture: CVMetalTexture?
+                    var status = CVMetalTextureCacheCreateTextureFromImage(nil, textureCache, nativeBuffer.pixelBuffer, nil, .rgba8Unorm, width, height, 0, &cvMetalTexture)
+                    guard status == kCVReturnSuccess, let rgbaTexture = CVMetalTextureGetTexture(cvMetalTexture!) else {
+                        return
+                    }
+                    output = Output(
+                        resolution: CGSize(width: CGFloat(rgbaTexture.width), height: CGFloat(rgbaTexture.height)),
+                        textureLayout: .bgra(Output.BGRATextureLayout(bgra: rgbaTexture)),
+                        dataBuffer: Output.NativeDataBuffer(pixelBuffer: nativeBuffer.pixelBuffer),
+                        rotationAngle: rotationAngle,
+                        followsDeviceOrientation: followsDeviceOrientation,
+                        mirrorDirection: mirrorDirection,
+                        sourceId: sourceId
+                    )
                 case let .bgra(nativeBuffer):
                     let width = CVPixelBufferGetWidth(nativeBuffer.pixelBuffer)
                     let height = CVPixelBufferGetHeight(nativeBuffer.pixelBuffer)
