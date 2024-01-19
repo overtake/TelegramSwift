@@ -773,16 +773,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: chatInteraction.mode.isSavedMessagesThread)
             
             if chatInteraction.mode == .pinned {
-                result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0))
-                status = nil
+                result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0)).withUpdatedStatus("")
             } else if chatInteraction.mode == .scheduled {
                 result = result.withUpdatedTitle(strings().chatTitleScheduledMessages)
             } else if case let .thread(data, mode) = chatInteraction.mode {
                 switch mode {
                 case .comments:
-                    result = result.withUpdatedTitle(strings().chatTitleCommentsCountable(Int(self.counters.replies ?? 0)))
+                    result = result.withUpdatedTitle(strings().chatTitleDiscussion).withUpdatedStatus(strings().chatTitleCommentsCountable(Int(self.counters.replies ?? 0)))
                 case .replies:
-                    result = result.withUpdatedTitle(strings().chatTitleRepliesCountable(Int(self.counters.replies ?? 0)))
+                    result = result.withUpdatedTitle(strings().chatTitleDiscussion).withUpdatedStatus(strings().chatTitleRepliesCountable(Int(self.counters.replies ?? 0)))
                 case .topic:
                     if let count = self.counters.replies, count > 0 {
                         result = result
@@ -817,8 +816,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             }
             
-            if (status == nil || !status!.isEqual(to: result.status) || force) && chatInteraction.mode != .scheduled && !chatInteraction.mode.isThreadMode && chatInteraction.mode != .pinned {
-                status = result.status
+            if (status == nil || !status!.isEqual(to: result.status) || force) {
+                status = result.status.string.isEmpty ? nil : result.status
             }
             switch connectionStatus {
             case let .connecting(proxy, _):

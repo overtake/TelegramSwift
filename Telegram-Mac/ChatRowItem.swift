@@ -2186,22 +2186,24 @@ class ChatRowItem: TableRowItem {
             let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? theme.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  theme.colors.grayForeground : theme.colors.background, colors: theme.chat.replyTitle(self), enabledText: theme.chat.replyText(self), disabledText: theme.chat.replyDisabledText(self), quoteIcon: theme.chat.replyQuote(self), pattern: theme.chat.replyPattern(self), app: theme)
 
             for attribute in message.attributes {
-                if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
+                if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if let threadId = message.threadId, threadId == attribute.messageId.id, chatInteraction.mode.isThreadMode {
+                    if attribute.messageId == attribute.threadMessageId || attribute.messageId == threadId, chatInteraction.mode.isThreadMode {
                         ignore = true
                     }
-              
                     
                     if message.media.first is TelegramMediaGiveawayResults {
                         ignore = true
                     }
                     if !ignore {
+                        
+                        let isQuote = attribute.isQuote
+                        
                         if replyMessage.isExpiredStory, let media = replyMessage.media.first as? TelegramMediaStory {
                             self.replyModel = ExpiredStoryReplyModel(message: message, storyId: media.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
                         } else {
-                            self.replyModel = ReplyModel(message: message, replyMessageId: attribute.messageId, context: context, replyMessage: replyMessage, quote: attribute.quote, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
+                            self.replyModel = ReplyModel(message: message, replyMessageId: attribute.messageId, context: context, replyMessage: replyMessage, quote: isQuote ? attribute.quote : nil, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
                         }
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
@@ -2212,14 +2214,10 @@ class ChatRowItem: TableRowItem {
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
                 }
-                if let attribute = attribute as? QuotedReplyMessageAttribute, self.replyModel == nil {
-                    let replyMessage: Message?
-                    if let replyAttr = message.replyAttribute, let message = message.associatedMessages[replyAttr.messageId] {
-                        replyMessage = message
-                    } else {
-                        replyMessage = nil
-                    }
-                    self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: replyMessage ?? message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
+                if let attribute = attribute as? QuotedReplyMessageAttribute, self.replyModel == nil, message.replyAttribute == nil {
+                                        
+                    self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
+                    
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
                     let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
