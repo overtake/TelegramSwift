@@ -218,9 +218,10 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
         }
     }
     
-    private func stop() {
+    func stop() {
         device = nil
         assert(queue.isCurrent())
+        
         
         self.paused = true
         
@@ -230,6 +231,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
             status = AudioUnitUninitialize(audioUnit)
             status = AudioComponentInstanceDispose(audioUnit)
         }
+        removeAudioUnitHolder(self.id)
 
     }
     
@@ -344,6 +346,12 @@ final class MicroListenerContext {
     init(devices:DevicesContext, accountManager: AccountManager<TelegramAccountManagerTypes>) {
         contextRef = .init(queue: queue, generate: {
             return MicroListenerContextObject(queue: queue, devices: devices, accountManager: accountManager)
+        })
+    }
+    
+    deinit {
+        contextRef.syncWith({
+            $0.stop()
         })
     }
     
