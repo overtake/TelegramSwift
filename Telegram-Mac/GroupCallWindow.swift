@@ -218,7 +218,7 @@ struct GroupCallTheme {
         NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(GroupCallTheme.customTheme.accentColor)
     }
     static var hide_peers: CGImage {
-        NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
+        NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
     }
 
     static let smallTableWidth: CGFloat = 160
