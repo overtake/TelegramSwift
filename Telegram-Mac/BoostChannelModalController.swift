@@ -996,7 +996,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
 
     
-    if let nextLevels = nextLevels, state.infoOnly {
+    if let nextLevels = nextLevels {
         for level in nextLevels {
             var perks: [BoostChannelPerk] = []
             perks.append(.story(level))

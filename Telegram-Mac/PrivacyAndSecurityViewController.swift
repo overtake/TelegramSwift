@@ -362,9 +362,9 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 arguments.openVoiceCallPrivacy()
             })
         case let .voiceMessagesPrivacy(_, text, locked, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsVoiceMessages, type: .nextContext(text), viewType: viewType, action: arguments.openVoicePrivacy, rightIcon: locked ? theme.icons.premium_lock_gray : nil)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsVoiceMessages, type: .nextContext(text), viewType: viewType, action: arguments.openVoicePrivacy)
         case let .messagesPrivacy(_, text, locked, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsMessages, type: .nextContext(text), viewType: viewType, action: arguments.openMessagesPrivacy, rightIcon: locked ? theme.icons.premium_lock_gray : nil)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsMessages, type: .nextContext(text), viewType: viewType, action: arguments.openMessagesPrivacy)
         case let .bioPrivacy(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsBio, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openBioPrivacy()
@@ -903,13 +903,13 @@ class PrivacyAndSecurityViewController: TableViewController {
             }))
         }, openVoicePrivacy: {
             
-            if !context.isPremium {
-                showModalText(for: context.window, text: strings().privacySettingsVoicePremiumError, button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
-                })
-                return
-            }
-            
+//            if !context.isPremium {
+//                showModalText(for: context.window, text: strings().privacySettingsVoicePremiumError, button: strings().alertLearnMore, callback: { _ in
+//                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+//                })
+//                return
+//            }
+//            
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue

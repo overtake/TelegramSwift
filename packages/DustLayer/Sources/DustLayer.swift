@@ -338,7 +338,7 @@ public func ApplyDustAnimation(for currentView: NSView) {
     guard let window = currentView.window else {
         return
     }
-    #if arch(arm64) && (DEBUG || BETA)
+    #if arch(arm64)
 //    if MetalEngine.shared.rootLayer.superlayer == nil {
     window.contentView?.layer?.addSublayer(MetalEngine.shared.rootLayer)
 //    }
@@ -362,7 +362,7 @@ public func ApplyDustAnimations(for views: [NSView], superview: DustLayerView? =
     guard let window = views.first?.window else {
         return nil
     }
-    #if arch(arm64) && (DEBUG || BETA)
+    #if arch(arm64)
     window.contentView?.layer?.addSublayer(MetalEngine.shared.rootLayer)
 
 
