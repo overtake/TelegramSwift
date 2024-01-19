@@ -20,6 +20,10 @@ private final class DrawLayer: SimpleLayer {
         }
     }
     
+    override init(layer: Any) {
+        super.init(layer: layer)
+    }
+    
     override init() {
         super.init()
     }

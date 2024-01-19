@@ -2789,11 +2789,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 autofinish = optimized >= StoryListChatListRowItem.InterfaceState.small
             }
             
+            let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
+            
             if autofinish  {
                 initFromEvent = nil
                 scrollPositions = [-1000, 1000]
             }
             let progress: CGFloat = max(0.0, min(1.0 - optimized / StoryListChatListRowItem.InterfaceState.small, 1.0))
+            let animated = progress != 0
             if autofinish {
                 switch storyInterfaceState {
                 case let .progress(_, from, _):
@@ -2805,9 +2808,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         storyInterfaceState = .revealed
                     }
                     CATransaction.begin()
-                    self.genericView.tableView.reloadData(row: item.index, animated: true)
-                    self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+                    self.genericView.updateLayout(frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+                    
+                    self.genericView.tableView.reloadData(row: item.index, animated: animated)
                     CATransaction.commit()
+                    
                     return false
                 default:
                     return false
