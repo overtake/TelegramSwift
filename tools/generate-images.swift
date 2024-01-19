@@ -915,6 +915,8 @@ func initialize() -> [String] {
     
     array.append("chat_hidden_author")
     array.append("chat_my_notes")
+    
+    array.append("premium_required_forward")
 
     return array
 }

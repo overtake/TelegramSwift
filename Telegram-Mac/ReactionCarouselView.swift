@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import AppKit
+import TelegramMedia
 
 private final class ReactionView : Control {
             

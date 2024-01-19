@@ -40,6 +40,7 @@ class ChatInputView: View, Notifable {
     private var messageActionsPanelView:MessageActionsPanelView?
     private var recordingPanelView:ChatInputRecordingView?
     private var blockedActionView:TextButton?
+    private var blockText: View?
     private var additionBlockedActionView: ImageButton?
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
@@ -285,9 +286,7 @@ class ChatInputView: View, Notifable {
         backgroundColor = theme.colors.background
         contentView.backgroundColor = theme.colors.background
         actionsView.backgroundColor = theme.colors.background
-        blockedActionView?.disableActions()
         chatDiscussionView?.updateLocalizationAndTheme(theme: theme)
-        blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
         self.needUpdateReplyMarkup(with: chatInteraction.presentation, false)
@@ -295,6 +294,9 @@ class ChatInputView: View, Notifable {
         accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
         accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
+        
+        blockText?.backgroundColor = theme.colors.background
+        
         let myPeerColor = chatInteraction.context.myPeer?.nameColor
         let colors: PeerNameColors.Colors
         if let myPeerColor = myPeerColor {
@@ -415,6 +417,10 @@ class ChatInputView: View, Notifable {
         restrictedView = nil
         messageActionsPanelView?.removeFromSuperview()
         messageActionsPanelView = nil
+        
+        blockText?.removeFromSuperview()
+        blockText = nil
+        
         textView.isHidden = false
         
         let chatInteraction = self.chatInteraction
@@ -435,8 +441,35 @@ class ChatInputView: View, Notifable {
             self.contentView.change(opacity: 0.0, animated: animated)
             self.accessory.change(opacity: 0.0, animated: animated)
             break
-        case .block(_):
-            break
+        case let .block(string):
+            if !string.isEmpty {
+                let current = Control(frame: NSMakeRect(0, 0, frame.width, frame.height - 1))
+                current.backgroundColor = theme.colors.background
+                addSubview(current)
+                self.blockText = current
+                
+                let context = chatInteraction.context
+                
+                let textView = TextView()
+                textView.isSelectable = false
+                
+                let parsed = parseMarkdownIntoAttributedString(string, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.link), linkAttribute: { link in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
+                        if value == "premium" {
+                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                        }
+                    }))
+                })).detectBold(with: .medium(.text))
+                let layout = TextViewLayout(parsed, alignment: .center)
+                layout.measure(width: frame.width - 40)
+                layout.interactions = globalLinkExecutor
+                textView.update(layout)
+                
+                current.addSubview(textView)
+            } else if let view = blockText {
+                performSubviewRemoval(view, animated: animated)
+                blockText = nil
+            }
         case let .action(text, action, addition):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
@@ -569,10 +602,14 @@ class ChatInputView: View, Notifable {
         
         if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText), state.state == .normal {
             textView.inputView.isEditable = false
+            textView.isHidden = false
         } else {
             switch state.state {
             case .normal, .editing:
                 textView.inputView.isEditable = true
+                textView.isHidden = false
+            case let .block(string):
+                textView.isHidden = !string.isEmpty
             default:
                 textView.inputView.isEditable = false
             }
@@ -701,6 +738,13 @@ class ChatInputView: View, Notifable {
             markup.measureSize(keyboardWidth)
             transition.updateFrame(view: view, frame: NSMakeRect(0, 0, markup.size.width, markup.size.height))
             markup.layout(transition: transition)
+        }
+        
+        if let current = self.blockText {
+            transition.updateFrame(view: current, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, size.height - 1)))
+            if let subview = current.subviews.first {
+                transition.updateFrame(view: subview, frame: subview.centerFrame())
+            }
         }
         
         transition.updateFrame(view: attachView, frame: NSMakeRect(leftInset, 0, attachView.frame.width, attachView.frame.height))

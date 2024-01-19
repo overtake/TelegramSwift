@@ -338,7 +338,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if let reactions = self.reactionsLayout, reactions.mode == .full {
+        if let reactions = self.reactionsLayout {
             height += defaultReactionsInset
             height += reactions.size.height
         }
@@ -1541,7 +1541,7 @@ class ChatRowItem: TableRowItem {
             if unsupported {
                 return nil
             }
-            let reactions = message.effectiveReactions(context.peerId)
+            let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == chatInteraction.peerId)
             let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
@@ -1549,6 +1549,8 @@ class ChatRowItem: TableRowItem {
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId, source: .reaction(message.id))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
+                }, tagAction: { [weak chatInteraction] reaction in
+                    chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction)))
                 })
                 
                 _reactionsLayout = layout
@@ -2187,9 +2189,11 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if let threadId = message.threadId, threadId == attribute.messageId.id, message.associatedThreadInfo != nil {
+                    if let threadId = message.threadId, threadId == attribute.messageId.id, chatInteraction.mode.isThreadMode {
                         ignore = true
                     }
+              
+                    
                     if message.media.first is TelegramMediaGiveawayResults {
                         ignore = true
                     }
@@ -2337,7 +2341,7 @@ class ChatRowItem: TableRowItem {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
-                    if let media = message.media.first, media is TelegramMediaImage || media.isVideoFile {
+                    if let media = message.media.first, media is TelegramMediaImage || (media.isVideoFile && !media.isInstantVideo) {
                         return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
                     }
                 }
@@ -2452,15 +2456,7 @@ class ChatRowItem: TableRowItem {
         channelViews?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
         replyCount?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
        
-        if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .short:
-                reactions.measure(for: .greatestFiniteMagnitude)
-            default:
-                break
-            }
-        }
-        
+       
         self.rightFrames = ChatRightView.Frames(self, size: NSMakeSize(.greatestFiniteMagnitude, rightHeight))
         
         var widthForContent: CGFloat = blockWidth
@@ -2482,27 +2478,22 @@ class ChatRowItem: TableRowItem {
         }
         
         if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .full:
-                if isBubbled {
-                    if !hasBubble {
-                        reactions.measure(for: min(320, blockWidth))
-                    } else if reactions.presentation.isOutOfBounds {
-                        reactions.measure(for: _contentSize.width + 40)
-                    } else {
-                        var w = widthForContent
-                        if let item = self as? ChatMessageItem {
-                            if item.webpageLayout != nil {
-                                w = _contentSize.width
-                            }
-                        }
-                        reactions.measure(for: w)
-                    }
+            if isBubbled {
+                if !hasBubble {
+                    reactions.measure(for: min(320, blockWidth))
+                } else if reactions.presentation.isOutOfBounds {
+                    reactions.measure(for: _contentSize.width + 40)
                 } else {
-                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+                    var w = widthForContent
+                    if let item = self as? ChatMessageItem {
+                        if item.webpageLayout != nil {
+                            w = _contentSize.width
+                        }
+                    }
+                    reactions.measure(for: w)
                 }
-            default:
-                break
+            } else {
+                reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
             }
         }
        
@@ -2748,7 +2739,7 @@ class ChatRowItem: TableRowItem {
 
         
         if let reactions = self.reactionsLayout {
-            if reactions.presentation.isOutOfBounds, reactions.mode == .full {
+            if reactions.presentation.isOutOfBounds {
                 rect.size.height -= defaultReactionsInset
                 rect.size.height -= reactions.size.height
             }
@@ -2792,7 +2783,7 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(rect.width, topicLinkWidth + bubbleDefaultInnerInset)
 
-        if let reactions = reactionsLayout, reactions.mode == .full, !reactions.presentation.isOutOfBounds {
+        if let reactions = reactionsLayout, !reactions.presentation.isOutOfBounds {
             rect.size.width = max(reactions.size.width + bubbleDefaultInnerInset, rect.width)
         }
         
@@ -3039,7 +3030,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
             if let reaction = reaction {
-                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate()))
+                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate(), isTags: context.peerId == message.id.peerId))
             }
         }
         return false
@@ -3068,24 +3059,27 @@ class ChatRowItem: TableRowItem {
             }
             |> take(1)
             
-            var orderedItemListCollectionIds: [Int32] = []
+            let isTags = context.peerId == peerId && tagsGloballyEnabled
+
             
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
-     
-            let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.emojies_reactions |> map { view in
+            
+            let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.top_reactions |> map { view in
                 
                 var recentReactionsView: OrderedItemListView?
                 var topReactionsView: OrderedItemListView?
+                var defaultTagReactions: OrderedItemListView?
                 for orderedView in view.orderedItemListsViews {
                     if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
                         recentReactionsView = orderedView
                     } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
                         topReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                        defaultTagReactions = orderedView
                     }
                 }
                 var recentReactionsItems:[RecentReactionItem] = []
                 var topReactionsItems:[RecentReactionItem] = []
+                var defaultTagReactionsItems:[RecentReactionItem] = []
 
                 if let recentReactionsView = recentReactionsView {
                     for item in recentReactionsView.items {
@@ -3095,6 +3089,14 @@ class ChatRowItem: TableRowItem {
                         recentReactionsItems.append(item)
                     }
                 }
+                if let defaultTagReactions = defaultTagReactions {
+                    for item in defaultTagReactions.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        defaultTagReactionsItems.append(item)
+                    }
+                }
                 if let topReactionsView = topReactionsView {
                     for item in topReactionsView.items {
                         guard let item = item.contents.get(RecentReactionItem.self) else {
@@ -3102,6 +3104,9 @@ class ChatRowItem: TableRowItem {
                         }
                         topReactionsItems.append(item)
                     }
+                }
+                if !defaultTagReactionsItems.isEmpty, isTags {
+                    return defaultTagReactionsItems
                 }
                 return topReactionsItems.filter { value in
                     if context.isPremium {
@@ -3130,7 +3135,7 @@ class ChatRowItem: TableRowItem {
                 var accessToAll: Bool
                 
                 let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
-                    return message.effectiveReactions?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
+                    return message.effectiveReactions(isTags: isTags)?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
                 }
 
                 
@@ -3194,8 +3199,9 @@ class ChatRowItem: TableRowItem {
                 if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
                     uniqueLimit = Int(value)
                 }
+                
                             
-                if let reactions = message.effectiveReactions, reactions.count >= uniqueLimit {
+                if let reactions = message.effectiveReactions(isTags: isTags), reactions.count >= uniqueLimit {
                     available = reactions.compactMap { reaction in
                         switch reaction.value {
                         case let .custom(fileId):
@@ -3232,8 +3238,8 @@ class ChatRowItem: TableRowItem {
                 
                 let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
                 
-                
-                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20)
+                let aboveText: String? = isTags ? strings().chatReactionsTagMessage : nil
+                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20 + (aboveText != nil ? 20 : 0))
                 
                 
                 let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
@@ -3245,12 +3251,12 @@ class ChatRowItem: TableRowItem {
                 panel.hasShadow = false
                 
 
-                let reveal:((NSView & StickerFramesCollector)->Void)?
+                let reveal:((ContextAddReactionsListView & StickerFramesCollector)->Void)?
                 
                 
                 var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
 
-                if let reactions = message.effectiveReactions {
+                if let reactions = message.effectiveReactions(isTags: isTags) {
                     for reaction in reactions {
                         if reaction.isSelected {
                             switch reaction.value {
@@ -3272,15 +3278,30 @@ class ChatRowItem: TableRowItem {
                             } else {
                                 value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
                             }
-                            if case .custom = value, !context.isPremium {
+                            var contains: Bool = false
+                            for reaction in reactions {
+                                switch reaction.content {
+                                case let .custom(file):
+                                    if file.fileId == sticker.file.fileId {
+                                        contains = true
+                                        break
+                                    }
+                                default:
+                                    break
+                                }
+                            }
+                            if case .custom = value, !context.isPremium && sticker.file.isPremiumEmoji, !contains {
                                 showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
                                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                                 })
                             } else {
-                                let updated = message.newReactions(with: value)
+                                let updated = message.newReactions(with: value, isTags: isTags)
                                 context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
                             }
                         })
+//                        let transition = ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeOut)
+//                        transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: NSMakeSize(view.frame.width, 60)))
+//                        view.updateLayout(size: view.frame.size, transition: transition)
                         window.show(view)
                     }
                 } else {
@@ -3289,8 +3310,8 @@ class ChatRowItem: TableRowItem {
                 
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
-                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), fromRect: fromRect, storeAsRecentlyUsed: true)
-                }, radiusLayer: nil, revealReactions: reveal)
+                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
+                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveText)
                 
                 
                 panel.contentView?.addSubview(view)
@@ -3375,19 +3396,14 @@ class ChatRowItem: TableRowItem {
     }
     var lastLineContentWidth: LastLineData? {
         if let reactionsLayout = reactionsLayout {
-            switch reactionsLayout.mode {
-            case .full:
-                var oneLine = reactionsLayout.oneLine
-                if let item = self as? ChatMessageItem {
-                    if item.webpageLayout != nil {
-                        oneLine = false
-                    }
+            var oneLine = reactionsLayout.oneLine
+            if let item = self as? ChatMessageItem {
+                if item.webpageLayout != nil {
+                    oneLine = false
                 }
-                if !reactionsLayout.presentation.isOutOfBounds {
-                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
-                }
-            default:
-                break
+            }
+            if !reactionsLayout.presentation.isOutOfBounds {
+                return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
             }
         }
         if captionLayouts.count == 1 {

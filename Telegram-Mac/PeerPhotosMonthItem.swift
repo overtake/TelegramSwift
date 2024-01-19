@@ -8,10 +8,11 @@
 
 import Cocoa
 import TelegramCore
-
+import MediaPlayer
 import TGUIKit
 import Postbox
 import SwiftSignalKit
+import TelegramMedia
 
 protocol MediaCellLayoutable {
     var context: AccountContext { get }

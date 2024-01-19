@@ -584,7 +584,7 @@ struct SearchTags : Hashable {
     
     var location: SearchMessagesLocation {
         if let peerTag = peerTag {
-            return .peer(peerId: peerTag, fromId: nil, tags: messageTags, threadId: nil, minDate: nil, maxDate: nil)
+            return .peer(peerId: peerTag, fromId: nil, tags: messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
         } else {
             return .general(tags: messageTags, minDate: nil, maxDate: nil)
         }
@@ -852,7 +852,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         }
                     }
                 case let .forum(peerId):
-                    location = .peer(peerId: peerId, fromId: nil, tags: globalTags.messageTags, threadId: nil, minDate: nil, maxDate: nil)
+                    location = .peer(peerId: peerId, fromId: nil, tags: globalTags.messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
                     foundRemotePeers = .single(([], [], false))
                     
                     let topics: Signal<[EngineChatList.Item], NoError> = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> filter { view in

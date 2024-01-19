@@ -14,6 +14,8 @@ import TGUIKit
 import SwiftSignalKit
 import TGModernGrowingTextView
 import InputView
+import TelegramMedia
+
 class ChatMediaLayoutParameters : Equatable {
     
     var showMedia:(Message)->Void = {_ in }

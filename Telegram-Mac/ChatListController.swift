@@ -720,7 +720,7 @@ class ChatListController : PeersListController {
                     mapped.append(.loading(filterData.filter))
                 }
             }
-            if let suspiciousSession = suspiciousSession.first, mode == .plain {
+            if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState != .minimisize {
                 mapped.append(.suspicious(suspiciousSession))
             }
             

@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import ColorPalette
+import TelegramMedia
 
 enum QRTokenState {
     case qr(CGImage)

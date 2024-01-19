@@ -12,7 +12,8 @@ import Postbox
 import TelegramCore
 import TextRecognizing
 import TGUIKit
-
+import TelegramMedia
+import MediaPlayer
 
 extension AutoremoveTimeoutMessageAttribute : Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
@@ -1072,6 +1073,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let context = context, !isLite(.any) {
             if let media = media as? TelegramMediaFile, let parent = parent {
                 let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
+                
+               // preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                
                 
                 let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                 partDisposable.set(preload.start())

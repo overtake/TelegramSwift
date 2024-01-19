@@ -23,6 +23,7 @@ public final class Reactions {
     }
     
     private(set) public var available: AvailableReactions?
+        
     public var stateValue: Signal<AvailableReactions?, NoError> {
         return state.get() |> distinctUntilChanged |> deliverOnMainQueue
     }

@@ -11,6 +11,7 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 import TGUIKit
+import TelegramMedia
 
 final class UserInfoSuggestPhotoItem : GeneralRowItem {
     fileprivate let context: AccountContext

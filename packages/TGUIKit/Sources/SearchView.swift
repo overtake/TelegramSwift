@@ -12,11 +12,7 @@ import ColorPalette
 
 
 public class SearchTextField: NSTextView {
-    
-    @available(OSX 10.12.2, *)
-    override public func makeTouchBar() -> NSTouchBar? {
-        return viewEnableTouchBar ? super.makeTouchBar() : nil
-    }
+
     
     public init() {
         super.init(frame: .zero)

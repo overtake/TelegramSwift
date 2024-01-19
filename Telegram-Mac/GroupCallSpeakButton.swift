@@ -9,7 +9,7 @@
 import Foundation
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 
 final class GroupCallSpeakButton : Control {
     private let animationView: LottiePlayerView

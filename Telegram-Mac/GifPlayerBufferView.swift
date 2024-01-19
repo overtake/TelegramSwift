@@ -12,7 +12,7 @@ import TelegramCore
 import TGUIKit
 import Postbox
 import SwiftSignalKit
-
+import TelegramMedia
 
 final class GifPlayerBufferView : TransformImageView {
     var timebase: CMTimebase!

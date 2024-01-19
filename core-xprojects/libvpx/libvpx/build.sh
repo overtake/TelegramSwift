@@ -8,7 +8,7 @@ BUILD_DIR=$(echo "$(cd "$(dirname "$3")"; pwd -P)/$(basename "$3")")
 
 
 
-SOURCE_DIR="$BUILD_DIR/source"
+SOURCE_DIR="${BUILD_DIR}source"
 
 
 pushd "$BUILD_DIR"

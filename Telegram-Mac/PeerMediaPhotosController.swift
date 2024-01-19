@@ -456,11 +456,11 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 return .single((nil, SearchResult(result: externalSearch.messages), search, nil))
             } else if !search.request.isEmpty {
                 
-                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, threadId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
+                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, reactions: [], threadId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
                 
                 return .single((nil, SearchResult(result: nil), search, nil)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search, nil) })
             } else {
-                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags, chatLocationInput: chatLocationInput) |> map { ($0, nil, search, location.side) }
+                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(tags), chatLocationInput: chatLocationInput) |> map { ($0, nil, search, location.side) }
             }
         }
         
@@ -644,7 +644,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     
     func jumpTo(_ toMessage: Message) -> Void {
 
-        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id, nil), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: .photoOrVideo, additionalData: [], chatLocationInput: self.chatLocationInput)
+        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id, nil), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(.photoOrVideo), additionalData: [], chatLocationInput: self.chatLocationInput)
         
         struct FindSearchMessage {
             let message:Message?

@@ -12,15 +12,19 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import DustLayer
+import TelegramMedia
+
+private protocol MediaView : APDelegate {
+    var didFinish:((NSView)->Void)? { get set }
+    func stopAndClose()
+}
 
 
-
-private final class VoiceView : View, APDelegate {
+private final class VoiceView : View, MediaView {
     let hood = View(frame: NSMakeRect(0, 0, 40, 40))
     let durationView = DynamicCounterTextView()
     let waveformView = AudioWaveformView(frame: NSMakeRect(0, 0, 170, 20))
     var fireView: InlineStickerView?
-    let progress: SimpleShapeLayer = SimpleShapeLayer()
     private let fireControl: FireTimerControl = FireTimerControl(frame: NSMakeRect(0, 0, 45, 45))
 
     private let sparkView = SparksView(frame: .zero)
@@ -30,7 +34,8 @@ private final class VoiceView : View, APDelegate {
     
     private var activityColor: NSColor = .clear
     private var activityBackground: NSColor = .clear
-    fileprivate var didFinish:((NSView)->Void)? = nil
+    
+    var didFinish:((NSView)->Void)? = nil
 
     
     required init(frame frameRect: NSRect) {
@@ -55,7 +60,19 @@ private final class VoiceView : View, APDelegate {
     }
     
     func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
+
         
+        let duration = song.duration ?? 0
+        
+        let text = String.durationTransformed(elapsed: duration)
+        
+        let value = DynamicCounterTextView.make(for: text, count: text, font: .normal(.short), textColor: theme.colors.grayText, width: .greatestFiniteMagnitude)
+        self.durationView.update(value, animated: true)
+        self.durationView.change(size: value.size, animated: true)
+        
+        let deadline = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+        
+        fireControl.update(color: activityColor, timeout: duration, deadlineTimestamp: .infinity)
     }
     private var once: Bool = false
     func songDidChangedState(song:APSongItem, for controller:APController, animated: Bool) {
@@ -67,17 +84,6 @@ private final class VoiceView : View, APDelegate {
             self.durationView.update(value, animated: true)
             self.durationView.change(size: value.size, animated: true)
         case let .paused(current, duration, _):
-            
-            let path = CGMutablePath()
-            let endAngle = -CGFloat.pi / 2.0
-            let startAngle = CGFloat(0.01) * 2.0 * CGFloat.pi + endAngle
-
-            path.addArc(center: CGPointMake(self.progress.frame.width / 2, self.progress.frame.height / 2), radius: self.progress.frame.height / 2, startAngle: -(.pi / 2), endAngle: (.pi * 2) - (.pi / 2), clockwise: false)
-            
-            self.progress.path = path
-            self.progress.transform = CATransform3DScale(CATransform3DIdentity, -1, 1, 1)
-
-            setProgressWithAnimation(duration: duration, value: 0)
             
             let tickValue = 1 / 60 / duration
             
@@ -130,15 +136,6 @@ private final class VoiceView : View, APDelegate {
         didFinish?(self)
     }
 
-    private func setProgressWithAnimation(duration: TimeInterval, value: Float) {
-        let animation = CABasicAnimation(keyPath: "strokeEnd")
-        animation.duration = duration
-        animation.fromValue = self.progress.strokeEnd
-        animation.toValue = value
-        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        progress.strokeEnd = CGFloat(value)
-        progress.add(animation, forKey: "animateprogress")
-    }
     
     private var progressValue: Double = 0
     
@@ -175,7 +172,6 @@ private final class VoiceView : View, APDelegate {
         self.fireView = fireView
         
         hood.backgroundColor = activityBackground
-        progress.strokeColor = activityColor.cgColor
 
         backgroundColor = theme.chat.bubbleBackgroundColor(false, true)
         
@@ -185,6 +181,9 @@ private final class VoiceView : View, APDelegate {
         player.start()
         
         player.add(listener: self)
+        if let song = player.currentSong {
+            songDidChanged(song: song, for: player, animated: true)
+        }
         
         self.player = player
         
@@ -210,8 +209,180 @@ private final class VoiceView : View, APDelegate {
     }
 }
 
+
+
+private final class VideoView : View, MediaView {
+    let hood: View
+    let durationView = DynamicCounterTextView()
+    private let fireControl: FireTimerControl
+
+    private var player: APController?
+    
+    private var activityColor: NSColor = .clear
+    private var activityBackground: NSColor = .clear
+    private var playerView: GIFPlayerView
+
+    private let statusDisposable = MetaDisposable()
+    
+    var didFinish:((NSView)->Void)? = nil
+
+    
+    required init(frame frameRect: NSRect) {
+        playerView = .init(frame: frameRect.size.bounds)
+        hood = View(frame: frameRect.size.bounds.insetBy(dx: 0, dy: 0))
+        fireControl = FireTimerControl(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        addSubview(playerView)
+        addSubview(hood)
+        addSubview(durationView)
+        hood.addSubview(fireControl)
+        
+        if #available(macOS 10.15, *) {
+            playerView.sampleBufferLayer.preventsCapture = true
+        } 
+        
+        hood.layer?.masksToBounds = false
+        hood.layer?.cornerRadius = hood.frame.height / 2
+        layer?.cornerRadius = 20
+        
+    }
+    
+    func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
+        
+        let duration = song.duration ?? 0
+        
+        let text = String.durationTransformed(elapsed: duration)
+        
+        let value = DynamicCounterTextView.make(for: text, count: text, font: .normal(.short), textColor: theme.colors.grayText, width: .greatestFiniteMagnitude)
+        self.durationView.update(value, animated: true)
+        self.durationView.change(size: value.size, animated: true)
+                
+        fireControl.update(color: .white, timeout: duration, deadlineTimestamp: .infinity, lineWidth: 4)
+    }
+    private var once: Bool = false
+    func songDidChangedState(song:APSongItem, for controller:APController, animated: Bool) {
+        switch song.state {
+        case let .playing(current, duration, _):
+            let text = String.durationTransformed(elapsed: duration - current)
+            
+            let value = DynamicCounterTextView.make(for: text, count: text, font: .normal(.short), textColor: theme.colors.grayText, width: .greatestFiniteMagnitude)
+            self.durationView.update(value, animated: true)
+            self.durationView.change(size: value.size, animated: true)
+        case let .paused(current, duration, _):
+            
+            let tickValue = 1 / 60 / duration
+            
+            let text = String.durationTransformed(elapsed: duration - current)
+            
+            let value = DynamicCounterTextView.make(for: text, count: text, font: .normal(.short), textColor: theme.colors.grayText, width: .greatestFiniteMagnitude)
+            self.durationView.update(value, animated: true)
+            self.durationView.change(size: value.size, animated: true)
+            
+            let deadline = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+            
+            fireControl.update(color: .white, timeout: duration, deadlineTimestamp: deadline + duration, lineWidth: 4)
+            
+        default:
+            break
+        }
+        needsLayout = true
+    }
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
+        
+    }
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
+        
+    }
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
+        
+    }
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
+        didFinish?(self)
+    }
+    
+    func stopAndClose() {
+        self.player?.stop()
+        didFinish?(self)
+    }
+
+    
+    private var progressValue: Double = 0
+    
+    func set(media: TelegramMediaFile, message: Message, isIncoming: Bool, context: AccountContext) {
+        
+        let activityColor = theme.chat.activityForeground(false, true)
+        let activityBackground = theme.chat.activityBackground(false, true)
+        
+        self.activityColor = activityColor
+        self.activityBackground = activityBackground
+        
+        let size = frame.size
+
+        playerView.layer?.cornerRadius = size.height / 2
+        let arguments = TransformImageArguments(corners: ImageCorners(radius:0), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+        
+        playerView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
+
+        playerView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
+            if let media = media {
+                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+            }
+        })
+        
+        playerView.set(arguments: arguments)
+        
+        let dataSignal = context.account.postbox.mediaBox.resourceData(media.resource) |> deliverOnResourceQueue |> map { resource -> AVGifData? in
+            if resource.complete {
+                return AVGifData.dataFrom(resource.path)
+            } else if let resource = media.resource as? LocalFileReferenceMediaResource {
+                return AVGifData.dataFrom(resource.localFilePath)
+            } else {
+                return nil
+            }
+        } |> deliverOnMainQueue
+        
+        self.statusDisposable.set(dataSignal.start(next: { [weak self] data in
+            self?.playerView.set(data: data)
+        }))
+        
+        hood.backgroundColor = .clear
+
+        backgroundColor = .clear
+        
+        
+        let player = APSingleResourceController(context: context, wrapper: .init(resource: media.resource, name: "", performer: "", duration: media.duration, id: 0), streamable: false)
+        player.start()
+        
+        player.add(listener: self)
+        
+        if let song = player.currentSong {
+            songDidChanged(song: song, for: player, animated: true)
+        }
+        
+        self.player = player
+        
+        needsLayout = true
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        hood.center()
+        fireControl.center()
+        
+        durationView.setFrameOrigin(NSMakePoint(8, frame.height - durationView.frame.height))
+    }
+}
+
+
+
+
 private final class SingleTimeMediaView : View {
-    fileprivate var voiceView: VoiceView?
+    fileprivate var mediaView: (View & MediaView)?
     fileprivate let close = TextButton()
     func update(context: AccountContext, message: Message) {
         let media = message.media.first! as! TelegramMediaFile
@@ -219,9 +390,15 @@ private final class SingleTimeMediaView : View {
         if media.isVoice {
             let voiceView = VoiceView(frame: NSMakeRect(0, 0, 220, 60))
             addSubview(voiceView)
-            self.voiceView = voiceView
+            self.mediaView = voiceView
             
             voiceView.set(media: media, isIncoming: isIncoming, context: context)
+        } else {
+            let videoView = VideoView(frame: NSMakeRect(0, 0, 250, 250))
+            addSubview(videoView)
+            self.mediaView = videoView
+            
+            videoView.set(media: media, message: message, isIncoming: isIncoming, context: context)
         }
         close.set(font: .medium(.text), for: .Normal)
         close.set(color: theme.colors.text, for: .Normal)
@@ -235,12 +412,12 @@ private final class SingleTimeMediaView : View {
     }
     
     func stopAndClose() {
-        self.voiceView?.stopAndClose()
+        self.mediaView?.stopAndClose()
     }
     
     override func layout() {
         super.layout()
-        voiceView?.center()
+        mediaView?.center()
         close.centerX(y: frame.height - close.frame.height - 40)
     }
 }
@@ -284,7 +461,7 @@ final class SingleTimeMediaViewer : ModalViewController {
         
         genericView.update(context: context, message: message)
         
-        genericView.voiceView?.didFinish = { [weak self] view in
+        genericView.mediaView?.didFinish = { [weak self] view in
             self?.close()
         }
         genericView.close.set(handler: { [weak self] _ in
@@ -298,7 +475,7 @@ final class SingleTimeMediaViewer : ModalViewController {
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         super.close(animationType: animationType)
-        if let view = genericView.voiceView {
+        if let view = genericView.mediaView {
             ApplyDustAnimation(for: view)
         }
     }

@@ -150,13 +150,10 @@ public extension ContainedViewLayoutTransition {
             }
         }
     }
-    func updateFrame(layer: CALayer, frame: CGRect, completion: ((Bool) -> Void)? = nil) {
+    func updateFrame(layer: CALayer, frame: CGRect, completion: ((Bool) -> Void)? = nil, save: Bool = true) {
         switch self {
         case .immediate:
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
             layer.frame = frame
-            CATransaction.commit()
             if let completion = completion {
                 completion(true)
             }
@@ -170,16 +167,16 @@ public extension ContainedViewLayoutTransition {
                     presentBounds.size.width = NSWidth(presentation.bounds)
                     presentBounds.size.height = NSHeight(presentation.bounds)
                 }
-                layer.animateBounds(from: presentBounds, to: frame.size.bounds, duration: duration, timingFunction: timingFunction)
+                layer.animateBounds(from: presentBounds, to: frame.size.bounds, duration: duration, timingFunction: timingFunction, completion: completion)
             }
             func animatePos(_ layer: CALayer) -> Void {
-                var presentRect:NSRect = layer.frame
+                var presentRect:NSPoint = layer.position
                 let presentation = layer.presentation()
                 if let presentation = presentation, layer.animation(forKey:"position") != nil {
-                    presentRect.origin.x = presentation.frame.minX
-                    presentRect.origin.y = presentation.frame.minY
+                    presentRect.x = presentation.position.x
+                    presentRect.y = presentation.position.y
                 }
-                layer.animatePosition(from: presentRect.origin, to: frame.origin, duration: duration, timingFunction: timingFunction)
+                layer.animatePosition(from: presentRect, to: frame.origin, duration: duration, timingFunction: timingFunction, completion: completion)
             }
             if layer.frame.origin != frame.origin {
                 animatePos(layer)
@@ -187,7 +184,10 @@ public extension ContainedViewLayoutTransition {
             if layer.frame.size != frame.size {
                 animateSize(layer)
             }
-            layer.frame = frame
+            if save {
+                layer.frame = frame.size.bounds
+                layer.position = frame.origin
+            }
             
         }
     }
@@ -262,6 +262,24 @@ public extension ContainedViewLayoutTransition {
             })
         }
     }
+    
+//    func updatePosition(layer: CALayer, position: NSPoint, completion: ((Bool) -> Void)? = nil) {
+//        switch self {
+//        case .immediate:
+//            layer.position = position
+//            if let completion = completion {
+//                completion(true)
+//            }
+//        case let .animated(duration, curve):
+//            let previousAlpha = layer.presentation()?.opacity ?? layer.opacity
+//            layer.position = position
+//            layer.animateAlpha(from: CGFloat(previousAlpha), to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
+//                if let completion = completion {
+//                    completion(result)
+//                }
+//            })
+//        }
+//    }
 
     
     func animatePositionWithKeyframes(layer: CALayer, keyframes: [CGPoint], removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {

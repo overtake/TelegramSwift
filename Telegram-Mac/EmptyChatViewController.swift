@@ -146,24 +146,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         super.init(context)
         self.bar = NavigationBarStyle(height:0)
     }
-    
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = ChatListTouchBar(context: self.context, search: { [weak self] in
-                self?.context.bindings.globalSearch("")
-            }, newGroup: { [weak self] in
-                self?.context.composeCreateGroup()
-            }, newSecretChat: { [weak self] in
-                self?.context.composeCreateSecretChat()
-            }, newChannel: { [weak self] in
-                self?.context.composeCreateChannel()
-            })
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
+
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

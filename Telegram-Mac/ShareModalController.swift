@@ -279,6 +279,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         self.tableView.merge(with: transition)
         self.tableView.cancelHighlight()
         
+        
         let item = self.tableView.item(stableId: UIChatListEntryId.reveal)
         self.topSeparator.change(opacity: item != nil ? 0 : 1, animated: transition.animated)
     }
@@ -497,6 +498,10 @@ class ShareObject {
     let excludePeerIds: Set<PeerId>
     let defaultSelectedIds:Set<PeerId>
     let limit: Int?
+    
+    var appearance: TelegramPresentationTheme {
+        return presentation ?? theme
+    }
     
     var withoutSound: Bool = false
     var scheduleDate: Date? = nil
@@ -1372,6 +1377,7 @@ enum SelectablePeersEntryStableId : Hashable {
 enum SelectablePeersEntry : Comparable, Identifiable {
     case folders([ChatListFilter], ChatListFilter)
     case secretChat(Peer, PeerId, ChatListIndex, PeerStatusStringResult?, Bool, Bool)
+    //peer, index, presence, autoDeletion, separator, multiple
     case plain(Peer, ChatListIndex, PeerStatusStringResult?, Int32?, Bool, Bool)
     case separator(String, ChatListIndex)
     case emptySearch
@@ -1454,7 +1460,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         switch entry {
         case let .plain(peer, _, presence, autoDeletion, drawSeparator, multiple):
             let theme = share.presentation ?? theme
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
+            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .interactable(selectInteraction), action: {
                 if peer.isForum && share.selectTopics {
                     selectInteraction.openForum(peer.id)
                 } else {
@@ -1503,6 +1509,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     private let forumPeerId:ValuePromise<PeerId?> = ValuePromise(nil, ignoreRepeated: true)
     private let inSearchSelected:Atomic<[PeerId]> = Atomic(value:[])
     private let disposable:MetaDisposable = MetaDisposable()
+    private let updatePremiumRequiredDisposable = MetaDisposable()
     private let exportLinkDisposable:MetaDisposable = MetaDisposable()
     private let tokenDisposable: MetaDisposable = MetaDisposable()
     private let filterDisposable = MetaDisposable()
@@ -1632,7 +1639,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             }
         }
         
-        _ = self.window?.makeFirstResponder(firstResponder())
+       // _ = self.window?.makeFirstResponder(firstResponder())
     }
     
     private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
@@ -1939,8 +1946,26 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         
         let previous:Atomic<[SelectablePeersEntry]?> = Atomic(value: nil)
         
+        selectInteraction.premiumRequiredAction = { [weak self] peerId in
+            let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+            _ = peer.startStandalone(next: { peer in
+                showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
+            })
+            self?.genericView.tableView.cancelSelection()
+            return
+        }
+        
         selectInteraction.action = { [weak self] peerId, threadId in
             guard let `self` = self else { return }
+            
+            let required = self.selectInteractions.presentation.premiumRequired
+            
+            if required.contains(peerId) {
+                self.selectInteractions.premiumRequiredAction?(peerId)
+                return
+            }
             
             if share.multipleSelection, let threadId = threadId {
                 let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
@@ -2095,6 +2120,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             }
         }
         
+        
         let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, search.get() |> distinctUntilChanged, forumPeerId.get(), multipleSelection.get(), chatList) |> mapToSignal { query, forumPeerId, multipleSelection, chatList -> Signal<TableUpdateTransition, NoError> in
             
             if query.request.isEmpty || query.state == .None {
@@ -2121,6 +2147,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                             indexId -= 1
                             return ChatListIndex(pinningIndex: nil, messageIndex: index)
                         }
+                        
                         
                         entries.append(.plain(user, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: Int32.max), timestamp: Int32.max)), nil, nil, top.isEmpty && recent.isEmpty, multipleSelection))
                         contains[user.id] = user.id
@@ -2295,7 +2322,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                                             let index = MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: i), timestamp: i)
                                             let id = ChatListIndex(pinningIndex: nil, messageIndex: index)
                                             i -= 1
-                                            
+                                                                                        
                                             if main.id.namespace == Namespaces.Peer.SecretChat {
                                                 entries.append(.secretChat(peer, main.id, id, values.1[peer.id], true, multipleSelection))
                                             } else {
@@ -2310,8 +2337,6 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                         if entries.isEmpty {
                             entries.append(.emptySearch)
                         }
-                    
-                        
                     
                         entries.sort(by: <)
                     
@@ -2337,10 +2362,31 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         
         disposable.set(signal.start(next: { [weak self] transition in
             self?.genericView.applyTransition(transition)
+            self?.updatePremiumRequired()
             self?.readyOnce()
         }))
-                
-        
+    }
+
+    private func updatePremiumRequired() {
+        var ids: [EnginePeer.Id] = []
+        let context = self.share.context
+        genericView.tableView.enumerateItems(with: { item in
+            if let item = item as? ShortPeerRowItem {
+                if item.peerId != context.peerId, item.peerId.namespace != Namespaces.Peer.SecretChat {
+                    ids.append(item.peerId)
+                }
+            }
+            return true
+        })
+        if !context.isPremium {
+            let signal = context.engine.peers.isPremiumRequiredToContact(ids) |> deliverOnMainQueue
+            
+            updatePremiumRequiredDisposable.set(signal.startStrict(next: { [weak self] peerIds in
+                self?.selectInteractions.update {
+                    $0.withUpdatedPremiumRequired(Set(peerIds))
+                }
+            }))
+        }
     }
     
     override var canBecomeResponder: Bool {
@@ -2559,7 +2605,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     
     private func updateSize(_ width: CGFloat, animated: Bool) {
         if let contentSize = self.window?.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 100, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: animated)
+            self.modal?.resize(with:NSMakeSize(width, min(contentSize.height - 100, max(400, genericView.tableView.listHeight + max(genericView.additionHeight, 88)))), animated: animated)
         }
     }
     
@@ -2574,7 +2620,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 100, genericView.tableView.listHeight + max(genericView.additionHeight, 88))), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 100, max(400, genericView.tableView.listHeight + max(genericView.additionHeight, 88)))), animated: false)
     }
     
     override var dynamicSize: Bool {
@@ -2603,6 +2649,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         exportLinkDisposable.dispose()
         forumDisposable.dispose()
         filterDisposable.dispose()
+        updatePremiumRequiredDisposable.dispose()
     }
     
     override var modalTheme: ModalViewController.Theme {

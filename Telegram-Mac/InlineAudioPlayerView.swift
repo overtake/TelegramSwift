@@ -13,7 +13,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import RangeSet
-
+import TelegramMedia
 
 private func effectivePlayingRate(for controller: APController) -> Double {
     if controller is APChatMusicController {

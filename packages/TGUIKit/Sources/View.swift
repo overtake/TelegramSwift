@@ -292,10 +292,6 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         
     }
     
-    @available(OSX 10.12.2, *)
-    open override func makeTouchBar() -> NSTouchBar? {
-        return viewEnableTouchBar ? super.makeTouchBar() : nil
-    }
     
     public var flip:Bool = true
     

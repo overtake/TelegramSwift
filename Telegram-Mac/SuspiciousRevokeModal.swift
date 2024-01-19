@@ -7,11 +7,7 @@
 //
 
 import Foundation
-
-
-
-//
-
+import TelegramMedia
 import Cocoa
 import TGUIKit
 import SwiftSignalKit

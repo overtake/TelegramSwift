@@ -11,7 +11,7 @@ import SwiftSignalKit
 import TelegramCore
 import InAppSettings
 import Postbox
-
+import TelegramMedia
 
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1

@@ -12,7 +12,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 import ColorPalette
-
+import TelegramMedia
 
 fileprivate final class ActionButton : Control {
     fileprivate let imageView: ImageView = ImageView()
@@ -572,6 +572,18 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let avatarStoryComponent: AvatarStoryIndicatorComponent?
     let canEditPhoto: Bool
     
+    var statusIsHidden: Bool {
+        if let presence = peerView.peerPresences[arguments.peerId] as? TelegramUserPresence {
+            switch presence.status {
+            case let .lastMonth(isHidden), let .lastWeek(isHidden), let .recently(isHidden):
+                return isHidden
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
     
     let peerPhotosDisposable = MetaDisposable()
     
@@ -704,6 +716,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
     }
     
+    func showStatusUnlocker() {
+        if let peer = peer {
+            showModal(with: PremiumShowStatusController(context: context, peer: .init(peer), source: .status), for: context.window)
+        }
+    }
+    
     var colorfulProfile: Bool {
         if let _ = nameColor {
             return true
@@ -809,6 +827,10 @@ class PeerInfoHeadItem: GeneralRowItem {
         var width = nameLayout.layoutSize.width
         if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true)  {
             width += size.width + 5
+        }
+        if statusIsHidden {
+            width += 5
+            width += 40
         }
         return NSMakeSize(width, stateHeight)
     }
@@ -982,6 +1004,7 @@ private final class PeerInfoPhotoEditableView : Control {
 private final class NameContainer : View {
     let nameView = TextView()
     var statusControl: PremiumStatusControl?
+    var showStatusView: TextButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(nameView)
@@ -1004,6 +1027,31 @@ private final class NameContainer : View {
         } else if let view = self.statusControl {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
+        }
+        
+        if item.statusIsHidden {
+            let current: TextButton
+            if let view = self.showStatusView {
+                current = view
+            } else {
+                current = TextButton()
+                current.set(font: .medium(.small), for: .Normal)
+                current.scaleOnClick = true
+                addSubview(current)
+                self.showStatusView = current
+            }
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(background: theme.colors.accent.withAlphaComponent(0.2), for: .Normal)
+            current.set(text: strings().peerStatusShow, for: .Normal)
+            current.sizeToFit(NSMakeSize(5, 5))
+            current.layer?.cornerRadius = current.frame.height * 0.5
+            current.removeAllHandlers()
+            current.set(handler: { [weak item] _ in
+                item?.showStatusUnlocker()
+            }, for: .Click)
+        } else if let view = showStatusView {
+            performSubviewRemoval(view, animated: animated)
+            self.showStatusView = nil
         }
         
         if let stateText = item.stateText, let control = statusControl, let peerId = item.peer?.id {
@@ -1041,8 +1089,13 @@ private final class NameContainer : View {
         super.layout()
         
         nameView.centerY(x: 0)
+        var inset: CGFloat = nameView.frame.maxX + 5
         if let control = statusControl {
-            control.centerY(x: nameView.frame.maxX + 5, addition: -1)
+            control.centerY(x: inset, addition: -1)
+            inset = control.frame.maxX + 8
+        }
+        if let showStatusView {
+            showStatusView.centerY(x: inset)
         }
     }
     

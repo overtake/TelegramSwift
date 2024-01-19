@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import TelegramMedia
 import SwiftSignalKit
 import AVFoundation
 
@@ -342,7 +342,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         addSubview(activities.view!)
         
         searchButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil, nil))})
+            self?.chatInteraction.update { current in
+                current.updatedSearchMode(.init(inSearch: !current.searchMode.inSearch))
+            }
         }, for: .Click)
         
         addSubview(searchButton)

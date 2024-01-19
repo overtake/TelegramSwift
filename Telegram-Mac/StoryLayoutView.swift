@@ -11,7 +11,8 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
-
+import TelegramMedia
+import MediaPlayer
 
 class StoryLayoutView : Control {
     

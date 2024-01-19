@@ -64,11 +64,6 @@ NSString * NSLocalized(NSString * key, NSString *comment) {
     }
 }
 
-static BOOL textViewEnableTouchBar = true;
-
-void setTextViewEnableTouchBar(BOOL enableTouchBar) {
-    textViewEnableTouchBar = enableTouchBar;
-}
 
 @interface GrowingScrollView : NSScrollView
     
@@ -401,11 +396,6 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     
     
     return @[removeAll, [NSMenuItem separatorItem], strikethrough, underline, spoiler, code, italic, bold, url];
-}
-    
-    
--(NSTouchBar *)makeTouchBar {
-    return textViewEnableTouchBar ?  [super makeTouchBar] : nil;
 }
     
 -(void)removeAll:(id)sender {

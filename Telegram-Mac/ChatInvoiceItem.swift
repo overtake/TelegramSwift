@@ -248,7 +248,7 @@ class ChatInvoiceItem: ChatRowItem {
 }
 
 
-private  class MediaDustView: View {
+private class MediaDustView: View {
     private var currentParams: (size: CGSize, color: NSColor)?
     private var animColor: CGColor?
         

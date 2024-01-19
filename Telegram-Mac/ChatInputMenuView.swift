@@ -9,7 +9,7 @@
 import Foundation
 import TGUIKit
 import SwiftSignalKit
-
+import TelegramMedia
 
 final class ChatInputMenuView : View {
     private let button = Control()

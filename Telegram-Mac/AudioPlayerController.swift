@@ -14,7 +14,7 @@ import SwiftSignalKit
 import TGUIKit
 import AVKit
 import RangeSet
-
+import TelegramMedia
 
 
 class APSingleWrapper {
@@ -688,7 +688,6 @@ class APController : NSResponder {
     }
     fileprivate var _commandCenter: Any? = nil
     
-
     init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
         self.state.volume = volume
@@ -1158,7 +1157,7 @@ class APChatController : APController {
 
     override func start() {
         super.start()
-        let tagMask:MessageTags = self.tags
+        let tagMask:HistoryViewInputTag = .tag(self.tags)
         let list = self.entries
         let items = self.items
         let account = self.context.account
@@ -1174,9 +1173,9 @@ class APChatController : APController {
                 default:
                     switch location {
                     case .initial:
-                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tag: tagMask, orderStatistics: [], additionalData: [])
                     case let .index(index):
-                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tag: tagMask, orderStatistics: [], additionalData: [])
                     }
                 }
                
@@ -1185,7 +1184,9 @@ class APChatController : APController {
                     var entries:[APEntry] = []
                     for viewEntry in view.0.entries {
                         if let media = viewEntry.message.anyMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
-                            entries.append(.song(viewEntry.message))
+                            if viewEntry.message.id.peerId.isSecretChat || viewEntry.message.autoclearTimeout == nil {
+                                entries.append(.song(viewEntry.message))
+                            }
                         }
                     }
                     

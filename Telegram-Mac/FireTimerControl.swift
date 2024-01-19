@@ -48,6 +48,7 @@ class FireTimerControl: Control {
         var color: NSColor
         var timeout: Double
         var deadlineTimestamp: Double?
+        var lineWidth: CGFloat
     }
     
     private var animator: ConstantDisplayLinkAnimator?
@@ -74,16 +75,18 @@ class FireTimerControl: Control {
             self.currentParams = Params(
                 color: color,
                 timeout: params.timeout,
-                deadlineTimestamp: params.deadlineTimestamp
+                deadlineTimestamp: params.deadlineTimestamp,
+                lineWidth: params.lineWidth
             )
         }
     }
     
-    func update(color: NSColor, timeout: Double, deadlineTimestamp: Double?) {
+    func update(color: NSColor, timeout: Double, deadlineTimestamp: Double?, lineWidth: CGFloat = 2.0) {
         let params = Params(
             color: color,
             timeout: timeout,
-            deadlineTimestamp: deadlineTimestamp
+            deadlineTimestamp: deadlineTimestamp,
+            lineWidth: lineWidth
         )
         self.currentParams = params
         self.reachedHalfNotified = false
@@ -136,7 +139,7 @@ class FireTimerControl: Control {
             
             let diameter: CGFloat = frame.width - 8
             let inset: CGFloat = 7
-            let lineWidth: CGFloat = 2
+            let lineWidth: CGFloat = params.lineWidth
             
             switch contentState {
             case let .clock(color):
@@ -222,14 +225,10 @@ class FireTimerControl: Control {
                     context.strokePath()
                     
                     for particle in self.particles {
-                        let size: CGFloat = 1.15
+                        let size: CGFloat = lineWidth / 2 + 0.15
                         context.setAlpha(particle.alpha)
                         context.fillEllipse(in: CGRect(origin: CGPoint(x: particle.position.x - size / 2.0, y: particle.position.y - size / 2.0), size: CGSize(width: size, height: size)))
                     }
-                    
-                 //   let image = NSImage(named: "Icon_ExportedInvitation_Fire")!.precomposed(color, flipVertical: true)
-                    
-                 //   context.draw(image, in: rect.focus(image.size.aspectFitted(NSMakeSize(30, 30))))
                 })
             }
             

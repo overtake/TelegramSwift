@@ -8,10 +8,11 @@
 
 import Cocoa
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 import TGUIKit
+
 class MGalleryGIFItem: MGalleryItem {
 
     private var mediaPlayer: MediaPlayer!

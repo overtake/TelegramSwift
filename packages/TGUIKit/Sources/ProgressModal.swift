@@ -268,6 +268,7 @@ private final class TextAndLabelModalView : View {
     private let textView: TextView = TextView()
     private var titleView: TextView?
     private let visualEffectView = NSVisualEffectView(frame: NSZeroRect)
+    private var button: TextButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -282,15 +283,22 @@ private final class TextAndLabelModalView : View {
         self.textView.isSelectable = false
         self.textView.userInteractionEnabled = true
         addSubview(self.textView)
-        layer?.cornerRadius = .cornerRadius
+        layer?.cornerRadius = 10
         
+        self.textView.set(handler: { [weak self] _ in
+            self?.button?.send(event: .Down)
+        }, for: .Down)
     }
 
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+    }
 
-    func update(text: String, title: String?, callback: ((String)->Void)?, maxSize: NSSize) -> NSSize {
+    func update(text: String, title: String?, button: String?, callback: ((String)->Void)?, maxSize: NSSize) -> NSSize {
 
         if let title = title {
             self.titleView = TextView()
@@ -300,7 +308,7 @@ private final class TextAndLabelModalView : View {
             self.titleView?.isSelectable = false
             self.titleView?.userInteractionEnabled = false
             let titleLayout = TextViewLayout(.initialize(string: title, color: .white, font: .medium(.title)), maximumNumberOfLines: 1)
-            titleLayout.measure(width: min(400, maxSize.width - 80))
+            titleLayout.measure(width: min(380, maxSize.width - 120))
             self.titleView?.update(titleLayout)
         }
         
@@ -320,6 +328,31 @@ private final class TextAndLabelModalView : View {
         textLayout.measure(width: min(400, maxSize.width - 80))
         self.textView.update(textLayout)
 
+        if let button = button {
+            let current: TextButton
+            if let view = self.button {
+                current = view
+            } else {
+                current = TextButton()
+                current.scaleOnClick = true
+                self.button = current
+                addSubview(current)
+                current.set(handler: { _ in
+                    callback?("action")
+                }, for: .Down)
+            }
+            
+            current.set(font: .medium(.header), for: .Normal)
+            current.set(color: nightAccentPalette.link, for: .Normal)
+            current.set(text: button, for: .Normal)
+            current.sizeToFit(NSMakeSize(10, 0))
+            
+           
+            addSubview(current)
+        } else if let view = self.button {
+            performSubviewRemoval(view, animated: false)
+            self.button = nil
+        }
 
 
         var size: NSSize = .zero
@@ -332,6 +365,10 @@ private final class TextAndLabelModalView : View {
             size.height = textView.frame.height + 20
         }
 
+        if let button = self.button {
+            size.width += button.frame.width
+        }
+        
         return size
     }
 
@@ -344,7 +381,10 @@ private final class TextAndLabelModalView : View {
             titleView.setFrameOrigin(NSMakePoint(10, 10))
             textView.setFrameOrigin(NSMakePoint(10, titleView.frame.maxY + 5))
         } else {
-            textView.center()
+            textView.centerY(x: 10)
+        }
+        if let button = button {
+            button.centerY(x: frame.width - button.frame.width - 10)
         }
     }
     
@@ -389,7 +429,7 @@ class TextAndLabelModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let size = self.genericView.update(text: text, title: title, callback: self.callback, maxSize: windowSize)
+        let size = self.genericView.update(text: text, title: title, button: button, callback: self.callback, maxSize: windowSize)
         self.modal?.resize(with: size, animated: false)
 
         readyOnce()
@@ -430,13 +470,15 @@ class TextAndLabelModalController: ModalViewController {
 
     private let text: String
     private let title: String?
+    private let button: String?
     private let windowSize: NSSize
     private let callback:((String)->Void)?
-    init(text: String, title: String?, callback:((String)->Void)?, windowSize: NSSize) {
+    init(text: String, title: String?, button: String?, callback:((String)->Void)?, windowSize: NSSize) {
         self.text = text
         self.windowSize = windowSize
         self.title = title
         self.callback = callback
+        self.button = button
         super.init(frame:NSMakeRect(0, 0, 80, 80))
         self.bar = .init(height: 0)
     }
@@ -444,8 +486,8 @@ class TextAndLabelModalController: ModalViewController {
 
 }
 
-public func showModalText(for window: Window, text: String, title: String? = nil, callback:((String)->Void)? = nil) {
-    let modal = TextAndLabelModalController(text: text, title: title, callback: callback, windowSize: window.frame.size)
+public func showModalText(for window: Window, text: String, title: String? = nil, button: String? = nil, callback:((String)->Void)? = nil) {
+    let modal = TextAndLabelModalController(text: text, title: title, button: button, callback: callback, windowSize: window.frame.size)
 
     showModal(with: modal, for: window, animationType: .scaleCenter)
 

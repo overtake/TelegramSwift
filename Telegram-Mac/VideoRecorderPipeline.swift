@@ -13,6 +13,7 @@ import TelegramCore
 import ObjcUtils
 import TGUIKit
 import TGVideoCameraMovie
+import TelegramMedia
 
 private let videoCameraRetainedBufferCount:Int = 16;
 

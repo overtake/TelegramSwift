@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import AppKit
+import TelegramMedia
 
 final class EmojiScreenEffect {
     fileprivate let context: AccountContext
