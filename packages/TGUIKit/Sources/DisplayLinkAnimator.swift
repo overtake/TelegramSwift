@@ -394,7 +394,7 @@ private func solveEps(_ duration: Float) -> Float {
 }
 
 public final class DisplayLinkAnimator {
-    private var displayLink: SharedDisplayLinkDriver.Link!
+    private var displayLink: SharedDisplayLinkDriver.Link?
     private let duration: Double
     private let fromValue: CGFloat
     private let toValue: CGFloat
@@ -434,10 +434,12 @@ public final class DisplayLinkAnimator {
     }
     
     deinit {
+        self.displayLink?.invalidate()
         self.displayLink = nil
     }
     
     public func invalidate() {
+        self.displayLink?.invalidate()
         self.displayLink = nil
     }
     
@@ -460,7 +462,7 @@ public final class DisplayLinkAnimator {
         self.update(self.fromValue * CGFloat(1 - solved) + self.toValue * CGFloat(solved))
         if abs(t - 1.0) < Double.ulpOfOne {
             self.completed = true
-            self.displayLink.invalidate()
+            self.displayLink?.invalidate()
             self.completion()
         }
     }
