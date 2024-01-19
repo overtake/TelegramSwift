@@ -335,7 +335,7 @@ class ChatEmptyPeerView : TableRowView {
                     self.premRequiredImageView = current
                 }
                 current.image = NSImage(named: "Icon_Chat_PremiumRequired")?.precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent)
-                current.contentGravity = .center
+                current.contentGravity = .resizeAspect
             } else if let view = self.premRequiredImageView {
                 performSubviewRemoval(view, animated: false)
                 self.premRequiredImageView = nil
