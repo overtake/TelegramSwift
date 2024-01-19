@@ -2787,8 +2787,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 #if arch(arm64)
         let videoView = MetalVideoMakeView(videoStreamSignal: context.video(endpointId: endpointId))
         
-        completion(PresentationCallVideoView(holder: videoView, view: videoView, setOnFirstFrameReceived: { f in
-            f?(1)
+        completion(PresentationCallVideoView(holder: videoView, view: videoView, setOnFirstFrameReceived: { [weak videoView] f in
+            videoView?.firstFrameRendered = {
+                f?(0)
+            }
         }, getOrientation: {
             .rotation0
         }, getAspect: {

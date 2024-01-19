@@ -59,6 +59,7 @@ public class MetalCallVideoView : LayerBackedView {
         }
     }
 
+    public var firstFrameRendered: (()->Void)?
 
     public var video: VideoSource? {
         didSet {
@@ -89,7 +90,10 @@ public class MetalCallVideoView : LayerBackedView {
                         self.videoMetrics = nil
                     }
                     
-
+                    if self.firstFrameRendered != nil {
+                        self.firstFrameRendered?()
+                        self.firstFrameRendered = nil
+                    }
 
                     
                     self.videoLayer.setNeedsUpdate()
