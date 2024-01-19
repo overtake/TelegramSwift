@@ -42,6 +42,14 @@ public final class VideoSourceOutput {
         }
     }
     
+    public final class BGRATextureLayout {
+        public let bgra: MTLTexture
+        
+        public init(bgra: MTLTexture) {
+            self.bgra = bgra
+        }
+    }
+    
     public final class TriPlanarTextureLayout {
         public let y: MTLTexture
         public let u: MTLTexture
@@ -55,6 +63,7 @@ public final class VideoSourceOutput {
     }
     
     public enum TextureLayout {
+        case bgra(BGRATextureLayout)
         case biPlanar(BiPlanarTextureLayout)
         case triPlanar(TriPlanarTextureLayout)
     }
