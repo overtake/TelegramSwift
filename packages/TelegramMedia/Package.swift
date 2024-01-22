@@ -19,15 +19,16 @@ let package = Package(
         .package(name: "TelegramCore", path: "../../submodules/telegram-ios/submodules/TelegramCore"),
         .package(name: "Postbox", path: "../../submodules/telegram-ios/submodules/Postbox"),
         .package(name: "OpusBinding", path: "../../submodules/telegram-ios/submodules/OpusBinding"),
+        .package(name: "TgVoipWebrtc", path: "../tgcalls"),
         .package(name: "ColorPalette", path: "../ColorPalette"),
         .package(name: "KeyboardKey", path: "../KeyboardKey"),
         .package(name: "GZIP", path: "../GZIP"),
         .package(name: "TGUIKit", path: "../TGUIKit"),
+        .package(name: "CallVideoLayer", path: "../CallVideoLayer"),
         .package(name: "libwebp", path: "../../submodules/libwebp"),
         .package(name: "ApiCredentials", path: "../ApiCredentials"),
         .package(name: "ObjcUtils", path: "../ObjcUtils"),
         .package(name: "MediaPlayer", path: "../../submodules/telegram-ios/submodules/MediaPlayer"),
-
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -38,6 +39,8 @@ let package = Package(
                            .product(name: "ColorPalette", package: "ColorPalette", condition: nil),
                            .product(name: "KeyboardKey", package: "KeyboardKey", condition: nil),
                            .product(name: "TGUIKit", package: "TGUIKit", condition: nil),
+                           .product(name: "CallVideoLayer", package: "CallVideoLayer", condition: nil),
+                           .product(name: "TgVoipWebrtc", package: "TgVoipWebrtc", condition: nil),
                            .product(name: "TelegramCore", package: "TelegramCore", condition: nil),
                            .product(name: "GZIP", package: "GZIP", condition: nil),
                            .product(name: "Postbox", package: "Postbox", condition: nil),

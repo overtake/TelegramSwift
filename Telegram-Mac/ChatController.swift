@@ -6413,7 +6413,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private weak var dustLayerView: DustLayerView? = nil
     
     private func checkMessageDeletions(_ previous: ChatHistoryView?, _ currentView: ChatHistoryView) {
+        
+        if !isLite(.animations) {
+            return
+        }
+        
         CATransaction.begin()
+        
+
         var expiredMessageStableIds = Set<AnyHashable>()
         if let previousHistoryView = self.historyView {
             var existingStableIds = Set<AnyHashable>()

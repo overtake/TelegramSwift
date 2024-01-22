@@ -367,7 +367,7 @@ private final class AdaptedCallVideoSource: VideoSource {
     }
 }
 
-func MetalVideoMakeView(videoStreamSignal: Signal<OngoingGroupCallContext.VideoFrameData, NoError>) -> MetalCallVideoView {
+public func MetalVideoMakeView(videoStreamSignal: Signal<OngoingGroupCallContext.VideoFrameData, NoError>) -> MetalCallVideoView {
     let view = MetalCallVideoView(frame: NSMakeRect(0, 0, 300, 300))
     
     let adapter = AdaptedCallVideoSource(videoStreamSignal: videoStreamSignal)

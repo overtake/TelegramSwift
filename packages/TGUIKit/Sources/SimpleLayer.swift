@@ -54,17 +54,23 @@ open class SimpleShapeLayer : CAShapeLayer {
 open class SimpleLayer: CALayer {
     public var didEnterHierarchy: (() -> Void)?
     public var didExitHierarchy: (() -> Void)?
-    public var isInHierarchy: Bool = false
+    public var isInHierarchy: Bool = false {
+        didSet {
+            if isInHierarchy {
+                self.didEnterHierarchy?()
+            } else {
+                self.didExitHierarchy?()
+            }
+        }
+    }
     
     public var onDraw: ((CALayer, CGContext) -> Void)?
 
     override open func action(forKey event: String) -> CAAction? {
         if event == kCAOnOrderIn {
             self.isInHierarchy = true
-            self.didEnterHierarchy?()
         } else if event == kCAOnOrderOut {
             self.isInHierarchy = false
-            self.didExitHierarchy?()
         }
         return nullAction
     }
