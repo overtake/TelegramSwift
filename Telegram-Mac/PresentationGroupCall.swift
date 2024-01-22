@@ -6,7 +6,7 @@ import SwiftSignalKit
 import AVFoundation
 import TelegramVoip
 import TGUIKit
-import CallVideoLayer
+import TelegramMedia
 
 func groupCallLogsPath(account: Account) -> String {
     return account.basePath + "/group-calls"
