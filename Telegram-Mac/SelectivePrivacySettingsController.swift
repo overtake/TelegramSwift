@@ -491,12 +491,12 @@ fileprivate func prepareTransition(left:[SelectivePrivacySettingsEntry], right: 
 class SelectivePrivacySettingsController: TableViewController {
     private let kind: SelectivePrivacySettingsKind
     private let current: SelectivePrivacySettings
-    private let updated: (SelectivePrivacySettings, SelectivePrivacySettings?, Bool?) -> Void
+    private let updated: (SelectivePrivacySettings, SelectivePrivacySettings?, Bool?, GlobalPrivacySettings?) -> Void
     private var savePressed:(()->Void)?
     private let callSettings: SelectivePrivacySettings?
     private let phoneDiscoveryEnabled: Bool?
     private let globalSettings: GlobalPrivacySettings?
-    init(_ context: AccountContext, kind: SelectivePrivacySettingsKind, current: SelectivePrivacySettings, callSettings: SelectivePrivacySettings? = nil, phoneDiscoveryEnabled: Bool?, globalSettings: GlobalPrivacySettings? = nil, updated: @escaping (SelectivePrivacySettings, SelectivePrivacySettings?, Bool?) -> Void) {
+    init(_ context: AccountContext, kind: SelectivePrivacySettingsKind, current: SelectivePrivacySettings, callSettings: SelectivePrivacySettings? = nil, phoneDiscoveryEnabled: Bool?, globalSettings: GlobalPrivacySettings? = nil, updated: @escaping (SelectivePrivacySettings, SelectivePrivacySettings?, Bool?, GlobalPrivacySettings?) -> Void) {
         self.kind = kind
         self.current = current
         self.updated = updated
@@ -993,9 +993,11 @@ class SelectivePrivacySettingsController: TableViewController {
                 
                 let basic = context.engine.privacy.updateSelectiveAccountPrivacySettings(type: type, settings: settings)
                 let global: Signal<Never, NoError>
+                var gSettings: GlobalPrivacySettings? = globalSettings
                 if var globalSettings = globalSettings {
                     globalSettings.hideReadTime = stateValue.with { $0.hideReadTime ?? false }
                     global = context.engine.privacy.updateGlobalPrivacySettings(settings: globalSettings)
+                    gSettings = globalSettings
                 } else {
                     global = .complete()
                 }
@@ -1006,7 +1008,7 @@ class SelectivePrivacySettingsController: TableViewController {
                         current.saving = false
                         return current
                     }
-                    updated(settings, callSettings, phoneDiscoveryEnabled)
+                    updated(settings, callSettings, phoneDiscoveryEnabled, gSettings)
                     dismissImpl?()
                 }))
             }
