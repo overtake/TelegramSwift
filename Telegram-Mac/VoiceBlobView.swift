@@ -96,7 +96,7 @@ final class VoiceBlobView: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func setColor(_ color: NSColor) {
+    func setColor(_ color: NSColor, animated: Bool) {
         smallBlob.setColor(color)
         mediumBlob.setColor(color.withAlphaComponent(0.3))
         bigBlob.setColor(color.withAlphaComponent(0.15))

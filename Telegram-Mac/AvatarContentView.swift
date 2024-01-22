@@ -86,7 +86,7 @@ final class AvatarContentView: View {
             )
 
 
-            audioLevelView.setColor(color)
+            audioLevelView.setColor(color, animated: true)
             self.audioLevelView = audioLevelView
             self.addSubview(audioLevelView, positioned: .below, relativeTo: self.subviews.first)
             audioLevelView.center()

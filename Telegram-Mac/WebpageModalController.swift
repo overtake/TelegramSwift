@@ -592,7 +592,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
     }
     
-    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil) {
+    private var botPeer: Peer? = nil
+    
+    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil) {
         self.url = url
         self.requestData = requestData
         self.data = nil
@@ -601,6 +603,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.title = title
         self.effectiveSize = effectiveSize
         self.thumbFile = thumbFile
+        self.botPeer = botPeer
         super.init(frame: NSMakeRect(0,0,380,450))
     }
     
@@ -1278,10 +1281,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     fileprivate func invokeCustomMethod(requestId: String, method: String, params: String) {
-        guard let data = self.requestData else {
+        
+        let id = self.requestData?.bot.id ?? self.botPeer?.id
+        
+        guard let peerId = id else {
             return
         }
-        let _ = (self.context.engine.messages.invokeBotCustomMethod(botId: data.bot.id, method: method, params: params)
+        let _ = (self.context.engine.messages.invokeBotCustomMethod(botId: peerId, method: method, params: params)
         |> deliverOnMainQueue).start(next: { [weak self] result in
             guard let `self` = self else {
                 return

@@ -132,6 +132,7 @@ float interpolateFloat(float value1, float value2, float factor) {
 
 struct Wave {
     float time;
+    float speed;
     float3 amplitude;
     float3 wavelength;
 };
@@ -148,7 +149,7 @@ float curve(float point, Wave wave) {
         float wavelength = len[i];
         float w = 2.0 / wavelength;
 
-        float speed = 0.5;
+        float speed = wave.speed;
         float q = speed * w;
 
         curve += amplitude * sin((w * point) + (q * t));

@@ -7,6 +7,7 @@ import TGUIKit
 
 struct VertexWave : sizable {
     var time: Float = 0
+    var speed: Float = 0.5
     var amplitude: SIMD3<Float> = .init(0, 0, 0)
     var wavelength: SIMD3<Float> = .init(0, 0, 0)
 }
@@ -34,13 +35,17 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         struct Wave {
             var amplitudes: [Float]
             var lengths: [Float]
-            init() {
+            var speed: Float = 0.5
+            init(speed: Float = 0.5) {
+                self.speed = speed
                 self.amplitudes = generateAmplitudes()
                 self.lengths = generateWavelengths()
             }
             
-            func interpolate(_ wave: Wave, t: Float) -> Wave {
+            func interpolate(_ wave: Wave, t: Float, speed: Float) -> Wave {
                 var interpolated = Wave()
+                let speed = interpolateFloat(self.speed, speed, at: t)
+                interpolated.speed = speed
                 for i in 0 ..< wave.amplitudes.count {
                     interpolated.amplitudes[i] = interpolateFloat(self.amplitudes[i], wave.amplitudes[i], at: t)
                     interpolated.lengths[i] = interpolateFloat(self.lengths[i], wave.lengths[i], at: t)
@@ -49,7 +54,7 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
             }
             
             func vertexWave(_ t: Float) -> VertexWave {
-                return .init(time: t, amplitude: SIMD3<Float>(amplitudes[0], amplitudes[1], amplitudes[2]), wavelength: SIMD3<Float>(lengths[0], lengths[1], lengths[2]))
+                return .init(time: t, speed: self.speed, amplitude: SIMD3<Float>(amplitudes[0] * speed, amplitudes[1] * speed, amplitudes[2] * speed), wavelength: SIMD3<Float>(lengths[0] * speed, lengths[1] * speed, lengths[2] * speed))
             }
         }
         
@@ -65,8 +70,8 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         }
 
         
-        mutating func advance(t: Float) {
-            self.wave = self.wave.interpolate(nextWave, t: t)
+        mutating func advance(t: Float, speed: Float) {
+            self.wave = self.wave.interpolate(nextWave, t: t, speed: speed)
             self.nextWave = Wave()
         }
     }
@@ -103,6 +108,8 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
 
     private var phase: Float = 0.0
     
+    public var waveSpeed: Float = 0.5
+    
     private var blobs: [Blob] = []
     
     private var displayLinkSubscription: SharedDisplayLinkDriver.Link?
@@ -121,7 +128,7 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
                 self.phase += Float(deltaTime)
                 if self.phase - floor(self.phase) <= Float(deltaTime) {
                     for i in 0 ..< self.blobs.count {
-                        self.blobs[i].advance(t: 0)
+                        self.blobs[i].advance(t: 0, speed: self.waveSpeed)
                     }
                 }
                 self.setNeedsUpdate()
@@ -136,7 +143,7 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         
         self.isOpaque = false
         self.blobs = (0 ..< 3).map { _ in
-            Blob(count: 10)
+            Blob(count: 16)
         }
     }
     
@@ -156,7 +163,7 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         let phase = self.phase
         let blobs = self.blobs
         
-        context.renderToLayer(spec: RenderLayerSpec(size: RenderSize(width: Int(self.bounds.width * 3.0), height: Int(self.bounds.height * 3.0)), edgeInset: 4), state: RenderState.self, layer: self, commands: { encoder, placement in
+        context.renderToLayer(spec: RenderLayerSpec(size: RenderSize(width: Int(self.bounds.width * 4.0), height: Int(self.bounds.height * 4.0)), edgeInset: 0), state: RenderState.self, layer: self, commands: { encoder, placement in
             let rect = placement.effectiveRect
             
             for i in 0 ..< blobs.count {

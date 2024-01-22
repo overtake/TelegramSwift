@@ -192,7 +192,7 @@ private class ChatRecorderOverlayView : Control {
         animation.duration = 0.1
         innerContainer.layer?.add(animation, forKey: "backgroundColor")
         
-        self.playbackAudioLevelView.setColor(mouseInside() ? theme.colors.accent : theme.colors.redUI)
+        self.playbackAudioLevelView.setColor(mouseInside() ? theme.colors.accent : theme.colors.redUI, animated: true)
 
     }
     
