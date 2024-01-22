@@ -117,6 +117,7 @@ fragment half4 callBackgroundFragment(
     return color;
 }
 
+
 struct BlobVertexOut {
     float4 position [[position]];
 };
@@ -124,6 +125,37 @@ struct BlobVertexOut {
 float2 blobVertex(float2 center, float angle, float radius) {
     return float2(center.x + radius * cos(angle), center.y + radius * sin(angle));
 }
+
+float interpolateFloat(float value1, float value2, float factor) {
+    return value1 * (1.0 - factor) + value2 * factor;
+}
+
+struct Wave {
+    float time;
+    float3 amplitude;
+    float3 wavelength;
+};
+
+float curve(float point, Wave wave) {
+    float curve = 0;
+    float t = wave.time;
+    
+    float amp[3] = { wave.amplitude.x, wave.amplitude.y, wave.amplitude.z };
+    float len[3] = { wave.wavelength.x, wave.wavelength.y, wave.wavelength.z };
+
+    for (int i = 0; i < 3; i++) {
+        float amplitude = amp[i];
+        float wavelength = len[i];
+        float w = 2.0 / wavelength;
+
+        float speed = 0.5;
+        float q = speed * w;
+
+        curve += amplitude * sin((w * point) + (q * t));
+    }
+    return curve;
+}
+
 
 float2 mapPointInRect(Rectangle rect, half2 point) {
     half2 out(rect.origin.x + rect.size.x * point.x, rect.origin.y + rect.size.y * point.y);
@@ -156,19 +188,19 @@ private:
     }
 };
 
-half2 evaluateBlobPoint(const device Rectangle &rect, const device float *positions, int index, int count, int subdivisions) {
-    float position = positions[index];
+half2 evaluateBlobPoint(const device Rectangle &rect, int index, int count, int subdivisions, Wave wave) {
+    float position = curve(index, wave);
     float segmentAngle = float(index) / float(count) * 2.0 * 3.1415926;
     return half2(blobVertex(float2(0.5, 0.5), segmentAngle, 0.45 + 0.05 * position));
 }
 
-SmoothPoint evaluateSmoothBlobPoint(const device Rectangle &rect, const device float *positions, int index, int count, int subdivisions) {
+SmoothPoint evaluateSmoothBlobPoint(const device Rectangle &rect, int index, int count, int subdivisions, Wave wave) {
     int prevIndex = (index - 1) < 0 ? (count - 1) : (index - 1);
     int nextIndex = (index + 1) % count;
     
-    half2 prev = evaluateBlobPoint(rect, positions, prevIndex, count, subdivisions);
-    half2 curr = evaluateBlobPoint(rect, positions, index, count, subdivisions);
-    half2 next = evaluateBlobPoint(rect, positions, nextIndex, count, subdivisions);
+    half2 prev = evaluateBlobPoint(rect, prevIndex, count, subdivisions, wave);
+    half2 curr = evaluateBlobPoint(rect, index, count, subdivisions, wave);
+    half2 next = evaluateBlobPoint(rect, nextIndex, count, subdivisions, wave);
     
     float dx = next.x - prev.x;
     float dy = -next.y + prev.y;
@@ -203,15 +235,17 @@ half2 evaluateBezierBlobPoint(thread SmoothPoint &curr, thread SmoothPoint &next
     return oneMinusT * oneMinusT * oneMinusT * p0 + 3.0 * t * oneMinusT * oneMinusT * p1 + 3.0 * t * t * oneMinusT * p2 + t * t * t * p3;
 }
 
+
 vertex BlobVertexOut callBlobVertex(
     const device Rectangle &rect [[ buffer(0) ]],
-    const device float *positions [[ buffer(1) ]],
-    const device int &count [[ buffer(2) ]],
+    const device int &count [[ buffer(1) ]],
+    const device Wave &wave [[ buffer(2) ]],
     unsigned int vid [[ vertex_id ]]
 ) {
     const int subdivisions = 8;
     
     int triangleIndex = vid / 3;
+    
     
     int segmentIndex = triangleIndex / subdivisions;
     int nextIndex = (segmentIndex + 1) % count;
@@ -219,8 +253,8 @@ vertex BlobVertexOut callBlobVertex(
     half innerPosition = half(triangleIndex - segmentIndex * subdivisions) / half(subdivisions);
     half nextInnerPosition = half(triangleIndex + 1 - segmentIndex * subdivisions) / half(subdivisions);
     
-    SmoothPoint curr = evaluateSmoothBlobPoint(rect, positions, segmentIndex, count, subdivisions);
-    SmoothPoint next = evaluateSmoothBlobPoint(rect, positions, nextIndex, count, subdivisions);
+    SmoothPoint curr = evaluateSmoothBlobPoint(rect, segmentIndex, count, subdivisions, wave);
+    SmoothPoint next = evaluateSmoothBlobPoint(rect, nextIndex, count, subdivisions, wave);
     
     half2 triangle[3];
     triangle[0] = half2(0.5, 0.5);
@@ -230,6 +264,7 @@ vertex BlobVertexOut callBlobVertex(
     BlobVertexOut out;
     out.position = float4(float2(mapPointInRect(rect, triangle[vid % 3])), 0.0, 1.0);
     
+
     return out;
 }
 
@@ -239,6 +274,7 @@ fragment half4 callBlobFragment(
     half alpha = 0.35;
     return half4(1.0 * alpha, 1.0 * alpha, 1.0 * alpha, alpha);
 }
+
 
 kernel void videoBiPlanarToRGBA(
     texture2d<half, access::read> inTextureY [[ texture(0) ]],

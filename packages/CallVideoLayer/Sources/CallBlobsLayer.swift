@@ -3,35 +3,71 @@ import MetalKit
 import MetalEngine
 import TGUIKit
 
+
+
+struct VertexWave : sizable {
+    var time: Float = 0
+    var amplitude: SIMD3<Float> = .init(0, 0, 0)
+    var wavelength: SIMD3<Float> = .init(0, 0, 0)
+}
+
+public func interpolateFloat(_ value1: Float, _ value2: Float, at factor: Float) -> Float {
+    return value1 * (1.0 - factor) + value2 * factor
+}
+
+private func generateAmplitudes() -> [Float] {
+    return [Float.random(in: 0.1 ..< 0.3),
+     Float.random(in: 0.1 ..< 0.3),
+     Float.random(in: 0.1 ..< 0.3)]
+}
+private func generateWavelengths() -> [Float] {
+    return [Float.random(in: 0.4 ..< 0.5),
+             Float.random(in: 0.4 ..< 0.5),
+             Float.random(in: 0.4 ..< 0.5)]
+}
+
 public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
     public var internalData: MetalEngineSubjectInternalData?
     
     struct Blob {
-        var points: [Float]
-        var nextPoints: [Float]
+        
+        struct Wave {
+            var amplitudes: [Float]
+            var lengths: [Float]
+            init() {
+                self.amplitudes = generateAmplitudes()
+                self.lengths = generateWavelengths()
+            }
+            
+            func interpolate(_ wave: Wave, t: Float) -> Wave {
+                var interpolated = Wave()
+                for i in 0 ..< wave.amplitudes.count {
+                    interpolated.amplitudes[i] = interpolateFloat(self.amplitudes[i], wave.amplitudes[i], at: t)
+                    interpolated.lengths[i] = interpolateFloat(self.lengths[i], wave.lengths[i], at: t)
+                }
+                return interpolated
+            }
+            
+            func vertexWave(_ t: Float) -> VertexWave {
+                return .init(time: t, amplitude: SIMD3<Float>(amplitudes[0], amplitudes[1], amplitudes[2]), wavelength: SIMD3<Float>(lengths[0], lengths[1], lengths[2]))
+            }
+        }
+        
+        var points: Int
+        var wave: Wave
+        var nextWave: Wave
         
         init(count: Int) {
-            self.points = (0 ..< count).map { _ in
-                Float.random(in: 0.0 ... 1.0)
-            }
-            self.nextPoints = (0 ..< count).map { _ in
-                Float.random(in: 0.0 ... 1.0)
-            }
+            self.points = count
+            
+            self.wave = Wave()
+            self.nextWave = Wave()
         }
+
         
-        func interpolate(at t: Float) -> [Float] {
-            var points: [Float] = Array(repeating: 0.0, count: self.points.count)
-            for i in 0 ..< self.points.count {
-                points[i] = Float(interpolateFloat(CGFloat(self.points[i]), CGFloat(self.nextPoints[i]), at: CGFloat(t)))
-            }
-            return points
-        }
-        
-        mutating func advance() {
-            self.points = self.nextPoints
-            self.nextPoints = (0 ..< self.points.count).map { _ in
-                Float.random(in: 0.0 ... 1.0)
-            }
+        mutating func advance(t: Float) {
+            self.wave = self.wave.interpolate(nextWave, t: t)
+            self.nextWave = Wave()
         }
     }
     
@@ -78,17 +114,16 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
             guard let self else {
                 return
             }
-            self.displayLinkSubscription = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(30), { [weak self] deltaTime in
+            self.displayLinkSubscription = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(60), { [weak self] deltaTime in
                 guard let self else {
                     return
                 }
-                self.phase += 1.5 * Float(deltaTime)
-                if self.phase >= 1.0 {
+                self.phase += Float(deltaTime)
+                if self.phase - floor(self.phase) <= Float(deltaTime) {
                     for i in 0 ..< self.blobs.count {
-                        self.blobs[i].advance()
+                        self.blobs[i].advance(t: 0)
                     }
                 }
-                self.phase = self.phase.truncatingRemainder(dividingBy: 1.0)
                 self.setNeedsUpdate()
             })
         }
@@ -100,8 +135,8 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         }
         
         self.isOpaque = false
-        self.blobs = (0 ..< 2).map { _ in
-            Blob(count: 8)
+        self.blobs = (0 ..< 3).map { _ in
+            Blob(count: 10)
         }
     }
     
@@ -125,20 +160,21 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
             let rect = placement.effectiveRect
             
             for i in 0 ..< blobs.count {
-                var points = blobs[i].interpolate(at: phase)
-                var count: Int32 = Int32(points.count)
+                var wave = blobs[i].wave.vertexWave(phase)
+                
+                var count: Int32 = Int32(blobs[i].points)
                 
                 let insetFraction: CGFloat = CGFloat(i) * 0.1
                 
                 let blobRect = rect.insetBy(dx: insetFraction * 0.5 * rect.width, dy: insetFraction * 0.5 * rect.height)
                 var rect = SIMD4<Float>(Float(blobRect.minX), Float(blobRect.minY), Float(blobRect.width), Float(blobRect.height))
                 
-                //encoder.setTriangleFillMode(.lines)
+               // encoder.setTriangleFillMode(.lines)
                 encoder.setVertexBytes(&rect, length: 4 * 4, index: 0)
-                encoder.setVertexBytes(&points, length: MemoryLayout<Float>.size * points.count, index: 1)
-                encoder.setVertexBytes(&count, length: MemoryLayout<Float>.size, index: 2)
+                encoder.setVertexBytes(&count, length: MemoryLayout<Float>.size, index: 1)
+                encoder.setVertexBytes(&wave, length: VertexWave.stride(), index: 2)
                 
-                encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3 * 8 * points.count)
+                encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3 * 8 * Int(count))
             }
         })
     }
