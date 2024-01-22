@@ -730,11 +730,25 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             choiceControl = nil
             break
         }
+        
+        switch item.interactionType {
+        case let .interactable(interaction):
+            updatePresentation(item: item, value: interaction.presentation, animated: animated)
+        default:
+            if let view = self.photoBadge {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.photoBadge = nil
+            }
+        }
+        
+        
+        
         self.image._change(opacity: item.enabled ? 1 : 0.8, animated: animated)
         rightSeparatorView.backgroundColor = theme.colors.border
         contextLabel?.backgroundColor = backdorColor
         needsLayout = true
         self.container.setNeedsDisplayLayer()
+        
         
         viewDidMoveToSuperview()
     }
@@ -786,35 +800,42 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
             
             if let value = value as? SelectPeerPresentation {
-                if value.premiumRequired.contains(item.peerId) {
-                    let current: ImageView
-                    var isNew = false
-                    if let view = self.photoBadge {
-                        current = view
-                    } else {
-                        current = ImageView()
-                        addSubview(current)
-                        self.photoBadge = current
-                        isNew = true
-                    }
-                    current.image = theme.icons.premium_required_forward
-                    current.setFrameOrigin(NSMakePoint(self.image.frame.maxX - current.frame.width / 2 + 5, self.image.frame.midY + 5))
-                    current.sizeToFit()
-                    
-                    if isNew, animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                        current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
-                    }
-                } else if let view = self.photoBadge {
-                    performSubviewRemoval(view, animated: animated, scale: true)
-                    self.photoBadge = nil
-                }
+                updatePresentation(item: item, value: value, animated: animated)
+            } else if let view = self.photoBadge {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.photoBadge = nil
             }
         }
         needsLayout = true
         
     }
 
+    
+    private func updatePresentation(item: ShortPeerRowItem, value: SelectPeerPresentation, animated: Bool) {
+        if value.premiumRequired.contains(item.peerId) {
+            let current: ImageView
+            var isNew = false
+            if let view = self.photoBadge {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.photoBadge = current
+                isNew = true
+            }
+            current.image = theme.icons.premium_required_forward
+            current.setFrameOrigin(NSMakePoint(self.image.frame.maxX - current.frame.width / 2 + 5, self.image.frame.midY + 5))
+            current.sizeToFit()
+            
+            if isNew, animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+            }
+        } else if let view = self.photoBadge {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.photoBadge = nil
+        }
+    }
     
 
     func isEqual(to other: Notifable) -> Bool {
