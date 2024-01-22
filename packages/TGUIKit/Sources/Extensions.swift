@@ -575,6 +575,11 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "backgroundColor")
     }
+    func animateTransform() ->Void {
+        let animation = CABasicAnimation(keyPath: "transform")
+        animation.duration = 0.2
+        self.add(animation, forKey: "transform")
+    }
     
     func animatePath(duration: Double = 0.2) {
         let animation = CABasicAnimation(keyPath: "path")
@@ -2847,4 +2852,10 @@ public extension CGImage {
            return newSampleBuffer
        }
 
+}
+
+
+public func mapRange(_ x: Double, inMin: Double, inMax: Double, outMin: Double, outMax: Double) -> Double {
+    let slope = (outMax - outMin) / (inMax - inMin)
+    return outMin + slope * (x - inMin)
 }

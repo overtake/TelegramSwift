@@ -452,6 +452,8 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         titleView.isSelectable = false
         photoView.userInteractionEnabled = false
         
+        containerView.layer?.masksToBounds = false
+        
         speakingView.layer?.cornerRadius = 10
         speakingView.layer?.borderWidth = 2
         speakingView.layer?.borderColor = GroupCallTheme.speakActiveColor.cgColor

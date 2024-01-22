@@ -134,7 +134,7 @@ private class StoryRecorderOverlayView : Control {
         animation.duration = 0.1
         innerContainer.layer?.add(animation, forKey: "backgroundColor")
         
-        self.playbackAudioLevelView.setColor(mouseInside() ? darkAppearance.colors.accent : darkAppearance.colors.redUI)
+        self.playbackAudioLevelView.setColor(mouseInside() ? darkAppearance.colors.accent : darkAppearance.colors.redUI, animated: true)
 
     }
     
