@@ -307,9 +307,9 @@ public final class MediaPlayerView: View {
         videoLayer.videoGravity = .resize
         
        // #if arch(x86_64)
-        if let sublayers = videoLayer.sublayers {
-            findContentsLayer(sublayers)?.minificationFilter = .linear
-        }
+//        if let sublayers = videoLayer.sublayers {
+//            findContentsLayer(sublayers)?.minificationFilter = .nearest
+//        }
        // #endif
         
         self.videoLayer = videoLayer
