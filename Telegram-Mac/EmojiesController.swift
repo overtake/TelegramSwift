@@ -16,6 +16,8 @@ import ColorPalette
 import TelegramMedia
 
 
+// https://getemoji.com/ to get the latest list
+
 private extension EmojiSearchCategories.Group {
     var icon: CGImage? {
         switch self.title.lowercased() {
@@ -125,14 +127,14 @@ let emojiesInstance:[EmojiSegment:[String]] = {
     var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
     
     let resource:URL?
-    if #available(OSX 11.1, *) {
+    if #available(OSX 14.0, *) {
+        resource = Bundle.main.url(forResource:"emoji14", withExtension:"txt")
+    } else if #available(OSX 11.1, *) {
         resource = Bundle.main.url(forResource:"emoji1016", withExtension:"txt")
     } else if #available(OSX 10.14.1, *) {
-        resource = Bundle.main.url(forResource:"emoji1014-1", withExtension:"txt")
-    } else  if #available(OSX 10.12, *) {
-        resource = Bundle.main.url(forResource:"emoji", withExtension:"txt")
+        resource = Bundle.main.url(forResource:"emoji1014", withExtension:"txt")
     } else {
-        resource = Bundle.main.url(forResource:"emoji11", withExtension:"txt")
+        resource = Bundle.main.url(forResource:"emoji", withExtension:"txt")
     }
     if let resource = resource {
         

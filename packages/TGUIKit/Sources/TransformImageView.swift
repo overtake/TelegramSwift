@@ -7,11 +7,8 @@
 //
 
 import Cocoa
-import TelegramCore
-
-import Postbox
+import AVFoundation
 import SwiftSignalKit
-import TGUIKit
 
 private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
@@ -27,7 +24,7 @@ open class TransformImageView: NSView {
     private let disposable = MetaDisposable()
     public var animatesAlphaOnFirstTransition:Bool = false
     private let argumentsPromise = Promise<TransformImageArguments>()
-    private(set) var isFullyLoaded: Bool = false
+    public private(set) var isFullyLoaded: Bool = false
     public var ignoreFullyLoad:Bool = false
     private var first:Bool = true
     public init() {
@@ -38,7 +35,7 @@ open class TransformImageView: NSView {
         layerContentsRedrawPolicy = .never
     }
     
-    func clear() {
+    public func clear() {
         self.isFullyLoaded = false
         self.image = nil
         self.disposable.set(nil)
@@ -57,7 +54,7 @@ open class TransformImageView: NSView {
         }
     }
     
-    var image: CGImage? {
+    public var image: CGImage? {
         set {
             layer?.contents = newValue
             if _image != newValue {
@@ -227,7 +224,7 @@ open class TransformImageView: NSView {
     
     override open func copy() -> Any {
         
-        var visibleRect = self.effectiveVisibleRect
+        let visibleRect = self.effectiveVisibleRect
         
         let view = NSView()
         view.wantsLayer = true

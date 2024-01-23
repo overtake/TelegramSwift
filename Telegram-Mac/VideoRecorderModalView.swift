@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-
+import TelegramMedia
 
 class VideoRecorderModalView: View {
     private let captureLayer: AVCaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer()
