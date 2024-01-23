@@ -408,6 +408,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
 //        self.updateLocalizationAndTheme(theme: theme)
         self.needsLayout = true
     }
+    
         
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {
         if !tokenizedView.isHidden {

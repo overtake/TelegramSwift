@@ -41,19 +41,6 @@ private final class WallpaperCachedRecord {
     }
 }
 
-public final class TransformImageResult {
-    let image: CGImage?
-    let highQuality: Bool
-    let sampleBuffer: CMSampleBuffer?
-    init(_ image: CGImage?, _ highQuality: Bool, _ sampleBuffer: CMSampleBuffer? = nil) {
-        self.image = image
-        self.sampleBuffer = sampleBuffer
-        self.highQuality = highQuality
-    }
-    deinit {
-        
-    }
-}
 
 enum AppearanceThumbSource : Int32 {
     case general

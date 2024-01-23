@@ -200,6 +200,10 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         self.updated = updated
         super.init(context)
     }
+    
+    override var defaultBarTitle: String {
+        return self.title
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()

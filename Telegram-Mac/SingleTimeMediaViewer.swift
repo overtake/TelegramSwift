@@ -476,7 +476,7 @@ final class SingleTimeMediaViewer : ModalViewController {
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         super.close(animationType: animationType)
         if let view = genericView.mediaView {
-            if !isLite(.animations) {
+            if isLite(.animations) {
                 return
             }
             ApplyDustAnimation(for: view)

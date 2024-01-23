@@ -246,9 +246,9 @@ class ChatSearchView: SearchView {
         self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
     }
     
-    func cancelEmojiToken() {
+    func cancelEmojiToken(animated: Bool) {
         self.tokenState = .none
-        self.change(state: .Focus, true)
+        self.change(state: .Focus, animated)
         self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
     }
     

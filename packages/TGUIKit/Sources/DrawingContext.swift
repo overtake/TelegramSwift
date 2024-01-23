@@ -9,7 +9,27 @@
 import Cocoa
 import SwiftSignalKit
 
-//canRepresent(<#T##displayGamut: NSDisplayGamut##NSDisplayGamut#>)
+
+public final class ImageDataTransformation {
+    public let data: ImageRenderData
+    public let execute:(TransformImageArguments, ImageRenderData)->DrawingContext?
+    public init(data: ImageRenderData = ImageRenderData(nil, nil, false), execute:@escaping(TransformImageArguments, ImageRenderData)->DrawingContext? = { _, _ in return nil}) {
+        self.data = data
+        self.execute = execute
+    }
+}
+
+public final class ImageRenderData {
+    public let thumbnailData: Data?
+    public let fullSizeData:Data?
+    public let fullSizeComplete:Bool
+    public init(_ thumbnailData: Data?, _ fullSizeData: Data?, _ fullSizeComplete: Bool) {
+        self.thumbnailData = thumbnailData
+        self.fullSizeData = fullSizeData
+        self.fullSizeComplete = fullSizeComplete
+    }
+}
+
 
 public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
     if size.width.isZero || size.height.isZero {

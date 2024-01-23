@@ -2859,3 +2859,19 @@ public func mapRange(_ x: Double, inMin: Double, inMax: Double, outMin: Double, 
     let slope = (outMax - outMin) / (inMax - inMin)
     return outMin + slope * (x - inMin)
 }
+
+
+
+public final class TransformImageResult {
+    public let image: CGImage?
+    public let highQuality: Bool
+    public let sampleBuffer: CMSampleBuffer?
+    public init(_ image: CGImage?, _ highQuality: Bool, _ sampleBuffer: CMSampleBuffer? = nil) {
+        self.image = image
+        self.sampleBuffer = sampleBuffer
+        self.highQuality = highQuality
+    }
+    deinit {
+        
+    }
+}

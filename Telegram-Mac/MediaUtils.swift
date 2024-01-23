@@ -22,26 +22,6 @@ import RangeSet
 
 
 
-public final class ImageDataTransformation {
-    let data: ImageRenderData
-    let execute:(TransformImageArguments, ImageRenderData)->DrawingContext?
-    init(data: ImageRenderData = ImageRenderData(nil, nil, false), execute:@escaping(TransformImageArguments, ImageRenderData)->DrawingContext? = { _, _ in return nil}) {
-        self.data = data
-        self.execute = execute
-    }
-}
-
-final class ImageRenderData {
-    let thumbnailData: Data?
-    let fullSizeData:Data?
-    let fullSizeComplete:Bool
-    init(_ thumbnailData: Data?, _ fullSizeData: Data?, _ fullSizeComplete: Bool) {
-        self.thumbnailData = thumbnailData
-        self.fullSizeData = fullSizeData
-        self.fullSizeComplete = fullSizeComplete
-    }
-}
-
 let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
     (400, [1]),

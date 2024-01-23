@@ -4189,6 +4189,8 @@ public final class L10n {
   public static func chatQuizTooltipVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_zero", p1)
   }
+  /// Edit Tag Label
+  public static var chatReactionContextEditTag: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.EditTag") }
   /// Filter by Tag
   public static var chatReactionContextFilterByTag: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.FilterByTag") }
   /// Remove Tag

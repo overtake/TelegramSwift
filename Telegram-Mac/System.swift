@@ -102,43 +102,6 @@ fileprivate func proccessEntries<T,R>(_ reverse:Bool = true, _ left:[R]?,right:[
 
 
 
-func link(path:String?, ext:String) -> String? {
-    var realPath:String? = path
-    if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
-        let path = path.nsstring.appendingPathExtension(ext)!
-        if !FileManager.default.fileExists(atPath: path) {
-            try? FileManager.default.removeItem(atPath: path)
-            try? FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
-        }
-        realPath = path
-    }
-    return realPath
-}
-
-
-func fs(_ path:String) -> Int32? {
-    
-    if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
-    
-        if attrs["NSFileType"] as? String == "NSFileTypeSymbolicLink" {
-            if let path = try? FileManager.default.destinationOfSymbolicLink(atPath: path) {
-                attrs = (try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary) ?? attrs
-            }
-        }
-        
-        
-        let size = attrs.fileSize()
-    
-        if size > UInt64(INT32_MAX) {
-            return INT32_MAX
-        }
-        return Int32(size)
-    }
-    return nil
-}
-
-
-
 
 func DALDevices() -> [AVCaptureDevice] {
     let video = AVCaptureDevice.devices(for: .video)
