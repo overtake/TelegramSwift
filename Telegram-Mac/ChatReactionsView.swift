@@ -330,6 +330,8 @@ final class ChatReactionsLayout {
         
         func loadMenu() -> ContextMenu? {
             
+            let context = self.context
+            let tag = self.value.value
             if message.id.peerId == context.peerId, tagsGloballyEnabled {
                 if let menu = menu {
                     return menu
@@ -342,6 +344,14 @@ final class ChatReactionsLayout {
                             _ = self.action(self.value.value, false)
                         }
                     }, itemImage: MenuAnimation.menu_tag_filter.value))
+                    
+                    
+                    menu.addItem(ContextMenuItem(strings().chatReactionContextEditTag, handler: {
+                        showModal(with: EditTagLabelController(context: context, reaction: tag), for: context.window)
+                    }, itemImage: MenuAnimation.menu_tag_rename.value))
+                    
+                    menu.addItem(ContextSeparatorItem())
+                    
                     menu.addItem(ContextMenuItem(strings().chatReactionContextRemoveTag, handler: { [weak self] in
                         if let `self` = self {
                             self.action(self.value.value, true)

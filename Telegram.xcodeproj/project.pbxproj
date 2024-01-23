@@ -502,6 +502,8 @@
 		27B6D05D27393A5500C785C7 /* MergeLists in Frameworks */ = {isa = PBXBuildFile; productRef = 27B6D05C27393A5500C785C7 /* MergeLists */; };
 		27B836192B5FC1AE00E82683 /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = 27B836182B5FC1AE00E82683 /* emoji14.txt */; };
 		27B8361C2B5FCD0300E82683 /* Dock in Frameworks */ = {isa = PBXBuildFile; productRef = 27B8361B2B5FCD0300E82683 /* Dock */; };
+		27B836202B5FF51F00E82683 /* menu_tag_rename.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8361F2B5FF51F00E82683 /* menu_tag_rename.tgs */; };
+		27B836222B5FF6E100E82683 /* EditTagLabelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B836212B5FF6E100E82683 /* EditTagLabelController.swift */; };
 		27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8AFE926380B4D0044C71B /* screenon.tgs */; };
 		27B8AFEC26380B4E0044C71B /* screenoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8AFEA26380B4E0044C71B /* screenoff.tgs */; };
 		27B8E7BD27424E90001B8DF7 /* TGGifConverter in Frameworks */ = {isa = PBXBuildFile; productRef = 27B8E7BC27424E90001B8DF7 /* TGGifConverter */; };
@@ -1948,6 +1950,8 @@
 		27B6D0472739387500C785C7 /* TelegramApi */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramApi; path = "submodules/telegram-ios/submodules/TelegramApi"; sourceTree = "<group>"; };
 		27B836182B5FC1AE00E82683 /* emoji14.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji14.txt; sourceTree = "<group>"; };
 		27B8361A2B5FCCF800E82683 /* Dock */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Dock; path = packages/Dock; sourceTree = "<group>"; };
+		27B8361F2B5FF51F00E82683 /* menu_tag_rename.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_tag_rename.tgs; sourceTree = "<group>"; };
+		27B836212B5FF6E100E82683 /* EditTagLabelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTagLabelController.swift; sourceTree = "<group>"; };
 		27B8AFE926380B4D0044C71B /* screenon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = screenon.tgs; sourceTree = "<group>"; };
 		27B8AFEA26380B4E0044C71B /* screenoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = screenoff.tgs; sourceTree = "<group>"; };
 		27B8E7BB27424E4F001B8DF7 /* TGGifConverter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGGifConverter; path = packages/TGGifConverter; sourceTree = "<group>"; };
@@ -3553,6 +3557,7 @@
 		27CE375C276095DA007E6F1B /* menu */ = {
 			isa = PBXGroup;
 			children = (
+				27B8361F2B5FF51F00E82683 /* menu_tag_rename.tgs */,
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
@@ -3770,6 +3775,7 @@
 			children = (
 				27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */,
 				2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */,
+				27B836212B5FF6E100E82683 /* EditTagLabelController.swift */,
 			);
 			name = reactions;
 			sourceTree = "<group>";
@@ -6610,6 +6616,7 @@
 				27CB176227637D7400DD25E0 /* menu_create_group.tgs in Resources */,
 				2747FD3E292CD4530045B95C /* menu_report_false_positive.tgs in Resources */,
 				A731925925DBA60000218E0E /* gigagroup.tgs in Resources */,
+				27B836202B5FF51F00E82683 /* menu_tag_rename.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				2733672C276214050027441E /* menu_select_messages.tgs in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
@@ -6744,6 +6751,7 @@
 				27A69778273D0ADF00B33415 /* GroupCallTileRowItem.swift in Sources */,
 				27A69779273D0ADF00B33415 /* GroupCallPeerController.swift in Sources */,
 				27A6977A273D0ADF00B33415 /* GroupCallPeerAvatarRowItem.swift in Sources */,
+				27B836222B5FF6E100E82683 /* EditTagLabelController.swift in Sources */,
 				27A6977B273D0AE000B33415 /* GroupCallTextAndLabelRowItem.swift in Sources */,
 				27A6976F273D0AB100B33415 /* GroupCallTileView.swift in Sources */,
 				27A6976E273D0A6000B33415 /* GroupCallParticipantRowItem.swift in Sources */,
@@ -7725,7 +7733,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.6;
+				MARKETING_VERSION = 10.6.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -7777,7 +7785,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.6;
+				MARKETING_VERSION = 10.6.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -7824,7 +7832,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.6;
+				MARKETING_VERSION = 10.6.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -7941,7 +7949,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.6;
+				MARKETING_VERSION = 10.6.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (

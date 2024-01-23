@@ -37,11 +37,9 @@ final class GroupCallAvatarView : View {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
     private let audioLevelDisposable = MetaDisposable()
     private let stateDelay = MetaDisposable()
+    private var peer: Peer?
     let photoSize: NSSize
     init(frame frameRect: NSRect, photoSize: NSSize) {
-        #if arch(arm64)
-        playbackAudioLevelView = CallBlobView(frame: frameRect.size.bounds.insetBy(dx: 6, dy: 6))
-        #else
         playbackAudioLevelView = VoiceBlobView(
             frame: frameRect.size.bounds,
             maxLevel: 0.3,
@@ -49,7 +47,6 @@ final class GroupCallAvatarView : View {
             mediumBlobRange: (0.7, 0.8),
             bigBlobRange: (0.8, 0.9)
         )
-    #endif
 
         self.photoSize = photoSize
         super.init(frame: frameRect)
@@ -73,12 +70,15 @@ final class GroupCallAvatarView : View {
     
     func update(_ audioLevel:(PeerId)->Signal<Float?, NoError>?, data: PeerGroupCallData, activityColor: NSColor, account: Account, animated: Bool) {
         self.timestamp = nil
+        self.peer = data.peer
         if let audioLevel = audioLevel(data.peer.id), data.state?.muteState == nil {
             self.audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
                 if let timestamp = self?.timestamp {
-                    if CACurrentMediaTime() - timestamp < 0.7 {
-                        self?.stateDelay.set(delaySignal(0.5).start(completed: {
-                            self?.updateAudioLevel(value, data: data, animated: animated)
+                    if CACurrentMediaTime() - timestamp < 0.5 {
+                        self?.stateDelay.set(delaySignal(0.3).start(completed: {
+                            if self?.peer?.id == data.peer.id {
+                                self?.updateAudioLevel(value, data: data, animated: animated)
+                            }
                         }))
                     } else {
                         self?.updateAudioLevel(value, data: data, animated: animated)
@@ -89,6 +89,7 @@ final class GroupCallAvatarView : View {
             }))
         } else {
             self.audioLevelDisposable.set(nil)
+            self.stateDelay.set(nil)
             self.updateAudioLevel(nil, data: data, animated: animated)
         }
 
