@@ -309,7 +309,7 @@ enum LocalAnimatedSticker : String {
     
     case menu_tag_filter
     case menu_tag_remove
-
+    case menu_tag_rename
     
     case forum_topic
     

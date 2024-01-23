@@ -9,6 +9,7 @@ import Localization
 import InAppSettings
 import IOKit
 import CodeSyntax
+import Dock
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -524,7 +525,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
 //            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
-            context.bindings.rootNavigation().push(MetalEngineTestController())
+            setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

@@ -1339,6 +1339,7 @@ private final class ChatSearchTagsView: View {
                 fileprivate private(set) var item: Item?
                 fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
                 private let backgroundView: NinePathImage = NinePathImage()
+                private var textView: TextView?
                 private var countView: TextView? = nil
                 required init(frame frameRect: NSRect) {
                     super.init(frame: frameRect)
@@ -1388,6 +1389,23 @@ private final class ChatSearchTagsView: View {
                         performSubviewRemoval(view, animated: animated)
                         self.countView = nil
                     }
+                    
+                    if let title = item.textViewLayout {
+                        let current: TextView
+                        if let view = self.textView {
+                            current = view
+                        } else {
+                            current = TextView()
+                            self.textView = current
+                            current.userInteractionEnabled = false
+                            current.isSelectable = false
+                            addSubview(current)
+                        }
+                        current.update(title)
+                    } else if let view = self.textView {
+                        performSubviewRemoval(view, animated: animated)
+                        self.textView = nil
+                    }
                 }
                 
                 deinit {
@@ -1408,9 +1426,17 @@ private final class ChatSearchTagsView: View {
                     transition.updateFrame(view: backgroundView, frame: size.bounds)
                     transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 5))
                     
-                    if let countView = countView {
-                        transition.updateFrame(view: countView, frame: countView.centerFrameY(x: imageView.frame.maxX + 5))
+                    
+                    var offset: CGFloat = 5
+                    if let textView = textView {
+                        transition.updateFrame(view: textView, frame: textView.centerFrameY(x: imageView.frame.maxX + offset))
+                        offset += textView.frame.width + 5
                     }
+                    
+                    if let countView = countView {
+                        transition.updateFrame(view: countView, frame: countView.centerFrameY(x: imageView.frame.maxX + offset))
+                    }
+                    
                    // transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - reactionSize.height) / 2), size: reactionSize))
                 }
                 override func layout() {
@@ -1457,17 +1483,39 @@ private final class ChatSearchTagsView: View {
             return 40
         }
         override var height: CGFloat {
-            return 50 + (countViewLayout != nil ? countViewLayout!.layoutSize.width + 10 : 0)
+            var width: CGFloat = 50
+            
+            if let textViewLayout = textViewLayout {
+                width += textViewLayout.layoutSize.width + 5
+            }
+            
+            if let countViewLayout = countViewLayout {
+                width += countViewLayout.layoutSize.width + 10
+            }
+            
+            return width
         }
         
         fileprivate let tag: EmojiTag
         fileprivate let arguments: Arguments
         fileprivate let selected: Bool
         fileprivate let countViewLayout: TextViewLayout?
+        fileprivate let textViewLayout: TextViewLayout?
         init(_ initialSize: NSSize, stableId: AnyHashable, tag: EmojiTag, selected: Bool, arguments: Arguments) {
             self.tag = tag
             self.selected = selected
             self.arguments = arguments
+            
+            let tagLabel = tag.tag.title
+            
+            if let title = tagLabel {
+                let layout = TextViewLayout(.initialize(string: title, color: selected ? theme.colors.underSelectedColor : theme.colors.text, font: .normal(.text)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                self.textViewLayout = layout
+            } else {
+                self.textViewLayout = nil
+            }
+            
             if tag.tag.count > 0 {
                 let layout = TextViewLayout(.initialize(string: "\(tag.tag.count)", color: selected ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.text)))
                 layout.measure(width: .greatestFiniteMagnitude)
@@ -1566,7 +1614,7 @@ private final class ChatSearchTagsView: View {
 
 class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
-    private let searchView:ChatSearchView = ChatSearchView(frame: NSZeroRect)
+    private let searchView:ChatSearchView = ChatSearchView(frame: NSMakeRect(0, 0, 200, 30))
     private let cancel:ImageButton = ImageButton()
     private let from:ImageButton = ImageButton()
     private let calendar:ImageButton = ImageButton()
@@ -1846,6 +1894,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     self.parentInteractions.updateSearchRequest(SearchMessagesResultState(state.request, []))
                     self.parentInteractions.loadingMessage.set(.single(true))
                     self.query.set(SearchStateQuery(state.request, nil))
+                    self.parentInteractions.setLocationTag(nil)
                 }
                 
             case .from(_, let complete):
@@ -1886,7 +1935,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     var tags: [EmojiTag] = []
                     
                     let emptyRequest: Bool
-                    if case .from = self.inputInteraction.state.tokenState {
+                    if case let .emojiTag(tag) = self.inputInteraction.state.tokenState {
+                        tags.append(tag)
+                        emptyRequest = !query.isEmpty
+                    } else if case .from = self.inputInteraction.state.tokenState {
                         emptyRequest = true
                     } else {
                         emptyRequest = !query.isEmpty
@@ -1987,7 +2039,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                 if let tag = tag {
                     self.searchView.completeEmojiToken(tag, context: parentInteractions.context)
                 } else {
-                    self.searchView.cancelEmojiToken()
+                    self.searchView.cancelEmojiToken(animated: animated)
                 }
                 
                 if current.selected.isEmpty {
@@ -2004,9 +2056,9 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     }
                 })
             } else if let tagsView = tagsView {
-                performSubviewRemoval(tagsView, animated: false)
+                performSubviewRemoval(tagsView, animated: animated)
                 self.tagsView = nil
-                self.searchView.cancelEmojiToken()
+                self.searchView.cancelEmojiToken(animated: animated)
             }
         default:
             fatalError()

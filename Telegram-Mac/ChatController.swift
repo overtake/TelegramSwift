@@ -185,20 +185,15 @@ extension ChatHistoryLocation {
 
 
 
-final class ChatWrapperEntry : Comparable, Identifiable {
+final class ChatWrappedEntry : Comparable, Identifiable {
     let appearance: AppearanceWrapperEntry<ChatHistoryEntry>
-    let automaticDownload: AutomaticMediaDownloadSettings
-    init(appearance: AppearanceWrapperEntry<ChatHistoryEntry>, automaticDownload: AutomaticMediaDownloadSettings) {
+    let tag: HistoryViewInputTag?
+    init(appearance: AppearanceWrapperEntry<ChatHistoryEntry>, tag: HistoryViewInputTag?) {
         self.appearance = appearance
-        self.automaticDownload = automaticDownload
+        self.tag = tag
     }
     var stableId: AnyHashable {
         return appearance.entry.stableId
-    }
-    
-    deinit {
-        var bp:Int = 0
-        bp += 1
     }
     
     var entry: ChatHistoryEntry {
@@ -206,19 +201,19 @@ final class ChatWrapperEntry : Comparable, Identifiable {
     }
 }
 
-func ==(lhs:ChatWrapperEntry, rhs: ChatWrapperEntry) -> Bool {
-    return lhs.appearance == rhs.appearance && lhs.automaticDownload == rhs.automaticDownload
+func ==(lhs:ChatWrappedEntry, rhs: ChatWrappedEntry) -> Bool {
+    return lhs.appearance == rhs.appearance && lhs.tag == rhs.tag
 }
-func <(lhs:ChatWrapperEntry, rhs: ChatWrapperEntry) -> Bool {
+func <(lhs:ChatWrappedEntry, rhs: ChatWrappedEntry) -> Bool {
     return lhs.appearance.entry < rhs.appearance.entry
 }
 
 
 final class ChatHistoryView {
     let originalView: MessageHistoryView?
-    let filteredEntries: [ChatWrapperEntry]
+    let filteredEntries: [ChatWrappedEntry]
     let theme: TelegramPresentationTheme
-    init(originalView:MessageHistoryView?, filteredEntries: [ChatWrapperEntry], theme: TelegramPresentationTheme) {
+    init(originalView:MessageHistoryView?, filteredEntries: [ChatWrappedEntry], theme: TelegramPresentationTheme) {
         self.originalView = originalView
         self.filteredEntries = filteredEntries
         self.theme = theme
@@ -425,12 +420,7 @@ class ChatControllerView : View, ChatInputDelegate {
             let location: SearchMessagesLocation
             switch chatInteraction.chatLocation {
             case let .peer(peerId):
-                switch chatInteraction.mode {
-                case .pinned:
-                    location = .peer(peerId: peerId, fromId: fromId, tags: .pinned, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
-                default:
-                    location = .peer(peerId: peerId, fromId: fromId, tags: nil, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
-                }
+                location = .peer(peerId: peerId, fromId: fromId, tags: chatInteraction.mode.tagMask, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
             case let .thread(data):
                 location = .peer(peerId: data.peerId, fromId: fromId, tags: nil, reactions: tags.map { $0.tag.reaction }, threadId: data.threadId, minDate: nil, maxDate: nil)
             }
@@ -1091,11 +1081,11 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         }
         
         
-        func makeItem(_ entry: ChatWrapperEntry) -> TableRowItem {
+        func makeItem(_ entry: ChatWrappedEntry) -> TableRowItem {
             
             let presentation: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
             
-            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.automaticDownload, theme: presentation)
+            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.entry.additionalData.automaticDownload, theme: presentation)
             _ = item.makeSize(initialSize.width)
             return item;
         }
@@ -2676,7 +2666,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let view = view {
                 for additionalEntry in view.additionalData {
                     if case let .cacheEntry(id, data) = additionalEntry {
-                        if id == cachedChannelAdminRanksEntryId(peerId: chatInteraction.peerId), let data = data?.get(CachedChannelAdminRanks.self)  {
+                        if id == cachedChannelAdminRanksEntryId(peerId: peerId), let data = data?.get(CachedChannelAdminRanks.self)  {
                             ranks = data
                         }
                         break
@@ -2723,7 +2713,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -6414,7 +6404,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private func checkMessageDeletions(_ previous: ChatHistoryView?, _ currentView: ChatHistoryView) {
         
-        if !isLite(.animations) {
+        if isLite(.animations) {
             return
         }
         

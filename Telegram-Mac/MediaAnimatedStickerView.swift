@@ -12,7 +12,7 @@ import TelegramCore
 import TelegramMedia
 import TGUIKit
 import SwiftSignalKit
-
+import TelegramMedia
 
 
 class MediaAnimatedStickerView: ChatMediaContentView {

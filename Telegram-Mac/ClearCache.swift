@@ -10,6 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
+import TGUIKit
 
 private let cacheQueue = Queue(name: "org.telegram.clearCacheQueue")
 private let cleanQueue = Queue(name: "org.telegram.cleanupQueue")

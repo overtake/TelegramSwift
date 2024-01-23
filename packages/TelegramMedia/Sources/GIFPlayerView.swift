@@ -46,7 +46,7 @@ let sampleBufferQueue = DispatchQueue(label: "sampleBufferQueue", qos: .default,
 
 private let veryLongTimeInterval = CFTimeInterval(8073216000)
 
-struct AVGifData : Equatable {
+public struct AVGifData : Equatable {
     let asset: AVURLAsset
     let track: AVAssetTrack
     let animatedSticker: Bool
@@ -58,7 +58,7 @@ struct AVGifData : Equatable {
         self.animatedSticker = animatedSticker
     }
     
-    static func dataFrom(_ path: String?, animatedSticker: Bool = false, swapOnComplete: Bool = false) -> AVGifData? {
+    public static func dataFrom(_ path: String?, animatedSticker: Bool = false, swapOnComplete: Bool = false) -> AVGifData? {
         let new = link(path: path, ext: "mp4")
         if let new = new {
             let avAsset = AVURLAsset(url: URL(fileURLWithPath: new))
@@ -69,7 +69,7 @@ struct AVGifData : Equatable {
         }
         return nil
     }
-    static func ==(lhs: AVGifData, rhs: AVGifData) -> Bool {
+    public static func ==(lhs: AVGifData, rhs: AVGifData) -> Bool {
         return lhs.asset.url == rhs.asset.url && lhs.animatedSticker == rhs.animatedSticker
     }
     
@@ -83,13 +83,13 @@ private final class TAVSampleBufferDisplayLayer : AVSampleBufferDisplayLayer {
 
 
 
-class GIFPlayerView: TransformImageView {
+open class GIFPlayerView: TransformImageView {
     
-    enum LoopActionResult {
+    public enum LoopActionResult {
         case pause
     }
     
-    var sampleBufferLayer: AVSampleBufferDisplayLayer {
+    public var sampleBufferLayer: AVSampleBufferDisplayLayer {
         return sampleLayer
     }
     
@@ -107,14 +107,14 @@ class GIFPlayerView: TransformImageView {
     private let _swapNext:Atomic<Bool> = Atomic(value:true)
     private let _data:Atomic<AVGifData?> = Atomic(value:nil)
 
-    func setLoopAction(_ action:(()->LoopActionResult)?) {
+    public func setLoopAction(_ action:(()->LoopActionResult)?) {
         _ = _loopAction.swap(action)
     }
     
     
     private let maskLayer = SimpleShapeLayer()
     
-    var positionFlags: LayoutPositionFlags? {
+    public var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
                 let path = CGMutablePath()
@@ -155,7 +155,7 @@ class GIFPlayerView: TransformImageView {
             }
         }
     }
-    override init() {
+    public override init() {
         super.init()
         sampleLayer.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(),"position":NSNull(),"contents":NSNull(),"opacity":NSNull(), "transform": NSNull()
         ]
@@ -167,35 +167,30 @@ class GIFPlayerView: TransformImageView {
 
     }
     
-    func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
+    public func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
         sampleLayer.videoGravity = gravity
     }
     
     
 
-    var controlTimebase: CMTimebase? {
+    public var controlTimebase: CMTimebase? {
         return sampleLayer.controlTimebase
     }
 
-    var isHasData: Bool {
+    public var isHasData: Bool {
         return _data.modify({$0}) != nil
     }
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layout() {
+    public override func layout() {
         super.layout()
         sampleLayer.frame = bounds
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        sampleLayer.frame = bounds
-    }
-    
-    func set(data: AVGifData?, timebase:CMTimebase? = nil) -> Void {
+    public func set(data: AVGifData?, timebase:CMTimebase? = nil) -> Void {
         assertOnMainThread()
       
          if data != _data.swap(data) {
@@ -307,7 +302,7 @@ class GIFPlayerView: TransformImageView {
         }
     }
     
-    func reset(with timebase:CMTimebase? = nil, _ resetImage: Bool = true) {
+    public func reset(with timebase:CMTimebase? = nil, _ resetImage: Bool = true) {
      //   if resetImage {
             sampleLayer.flushAndRemoveImage()
       //  } else {
@@ -327,7 +322,7 @@ class GIFPlayerView: TransformImageView {
     
 
     
-    required convenience init(frame frameRect: NSRect) {
+    public required convenience init(frame frameRect: NSRect) {
         self.init()
         self.frame = frameRect
     }
@@ -357,7 +352,7 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                     
                     var timebase:CMTimebase? = _timebase.swap(nil)
                     if timebase == nil {
-                        CMTimebaseCreateWithMasterClock( allocator: kCFAllocatorDefault, masterClock: CMClockGetHostTimeClock(), timebaseOut: &timebase )
+                        CMTimebaseCreateWithSourceClock( allocator: kCFAllocatorDefault, sourceClock: CMClockGetHostTimeClock(), timebaseOut: &timebase )
                         CMTimebaseSetRate(timebase!, rate: 1.0)
                     }
                     
@@ -404,45 +399,3 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
 }
 
 
-
-/*
- if isAnimatedSticker {
- let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
- var newSampleBuffer:CMSampleBuffer? = nil
- if let imageBuffer = imageBuffer {
- let sourceImage = CIImage(cvImageBuffer: imageBuffer)
- 
- var cvPixelBuffer: CVPixelBuffer?
- let videoSize = CGSize(width: 400, height: 400)
- CVPixelBufferCreate(nil, 400, 400, kCVPixelFormatType_32BGRA, nil, &cvPixelBuffer)
- if let cvPixelBuffer = cvPixelBuffer {
- 
- let sourceRect = CGRect(origin: .zero, size: videoSize)
- let alphaRect = sourceRect.offsetBy(dx: 0, dy: sourceRect.height)
- let filter = AlphaFrameFilter()
- filter.inputImage = sourceImage.cropped(to: alphaRect)
- .transformed(by: CGAffineTransform(translationX: 0, y: -sourceRect.height))
- filter.maskImage = sourceImage.cropped(to: sourceRect)
- 
- let outputImage = filter.outputImage!
- 
- 
- 
- context.render(outputImage, to: cvPixelBuffer)
- 
- var formatRef: CMVideoFormatDescription?
- let _ = CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: cvPixelBuffer, formatDescriptionOut: &formatRef)
- 
- 
- var sampleTimingInfo: CMSampleTimingInfo = CMSampleTimingInfo()
- CMSampleBufferGetSampleTimingInfo(sampleBuffer, at: 0, timingInfoOut: &sampleTimingInfo)
- 
- CMSampleBufferCreateReadyWithImageBuffer(allocator: nil, imageBuffer: cvPixelBuffer, formatDescription: formatRef!, sampleTiming: &sampleTimingInfo, sampleBufferOut: &newSampleBuffer)
- 
- if let newSampleBuffer = newSampleBuffer {
- sampleBuffer = newSampleBuffer
- }
- }
- }
- }
- */
