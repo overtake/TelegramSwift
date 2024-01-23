@@ -1,14 +1,27 @@
 //
-//  FireTimerControl.swift
+//  PollTimerView.swift
 //  Telegram
 //
-//  Created by Mikhail Filimonov on 14.01.2021.
-//  Copyright © 2021 Telegram. All rights reserved.
+//  Created by Mikhail Filimonov on 09/04/2020.
+//  Copyright © 2020 Telegram. All rights reserved.
 //
 
 import Cocoa
-import TGUIKit
 
+
+private func textForTimeout(value: Int) -> String {
+    //TODO: localize
+    if value > 60 * 60 {
+        let hours = value / (60 * 60)
+        return "\(hours)h"
+    } else {
+        let minutes = value / 60
+        let seconds = value % 60
+        let minutesPadding = minutes < 10 ? "0" : ""
+        let secondsPadding = seconds < 10 ? "0" : ""
+        return "\(minutesPadding)\(minutes):\(secondsPadding)\(seconds)"
+    }
+}
 
 private enum ContentState: Equatable {
     case clock(NSColor)
@@ -33,67 +46,55 @@ private struct ContentParticle {
     }
 }
 
-class FireTimerControl: Control {
-    
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        self.addSubview(self.contentView)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+public final class PollBubbleTimerView: View {
     private struct Params: Equatable {
-        var color: NSColor
-        var timeout: Double
-        var deadlineTimestamp: Double?
-        var lineWidth: CGFloat
+        var regularColor: NSColor
+        var proximityColor: NSColor
+        var timeout: Int32
+        var deadlineTimestamp: Int32?
     }
     
     private var animator: ConstantDisplayLinkAnimator?
+    private let textView: TextView = TextView()
     private let contentView: ImageView = ImageView()
     private var currentContentState: ContentState?
     private var particles: [ContentParticle] = []
-
-    
     
     private var currentParams: Params?
     
-    var reachedTimeout: (() -> Void)?
-    var reachedHalf: (() -> Void)?
-    var updateValue: ((CGFloat) -> Void)?
-
-    private var reachedHalfNotified: Bool = false
+    public var reachedTimeout: (() -> Void)?
+    
+    public required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        self.addSubview(self.textView)
+        self.addSubview(self.contentView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        textView.isEventLess = true
+    }
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     deinit {
         self.animator?.invalidate()
     }
-
-    func updateColor(_ color: NSColor) {
-        if let params = self.currentParams {
-            self.currentParams = Params(
-                color: color,
-                timeout: params.timeout,
-                deadlineTimestamp: params.deadlineTimestamp,
-                lineWidth: params.lineWidth
-            )
-        }
-    }
     
-    func update(color: NSColor, timeout: Double, deadlineTimestamp: Double?, lineWidth: CGFloat = 2.0) {
+    public func update(regularColor: NSColor, proximityColor: NSColor, timeout: Int32, deadlineTimestamp: Int32?) {
         let params = Params(
-            color: color,
+            regularColor: regularColor,
+            proximityColor: proximityColor,
             timeout: timeout,
-            deadlineTimestamp: deadlineTimestamp,
-            lineWidth: lineWidth
+            deadlineTimestamp: deadlineTimestamp
         )
         self.currentParams = params
-        self.reachedHalfNotified = false
+        
         self.updateValues()
     }
     
-    override func viewWillMove(toWindow newWindow: NSWindow?) {
+    public override func viewWillMove(toWindow newWindow: NSWindow?) {
         super.viewWillMove(toWindow: newWindow)
         self.animator?.isPaused = newWindow == nil
     }
@@ -107,39 +108,51 @@ class FireTimerControl: Control {
         
         if let deadlineTimestamp = params.deadlineTimestamp {
             let fractionalTimestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            fractionalTimeout = min(Double(params.timeout), max(0.0, Double(deadlineTimestamp) - fractionalTimestamp))
+            fractionalTimeout = min(Double(params.timeout), max(0.0, Double(deadlineTimestamp) + 1.0 - fractionalTimestamp))
         } else {
             fractionalTimeout = Double(params.timeout)
         }
-                
-        let isTimer = true
-        let color = params.color
+        
+        let timeout = Int(round(fractionalTimeout))
+        
+        let proximityInterval: Double = 5.0
+        let timerInterval: Double = 60.0
+        
+        let isProximity = timeout <= Int(proximityInterval)
+        let isTimer = timeout <= Int(timerInterval)
+        
+        let color = isProximity ? params.proximityColor : params.regularColor
+        
+        let attributed = NSAttributedString.initialize(string: textForTimeout(value: timeout), color: color, font: .normal(.short))
+        
+        let textLayout = TextViewLayout(attributed)
+        textLayout.measure(width: 100)
+        
+        
+      //  self.textView.attributedText = NSAttributedString(string: textForTimeout(value: timeout), font: Font.regular(14.0), textColor: color)
+        let textSize = textLayout.layoutSize
+        
+        self.textView.update(textLayout)
         
         let contentState: ContentState
         if isTimer {
             var fraction: CGFloat = 1.0
-            fraction = CGFloat(fractionalTimeout) / CGFloat(params.timeout)
+            if fractionalTimeout <= timerInterval {
+                fraction = CGFloat(fractionalTimeout) / min(CGFloat(timerInterval), CGFloat(params.timeout))
+            }
             fraction = max(0.0, min(0.99, fraction))
             contentState = .timeout(color, 1.0 - fraction)
-            self.updateValue?(fraction)
         } else {
             contentState = .clock(color)
-        }
-        
-        if let deadlineTimestamp = params.deadlineTimestamp, deadlineTimestamp - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970) < params.timeout / 2 {
-            if let reachedHalf = self.reachedHalf, !reachedHalfNotified {
-                reachedHalf()
-                reachedHalfNotified = true
-            }
         }
         
         if self.currentContentState != contentState {
             self.currentContentState = contentState
             let image: CGImage?
             
-            let diameter: CGFloat = frame.width - 8
-            let inset: CGFloat = 7
-            let lineWidth: CGFloat = params.lineWidth
+            let diameter: CGFloat = 14.0
+            let inset: CGFloat = 8.0
+            let lineWidth: CGFloat = 1.2
             
             switch contentState {
             case let .clock(color):
@@ -162,7 +175,6 @@ class FireTimerControl: Control {
                     context.strokePath()
                 })
             case let .timeout(color, fraction):
-                
                 let timestamp = CACurrentMediaTime()
                 
                 let center = CGPoint(x: (diameter + inset) / 2.0, y: (diameter + inset) / 2.0)
@@ -212,8 +224,7 @@ class FireTimerControl: Control {
                 }
                 
                 image = generateImage(CGSize(width: diameter + inset, height: diameter + inset), rotatedContext: { size, context in
-                    let rect = CGRect(origin: CGPoint(), size: size)
-                    context.clear(rect)
+                    context.clear(CGRect(origin: CGPoint(), size: size))
                     context.setStrokeColor(color.cgColor)
                     context.setFillColor(color.cgColor)
                     context.setLineWidth(lineWidth)
@@ -225,7 +236,7 @@ class FireTimerControl: Control {
                     context.strokePath()
                     
                     for particle in self.particles {
-                        let size: CGFloat = lineWidth / 2 + 0.15
+                        let size: CGFloat = 1.15
                         context.setAlpha(particle.alpha)
                         context.fillEllipse(in: CGRect(origin: CGPoint(x: particle.position.x - size / 2.0, y: particle.position.y - size / 2.0), size: CGSize(width: size, height: size)))
                     }
@@ -235,13 +246,14 @@ class FireTimerControl: Control {
             self.contentView.image = image
             self.contentView.sizeToFit()
             self.contentView.centerY(x: frame.width - contentView.frame.width)
-                        
+            
+            self.textView.centerY(x: frame.width - contentView.frame.width - textSize.width - 4)
         }
         
         if let reachedTimeout = self.reachedTimeout, fractionalTimeout <= .ulpOfOne {
             reachedTimeout()
         }
-      
+        
         if fractionalTimeout <= .ulpOfOne {
             self.animator?.invalidate()
             self.animator = nil
@@ -252,8 +264,8 @@ class FireTimerControl: Control {
                 })
                 animator.isPaused = self.window == nil
                 self.animator = animator
+//                animator.isPaused = self.inHierarchyValue
             }
         }
     }
-    
 }

@@ -11,6 +11,7 @@ import TelegramCore
 import TGUIKit
 import SwiftSignalKit
 import Postbox
+import TelegramMedia
 
 final class StorageUsageMediaItem : GeneralRowItem {
     let context: AccountContext

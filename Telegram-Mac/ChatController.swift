@@ -6404,7 +6404,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private func checkMessageDeletions(_ previous: ChatHistoryView?, _ currentView: ChatHistoryView) {
         
-        if !isLite(.animations) {
+        if isLite(.animations) {
             return
         }
         
