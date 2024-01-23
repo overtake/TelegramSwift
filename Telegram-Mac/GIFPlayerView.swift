@@ -357,7 +357,7 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                     
                     var timebase:CMTimebase? = _timebase.swap(nil)
                     if timebase == nil {
-                        CMTimebaseCreateWithMasterClock( allocator: kCFAllocatorDefault, masterClock: CMClockGetHostTimeClock(), timebaseOut: &timebase )
+                        CMTimebaseCreateWithSourceClock( allocator: kCFAllocatorDefault, sourceClock: CMClockGetHostTimeClock(), timebaseOut: &timebase )
                         CMTimebaseSetRate(timebase!, rate: 1.0)
                     }
                     
@@ -404,45 +404,3 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
 }
 
 
-
-/*
- if isAnimatedSticker {
- let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
- var newSampleBuffer:CMSampleBuffer? = nil
- if let imageBuffer = imageBuffer {
- let sourceImage = CIImage(cvImageBuffer: imageBuffer)
- 
- var cvPixelBuffer: CVPixelBuffer?
- let videoSize = CGSize(width: 400, height: 400)
- CVPixelBufferCreate(nil, 400, 400, kCVPixelFormatType_32BGRA, nil, &cvPixelBuffer)
- if let cvPixelBuffer = cvPixelBuffer {
- 
- let sourceRect = CGRect(origin: .zero, size: videoSize)
- let alphaRect = sourceRect.offsetBy(dx: 0, dy: sourceRect.height)
- let filter = AlphaFrameFilter()
- filter.inputImage = sourceImage.cropped(to: alphaRect)
- .transformed(by: CGAffineTransform(translationX: 0, y: -sourceRect.height))
- filter.maskImage = sourceImage.cropped(to: sourceRect)
- 
- let outputImage = filter.outputImage!
- 
- 
- 
- context.render(outputImage, to: cvPixelBuffer)
- 
- var formatRef: CMVideoFormatDescription?
- let _ = CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: cvPixelBuffer, formatDescriptionOut: &formatRef)
- 
- 
- var sampleTimingInfo: CMSampleTimingInfo = CMSampleTimingInfo()
- CMSampleBufferGetSampleTimingInfo(sampleBuffer, at: 0, timingInfoOut: &sampleTimingInfo)
- 
- CMSampleBufferCreateReadyWithImageBuffer(allocator: nil, imageBuffer: cvPixelBuffer, formatDescription: formatRef!, sampleTiming: &sampleTimingInfo, sampleBufferOut: &newSampleBuffer)
- 
- if let newSampleBuffer = newSampleBuffer {
- sampleBuffer = newSampleBuffer
- }
- }
- }
- }
- */

@@ -339,7 +339,7 @@ final class ChatReactionsLayout {
                     
                     menu.addItem(ContextMenuItem(strings().chatReactionContextFilterByTag, handler: { [weak self] in
                         if let `self` = self {
-                            self.action(self.value.value, false)
+                            _ = self.action(self.value.value, false)
                         }
                     }, itemImage: MenuAnimation.menu_tag_filter.value))
                     menu.addItem(ContextMenuItem(strings().chatReactionContextRemoveTag, handler: { [weak self] in
@@ -550,7 +550,7 @@ final class ChatReactionsLayout {
                 }
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, isFilterTag in
                     if message.id.peerId == context.peerId, !isFilterTag, mode == .tag {
-                        tagAction(value)
+                       tagAction(value)
                     } else {
                         engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId && tagsGloballyEnabled))
                     }
@@ -1061,9 +1061,9 @@ final class ChatReactionsView : View {
             addSubview(imageView)
             scaleOnClick = true
             
-            self.set(handler: { [weak self] _ in
+            self.set(handler: { [weak self] control in
                 if let reaction = self?.reaction {
-                    reaction.action(reaction.value.value, false)
+                    control.showContextMenu()
                 }
             }, for: .Click)
             
@@ -1155,9 +1155,7 @@ final class ChatReactionsView : View {
             self.reaction = reaction
             
             self.imageView.layer?.cornerRadius = reaction.value.value.string == "" ? 4 : 0
-            
-            let presentation = reaction.presentation
-            
+                        
             self.backgroundColor = .clear
 
             if selectedUpdated {
