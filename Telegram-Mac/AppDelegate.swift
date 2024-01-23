@@ -254,6 +254,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
+       // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
       
 //        window.styleMask.insert(.fullSizeContentView)
 //        window.styleMask.insert(.unifiedTitleAndToolbar)
@@ -285,6 +286,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }
+        
         
         self.containerUrl = containerUrl.path
         

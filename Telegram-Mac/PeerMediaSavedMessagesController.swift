@@ -101,10 +101,10 @@ private struct State : Equatable {
 
 private final class HistoryView {
     let view: MessageHistoryView?
-    let entries: [ChatWrapperEntry]
+    let entries: [ChatWrappedEntry]
     let state: State
     let isLoading: Bool
-    init(view:MessageHistoryView?, entries: [ChatWrapperEntry], state: State, isLoading: Bool) {
+    init(view:MessageHistoryView?, entries: [ChatWrappedEntry], state: State, isLoading: Bool) {
         self.view = view
         self.entries = entries
         self.state = state
@@ -133,7 +133,7 @@ private class MessageIdenfitifer : InputDataIdentifier {
 
 
 private let _id_loading = InputDataIdentifier("_id_loading")
-private func _id_entry(_ entry: ChatWrapperEntry) -> InputDataIdentifier {
+private func _id_entry(_ entry: ChatWrappedEntry) -> InputDataIdentifier {
     return MessageIdenfitifer(entry.entry.stableId)
 }
 
@@ -143,9 +143,9 @@ private func entries(_ view: HistoryView, arguments: Arguments) -> [InputDataEnt
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    func makeItem(_ entry: ChatWrapperEntry, initialSize: NSSize) -> TableRowItem {
+    func makeItem(_ entry: ChatWrappedEntry, initialSize: NSSize) -> TableRowItem {
         let presentation: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
-        let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: arguments.chatInteraction, downloadSettings: entry.automaticDownload, theme: presentation)
+        let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: arguments.chatInteraction, downloadSettings: entry.entry.additionalData.automaticDownload, theme: presentation)
         _ = item.makeSize(initialSize.width)
         return item;
     }
@@ -439,11 +439,11 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
                 effectiveEntries = view.entries
             }
             
-            let messages: [ChatHistoryEntry] = messageEntries(effectiveEntries, renderType: theme.bubbled ? .bubble : .list, pollAnswersLoading: state.pollAnswers, groupingPhotos: true, searchState: state.searchMessages?.resultState, chatTheme: state.appearance.presentation, mediaRevealed: state.mediaRevealed).reversed()
+            let messages: [ChatHistoryEntry] = messageEntries(effectiveEntries, renderType: theme.bubbled ? .bubble : .list, pollAnswersLoading: state.pollAnswers, groupingPhotos: true, searchState: state.searchMessages?.resultState, chatTheme: state.appearance.presentation, mediaRevealed: state.mediaRevealed, automaticDownload: initialData.autodownloadSettings).reversed()
             
             
             let entries = messages.map {
-                ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: state.appearance), automaticDownload: initialData.autodownloadSettings)
+                ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: state.appearance), tag: nil)
             }
             return HistoryView(view: view, entries: entries, state: state, isLoading: isLoading)
         } else {

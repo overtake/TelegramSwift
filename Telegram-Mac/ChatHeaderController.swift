@@ -1566,7 +1566,7 @@ private final class ChatSearchTagsView: View {
 
 class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
-    private let searchView:ChatSearchView = ChatSearchView(frame: NSZeroRect)
+    private let searchView:ChatSearchView = ChatSearchView(frame: NSMakeRect(0, 0, 200, 30))
     private let cancel:ImageButton = ImageButton()
     private let from:ImageButton = ImageButton()
     private let calendar:ImageButton = ImageButton()
@@ -1846,6 +1846,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     self.parentInteractions.updateSearchRequest(SearchMessagesResultState(state.request, []))
                     self.parentInteractions.loadingMessage.set(.single(true))
                     self.query.set(SearchStateQuery(state.request, nil))
+                    self.parentInteractions.setLocationTag(nil)
                 }
                 
             case .from(_, let complete):
@@ -1886,7 +1887,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     var tags: [EmojiTag] = []
                     
                     let emptyRequest: Bool
-                    if case .from = self.inputInteraction.state.tokenState {
+                    if case let .emojiTag(tag) = self.inputInteraction.state.tokenState {
+                        tags.append(tag)
+                        emptyRequest = !query.isEmpty
+                    } else if case .from = self.inputInteraction.state.tokenState {
                         emptyRequest = true
                     } else {
                         emptyRequest = !query.isEmpty
@@ -1987,7 +1991,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                 if let tag = tag {
                     self.searchView.completeEmojiToken(tag, context: parentInteractions.context)
                 } else {
-                    self.searchView.cancelEmojiToken()
+                    self.searchView.cancelEmojiToken(animated: animated)
                 }
                 
                 if current.selected.isEmpty {
@@ -2004,9 +2008,9 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     }
                 })
             } else if let tagsView = tagsView {
-                performSubviewRemoval(tagsView, animated: false)
+                performSubviewRemoval(tagsView, animated: animated)
                 self.tagsView = nil
-                self.searchView.cancelEmojiToken()
+                self.searchView.cancelEmojiToken(animated: animated)
             }
         default:
             fatalError()

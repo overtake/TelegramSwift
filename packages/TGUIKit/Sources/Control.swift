@@ -489,6 +489,11 @@ open class Control: View {
     }
     public var contextMenu:(()->ContextMenu?)? = nil
    
+    open func showContextMenu() {
+        if let menu = self.contextMenu?(), let event = NSApp.currentEvent {
+            AppMenu.show(menu: menu, event: event, for: self)
+        }
+    }
     
     public func send(event:ControlEvent) -> Void {
         for value in handlers {
