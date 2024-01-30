@@ -319,6 +319,10 @@ class SelectCallbackObject : ShareObject {
         super.init(context, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
     }
     
+    override var selectTopics: Bool {
+        return false
+    }
+    
     override var hasFolders: Bool {
         return false
     }

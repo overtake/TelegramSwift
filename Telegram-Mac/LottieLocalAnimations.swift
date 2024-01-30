@@ -311,6 +311,10 @@ enum LocalAnimatedSticker : String {
     case menu_tag_remove
     case menu_tag_rename
     
+    case menu_hd
+    case menu_hd_lock
+    case menu_sd
+    
     case forum_topic
     
     case custom_reaction

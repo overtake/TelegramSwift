@@ -98,7 +98,7 @@ public class NinePathImage : NSView {
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         if let image = image {
-            image.drawInRect(rect: dirtyRect, withCapInsets: capInsets)
+            image.drawInRect(rect: self.bounds, withCapInsets: capInsets)
         }
     }
     

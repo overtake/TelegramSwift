@@ -1542,15 +1542,25 @@ class ChatRowItem: TableRowItem {
                 return nil
             }
             let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == chatInteraction.peerId)
+            let currentTag: MessageReaction.Reaction?
+            if case let .customTag(buffer) = chatInteraction.presentation.searchMode.tag {
+                currentTag = ReactionsMessageAttribute.reactionFromMessageTag(tag: buffer)
+            } else {
+                currentTag = nil
+            }
             let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, savedMessageTags: entry.additionalData.savedMessageTags, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, currentTag: currentTag, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId, source: .reaction(message.id))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
                 }, tagAction: { [weak chatInteraction] reaction in
-                    chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction)))
+                    if !context.isPremium {
+                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                    } else {
+                        chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction)))
+                    }
                 })
                 
                 _reactionsLayout = layout
@@ -1952,6 +1962,7 @@ class ChatRowItem: TableRowItem {
 
                             if range.location != NSNotFound {
                                 attr.addAttribute(.link, value: link, range: range)
+                                attr.addAttribute(.font, value: NSFont.bold(.short), range: range)
                             }
                         } else {
                             let newAttr = NSAttributedString.initialize(string: text, color: forwardNameColor, font: .normal(.short))
@@ -2214,10 +2225,12 @@ class ChatRowItem: TableRowItem {
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
                 }
-                if let attribute = attribute as? QuotedReplyMessageAttribute, self.replyModel == nil, message.replyAttribute == nil {
-                                        
-                    self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
-                    
+                if let attribute = attribute as? QuotedReplyMessageAttribute, self.replyModel == nil {
+                    if let attr = message.replyAttribute, message.associatedMessages[attr.messageId] == nil {
+                        self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
+                    } else if message.replyAttribute == nil {
+                        self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
+                    }
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
                     let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
@@ -3233,11 +3246,42 @@ class ChatRowItem: TableRowItem {
                     available = Array(available.prefix(7))
                 }
                 
+                if isTags, !context.isPremium {
+                   accessToAll = false
+                }
+                
                 
                 let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
+                let aboveText: String?
+                if isTags {
+                    if context.isPremium {
+                        aboveText = strings().chatReactionsTagMessage
+                    } else {
+                        aboveText = strings().chatReactionsTagMessagePremium
+                    }
+                } else {
+                    aboveText = nil
+                }
                 
-                let aboveText: String? = isTags ? strings().chatReactionsTagMessage : nil
-                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 0), 40 + 20 + (aboveText != nil ? 20 : 0))
+                let w_width = width + 20 + (accessToAll ? 0 : 0)
+                
+                let aboveLayout: TextViewLayout?
+                if let aboveText = aboveText {
+                    let color = theme.colors.darkGrayText.withAlphaComponent(0.8)
+                    let link = theme.colors.link.withAlphaComponent(0.8)
+                    let attributed = parseMarkdownIntoAttributedString(aboveText, attributes: .init(body: .init(font: .normal(.text), textColor: color), bold: .init(font: .medium(.text), textColor: color), link: .init(font: .normal(.text), textColor: link), linkAttribute: { link in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                            showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                        }))
+                    }))
+                    aboveLayout = TextViewLayout(attributed, maximumNumberOfLines: 2, alignment: .center)
+                    aboveLayout?.measure(width: w_width - 10)
+                    aboveLayout?.interactions = globalLinkExecutor
+                } else {
+                    aboveLayout = nil
+                }
+                
+                let rect = NSMakeRect(0, 0, w_width, 40 + 20 + (aboveLayout != nil ? aboveLayout!.layoutSize.height + 4 : 0))
                 
                 
                 let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
@@ -3288,13 +3332,18 @@ class ChatRowItem: TableRowItem {
                                     break
                                 }
                             }
-                            if case .custom = value, !context.isPremium && sticker.file.isPremiumEmoji, !contains {
-                                showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
-                                    showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
-                                })
+                            
+                            if isTags, !context.isPremium {
+                                showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                             } else {
-                                let updated = message.newReactions(with: value, isTags: isTags)
-                                context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
+                                if case .custom = value, !context.isPremium && sticker.file.isPremiumEmoji, !contains {
+                                    showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
+                                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                                    })
+                                } else {
+                                    let updated = message.newReactions(with: value, isTags: isTags)
+                                    context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
+                                }
                             }
                         })
 //                        let transition = ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeOut)
@@ -3308,8 +3357,12 @@ class ChatRowItem: TableRowItem {
                 
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
-                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
-                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveText)
+                    if isTags, !context.isPremium {
+                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                    } else {
+                        context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
+                    }
+                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout)
                 
                 
                 panel.contentView?.addSubview(view)

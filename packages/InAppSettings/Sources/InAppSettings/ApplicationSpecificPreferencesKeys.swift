@@ -32,6 +32,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case recentEmoji = 52
     case downloadedPaths = 53
     case someSettings = 54
+    case dockSettings = 55
 }
 
 public struct ApplicationSpecificPreferencesKeys {
@@ -58,6 +59,7 @@ public struct ApplicationSharedPreferencesKeys {
     public static let voiceCallSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.voiceCallSettings.rawValue)
     public static let passcodeSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.passcodeSettings.rawValue)
     public static let appConfiguration = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.appConfiguration.rawValue)
+    public static let dockSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.dockSettings.rawValue)
 }
 
 

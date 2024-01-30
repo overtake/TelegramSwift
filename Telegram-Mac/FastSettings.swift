@@ -165,7 +165,8 @@ class FastSettings {
 
     
     private static let kStoryMuted = "kStoryMuted"
-    
+    private static let kStoryHD = "kStoryHD"
+
 
     
     static var sendingType:SendingType {

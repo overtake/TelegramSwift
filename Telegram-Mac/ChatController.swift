@@ -721,18 +721,21 @@ class ChatControllerView : View, ChatInputDelegate {
         
         var value:ChatHeaderState.Value
         if interfaceState.searchMode.inSearch {
-            var tags: [EmojiTag] = []
+            var tags: [EmojiTag]? = nil
             
             if let savedMessageTags = interfaceState.savedMessageTags {
+                if interfaceState.accountPeer?.isPremium == false || !savedMessageTags.tags.isEmpty {
+                    tags = []
+                }
                 for tag in savedMessageTags.tags {
                     switch tag.reaction {
                     case .builtin:
                         if let file = chatInteraction.context.reactions.available?.enabled.first(where: { $0.value == tag.reaction })?.activateAnimation {
-                            tags.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
+                            tags?.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
                         }
                     case let .custom(fileId):
                         if let file = savedMessageTags.files[fileId] {
-                            tags.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
+                            tags?.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
                         }
                     }
                 }
@@ -741,7 +744,7 @@ class ChatControllerView : View, ChatInputDelegate {
             let selected: EmojiTag?
             if let tag = interfaceState.searchMode.tag, case let .customTag(memoryBuffer) = tag {
                 let tag = ReactionsMessageAttribute.reactionFromMessageTag(tag: memoryBuffer)
-                selected = tags.first(where: { $0.tag.reaction == tag })
+                selected = tags?.first(where: { $0.tag.reaction == tag })
             } else {
                 selected = nil
             }
@@ -2289,6 +2292,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let animatedEmojiStickers: Signal<[String: StickerPackItem], NoError> = context.diceCache.animatedEmojies
         
+        let savedMessageTags: Signal<SavedMessageTags?, NoError>
+        if peerId == self.context.account.peerId {
+            savedMessageTags = context.engine.stickers.savedMessageTagData()
+        } else {
+            savedMessageTags = .single(nil)
+        }
+
+        
         let reactions = context.reactions.stateValue
 
         
@@ -2588,6 +2599,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   maxReadIndex.get(),
                                                   searchState.get(),
                                                   animatedEmojiStickers,
+                                                  savedMessageTags,
                                                   customChannelDiscussionReadState,
                                                   customThreadOutgoingReadState,
                                                   updatingMedia,
@@ -2596,7 +2608,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   stateValue.get(),
                                                   peerView.get(),
                                                   recommendedChannels
-    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState, peerView, recommendedChannels -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, savedMessageTags, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState, peerView, recommendedChannels -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
@@ -2713,7 +2725,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -5384,8 +5396,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let tagsAndFiles: Signal<([SavedMessageTags.Tag], [Int64 : TelegramMediaFile]), NoError>
         if peerId == context.peerId, tagsGloballyEnabled {
-            tagsAndFiles = context.engine.data.subscribe(
-                TelegramEngine.EngineData.Item.Messages.SavedMessageTagStats(peerId: context.account.peerId)
+            tagsAndFiles = combineLatest(context.engine.data.subscribe(
+                TelegramEngine.EngineData.Item.Messages.SavedMessageTagStats(peerId: context.account.peerId, threadId: threadId64)
             )
             |> distinctUntilChanged
             |> mapToSignal { tags -> Signal<([MessageReaction.Reaction: Int], [Int64: TelegramMediaFile]), NoError> in
@@ -5403,10 +5415,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 |> map { files in
                     return (tags, files)
                 }
-            } |> map { tags, files in
+            }, context.engine.stickers.savedMessageTagData()) |> map { tagsAndFiles, savedMessageTags in
                 var result: [SavedMessageTags.Tag] = []
+                let tags = tagsAndFiles.0
+                let files = tagsAndFiles.1
                 for (reaction, count) in tags {
-                    result.append(.init(reaction: reaction, title: nil, count: count))
+                    let title = savedMessageTags?.tags.first(where: { $0.reaction == reaction })?.title
+                    result.append(.init(reaction: reaction, title: title, count: count))
                 }
                 result = result.sorted(by: { lhs, rhs in
                     if lhs.count != rhs.count {
@@ -6785,6 +6800,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case .history:
                 switch chatLocation {
                 case let .peer(peerId):
+                    
                     items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
                         self?.changeState()
                     }, itemImage: MenuAnimation.menu_edit.value))
@@ -7727,9 +7743,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if !mode.isSavedMessagesThread {
-            self.context.globalPeerHandler.set(.single(chatLocation))
-        }
+        self.context.globalPeerHandler.set(.single(chatLocation))
+
         self.genericView.tableView.notifyScrollHandlers()
         self.genericView.updateHeader(chatInteraction.presentation, false, false)
         if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {

@@ -159,8 +159,9 @@ final class ReactionsWindowController : NSObject {
         var wAdd: CGFloat = 0
         var initialAdd: CGFloat = 0
         if initialView.frame.height != 60 {
-            wAdd = (initialView.frame.height - 60) + 18 // (18 is reaction offset y in parent)
-            initialAdd = 18 // (18 is reaction offset y in parent)
+            let offset = initialView.subviews[1].frame.minY - 8
+            wAdd = (initialView.frame.height - 60) + offset // (18 is reaction offset y in parent)
+            initialAdd = offset // (18 is reaction offset y in parent)
         }
         
         let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36 - wAdd, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)

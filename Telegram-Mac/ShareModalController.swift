@@ -1988,8 +1988,10 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         }
         
         selectInteraction.openForum = { [weak self] peerId in
-            self?.openForum(peerId, animated: true)
-            
+            if share.selectTopics {
+                self?.openForum(peerId, animated: true)
+            }
+            return share.selectTopics
         }
         
         genericView.share.contextMenu = { [weak self] in

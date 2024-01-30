@@ -434,8 +434,8 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let shadowLayer = SimpleShapeLayer()
     private let presentation: TelegramPresentationTheme
     private let hasBubble: Bool
-    private let aboveText: String?
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((ContextAddReactionsListView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme, hasBubble: Bool = true, aboveText: String? = nil) {
+    private let aboveText: TextViewLayout?
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((ContextAddReactionsListView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme, hasBubble: Bool = true, aboveText: TextViewLayout? = nil) {
         self.list = list
         self.showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34), theme: presentation)
         self.revealReactions = revealReactions
@@ -530,9 +530,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         let size = ContextAddReactionsListView.size
         var x: CGFloat = 1
         
+       
+        
+        
         var y: CGFloat = 3
-        if aboveText != nil {
-            y += 18
+        if let aboveText = aboveText {
+            y += aboveText.layoutSize.height + 2
         }
         
         for reaction in list {
@@ -554,15 +557,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         if let aboveText = aboveText {
             let aboveTextView = TextView()
-            aboveTextView.userInteractionEnabled = false
+            aboveTextView.userInteractionEnabled = true
             aboveTextView.isSelectable = false
             addSubview(aboveTextView)
             self.aboveTextView = aboveTextView
-            let layout = TextViewLayout(.initialize(string: aboveText, color: theme.colors.darkGrayText.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
-            layout.measure(width: frameRect.width - 10)
-            aboveTextView.update(layout)
+            aboveTextView.update(aboveText)
         }
-        
         
         updateLayout(size: frame.size, transition: .immediate)
         
@@ -692,8 +692,8 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         for subview in documentView.subviews {
             let point: NSPoint
-            if size.height == 80 {
-                point = NSMakePoint(subview.frame.minX, 18 + 3)
+            if let aboveText = aboveText {
+                point = NSMakePoint(subview.frame.minX, aboveText.layoutSize.height + 2 + 3)
             } else {
                 point = NSMakePoint(subview.frame.minX, 3)
             }
@@ -721,7 +721,11 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         transition.updateFrame(view: backgroundView, frame: size.bounds)
         transition.updateFrame(view: backgroundColorView, frame: size.bounds)
         
-        transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3 + (size.height == 80 ? 18 : 0), showMore.frame.width, showMore.frame.height))
+        if let aboveText = aboveText {
+            transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3 + aboveText.layoutSize.height + 2, showMore.frame.width, showMore.frame.height))
+        } else {
+            transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3, showMore.frame.width, showMore.frame.height))
+        }
         
 //        transition.updateFrame(layer: maskLayer, frame: rect.size.bounds)
         transition.updateFrame(layer: shadowLayer, frame: size.bounds)

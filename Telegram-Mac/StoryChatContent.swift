@@ -11,6 +11,7 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 import RangeSet
+import InAppSettings
 
 private struct StoryKey: Hashable {
     var peerId: EnginePeer.Id
@@ -105,18 +106,21 @@ final class StoryContentContextState {
         let presence: EnginePeer.Presence?
         let canViewStats: Bool
         let premiumRequired: Bool
+        let preferHighQualityStories: Bool
         init(
             isMuted: Bool,
             areVoiceMessagesAvailable: Bool,
             presence: EnginePeer.Presence?,
             canViewStats: Bool,
-            premiumRequired: Bool
+            premiumRequired: Bool,
+            preferHighQualityStories: Bool
         ) {
             self.isMuted = isMuted
             self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
             self.presence = presence
             self.canViewStats = canViewStats
             self.premiumRequired = premiumRequired
+            self.preferHighQualityStories = preferHighQualityStories
         }
     }
 
@@ -245,6 +249,25 @@ final class StoryContentContextImpl: StoryContentContext {
             self.currentFocusedId = initialFocusedId
             self.currentFocusedIdUpdatedPromise.set(.single(Void()))
             
+            context.engine.account.viewTracker.refreshCanSendMessagesForPeerIds(peerIds: [peerId])
+            
+            let preferHighQualityStories: Signal<Bool, NoError> = combineLatest(
+                context.sharedContext.baseApplicationSettings
+                |> map { settings in
+                    return settings.highQualityStories
+                }
+                |> distinctUntilChanged,
+                context.engine.data.subscribe(
+                    TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId)
+                )
+            )
+            |> map { setting, peer -> Bool in
+                let isPremium = peer?.isPremium ?? false
+                return setting && isPremium
+            }
+            |> distinctUntilChanged
+
+            
             var inputKeys: [PostboxViewKey] = [
                 PostboxViewKey.basicPeer(peerId),
                 PostboxViewKey.cachedPeerData(peerId: peerId),
@@ -258,10 +281,11 @@ final class StoryContentContextImpl: StoryContentContext {
                 context.account.postbox.combinedView(
                     keys: inputKeys
                 ),
-                context.engine.data.subscribe(TelegramEngine.EngineData.Item.NotificationSettings.Global())
+                context.engine.data.subscribe(TelegramEngine.EngineData.Item.NotificationSettings.Global()),
+                preferHighQualityStories
             )
-            |> mapToSignal { _, views, globalNotificationSettings -> Signal<(CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile], [Int64: EngineStoryItem.ForwardInfo], [StoryId: EngineStoryItem?]), NoError> in
-                return context.account.postbox.transaction { transaction -> (CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile], [Int64: EngineStoryItem.ForwardInfo], [StoryId: EngineStoryItem?]) in
+            |> mapToSignal { _, views, globalNotificationSettings, preferHighQualityStories -> Signal<(CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile], [Int64: EngineStoryItem.ForwardInfo], [StoryId: EngineStoryItem?], Bool), NoError> in
+                return context.account.postbox.transaction { transaction -> (CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile], [Int64: EngineStoryItem.ForwardInfo], [StoryId: EngineStoryItem?], Bool) in
                     var peers: [PeerId: Peer] = [:]
                     var forwardInfoStories: [StoryId: EngineStoryItem?] = [:]
                     var allEntityFiles: [MediaId: TelegramMediaFile] = [:]
@@ -327,10 +351,10 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                     
-                    return (views, peers, globalNotificationSettings, allEntityFiles, pendingForwardsInfo, forwardInfoStories)
+                    return (views, peers, globalNotificationSettings, allEntityFiles, pendingForwardsInfo, forwardInfoStories, preferHighQualityStories)
                 }
             }
-            |> deliverOnMainQueue).startStrict(next: { [weak self] views, peers, globalNotificationSettings, allEntityFiles, pendingForwardsInfo, forwardInfoStories in
+            |> deliverOnMainQueue).startStrict(next: { [weak self] views, peers, globalNotificationSettings, allEntityFiles, pendingForwardsInfo, forwardInfoStories, preferHighQualityStories in
                 guard let `self` = self else {
                     return
                 }
@@ -382,7 +406,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                             canViewStats: false,
-                            premiumRequired: cachedUserData.flags.contains(.premiumRequired)
+                            premiumRequired: cachedUserData.flags.contains(.premiumRequired),
+                            preferHighQualityStories: preferHighQualityStories
                         )
                     } else if let cachedChannelData = cachedPeerDataView.cachedPeerData as? CachedChannelData {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
@@ -390,7 +415,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             areVoiceMessagesAvailable: true,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                             canViewStats: cachedChannelData.flags.contains(.canViewStats), 
-                            premiumRequired: false
+                            premiumRequired: false,
+                            preferHighQualityStories: preferHighQualityStories
                         )
                     } else {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
@@ -398,7 +424,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             areVoiceMessagesAvailable: true,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                             canViewStats: false,
-                            premiumRequired: false
+                            premiumRequired: false,
+                            preferHighQualityStories: preferHighQualityStories
                         )
                     }
                 }
@@ -408,7 +435,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         areVoiceMessagesAvailable: true,
                         presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                         canViewStats: false,
-                        premiumRequired: false
+                        premiumRequired: false,
+                        preferHighQualityStories: preferHighQualityStories
                     )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
@@ -1130,11 +1158,18 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                 }
+                
+                var selectedMedia: EngineMedia
+                if let slice = stateValue.slice, let alternativeMedia = item.alternativeMedia, !slice.additionalPeerData.preferHighQualityStories {
+                    selectedMedia = alternativeMedia
+                } else {
+                    selectedMedia = item.media
+                }
+                
                 resultResources[mediaId] = StoryPreloadInfo(
                     peer: peerReference,
                     storyId: item.id,
-                    media: item.media,
-                    alternativeMedia: item.alternativeMedia,
+                    media: selectedMedia,
                     reactions: reactions,
                     priority: .top(position: nextPriority)
                 )
@@ -1146,7 +1181,7 @@ final class StoryContentContextImpl: StoryContentContext {
         for (id, info) in resultResources.sorted(by: { $0.value.priority < $1.value.priority }) {
             validIds.append(id)
             if self.preloadStoryResourceDisposables[id] == nil {
-                self.preloadStoryResourceDisposables[id] = preloadStoryMedia(context: context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).startStrict()
+                self.preloadStoryResourceDisposables[id] = preloadStoryMedia(context: context, info: info).startStrict()
             }
         }
         
@@ -1279,6 +1314,26 @@ final class SingleStoryContentContextImpl: StoryContentContext {
             }
         }
         
+        context.engine.account.viewTracker.refreshCanSendMessagesForPeerIds(peerIds: [storyId.peerId])
+                
+        let preferHighQualityStories: Signal<Bool, NoError> = combineLatest(
+            baseAppSettings(accountManager: context.sharedContext.accountManager)
+            |> map { settings in
+                return settings.highQualityStories
+            }
+            |> distinctUntilChanged,
+            context.engine.data.subscribe(
+                TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId)
+            )
+        )
+        |> map { setting, peer -> Bool in
+            let isPremium = peer?.isPremium ?? false
+            return setting && isPremium
+        }
+        |> distinctUntilChanged
+                
+
+        
         self.storyDisposable = (combineLatest(queue: .mainQueue(),
             context.engine.data.subscribe(
                 TelegramEngine.EngineData.Item.Peer.Peer(id: storyId.peerId),
@@ -1345,9 +1400,9 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     }
                     return (item, peers, allEntityFiles, stories)
                 }
-            }
+            }, preferHighQualityStories
         )
-        |> deliverOnMainQueue).startStrict(next: { [weak self] data, itemAndPeers in
+        |> deliverOnMainQueue).startStrict(next: { [weak self] data, itemAndPeers, preferHighQualityStories in
             guard let `self` = self else {
                 return
             }
@@ -1366,7 +1421,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 areVoiceMessagesAvailable: areVoiceMessagesAvailable,
                 presence: presence,
                 canViewStats: canViewStats,
-                premiumRequired: false
+                premiumRequired: false,
+                preferHighQualityStories: preferHighQualityStories
             )
             
             for (storyId, story) in forwardInfoStories {
@@ -1535,6 +1591,25 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
     init(context: AccountContext, peerId: EnginePeer.Id, listContext: PeerStoryListContext, initialId: Int32?) {
         self.context = context
         
+        context.engine.account.viewTracker.refreshCanSendMessagesForPeerIds(peerIds: [peerId])
+                
+        let preferHighQualityStories: Signal<Bool, NoError> = combineLatest(
+            baseAppSettings(accountManager: context.sharedContext.accountManager)
+            |> map { settings in
+                return settings.highQualityStories
+            }
+            |> distinctUntilChanged,
+            context.engine.data.subscribe(
+                TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId)
+            )
+        )
+        |> map { setting, peer -> Bool in
+            let isPremium = peer?.isPremium ?? false
+            return setting && isPremium
+        }
+        |> distinctUntilChanged
+
+        
         self.storyDisposable = (combineLatest(queue: .mainQueue(),
             context.engine.data.subscribe(
                 TelegramEngine.EngineData.Item.Peer.Peer(id: peerId),
@@ -1546,9 +1621,10 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId)
             ),
             listContext.state,
-            self.focusedIdUpdated.get()
+            self.focusedIdUpdated.get(),
+            preferHighQualityStories
         )
-        |> deliverOnMainQueue).startStrict(next: { [weak self] data, state, _ in
+        |> deliverOnMainQueue).startStrict(next: { [weak self] data, state, _, preferHighQualityStories in
             guard let `self` = self else {
                 return
             }
@@ -1566,7 +1642,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 areVoiceMessagesAvailable: areVoiceMessagesAvailable,
                 presence: presence,
                 canViewStats: canViewStats,
-                premiumRequired: premiumRequired
+                premiumRequired: premiumRequired,
+                preferHighQualityStories: preferHighQualityStories
             )
             
             self.listState = state
@@ -1720,11 +1797,18 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                                 }
                             }
                             
+                            var selectedMedia: EngineMedia
+                            if let alternativeMedia = item.alternativeMedia, !preferHighQualityStories {
+                                selectedMedia = alternativeMedia
+                            } else {
+                                selectedMedia = item.media
+                            }
+
+                            
                             resultResources[mediaId] = StoryPreloadInfo(
                                 peer: peerReference,
                                 storyId: item.id,
-                                media: item.media,
-                                alternativeMedia: item.alternativeMedia,
+                                media: selectedMedia,
                                 reactions: reactions,
                                 priority: .top(position: nextPriority)
                             )
@@ -1738,7 +1822,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                     if let mediaId = info.media.id {
                         validIds.append(mediaId)
                         if self.preloadStoryResourceDisposables[mediaId] == nil {
-                            self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).startStrict()
+                            self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: context, info: info).startStrict()
                         }
                     }
                 }
@@ -1822,13 +1906,15 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
     }
 }
 
-func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: Int32, media: EngineMedia, reactions: [MessageReaction.Reaction]) -> Signal<Never, NoError> {
+func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signal<Never, NoError> {
     var signals: [Signal<Never, NoError>] = []
     
-    switch media {
+    let selectedMedia: EngineMedia = info.media
+    
+    switch selectedMedia {
     case let .image(image):
         if let representation = largestImageRepresentation(image.representations) {
-            signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyId, media: media._asMedia()), resource: representation.resource), range: nil)
+            signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(info.peer.id), userContentType: .story, reference: .media(media: .story(peer: info.peer, id: info.storyId, media: selectedMedia._asMedia()), resource: representation.resource), range: nil)
             |> ignoreValues
             |> `catch` { _ -> Signal<Never, NoError> in
                 return .complete()
@@ -1838,14 +1924,14 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
         var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
         for attribute in file.attributes {
             if case let .Video(_, _, _, preloadSize) = attribute {
-                if let preloadSize = preloadSize {
+                if let preloadSize {
                     fetchRange = (0 ..< Int64(preloadSize), .default)
                 }
                 break
             }
         }
         
-        signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyId, media: media._asMedia()), resource: file.resource), range: fetchRange)
+        signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(info.peer.id), userContentType: .story, reference: .media(media: .story(peer: info.peer, id: info.storyId, media: selectedMedia._asMedia()), resource: file.resource), range: fetchRange)
         |> ignoreValues
         |> `catch` { _ -> Signal<Never, NoError> in
             return .complete()
@@ -1858,7 +1944,7 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
     
     var builtinReactions: [String] = []
     var customReactions: [Int64] = []
-    for reaction in reactions {
+    for reaction in info.reactions {
         switch reaction {
         case let .builtin(value):
             if !builtinReactions.contains(value) {
@@ -1909,8 +1995,6 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
                         return Void()
                     }
                     
-                    //let fileFetchPriorityDisposable = context.engine.resources.pushPriorityDownload(resourceId: file.resource.id.stringRepresentation, priority: 1)
-                    
                     let statusDisposable = statusSignal.start(completed: {
                         subscriber.putCompletion()
                     })
@@ -1919,7 +2003,6 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
                     return ActionDisposable {
                         statusDisposable.dispose()
                         loadDisposable.dispose()
-                        //fileFetchPriorityDisposable.dispose()
                     }
                 }
             })
@@ -1964,12 +2047,9 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
                     })
                     let loadDisposable = loadSignal.start()
                     
-                    //let fileFetchPriorityDisposable = context.engine.resources.pushPriorityDownload(resourceId: file.resource.id.stringRepresentation, priority: 1)
-                    
                     return ActionDisposable {
                         statusDisposable.dispose()
                         loadDisposable.dispose()
-                        //fileFetchPriorityDisposable.dispose()
                     }
                 }
             })
@@ -1980,12 +2060,38 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
     return combineLatest(signals) |> ignoreValues
 }
 
+
+
 func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id, storyItem: EngineStoryItem) -> Signal<Never, NoError> {
-    return context.engine.data.get(
-        TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+    
+    
+    let preferHighQualityStories: Signal<Bool, NoError> = combineLatest(
+           context.sharedContext.baseApplicationSettings
+           |> map { settings in
+               return settings.highQualityStories
+           }
+           |> distinctUntilChanged,
+           context.engine.data.subscribe(
+               TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId)
+           )
+       )
+       |> map { setting, peer -> Bool in
+           let isPremium = peer?.isPremium ?? false
+           return setting && isPremium
+       }
+       |> distinctUntilChanged
+       
+
+    
+    return combineLatest(
+        context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+        ),
+        preferHighQualityStories
+        |> take(1)
     )
-    |> mapToSignal { peerValue -> Signal<Never, NoError> in
-        guard let peerValue = peerValue else {
+    |> mapToSignal { peerValue, preferHighQualityStories -> Signal<Never, NoError> in
+        guard let peerValue else {
             return .complete()
         }
         guard let peer = PeerReference(peerValue._asPeer()) else {
@@ -1996,8 +2102,15 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
         var loadSignals: [Signal<Never, NoError>] = []
         var fetchPriorityDisposable: Disposable?
         
+        let selectedMedia: EngineMedia
+        if !preferHighQualityStories, let alternativeMedia = storyItem.alternativeMedia {
+            selectedMedia = alternativeMedia
+        } else {
+            selectedMedia = storyItem.media
+        }
+        
         var fetchPriorityResourceId: String?
-        switch storyItem.media {
+        switch selectedMedia {
         case let .image(image):
             if let representation = largestImageRepresentation(image.representations) {
                 fetchPriorityResourceId = representation.resource.id.stringRepresentation
@@ -2008,11 +2121,11 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
             break
         }
         
-        if let fetchPriorityResourceId = fetchPriorityResourceId {
+        if let fetchPriorityResourceId {
             fetchPriorityDisposable = context.engine.resources.pushPriorityDownload(resourceId: fetchPriorityResourceId, priority: 2)
         }
         
-        switch storyItem.media {
+        switch selectedMedia {
         case let .image(image):
             if let representation = largestImageRepresentation(image.representations) {
                 statusSignals.append(
@@ -2024,7 +2137,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
                     |> ignoreValues
                 )
                 
-                loadSignals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyItem.id, media: storyItem.media._asMedia()), resource: representation.resource), range: nil)
+                loadSignals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyItem.id, media: selectedMedia._asMedia()), resource: representation.resource), range: nil)
                 |> ignoreValues
                 |> `catch` { _ -> Signal<Never, NoError> in
                     return .complete()
@@ -2034,7 +2147,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
             var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
             for attribute in file.attributes {
                 if case let .Video(_, _, _, preloadSize) = attribute {
-                    if let preloadSize = preloadSize {
+                    if let preloadSize {
                         fetchRange = (0 ..< Int64(preloadSize), .default)
                     }
                     break
@@ -2044,7 +2157,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
             statusSignals.append(
                 context.account.postbox.mediaBox.resourceRangesStatus(file.resource)
                 |> filter { ranges in
-                    if let fetchRange = fetchRange {
+                    if let fetchRange {
                         return ranges.isSuperset(of: RangeSet(fetchRange.0))
                     } else {
                         return true
@@ -2054,7 +2167,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
                 |> ignoreValues
             )
             
-            loadSignals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyItem.id, media: storyItem.media._asMedia()), resource: file.resource), range: fetchRange)
+            loadSignals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyItem.id, media: selectedMedia._asMedia()), resource: file.resource), range: fetchRange)
             |> ignoreValues
             |> `catch` { _ -> Signal<Never, NoError> in
                 return .complete()

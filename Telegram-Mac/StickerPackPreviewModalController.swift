@@ -133,7 +133,6 @@ private class StickersModalView : View {
         add.set(background: theme.colors.accent, for: .Normal)
         add.set(background: theme.colors.accent, for: .Hover)
         add.set(background: theme.colors.accent, for: .Highlight)
-        add.set(text: strings().stickerPackAdd1Countable(0), for: .Normal)
         addSubview(add)
         add.scaleOnClick = true
 
@@ -185,7 +184,7 @@ private class StickersModalView : View {
     }
     
     
-    func layout(with state: State, installed: Set<StickerPackPreviewSource>, arguments: StickerPackArguments) -> Void {
+    func layout(with state: State, source controllerSource: StickerPackPreviewModalController.Source, installed: Set<StickerPackPreviewSource>, arguments: StickerPackArguments) -> Void {
         
         
         switch state {
@@ -217,31 +216,58 @@ private class StickersModalView : View {
                 }
             }
             
-            dismiss.isHidden = collections.count > 1 || !isInstalled(collections[0])
-            shareView.isHidden = false
-            
-            let allInstalled: Bool = !collections.contains(where: { !isInstalled($0) })
+            let allInstalled: Bool
             let notInstalledCount = collections.filter({ !isInstalled($0) }).count
-            add.isHidden = allInstalled
-            shadowView.isHidden = allInstalled
+
             
-            if !allInstalled {
-                switch source {
-                case .emoji:
-                    if collections.count == 1 {
-                        add.set(text: strings().emojiPackAddCountable(collections[0].items.count).uppercased(), for: .Normal)
-                    } else {
-                        add.set(text: strings().emojiPackSetsAddCountable(notInstalledCount).uppercased(), for: .Normal)
+            switch controllerSource {
+            case .install:
+                dismiss.isHidden = collections.count > 1 || !isInstalled(collections[0])
+                shareView.isHidden = false
+                
+                allInstalled = !collections.contains(where: { !isInstalled($0) })
+                
+                add.isHidden = allInstalled
+                shadowView.isHidden = allInstalled
+                
+                
+                if !allInstalled {
+                    switch source {
+                    case .emoji:
+                        if collections.count == 1 {
+                            add.set(text: strings().emojiPackAddCountable(collections[0].items.count).uppercased(), for: .Normal)
+                        } else {
+                            add.set(text: strings().emojiPackSetsAddCountable(notInstalledCount).uppercased(), for: .Normal)
+                        }
+                    case .stickers:
+                        if collections.count == 1 {
+                            add.set(text: strings().stickerPackAdd1Countable(collections[0].items.count).uppercased(), for: .Normal)
+                        } else {
+                            add.set(text: strings().stickerPackSetsAdd1Countable(notInstalledCount).uppercased(), for: .Normal)
+                        }
                     }
-                case .stickers:
-                    if collections.count == 1 {
-                        add.set(text: strings().stickerPackAdd1Countable(collections[0].items.count).uppercased(), for: .Normal)
-                    } else {
-                        add.set(text: strings().stickerPackSetsAdd1Countable(notInstalledCount).uppercased(), for: .Normal)
-                    }
+                    _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
+                }
+            default:
+                dismiss.isHidden = true
+                shareView.isHidden = true
+                add.isHidden = false
+                shadowView.isHidden = false
+                
+                allInstalled = false
+                
+                switch controllerSource {
+                case .installGroupEmojiPack:
+                    add.set(text: "Set as Group Emoji Pack", for: .Normal)
+                case .removeGroupEmojiPack:
+                    add.set(text: "Remove Group Emoji Pack", for: .Normal)
+                default:
+                    break
                 }
                 _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
             }
+            
+            
 
             let attr = NSMutableAttributedString()
 
@@ -430,6 +456,7 @@ class StickerPackPreviewModalController: ModalViewController {
     private let disposable: MetaDisposable = MetaDisposable()
     private var arguments:StickerPackArguments!
     private var onAdd:(()->Void)? = nil
+    private let source: Source
     
     private let installedValue = ValuePromise<Set<StickerPackPreviewSource>>(Set(), ignoreRepeated: true)
     private var installed: Set<StickerPackPreviewSource> = Set() {
@@ -437,14 +464,19 @@ class StickerPackPreviewModalController: ModalViewController {
             installedValue.set(installed)
         }
     }
+    enum Source {
+        case install
+        case installGroupEmojiPack
+        case removeGroupEmojiPack
+    }
     
-
-    init(_ context: AccountContext, peerId:PeerId?, references: [StickerPackPreviewSource], onAdd:(()->Void)? = nil) {
+    
+    init(_ context: AccountContext, peerId:PeerId?, references: [StickerPackPreviewSource], onAdd:(()->Void)? = nil, source controllerSource: Source = .install) {
         self.context = context
         self.peerId = peerId
         self.references = references
         self.onAdd = onAdd
-
+        self.source = controllerSource
         super.init(frame: NSMakeRect(0, 0, 350, 400))
         bar = .init(height: 0)
         arguments = StickerPackArguments(context: context, send: { [weak self] media, view, silent, schedule in
@@ -476,43 +508,51 @@ class StickerPackPreviewModalController: ModalViewController {
             }
             
         }, addpack: { [weak self] source, collection, close in
-            let title: String
-            let text: String
-            if !collection.installed {
-                _ = context.engine.stickers.addStickerPackInteractively(info: collection.info, items: collection.items).start()
-                switch source {
-                case .stickers:
-                    title = strings().stickerPackAddedTitle
-                    text = strings().stickerPackAddedInfo(collection.info.title)
-                case .emoji:
-                    title = strings().emojiPackAddedTitle
-                    text = strings().emojiPackAddedInfo(collection.info.title)
+            switch controllerSource {
+            case .install:
+                let title: String
+                let text: String
+                if !collection.installed {
+                    _ = context.engine.stickers.addStickerPackInteractively(info: collection.info, items: collection.items).start()
+                    switch source {
+                    case .stickers:
+                        title = strings().stickerPackAddedTitle
+                        text = strings().stickerPackAddedInfo(collection.info.title)
+                    case .emoji:
+                        title = strings().emojiPackAddedTitle
+                        text = strings().emojiPackAddedInfo(collection.info.title)
+                    }
+                } else {
+                    switch source {
+                    case .stickers:
+                        title = strings().stickerPackRemovedTitle
+                        text = strings().stickerPackRemovedInfo(collection.info.title)
+                    case .emoji:
+                        title = strings().emojiPackRemovedTitle
+                        text = strings().emojiPackRemovedInfo(collection.info.title)
+                    }
+                    _ = context.engine.stickers.removeStickerPackInteractively(id: collection.info.id, option: .archive).start()
                 }
-            } else {
-                switch source {
-                case .stickers:
-                    title = strings().stickerPackRemovedTitle
-                    text = strings().stickerPackRemovedInfo(collection.info.title)
-                case .emoji:
-                    title = strings().emojiPackRemovedTitle
-                    text = strings().emojiPackRemovedInfo(collection.info.title)
-                }
-                _ = context.engine.stickers.removeStickerPackInteractively(id: collection.info.id, option: .archive).start()
-            }
-            showModalText(for: context.window, text: text, title: title)
+                showModalText(for: context.window, text: text, title: title)
 
-            if close {
+                if close {
+                    self?.close()
+                    self?.disposable.dispose()
+                } else {
+                    switch source {
+                    case .emoji:
+                        self?.installed.insert(.emoji(.name(collection.info.shortName)))
+                    case .stickers:
+                        self?.installed.insert(.emoji(.name(collection.info.shortName)))
+                    }
+                }
+                self?.onAdd?()
+            default:
                 self?.close()
                 self?.disposable.dispose()
-            } else {
-                switch source {
-                case .emoji:
-                    self?.installed.insert(.emoji(.name(collection.info.shortName)))
-                case .stickers:
-                    self?.installed.insert(.emoji(.name(collection.info.shortName)))
-                }
+                self?.onAdd?()
             }
-            self?.onAdd?()
+            
             
         }, addAll: { [weak self] source, collections, close in
             
@@ -633,7 +673,7 @@ class StickerPackPreviewModalController: ModalViewController {
                 alert(for: context.window, info: strings().stickerSetDontExist)
                 self.close()
             } else {
-                self.genericView.layout(with: state, installed: installed, arguments: self.arguments)
+                self.genericView.layout(with: state, source: self.source, installed: installed, arguments: self.arguments)
                 self.readyOnce()
             }
         }))

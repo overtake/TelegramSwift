@@ -35,8 +35,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Tag Label...", filter: { $0 }, limit: 16))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().chatReactionEditTagPlaceholder, filter: { $0 }, limit: 10))
     
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatReactionContextEditTagInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
     // entries
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -45,11 +47,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func EditTagLabelController(context: AccountContext, reaction: MessageReaction.Reaction) -> InputDataModalController {
+func EditTagLabelController(context: AccountContext, reaction: MessageReaction.Reaction, label: String?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let initialState = State(value: label)
     
     var close: (()->Void)? = nil
     
@@ -65,7 +67,7 @@ func EditTagLabelController(context: AccountContext, reaction: MessageReaction.R
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Edit Tag Label")
+    let controller = InputDataController(dataSignal: signal, title: strings().chatReactionContextEditTag)
     
     controller.updateDatas = { data in
         updateState { current in
@@ -77,8 +79,9 @@ func EditTagLabelController(context: AccountContext, reaction: MessageReaction.R
     }
     
     controller.validateData = { _ in
-        
+        _ = context.engine.stickers.setSavedMessageTagTitle(reaction: reaction, title: stateValue.with { $0.value }).start()
         close?()
+        _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.5).start()
         return .none
     }
     
@@ -86,7 +89,7 @@ func EditTagLabelController(context: AccountContext, reaction: MessageReaction.R
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: strings().modalSave, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     

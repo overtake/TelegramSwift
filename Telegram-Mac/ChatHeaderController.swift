@@ -33,7 +33,7 @@ struct EmojiTag : Equatable {
 struct ChatHeaderState : Identifiable, Equatable {
     enum Value : Equatable {
         case none
-        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag], EmojiTag?)
+        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag]?, EmojiTag?)
         case addContact(block: Bool, autoArchived: Bool)
         case requestChat(String, String)
         case shareInfo
@@ -144,7 +144,7 @@ struct ChatHeaderState : Identifiable, Equatable {
             height += 0
         case let .search(_, _, _, emojiTags, _):
             height += 44
-            if !emojiTags.isEmpty {
+            if emojiTags != nil {
                 height += 35
             }
         case let .report(_, status):
@@ -1359,6 +1359,30 @@ private final class ChatSearchTagsView: View {
                         }
                     }, for: .Click)
                     
+                    self.contextMenu = { [weak self] in
+                        
+                        if let item = self?.item {
+                            let menu = ContextMenu()
+                            let context = item.arguments.context
+
+                            menu.addItem(ContextMenuItem(item.tag.tag.title != nil ? strings().chatReactionContextEditTag : strings().chatReactionContextAddLabel, handler: {
+                                showModal(with: EditTagLabelController(context: context, reaction: item.tag.tag.reaction, label: item.tag.tag.title), for: context.window)
+                            }, itemImage: MenuAnimation.menu_tag_rename.value))
+                            
+                           // menu.addItem(ContextSeparatorItem())
+                            
+//                            menu.addItem(ContextMenuItem(strings().chatReactionContextRemoveTag, handler: { [weak self] in
+//                                if let `self` = self {
+//                                    self.action(self.value.value, true)
+//                                }
+//                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_tag_remove.value))
+//                            
+                            return menu
+                        }
+                        
+                        return nil
+                    }
+                    
 
                 }
                 
@@ -1509,7 +1533,7 @@ private final class ChatSearchTagsView: View {
             let tagLabel = tag.tag.title
             
             if let title = tagLabel {
-                let layout = TextViewLayout(.initialize(string: title, color: selected ? theme.colors.underSelectedColor : theme.colors.text, font: .normal(.text)))
+                let layout = TextViewLayout(.initialize(string: title, color: selected ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.text)))
                 layout.measure(width: .greatestFiniteMagnitude)
                 self.textViewLayout = layout
             } else {
@@ -1545,6 +1569,73 @@ private final class ChatSearchTagsView: View {
         }
     }
     
+    class PremiumView : Control {
+        private let tagImageView = NinePathImage()
+        private let tagTextView = TextView()
+        private let secondTextView = TextView()
+        private let chevron = ImageView()
+        private var context: AccountContext?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(tagImageView)
+            addSubview(tagTextView)
+            addSubview(secondTextView)
+            addSubview(chevron)
+            
+            self.tagImageView.capInsets = NSEdgeInsets(top: 3, left: 5, bottom: 3, right: 10)
+
+            secondTextView.userInteractionEnabled = false
+            secondTextView.isSelectable = false
+            
+            tagTextView.userInteractionEnabled = false
+            tagTextView.isSelectable = false
+            
+            self.scaleOnClick = true
+            
+            self.set(handler: { [weak self] _ in
+                if let context = self?.context {
+                    showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                }
+            }, for: .Click)
+            
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(context: AccountContext) {
+            self.context = context
+            let tagLayout: TextViewLayout = TextViewLayout(.initialize(string: strings().chatHeaderSearchAddTags, color: theme.colors.accent, font: .normal(.text)))
+            let secondLayout: TextViewLayout = TextViewLayout(.initialize(string: strings().chatHeaderSearchAddTagsSecond, color: theme.colors.grayText, font: .normal(.text)))
+
+            tagLayout.measure(width: .greatestFiniteMagnitude)
+            secondLayout.measure(width: .greatestFiniteMagnitude)
+            
+            self.tagTextView.update(tagLayout)
+            self.secondTextView.update(secondLayout)
+            
+            let image = NSImage(named: "Icon_SavedMessages_Premium_Tag")!
+
+            tagImageView.image = NSImage(cgImage: generateTintedImage(image: image._cgImage, color: theme.colors.accent.withAlphaComponent(0.2))!, size: image.size)
+            tagImageView.setFrameSize(NSMakeSize(tagLayout.layoutSize.width + 12, 22))
+            
+            chevron.image = theme.icons.generalNext
+            chevron.sizeToFit()
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            
+            self.tagTextView.centerY(x: 30)
+            self.tagImageView.centerY(x: self.tagTextView.frame.minX - 6)
+
+            self.secondTextView.centerY(x: self.tagTextView.frame.maxX + 16)
+            chevron.centerY(x: self.secondTextView.frame.maxX + 5, addition: 1)
+        }
+    }
+    
     private let tableView = HorizontalTableView(frame: .zero)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -1565,12 +1656,15 @@ private final class ChatSearchTagsView: View {
     override func layout() {
         super.layout()
         tableView.frame = bounds
+        premiumView?.frame = bounds
     }
     
     private var entries: [EmojiTagEntry] = []
     private var context: AccountContext?
     private var callback:((EmojiTag)->Void)?
     private var tags: [EmojiTag] = []
+    
+    private var premiumView: PremiumView?
     
     func set(tags: [EmojiTag], context: AccountContext, animated: Bool, callback: @escaping(EmojiTag)->Void) {
         
@@ -1601,6 +1695,21 @@ private final class ChatSearchTagsView: View {
             let item = item
             tableView.replace(item: item.item(arguments, initialSize: frame.size), at: idx, animated: animated)
             self.entries[idx] = item
+        }
+        
+        if tableView.isEmpty {
+            let current: PremiumView
+            if let view = self.premiumView {
+                current = view
+            } else {
+                current = PremiumView(frame: frame.size.bounds)
+                self.premiumView = current
+                addSubview(current)
+            }
+            current.set(context: context)
+        } else if let premiumView = self.premiumView {
+            performSubviewRemoval(premiumView, animated: animated)
+            self.premiumView = nil
         }
     }
     
@@ -2025,7 +2134,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         
         switch state.main {
         case let .search(_, _, _, tags, tag):
-            if !tags.isEmpty {
+            if let tags = tags {
                 let current: ChatSearchTagsView
                 if let view = self.tagsView {
                     current = view

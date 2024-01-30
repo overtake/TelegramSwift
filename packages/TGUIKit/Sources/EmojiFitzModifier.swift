@@ -39,13 +39,8 @@ public enum EmojiFitzModifier: Int32, Equatable {
 private let colorKeyRegex = try? NSRegularExpression(pattern: "\"k\":\\[[\\d\\.]+\\,[\\d\\.]+\\,[\\d\\.]+\\,[\\d\\.]+\\]")
 
 public func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModifier?) -> Data {
-    if let fitzModifier = fitzModifier, var string = String(data: data, encoding: .utf8) {
-        let color1: NSColor
-        let color2: NSColor
-        let color3: NSColor
-        let color4: NSColor
-        
-        var colors: [NSColor] = [0xf77e41, 0xffb139, 0xffd140, 0xffdf79].map { NSColor(rgb: $0) }
+    if let fitzModifier = fitzModifier, var string = String(data: data, encoding: .utf8)?.replacingOccurrences(of: " ", with: "") {
+        let colors: [NSColor] = [0xf77e41, 0xffb139, 0xffd140, 0xffdf79].map { NSColor(rgb: $0) }
         let replacementColors: [NSColor]
         switch fitzModifier {
         case .type12:
@@ -112,7 +107,7 @@ public func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModif
 }
 
 public func applyLottieColor(data: Data, color: NSColor) -> Data {
-    if var string = String(data: data, encoding: .utf8) {
+    if var string = String(data: data, encoding: .utf8)?.replacingOccurrences(of: " ", with: "") {
         func colorToString(_ color: NSColor) -> String {
             var r: CGFloat = 0.0
             var g: CGFloat = 0.0

@@ -180,7 +180,7 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
 }
 
 func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage {
-    return generateTextIcon_AccentBadge(text: "NEW", bgColor: bgColor, textColor: textColor)
+    return generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
 }
 
 func generateTextIcon_AccentBadge(text: String, bgColor: NSColor, textColor: NSColor) -> CGImage {
