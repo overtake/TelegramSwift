@@ -1590,7 +1590,7 @@ class ChatListController : PeersListController {
         let searchOptions:AppSearchOptions
         switch mode {
         case .savedMessagesChats:
-            searchOptions = [.chats]
+            searchOptions = [.messages, .chats]
         default:
             searchOptions = [.messages, .chats]
         }

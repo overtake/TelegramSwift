@@ -187,9 +187,9 @@ struct ForumUI {
         
                 
         if addition {
-            newController = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)))
+            newController = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
         } else {
-            newController = ChatController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)))
+            newController = ChatController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
         }
         
         context.bindings.rootNavigation().push(newController, style: animated ? .push : nil)
