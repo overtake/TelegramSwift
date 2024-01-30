@@ -2102,6 +2102,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 menu.addItem(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: {
                     context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
                     self?.navigationController?.back()
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(context.peerId)))
                 }, itemImage: !displayAsTopics ? MenuAnimation.menu_check_selected.value : nil))
                 
                 menu.addItem(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: {
