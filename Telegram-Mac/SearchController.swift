@@ -449,7 +449,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
 }
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry>]?, to:[AppearanceWrapperEntry<ChatListSearchEntry>], arguments:SearchControllerArguments, pinnedItems:[PinnedItemId], initialSize:NSSize, animated: Bool) -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry>]?, to:[AppearanceWrapperEntry<ChatListSearchEntry>], arguments:SearchControllerArguments, pinnedItems:[PinnedItemId], initialSize:NSSize, animated: Bool, target: SearchController.Target) -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> {
     
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
@@ -467,6 +467,18 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 let threadId = Int64(threadId.id)
                 mode = .topic(threadId, data)
                 id = .forum(threadId)
+            } else if case .savedMessages = target {
+                if let sourceReference = message.sourceReference {
+                    id = .chatList(sourceReference.messageId.peerId)
+                    mode = .savedMessages(sourceReference.messageId.peerId.toInt64())
+                    if let value = message.peers[sourceReference.messageId.peerId] {
+                        peer = RenderedPeer(peer: value)
+                    }
+                } else {
+                    id = .chatList(.init(anonymousSavedMessagesId))
+                    mode = .savedMessages(anonymousSavedMessagesId)
+                    peer = RenderedPeer.init(peer: TelegramUser(id: .init(anonymousSavedMessagesId), accessHash: nil, firstName: nil, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil))
+                }
             } else {
                 id = .chatList(message.id.peerId)
                 mode = .chat
@@ -863,7 +875,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return ([], local, false)
                     }
                     foundLocalPeers = .single([])
-                    location = .general(tags: nil, minDate: nil, maxDate: nil)
+//                    location = .general(tags: nil, minDate: nil, maxDate: nil)
+                    location = .peer(peerId: context.peerId, fromId: nil, tags: globalTags.messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
                 case let .forum(peerId):
                     location = .peer(peerId: peerId, fromId: nil, tags: globalTags.messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
                     foundRemotePeers = .single(([], [], false))
@@ -927,7 +940,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
                                     index += 1
                                 case .savedMessages:
-                                    break
+                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
+                                    index += 1
                                 }
                                 
                             }
@@ -1148,7 +1162,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems, value.3, value.4)
         }
         |> map { entries, loading, location, animated, pinnedItems, searchMessagesState, searchMessagesResult -> (TableUpdateTransition, Bool, ChatLocation?, SearchMessagesState?, SearchMessagesResult?) in
-            let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, pinnedItems: pinnedItems, initialSize: atomicSize.modify { $0 }, animated: animated)
+            let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, pinnedItems: pinnedItems, initialSize: atomicSize.modify { $0 }, animated: animated, target: target)
             return (transition, loading, location, searchMessagesState, searchMessagesResult)
         } |> deliverOnMainQueue
         

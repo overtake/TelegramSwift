@@ -955,7 +955,7 @@ class PeerListContainerView : Control {
                     
                     var items: [ContextMenuItem] = []
 
-                    if state.forumPeer == nil {
+                    if state.forumPeer == nil, !state.mode.isForumLike {
                         items.append(ContextMenuItem(strings().chatListDownloadsTag, handler: { [weak self] in
                             updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
                             self?.showDownloads?()

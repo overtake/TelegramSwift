@@ -19,6 +19,7 @@ let package = Package(
         .package(name: "TelegramCore", path: "../../submodules/telegram-ios/submodules/TelegramCore"),
         .package(name: "Postbox", path: "../../submodules/telegram-ios/submodules/Postbox"),
         .package(name: "OpusBinding", path: "../../submodules/telegram-ios/submodules/OpusBinding"),
+        .package(name: "TelegramVoip", path: "../../submodules/telegram-ios/submodules/TelegramVoip"),
         .package(name: "TgVoipWebrtc", path: "../tgcalls"),
         .package(name: "ColorPalette", path: "../ColorPalette"),
         .package(name: "KeyboardKey", path: "../KeyboardKey"),
@@ -49,6 +50,7 @@ let package = Package(
                            .product(name: "ObjcUtils", package: "ObjcUtils", condition: nil),
                            .product(name: "MediaPlayer", package: "MediaPlayer", condition: nil),
                            .product(name: "OpusBinding", package: "OpusBinding", condition: nil),
+                           .product(name: "TelegramVoip", package: "TelegramVoip", condition: nil),
                           ],
             path: "Sources"),
     ]
