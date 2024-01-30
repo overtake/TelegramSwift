@@ -1438,6 +1438,7 @@ public final class LottieAnimation : Equatable {
                     } else {
                         modified = transformedWithFitzModifier(data: data, fitzModifier: self.key.fitzModifier)
                     }
+                   
                     if let json = String(data: modified, encoding: .utf8) {
                         if let bridge = makeRLottie?(json, self.cacheKey) {
                             for color in self.colors {

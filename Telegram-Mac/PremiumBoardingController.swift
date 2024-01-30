@@ -62,6 +62,7 @@ enum PremiumLogEventsSource : Equatable {
     case recommended_channels
     case last_seen
     case messages_privacy
+    case saved_tags
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -106,6 +107,8 @@ enum PremiumLogEventsSource : Equatable {
             return "last_seen"
         case .messages_privacy:
             return "messages_privacy"
+        case .saved_tags:
+            return "saved_tags"
         }
     }
     
@@ -148,6 +151,8 @@ enum PremiumLogEventsSource : Equatable {
         case .last_seen:
             return nil
         case .messages_privacy:
+            return nil
+        case .saved_tags:
             return nil
         }
     }
@@ -245,6 +250,7 @@ enum PremiumValue : String {
     case stories
     case wallpapers
     case peer_colors
+    case saved_tags
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xef6922),
                                  NSColor(rgb: 0xe95a2c),
@@ -262,7 +268,8 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x429bd5),
                                  NSColor(rgb: 0x41a6a5),
                                  NSColor(rgb: 0x3eb26d),
-                                 NSColor(rgb: 0x3dbd4a)]
+                                 NSColor(rgb: 0x3dbd4a),
+                                 NSColor(rgb: 0x51c736)]
         return [colors[index]]
     }
     
@@ -336,6 +343,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Wallpapers")!.precomposed(presentation.colors.accent)
         case .peer_colors:
             return NSImage(named: "Icon_Premium_Peer_Colors")!.precomposed(presentation.colors.accent)
+        case .saved_tags:
+            return NSImage(named: "Icon_Premium_Boarding_Tag")!.precomposed(presentation.colors.accent)
         }
     }
     
@@ -373,6 +382,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingWallpapersTitle
         case .peer_colors:
             return strings().premiumBoardingColorsTitle
+        case .saved_tags:
+            return strings().premiumBoardingSavedTagsTitle
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -409,6 +420,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingWallpapersInfo
         case .peer_colors:
             return strings().premiumBoardingColorsInfo
+        case .saved_tags:
+            return strings().premiumBoardingSavedTagsInfo
         }
     }
 }
@@ -416,7 +429,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
+    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?

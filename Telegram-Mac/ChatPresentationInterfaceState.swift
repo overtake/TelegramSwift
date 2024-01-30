@@ -630,6 +630,13 @@ class ChatPresentationInterfaceState: Equatable {
                 }, nil)
             }
             
+            
+            if chatMode.isThreadMode, chatLocation.peerId == accountPeer?.id, let threadId64 = chatMode.threadId64 {
+                return .action(strings().chatInputOpenChat, { chatInteraction in
+                    chatInteraction.openInfo(PeerId(threadId64), true, nil, nil)
+                }, nil)
+            }
+            
             switch chatMode {
             case .pinned:
                 if canPinMessageInPeer {

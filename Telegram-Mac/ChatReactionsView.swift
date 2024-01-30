@@ -223,6 +223,7 @@ final class ChatReactionsLayout {
         let source: Source
         
         let mode: ChatReactionsLayout.Mode
+        let currentTag: MessageReaction.Reaction?
         let disposable: MetaDisposable = MetaDisposable()
         let delayDisposable = MetaDisposable()
         let action:(MessageReaction.Reaction, Bool)->Void
@@ -253,7 +254,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, savedMessageTags: SavedMessageTags?, currentTag: MessageReaction.Reaction?, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -261,6 +262,7 @@ final class ChatReactionsLayout {
             self.action = action
             self.source = source
             self.context = context
+            self.currentTag = currentTag
             self.presentation = presentation
             self.mode = mode
             self.openInfo = openInfo
@@ -273,12 +275,19 @@ final class ChatReactionsLayout {
                     self.avatars = []
                     self.text = nil
                 } else {
-                    if recentPeers.isEmpty, mode != .tag {
-                        self.text = .init(.initialize(string: Int(value.count).prettyNumber, color: value.isSelected ? presentation.textSelectedColor : presentation.textColor, font: .normal(.text)))
+                    if let title = savedMessageTags?.tags.first(where: { $0.reaction == value.value })?.title {
+                        self.text = .init(.initialize(string: title, color: value.isSelected ? presentation.textSelectedColor : presentation.textColor, font: .normal(.text)))
                         self.text?.measure(width: .greatestFiniteMagnitude)
+
                     } else {
-                        self.text = nil
+                        if recentPeers.isEmpty, mode != .tag {
+                            self.text = .init(.initialize(string: Int(value.count).prettyNumber, color: value.isSelected ? presentation.textSelectedColor : presentation.textColor, font: .normal(.text)))
+                            self.text?.measure(width: .greatestFiniteMagnitude)
+                        } else {
+                            self.text = nil
+                        }
                     }
+                    
                     
                     var width: CGFloat = presentation.insetOuter
                     width += presentation.reactionSize.width
@@ -300,8 +309,13 @@ final class ChatReactionsLayout {
                             width += 4
                         }
                         width += presentation.insetOuter
-                    } else if mode == .tag {
-                        width += 22
+                    }
+                    if mode == .tag {
+                        if text == nil {
+                            width += 22
+                        } else {
+                            width += 16
+                        }
                     }
                     
                     var index: Int = 0
@@ -332,6 +346,7 @@ final class ChatReactionsLayout {
             
             let context = self.context
             let tag = self.value.value
+            let label = self.text?.attributedString.string
             if message.id.peerId == context.peerId, tagsGloballyEnabled {
                 if let menu = menu {
                     return menu
@@ -339,18 +354,21 @@ final class ChatReactionsLayout {
                     let menu = ContextMenu()
                     self.menu = menu
                     
-                    menu.addItem(ContextMenuItem(strings().chatReactionContextFilterByTag, handler: { [weak self] in
-                        if let `self` = self {
-                            _ = self.action(self.value.value, false)
+                    if context.isPremium {
+                        if self.value.value != self.currentTag {
+                            menu.addItem(ContextMenuItem(strings().chatReactionContextFilterByTag, handler: { [weak self] in
+                                if let `self` = self {
+                                    _ = self.action(self.value.value, false)
+                                }
+                            }, itemImage: MenuAnimation.menu_tag_filter.value))
                         }
-                    }, itemImage: MenuAnimation.menu_tag_filter.value))
-                    
-                    
-                    menu.addItem(ContextMenuItem(strings().chatReactionContextEditTag, handler: {
-                        showModal(with: EditTagLabelController(context: context, reaction: tag), for: context.window)
-                    }, itemImage: MenuAnimation.menu_tag_rename.value))
-                    
-                    menu.addItem(ContextSeparatorItem())
+                        
+                        menu.addItem(ContextMenuItem(label != nil ? strings().chatReactionContextEditTag : strings().chatReactionContextAddLabel, handler: {
+                            showModal(with: EditTagLabelController(context: context, reaction: tag, label: label), for: context.window)
+                        }, itemImage: MenuAnimation.menu_tag_rename.value))
+                        
+                        menu.addItem(ContextSeparatorItem())
+                    }
                     
                     menu.addItem(ContextMenuItem(strings().chatReactionContextRemoveTag, handler: { [weak self] in
                         if let `self` = self {
@@ -470,7 +488,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, savedMessageTags: SavedMessageTags?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, currentTag: MessageReaction.Reaction?, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void) {
         
         var mode: Mode = .full
         if message.id.peerId == context.peerId, tagsGloballyEnabled {
@@ -558,7 +576,7 @@ final class ChatReactionsLayout {
                         }
                     }
                 }
-                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, isFilterTag in
+                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, savedMessageTags: savedMessageTags, currentTag: currentTag, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, isFilterTag in
                     if message.id.peerId == context.peerId, !isFilterTag, mode == .tag {
                        tagAction(value)
                     } else {
@@ -1062,7 +1080,8 @@ final class ChatReactionsView : View {
         fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
         private var first: Bool = true
         private var backgroundView: NinePathImage? = nil
-        
+        private var textView: TextView?
+
         private var effetView: LottiePlayerView?
         private let effectDisposable = MetaDisposable()
         required init(frame frameRect: NSRect) {
@@ -1071,10 +1090,8 @@ final class ChatReactionsView : View {
             addSubview(imageView)
             scaleOnClick = true
             
-            self.set(handler: { [weak self] control in
-                if let reaction = self?.reaction {
-                    control.showContextMenu()
-                }
+            self.set(handler: { control in
+                control.showContextMenu()
             }, for: .Click)
             
             
@@ -1188,6 +1205,30 @@ final class ChatReactionsView : View {
                     }
                 }
             }
+            
+            let presentation = reaction.presentation
+            
+            if let text = reaction.text {
+                let current: TextView
+                if let view = self.textView {
+                    current = view
+                } else {
+                    current = TextView(frame: CGRect(origin: NSMakePoint(presentation.insetOuter + presentation.reactionSize.width + presentation.insetInner, (frame.height - text.layoutSize.height) / 2), size: text.layoutSize))
+                    current.userInteractionEnabled = false
+                    current.isSelectable = false
+                    self.textView = current
+                    addSubview(current)
+                }
+                current.update(text)
+            } else {
+                if let view = self.textView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.textView = nil
+                }
+            }
+            
+            
+            
             self.backgroundView?.image = reaction.presentation.tagBackground
             
             if animated {
@@ -1251,6 +1292,11 @@ final class ChatReactionsView : View {
             }
             
             transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - reactionSize.height) / 2), size: reactionSize))
+            
+            if let textView = textView, let text = reaction.text {
+                let center = focus(text.layoutSize)
+                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.layoutSize))
+            }
         }
         override func layout() {
             super.layout()

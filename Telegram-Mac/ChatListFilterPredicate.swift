@@ -123,7 +123,7 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
             signal = account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: filterPredicate, count: count)
             return signal
             |> map { view, updateType -> ChatListViewUpdate in
-                return ChatListViewUpdate(list: EngineChatList(view), type: updateType, scroll: st, removeNextAnimation: false)
+                return ChatListViewUpdate(list: EngineChatList(view, accountPeerId: account.peerId), type: updateType, scroll: st, removeNextAnimation: false)
             }
         case let .Index(index, st):
             guard case let .chatList(index) = index else {
@@ -139,7 +139,7 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                 } else {
                     genericType = updateType
                 }
-                return ChatListViewUpdate(list: EngineChatList(view), type: genericType, scroll: st, removeNextAnimation: st != nil)
+                return ChatListViewUpdate(list: EngineChatList(view, accountPeerId: account.peerId), type: genericType, scroll: st, removeNextAnimation: st != nil)
             }
         }
     case let .forum(peerId):
@@ -249,7 +249,8 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                     hasFailed: false,
                     isContact: false,
                     autoremoveTimeout: nil,
-                    storyStats: nil
+                    storyStats: nil,
+                    displayAsTopicList: false
                 ))
 
             }
@@ -314,7 +315,8 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                     hasFailed: false,
                     isContact: false,
                     autoremoveTimeout: nil,
-                    storyStats: nil
+                    storyStats: nil,
+                    displayAsTopicList: false
                 ))
             }
             

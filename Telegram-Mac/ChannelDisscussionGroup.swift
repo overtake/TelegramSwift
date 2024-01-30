@@ -105,7 +105,7 @@ private final class DiscussionState : Equatable {
         return DiscussionState(type: self.type, availablePeers: self.availablePeers, associatedPeer: self.associatedPeer, unlinkAbility: unlinkAbility, searchState: self.searchState)
     }
     
-    func withUpdatedSearchState(_ searchState: SearchState) -> DiscussionState {
+    func withUpdatedSearchState(_ searchState: SearchState?) -> DiscussionState {
         return DiscussionState(type: self.type, availablePeers: self.availablePeers, associatedPeer: self.associatedPeer, unlinkAbility: self.unlinkAbility, searchState: searchState)
     }
     

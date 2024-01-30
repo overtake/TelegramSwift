@@ -589,7 +589,7 @@ protocol PeerMediaSearchable : AnyObject {
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
         self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
-         self.saved = PeerMediaSavedMessagesController(context: context, peerId: peerId)
+        self.saved = PeerMediaSavedMessagesController(context: context, peerId: peerId)
          
         var updateTitle:((ExternalSearchMessages)->Void)? = nil
         
@@ -944,7 +944,7 @@ protocol PeerMediaSearchable : AnyObject {
             savedMessagesTab = .single((tag: .savedMessages, exists: false, hasLoaded: true))
         }
         
-        if peerId != context.peerId {
+        if peerId != context.peerId, threadInfo == nil {
             savedTab = context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: context.peerId, threadId: peerId.toInt64()), count: 3, tag: nil)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 1 || (!view.isLoading)

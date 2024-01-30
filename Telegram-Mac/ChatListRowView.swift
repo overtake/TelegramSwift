@@ -1067,7 +1067,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isForum && !item.isTopic, !isResorting {
                 return .clear
             }
-            if item.entryId.savedMessages {
+            if case .savedMessageIndex = item.entryId {
                 return theme.colors.background
             }
             if item.isCollapsed {
@@ -1772,7 +1772,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.archivedPhoto = nil
                 let icon = theme.icons.searchSaved
                 photo.setState(account: item.context.account, state: .Empty)
-                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
+                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)), cornerRadius: item.displayAsTopics ? 20 : nil)) |> map {($0, false)})
             } else if item.isRepliesChat {
                 self.archivedPhoto?.removeFromSuperview()
                 self.archivedPhoto = nil

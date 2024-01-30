@@ -219,7 +219,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 }
             }
             if let view = self.text {
-                updateInlineStickers(context: item.context, view: view, textLayout: item.textLayout)
+                updateInlineStickers(context: item.context, view: [view])
             }
             
             if let webpageLayout = item.webpageLayout {

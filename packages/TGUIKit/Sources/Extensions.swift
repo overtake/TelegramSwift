@@ -602,6 +602,11 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderWidth")
     }
+    func animateOpacity() ->Void {
+        let animation = CABasicAnimation(keyPath: "opacity")
+        animation.duration = 0.2
+        self.add(animation, forKey: "opacity")
+    }
     
     func animateBorderColor() ->Void {
         let animation = CABasicAnimation(keyPath: "borderColor")

@@ -108,7 +108,7 @@ func <(lhs:LanguageTableEntry, rhs:LanguageTableEntry) -> Bool {
 
 
 
-private func languageControllerEntries(listState: LocalizationListState?, language: TelegramLocalization, state:SearchState, searchViewState: TableSearchViewState) -> [LanguageTableEntry] {
+private func languageControllerEntries(listState: LocalizationListState?, language: TelegramLocalization, state:SearchState?, searchViewState: TableSearchViewState) -> [LanguageTableEntry] {
 
     var sectionId: Int32 = 0
     var index: Int32 = 0
@@ -127,18 +127,26 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
         }
         
         let availableSavedLocalizations = listState.availableSavedLocalizations.filter({ info in !listState.availableOfficialLocalizations.contains(where: { $0.languageCode == info.languageCode }) }).filter { value in
-            if state.request.isEmpty {
-                return true
+            if let state = state {
+                if state.request.isEmpty {
+                    return true
+                } else {
+                    return (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
+                }
             } else {
-                return (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
+                return true
             }
         }
         
         let availableOfficialLocalizations = listState.availableOfficialLocalizations.filter { value in
-            if state.request.isEmpty {
-                return true
+            if let state = state {
+                if state.request.isEmpty {
+                    return true
+                } else {
+                    return (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
+                }
             } else {
-                return (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
+                return true
             }
         }
     
@@ -152,7 +160,7 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
             }
             
             var accept: Bool = true
-            if !state.request.isEmpty {
+            if let state = state, !state.request.isEmpty {
                 accept = (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
             }
             return accept
@@ -181,7 +189,7 @@ private func languageControllerEntries(listState: LocalizationListState?, langua
                     return false
                 }
                 var accept: Bool = true
-                if !state.request.isEmpty {
+                if let state = state, !state.request.isEmpty {
                     accept = (value.title.lowercased().range(of: state.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.request.lowercased()) != nil)
                 }
                 return accept
@@ -325,10 +333,10 @@ class LanguageViewController: TableViewController {
         let context = self.context
         
         
-        let stateValue: Atomic<SearchState> = Atomic(value: SearchState(state: .None, request: nil))
-        let statePromise:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+        let stateValue: Atomic<SearchState?> = Atomic(value: nil)
+        let statePromise:ValuePromise<SearchState?> = ValuePromise(nil, ignoreRepeated: true)
         
-        let updateState:((SearchState)->SearchState)->Void = { f in
+        let updateState:((SearchState?)->SearchState?)->Void = { f in
             statePromise.set(stateValue.modify(f))
         }
 
@@ -404,7 +412,7 @@ class LanguageViewController: TableViewController {
             let entries = languageControllerEntries(listState: listState, language: appearance.language, state: state, searchViewState: searchViewState)
                 .map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             
-            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, animated: prevSearch.swap(state.request) == state.request, arguments: arguments, searchViewState: searchViewState)
+            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, animated: prevSearch.swap(state?.request) == state?.request, arguments: arguments, searchViewState: searchViewState)
                     |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
             } |> deliverOnMainQueue
         

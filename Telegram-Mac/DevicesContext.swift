@@ -267,37 +267,35 @@ final class DevicesContext : NSObject {
     }
     
     static func updateCameraId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
-        let cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
+        var cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
         
-        let activeDevice: AVCaptureDevice?
+        var activeDevice: AVCaptureDevice?
         if let cameraDevice = cameraDevice {
             if cameraDevice.isConnected && !cameraDevice.isSuspended {
                 activeDevice = cameraDevice
             } else {
                 activeDevice = nil
             }
-        } else if settings.cameraInputDeviceId == nil {
-            activeDevice = AVCaptureDevice.default(for: .video)
-        } else {
-            activeDevice = devices.camera.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
+        if activeDevice == nil {
+            activeDevice = AVCaptureDevice.default(for: .video)
+        }
         return activeDevice?.uniqueID
     }
     static func updateMicroId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
-        let audiodevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+        var audiodevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
         
-        let activeDevice: AVCaptureDevice?
+        var activeDevice: AVCaptureDevice?
         if let audiodevice = audiodevice {
             if audiodevice.isConnected && !audiodevice.isSuspended {
                 activeDevice = audiodevice
             } else {
                 activeDevice = nil
             }
-        } else if settings.audioInputDeviceId == nil {
+        }
+        if activeDevice == nil {
             activeDevice = AVCaptureDevice.default(for: .audio)
-        } else {
-            activeDevice = devices.audioInput.first(where: { $0.isConnected && !$0.isSuspended })
         }
                 
         return activeDevice?.uniqueID

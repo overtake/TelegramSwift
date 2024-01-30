@@ -63,15 +63,7 @@ enum UIChatListEntryId : Hashable {
     case sharedFolderUpdated
     case space
     case suspicious
-    
-    var savedMessages: Bool {
-        switch self {
-        case .savedMessageIndex:
-            return true
-        default:
-            return false
-        }
-    }
+
 }
 
 
@@ -265,7 +257,7 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, arguments: Arguments, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: EngineChatList.Group) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, arguments: Arguments, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: EngineChatList.Group, listMode: PeerListMode) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
                 
@@ -282,14 +274,19 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     $0._asMessage()
                 }
                 let mode: ChatListRowItem.Mode
-                if let data = item.threadData, case let .forum(id) = item.id {
-                    mode = .topic(id, data)
+                if listMode.isSavedMessages {
+                    mode = .savedMessages(item.renderedPeer.peerId.toInt64())
                 } else {
-                    mode = .chat
+                    if let data = item.threadData, case let .forum(id) = item.id {
+                        mode = .topic(id, data)
+                    } else {
+                        mode = .chat
+                    }
                 }
                 
                 
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact)
+                
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact, displayAsTopics: item.displayAsTopicList)
 
             case let .group(_, item, animated, hideStatus, appearMode, hideContent, storyState):
                 var messages:[Message] = []
@@ -499,8 +496,24 @@ class ChatListController : PeersListController {
         let animateGroupNextTransition = self.animateGroupNextTransition
         var scroll:TableScrollState? = nil
         
+        let preferHighQualityStories: Signal<Bool, NoError> = combineLatest(
+            context.sharedContext.baseApplicationSettings
+            |> map { settings in
+                return settings.highQualityStories
+            }
+            |> distinctUntilChanged,
+            context.engine.data.subscribe(
+                TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId)
+            )
+        )
+        |> map { setting, peer -> Bool in
+            let isPremium = peer?.isPremium ?? false
+            return setting && isPremium
+        }
+        |> distinctUntilChanged
+
         
-        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: self.mode.groupId == .archive)
+        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: self.mode.groupId == .archive, preferHighQuality: preferHighQualityStories)
                    |> deliverOnMainQueue).start(next: { [weak self] resources in
                        guard let `self` = self else {
                            return
@@ -511,7 +524,7 @@ class ChatListController : PeersListController {
                            if let mediaId = info.media.id {
                                validIds.append(mediaId)
                                if self.preloadStoryResourceDisposables[mediaId] == nil {
-                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).start()
+                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, info: info).startStrict()
                                }
                            }
                        }
@@ -756,7 +769,7 @@ class ChatListController : PeersListController {
                 return AppearanceWrapperEntry(entry: entry, appearance: appearance)
             }
             
-            return prepareEntries(from: previousEntries.swap(entries), to: entries, adIndex: nil, arguments: arguments, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId)
+            return prepareEntries(from: previousEntries.swap(entries), to: entries, adIndex: nil, arguments: arguments, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId, listMode: mode)
         }
         
         
@@ -1556,6 +1569,10 @@ class ChatListController : PeersListController {
             navigation.back()
             return .invoked
         }
+        if case .savedMessagesChats = mode, let navigation = navigationController {
+            navigation.back()
+            return .invoked
+        }
         if !self.filterValue.isFirst {
             updateFilter {
                 $0.withUpdatedFilter(nil)
@@ -1571,7 +1588,12 @@ class ChatListController : PeersListController {
 
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         let searchOptions:AppSearchOptions
-        searchOptions = [.messages, .chats]
+        switch mode {
+        case .savedMessagesChats:
+            searchOptions = [.chats]
+        default:
+            searchOptions = [.messages, .chats]
+        }
         super.init(context, followGlobal: !modal, mode: mode, searchOptions: searchOptions)
         
         if mode.filterId != nil {
@@ -1606,7 +1628,15 @@ class ChatListController : PeersListController {
                 return false
             } else if item.isForum {
                 if byClick {
-                    open(with: item.entryId, initialAction: nil, addition: false)
+                    open(with: item.entryId, initialAction: nil, addition: false, openAsTopics: item.displayAsTopics)
+                    return false
+                } else {
+                    return true
+                }
+            } else if item.peerId == context.peerId, item.displayAsTopics {
+                if byClick {
+                    item.view?.focusAnimation(nil, text: nil)
+                    open(with: item.entryId, initialAction: nil, addition: false, openAsTopics: item.displayAsTopics)
                     return false
                 } else {
                     return true
@@ -1667,7 +1697,7 @@ class ChatListController : PeersListController {
                     initialAction = nil
                 }
                 
-                open(with: item.entryId, initialAction: initialAction, addition: false)
+                open(with: item.entryId, initialAction: initialAction, addition: false, openAsTopics: item.displayAsTopics)
                 
             }
         }

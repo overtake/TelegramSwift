@@ -99,7 +99,7 @@ final class SelectPeerInteraction : InterfaceObserver {
     private(set) var presentation:SelectPeerPresentation = SelectPeerPresentation()
     var close: ()->Void = {}
     var action:(PeerId, Int64?)->Void = { _, _ in }
-    var openForum:(PeerId)->Void = { _ in }
+    var openForum:(PeerId)->Bool = { _ in return false }
     var singleUpdater:((SelectPeerPresentation)->Void)? = nil
     
     var updateFolder:((ChatListFilter)->Void)? = nil

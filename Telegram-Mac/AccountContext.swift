@@ -22,7 +22,7 @@ import InAppPurchaseManager
 import ApiCredentials
 
 let clown: String = "🤡"
-let tagsGloballyEnabled = false
+let tagsGloballyEnabled = true
 
 
 public struct PremiumConfiguration {
@@ -338,6 +338,7 @@ final class AccountContext {
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     let reactions: Reactions
+    let dockControl: DockControl
     private(set) var reactionSettings: ReactionSettings = ReactionSettings.default
     private let reactionSettingsDisposable = MetaDisposable()
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
@@ -355,6 +356,8 @@ final class AccountContext {
         return _cloudThemes.get() |> deliverOnMainQueue
     }
     #endif
+    
+    
     
     private let _emoticonThemes = Atomic<[(String, TelegramPresentationTheme)]>(value: [])
     var emoticonThemes: [(String, TelegramPresentationTheme)] {
@@ -547,6 +550,7 @@ final class AccountContext {
         self.webSessions = engine.privacy.webSessions()
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
+        self.dockControl = DockControl(engine)
         #endif
         
         
@@ -749,6 +753,7 @@ final class AccountContext {
            }))
 
         
+        
         let autoplayMedia = _autoplayMedia
         prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in
             _ = autoplayMedia.swap(view.values[ApplicationSpecificPreferencesKeys.autoplayMedia]?.get(AutoplayMediaPreferences.self) ?? AutoplayMediaPreferences.defaultSettings)
@@ -821,28 +826,6 @@ final class AccountContext {
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
-//        var shouldReindex: Signal<SomeAccountSettings, NoError> = someAccountSetings(postbox: account.postbox) |> filter { value -> Bool in
-//            if value.appVersion != ApiEnvironment.version {
-//                return true
-//            } else if let time = value.lastChatReindexTime {
-//                return Int32(Date().timeIntervalSince1970) > time
-//            } else {
-//                return true
-//            }
-//        } |> deliverOnMainQueue
-//
-//        shouldReindex = (shouldReindex |> then(.complete() |> suspendAwareDelay(60 * 60, queue: Queue.mainQueue()))) |> restart
-//
-//        shouldReindexCacheDisposable.set(shouldReindex.start(next: { [weak self] _ in
-//            self?.reindexCacheDisposable.set(engine.resources.reindexCacheInBackground(lowImpact: true).start())
-//            _ = updateSomeSettingsInteractively(postbox: account.postbox, { settings in
-//                var settings = settings
-//                settings.lastChatReindexTime = Int32(Date().timeIntervalSince1970) + 2 * 60 * 60 * 24
-//                settings.appVersion = ApiEnvironment.version
-//                return settings
-//            }).start()
-//        }))
-//
         
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
@@ -882,11 +865,8 @@ final class AccountContext {
             CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
         })
         
-//        reactions.needsPremium = { [weak self] in
-//            if let strongSelf = self {
-//                showModal(with: PremiumReactionsModal(context: strongSelf), for: strongSelf.window)
-//            }
-//        }
+        actionsDisposable.add(requestApplicationIcons(engine: engine).start())
+
         
         #endif
         
@@ -901,6 +881,7 @@ final class AccountContext {
         self.globalLocationDisposable.set(globalPeerHandler.get().start(next: { [weak self] value in
             _ = self?._globalLocationId.swap(value)
         }))
+        
         
     }
     
@@ -1011,6 +992,7 @@ final class AccountContext {
         _chatThemes.set(.single([]))
         _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))
         reactionSettingsDisposable.dispose()
+        dockControl.clear()
         #endif
     }
    

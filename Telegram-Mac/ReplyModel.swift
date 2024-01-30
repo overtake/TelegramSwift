@@ -258,7 +258,13 @@ class ReplyModel: ChatAccessoryModel {
             if self.parent?.id == message.id {
                 for attr in message.attributes {
                     if let attr = attr as? QuotedReplyMessageAttribute {
-                        title = attr.authorName ?? ""
+                        if let name = attr.authorName {
+                            title = name
+                        } else if let peerId = attr.peerId, let peer = message.peers[peerId] {
+                            title = peer.displayTitle
+                        } else {
+                            title = ""
+                        }
                     }
                 }
             }
@@ -334,7 +340,7 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
-            self.message = .init(attr, maximumNumberOfLines: quote != nil && self.modelType == .modern ? 4 : 1, cutout: self.cutout)
+            self.message = .init(attr, maximumNumberOfLines: quote != nil && message.replyAttribute == nil && self.modelType == .modern ? 4 : 1, cutout: self.cutout)
         } else {
             self.header = nil
             self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.enabledText, font: .normal(.text)), maximumNumberOfLines: 1, cutout: self.cutout)

@@ -1049,12 +1049,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             
             view?.view.update(layout.layout)
-            
-
-            if let view = view {
-                updateInlineStickers(context: item.context, view: view.view, textLayout: layout.layout)
-            }
         }
+        updateInlineStickers(context: item.context, view: self.captionViews.map { $0.view })
     }
 
     
@@ -1086,7 +1082,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return super.isEmojiLite
     }
     
-    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+    func updateInlineStickers(context: AccountContext, view textViews: [TextView]) {
         
         guard let item = self.item as? ChatRowItem else {
             return
@@ -1094,45 +1090,50 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         let textColor = item.presentation.chat.textColor(item.isIncoming, item.renderType == .bubble)
         
         var validIds: [InlineStickerItemLayer.Key] = []
-        var index: Int = textView.hashValue
-        
-        for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
-                
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
-                validIds.append(id)
-                
-                
-                let rect: NSRect
-                if textLayout.isBigEmoji {
-                    rect = item.rect
-                } else {
-                    rect = item.rect.insetBy(dx: -2, dy: -2)
-                }
-                
-                let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, textColor == current.textColor {
-                    view = current
-                } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
-                    self.inlineStickerItemViews[id] = view
-                    view.superview = textView
-                    textView.addEmbeddedLayer(view)
-                }
-                index += 1
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
+        var index: Int = 0
+
+        for textView in textViews {
+            if let textLayout = textView.textLayout {
+                for item in textLayout.embeddedItems {
+                    if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                        
+                        let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
+                        validIds.append(id)
+                        
+                        
+                        let rect: NSRect
+                        if textLayout.isBigEmoji {
+                            rect = item.rect
+                        } else {
+                            rect = item.rect.insetBy(dx: -2, dy: -2)
+                        }
+                        
+                        let view: InlineStickerItemLayer
+                        if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, textColor == current.textColor {
+                            view = current
+                        } else {
+                            self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
+                            self.inlineStickerItemViews[id] = view
+                            view.superview = textView
+                            textView.addEmbeddedLayer(view)
+                        }
+                        index += 1
+                        var isKeyWindow: Bool = false
+                        if let window = window {
+                            if !window.canBecomeKey {
+                                isKeyWindow = true
+                            } else {
+                                isKeyWindow = window.isKeyWindow
+                            }
+                        }
+                        view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                        view.frame = rect
                     }
                 }
-                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
-                view.frame = rect
             }
         }
+       
         
         var removeKeys: [InlineStickerItemLayer.Key] = []
         for (key, itemLayer) in self.inlineStickerItemViews {

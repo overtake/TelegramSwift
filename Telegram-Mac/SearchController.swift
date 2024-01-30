@@ -472,7 +472,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 mode = .chat
             }
             switch arguments.target {
-            case .forum:
+            case .forum, .savedMessages:
                 titleMode = .normal
             case .common:
                 titleMode = .forumInfo
@@ -851,6 +851,19 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             foundRemotePeers = .single(([], [], false))
                         }
                     }
+                case .savedMessages:
+                    foundRemotePeers = context.engine.messages.searchLocalSavedMessagesPeers(query: query, indexNameMapping: [:]) |> map { peers in
+                        var local: [ChatListSearchEntry] = []
+                        var index = 1000
+                        for item in peers {
+                            
+                            local.append(.localPeer(item._asPeer(), index, nil, .none, false, false, nil))
+                            index += 1
+                        }
+                        return ([], local, false)
+                    }
+                    foundLocalPeers = .single([])
+                    location = .general(tags: nil, minDate: nil, maxDate: nil)
                 case let .forum(peerId):
                     location = .peer(peerId: peerId, fromId: nil, tags: globalTags.messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
                     foundRemotePeers = .single(([], [], false))
@@ -913,6 +926,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 case .common:
                                     entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
                                     index += 1
+                                case .savedMessages:
+                                    break
                                 }
                                 
                             }
@@ -1309,12 +1324,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     enum Target {
         case common(PeerGroupId)
         case forum(PeerId)
-        
+        case savedMessages
         var isCommon: Bool {
             switch self {
             case .common:
                 return true
             case .forum:
+                return false
+            case .savedMessages:
                 return false
             }
         }
@@ -1323,6 +1340,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             case .common:
                 return false
             case .forum:
+                return true
+            case .savedMessages:
                 return true
             }
         }

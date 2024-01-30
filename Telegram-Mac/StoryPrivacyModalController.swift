@@ -190,7 +190,7 @@ private final class StoryPreviewRowView : GeneralContainableRowView {
         }
  
         if self.storyView == nil, let peerId = item.story.peerId {
-            let storyView = StoryLayoutView.makeView(for: item.story.storyItem, peerId: peerId, peer: item.story.peer?._asPeer(), context: item.context, frame: NSMakeRect(0, 0, 100, 100))
+            let storyView = StoryLayoutView.makeView(for: item.story.storyItem, isHighQuality: item.context.sharedContext.baseSettings.highQualityStories && item.context.isPremium, peerId: peerId, peer: item.story.peer?._asPeer(), context: item.context, frame: NSMakeRect(0, 0, 100, 100))
             storyView.layer?.cornerRadius = 0
             addSubview(storyView)
             self.storyView = storyView
@@ -521,11 +521,14 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     var getController:(()->InputDataController?)? = nil
     
     let reveal: Bool
-    let initialPrivacy: StoryPosterResultPrivacy = .init(sendAsPeerId: context.peerId, privacyEveryone: .init(base: .everyone, additionallyIncludePeers: []), privacyContacts: .init(base: .contacts, additionallyIncludePeers: []), privacyFriends: .init(base: .closeFriends, additionallyIncludePeers: []), privacyNobody: .init(base: .nobody, additionallyIncludePeers: []), selectedPrivacy: .everyone, isForwardingDisabled: false, pin: true)
+    var initialPrivacy: StoryPosterResultPrivacy = .init(sendAsPeerId: context.peerId, privacyEveryone: .init(base: .everyone, additionallyIncludePeers: []), privacyContacts: .init(base: .contacts, additionallyIncludePeers: []), privacyFriends: .init(base: .closeFriends, additionallyIncludePeers: []), privacyNobody: .init(base: .nobody, additionallyIncludePeers: []), selectedPrivacy: .everyone, isForwardingDisabled: false, pin: true)
     
     switch reason {
-    case .settings:
+    case let  .settings(item):
         reveal = true
+        if let privacy = item.storyItem.privacy {
+            initialPrivacy.selectedPrivacy = privacy.base
+        }
     case .share:
         reveal = false
     }

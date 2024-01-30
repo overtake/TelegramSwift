@@ -248,6 +248,14 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(wallpapers)
         
+        let savedTags = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        savedTags.setup(context: context, type: .saved_tags, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.saved_tags.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(savedTags)
+        
         switch value {
         case .double_limits:
             slideView.displaySlide(at: 1, animated: false)
@@ -281,7 +289,8 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 14, animated: false)
         case .wallpapers:
             slideView.displaySlide(at: 15, animated: false)
-
+        case .saved_tags:
+            slideView.displaySlide(at: 16, animated: false)
         }
         
         needsLayout = true

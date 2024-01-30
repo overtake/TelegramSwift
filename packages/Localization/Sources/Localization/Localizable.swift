@@ -321,6 +321,8 @@ public final class L10n {
   public static var appearanceConfirmRemoveTitle: String  { return L10n.tr("Localizable", "Appearance.Confirm.RemoveTitle") }
   /// The file size must not exceed 2MB and the image dimensions must not exceed 500x500px.
   public static var appearanceCustomBackgroundFileError: String  { return L10n.tr("Localizable", "Appearance.CustomBackground.FileError") }
+  /// Subscriber to **Telegram Premium** to unlock a wider range of app Icons.
+  public static var appearanceDockIconPremium: String  { return L10n.tr("Localizable", "Appearance.DockIcon.Premium") }
   /// Auto-Night Mode
   public static var appearanceSettingsAutoNight: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNight") }
   /// AUTO-NIGHT MODE
@@ -343,6 +345,8 @@ public final class L10n {
   public static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
   /// Messages
   public static var appearanceThemeAccentMessages: String  { return L10n.tr("Localizable", "Appearance.Theme.Accent.Messages") }
+  /// APP ICON
+  public static var appearanceSettingsDockIcon: String  { return L10n.tr("Localizable", "AppearanceSettings.DockIcon") }
   /// Follow System Appearance
   public static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
   /// Good morning! 👋
@@ -563,6 +567,8 @@ public final class L10n {
   public static var avatarBackgroundPlainGradient: String  { return L10n.tr("Localizable", "Avatar.Background.PlainGradient") }
   /// Preferences…
   public static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
+  /// NEW
+  public static var badgeNew: String  { return L10n.tr("Localizable", "Badge.New") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
   public static var bioDescription: String  { return L10n.tr("Localizable", "Bio.Description") }
   /// BIO
@@ -2501,6 +2507,8 @@ public final class L10n {
   public static var channelWallpaperRemoveWallpaper: String  { return L10n.tr("Localizable", "ChannelWallpaper.RemoveWallpaper") }
   /// Channel Wallpaper
   public static var channelWallpaperTitle: String  { return L10n.tr("Localizable", "ChannelWallpaper.Title") }
+  /// Group Wallpaper
+  public static var channelWallpaperTitleGroup: String  { return L10n.tr("Localizable", "ChannelWallpaper.Title.Group") }
   /// admin
   public static var chatAdminBadge: String  { return L10n.tr("Localizable", "Chat.AdminBadge") }
   /// ADD PROXY
@@ -4189,12 +4197,18 @@ public final class L10n {
   public static func chatQuizTooltipVotesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.Tooltip.Votes_zero", p1)
   }
-  /// Edit Tag Label
+  /// Add Name
+  public static var chatReactionContextAddLabel: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.AddLabel") }
+  /// Edit Name
   public static var chatReactionContextEditTag: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.EditTag") }
   /// Filter by Tag
   public static var chatReactionContextFilterByTag: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.FilterByTag") }
   /// Remove Tag
   public static var chatReactionContextRemoveTag: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.RemoveTag") }
+  /// You can label your emoji tag with a text name.
+  public static var chatReactionContextEditTagInfo: String  { return L10n.tr("Localizable", "Chat.Reaction.Context.EditTag.Info") }
+  /// Label...
+  public static var chatReactionEditTagPlaceholder: String  { return L10n.tr("Localizable", "Chat.Reaction.EditTag.Placeholder") }
   /// Are you sure you want to cancel recording?
   public static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   /// This chat helps you keep track of replies to your comments in Channels.
@@ -4207,6 +4221,10 @@ public final class L10n {
   public static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
   /// Scheduled Messages
   public static var chatRightContextScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Right.Context.ScheduledMessages") }
+  /// View as Chats
+  public static var chatSavedMessagesViewAsChats: String  { return L10n.tr("Localizable", "Chat.SavedMessages.ViewAsChats") }
+  /// View as Messages
+  public static var chatSavedMessagesViewAsMessages: String  { return L10n.tr("Localizable", "Chat.SavedMessages.ViewAsMessages") }
   /// The buttons will become active as soon as the message is sent.
   public static var chatScheduledInlineButtonError: String  { return L10n.tr("Localizable", "Chat.Scheduled.InlineButton.Error") }
   /// • Use end-to-end encryption
@@ -5095,6 +5113,10 @@ public final class L10n {
   public static var chatGiftTitleUnclaimed: String  { return L10n.tr("Localizable", "ChatGift.Title.Unclaimed") }
   /// Restart Topic
   public static var chatHeaderRestartTopic: String  { return L10n.tr("Localizable", "ChatHeader.RestartTopic") }
+  /// Add Tags
+  public static var chatHeaderSearchAddTags: String  { return L10n.tr("Localizable", "ChatHeader.Search.AddTags") }
+  /// to your Saved Messages
+  public static var chatHeaderSearchAddTagsSecond: String  { return L10n.tr("Localizable", "ChatHeader.Search.AddTags.Second") }
   /// Menu
   public static var chatInputBotMenu: String  { return L10n.tr("Localizable", "ChatInput.BotMenu") }
   /// Open Chat
@@ -5737,6 +5759,8 @@ public final class L10n {
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// Tag the message with an emoji for quick search
   public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage") }
+  /// Organize your Saved Messages with tags\nfor quicker access. [Learn More...]()
+  public static var chatReactionsTagMessagePremium: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage.Premium") }
   /// %1$@ set the same wallpaper for this chat
   public static func chatServiceChangedToSameWallpaper(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.ChangedToSameWallpaper", p1)
@@ -7757,6 +7781,10 @@ public final class L10n {
   public static var groupUsersTooMuchError: String  { return L10n.tr("Localizable", "Group.UsersTooMuchError") }
   /// Change Group Info
   public static var groupEditAdminPermissionChangeInfo: String  { return L10n.tr("Localizable", "Group.EditAdmin.Permission.ChangeInfo") }
+  /// CHOOSE EMOJI PACK
+  public static var groupEmojiPackHeader: String  { return L10n.tr("Localizable", "Group.EmojiPack.Header") }
+  /// Group Emoji Pack
+  public static var groupEmojiPackTitle: String  { return L10n.tr("Localizable", "Group.EmojiPack.Title") }
   /// **No events here yet**\n\nThere were no service actions taken by the group's members and admins for the last 48 hours.
   public static var groupEventLogEmptyText: String  { return L10n.tr("Localizable", "Group.EventLog.EmptyText") }
   /// %@ removed the group's description:
@@ -10381,6 +10409,8 @@ public final class L10n {
   public static var peerListTitleContacts: String  { return L10n.tr("Localizable", "PeerList.Title.Contacts") }
   /// Forum
   public static var peerListTitleForum: String  { return L10n.tr("Localizable", "PeerList.Title.Forum") }
+  /// Saved Messages
+  public static var peerListTitleSavedMessages: String  { return L10n.tr("Localizable", "PeerList.Title.SavedMessages") }
   /// Audio
   public static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
   /// Groups
@@ -10871,6 +10901,10 @@ public final class L10n {
   public static var premiumBoardingReactionsNewInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Info") }
   /// Infinite Reactions
   public static var premiumBoardingReactionsNewTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Title") }
+  /// Organize your Saved Messages with tagsfor quicker access.
+  public static var premiumBoardingSavedTagsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.SavedTags.Info") }
+  /// Tags for Messages
+  public static var premiumBoardingSavedTagsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.SavedTags.Title") }
   /// React with thousands of emoji — with multiple reactions per message.
   public static var premiumBoardingStatusInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Status.Info") }
   /// Emoji Status
@@ -11139,6 +11173,10 @@ public final class L10n {
   public static var premiumBoardingStoriesExpirationDurationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.ExpirationDuration.Info") }
   /// Expiration Options
   public static var premiumBoardingStoriesExpirationDurationTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.ExpirationDuration.Title") }
+  /// View video stories in double the resolution.
+  public static var premiumBoardingStoriesHighQualityInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.HighQuality.Info") }
+  /// Higher Quality
+  public static var premiumBoardingStoriesHighQualityTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.HighQuality.Title") }
   /// Add links and formatting to your story captions.
   public static var premiumBoardingStoriesLinkFormattingInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.LinkFormatting.Info") }
   /// Links and Formatting
@@ -12529,6 +12567,8 @@ public final class L10n {
   public static var selectColorApply: String  { return L10n.tr("Localizable", "SelectColor.Apply") }
   /// Channel Wallpaper
   public static var selectColorChannelWallpaper: String  { return L10n.tr("Localizable", "SelectColor.ChannelWallpaper") }
+  /// Group Wallpaper
+  public static var selectColorGroupWallpaper: String  { return L10n.tr("Localizable", "SelectColor.GroupWallpaper") }
   /// Reply to your message
   public static var selectColorMessage1: String  { return L10n.tr("Localizable", "SelectColor.Message1") }
   /// Your name and replies to your messages will be shown in the selected color.
@@ -12539,26 +12579,40 @@ public final class L10n {
   public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
   /// Set a wallpaper that will be visible to everyone reading your channel.
   public static var selectColorChannelWallpaperInfo: String  { return L10n.tr("Localizable", "SelectColor.ChannelWallpaper.Info") }
+  /// Group Emoji Pack
+  public static var selectColorEmojiPackGroup: String  { return L10n.tr("Localizable", "SelectColor.EmojiPack.Group") }
+  /// Choose an emoji pack that will be available to all members within the group.
+  public static var selectColorEmojiPackInfoGroup: String  { return L10n.tr("Localizable", "SelectColor.EmojiPack.Info.Group") }
   /// Channel Emoji Status
   public static var selectColorEmojiStatusChannel: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Channel") }
+  /// Group Emoji Status
+  public static var selectColorEmojiStatusGroup: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Group") }
   /// Emoji Status
   public static var selectColorEmojiStatusUser: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.User") }
   /// Choose status that will be shown next to the channel's name.
   public static var selectColorEmojiStatusInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Info.Channel") }
+  /// Choose status that will be shown next to the group's name.
+  public static var selectColorEmojiStatusInfoGroup: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Info.Group") }
   /// Choose status that will be shown next to your profile.
   public static var selectColorEmojiStatusInfoUser: String  { return L10n.tr("Localizable", "SelectColor.EmojiStatus.Info.User") }
+  /// Members of your group can **boost** it so that it levels up and unlocks these features.
+  public static var selectColorGroupBlockInfo: String  { return L10n.tr("Localizable", "SelectColor.Group.BlockInfo") }
+  /// Set a wallpaper that will be visible to everyone reading your group.
+  public static var selectColorGroupWallpaperInfo: String  { return L10n.tr("Localizable", "SelectColor.GroupWallpaper.Info") }
   /// REMOVE ICON
   public static var selectColorIconRemoveIcon: String  { return L10n.tr("Localizable", "SelectColor.Icon.RemoveIcon") }
   /// Icon
   public static var selectColorIconSelect: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select") }
   /// ADD ICON TO REPLIES
   public static var selectColorIconTitle: String  { return L10n.tr("Localizable", "SelectColor.Icon.Title") }
-  /// Make replies to your messages stand out by adding\ncustom icons to them.
+  /// Make replies to your messages stand out by adding custom icons to them.
   public static var selectColorIconInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.Channel") }
   /// Make replies to your messages stand out by adding custom icons to them.
   public static var selectColorIconInfoUser: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.User") }
   /// Make your channel profile stand out by adding custom icons to background.
   public static var selectColorIconInfoChannelProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.Channel.Profile") }
+  /// Make your group profile stand out by adding custom icons to background.
+  public static var selectColorIconInfoGroupProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.Group.Profile") }
   /// Make your profile stand out by adding custom icons to background.
   public static var selectColorIconInfoUserProfile: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.User.Profile") }
   /// Not Selected
@@ -12601,6 +12655,10 @@ public final class L10n {
   public static var selectCountriesOK: String  { return L10n.tr("Localizable", "SelectCountries.OK") }
   /// Select Countries
   public static var selectCountriesTitle: String  { return L10n.tr("Localizable", "SelectCountries.Title") }
+  /// CONTACTS
+  public static var selectPeersContacts: String  { return L10n.tr("Localizable", "SelectPeers.Contacts") }
+  /// FREQUENT CONTACTS
+  public static var selectPeersFrequent: String  { return L10n.tr("Localizable", "SelectPeers.Frequent") }
   /// Sorry, you can't select more than %@ users
   public static func selectPeersLimitReached(_ p1: String) -> String {
     return L10n.tr("Localizable", "SelectPeers.LimitReached", p1)
@@ -14091,6 +14149,18 @@ public final class L10n {
   public static var storyChannelInputSaveToProfile: String  { return L10n.tr("Localizable", "Story.ChannelInput.SaveToProfile") }
   /// Are you sure you want to delete story?
   public static var storyConfirmDelete: String  { return L10n.tr("Localizable", "Story.Confirm.Delete") }
+  /// Increase Quality
+  public static var storyContextIncreaseQuality: String  { return L10n.tr("Localizable", "Story.Context.IncreaseQuality") }
+  /// Lower Quality
+  public static var storyContextLowerQuality: String  { return L10n.tr("Localizable", "Story.Context.LowerQuality") }
+  /// You can lower the quality later for faster downloads.
+  public static var storyContextIncreaseQualityTooltipText: String  { return L10n.tr("Localizable", "Story.Context.IncreaseQuality.Tooltip.Text") }
+  /// Quality Increased
+  public static var storyContextIncreaseQualityTooltipTitle: String  { return L10n.tr("Localizable", "Story.Context.IncreaseQuality.Tooltip.Title") }
+  /// Stories will now download faster.
+  public static var storyContextLowerQualityTooltipText: String  { return L10n.tr("Localizable", "Story.Context.LowerQuality.Tooltip.Text") }
+  /// Quality Lowered
+  public static var storyContextLowerQualityTooltipTitle: String  { return L10n.tr("Localizable", "Story.Context.LowerQuality.Tooltip.Title") }
   /// edited
   public static var storyControlsEdited: String  { return L10n.tr("Localizable", "Story.Controls.Edited") }
   /// This video has no sound

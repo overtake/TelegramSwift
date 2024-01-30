@@ -278,7 +278,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
             switch recentPeers {
             case let .peers(recent):
                 if !recent.isEmpty {
-                    entries.append(.separator(index, theme, "FREQUENT CONTACTS"))
+                    entries.append(.separator(index, theme, strings().selectPeersFrequent))
                     for peer in recent {
                         if !peer.isEqual(accountPeer), isset[peer.id] == nil {
                             isset[peer.id] = peer.id
@@ -287,7 +287,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                         }
                     }
                     if !peers.isEmpty {
-                        entries.append(.separator(index, theme, "CONTACTS"))
+                        entries.append(.separator(index, theme, strings().selectPeersContacts))
                     }
                 }
             default:

@@ -304,7 +304,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelWallpapersController(context: AccountContext, peerId: PeerId, boostLevel: Int32, selected: (Bool, TelegramWallpaper?), callback: @escaping(TelegramWallpaper?)->Void) -> InputDataModalController {
+func ChannelWallpapersController(context: AccountContext, peerId: PeerId, isGroup: Bool, boostLevel: Int32, selected: (Bool, TelegramWallpaper?), callback: @escaping(TelegramWallpaper?)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -449,7 +449,7 @@ func ChannelWallpapersController(context: AccountContext, peerId: PeerId, boostL
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().channelWallpaperTitle)
+    let controller = InputDataController(dataSignal: signal, title: isGroup ? strings().channelWallpaperTitleGroup : strings().channelWallpaperTitle)
     
     controller.validateData = { _ in
         callback(stateValue.with { $0.selected?.wallpaper })

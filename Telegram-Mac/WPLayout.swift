@@ -415,7 +415,7 @@ class WPLayout: Equatable {
                     action = nil
                 }
                 link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: true, postId: messageId?.id, callback: chatInteraction.openInfo)
-            case let .join(_, joinHash):
+            case let .join(_, joinHash, _):
                 link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
             case let .webPage(_, url: url):
                 link = .external(link: url, false)

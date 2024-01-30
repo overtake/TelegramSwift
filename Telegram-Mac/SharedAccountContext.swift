@@ -73,6 +73,10 @@ class SharedAccountContext {
         return _baseSettings.with { $0 }
     }
     
+    var baseApplicationSettings: Signal<BaseApplicationSettings, NoError> {
+        return baseAppSettings(accountManager: self.accountManager)
+    }
+    
    
     func isLite(_ key: LiteModeKey = .any) -> Bool {
         let mode = baseSettings.liteMode

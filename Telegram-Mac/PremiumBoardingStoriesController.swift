@@ -116,10 +116,11 @@ enum PremiumBoardingStoriesItem {
     case saveToGallery
     case longerCaption
     case linksAndFormating
-    
+    case highQuality
     static var all: [PremiumBoardingStoriesItem] {
         return [.priority,
                 .stealth,
+                .highQuality,
                 .permanentViews,
                 .expiratationDuration,
                 .saveToGallery,
@@ -143,6 +144,8 @@ enum PremiumBoardingStoriesItem {
             return strings().premiumBoardingStoriesLongerCaptionTitle
         case .linksAndFormating:
             return strings().premiumBoardingStoriesLinkFormattingTitle
+        case .highQuality:
+            return strings().premiumBoardingStoriesHighQualityTitle
         }
     }
     var info: String {
@@ -161,6 +164,8 @@ enum PremiumBoardingStoriesItem {
             return strings().premiumBoardingStoriesLongerCaptionInfo
         case .linksAndFormating:
             return strings().premiumBoardingStoriesLinkFormattingInfo
+        case .highQuality:
+            return strings().premiumBoardingStoriesHighQualityInfo
         }
     }
     
@@ -183,6 +188,8 @@ enum PremiumBoardingStoriesItem {
             return NSImage(named: "Icon_PremiumBoarding_LongerCaptions")?.precomposed()
         case .linksAndFormating:
             return NSImage(named: "Icon_PremiumBoarding_LinksAndFormatting")?.precomposed()
+        case .highQuality:
+            return NSImage(named: "Icon_PremiumBoarding_HighQuality")?.precomposed(NSColor(0x9A64EE))
         }
     }
 }

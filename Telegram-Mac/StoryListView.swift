@@ -1428,7 +1428,6 @@ final class StoryListView : Control, Notifable {
             inputView.updateState(value, animated: animated)
         }
                 
-
         
         if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.wideInput || value.inputRecording != nil || value.hasReactions {
             let current: Control
@@ -1649,6 +1648,8 @@ final class StoryListView : Control, Notifable {
             if let current = self.current, !current.isEqual(to: entry.item.storyItem.id) {
                 self.redraw()
                 self.initInteractiveMedia(current, arguments: arguments, animated: false)
+            } else if let current = self.current, current.isHighQuality != entry.additionalPeerData.preferHighQualityStories {
+                self.redraw()
             } else if let current = self.current {
                 self.updateStoryState(current.state)
                 self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
@@ -1681,7 +1682,7 @@ final class StoryListView : Control, Notifable {
         
         let size = NSMakeSize(frame.width - 100, frame.height - 110)
         let aspect = StoryLayoutView.size.aspectFitted(size)
-        let current = StoryLayoutView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
+        let current = StoryLayoutView.makeView(for: entry.item.storyItem, isHighQuality: entry.additionalPeerData.preferHighQualityStories, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
         
         self.current = current
         self.firstPlayingState = true

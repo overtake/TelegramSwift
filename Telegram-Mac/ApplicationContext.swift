@@ -525,7 +525,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
 //            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
-            setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
+            //setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

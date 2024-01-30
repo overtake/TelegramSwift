@@ -407,7 +407,7 @@ private final class StoryViewerRowView: GeneralRowView {
                     performSubviewRemoval(view, animated: false)
                     self.storyPreview = nil
                 }
-                current = StoryLayoutView.makeView(for: repost.story, peerId: repost.peer.id, peer: repost.peer._asPeer(), context: item.context, frame: NSMakeRect(0, 0, 30, 40))
+                current = StoryLayoutView.makeView(for: repost.story, isHighQuality: false, peerId: repost.peer.id, peer: repost.peer._asPeer(), context: item.context, frame: NSMakeRect(0, 0, 30, 40))
                 current.layer?.cornerRadius = .cornerRadius
                 current.scaleOnClick = true
                 self.storyPreview = current

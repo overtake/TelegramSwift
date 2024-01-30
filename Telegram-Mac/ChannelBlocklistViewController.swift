@@ -412,7 +412,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
             listDisposable.set(disposable)
             
         }, updateState: { state in
-            if !state.request.isEmpty {
+            if let state = state, !state.request.isEmpty {
                 (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.restrictedAndBanned(peerId: peerId, searchQuery: state.request, updated: { listState in
                     blacklistPromise.set(.single(listState.list))
                 })
