@@ -2649,7 +2649,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         }, itemImage: hq ? MenuAnimation.menu_sd.value : MenuAnimation.menu_hd.value))
                     } else {
                         menu.addItem(ContextMenuItem(strings().storyContextIncreaseQuality, handler: {
-                            showModal(with: PremiumBoardingController(context: context, presentation: darkAppearance), for: context.window)
+                            showModal(with: PremiumBoardingController(context: context, source: .stories_quality, openFeatures: true, presentation: darkAppearance), for: context.window)
                         }, itemImage: MenuAnimation.menu_hd_lock.value))
                     }
                 }
