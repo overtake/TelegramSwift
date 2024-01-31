@@ -61,7 +61,7 @@ public final class Reactions {
     
     public func react(_ messageId: MessageId, values: [UpdateMessageReaction], fromRect: NSRect? = nil, storeAsRecentlyUsed: Bool = false) {
         _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
-        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
+        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
     public func updateQuick(_ value: MessageReaction.Reaction) {

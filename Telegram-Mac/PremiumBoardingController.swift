@@ -153,7 +153,7 @@ enum PremiumLogEventsSource : Equatable {
         case .messages_privacy:
             return nil
         case .saved_tags:
-            return nil
+            return .saved_tags
         }
     }
     

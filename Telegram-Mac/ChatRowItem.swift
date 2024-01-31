@@ -905,6 +905,9 @@ class ChatRowItem: TableRowItem {
         if let peer = peer {
             peers.append(peer)
         }
+        if let peer = message?.author {
+            peers.append(peer)
+        }
         
         guard let message = message else {
             return false
@@ -934,7 +937,7 @@ class ChatRowItem: TableRowItem {
         }
         
         for peer in peers {
-            if peer.addressName == "reviews_bot" {
+            if peer.addressName == "reviews_bot" || peer.addressName == "ReviewInsightsBot" {
                 return true
             }
             if let peer = peer as? TelegramChannel {
@@ -1962,7 +1965,9 @@ class ChatRowItem: TableRowItem {
 
                             if range.location != NSNotFound {
                                 attr.addAttribute(.link, value: link, range: range)
-                                attr.addAttribute(.font, value: NSFont.bold(.short), range: range)
+                                if !message.isAnonymousMessage {
+                                    attr.addAttribute(.font, value: NSFont.bold(.short), range: range)
+                                }
                             }
                         } else {
                             let newAttr = NSAttributedString.initialize(string: text, color: forwardNameColor, font: .normal(.short))
@@ -3149,8 +3154,9 @@ class ChatRowItem: TableRowItem {
                     return message.effectiveReactions(isTags: isTags)?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
                 }
 
-                
-                if peer.isChannel {
+                if isTags {
+                    accessToAll = true
+                } else if peer.isChannel {
                    accessToAll = false
                 } else if let peerAllowed = peerAllowed {
                     switch peerAllowed {
