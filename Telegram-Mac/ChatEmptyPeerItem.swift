@@ -387,16 +387,12 @@ class ChatEmptyPeerView : TableRowView {
             
             bgView.center()
             
-            if let imageView = imageView {
-                imageView.centerX(y: 0)
-                textView.centerX(y: imageView.frame.maxY + 10)
-            } else {
-                textView.center()
-            }
-            
             if let view = premRequiredImageView {
                 view.centerX(y: 0)
                 textView.centerX(y: view.frame.maxY + 10)
+            } else if let imageView = imageView {
+                imageView.centerX(y: 0)
+                textView.centerX(y: imageView.frame.maxY + 10)
             } else {
                 textView.center()
             }
