@@ -303,7 +303,7 @@ private class Container : NSVisualEffectView {
 }
 
 private final class DockIconRowView : GeneralContainableRowView {
-    private let backgroundView = LayerBackedView()
+    private let backgroundView = BackgroundView(frame: .zero)
     private let visualEffect = Container()
     
     required init(frame frameRect: NSRect) {
@@ -356,11 +356,10 @@ private final class DockIconRowView : GeneralContainableRowView {
             view.frame = icon.frame
         }
         
-        backgroundView.layer?.contentsGravity = .center
+        backgroundView.backgroundMode = theme.backgroundMode
         
         visualEffect.layer?.borderColor = NSColor.white.withAlphaComponent(0.2).cgColor
         
-        self.backgroundView.layer?.contents = item.wallpaperImage
 
     }
 }
