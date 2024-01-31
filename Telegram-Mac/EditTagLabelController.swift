@@ -35,7 +35,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().chatReactionEditTagPlaceholder, filter: { $0 }, limit: 10))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().chatReactionEditTagPlaceholder, filter: { $0 }, limit: 12))
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatReactionContextEditTagInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
