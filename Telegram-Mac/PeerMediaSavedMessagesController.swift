@@ -230,7 +230,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     let location: ChatLocation = .makeSaved(context.peerId, peerId: peerId)
     let mode: ChatMode = .thread(data: location.threadMessage!, mode: .saved(origin: .init(peerId: peerId, namespace: 0, id: 0)))
     
-    let chatInteraction = ChatInteraction(chatLocation: location, context: context, mode: mode)
+    let chatInteraction = ChatInteraction(chatLocation: location, context: context, mode: mode, isPeerSavedMessages: true)
     
     var selectText: ChatSelectText? = nil
     

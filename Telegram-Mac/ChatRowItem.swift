@@ -866,6 +866,10 @@ class ChatRowItem: TableRowItem {
     
     var canReact: Bool {
         if let message = firstMessage {
+            
+            if chatInteraction.isPeerSavedMessages {
+                return false
+            }
             if message.id.namespace != Namespaces.Message.Cloud {
                 return false
             }
@@ -1539,6 +1543,9 @@ class ChatRowItem: TableRowItem {
             return value
         } else if let message = self.messages.first {
             if chatInteraction.isLogInteraction {
+                return nil
+            }
+            if chatInteraction.isPeerSavedMessages {
                 return nil
             }
             if unsupported {
