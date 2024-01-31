@@ -12,7 +12,8 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import ApiCredentials
-
+import InAppSettings
+import Dock
 
 extension TelegramApplicationIcons.Icon {
     var path: String {
@@ -55,9 +56,15 @@ final class DockControl {
     private let data = DisposableSet()
     
     private let engine: TelegramEngine
-    init(_ engine: TelegramEngine) {
+    private let accountManager: AccountManager<TelegramAccountManagerTypes>
+    private let update = MetaDisposable()
+    private let applyResource = MetaDisposable()
+    init(_ engine: TelegramEngine, accountManager: AccountManager<TelegramAccountManagerTypes>) {
         self.engine = engine
+        self.accountManager = accountManager
         loadResources()
+        
+        silence()
     }
     
     private func loadResources() {
@@ -74,10 +81,29 @@ final class DockControl {
         self.promise.set(icons)
     }
     
+    private func silence() {
+        let signal = combineLatest(engine.resources.applicationIcons(), dockSettings(accountManager: accountManager)) |> deliverOnMainQueue
+        update.set(signal.start(next: { [weak self] icons, settings in
+            if let self, let selected = settings.iconSelected, selected != TelegramApplicationIcons.Icon.defaultIconName {
+                if let icon = icons.icons.first(where: { $0.file.fileName == selected }) {
+                    let resource = self.engine.account.postbox.mediaBox.resourceData(icon.file.resource) |> filter { $0.complete } |> take(1) |> deliverOnMainQueue
+                    self.applyResource.set(resource.start(next: { resource in
+                        Dock.setCustomAppIcon(path: resource.path, silence: true)
+                    }))
+                }
+            } else {
+                Dock.setCustomAppIcon(path: nil, silence: true)
+                self?.applyResource.set(nil)
+            }
+        }))
+    }
+    
     func clear() {
+        update.dispose()
         data.dispose()
         fetch.dispose()
         disposable.dispose()
+        applyResource.dispose()
     }
     
     deinit {

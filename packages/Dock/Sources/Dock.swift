@@ -80,13 +80,15 @@ public class Dock {
     }
 
     // Refresh Dock
-    static func refreshDock() -> Bool {
+    static func refreshDock(silence: Bool) -> Bool {
         let _ = launch(command: "/bin/bash", arguments: ["-c", "rm /var/folders/*/*/*/com.apple.dock.iconcache"])
-        let killallResult = launch(command: "/usr/bin/killall", arguments: ["Dock"])
         
-        if killallResult != 0 {
-            logError("Failed to run `killall Dock`, result: \(killallResult)")
-            return false
+        if !silence {
+            let killallResult = launch(command: "/usr/bin/killall", arguments: ["Dock"])
+            if killallResult != 0 {
+                logError("Failed to run `killall Dock`, result: \(killallResult)")
+                return false
+            }
         }
         return true
     }
@@ -125,7 +127,7 @@ public class Dock {
         return data.sha256()
     }
 
-    static func setPreparedIcon(path: String) -> String? {
+    static func setPreparedIcon(path: String, silence: Bool) -> String? {
         let sipsResult = launch(command: "/usr/bin/sips", arguments: ["-i", path])
         if sipsResult != 0 {
             print("Icon Error: Failed to run `sips -i \"\(path)\"`, result: \(sipsResult)")
@@ -153,28 +155,28 @@ public class Dock {
             return nil
         }
         
-        return refreshDock() ? digest(rsrc) : nil
+        return refreshDock(silence: silence) ? digest(rsrc) : nil
     }
 
     
-    @discardableResult static func clearCustomAppIcon() -> Bool {
+    @discardableResult static func clearCustomAppIcon(silence: Bool) -> Bool {
         let bundle = bundlePath();
         let icon = bundle + "/Icon\r";
         try? FileManager.default.removeItem(atPath: icon)
         try? XAttr.remove(named: kFinderInfo, atPath: bundle)
-        return refreshDock();
+        return refreshDock(silence: silence);
 
     }
 
 
-    @discardableResult public static func setCustomAppIcon(path: String?) -> String? {
+    @discardableResult public static func setCustomAppIcon(path: String?, silence: Bool = false) -> String? {
         let temp = tempPath(ext: "icns")
         guard !temp.isEmpty else {
             return nil
         }
         
         guard let path = path else {
-            clearCustomAppIcon()
+            clearCustomAppIcon(silence: silence)
             return nil
         }
 
@@ -184,7 +186,7 @@ public class Dock {
 
         do {
             try FileManager.default.copyItem(atPath: path, toPath: temp)
-            return setPreparedIcon(path: temp)
+            return setPreparedIcon(path: temp, silence: silence)
         } catch {
             print("Icon Error: Failed to copy icon from \"\(path)\" to \"\(temp)\"")
             return nil
