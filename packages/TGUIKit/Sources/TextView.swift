@@ -1661,8 +1661,8 @@ public final class TextViewLayout : Equatable {
                 
                 let lineRange = CTLineGetStringRange(line)
                 
-                let sp = startPoint.offsetBy(dx: -penOffset, dy: 0)
-                let cp = currentPoint.offsetBy(dx: -penOffset, dy: 0)
+                let sp = startPoint.offsetBy(dx: -penOffset - lines[i].frame.minX, dy: 0)
+                let cp = currentPoint.offsetBy(dx: -penOffset - lines[i].frame.minX, dy: 0)
                 
                 var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, sp)
                 var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, cp)

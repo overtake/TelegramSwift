@@ -2099,8 +2099,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
-                    
+                    #if DEBUG
                     actionBlock.append(.color(section: GroupInfoSection.type.rawValue, peer: PeerEquatable(peer: channel), viewType: .singleItem))
+                    #endif
 
                     actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                 }
