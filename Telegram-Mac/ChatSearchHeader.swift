@@ -953,7 +953,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     let emptyRequest: Bool
                     if case let .emojiTag(tag) = self.inputInteraction.state.tokenState {
                         tags.append(tag)
-                        emptyRequest = !query.isEmpty
+                        emptyRequest = true
                     } else if case .from = self.inputInteraction.state.tokenState {
                         emptyRequest = true
                     } else {

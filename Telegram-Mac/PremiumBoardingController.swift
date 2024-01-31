@@ -53,6 +53,7 @@ enum PremiumLogEventsSource : Equatable {
     case profile(PeerId)
     case gift(from: PeerId, to: PeerId, months: Int32, slug: String?, unclaimed: Bool)
     case story_viewers
+    case stories_quality
     case send_as
     case translations
     case stories__stealth_mode
@@ -95,6 +96,8 @@ enum PremiumLogEventsSource : Equatable {
             return "stories__stealth_mode"
         case .story_viewers:
             return "stories__viewers"
+        case .stories_quality:
+            return "stories__quality"
         case .stories__save_to_gallery:
             return "stories__save_to_gallery"
         case let .channel_boost(peerId):
@@ -139,6 +142,8 @@ enum PremiumLogEventsSource : Equatable {
         case .stories__stealth_mode:
             return .stories
         case .story_viewers:
+            return .stories
+        case .stories_quality:
             return .stories
         case .stories__save_to_gallery:
             return .stories
