@@ -22,6 +22,7 @@
 		27034076282CF79E00D0156C /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27034075282CF79E00D0156C /* SceneKit.framework */; };
 		27034078282CF7BE00D0156C /* PremiumStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
+		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CB929F66649009C994C /* StoryModalController.swift */; };
 		270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBD29F7BCCA009C994C /* StoryListView.swift */; };
@@ -1501,6 +1502,7 @@
 		27034075282CF79E00D0156C /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
 		27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStarSceneView.swift; sourceTree = "<group>"; };
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
+		270595D72B6941C400E05493 /* ChatSearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchHeader.swift; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270B7CB929F66649009C994C /* StoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModalController.swift; sourceTree = "<group>"; };
 		270B7CBD29F7BCCA009C994C /* StoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListView.swift; sourceTree = "<group>"; };
@@ -3083,6 +3085,15 @@
 			path = premium;
 			sourceTree = "<group>";
 		};
+		270595D62B69419000E05493 /* header */ = {
+			isa = PBXGroup;
+			children = (
+				C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */,
+				270595D72B6941C400E05493 /* ChatSearchHeader.swift */,
+			);
+			name = header;
+			sourceTree = "<group>";
+		};
 		27093B2A279FD70F001C36D8 /* folders */ = {
 			isa = PBXGroup;
 			children = (
@@ -4308,6 +4319,7 @@
 		C219E1E51D8AC83A0042F0C8 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				270595D62B69419000E05493 /* header */,
 				27EBC7AE275795CA00C6A820 /* reactions */,
 				C2A506731DF438A700971A93 /* elements */,
 				C2777B561DCE1174008B69DD /* controls */,
@@ -4320,7 +4332,6 @@
 				C259ED1B1DB8DC78008E6712 /* ChatNavigateScroller.swift */,
 				C2777B631DCFB559008B69DD /* ChatServiceRowView.swift */,
 				C2777B671DD20DD2008B69DD /* ChatTitleBarView.swift */,
-				C2A71CEC1DDB3C1000C69F73 /* ChatHeaderController.swift */,
 				C2DF47E81DE892E3003AA6C0 /* ChatToasterView.swift */,
 				A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */,
 				D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */,
@@ -6880,6 +6891,7 @@
 				C22EE6191E66ECB200334C38 /* ReportReasonModalController.swift in Sources */,
 				277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */,
 				27F674142971504E0014DCB9 /* CreateChannelController.swift in Sources */,
+				270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */,
 				2738A2E0289D5DD700EC1010 /* PremiumGiftStarSceneView.swift in Sources */,
 				275E85212B219011007A72CA /* MetalEngineTestController.swift in Sources */,
 				C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */,

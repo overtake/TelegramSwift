@@ -609,11 +609,11 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
             }, onClose: onClose, presentation: darkAppearance, name: name)
             window.show(view)
         }
-        
+                
         let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
             onClose()
             react(.init(item: value.toUpdate(), fromRect: fromRect))
-        }, radiusLayer: nil, revealReactions: reveal, presentation: darkAppearance, hasBubble: false)
+        }, radiusLayer: nil, revealReactions: reveal, presentation: darkAppearance, hasBubble: false, aboveText: nil)
         
         return (panel, view)
     } |> deliverOnMainQueue

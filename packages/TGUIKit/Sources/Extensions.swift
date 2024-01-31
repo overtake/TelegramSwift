@@ -142,7 +142,7 @@ public extension NSAttributedString {
         return NSMakeRange(loc, length)
     }
     
-    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSAttributedString {
+    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = .normal(.text)) -> NSAttributedString {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
         _ = attr.append(string: string, color: color, font: font)
         

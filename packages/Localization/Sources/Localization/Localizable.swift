@@ -10901,7 +10901,7 @@ public final class L10n {
   public static var premiumBoardingReactionsNewInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Info") }
   /// Infinite Reactions
   public static var premiumBoardingReactionsNewTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Title") }
-  /// Organize your Saved Messages with tagsfor quicker access.
+  /// Organize your Saved Messages with tags for quicker access.
   public static var premiumBoardingSavedTagsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.SavedTags.Info") }
   /// Tags for Messages
   public static var premiumBoardingSavedTagsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.SavedTags.Title") }
@@ -11997,6 +11997,8 @@ public final class L10n {
   public static var ruw6mB2mTitle: String  { return L10n.tr("Localizable", "Ruw-6m-B2m.title") }
   /// Saved!\n[Show In Finder]()
   public static var savedAsModalOk: String  { return L10n.tr("Localizable", "SavedAs.ModalOk") }
+  /// Unlock
+  public static var savedMessagesTagsUnlock: String  { return L10n.tr("Localizable", "SavedMessages.Tags.Unlock") }
   /// Send on %@ at %@
   public static func scheduleSendDate(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Schedule.SendDate", p1, p2)
