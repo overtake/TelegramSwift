@@ -550,7 +550,7 @@ final class AccountContext {
         self.webSessions = engine.privacy.webSessions()
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
-        self.dockControl = DockControl(engine)
+        self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         #endif
         
         
@@ -580,6 +580,9 @@ final class AccountContext {
         prefDisposable.add((account.postbox.peerView(id: account.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
             self?._myPeer = peerView.peers[peerView.peerId]
         }))
+        
+        
+       
         
         
         #if !SHARE
