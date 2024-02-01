@@ -2610,6 +2610,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_translate: { generateProfileIcon(NSImage(named: "Icon_Profile_Translate")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_join_channel: { generateProfileIcon(NSImage(named: "Icon_Profile_JoinChannel")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               profile_boost: { generateProfileIcon(NSImage(named: "Icon_Profile_Boost")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
@@ -2888,6 +2889,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_feature_reaction: { NSImage(named: "Icon_ChannelFeature_Reaction")!.precomposed(palette.accent) },
                               channel_feature_status: { NSImage(named: "Icon_ChannelFeature_Status")!.precomposed(palette.accent) },
                               channel_feature_stories: { NSImage(named: "Icon_ChannelFeature_Stories")!.precomposed(palette.accent) },
+                              channel_feature_emoji_pack: { NSImage(named: "Icon_ChannelFeature_EmojiPack")!.precomposed(palette.accent) },
+                              channel_feature_voice_to_text: { NSImage(named: "Icon_ChannelFeature_VoiceToText")!.precomposed(palette.accent) },
                               chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) },
                               chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) },
                               premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() }

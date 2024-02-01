@@ -603,6 +603,14 @@ class ChatPresentationInterfaceState: Equatable {
                 return .block("")
             }
             
+//            #if DEBUG
+//            if let peer = peer as? TelegramChannel, peer.adminRights == nil {
+//                return .action(strings().boostGroupChatInputAction, { chatInteraction in
+//                    
+//                }, nil)
+//            }
+//            #endif
+            
             if searchMode.tag != nil {
                 return .action(!searchMode.showAll ? strings().chatStateShowOtherMessages : strings().chatStateHideOtherMessages, { chatInteraction in
                     chatInteraction.update { current in

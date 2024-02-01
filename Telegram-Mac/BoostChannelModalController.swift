@@ -15,30 +15,40 @@ import TelegramCore
 import Postbox
 import TelegramMedia
 
-func requiredBoostSubjectLevel(subject: BoostSubject, context: AccountContext, configuration: PremiumConfiguration) -> Int32 {
+
+func requiredBoostSubjectLevel(subject: BoostSubject, group: Bool, context: AccountContext, configuration: PremiumConfiguration) -> Int32 {
     switch subject {
     case .stories:
         return 1
     case let .channelReactions(reactionCount):
         return reactionCount
     case let .nameColors(colors):
-        if let value = context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[colors.rawValue] {
-            return value
+        if group {
+            if let value = context.peerNameColors.nameColorsGroupMinRequiredBoostLevel[colors.rawValue] {
+                return value
+            }
         } else {
-            return 1
+            if let value = context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[colors.rawValue] {
+                return value
+            }
         }
+        return 1
     case .nameIcon:
         return configuration.minChannelNameIconLevel
     case .profileColors:
         return configuration.minChannelProfileColorLevel
     case .profileIcon:
-        return configuration.minChannelProfileIconLevel
+        return group ? configuration.minGroupProfileIconLevel : configuration.minChannelProfileIconLevel
     case .emojiStatus:
-        return configuration.minChannelEmojiStatusLevel
+        return group ? configuration.minGroupEmojiStatusLevel : configuration.minChannelEmojiStatusLevel
     case .wallpaper:
-        return configuration.minChannelWallpaperLevel
+        return group ? configuration.minGroupWallpaperLevel : configuration.minChannelWallpaperLevel
     case .customWallpaper:
-        return configuration.minChannelCustomWallpaperLevel
+        return group ? configuration.minGroupCustomWallpaperLevel : configuration.minChannelCustomWallpaperLevel
+    case .audioTranscription:
+        return configuration.minGroupAudioTranscriptionLevel
+    case .emojiPack:
+        return configuration.minGroupEmojiPackLevel
     }
 }
 
@@ -54,9 +64,12 @@ enum BoostSubject: Equatable {
     case emojiStatus
     case wallpaper
     case customWallpaper
-    
-    func requiredLevel(context: AccountContext, configuration: PremiumConfiguration) -> Int32 {
-        return requiredBoostSubjectLevel(subject: self, context: context, configuration: configuration)
+    case audioTranscription
+    case emojiPack
+
+
+    func requiredLevel(context: AccountContext, group: Bool, configuration: PremiumConfiguration) -> Int32 {
+        return requiredBoostSubjectLevel(subject: self, group: group, context: context, configuration: configuration)
     }
 }
 
@@ -188,14 +201,16 @@ private func generateBadgePath(rectSize: CGSize, tailPosition: CGFloat = 0.5) ->
 private final class Arguments {
     let context: AccountContext
     let presentation: TelegramPresentationTheme
+    let isGroup: Bool
     let boost:()->Void
     let openChannel:()->Void
     let shareLink:(String)->Void
     let copyLink:(String)->Void
     let openGiveaway:()->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
+    init(context: AccountContext, presentation: TelegramPresentationTheme, isGroup: Bool, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
         self.context = context
         self.presentation = presentation
+        self.isGroup = isGroup
         self.boost = boost
         self.copyLink = copyLink
         self.shareLink = shareLink
@@ -244,6 +259,10 @@ private struct State : Equatable {
         }
     }
     
+    var isGroup: Bool {
+        return self.peer.peer.isGroup || self.peer.peer.isSupergroup
+    }
+    
     var currentLevelBoosts: Int {
         return status.boosts - status.currentLevelBoosts
     }
@@ -275,10 +294,10 @@ private struct State : Equatable {
                 case .wallpaper:
                     title = strings().channelBoostEnableWallpapers
                 default:
-                    if level == 0 {
-                        title = strings().channelBoostEnableStories
+                    if self.isGroup {
+                        title = strings().channelBoostTitleGroup
                     } else {
-                        title = strings().channelBoostIncreaseLimit
+                        title = strings().channelBoostTitleChannel
                     }
                 }
             } else {
@@ -287,9 +306,17 @@ private struct State : Equatable {
         } else {
             if let _ = remaining {
                 if level == 0 {
-                    title = samePeer ? strings().channelBoostEnableStoriesForChannel : strings().channelBoostEnableStoriesForOtherChannel
+                    if isGroup {
+                        title = strings().channelBoostTitleGroup
+                    } else {
+                        title = strings().channelBoostTitleChannel
+                    }
                 } else {
-                    title = strings().channelBoostHelpUpgradeChannel
+                    if isGroup {
+                        title = strings().channelBoostHelpUpgradeGroup
+                    } else {
+                        title = strings().channelBoostHelpUpgradeChannel
+                    }
                 }
             } else {
                 title = strings().channelBoostMaxLevelReached
@@ -851,7 +878,11 @@ private final class AcceptRowView : TableRowView {
                 if state.isAdmin {
                     title = strings().modalCopyLink
                 } else {
-                    title = strings().channelBoostBoostChannel
+                    if state.isGroup {
+                        title = strings().channelBoostBoostGroup
+                    } else {
+                        title = strings().channelBoostBoostChannel
+                    }
                     gradient = true
                 }
             }
@@ -995,21 +1026,29 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         nameColorsAtLevel.append((key, value))
     }
 
+    let isGroup = arguments.isGroup
     
     if let nextLevels = nextLevels {
         for level in nextLevels {
             var perks: [BoostChannelPerk] = []
             perks.append(.story(level))
-            perks.append(.reaction(level))
-                         
+                                
+            if !isGroup {
+                perks.append(.reaction(level))
+            }
+            
             var nameColorsCount: Int32 = 0
             for (colorLevel, count) in nameColorsAtLevel {
                 if level >= colorLevel && colorLevel == 1 {
                     nameColorsCount = count
                 }
             }
-            if nameColorsCount > 0 {
+            if !isGroup && nameColorsCount > 0 {
                 perks.append(.nameColor(nameColorsCount))
+            }
+            
+            if isGroup && level >= premiumConfiguration.minGroupAudioTranscriptionLevel {
+                perks.append(.audioTranscription)
             }
             
             if level >= premiumConfiguration.minChannelProfileColorLevel {
@@ -1020,17 +1059,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 perks.append(.profileIcon)
             }
             
+            if isGroup && level >= premiumConfiguration.minGroupAudioTranscriptionLevel {
+                perks.append(.emojiPack)
+            }
+            
             var linkColorsCount: Int32 = 0
             for (colorLevel, count) in nameColorsAtLevel {
                 if level >= colorLevel {
                     linkColorsCount += count
                 }
             }
-            if linkColorsCount > 0 {
+            if !isGroup && linkColorsCount > 0 {
                 perks.append(.linkColor(linkColorsCount))
             }
                                 
-            if level >= premiumConfiguration.minChannelNameIconLevel {
+            if !isGroup && level >= premiumConfiguration.minChannelNameIconLevel {
                 perks.append(.linkIcon)
             }
             if level >= premiumConfiguration.minChannelEmojiStatusLevel {
@@ -1042,6 +1085,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if level >= premiumConfiguration.minChannelCustomWallpaperLevel {
                 perks.append(.customWallpaper)
             }
+
             
             // header
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_perk_level(level), equatable: .init(level), comparable: nil, item: { initialSize, stableId in
@@ -1096,7 +1140,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
 
     var close:(()->Void)? = nil
     
-    let arguments = Arguments(context: context, presentation: presentation, boost: {
+    let arguments = Arguments(context: context, presentation: presentation, isGroup: peer.isGroup || peer.isSupergroup, boost: {
         
         let myStatus = stateValue.with { $0.myStatus }
         let nextLevelBoosts = stateValue.with { $0.status.nextLevelBoosts }

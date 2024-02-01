@@ -40,7 +40,8 @@ private extension PeerNameColors.Colors {
 
 
 extension PeerNameColors {
-    public func get(_ color: PeerNameColor, dark: Bool = presentation.colors.isDark) -> Colors {
+    
+    public func get(_ color: PeerNameColor, dark: Bool = false) -> Colors {
         if dark, let colors = self.darkColors[color.rawValue] {
             return colors
         } else if let colors = self.colors[color.rawValue] {
@@ -50,7 +51,7 @@ extension PeerNameColors {
         }
     }
     
-    public func getProfile(_ color: PeerNameColor, dark: Bool = presentation.colors.isDark, subject: Subject = .background) -> Colors {
+    public func getProfile(_ color: PeerNameColor, dark: Bool = false, subject: Subject = .background) -> Colors {
         switch subject {
         case .background:
             if dark, let colors = self.profileDarkColors[color.rawValue] {
@@ -58,7 +59,7 @@ extension PeerNameColors {
             } else if let colors = self.profileColors[color.rawValue] {
                 return colors
             } else {
-                return PeerNameColors.Colors(main: NSColor(rgb: 0xcc5049))
+                return Colors(main: NSColor(rgb: 0xcc5049))
             }
         case .palette:
             if dark, let colors = self.profilePaletteDarkColors[color.rawValue] {
@@ -79,7 +80,7 @@ extension PeerNameColors {
         }
     }
     
-    static func with(availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions) -> PeerNameColors {
+    public static func with(availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions) -> PeerNameColors {
         var colors: [Int32: Colors] = [:]
         var darkColors: [Int32: Colors] = [:]
         var displayOrder: [Int32] = []
@@ -92,13 +93,17 @@ extension PeerNameColors {
         var profileDisplayOrder: [Int32] = []
         
         var nameColorsChannelMinRequiredBoostLevel: [Int32: Int32] = [:]
-
+        var nameColorsGroupMinRequiredBoostLevel: [Int32: Int32] = [:]
         
         if !availableReplyColors.options.isEmpty {
             for option in availableReplyColors.options {
                 if let requiredChannelMinBoostLevel = option.value.requiredChannelMinBoostLevel {
                     nameColorsChannelMinRequiredBoostLevel[option.key] = requiredChannelMinBoostLevel
                 }
+                if let requiredGroupMinBoostLevel = option.value.requiredGroupMinBoostLevel {
+                    nameColorsGroupMinRequiredBoostLevel[option.key] = requiredGroupMinBoostLevel
+                }
+                
                 if let parsedLight = PeerNameColors.Colors(colors: option.value.light.background) {
                     colors[option.key] = parsedLight
                 }
@@ -106,8 +111,10 @@ extension PeerNameColors {
                     darkColors[option.key] = parsedDark
                 }
                 
-                if !displayOrder.contains(option.key) {
-                    displayOrder.append(option.key)
+                for option in availableReplyColors.options {
+                    if !displayOrder.contains(option.key) {
+                        displayOrder.append(option.key)
+                    }
                 }
             }
         } else {
@@ -137,8 +144,10 @@ extension PeerNameColors {
                 if let parsedStoryDark = (option.value.dark?.stories).flatMap(PeerNameColors.Colors.init(colors:)) {
                     profileStoryDarkColors[option.key] = parsedStoryDark
                 }
-                if !profileDisplayOrder.contains(option.key) {
-                    profileDisplayOrder.append(option.key)
+                for option in availableProfileColors.options {
+                    if !profileDisplayOrder.contains(option.key) {
+                        profileDisplayOrder.append(option.key)
+                    }
                 }
             }
         }
@@ -154,7 +163,8 @@ extension PeerNameColors {
             profileStoryColors: profileStoryColors,
             profileStoryDarkColors: profileStoryDarkColors,
             profileDisplayOrder: profileDisplayOrder,
-            nameColorsChannelMinRequiredBoostLevel: nameColorsChannelMinRequiredBoostLevel
+            nameColorsChannelMinRequiredBoostLevel: nameColorsChannelMinRequiredBoostLevel,
+            nameColorsGroupMinRequiredBoostLevel: nameColorsGroupMinRequiredBoostLevel
         )
     }
 }

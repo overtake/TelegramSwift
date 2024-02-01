@@ -14,7 +14,7 @@ import TelegramCore
 import ColorPalette
 import TelegramMedia
 
-fileprivate final class ActionButton : Control {
+final class ActionButton : Control {
     fileprivate let imageView: ImageView = ImageView()
     fileprivate let textView: TextView = TextView()
     
@@ -87,7 +87,6 @@ fileprivate final class ActionButton : Control {
         super.layout()
         imageView.centerX(y: 5)
         textView.centerX(y: frame.height - textView.frame.height - 11)
-        
     }
 }
 
@@ -118,7 +117,7 @@ extension TelegramPeerPhoto : Equatable {
 fileprivate let actionItemWidth: CGFloat = 145
 fileprivate let actionItemInsetWidth: CGFloat = 20
 
-private struct SubActionItem {
+struct SubActionItem {
     let text: String
     let destruct: Bool
     let action:()->Void
@@ -131,7 +130,7 @@ private struct SubActionItem {
     }
 }
 
-private final class ActionItem {
+final class ActionItem {
     let text: String
     let destruct: Bool
     let image: CGImage
@@ -266,6 +265,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     } else if let peer = item.peer, peer.isSupergroup || peer.isGroup, let arguments = item.arguments as? GroupInfoArguments {
         let access = peer.groupAccess
         
+       
         if access.canAddMembers {
             items.append(ActionItem(text: strings().peerInfoActionAddMembers, color: item.accentColor, image: theme.icons.profile_add_member, animation: .menu_plus, action: {
                 arguments.addMember(access.canCreateInviteLink)
@@ -276,6 +276,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 arguments.toggleNotifications(value)
             }))
         }
+        
+        items.append(ActionItem(text: strings().peerInfoActionBoostGroup, color: item.accentColor, image: theme.icons.profile_boost, animation: .menu_boost, action: {
+            arguments.boosts(peer.groupAccess)
+        }))
         
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData, let peer = peer as? TelegramChannel {

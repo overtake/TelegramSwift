@@ -25,6 +25,15 @@ final class PremiumPromoOrder {
             if let order = data["premium_promo_order"] as? [String] {
                 premiumValues = order.compactMap { PremiumValue(rawValue: $0) }
             }
+            
+            #if DEBUG
+            if !premiumValues.contains(.last_seen) {
+                premiumValues.append(.last_seen)
+            }
+            if !premiumValues.contains(.messages_privacy) {
+                premiumValues.append(.messages_privacy)
+            }
+            #endif
         }
     }
 }

@@ -237,7 +237,11 @@ private final class BoostRowItem : TableRowItem {
     
     
     override var height: CGFloat {
-        return 100
+        if state.isGroup {
+            return 100 + 100
+        } else {
+            return 100
+        }
     }
     
     override func viewClass() -> AnyClass {
@@ -473,10 +477,11 @@ private final class BoostRowItemView : TableRowView {
             return
         }
     
-        transition.updateFrame(view: lineView, frame: lineView.centerFrameX(y: frame.height - lineView.frame.height))
+        transition.updateFrame(view: lineView, frame: lineView.centerFrameX(y: top.frame.height + 10))
         
 
         let topPoint = NSMakePoint(max(min(lineView.frame.minX + lineView.frame.width * item.state.percentToNext - top.frame.width / 2, size.width - 20 - top.frame.width), lineView.frame.minX), lineView.frame.minY - top.frame.height - 10)
+        
         transition.updateFrame(view: top, frame: CGRect(origin: topPoint, size: top.frame.size))
 
     }
@@ -508,6 +513,7 @@ private struct State : Equatable {
     var booster: ChannelBoostersContext.State?
     
     var revealed: Bool = false
+    var isGroup: Bool
     
     var link: String {
         if let peer = peer {
@@ -683,11 +689,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }))
                 }
                 
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().statsBoostsBoostersInfoGroup : strings().statsBoostsBoostersInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
                 index += 1
             } else {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_boosters, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().statsBoostsNoBoostersYet, font: .normal(.text), color: theme.colors.grayText)
+                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.isGroup ? strings().statsBoostsNoBoostersYetGroup : strings().statsBoostsNoBoostersYet, font: .normal(.text), color: theme.colors.grayText)
                 }))
             }
 
@@ -712,7 +718,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }, share: arguments.shareLink, copyLink: arguments.copyLink)
         }))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsLinkInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().statsBoostsLinkInfoGroup : strings().statsBoostsLinkInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
                 
         // entries
@@ -728,7 +734,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 arguments.giveaway(nil)
             })))
 
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsGetBoostsViaGiftsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().channelBoostsStatsGetBoostsViaGiftsInfoGroup : strings().channelBoostsStatsGetBoostsViaGiftsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
         }
        
@@ -746,12 +752,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func ChannelBoostStatsController(context: AccountContext, peerId: PeerId, isGroup: Bool = false) -> InputDataController {
     
     let actionsDisposable = DisposableSet()
     var getController:(()->InputDataController?)? = nil
     
-    let initialState = State()
+    let initialState = State(isGroup: isGroup)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -793,7 +799,7 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: " ")
+    let controller = InputDataController(dataSignal: signal, title: strings().statsBoosts)
     
     controller.contextObject = boostersContext
     

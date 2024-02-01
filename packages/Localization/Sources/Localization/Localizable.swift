@@ -713,6 +713,8 @@ public final class L10n {
   public static var boostGiftStartConfirmationText: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Text") }
   /// Start Giveaway
   public static var boostGiftStartConfirmationTitle: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Title") }
+  /// Boost this group to send messages
+  public static var boostGroupChatInputAction: String  { return L10n.tr("Localizable", "BoostGroup.ChatInput.Action") }
   /// To boost **%1$@**, reassign a previous boost or gift **Telegram Premium** to a friend to get **%2$@** additional boosts
   public static func boostReassignInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "BoostReassign.Info", p1, p2)
@@ -1401,8 +1403,10 @@ public final class L10n {
   public static var channelBoostPrivateError: String  { return L10n.tr("Localizable", "Channel.Boost.PrivateError") }
   /// Get Boosts Via Gifts
   public static var channelBoostsStatsGetBoostsViaGifts: String  { return L10n.tr("Localizable", "Channel.BoostsStats.GetBoostsViaGifts") }
-  /// Get more boosts for your channel by gifting  Premium to your subscribers.
+  /// Get more boosts for your channel by gifting Premium to your subscribers.
   public static var channelBoostsStatsGetBoostsViaGiftsInfo: String  { return L10n.tr("Localizable", "Channel.BoostsStats.GetBoostsViaGifts.Info") }
+  /// Get more boosts for your group by gifting Premium to your subscribers.
+  public static var channelBoostsStatsGetBoostsViaGiftsInfoGroup: String  { return L10n.tr("Localizable", "Channel.BoostsStats.GetBoostsViaGifts.Info.Group") }
   /// Select a giveaway you already paid for to set it up.
   public static var channelBoostsStatsPrepaidInfo: String  { return L10n.tr("Localizable", "Channel.BoostsStats.Prepaid.Info") }
   /// %d-months subscriptions
@@ -1895,6 +1899,8 @@ public final class L10n {
   public static func channelBoostBoostedChannelReachedLevel(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel", p1, p2)
   }
+  /// Boost Group
+  public static var channelBoostBoostGroup: String  { return L10n.tr("Localizable", "ChannelBoost.BoostGroup") }
   /// Use Emoji Statuses
   public static var channelBoostEmojiStatus: String  { return L10n.tr("Localizable", "ChannelBoost.EmojiStatus") }
   /// Enable Colors
@@ -1957,6 +1963,8 @@ public final class L10n {
   public static func channelBoostHelpUpgradeChannelText(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeChannelText", p1, p2, p3)
   }
+  /// Help Upgrade This Group
+  public static var channelBoostHelpUpgradeGroup: String  { return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeGroup") }
   /// Increase Story Limit
   public static var channelBoostIncreaseLimit: String  { return L10n.tr("Localizable", "ChannelBoost.IncreaseLimit") }
   /// Your channel needs %1$@ to post %2$@.\n\nAsk your **Premium** subscribers to boost your channel with this link:
@@ -2075,6 +2083,8 @@ public final class L10n {
   public static var channelBoostErrorPremiumNeededTitle: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededTitle") }
   /// Read More
   public static var channelBoostErrorPremiumNeededTextOK: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededText.OK") }
+  /// Voice-To-Text Conversion
+  public static var channelBoostTableAudioTranscription: String  { return L10n.tr("Localizable", "ChannelBoost.Table.AudioTranscription") }
   /// %d
   public static func channelBoostTableCustomReactionsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.CustomReactions_countable", p1)
@@ -2105,6 +2115,8 @@ public final class L10n {
   }
   /// Custom Channel Background
   public static var channelBoostTableCustomWallpaper: String  { return L10n.tr("Localizable", "ChannelBoost.Table.CustomWallpaper") }
+  /// Custom Emoji Pack
+  public static var channelBoostTableEmojiPack: String  { return L10n.tr("Localizable", "ChannelBoost.Table.EmojiPack") }
   /// 1000+ Emoji Statuses
   public static var channelBoostTableEmojiStatus: String  { return L10n.tr("Localizable", "ChannelBoost.Table.EmojiStatus") }
   /// Custom Logo for Links and Quotes
@@ -2279,6 +2291,10 @@ public final class L10n {
   public static func channelBoostTableWallpaperZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_zero", p1)
   }
+  /// Boost Channel
+  public static var channelBoostTitleChannel: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Channel") }
+  /// Boost Group
+  public static var channelBoostTitleGroup: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Group") }
   /// Channel Info
   public static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -7781,6 +7797,8 @@ public final class L10n {
   public static var groupUsersTooMuchError: String  { return L10n.tr("Localizable", "Group.UsersTooMuchError") }
   /// Change Group Info
   public static var groupEditAdminPermissionChangeInfo: String  { return L10n.tr("Localizable", "Group.EditAdmin.Permission.ChangeInfo") }
+  /// All members will be able to use these emoji in the group, even if they don't have Telegram Premium.\n\nYou can create your own custom emoji set using the [@stickers](stickers) bot.
+  public static var groupEmojiPackCreateInfo: String  { return L10n.tr("Localizable", "Group.EmojiPack.CreateInfo") }
   /// CHOOSE EMOJI PACK
   public static var groupEmojiPackHeader: String  { return L10n.tr("Localizable", "Group.EmojiPack.Header") }
   /// Group Emoji Pack
@@ -7953,6 +7971,10 @@ public final class L10n {
   public static var groupStickersEmptyDesc: String  { return L10n.tr("Localizable", "GroupStickers.EmptyDesc") }
   /// No such sticker set found
   public static var groupStickersEmptyHeader: String  { return L10n.tr("Localizable", "GroupStickers.EmptyHeader") }
+  /// Try again or choose from the list below
+  public static var groupStickersEmptyDescEmoji: String  { return L10n.tr("Localizable", "GroupStickers.EmptyDesc.Emoji") }
+  /// No such emoji set found
+  public static var groupStickersEmptyHeaderEmoji: String  { return L10n.tr("Localizable", "GroupStickers.EmptyHeader.Emoji") }
   /// No groups in common
   public static var groupsInCommonEmpty: String  { return L10n.tr("Localizable", "GroupsInCommon.Empty") }
   /// View
@@ -10195,6 +10217,8 @@ public final class L10n {
   public static var peerInfoAboutPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.About.Placeholder") }
   /// Add
   public static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
+  /// Boost Group
+  public static var peerInfoActionBoostGroup: String  { return L10n.tr("Localizable", "PeerInfo.Action.BoostGroup") }
   /// Call
   public static var peerInfoActionCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.Call") }
   /// Delete
@@ -10861,6 +10885,14 @@ public final class L10n {
   public static var premiumBoardingGotInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Got.Info") }
   /// You are all set!
   public static var premiumBoardingGotTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Got.Title") }
+  /// View the last seen and read times of others even if you hide yours.
+  public static var premiumBoardingLastSeenInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.LastSeen.Info") }
+  /// Last Seen Times
+  public static var premiumBoardingLastSeenTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.LastSeen.Title") }
+  /// Restrict people you don't know from sending you messages.
+  public static var premiumBoardingMessagePrivacyInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.MessagePrivacy.Info") }
+  /// Message Privacy
+  public static var premiumBoardingMessagePrivacyTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.MessagePrivacy.Title") }
   /// No more ads in public channels where Telegram sometimes shows ads.
   public static var premiumBoardingNoAdsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Info") }
   /// No Ads
@@ -13719,6 +13751,12 @@ public final class L10n {
   public static var statsBoostsPremiumSubscribers: String  { return L10n.tr("Localizable", "Stats.Boosts.PremiumSubscribers") }
   /// Show More
   public static var statsBoostsShowMore: String  { return L10n.tr("Localizable", "Stats.Boosts.ShowMore") }
+  /// Your group is currently boosted by these users.
+  public static var statsBoostsBoostersInfoGroup: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostersInfo.Group") }
+  /// Share this link with your group members to get more boosts.
+  public static var statsBoostsLinkInfoGroup: String  { return L10n.tr("Localizable", "Stats.Boosts.LinkInfo.Group") }
+  /// No users currently boost your group
+  public static var statsBoostsNoBoostersYetGroup: String  { return L10n.tr("Localizable", "Stats.Boosts.NoBoostersYet.Group") }
   /// Actions
   public static var statsGroupTopAdminActions: String  { return L10n.tr("Localizable", "Stats.GroupTopAdmin.Actions") }
   /// Promote

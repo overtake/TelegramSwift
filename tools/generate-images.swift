@@ -527,6 +527,7 @@ func initialize() -> [String] {
     array.append("profile_unblock")
     array.append("profile_translate")
     array.append("profile_join_channel")
+    array.append("profile_boost")
 
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
@@ -912,7 +913,9 @@ func initialize() -> [String] {
     array.append("channel_feature_reaction")
     array.append("channel_feature_status")
     array.append("channel_feature_stories")
-    
+    array.append("channel_feature_emoji_pack")
+    array.append("channel_feature_voice_to_text")
+
     array.append("chat_hidden_author")
     array.append("chat_my_notes")
     

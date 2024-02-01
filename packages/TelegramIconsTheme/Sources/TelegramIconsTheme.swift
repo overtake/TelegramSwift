@@ -6544,6 +6544,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_boost: CGImage {
+      if let image = cached.with({ $0["profile_boost"] }) {
+          return image
+      } else {
+          let image = _profile_boost()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_boost"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_quiz_explanation: CGImage {
       if let image = cached.with({ $0["chat_quiz_explanation"] }) {
           return image
@@ -10145,6 +10158,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_feature_emoji_pack: CGImage {
+      if let image = cached.with({ $0["channel_feature_emoji_pack"] }) {
+          return image
+      } else {
+          let image = _channel_feature_emoji_pack()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_emoji_pack"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_voice_to_text: CGImage {
+      if let image = cached.with({ $0["channel_feature_voice_to_text"] }) {
+          return image
+      } else {
+          let image = _channel_feature_voice_to_text()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_voice_to_text"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_hidden_author: CGImage {
       if let image = cached.with({ $0["chat_hidden_author"] }) {
           return image
@@ -10688,6 +10727,7 @@ public final class TelegramIconsTheme {
   private let _profile_unblock: ()->CGImage
   private let _profile_translate: ()->CGImage
   private let _profile_join_channel: ()->CGImage
+  private let _profile_boost: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
@@ -10965,6 +11005,8 @@ public final class TelegramIconsTheme {
   private let _channel_feature_reaction: ()->CGImage
   private let _channel_feature_status: ()->CGImage
   private let _channel_feature_stories: ()->CGImage
+  private let _channel_feature_emoji_pack: ()->CGImage
+  private let _channel_feature_voice_to_text: ()->CGImage
   private let _chat_hidden_author: ()->CGImage
   private let _chat_my_notes: ()->CGImage
   private let _premium_required_forward: ()->CGImage
@@ -11473,6 +11515,7 @@ public final class TelegramIconsTheme {
       profile_unblock: @escaping()->CGImage,
       profile_translate: @escaping()->CGImage,
       profile_join_channel: @escaping()->CGImage,
+      profile_boost: @escaping()->CGImage,
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
@@ -11750,6 +11793,8 @@ public final class TelegramIconsTheme {
       channel_feature_reaction: @escaping()->CGImage,
       channel_feature_status: @escaping()->CGImage,
       channel_feature_stories: @escaping()->CGImage,
+      channel_feature_emoji_pack: @escaping()->CGImage,
+      channel_feature_voice_to_text: @escaping()->CGImage,
       chat_hidden_author: @escaping()->CGImage,
       chat_my_notes: @escaping()->CGImage,
       premium_required_forward: @escaping()->CGImage
@@ -12257,6 +12302,7 @@ public final class TelegramIconsTheme {
       self._profile_unblock = profile_unblock
       self._profile_translate = profile_translate
       self._profile_join_channel = profile_join_channel
+      self._profile_boost = profile_boost
       self._chat_quiz_explanation = chat_quiz_explanation
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
@@ -12534,6 +12580,8 @@ public final class TelegramIconsTheme {
       self._channel_feature_reaction = channel_feature_reaction
       self._channel_feature_status = channel_feature_status
       self._channel_feature_stories = channel_feature_stories
+      self._channel_feature_emoji_pack = channel_feature_emoji_pack
+      self._channel_feature_voice_to_text = channel_feature_voice_to_text
       self._chat_hidden_author = chat_hidden_author
       self._chat_my_notes = chat_my_notes
       self._premium_required_forward = premium_required_forward

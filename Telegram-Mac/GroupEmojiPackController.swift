@@ -16,9 +16,11 @@ import Postbox
 private final class Arguments {
     let context: AccountContext
     let select:(State.Item)->Void
-    init(context: AccountContext, select:@escaping(State.Item)->Void) {
+    let openStickerBot:(String)->Void
+    init(context: AccountContext, select:@escaping(State.Item)->Void, openStickerBot:@escaping(String)->Void) {
         self.context = context
         self.select = select
+        self.openStickerBot = openStickerBot
     }
 }
 
@@ -39,11 +41,18 @@ private struct State : Equatable {
     var searchState: SearchState?
     var searchResult: SearchResult?
     var selected: Item?
+    var loading: Bool = false
+    var string: String?
 }
 
 private func _id_pack(_ id: ItemCollectionId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_pack_\(id.id)")
 }
+private func _id_pack_selected(_ id: ItemCollectionId) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_pack_\(id.id)_selected")
+}
+private let _id_input = InputDataIdentifier("_id_input")
+private let _id_loading = InputDataIdentifier("_id_loading")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -59,14 +68,56 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
     }
     
-  
-   
-    
     struct Tuple : Equatable {
         let item: State.Item
         let selected: Bool
         let viewType: GeneralViewType
     }
+   
+    if state.searchResult == nil {
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.string), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.selected != nil || state.loading ? .firstItem : .singleItem, defaultText: "https://t.me/addstickers/", pasteFilter: { value in
+            if let index = value.range(of: "t.me/addstickers/") {
+                return (true, String(value[index.upperBound...]))
+            }
+            return (false, value)
+        }), placeholder: nil, inputPlaceholder: "https://t.me/addstickers/", filter: { text in
+            var filter = NSCharacterSet.alphanumerics
+            filter.insert(charactersIn: "_/")
+            return text.trimmingCharacters(in: filter.inverted)
+        }, limit: 25 + 30))
+
+        if state.loading {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return LoadingTableItem(initialSize, height: 50, stableId: stableId, viewType: .lastItem)
+            }))
+        } else {
+            if let item = state.selected {
+                let tuple = Tuple(item: item, selected: false, viewType: .lastItem)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack_selected(tuple.item.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                    return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: tuple.item.info, topItem: tuple.item.item, itemCount: tuple.item.count, unread: false, editing: .init(editable: false, editing: false), enabled: true, control: tuple.selected ? .selected : .empty, viewType: tuple.viewType, action: {
+                        arguments.select(tuple.item)
+                    })
+                }))
+            } else if let string = state.string, !string.isEmpty {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                    return EmptyGroupstickerSearchRowItem(initialSize, height: 50, stableId: stableId, viewType: .lastItem, type: .emojies)
+                }))
+            }
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().groupEmojiPackCreateInfo, linkHandler: arguments.openStickerBot), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    }
+    
+    
+    
+    
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+ 
     
     var tuples: [Tuple] = []
     
@@ -124,10 +175,12 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     let searchDisposable = MetaDisposable()
-    
+    let resolveDisposable = MetaDisposable()
     actionsDisposable.add(searchDisposable)
-    
+    actionsDisposable.add(resolveDisposable)
     let initialState = State()
+    
+    var closeSearch:(()->Void)? = nil
     
     let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -168,7 +221,7 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
             return current
         }
         
-        if let result = result, let state = state {
+        if let _ = result, let state = state {
             let emojies = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init) |> delay(0.2, queue: .concurrentDefaultQueue())
             
             let signal = context.engine.stickers.searchEmojiSetsRemotely(query: state.request)
@@ -197,13 +250,22 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
                 var current = current
                 if current.selected?.id == item.id {
                     current.selected = nil
+                    current.string = nil
                 } else {
                     current.selected = item
+                    current.string = item.info.shortName
                 }
                 return current
             }
+            closeSearch?()
         }, source: stateValue.with { $0.selected?.id == item.id } ? .removeGroupEmojiPack : .installGroupEmojiPack), for: context.window)
         
+    }, openStickerBot: { name in
+        _ = (resolveUsername(username: name, context: context) |> deliverOnMainQueue).start(next: { peer in
+            if let peer = peer {
+                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
+            }
+        })
     })
     
     let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in
@@ -240,7 +302,7 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments), searchState: searchData)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().groupEmojiPackTitle, customRightButton: { controller in
+    let controller = InputDataController(dataSignal: signal, title: strings().groupEmojiPackTitle, removeAfterDisappear: false, customRightButton: { controller in
         let bar = ImageBarView(controller: controller, theme.icons.chatSearch)
         bar.button.set(handler: { _ in
             updateSearchValue { current in
@@ -263,6 +325,7 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
         return bar
     })
     
+    
     controller.searchKeyInvocation = {
         updateSearchValue { current in
             switch current {
@@ -280,6 +343,61 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
         }
         
         return .invoked
+    }
+    
+    controller.updateDatas = { data in
+        
+        let text = data[_id_input]?.stringValue ?? ""
+        
+        updateState { current in
+            var current = current
+            current.string = text
+            return current
+        }
+        
+        if text.isEmpty {
+            resolveDisposable.set(nil)
+        } else {
+            resolveDisposable.set((context.engine.stickers.loadedStickerPack(reference: .name(text), forceActualized: false) |> deliverOnMainQueue).start(next: { result in
+                switch result {
+                case .fetching:
+                    updateState { current in
+                        var current = current
+                        current.loading = true
+                        return current
+                    }
+                case .none:
+                    updateState { current in
+                        var current = current
+                        current.loading = false
+                        current.selected = nil
+                        return current
+                    }
+                case let .result(info, items, _):
+                    updateState { current in
+                        var current = current
+                        current.loading = false
+                        if let first = items.first {
+                            current.selected = .init(info: info, id: info.id, item: first, count: info.count)
+                        } else {
+                            current.selected = nil
+                        }
+                        return current
+                    }
+                }
+            }))
+        }
+        return .none
+    }
+    
+    closeSearch = {
+        updateSearchValue { _ in
+            return .none({ searchState in
+                updateSearchState { _ in
+                    return nil
+                }
+            })
+        }
     }
     
     controller.onDeinit = {

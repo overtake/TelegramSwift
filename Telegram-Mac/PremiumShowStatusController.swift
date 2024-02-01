@@ -347,7 +347,7 @@ func PremiumShowStatusController(context: AccountContext, peer: EnginePeer, sour
         })
         close?()
     }, premium: {
-        showModal(with: PremiumBoardingController(context: context, source: .last_seen), for: context.window)
+        showModal(with: PremiumBoardingController(context: context, source: .last_seen, openFeatures: true), for: context.window)
         close?()
     })
     
