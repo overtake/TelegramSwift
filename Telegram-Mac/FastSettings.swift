@@ -630,7 +630,12 @@ class FastSettings {
     
     
     static var premiumPerks:[String] {
-        let perks = [PremiumValue.stories.rawValue, PremiumValue.wallpapers.rawValue, PremiumValue.peer_colors.rawValue, PremiumValue.saved_tags.rawValue]
+        let perks = [PremiumValue.stories.rawValue,
+                     PremiumValue.wallpapers.rawValue,
+                     PremiumValue.peer_colors.rawValue,
+                     PremiumValue.saved_tags.rawValue,
+                     PremiumValue.last_seen.rawValue,
+                     PremiumValue.messages_privacy.rawValue]
         let dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
         return perks.filter { !dismissedPerks.contains($0) }
     }

@@ -256,6 +256,22 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(savedTags)
         
+        let lastSeen = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        lastSeen.setup(context: context, type: .last_seen, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.last_seen.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(lastSeen)
+        
+        let messagesPrivacy = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        messagesPrivacy.setup(context: context, type: .messages_privacy, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.messages_privacy.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(messagesPrivacy)
+        
         switch value {
         case .double_limits:
             slideView.displaySlide(at: 1, animated: false)
@@ -291,6 +307,10 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 15, animated: false)
         case .saved_tags:
             slideView.displaySlide(at: 16, animated: false)
+        case .last_seen:
+            slideView.displaySlide(at: 17, animated: false)
+        case .messages_privacy:
+            slideView.displaySlide(at: 18, animated: false)
         }
         
         needsLayout = true

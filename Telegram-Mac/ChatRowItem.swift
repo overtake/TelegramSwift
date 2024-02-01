@@ -3082,7 +3082,7 @@ class ChatRowItem: TableRowItem {
             }
             |> take(1)
             
-            let isTags = context.peerId == peerId && tagsGloballyEnabled
+            let isTags = context.peerId == peerId
 
             
             

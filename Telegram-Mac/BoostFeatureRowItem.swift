@@ -20,7 +20,8 @@ enum BoostChannelPerk: Equatable {
     case emojiStatus
     case wallpaper(Int32)
     case customWallpaper
-    
+    case audioTranscription
+    case emojiPack
     func title() -> String {
         switch self {
         case let .story(value):
@@ -43,6 +44,11 @@ enum BoostChannelPerk: Equatable {
             return strings().channelBoostTableWallpaperCountable(Int(value))
         case .customWallpaper:
             return strings().channelBoostTableCustomWallpaper
+        case .audioTranscription:
+            return strings().channelBoostTableAudioTranscription
+        case .emojiPack:
+            return strings().channelBoostTableEmojiPack
+
         }
     }
     
@@ -69,6 +75,11 @@ enum BoostChannelPerk: Equatable {
             return theme.icons.channel_feature_background
         case .customWallpaper:
             return theme.icons.channel_feature_background_photo
+        case .audioTranscription:
+            return theme.icons.channel_feature_voice_to_text
+        case .emojiPack:
+            return theme.icons.channel_feature_emoji_pack
+
         }
     }
 }

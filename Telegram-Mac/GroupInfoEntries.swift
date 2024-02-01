@@ -425,6 +425,26 @@ final class GroupInfoArguments : PeerInfoArguments {
     func stats(_ datacenterId: Int32) {
         self.pushViewController(GroupStatsViewController(context, peerId: peerId))
     }
+    func boosts(_ access: GroupAccess) {
+        let context = self.context
+        
+        if access.canEditGroupInfo {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId, isGroup: true))
+        } else {
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        }
+    }
     
     func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {
         let context = self.context
