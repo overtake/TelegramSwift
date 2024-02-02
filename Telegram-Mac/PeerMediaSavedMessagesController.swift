@@ -235,6 +235,10 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     var selectText: ChatSelectText? = nil
     
     
+    actionsDisposable.add(context.engine.stickers.refreshSavedMessageTags(subPeerId: peerId).startStrict())
+
+    
+    
     chatInteraction.openInfo = { peerId, toChat, postId, action in
         let navigation = context.bindings.rootNavigation()
         if toChat {
