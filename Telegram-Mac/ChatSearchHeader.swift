@@ -1070,7 +1070,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                             if selected.tag.reaction == self.tagsView?.selected.first?.tag.reaction {
                                 self.parentInteractions.setLocationTag(nil)
                             } else {
-                                self.parentInteractions.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: selected.tag.reaction)))
+                                self.parentInteractions.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: selected.tag.reaction), nil))
                             }
                         } else {
                             showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
