@@ -1,4 +1,3 @@
-
 //
 //  ChatInterfaceState.swift
 //  Telegram-Mac
@@ -1119,7 +1118,7 @@ struct ChatInterfaceState: Codable, Equatable {
                 .withUpdatedReplyMessageId(state.replySubject)
                 .withUpdatedTimestamp(timestamp)
         } else {
-            result = result.withUpdatedHistoryScrollState(self.historyScrollState)
+            result = result.withUpdatedInputState(.init()).withUpdatedHistoryScrollState(self.historyScrollState)
         }
         return result
     }
