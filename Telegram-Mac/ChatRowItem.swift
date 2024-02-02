@@ -1553,7 +1553,7 @@ class ChatRowItem: TableRowItem {
             }
             let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == chatInteraction.peerId)
             let currentTag: MessageReaction.Reaction?
-            if case let .customTag(buffer) = chatInteraction.presentation.searchMode.tag {
+            if case let .customTag(buffer, _) = chatInteraction.presentation.searchMode.tag {
                 currentTag = ReactionsMessageAttribute.reactionFromMessageTag(tag: buffer)
             } else {
                 currentTag = nil
@@ -1569,7 +1569,7 @@ class ChatRowItem: TableRowItem {
                     if !context.isPremium {
                         showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
-                        chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction)))
+                        chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction), nil))
                     }
                 })
                 
