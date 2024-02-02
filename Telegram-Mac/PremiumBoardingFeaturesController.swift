@@ -265,9 +265,9 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(lastSeen)
         
         let messagesPrivacy = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        messagesPrivacy.setup(context: context, type: .messages_privacy, decoration: .badgeStars, getView: { _ in
+        messagesPrivacy.setup(context: context, type: .message_privacy, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
-            view.setup(context: context, video: configuration.videos[PremiumValue.messages_privacy.rawValue], position: .top)
+            view.setup(context: context, video: configuration.videos[PremiumValue.message_privacy.rawValue], position: .top)
             return view
         })
         slideView.addSlide(messagesPrivacy)
@@ -309,7 +309,7 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 16, animated: false)
         case .last_seen:
             slideView.displaySlide(at: 17, animated: false)
-        case .messages_privacy:
+        case .message_privacy:
             slideView.displaySlide(at: 18, animated: false)
         }
         

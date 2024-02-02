@@ -30,8 +30,8 @@ final class PremiumPromoOrder {
             if !premiumValues.contains(.last_seen) {
                 premiumValues.append(.last_seen)
             }
-            if !premiumValues.contains(.messages_privacy) {
-                premiumValues.append(.messages_privacy)
+            if !premiumValues.contains(.message_privacy) {
+                premiumValues.append(.message_privacy)
             }
             #endif
         }

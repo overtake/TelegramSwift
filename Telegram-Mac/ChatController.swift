@@ -775,7 +775,8 @@ class ChatControllerView : View, ChatInputDelegate {
             } else if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 value = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {
-                value = .report(autoArchived: settings.contains(.autoArchived), status: interfaceState.peer?.emojiStatus)
+                let isUser = interfaceState.peer?.isUser == true
+                value = .report(autoArchived: settings.contains(.autoArchived), status: isUser ? interfaceState.peer?.emojiStatus : nil)
             } else if settings.contains(.canShareContact) {
                 value = .shareInfo
             } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {

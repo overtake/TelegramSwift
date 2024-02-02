@@ -24,6 +24,7 @@
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
 		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
+		270595EC2B6CD7B600E05493 /* menu_boost_plus.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CB929F66649009C994C /* StoryModalController.swift */; };
 		270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBD29F7BCCA009C994C /* StoryListView.swift */; };
@@ -42,7 +43,6 @@
 		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
 		271891F82B08A7DB0008B238 /* LokiRng in Frameworks */ = {isa = PBXBuildFile; productRef = 271891F72B08A7DB0008B238 /* LokiRng */; };
 		271892082B0B2E5C0008B238 /* SimilarChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */; };
-		2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892092B0B93E00008B238 /* CustomizeAccountController.swift */; };
 		2718920E2B0DD1550008B238 /* grammars.dat in Resources */ = {isa = PBXBuildFile; fileRef = 2718920D2B0DD1550008B238 /* grammars.dat */; };
 		271892122B0E44190008B238 /* StoryPrivacyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892112B0E44190008B238 /* StoryPrivacyModalController.swift */; };
 		271892142B0E57390008B238 /* StoryPosterState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892132B0E57390008B238 /* StoryPosterState.swift */; };
@@ -1505,6 +1505,7 @@
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270595D72B6941C400E05493 /* ChatSearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchHeader.swift; sourceTree = "<group>"; };
 		270595E32B6BDCF500E05493 /* menu_boost.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost.tgs; sourceTree = "<group>"; };
+		270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost_plus.tgs; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270B7CB929F66649009C994C /* StoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModalController.swift; sourceTree = "<group>"; };
 		270B7CBD29F7BCCA009C994C /* StoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListView.swift; sourceTree = "<group>"; };
@@ -1524,7 +1525,6 @@
 		271824502A08C60400AFBD4C /* StoryChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatListView.swift; sourceTree = "<group>"; };
 		271891F62B08A7B70008B238 /* LokiRng */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = LokiRng; path = "submodules/telegram-ios/submodules/Utils/LokiRng"; sourceTree = "<group>"; };
 		271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimilarChannelsController.swift; sourceTree = "<group>"; };
-		271892092B0B93E00008B238 /* CustomizeAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizeAccountController.swift; sourceTree = "<group>"; };
 		2718920D2B0DD1550008B238 /* grammars.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = grammars.dat; path = submodules/libprisma/libprisma/grammars.dat; sourceTree = SOURCE_ROOT; };
 		271892112B0E44190008B238 /* StoryPrivacyModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPrivacyModalController.swift; sourceTree = "<group>"; };
 		271892132B0E57390008B238 /* StoryPosterState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPosterState.swift; sourceTree = "<group>"; };
@@ -3599,6 +3599,7 @@
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
+				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
 				27B836472B6396E500E82683 /* menu_hd_lock.tgs */,
 				270595E32B6BDCF500E05493 /* menu_boost.tgs */,
 				27B836482B6396E600E82683 /* menu_hd.tgs */,
@@ -4289,7 +4290,6 @@
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
 				D02BD7BF232D0FB800D1814A /* AppAppearanceViewController.swift */,
-				271892092B0B93E00008B238 /* CustomizeAccountController.swift */,
 				276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */,
 			);
 			name = appearance;
@@ -6466,6 +6466,7 @@
 				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
 				27D91323283BC0EB007CF40F /* star in Resources */,
 				27916F29287D77660046DB44 /* symbols.tgs in Resources */,
+				270595EC2B6CD7B600E05493 /* menu_boost_plus.tgs in Resources */,
 				2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */,
 				279B03592A4F1CB3007D2AB9 /* menu_stories.tgs in Resources */,
 				27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */,
@@ -7285,7 +7286,6 @@
 				2726BDD52869DCB00044D260 /* InlineStickersContext.swift in Sources */,
 				271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
-				2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */,
 				27D48B4D2A72F87000721995 /* PremiumBoardingStoriesController.swift in Sources */,
 				27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,

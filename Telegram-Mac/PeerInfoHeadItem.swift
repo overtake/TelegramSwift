@@ -114,8 +114,6 @@ extension TelegramPeerPhoto : Equatable {
     }
 }
 
-fileprivate let actionItemWidth: CGFloat = 145
-fileprivate let actionItemInsetWidth: CGFloat = 20
 
 struct SubActionItem {
     let text: String
@@ -131,6 +129,11 @@ struct SubActionItem {
 }
 
 final class ActionItem {
+    
+    static let actionItemWidth: CGFloat = 145
+    static let actionItemInsetWidth: CGFloat = 20
+
+    
     let text: String
     let destruct: Bool
     let image: CGImage
@@ -150,9 +153,9 @@ final class ActionItem {
         self.subItems = subItems
         self.destruct = destruct
         self.textLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), alignment: .center)
-        self.textLayout.measure(width: actionItemWidth)
+        self.textLayout.measure(width: ActionItem.actionItemWidth)
         
-        self.size = NSMakeSize(actionItemWidth, image.backingSize.height + textLayout.layoutSize.height + 10)
+        self.size = NSMakeSize(ActionItem.actionItemWidth, image.backingSize.height + textLayout.layoutSize.height + 10)
     }
     
 }
@@ -163,7 +166,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     var rowItemsCount: Int = 1
     
-    while width - (actionItemWidth + actionItemInsetWidth) > ((actionItemWidth * CGFloat(rowItemsCount)) + (CGFloat(rowItemsCount - 1) * actionItemInsetWidth)) {
+    while width - (ActionItem.actionItemWidth + ActionItem.actionItemInsetWidth) > ((ActionItem.actionItemWidth * CGFloat(rowItemsCount)) + (CGFloat(rowItemsCount - 1) * ActionItem.actionItemInsetWidth)) {
         rowItemsCount += 1
     }
     rowItemsCount = min(rowItemsCount, 4)
@@ -1375,9 +1378,9 @@ private final class PeerInfoHeadView : GeneralRowView {
             return 0
         }
         
-        let width = (item.blockWidth - (actionItemInsetWidth * CGFloat(items.count - 1)))
+        let width = (item.blockWidth - (ActionItem.actionItemInsetWidth * CGFloat(items.count - 1)))
         
-        return max(actionItemWidth, min(170, width / CGFloat(items.count)))
+        return max(ActionItem.actionItemWidth, min(170, width / CGFloat(items.count)))
     }
     
     private func layoutActionItems(_ items: [ActionItem], animated: Bool) {
@@ -1397,7 +1400,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             
             let actionItemWidth = _actionItemWidth(items)
             
-            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * actionItemInsetWidth, maxActionSize.height), animated: animated)
+            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * ActionItem.actionItemInsetWidth, maxActionSize.height), animated: animated)
             
             var x: CGFloat = inset
             
@@ -1406,7 +1409,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 view.updateAndLayout(item: item, bgColor: rowItem.actionColor)
                 view.setFrameSize(NSMakeSize(actionItemWidth, maxActionSize.height))
                 view.change(pos: NSMakePoint(x, 0), animated: false)
-                x += actionItemWidth + actionItemInsetWidth
+                x += actionItemWidth + ActionItem.actionItemInsetWidth
             }
             
         } else {

@@ -2611,6 +2611,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_translate: { generateProfileIcon(NSImage(named: "Icon_Profile_Translate")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_join_channel: { generateProfileIcon(NSImage(named: "Icon_Profile_JoinChannel")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_boost: { generateProfileIcon(NSImage(named: "Icon_Profile_Boost")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               stats_boost_boost: { generateProfileIcon(NSImage(named: "Icon_Boost_Boost")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               stats_boost_giveaway: { generateProfileIcon(NSImage(named: "Icon_Boost_Gift")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               stats_boost_info: { generateProfileIcon(NSImage(named: "Icon_Boost_Info")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },

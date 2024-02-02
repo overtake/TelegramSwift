@@ -1973,7 +1973,7 @@ class ChatRowItem: TableRowItem {
                             if range.location != NSNotFound {
                                 attr.addAttribute(.link, value: link, range: range)
                                 if message.forwardInfo?.author != nil || message.forwardInfo == nil {
-                                    attr.addAttribute(.font, value: NSFont.bold(.short), range: range)
+                                    attr.addAttribute(.font, value: NSFont.medium(.short), range: range)
                                 }
                             }
                         } else {

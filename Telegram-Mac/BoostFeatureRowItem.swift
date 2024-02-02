@@ -22,7 +22,7 @@ enum BoostChannelPerk: Equatable {
     case customWallpaper
     case audioTranscription
     case emojiPack
-    func title() -> String {
+    func title(isGroup: Bool) -> String {
         switch self {
         case let .story(value):
             return strings().channelBoostTableStoriesPerDayCountable(Int(value))
@@ -31,9 +31,17 @@ enum BoostChannelPerk: Equatable {
         case let .nameColor(value):
             return strings().channelBoostTableNameColorCountable(Int(value))
         case let .profileColor(value):
-            return strings().channelBoostTableProfileColorCountable(Int(value))
+            if isGroup {
+                return strings().channelBoostTableProfileColorGroupCountable(Int(value))
+            } else {
+                return strings().channelBoostTableProfileColorCountable(Int(value))
+            }
         case .profileIcon:
-            return strings().channelBoostTableProfileLogo
+            if isGroup {
+                return strings().channelBoostTableProfileLogoGroup
+            } else {
+                return strings().channelBoostTableProfileLogo
+            }
         case let .linkColor(value):
             return strings().channelBoostTableStyleForHeadersCountable(Int(value))
         case .linkIcon:
@@ -41,9 +49,17 @@ enum BoostChannelPerk: Equatable {
         case .emojiStatus:
             return strings().channelBoostTableEmojiStatus
         case let .wallpaper(value):
-            return strings().channelBoostTableWallpaperCountable(Int(value))
+            if isGroup {
+                return strings().channelBoostTableWallpaperGroupCountable(Int(value))
+            } else {
+                return strings().channelBoostTableWallpaperCountable(Int(value))
+            }
         case .customWallpaper:
-            return strings().channelBoostTableCustomWallpaper
+            if isGroup {
+                return strings().channelBoostTableCustomWallpaperGroup
+            } else {
+                return strings().channelBoostTableCustomWallpaper
+            }
         case .audioTranscription:
             return strings().channelBoostTableAudioTranscription
         case .emojiPack:
@@ -88,9 +104,9 @@ enum BoostChannelPerk: Equatable {
 final class BoostFeatureRowItem : GeneralRowItem {
     let perk: BoostChannelPerk
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, perk: BoostChannelPerk) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, isGroup: Bool, perk: BoostChannelPerk) {
         self.perk = perk
-        self.textLayout = .init(.initialize(string: perk.title(), color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.textLayout = .init(.initialize(string: perk.title(isGroup: isGroup), color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, stableId: stableId)
     }
     

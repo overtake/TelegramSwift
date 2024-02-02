@@ -2200,6 +2200,27 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
             }
             |> take(1)
+        } else if mode == .emoji {
+            if let peer = chatInteraction?.peer, peer.isGroup || peer.isSupergroup {
+                let emojiPack = getCachedDataView(peerId: peer.id, postbox: context.account.postbox) |> map { $0 as? CachedChannelData } |> map { $0?.emojiPack }
+                iconStatusEmoji = emojiPack |> mapToSignal { info in
+                    if let info = info {
+                        return context.engine.stickers.loadedStickerPack(reference: .id(id: info.id.id, accessHash: info.accessHash), forceActualized: false)
+                        |> map { result -> [TelegramMediaFile] in
+                            switch result {
+                            case let .result(_, items, _):
+                                return items.map(\.file)
+                            default:
+                                return []
+                            }
+                        }
+                        |> take(1)
+                    } else {
+                        return .single([])
+                    }
+                    
+                }
+            }
         }
         
  

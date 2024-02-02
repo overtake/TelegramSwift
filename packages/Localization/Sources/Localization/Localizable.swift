@@ -1891,16 +1891,10 @@ public final class L10n {
   public static var channelBlacklistRestricted: String  { return L10n.tr("Localizable", "ChannelBlacklist.Restricted") }
   /// Boost Channel
   public static var channelBoostBoostChannel: String  { return L10n.tr("Localizable", "ChannelBoost.BoostChannel") }
-  /// %1$@ needed to be able to post %2$@.
-  public static func channelBoostBoostedChannelMoreRequired(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelMoreRequired", p1, p2)
-  }
-  /// This channel reached **Level %1$@** and can now post %2$@.
-  public static func channelBoostBoostedChannelReachedLevel(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel", p1, p2)
-  }
   /// Boost Group
   public static var channelBoostBoostGroup: String  { return L10n.tr("Localizable", "ChannelBoost.BoostGroup") }
+  /// Use Emoji Pack
+  public static var channelBoostEmojiPack: String  { return L10n.tr("Localizable", "ChannelBoost.EmojiPack") }
   /// Use Emoji Statuses
   public static var channelBoostEmojiStatus: String  { return L10n.tr("Localizable", "ChannelBoost.EmojiStatus") }
   /// Enable Colors
@@ -1965,26 +1959,12 @@ public final class L10n {
   }
   /// Help Upgrade This Group
   public static var channelBoostHelpUpgradeGroup: String  { return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeGroup") }
-  /// Increase Story Limit
-  public static var channelBoostIncreaseLimit: String  { return L10n.tr("Localizable", "ChannelBoost.IncreaseLimit") }
-  /// Your channel needs %1$@ to post %2$@.\n\nAsk your **Premium** subscribers to boost your channel with this link:
-  public static func channelBoostIncreaseLimitText(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.IncreaseLimitText", p1, p2)
-  }
   /// Level %@
   public static func channelBoostLevel(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Level", p1)
   }
   /// Maximum Level Reached
   public static var channelBoostMaxLevelReached: String  { return L10n.tr("Localizable", "ChannelBoost.MaxLevelReached") }
-  /// This channel reached **Level %1$@** and can now post %2$@.
-  public static func channelBoostMaxLevelReachedText(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedText", p1, p2)
-  }
-  /// %1$@ reached **Level %2$@** and can now post %3$@.
-  public static func channelBoostMaxLevelReachedTextAuthor(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedTextAuthor", p1, p2, p3)
-  }
   /// %d
   public static func channelBoostMoreBoostsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_countable", p1)
@@ -2059,6 +2039,22 @@ public final class L10n {
   }
   /// You Boosted The Channel
   public static var channelBoostYouBoostedOtherChannel: String  { return L10n.tr("Localizable", "ChannelBoost.YouBoostedOtherChannel") }
+  /// By gaining boosts, your group levels and unlocks more features.
+  public static var channelBoostAdditionalFeaturesText: String  { return L10n.tr("Localizable", "ChannelBoost.AdditionalFeatures.Text") }
+  /// Additional Features
+  public static var channelBoostAdditionalFeaturesTitle: String  { return L10n.tr("Localizable", "ChannelBoost.AdditionalFeatures.Title") }
+  /// %1$@ more boosts needed to unlock new features.
+  public static func channelBoostBoostedChannelMoreRequiredNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelMoreRequired.New", p1)
+  }
+  /// This channel reached **Level %1$@**.
+  public static func channelBoostBoostedChannelReachedLevelChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel.Channel", p1)
+  }
+  /// This group reached **Level %1$@**.
+  public static func channelBoostBoostedChannelReachedLevelGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel.Group", p1)
+  }
   /// %dm
   public static func channelBoostBoosterDuration(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Booster.Duration", p1)
@@ -2067,6 +2063,26 @@ public final class L10n {
   public static var channelBoostBoosterToBeDistributed: String  { return L10n.tr("Localizable", "ChannelBoost.Booster.ToBeDistributed") }
   /// Unclaimed
   public static var channelBoostBoosterUnclaimed: String  { return L10n.tr("Localizable", "ChannelBoost.Booster.Unclaimed") }
+  /// Your group needs **Level %1$@** to use emoji pack.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostEnableEmojiStatusLevelTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableEmojiStatusLevelText.Group", p1)
+  }
+  /// Your group needs **Level %1$@** to change group cover color.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostEnableProfileColorLevelTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableProfileColorLevelText.Group", p1)
+  }
+  /// Your group needs **Level %1$@** to change channel cover icon.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostEnableProfileIconLevelTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableProfileIconLevelText.Group", p1)
+  }
+  /// Your group needs to reach **%1$@ level** to add %2$@ custom emoji as reactions.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostEnableReactionsTextGroup(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableReactionsText.Group", p1, p2)
+  }
+  /// Your group needs **%1$@ level** to change wallpaper.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostEnableWallpapersTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableWallpapersText.Group", p1)
+  }
   /// You can change the channel you boost only once a day. Next time you can boost is in **%@**.
   public static func channelBoostErrorBoostTooOftenText(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Error.BoostTooOftenText", p1)
@@ -2083,6 +2099,22 @@ public final class L10n {
   public static var channelBoostErrorPremiumNeededTitle: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededTitle") }
   /// Read More
   public static var channelBoostErrorPremiumNeededTextOK: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededText.OK") }
+  /// Your channel needs %1$@ to get access to featrues.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostIncreaseLimitTextChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.IncreaseLimitText.Channel", p1)
+  }
+  /// Your group needs %1$@ to get access to featrues.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostIncreaseLimitTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.IncreaseLimitText.Group", p1)
+  }
+  /// This channel reached **Level %1$@** and have access to all features.
+  public static func channelBoostMaxLevelReachedTextChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedText.Channel", p1)
+  }
+  /// This group reached **Level %1$@** and have access to all features.
+  public static func channelBoostMaxLevelReachedTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedText.Group", p1)
+  }
   /// Voice-To-Text Conversion
   public static var channelBoostTableAudioTranscription: String  { return L10n.tr("Localizable", "ChannelBoost.Table.AudioTranscription") }
   /// %d
@@ -2291,10 +2323,78 @@ public final class L10n {
   public static func channelBoostTableWallpaperZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper_zero", p1)
   }
+  /// Custom Group Background
+  public static var channelBoostTableCustomWallpaperGroup: String  { return L10n.tr("Localizable", "ChannelBoost.Table.CustomWallpaper.Group") }
+  /// %d
+  public static func channelBoostTableProfileColorGroupCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_countable", p1)
+  }
+  /// %d Color for Group Covers
+  public static func channelBoostTableProfileColorGroupFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_few", p1)
+  }
+  /// %d Color for Group Covers
+  public static func channelBoostTableProfileColorGroupMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_many", p1)
+  }
+  /// %d Color for Group Cover
+  public static func channelBoostTableProfileColorGroupOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_one", p1)
+  }
+  /// %d Color for Group Covers
+  public static func channelBoostTableProfileColorGroupOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_other", p1)
+  }
+  /// %d Color for Group Covers
+  public static func channelBoostTableProfileColorGroupTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_two", p1)
+  }
+  /// %d Color for Group Covers
+  public static func channelBoostTableProfileColorGroupZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.ProfileColor.Group_zero", p1)
+  }
+  /// Custom Logo for Group Cover
+  public static var channelBoostTableProfileLogoGroup: String  { return L10n.tr("Localizable", "ChannelBoost.Table.ProfileLogo.Group") }
+  /// %d
+  public static func channelBoostTableWallpaperGroupCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_countable", p1)
+  }
+  /// %d Group Backgrounds
+  public static func channelBoostTableWallpaperGroupFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_few", p1)
+  }
+  /// %d Group Backgrounds
+  public static func channelBoostTableWallpaperGroupMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_many", p1)
+  }
+  /// %d Group Background
+  public static func channelBoostTableWallpaperGroupOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_one", p1)
+  }
+  /// %d Group Backgrounds
+  public static func channelBoostTableWallpaperGroupOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_other", p1)
+  }
+  /// %d Group Backgrounds
+  public static func channelBoostTableWallpaperGroupTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_two", p1)
+  }
+  /// %d Group Backgrounds
+  public static func channelBoostTableWallpaperGroupZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Table.Wallpaper.Group_zero", p1)
+  }
   /// Boost Channel
   public static var channelBoostTitleChannel: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Channel") }
   /// Boost Group
   public static var channelBoostTitleGroup: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Group") }
+  /// Your channel needs %1$@ to get access to features.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostZeroLevelTextChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.ZeroLevelText.Channel", p1)
+  }
+  /// Your group needs %1$@ to get access to features.\n\nAsk your **Premium** subscribers to boost your group with this link:
+  public static func channelBoostZeroLevelTextGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.ZeroLevelText.Group", p1)
+  }
   /// Channel Info
   public static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -2347,6 +2447,12 @@ public final class L10n {
   public static var channelMembersGroupHideMembersInfo: String  { return L10n.tr("Localizable", "ChannelMembers.Group.HideMembers.Info") }
   /// Add Members
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
+  /// Do Not Restrict Boosters
+  public static var channelPermissionRestrictBoosters: String  { return L10n.tr("Localizable", "ChannelPermission.RestrictBoosters") }
+  /// Choose how many boosts a user must give to the group to bypass restrictions on sending messages.
+  public static var channelPermissionRestrictBoostersActive: String  { return L10n.tr("Localizable", "ChannelPermission.RestrictBoosters.Active") }
+  /// Turn this on to always allow users who boosted your group to send messages and media.
+  public static var channelPermissionRestrictBoostersNonActive: String  { return L10n.tr("Localizable", "ChannelPermission.RestrictBoosters.NonActive") }
   /// Add Reactions
   public static var channelReactionsAdd: String  { return L10n.tr("Localizable", "ChannelReactions.Add") }
   /// Enable Reaction
@@ -7617,6 +7723,8 @@ public final class L10n {
   }
   /// CHANNELS INCLUDED IN THE GIVEAWAY
   public static var giveawayChannelsHeader: String  { return L10n.tr("Localizable", "Giveaway.Channels.Header") }
+  /// Add Group
+  public static var giveawayChannelsAddGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Group") }
   /// Select Channel
   public static var giveawayChannelsAddSelectChannel: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.SelectChannel") }
   /// Private Channel
@@ -7625,8 +7733,46 @@ public final class L10n {
   public static var giveawayChannelsAddPrivateOk: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Ok") }
   /// Are you sure you want to add a private channel? Users won't be able to join it without an invite link.
   public static var giveawayChannelsAddPrivateText: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Text") }
+  /// Private Group
+  public static var giveawayChannelsAddPrivateHeaderGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Header.Group") }
+  /// Add
+  public static var giveawayChannelsAddPrivateOkGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Ok.Group") }
+  /// Are you sure you want to add a private group? Users won't be able to join it without an invite link.
+  public static var giveawayChannelsAddPrivateTextGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Text.Group") }
+  /// Select Group
+  public static var giveawayChannelsAddSelectChannelGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.SelectChannel.Group") }
+  /// %d
+  public static func giveawayChannelsBoostReceiveGroupCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_countable", p1)
+  }
+  /// this group will receive %d boosts
+  public static func giveawayChannelsBoostReceiveGroupFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_few", p1)
+  }
+  /// this group will receive %d boosts
+  public static func giveawayChannelsBoostReceiveGroupMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_many", p1)
+  }
+  /// this group will receive %d boost
+  public static func giveawayChannelsBoostReceiveGroupOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_one", p1)
+  }
+  /// this group will receive %d boosts
+  public static func giveawayChannelsBoostReceiveGroupOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_other", p1)
+  }
+  /// this group will receive %d boosts
+  public static func giveawayChannelsBoostReceiveGroupTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_two", p1)
+  }
+  /// this group will receive %d boosts
+  public static func giveawayChannelsBoostReceiveGroupZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive.Group_zero", p1)
+  }
   /// Remove
   public static var giveawayChannelsContextRemove: String  { return L10n.tr("Localizable", "Giveaway.Channels.Context.Remove") }
+  /// GROUPS INCLUDED IN THE GIVEAWAY
+  public static var giveawayChannelsHeaderGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Header.Group") }
   /// Ends
   public static var giveawayDateEnds: String  { return L10n.tr("Localizable", "Giveaway.Date.Ends") }
   /// Choose when subscribers of your channel will be randomly selected to receive Telegram Premium.
@@ -7635,12 +7781,16 @@ public final class L10n {
   public static var giveawayDateSelectDate: String  { return L10n.tr("Localizable", "Giveaway.Date.SelectDate") }
   /// DATE WHEN GIVEAWAY ENDS
   public static var giveawayDateTitle: String  { return L10n.tr("Localizable", "Giveaway.Date.Title") }
+  /// Choose when subscribers of your group will be randomly selected to receive Telegram Premium.
+  public static var giveawayDateInfoGroup: String  { return L10n.tr("Localizable", "Giveaway.Date.Info.Group") }
   /// OK
   public static var giveawayDateSelectDateOK: String  { return L10n.tr("Localizable", "Giveaway.Date.SelectDate.OK") }
   /// Get more boosts for your channel by gifting
   public static var giveawayHeaderText: String  { return L10n.tr("Localizable", "Giveaway.Header.Text") }
   /// **Gift Telegram Premium**
   public static var giveawayHeaderTitle: String  { return L10n.tr("Localizable", "Giveaway.Header.Title") }
+  /// Get more boosts for your group by gifting
+  public static var giveawayHeaderTextGroup: String  { return L10n.tr("Localizable", "Giveaway.Header.Text.Group") }
   /// You can review the list of features and terms of use for Telegram Premium [here](premium).
   public static var giveawayPaymentOptionsInfo: String  { return L10n.tr("Localizable", "Giveaway.PaymentOptions.Info") }
   /// %d Months
@@ -7749,6 +7899,8 @@ public final class L10n {
   public static var giveawayTypeSpecificModalSelectUsers: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Modal.SelectUsers") }
   /// Choose the channels users need to be subscribed to take part in the giveaway.
   public static var givewayChannelsInfo: String  { return L10n.tr("Localizable", "Giveway.Channels.Info") }
+  /// Choose the groups users need to be subscribed to take part in the giveaway.
+  public static var givewayChannelsInfoGroup: String  { return L10n.tr("Localizable", "Giveway.Channels.Info.Group") }
   /// Off
   public static var globalTimerOff: String  { return L10n.tr("Localizable", "GlobalTimer.Off") }
   /// Set Custom Time
@@ -12677,10 +12829,12 @@ public final class L10n {
   public static var selectColorResetColorName: String  { return L10n.tr("Localizable", "SelectColor.ResetColor.Name") }
   /// Reset Profile Color
   public static var selectColorResetColorProfile: String  { return L10n.tr("Localizable", "SelectColor.ResetColor.Profile") }
-  /// Your channel name color has been updated!
-  public static var selectColorSuccessChannel: String  { return L10n.tr("Localizable", "SelectColor.Success.Channel") }
-  /// Your name color has been updated!
-  public static var selectColorSuccessUser: String  { return L10n.tr("Localizable", "SelectColor.Success.User") }
+  /// Your channel appearance has been updated!
+  public static var selectColorSuccessAppearanceChannel: String  { return L10n.tr("Localizable", "SelectColor.Success.Appearance.Channel") }
+  /// Your channel appearance has been updated!
+  public static var selectColorSuccessAppearanceGroup: String  { return L10n.tr("Localizable", "SelectColor.Success.Appearance.Group") }
+  /// Your profile appearance has been updated!
+  public static var selectColorSuccessAppearanceUser: String  { return L10n.tr("Localizable", "SelectColor.Success.Appearance.User") }
   /// Channel Color
   public static var selectColorTitleChannel: String  { return L10n.tr("Localizable", "SelectColor.Title.Channel") }
   /// Your Name Color
@@ -13737,6 +13891,8 @@ public final class L10n {
   public static func statsBoostsExpiresOn(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stats.Boosts.ExpiresOn", p1)
   }
+  /// Members of your group can **boost** it so that it **levels up** and gets **exclusive features**.
+  public static var statsBoostsGroupInfo: String  { return L10n.tr("Localizable", "Stats.Boosts.GroupInfo") }
   /// Level
   public static var statsBoostsLevel: String  { return L10n.tr("Localizable", "Stats.Boosts.Level") }
   /// LINK FOR BOOSTING
@@ -13751,6 +13907,12 @@ public final class L10n {
   public static var statsBoostsPremiumSubscribers: String  { return L10n.tr("Localizable", "Stats.Boosts.PremiumSubscribers") }
   /// Show More
   public static var statsBoostsShowMore: String  { return L10n.tr("Localizable", "Stats.Boosts.ShowMore") }
+  /// Boost
+  public static var statsBoostsActionBoost: String  { return L10n.tr("Localizable", "Stats.Boosts.Action.Boost") }
+  /// Giveaway
+  public static var statsBoostsActionGiveaway: String  { return L10n.tr("Localizable", "Stats.Boosts.Action.Giveaway") }
+  /// Features
+  public static var statsBoostsActionInfo: String  { return L10n.tr("Localizable", "Stats.Boosts.Action.Info") }
   /// Your group is currently boosted by these users.
   public static var statsBoostsBoostersInfoGroup: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostersInfo.Group") }
   /// Share this link with your group members to get more boosts.

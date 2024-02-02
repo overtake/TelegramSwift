@@ -202,15 +202,17 @@ private final class Arguments {
     let context: AccountContext
     let presentation: TelegramPresentationTheme
     let isGroup: Bool
+    let onlyFeatures: Bool
     let boost:()->Void
     let openChannel:()->Void
     let shareLink:(String)->Void
     let copyLink:(String)->Void
     let openGiveaway:()->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, isGroup: Bool, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
+    init(context: AccountContext, presentation: TelegramPresentationTheme, isGroup: Bool, onlyFeatures: Bool, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
         self.context = context
         self.presentation = presentation
         self.isGroup = isGroup
+        self.onlyFeatures = onlyFeatures
         self.boost = boost
         self.copyLink = copyLink
         self.shareLink = shareLink
@@ -289,6 +291,8 @@ private struct State : Equatable {
                     title = strings().channelBoostProfileIcon
                 case .emojiStatus:
                     title = strings().channelBoostEmojiStatus
+                case .emojiPack:
+                    title = strings().channelBoostEmojiPack
                 case .reactions:
                     title = strings().channelBoostEnableReactions
                 case .wallpaper:
@@ -338,6 +342,7 @@ private struct State : Equatable {
 
 
 
+
 private final class BoostRowItem : TableRowItem {
     fileprivate let context: AccountContext
     fileprivate let state: State
@@ -374,29 +379,52 @@ private final class BoostRowItem : TableRowItem {
                     case let .profileColor(level):
                         string = strings().channelBoostEnableProfileColorLevelText("\(level)")
                     case let .emojiStatus(level):
-                        string = strings().channelBoostEnableEmojiStatusLevelText("\(level)")
+                        if state.isGroup {
+                            string = strings().channelBoostEnableEmojiStatusLevelTextGroup("\(level)")
+                        } else {
+                            string = strings().channelBoostEnableEmojiStatusLevelText("\(level)")
+                        }
                     case let .wallpaper(level):
-                        string = strings().channelBoostEnableWallpapersText("\(level)")
+                        if state.isGroup {
+                            string = strings().channelBoostEnableWallpapersTextGroup("\(level)")
+                        } else {
+                            string = strings().channelBoostEnableWallpapersText("\(level)")
+                        }
                     case .reactions:
-                        string = strings().channelBoostEnableReactionsText("\(level + 1)", "\(level)")
+                        if state.isGroup {
+                            string = strings().channelBoostEnableReactionsTextGroup("\(level + 1)", "\(level)")
+                        } else {
+                            string = strings().channelBoostEnableReactionsText("\(level + 1)", "\(level)")
+                        }
                     default:
                         if level == 0 {
-                            string = strings().channelBoostEnableStoriesText(valueString)
+                            if state.isGroup {
+                                string = strings().channelBoostZeroLevelTextGroup(valueString)
+                            } else {
+                                string = strings().channelBoostZeroLevelTextChannel(valueString)
+                            }
                         } else {
-                            string = strings().channelBoostIncreaseLimitText(valueString, "\(level + 1)")
+                            if state.isGroup {
+                                string = strings().channelBoostIncreaseLimitTextGroup(valueString)
+                            } else {
+                                string = strings().channelBoostIncreaseLimitTextChannel(valueString)
+                            }
                         }
                     }
                 } else {
                     string = ""
                 }
             } else {
-                let storiesString = strings().channelBoostStoriesPerDayCountable(level + 1)
                 if let remaining = remaining {
                     let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     if remaining == 0 {
-                        string = strings().channelBoostBoostedChannelReachedLevel("\(level + 1)", storiesString)
+                        if state.isGroup {
+                            string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level + 1)")
+                        } else {
+                            string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level + 1)")
+                        }
                     } else {
-                        string = strings().channelBoostBoostedChannelMoreRequired(valueString, storiesString)
+                        string = strings().channelBoostBoostedChannelMoreRequiredNew(valueString)
                     }
 
                 } else {
@@ -405,7 +433,6 @@ private final class BoostRowItem : TableRowItem {
             }
             
             if state.boosted {
-                let storiesString = strings().channelBoostStoriesPerDayCountable(level + 1)
                 if let remaining = remaining {
                     let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     if level == 0 {
@@ -415,19 +442,26 @@ private final class BoostRowItem : TableRowItem {
                             string = strings().channelBoostEnableStoriesMoreRequired(valueString)
                         }
                     } else {
-                        if remaining == 0 {
-                            string = strings().channelBoostBoostedChannelReachedLevel("\(level + 1)", storiesString)
+                        if state.isGroup {
+                            string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level + 1)")
                         } else {
-                            string = strings().channelBoostBoostedChannelMoreRequired(valueString, storiesString)
+                            string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level + 1)")
                         }
                     }
                 } else {
-                    string = strings().channelBoostBoostedChannelReachedLevel("\(level + 1)", storiesString)
+                    if state.isGroup {
+                        string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level + 1)")
+                    } else {
+                        string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level + 1)")
+                    }
                 }
             }
         } else {
-            let storiesString = strings().channelBoostStoriesPerDayCountable(level)
-            string = strings().channelBoostMaxLevelReachedText("\(level)", storiesString)
+            if state.isGroup {
+                string = strings().channelBoostMaxLevelReachedTextGroup("\(level)")
+            } else {
+                string = strings().channelBoostMaxLevelReachedTextChannel("\(level)")
+            }
         }
        
 
@@ -955,8 +989,8 @@ private final class AcceptRowView : TableRowView {
 
 private let _id_accept = InputDataIdentifier("accept")
 
-private func _id_perk(_ perk: BoostChannelPerk, _ level: Int32) -> InputDataIdentifier {
-    return .init("perk_\(perk.title().hashValue)_\(level)")
+private func _id_perk(_ perk: BoostChannelPerk, _ level: Int32, _ isGroup: Bool) -> InputDataIdentifier {
+    return .init("perk_\(perk.title(isGroup: isGroup).hashValue)_\(level)")
 }
 private func _id_perk_level(_ level: Int32) -> InputDataIdentifier {
     return .init("perk_level_\(level)")
@@ -969,45 +1003,70 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var index: Int32 = 0
     var sectionId: Int32 = 0
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return BoostRowItem(initialSize, presentation: arguments.presentation, state: state, context: arguments.context, boost: arguments.boost, openChannel: arguments.openChannel)
-    }))
-    index += 1
+    if arguments.onlyFeatures {
+        let text = NSMutableAttributedString()
+        
+        //.initialize(string: "Additional Features\nBy gaining boosts, your group levels and unlocks more features.")
+        text.append(string: strings().channelBoostAdditionalFeaturesTitle, color: theme.colors.text, font: .medium(.header))
+        text.append(string: "\n")
+        text.append(string: strings().channelBoostAdditionalFeaturesText, color: theme.colors.text, font: .normal(.text))
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            
+            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .menu_lighting, text: text, stickerSize: NSMakeSize(60, 60))
+        }))
+        index += 1
+    } else {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return BoostRowItem(initialSize, presentation: arguments.presentation, state: state, context: arguments.context, boost: arguments.boost, openChannel: arguments.openChannel)
+        }))
+        index += 1
+    }
+    
+    
     
     var noLastSection = false
     
-    if state.isAdmin, state.status.nextLevelBoosts != nil {
-        
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
-                
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: {
-                arguments.copyLink(state.link)
-            }), customTheme: .initialize(arguments.presentation))
-        }))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
-        sectionId += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().boostGetBoosts, linkHandler: { _ in
-            arguments.openGiveaway()
-        }), data: .init(color: arguments.presentation.colors.text, viewType: .textBottomItem, fontSize: 13, centerViewAlignment: true, alignment: .center, linkColor: arguments.presentation.colors.link)))
-        
-        
-    } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_accept, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return AcceptRowItem(initialSize, state: state, context: arguments.context, presentation: arguments.presentation, boost: arguments.boost)
-        }))
-        index += 1
-        noLastSection = true
+    if !arguments.onlyFeatures {
+        if state.isAdmin, state.status.nextLevelBoosts != nil {
+            
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+                    
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: {
+                    arguments.copyLink(state.link)
+                }), customTheme: .initialize(arguments.presentation))
+            }))
+            index += 1
+            
+            entries.append(.sectionId(sectionId, type: .customModern(10)))
+            sectionId += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().boostGetBoosts, linkHandler: { _ in
+                arguments.openGiveaway()
+            }), data: .init(color: arguments.presentation.colors.text, viewType: .textBottomItem, fontSize: 13, centerViewAlignment: true, alignment: .center, linkColor: arguments.presentation.colors.link)))
+            
+            
+        } else {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_accept, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return AcceptRowItem(initialSize, state: state, context: arguments.context, presentation: arguments.presentation, boost: arguments.boost)
+            }))
+            index += 1
+            noLastSection = true
+        }
     }
     
+    
     var nextLevels: ClosedRange<Int32>?
-    if state.status.level < 10 {
-        nextLevels = Int32(state.status.level) + 1 ... 10
+    if arguments.onlyFeatures {
+        nextLevels = 1 ... 10
+    } else {
+        if state.status.level < 10 {
+            nextLevels = Int32(state.status.level) + 1 ... 10
+        }
     }
+    
 
     let premiumConfiguration = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration)
     
@@ -1093,8 +1152,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             
             for perk in perks {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_perk(perk, level), equatable: .init(perk), comparable: nil, item: { initialSize, stableId in
-                    return BoostFeatureRowItem(initialSize, stableId: stableId, perk: perk)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_perk(perk, level, isGroup), equatable: .init(perk), comparable: nil, item: { initialSize, stableId in
+                    return BoostFeatureRowItem(initialSize, stableId: stableId, isGroup: isGroup, perk: perk)
                 }))
             }
         }
@@ -1117,10 +1176,11 @@ enum BoostChannelSource : Equatable {
     case profileColor(Int32)
     case profileIcon(Int32)
     case emojiStatus(Int32)
+    case emojiPack(Int32)
     case wallpaper(Int32)
 }
 
-func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
+func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, onlyFeatures: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -1140,7 +1200,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
 
     var close:(()->Void)? = nil
     
-    let arguments = Arguments(context: context, presentation: presentation, isGroup: peer.isGroup || peer.isSupergroup, boost: {
+    let arguments = Arguments(context: context, presentation: presentation, isGroup: peer.isGroup || peer.isSupergroup, onlyFeatures: onlyFeatures, boost: {
         
         let myStatus = stateValue.with { $0.myStatus }
         let nextLevelBoosts = stateValue.with { $0.status.nextLevelBoosts }
@@ -1206,7 +1266,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         showModalText(for: context.window, text: strings().shareLinkCopied)
         copyToClipboard(link)
     }, openGiveaway: {
-        showModal(with: GiveawayModalController(context: context, peerId: peer.id, prepaid: nil), for: context.window)
+        showModal(with: GiveawayModalController(context: context, peerId: peer.id, prepaid: nil, isGroup: stateValue.with { $0.isGroup }), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

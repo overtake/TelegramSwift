@@ -528,6 +528,12 @@ func initialize() -> [String] {
     array.append("profile_translate")
     array.append("profile_join_channel")
     array.append("profile_boost")
+    
+    
+    array.append("stats_boost_boost")
+    array.append("stats_boost_giveaway")
+    array.append("stats_boost_info")
+
 
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
