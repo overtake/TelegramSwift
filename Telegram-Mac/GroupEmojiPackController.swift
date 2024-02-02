@@ -171,7 +171,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func GroupEmojiPackController(context: AccountContext) -> InputDataController {
+func GroupEmojiPackController(context: AccountContext, peerId: PeerId, selected: StickerPackCollectionInfo?, updated: @escaping(StickerPackCollectionInfo?)->Void) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     let searchDisposable = MetaDisposable()
@@ -205,6 +205,33 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
             return current
         }
     }))
+    if let info = selected {
+        let signal: Signal<(StickerPackCollectionInfo, StickerPackItem)?, NoError> = context.engine.stickers.loadedStickerPack(reference: .id(id: info.id.id, accessHash: info.accessHash), forceActualized: false) |> map { value in
+            switch value {
+            case let .result(info, items, _):
+                if let item = items.first {
+                    return (info, item)
+                } else {
+                    return nil
+                }
+            default:
+                return nil
+            }
+        }
+        actionsDisposable.add(signal.start(next: { selected in
+            updateState { current in
+                var current = current
+                if let selected = selected {
+                    current.selected = .init(info: selected.0, id: selected.0.id, item: selected.1, count: selected.0.count)
+                    current.string = selected.0.shortName
+                }
+                return current
+            }
+        }))
+        
+    }
+    
+    
     
     actionsDisposable.add(searchStatePromise.get().start(next: { state in
         
@@ -257,6 +284,7 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
                 }
                 return current
             }
+            updated(stateValue.with { $0.selected?.info })
             closeSearch?()
         }, source: stateValue.with { $0.selected?.id == item.id } ? .removeGroupEmojiPack : .installGroupEmojiPack), for: context.window)
         
@@ -298,6 +326,7 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
         }
     })
     
+    
     let signal = combineLatest(statePromise.get(), searchPromise.get()) |> deliverOnPrepareQueue |> map { state, searchData in
         return InputDataSignalValue(entries: entries(state, arguments: arguments), searchState: searchData)
     }
@@ -324,6 +353,9 @@ func GroupEmojiPackController(context: AccountContext) -> InputDataController {
         bar.button.scaleOnClick = true
         return bar
     })
+    
+    controller.afterDisappear = {
+    }
     
     
     controller.searchKeyInvocation = {

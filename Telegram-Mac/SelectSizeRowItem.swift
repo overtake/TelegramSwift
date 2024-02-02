@@ -14,15 +14,17 @@ import TGUIKit
 class SelectSizeRowItem: GeneralRowItem {
 
     fileprivate let titles:[String]?
+    fileprivate let titlesImages:[CGImage]?
     fileprivate let sizes: [Int32]
     fileprivate var current: Int32
     fileprivate let initialCurrent: Int32
     fileprivate let selectAction:(Int)->Void
     fileprivate let hasMarkers: Bool
     fileprivate let dottedIndexes: [Int]
-    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, dottedIndexes:[Int] = [], viewType: GeneralViewType = .legacy, selectAction: @escaping(Int)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, titlesImages: [CGImage]? = nil, dottedIndexes:[Int] = [], viewType: GeneralViewType = .legacy, selectAction: @escaping(Int)->Void) {
         self.sizes = sizes
         self.titles = titles
+        self.titlesImages = titlesImages
         self.dottedIndexes = dottedIndexes
         self.initialCurrent = current
         self.hasMarkers = hasMarkers
@@ -174,7 +176,13 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 if let titles = item.titles, titles.count == item.sizes.count {
                     let title = titles[i]
                     let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                    titleNode.1.draw(NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    let titleRect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
+                    
+                    if let image = item.titlesImages?[i] {
+                        ctx.draw(image, in: CGRect(origin: NSMakePoint(titleRect.minX - image.backingSize.width, titleRect.minY), size: image.backingSize))
+                    }
+                    
+                    titleNode.1.draw(titleRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
             
@@ -182,6 +190,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 let perSize = NSMakeSize(10, 10)
                 let perF = _focus(perSize)
                 let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                
                 titleNode.1.draw(NSMakeRect(_focus(titleNode.0.size).minX, perF.minY - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
@@ -290,6 +299,12 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                     if i == titles.count - 1 {
                         rect.origin.x = min(rect.minX, (point.x + 5) - titleNode.0.size.width)
                     }
+                    
+                    if let image = item.titlesImages?[i] {
+                        ctx.draw(image, in: CGRect(origin: NSMakePoint(rect.minX - image.backingSize.width + 4, rect.minY), size: image.backingSize))
+                        rect.origin.x += 6
+                    }
+                    
 
                     titleNode.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }

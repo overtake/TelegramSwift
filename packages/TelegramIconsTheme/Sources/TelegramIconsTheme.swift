@@ -6557,6 +6557,45 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var stats_boost_boost: CGImage {
+      if let image = cached.with({ $0["stats_boost_boost"] }) {
+          return image
+      } else {
+          let image = _stats_boost_boost()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_boost"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_giveaway: CGImage {
+      if let image = cached.with({ $0["stats_boost_giveaway"] }) {
+          return image
+      } else {
+          let image = _stats_boost_giveaway()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_giveaway"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_info: CGImage {
+      if let image = cached.with({ $0["stats_boost_info"] }) {
+          return image
+      } else {
+          let image = _stats_boost_info()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_info"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_quiz_explanation: CGImage {
       if let image = cached.with({ $0["chat_quiz_explanation"] }) {
           return image
@@ -10728,6 +10767,9 @@ public final class TelegramIconsTheme {
   private let _profile_translate: ()->CGImage
   private let _profile_join_channel: ()->CGImage
   private let _profile_boost: ()->CGImage
+  private let _stats_boost_boost: ()->CGImage
+  private let _stats_boost_giveaway: ()->CGImage
+  private let _stats_boost_info: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
@@ -11516,6 +11558,9 @@ public final class TelegramIconsTheme {
       profile_translate: @escaping()->CGImage,
       profile_join_channel: @escaping()->CGImage,
       profile_boost: @escaping()->CGImage,
+      stats_boost_boost: @escaping()->CGImage,
+      stats_boost_giveaway: @escaping()->CGImage,
+      stats_boost_info: @escaping()->CGImage,
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
@@ -12303,6 +12348,9 @@ public final class TelegramIconsTheme {
       self._profile_translate = profile_translate
       self._profile_join_channel = profile_join_channel
       self._profile_boost = profile_boost
+      self._stats_boost_boost = stats_boost_boost
+      self._stats_boost_giveaway = stats_boost_giveaway
+      self._stats_boost_info = stats_boost_info
       self._chat_quiz_explanation = chat_quiz_explanation
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing

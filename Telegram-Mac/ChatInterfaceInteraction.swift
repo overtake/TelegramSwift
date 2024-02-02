@@ -732,7 +732,6 @@ final class ChatInteraction : InterfaceObserver  {
             }
             if FastSettings.shouldConfirmWebApp(botId) {
                 verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
-                    
                     FastSettings.markWebAppAsConfirmed(botId)
                     invoke()
                 })

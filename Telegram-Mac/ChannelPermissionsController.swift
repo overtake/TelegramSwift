@@ -57,6 +57,13 @@ private struct State: Equatable {
     var peer: PeerEquatable?
     var cachedData: CachedDataEquatable?
     var restrictBoosters: Int32? = nil
+    
+    var slowmodeTimeout: Int32? {
+        if let cachedDatra = cachedData?.data as? CachedChannelData {
+            return cachedDatra.slowModeTimeout
+        }
+        return nil
+    }
 }
 
 func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
@@ -296,9 +303,8 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     let insertBoost:(TelegramChatBannedRightsFlags)->Void = { rigths in
-        //TODO LANG
-        if rigths.contains(.banSendMedia) || rigths.contains(.banSendText) {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_do_not_boosters, data: .init(name: "Do Not Restrict Boosters", color: theme.colors.text, type: .switchable(state.restrictBoosters != nil), viewType: state.restrictBoosters != nil ? .firstItem : .singleItem, action: {
+        if rigths.contains(.banSendMedia) || rigths.contains(.banSendText) || (state.slowmodeTimeout != nil && state.slowmodeTimeout! > 0) {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_do_not_boosters, data: .init(name: strings().channelPermissionRestrictBoosters, color: theme.colors.text, type: .switchable(state.restrictBoosters != nil), viewType: state.restrictBoosters != nil ? .firstItem : .singleItem, action: {
                 if state.restrictBoosters != nil {
                     arguments.updateBoostNeed(nil)
                 } else {
@@ -315,13 +321,18 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                                             "3",
                                             "4",
                                             "5"]
-                    return SelectSizeRowItem(initialSize, stableId: stableId, current: boost, sizes: list, hasMarkers: false, titles: titles, viewType: .lastItem, selectAction: { index in
+                    let images:[CGImage] = [NSImage(named: "Icon_Boost_Indicator_Single")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true)]
+                    return SelectSizeRowItem(initialSize, stableId: stableId, current: boost, sizes: list, hasMarkers: false, titles: titles, titlesImages: images, viewType: .lastItem, selectAction: { index in
                        arguments.updateBoostNeed(list[index])
                     })
                 }))
-                infoText = "Choose how many boosts a user must give to the group to bypass restrictions on sending messages."
+                infoText = strings().channelPermissionRestrictBoostersActive
             } else {
-                infoText = "Turn this on to always allow users who boosted your group to send messages and media."
+                infoText = strings().channelPermissionRestrictBoostersNonActive
             }
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(infoText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -573,7 +584,7 @@ final class ChannelPermissionsController : TableViewController {
         let peerId = self.peerId
         let context = self.context
         
-        let statePromise = ValuePromise<State>(ignoreRepeated: true)
+        let statePromise = ValuePromise<State>(State(), ignoreRepeated: true)
         let stateValue = Atomic(value: State())
         let updateState: ((State) -> State) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
@@ -953,7 +964,7 @@ final class ChannelPermissionsController : TableViewController {
         actionsDisposable.add(peersPromise.get().start(next: { participants in
             updateState { current in
                 var current = current
-                current.participants = participants
+                current.participants = participants ?? []
                 return current
             }
         }))
