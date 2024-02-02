@@ -742,7 +742,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             
             let selected: EmojiTag?
-            if let tag = interfaceState.searchMode.tag, case let .customTag(memoryBuffer) = tag {
+            if let tag = interfaceState.searchMode.tag, case let .customTag(memoryBuffer, _) = tag {
                 let tag = ReactionsMessageAttribute.reactionFromMessageTag(tag: memoryBuffer)
                 selected = tags?.first(where: { $0.tag.reaction == tag })
             } else {
@@ -1636,7 +1636,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let answersAndOnlineDisposable = MetaDisposable()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
-    
+    private var keepSavedMessagesSyncrhonizedDisposable: Disposable?
+
+
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
 
     
@@ -2091,9 +2093,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             return reply
         }
-        if let threadId64 = threadId64 {
-            keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: peerId, threadId: threadId64).start()
+        if case let .thread(message) = self.chatLocation, message.isForumPost {
+            if self.keepMessageCountersSyncrhonizedDisposable == nil {
+                self.keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: message.peerId, threadId: message.threadId).startStrict()
+            }
+        } else if self.chatLocation.peerId == self.context.account.peerId {
+            if self.keepMessageCountersSyncrhonizedDisposable == nil {
+                if let threadId = self.chatLocation.threadId {
+                    self.keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: self.context.account.peerId, threadId: threadId).startStrict()
+                } else {
+                    self.keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: self.context.account.peerId).startStrict()
+                }
+            }
+            if self.keepSavedMessagesSyncrhonizedDisposable == nil {
+                self.keepSavedMessagesSyncrhonizedDisposable = self.context.engine.stickers.refreshSavedMessageTags(subPeerId: self.chatLocation.threadId.flatMap(PeerId.init)).startStrict()
+            }
         }
+
+
 
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -5437,7 +5454,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
 
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox)).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer in
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics())).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics in
             
                         
             guard let `self` = self else {return}
@@ -5602,7 +5619,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedCurrentSendAsPeerId(sendAsPeerId)
                         present = present.withUpdatedIsNotAccessible(isNotAccessible)
                         present = present.withUpdatedSavedMessageTags(.init(tags: savedMessageTags.0, files: savedMessageTags.1))
-
+                        present = present.withUpdatedDisplaySavedChatsAsTopics(displaySavedChatsAsTopics)
+                        
                         present = present.updatedGroupCall { current in
                             if let call = activeCall {
                                 return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: callJoinPeerId, joinHash: current?.joinHash, isLive: peer.isGigagroup || peer.isChannel)
@@ -6790,6 +6808,30 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let mode = self.mode
             var items:[ContextMenuItem] = []
             let peerId = chatLocation.peerId
+            
+            
+            switch mode {
+            case .history, .thread:
+                if peerId == context.peerId {
+                    let displaySavedChatsAsTopics = chatInteraction.presentation.displaySavedChatsAsTopics
+                    
+                    items.append(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: { [weak self] in
+                        context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
+                        self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(context.peerId)))
+                    }, itemImage: !displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    items.append(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: { [weak self] in
+                        context.engine.peers.updateSavedMessagesViewAsTopics(value: true)
+                        self?.navigationController?.back()
+                        ForumUI.open(context.peerId, context: context)
+                    }, itemImage: displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    items.append(ContextSeparatorItem())
+                }
+            default:
+                break
+            }
+            
             switch self.mode {
             case .scheduled:
                 items.append(ContextMenuItem(strings().chatContextClearScheduled, handler: {
@@ -7242,6 +7284,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         liveTranslateDisposable.dispose()
         presentationDisposable.dispose()
         storiesDisposable.dispose()
+        keepSavedMessagesSyncrhonizedDisposable?.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
