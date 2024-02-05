@@ -903,6 +903,23 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceGiveawayResultsCountable(Int(winners))
             }
+        case let .boostsApplied(boosts):
+            if message.author?.id == account.peerId {
+                if boosts == 1 {
+                    text = strings().notificationBoostSingleYou
+                } else {
+                    let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
+                    text = strings().notificationBoostMultipleYou(boostsString)
+                }
+            } else {
+                let peerName = message.author?.compactDisplayTitle ?? ""
+                if boosts == 1 {
+                    text = strings().notificationBoostSingle(peerName)
+                } else {
+                    let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
+                    text = strings().notificationBoostMultiple(peerName, boostsString)
+                }
+            }
 
         }
     }

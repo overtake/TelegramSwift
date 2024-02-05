@@ -9547,6 +9547,48 @@ public final class L10n {
   public static func notificationStoryReply(_ p1: String) -> String {
     return L10n.tr("Localizable", "Notification.StoryReply", p1)
   }
+  /// %1$@ boosted the group %2$@
+  public static func notificationBoostMultiple(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Multiple", p1, p2)
+  }
+  /// You boosted the group %1$@
+  public static func notificationBoostMultipleYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.MultipleYou", p1)
+  }
+  /// %1$@ boosted the group
+  public static func notificationBoostSingle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Single", p1)
+  }
+  /// You boosted the group
+  public static var notificationBoostSingleYou: String  { return L10n.tr("Localizable", "Notification.Boost.SingleYou") }
+  /// %d
+  public static func notificationBoostTimesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_countable", p1)
+  }
+  /// %@ times
+  public static func notificationBoostTimesFew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_few", p1)
+  }
+  /// %@ times
+  public static func notificationBoostTimesMany(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_many", p1)
+  }
+  /// %@ time
+  public static func notificationBoostTimesOne(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_one", p1)
+  }
+  /// %@ times
+  public static func notificationBoostTimesOther(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_other", p1)
+  }
+  /// %@ times
+  public static func notificationBoostTimesTwo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_two", p1)
+  }
+  /// %d times
+  public static func notificationBoostTimesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.Boost.Times_zero", p1)
+  }
   /// %1$@ to your "%2$@"
   public static func notificationContactReacted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Notification.Contact.Reacted", p1, p2)

@@ -477,7 +477,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     }, userNameColor: {
-        context.bindings.rootNavigation().push(SelectColorController(context: context, source: .account(stateValue.with { $0.peer! })))
+        context.bindings.rootNavigation().push(SelectColorController(context: context, peer: stateValue.with { $0.peer! }))
     })
     
     let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in

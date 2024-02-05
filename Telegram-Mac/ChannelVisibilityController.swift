@@ -658,42 +658,61 @@ private func entries(arguments: Arguments, state: State) -> [ChannelVisibilityEn
     }
     
     if let peer = state.peer?.peer  {
+      
+        
+       
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
         
         if let channel = peer as? TelegramChannel, channel.isSupergroup {
             
-            let mode: CurrentChannelJoinToSend
-            if let value = state.joinToSend {
-                mode = value
-            } else {
-                if channel.flags.contains(.joinToSend) {
-                    mode = .members
-                } else {
-                    mode = .everyone
-                }
+            
+            
+            var isDiscussion = false
+            if let cachedData = state.cachedData?.data as? CachedChannelData, case let .known(peerId) = cachedData.linkedDiscussionPeerId, peerId != nil {
+                isDiscussion = true
             }
-            entries.append(.writeHeader(sectionId: sectionId, strings().channelVisibilityMessagesWho, .textTopItem))
-            entries.append(.writeEveryone(sectionId: sectionId, mode == .everyone, .firstItem))
-            entries.append(.writeOnlyMembers(sectionId: sectionId, mode == .members, .lastItem))
             
-            
-            if mode == .members {
+            if  (state.selectedType == .publicChannel || isDiscussion || (state.selectedType == nil && channel.addressName != nil)) {
+                
+                let mode: CurrentChannelJoinToSend
+                if let value = state.joinToSend {
+                    mode = value
+                } else {
+                    if channel.flags.contains(.joinToSend) {
+                        mode = .members
+                    } else {
+                        mode = .everyone
+                    }
+                }
+                
+                if isDiscussion {
+                    entries.append(.writeHeader(sectionId: sectionId, strings().channelVisibilityMessagesWho, .textTopItem))
+                    entries.append(.writeEveryone(sectionId: sectionId, mode == .everyone, .firstItem))
+                    entries.append(.writeOnlyMembers(sectionId: sectionId, mode == .members, .lastItem))
+                }
+                
+                
+                if mode == .members || !isDiscussion {
+                    if isDiscussion {
+                        entries.append(.section(sectionId: sectionId))
+                        sectionId += 1
+                    }
+                    
+                    let approve: Bool
+                    if let value = state.approveMembers {
+                        approve = value
+                    } else {
+                        approve = channel.flags.contains(.requestToJoin)
+                    }
+                    entries.append(.approveNewMembers(sectionId: sectionId, approve, .singleItem))
+                    entries.append(.approveNewMembersInfo(sectionId: sectionId, strings().channelVisibilityMessagesApproveInfo, .textBottomItem))
+                }
+                
                 entries.append(.section(sectionId: sectionId))
                 sectionId += 1
-                
-                let approve: Bool
-                if let value = state.approveMembers {
-                    approve = value
-                } else {
-                    approve = channel.flags.contains(.requestToJoin)
-                }
-                entries.append(.approveNewMembers(sectionId: sectionId, approve, .singleItem))
-                entries.append(.approveNewMembersInfo(sectionId: sectionId, strings().channelVisibilityMessagesApproveInfo, .textBottomItem))
             }
             
-            entries.append(.section(sectionId: sectionId))
-            sectionId += 1
         }
         
                

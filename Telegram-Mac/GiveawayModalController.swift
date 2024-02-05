@@ -832,9 +832,17 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             return current
         }
     }, addChannel: {
-        _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayChannelsAddSelectChannel, behavior: SelectChatsBehavior(settings: [.channels], excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
+        
+        var settings: SelectPeerSettings = [.channels]
+        if isGroup {
+            settings = [.channels, .groups]
+        }
+        
+        _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayChannelsAddSelectChannel, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
             if let peerId = peerIds.first {
                 return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer in
+                    
+                    let isGroup = peer.isGroup || peer.isSupergroup
                     if peer.addressName == nil {
                         let header: String = isGroup ? strings().giveawayChannelsAddPrivateHeaderGroup : strings().giveawayChannelsAddPrivateHeader
                         let info = isGroup ? strings().giveawayChannelsAddPrivateTextGroup : strings().giveawayChannelsAddPrivateText

@@ -1258,8 +1258,17 @@ final class SelectColorCallback {
     }
 }
 
-func SelectColorController(context: AccountContext, source: SelectColorSource, callback: SelectColorCallback? = nil) -> InputDataController {
+func SelectColorController(context: AccountContext, peer: Peer, callback: SelectColorCallback? = nil) -> InputDataController {
 
+    let source: SelectColorSource
+    if peer.isGroup || peer.isSupergroup {
+        source = .group(peer)
+    } else if peer.isChannel {
+        source = .channel(peer)
+    } else {
+        source = .account(peer)
+    }
+    
     let actionsDisposable = DisposableSet()
 
     let initialState = State(peer: .init(source.peer), selected: source.nameColor(.name), selected_profile: source.nameColor(.profile), backgroundEmojiId: source.backgroundIcon(.name), backgroundEmojiId_profile: source.backgroundIcon(.profile), emojiStatus: source.peer.emojiStatus, theme: theme.withUpdatedEmoticonThemes(context.emoticonThemes))
