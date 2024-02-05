@@ -2605,6 +2605,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var processedIds: Set<Int64> = Set()
     private var firstSearchAppear = true
+    private var currentSearchState: SearchState?
     
     private func enqueueAwaitingIfNeeded() {
 //        while !awaitingTransitions.isEmpty && !self.clipView.isAnimateScrolling {
@@ -2915,7 +2916,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     data.updateState(state)
                 })
                 
-                data.updateState(.init(state: searchView.searchView.state, request: searchView.searchView.query))
+                let searchState: SearchState = .init(state: searchView.searchView.state, request: searchView.searchView.query)
+                
+                if searchState != self.currentSearchState {
+                    self.currentSearchState = searchState
+                    data.updateState(searchState)
+                }
             }
         } else {
             self.searchView?.removeFromSuperview()

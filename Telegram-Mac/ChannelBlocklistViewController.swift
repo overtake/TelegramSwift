@@ -60,7 +60,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
     case peerItem(Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, Bool, Bool, GeneralViewType)
     case empty(Bool)
     case header(Int32, Int32, String, GeneralViewType)
-    case section(Int32)
+    case section(Int32, CGFloat)
     case addMember(Int32, Int32, GeneralViewType)
     var stableId: ChannelBlacklistEntryStableId {
         switch self {
@@ -68,7 +68,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
             return .peer(participant.peer.id)
         case .empty:
             return .empty
-        case let .section(section):
+        case let .section(section, _):
             return .section(section)
         case let .header(_, index, _, _):
             return .header(index)
@@ -81,7 +81,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
     
     var index:Int32 {
         switch self {
-        case let .section(section):
+        case let .section(section, _):
             return (section * 1000) - section
         case let .header(section, index, _, _):
             return (section * 1000) + index
@@ -160,8 +160,8 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelBlacklistRemoveUser, nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.addMember()
             })
-        case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
+        case .section(_, let height):
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -202,9 +202,11 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
     var sectionId:Int32 = 1
     
    
+    
+   
     if let peer = peerViewMainPeer(view) as? TelegramChannel {
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, inSearch ? 50 : 20))
         sectionId += 1
        
         if peer.hasPermission(.banMembers), !inSearch {
@@ -213,7 +215,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
         }
         if let participants = participants {
             if !participants.isEmpty, peer.hasPermission(.banMembers) || inSearch {
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, 20))
                 sectionId += 1
             }
             
@@ -237,7 +239,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
                 }
             }
         }
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
     }
     if entries.isEmpty {
