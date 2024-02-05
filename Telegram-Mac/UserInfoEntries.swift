@@ -220,7 +220,7 @@ class UserInfoArguments : PeerInfoArguments {
         
         let peer = self.peer as? TelegramUser
         
-        let firstName: String = peer?.firstName ?? ""
+        let firstName: String = peerViewMainPeer(peerView)?.compactDisplayTitle ?? ""
         let lastName = isEditableBot ? (peerView.cachedData as? CachedUserData)?.about : peer?.lastName
 
         if editable {

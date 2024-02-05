@@ -739,7 +739,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
             return current
         }
     }, userNameColor: {
-        context.bindings.rootNavigation().push(SelectColorController(context: context, source: .account(context.myPeer!)))
+        context.bindings.rootNavigation().push(SelectColorController(context: context, peer: context.myPeer!))
     }, selectAppIcon: { icon in
         
         if icon.isPremium, !context.isPremium {

@@ -269,7 +269,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func openNameColor(peer: Peer) {
-        pushViewController(SelectColorController(context: context, source: .group(peer)))
+        pushViewController(SelectColorController(context: context, peer: peer))
     }
     
     func enableTranslate() {

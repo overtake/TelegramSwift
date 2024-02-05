@@ -1,4 +1,3 @@
-
 //
 //  ChatInterfaceState.swift
 //  Telegram-Mac

@@ -368,7 +368,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         mw = window
         
-        #if !APP_STORE
+        #if BETA || DEBUG
             if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
                 AppCenter.start(withAppSecret: secret, services: [Crashes.self])
             }

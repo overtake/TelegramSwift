@@ -946,7 +946,7 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId, isGrou
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().statsBoosts)
+    let controller = InputDataController(dataSignal: signal, title: strings().statsBoosts, removeAfterDisappear: false, hasDone: false)
     
     controller.contextObject = boostersContext
     

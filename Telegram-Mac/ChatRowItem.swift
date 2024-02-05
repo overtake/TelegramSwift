@@ -3286,9 +3286,9 @@ class ChatRowItem: TableRowItem {
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
                             showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                         }))
-                    }))
+                    })).detectBold(with: .medium(.text))
                     aboveLayout = TextViewLayout(attributed, maximumNumberOfLines: 2, alignment: .center)
-                    aboveLayout?.measure(width: w_width - 10)
+                    aboveLayout?.measure(width: w_width - 24)
                     aboveLayout?.interactions = globalLinkExecutor
                 } else {
                     aboveLayout = nil

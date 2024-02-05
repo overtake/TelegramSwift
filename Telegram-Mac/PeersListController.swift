@@ -3102,7 +3102,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
 
-    
+    override func firstResponder() -> NSResponder? {
+        return genericView.searchView.input
+    }
         
 }
 
