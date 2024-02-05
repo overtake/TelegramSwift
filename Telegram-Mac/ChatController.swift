@@ -2403,7 +2403,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let messageIndex = messageIndex {
                 self.setLocation(.init(content: .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper), tag: locationValue?.tag, id: self.takeNextHistoryLocationId()))
             } else if let location = self.locationValue {
-                self.setLocation(.init(content: location.content, tag: location.tag, id: location.id + 1))
+                self.setLocation(.init(content: location.content, tag: location.tag, id: self.takeNextHistoryLocationId()))
             }
         }
         
@@ -2651,7 +2651,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 updateType = _type
                 if !wasUsedLocation {
                     scrollPosition = searchStateUpdated ? nil : _scrollPosition
-                    wasUsedLocation = true
+                    delay(2.0, onQueue: messagesViewQueue.queue, closure: {
+                        wasUsedLocation = true
+                    })
                 } else {
                     scrollPosition = nil
                 }
@@ -6581,6 +6583,25 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         collectFloatingPhotos(animated: animated && transition.state.isNone, currentAnimationRows: currentAnimationRows)
 
         
+        var contains = false
+        
+        genericView.tableView.enumerateItems(with: { item in
+            if let item = item as? ChatRowItem {
+                if item.message?.id.id == 27718 {
+                    contains = true
+                    return false
+                }
+            }
+            return true
+        })
+        
+        if contains {
+            var bp = 0
+            bp += 1
+        } else {
+            var bp = 0
+            bp += 1
+        }
         
         self.genericView.tableView.notifyScrollHandlers()
         
