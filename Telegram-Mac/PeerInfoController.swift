@@ -21,7 +21,12 @@ class PeerInfoArguments {
     let isAd: Bool
     let pushViewController:(ViewController) -> Void
     
-    var peer: Peer?
+    var peer: Peer? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
     
     var effectivePeerId: PeerId {
         if let peer = peer as? TelegramSecretChat {
