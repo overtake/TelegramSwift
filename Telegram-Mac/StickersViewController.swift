@@ -458,6 +458,12 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
             
             if !view.orderedItemListsViews[0].items.isEmpty {
                 var files:[TelegramMediaFile] = []
+                var maxStickers: Int32 = 20
+                if context.isPremium {
+                    maxStickers = 82
+                } else {
+                    maxStickers = 20
+                }
                 for item in view.orderedItemListsViews[0].items {
                     if let entry = item.contents.get(RecentMediaItem.self) {
                         let file = entry.media
@@ -468,7 +474,7 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                             }
                         }
                     }
-                    if files.count == 20 {
+                    if files.count == maxStickers {
                         break
                     }
                 }
