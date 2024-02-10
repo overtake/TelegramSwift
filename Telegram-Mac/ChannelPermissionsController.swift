@@ -411,7 +411,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }
         
-        insertBoost(effectiveRightsFlags)
 
         if !channel.flags.contains(.isGigagroup) {
             insertSlowMode(cachedData.slowModeTimeout)
@@ -419,6 +418,9 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
+        
+        insertBoost(effectiveRightsFlags)
+
 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_kicked, data: .init(name: strings().groupInfoPermissionsRemoved, color: theme.colors.text, type: .nextContext(cachedData.participantsSummary.kickedCount.flatMap({ "\($0 > 0 ? "\($0)" : "")" }) ?? ""), viewType: .singleItem, action: arguments.openKicked)))
 
@@ -675,6 +677,7 @@ final class ChannelPermissionsController : TableViewController {
                 var current = current
                 current.peer = PeerEquatable(peerView.peers[peerId])
                 current.cachedData = CachedDataEquatable(peerView.cachedData)
+                current.restrictBoosters = (peerView.cachedData as? CachedChannelData)?.boostsToUnrestrict
                 return current
             }
         }))
@@ -934,6 +937,7 @@ final class ChannelPermissionsController : TableViewController {
                 current.restrictBoosters = value
                 return current
             }
+            _ = context.engine.peers.updateChannelBoostsToUnlockRestrictions(peerId: peerId, boosts: value == nil ? 0 : value!).start()
         })
         
         let previous = Atomic<[AppearanceWrapperEntry<InputDataEntry>]>(value: [])

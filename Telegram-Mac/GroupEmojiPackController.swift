@@ -17,10 +17,12 @@ private final class Arguments {
     let context: AccountContext
     let select:(State.Item)->Void
     let openStickerBot:(String)->Void
-    init(context: AccountContext, select:@escaping(State.Item)->Void, openStickerBot:@escaping(String)->Void) {
+    let deselect:()->Void
+    init(context: AccountContext, select:@escaping(State.Item)->Void, openStickerBot:@escaping(String)->Void, deselect:@escaping()->Void) {
         self.context = context
         self.select = select
         self.openStickerBot = openStickerBot
+        self.deselect = deselect
     }
 }
 
@@ -94,9 +96,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if let item = state.selected {
                 let tuple = Tuple(item: item, selected: false, viewType: .lastItem)
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack_selected(tuple.item.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                    return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: tuple.item.info, topItem: tuple.item.item, itemCount: tuple.item.count, unread: false, editing: .init(editable: false, editing: false), enabled: true, control: tuple.selected ? .selected : .empty, viewType: tuple.viewType, action: {
+                    return StickerSetTableRowItem(initialSize, context: arguments.context, stableId: stableId, info: tuple.item.info, topItem: tuple.item.item, itemCount: tuple.item.count, unread: false, editing: .init(editable: false, editing: false), enabled: true, control: tuple.selected ? .selected : .remove, viewType: tuple.viewType, action: {
                         arguments.select(tuple.item)
-                    })
+                    }, removePack: arguments.deselect)
                 }))
             } else if let string = state.string, !string.isEmpty {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -294,6 +296,13 @@ func GroupEmojiPackController(context: AccountContext, peerId: PeerId, selected:
                 context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
             }
         })
+    }, deselect: {
+        updateState { current in
+            var current = current
+            current.selected = nil
+            current.string = nil
+            return current
+        }
     })
     
     let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in

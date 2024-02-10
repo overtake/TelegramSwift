@@ -249,7 +249,7 @@ private struct State : Equatable {
         var items:[StickerPackItem]
         var dict:[MediaId: StickerPackItem]
         var installed: Bool
-        
+        var groupEmojiPack: Bool = false
         static func ==(lhs: Section, rhs: Section) -> Bool {
             if lhs.info != rhs.info {
                 return false
@@ -261,6 +261,9 @@ private struct State : Equatable {
                 return false
             }
             if lhs.dict.count != rhs.dict.count {
+                return false
+            }
+            if lhs.groupEmojiPack != rhs.groupEmojiPack {
                 return false
             }
             return true
@@ -831,7 +834,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         var tuples:[Tuple] = []
-        //NSLog("name: \(section.info.title), count: \(section.items.count), \(section.items.map { $0.file.customEmojiText })")
 
         let chunks = section.items.chunks(24)
         var string: String = "a"
@@ -842,7 +844,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         for tuple in tuples {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, groupEmojiPack: tuple.section.groupEmojiPack, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
                     arguments.viewSet(info)
                 }, showAllItems: {
                     arguments.showAllItems(section.info.id.id)
@@ -1798,6 +1800,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
     
+    private var groupEmojiPack: Signal<(StickerPackCollectionInfo, [StickerPackItem])?, NoError> = .single(nil)
+
+    
     private var updateState: (((State) -> State) -> Void)? = nil
     private var scrollOnAppear:(()->Void)? = nil
     
@@ -2200,27 +2205,6 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
             }
             |> take(1)
-        } else if mode == .emoji {
-            if let peer = chatInteraction?.peer, peer.isGroup || peer.isSupergroup {
-                let emojiPack = getCachedDataView(peerId: peer.id, postbox: context.account.postbox) |> map { $0 as? CachedChannelData } |> map { $0?.emojiPack }
-                iconStatusEmoji = emojiPack |> mapToSignal { info in
-                    if let info = info {
-                        return context.engine.stickers.loadedStickerPack(reference: .id(id: info.id.id, accessHash: info.accessHash), forceActualized: false)
-                        |> map { result -> [TelegramMediaFile] in
-                            switch result {
-                            case let .result(_, items, _):
-                                return items.map(\.file)
-                            default:
-                                return []
-                            }
-                        }
-                        |> take(1)
-                    } else {
-                        return .single([])
-                    }
-                    
-                }
-            }
         }
         
  
@@ -2290,7 +2274,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
 //            }
 //        }
         
-        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories, availableReactions in
+        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -2389,11 +2373,34 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 var current = current
                 var sections: [State.Section] = []
                 var itemsDict: [MediaId: StickerPackItem] = [:]
+                
+                if let groupEmojiPack = groupEmojiPack {
+                    var files: [StickerPackItem] = []
+                    var dict: [MediaId: StickerPackItem] = [:]
+                    for item in groupEmojiPack.1 {
+                        var updated = item
+                        var attrs = item.file.attributes
+                        loop: for (i, attr) in attrs.enumerated() {
+                            switch attr {
+                            case let .CustomEmoji(isPremium, isSingleColor, alt, packReference):
+                                attrs[i] = .CustomEmoji(isPremium: false, isSingleColor: isSingleColor, alt: alt, packReference: packReference)
+                                break loop;
+                            default:
+                                break
+                            }
+                        }
+                        updated = StickerPackItem(index: updated.index, file: item.file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
+                        files.append(updated)
+                        dict[item.file.fileId] = updated
+                        itemsDict[item.file.fileId] = updated
+                    }
+                    sections.append(.init(info: groupEmojiPack.0, items: files, dict: dict, installed: true, groupEmojiPack: true))
+                }
                 for (_, info, _) in view.collectionInfos {
                     var files: [StickerPackItem] = []
                     var dict: [MediaId: StickerPackItem] = [:]
                     
-                    if let info = info as? StickerPackCollectionInfo {
+                    if let info = info as? StickerPackCollectionInfo, !sections.contains(where: { $0.info.id == info.id }) {
                         let items = view.entries
                         for (i, entry) in items.enumerated() {
                             if entry.index.collectionId == info.id {
@@ -2486,6 +2493,34 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        let context = chatInteraction.context
+        
+        if mode == .emoji {
+            if let peer = chatInteraction.peer, peer.isSupergroup {
+                let emojiPack = getCachedDataView(peerId: peer.id, postbox: context.account.postbox) |> map { $0 as? CachedChannelData } |> map { $0?.emojiPack }
+                groupEmojiPack = emojiPack |> mapToSignal { info in
+                    if let info = info {
+                        return context.engine.stickers.loadedStickerPack(reference: .id(id: info.id.id, accessHash: info.accessHash), forceActualized: false)
+                        |> map { result in
+                            switch result {
+                            case let .result(info, items, _):
+                                return (info, items)
+                            default:
+                                return nil
+                            }
+                        }
+                        |> take(1)
+                    } else {
+                        return .single(nil)
+                    }
+                    
+                }
+            } else {
+                groupEmojiPack = .single(nil)
+            }
+        } else {
+            groupEmojiPack = .single(nil)
+        }
     }
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {

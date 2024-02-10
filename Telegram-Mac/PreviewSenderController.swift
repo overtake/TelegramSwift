@@ -1369,7 +1369,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                         input = ChatTextInputState()
                     }
                 }
-                if additionalMessage != nil, let text = permissionText(from: peer, for: .banSendText) {
+                if additionalMessage != nil, let text = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData) {
                     permissions.insert((text, -1), at: 0)
                 }
                 
@@ -1380,9 +1380,19 @@ class PreviewSenderController: ModalViewController, Notifable {
                         self.genericView.textView.shake(beep: true)
                     }
                 }
+                
                 if let first = permissions.first {
-                    showModalText(for: context.window, text: first.0)
-                    return
+                    if let totalBoostNeed = chatInteraction.presentation.totalBoostNeed {
+                        if totalBoostNeed > 0 {
+                            verifyAlert(for: context.window, information: strings().boostGroupChatInputSendMedia, ok: strings().boostGroupChatInputBoost, successHandler: { [weak self] _ in
+                                self?.chatInteraction.boostToUnrestrict(.unblockText(totalBoostNeed))
+                            })
+                            return
+                        }
+                    } else {
+                        showModalText(for: context.window, text: first.0)
+                        return
+                    }
                 }
                 
                 self.sent = true

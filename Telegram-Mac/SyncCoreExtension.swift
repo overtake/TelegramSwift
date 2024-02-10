@@ -9,6 +9,7 @@
 import Cocoa
 import TelegramCore
 import TGUIKit
+import Postbox
 
 extension PixelDimensions {
     var size: CGSize {
@@ -29,5 +30,147 @@ extension CGSize {
 
 enum AppLogEvents : String {
     case imageEditor = "image_editor_used"
+}
+
+
+extension Peer {
+    var isUser:Bool {
+        return self is TelegramUser
+    }
+    var isSecretChat:Bool {
+        return self is TelegramSecretChat
+    }
+    var isGroup:Bool {
+        return self is TelegramGroup
+    }
+    var canManageDestructTimer: Bool {
+        if self is TelegramSecretChat {
+            return true
+        }
+        if self.isUser && !self.isBot {
+            return true
+        }
+        if let peer = self as? TelegramChannel {
+            if let adminRights = peer.adminRights, adminRights.rights.contains(.canDeleteMessages) {
+                return true
+            } else if peer.groupAccess.isCreator {
+                return true
+            }
+            return false
+        }
+        if let peer = self as? TelegramGroup {
+            switch peer.role {
+            case .admin, .creator:
+                return true
+            default:
+                break
+            }
+        }
+        return false
+    }
+    
+    var storyArchived: Bool {
+        if let user = self as? TelegramUser {
+            return user.storiesHidden ?? false
+        }
+        if let user = self as? TelegramChannel {
+            return user.storiesHidden ?? false
+        }
+        return false
+    }
+
+    var canClearHistory: Bool {
+        if self.isGroup || self.isUser || (self.isSupergroup && self.addressName == nil) {
+            if let peer = self as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
+                return true
+            }
+        }
+        if self is TelegramSecretChat {
+            return true
+        }
+        return false
+    }
+    
+    func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
+        if let peer = self as? TelegramChannel {
+            if let restrictionInfo = peer.restrictionInfo {
+                for rule in restrictionInfo.rules {
+                    #if APP_STORE
+                    if rule.platform == "ios" || rule.platform == "all" {
+                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason)
+                    }
+                    #endif
+                }
+            }
+        }
+        return false
+    }
+    
+    var restrictionText:String? {
+        if let peer = self as? TelegramChannel {
+            if let restrictionInfo = peer.restrictionInfo {
+                for rule in restrictionInfo.rules {
+                    if rule.platform == "ios" || rule.platform == "all" {
+                        return rule.text
+                    }
+                }
+            }
+        }
+        return nil
+    }
+    
+    var botInfo: BotUserInfo? {
+        if let peer = self as? TelegramUser {
+            return peer.botInfo
+        }
+        return nil
+    }
+    
+    var isSupergroup:Bool {
+        if let peer = self as? TelegramChannel {
+            switch peer.info {
+            case .group:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    var isBot:Bool {
+        if let user = self as? TelegramUser {
+            return user.botInfo != nil
+        }
+        return false
+    }
+
+    var canCall:Bool {
+        return isUser && !isBot && ((self as! TelegramUser).phone != "42777") && ((self as! TelegramUser).phone != "42470") && ((self as! TelegramUser).phone != "4240004")
+    }
+    var isChannel:Bool {
+        if let peer = self as? TelegramChannel {
+            switch peer.info {
+            case .broadcast:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
+    var isAdmin: Bool {
+        if let peer = self as? TelegramChannel {
+            return peer.adminRights != nil || peer.flags.contains(.isCreator)
+        }
+        return false
+    }
+    
+    var isGigagroup:Bool {
+        if let peer = self as? TelegramChannel {
+            return peer.flags.contains(.isGigagroup)
+        }
+        return false
+    }
 }
 

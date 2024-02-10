@@ -575,7 +575,7 @@ final class ChatTextInputState: Codable, Equatable {
                             let test = lang.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                             if test.length == lang.length {
                                 language = lang
-                                offsetRanges.append(NSMakeRange(newLineRange.location, lang.length))
+                                offsetRanges.append(NSMakeRange(matchIndex + newLineRange.location, lang.length))
                                 text = String(text.nsstring.substring(with: NSMakeRange(newLineRange.location, text.length - newLineRange.location)))
                                 rawOffset -= newLineRange.location
                             }

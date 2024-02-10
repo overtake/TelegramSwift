@@ -543,6 +543,51 @@ class ChatPresentationInterfaceState: Equatable {
         return inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
     }
     
+    var boostNeed: Int32 {
+        if let cachedData = cachedData as? CachedChannelData, peer?.isAdmin == false {
+            if let boostsToUnrestrict = cachedData.boostsToUnrestrict, slowMode?.timeout != nil {
+                let appliedBoosts = cachedData.appliedBoosts ?? 0
+                if boostsToUnrestrict > appliedBoosts {
+                    return boostsToUnrestrict - appliedBoosts
+                }
+            }
+        }
+        return 0
+    }
+        
+    var passBoostRestrictions: Bool {
+        if let cachedData = cachedData as? CachedChannelData, peer?.isAdmin == false {
+            if let boostsToUnrestrict = cachedData.boostsToUnrestrict {
+                let appliedBoosts = cachedData.appliedBoosts ?? 0
+                return boostsToUnrestrict <= appliedBoosts
+            }
+        }
+        return false
+    }
+    
+    var totalBoostNeed: Int32? {
+        if let cachedData = cachedData as? CachedChannelData, peer?.isAdmin == false {
+            if let boostsToUnrestrict = cachedData.boostsToUnrestrict {
+                let appliedBoosts = cachedData.appliedBoosts ?? 0
+                if boostsToUnrestrict > appliedBoosts {
+                    return boostsToUnrestrict
+                } else {
+                    return 0
+                }
+            }
+        }
+        return nil
+    }
+    
+    var restrictedByBoosts: Bool {
+        if let cachedData = cachedData as? CachedChannelData, peer?.isAdmin == false {
+            if let boostsToUnrestrict = cachedData.boostsToUnrestrict {
+                return boostsToUnrestrict > 0
+            }
+        }
+        return false
+    }
+    
     var effectiveInputContext: ChatPresentationInputQuery {
         let current = inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
         if case .contextRequest = current {
@@ -779,9 +824,20 @@ class ChatPresentationInterfaceState: Equatable {
                 }, nil)
             }
             
-            if let peer = peer as? TelegramChannel, !peer.hasPermission(.sendSomething) {
+            //, !peer.hasPermission(.sendSomething)
+            
+            if let peer = peer as? TelegramChannel {
                 if let text = permissionText(from: peer, for: .banSendText) {
-                    return .restricted(text)
+                    if let cachedData = cachedData as? CachedChannelData, let boostsToRestrict = cachedData.boostsToUnrestrict {
+                        let appliedBoosts = cachedData.appliedBoosts ?? 0
+                        if boostsToRestrict > appliedBoosts {
+                            return .action(strings().boostGroupChatInputAction, { chatInteraction in
+                                chatInteraction.boostToUnrestrict(.unblockText(boostsToRestrict))
+                            }, nil)
+                        }
+                    } else {
+                        return .restricted(text)
+                    }
                 }
             }
             

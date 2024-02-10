@@ -220,7 +220,7 @@ class ChatInputView: View, Notifable {
             return strings().messagesPlaceholderSentMessage
         }
         
-        if let _ = permissionText(from: peer, for: .banSendText), chatInteraction.presentation.state == .normal {
+        if let _ = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), chatInteraction.presentation.state == .normal {
             return strings().channelPersmissionMessageBlock
         }
         
@@ -572,7 +572,7 @@ class ChatInputView: View, Notifable {
             self.accessory.change(opacity: 0.0, animated: animated)
         }
         
-        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText), state == .normal {
+        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), state == .normal {
             let context = chatInteraction.context
             let current: Control
             if let view = self.disallowText {
@@ -600,7 +600,7 @@ class ChatInputView: View, Notifable {
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
         
-        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText), state.state == .normal {
+        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText, cachedData: state.cachedData), state.state == .normal {
             textView.inputView.isEditable = false
             textView.isHidden = false
         } else {

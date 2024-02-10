@@ -65,6 +65,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private var nameView:TextView?
     private var adminBadge: TextView?
+    private var boostBadge: InteractiveTextView?
     let rightView:ChatRightView = ChatRightView(frame:NSZeroRect)
     private(set) var selectingView:SelectingControl?
     private var mouseDragged: Bool = false
@@ -726,7 +727,28 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let adminBadge = item.adminBadge, let authorText = item.authorText else {return NSZeroPoint}
         let bubbleFrame = self.bubbleFrame(item)
         let namePoint = self.namePoint(item)
-        var point = NSMakePoint( item.isBubbled ? bubbleFrame.maxX - item.bubbleContentInset - adminBadge.layoutSize.width : namePoint.x + authorText.layoutSize.width, item.defaultContentTopOffset + 1)
+        
+        var offset: CGFloat = adminBadge.layoutSize.width
+        if let boostBadge = item.boostBadge {
+            offset += boostBadge.layoutSize.width
+        }
+        
+        var point = NSMakePoint( item.isBubbled ? bubbleFrame.maxX - item.bubbleContentInset - offset : namePoint.x + authorText.layoutSize.width, item.defaultContentTopOffset + 1)
+        
+        if !item.isBubbled {
+            point.x += max(0, item.statusSize - 2)
+        }
+
+        if item.isBubbled {
+            point.y -= item.topInset
+        }
+        return point
+    }
+    func boostBadgePoint(_ item: ChatRowItem) -> NSPoint {
+        guard let boostBadge = item.boostBadge, let authorText = item.authorText else {return NSZeroPoint}
+        let bubbleFrame = self.bubbleFrame(item)
+        let namePoint = self.namePoint(item)
+        var point = NSMakePoint( item.isBubbled ? bubbleFrame.maxX - item.bubbleContentInset - boostBadge.layoutSize.width : namePoint.x + authorText.layoutSize.width, item.defaultContentTopOffset + 1)
         
         if !item.isBubbled {
             point.x += max(0, item.statusSize - 2)
@@ -1442,6 +1464,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     performSubviewRemoval(view, animated: animated, scale: true)
                     self.adminBadge = nil
                 }
+                if let view = boostBadge {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.boostBadge = nil
+                }
                 
                 if viaAccessory == nil {
                     viaAccessory = ChatBubbleViaAccessory(frame: NSZeroRect)
@@ -1464,6 +1490,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     nameView = TextView(frame: CGRect(origin: namePoint(item), size: author.layoutSize))
                     nameView?.isSelectable = false
                     rowView.addSubview(nameView!)
+                }
+                if let boostBadge = item.boostBadge {
+                    if self.boostBadge == nil {
+                        self.boostBadge = InteractiveTextView(frame: CGRect(origin: boostBadgePoint(item), size: boostBadge.layoutSize))
+                        self.boostBadge?.scaleOnClick = true
+                        rowView.addSubview(self.boostBadge!)
+                    }
+                    self.boostBadge?.removeAllHandlers()
+                    self.boostBadge?.set(handler: { [weak item] _ in
+                        item?.boost()
+                    }, for: .Click)
+                    self.boostBadge?.set(text: boostBadge, context: item.context)
+                } else {
+                    if let view = boostBadge {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.boostBadge = nil
+                    }
                 }
                 if let adminBadge = item.adminBadge {
                     if self.adminBadge == nil {
@@ -1494,6 +1537,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if let view = adminBadge {
                 performSubviewRemoval(view, animated: animated, scale: true)
                 self.adminBadge = nil
+            }
+            if let view = boostBadge {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.boostBadge = nil
             }
         }
     }
@@ -1641,7 +1688,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let rect: NSRect
                 let tempRect: NSRect
             }
-            var views:[NSView] = [self.rightView, self.nameView, self.statusControl, self.forwardStatusControl, self.replyView, self.adminBadge, self.forwardName, self.viaAccessory].compactMap { $0 }
+            var views:[NSView] = [self.rightView, self.nameView, self.statusControl, self.forwardStatusControl, self.replyView, self.adminBadge, self.boostBadge, self.forwardName, self.viaAccessory].compactMap { $0 }
             views.append(contentsOf: self.captionViews.map { $0.view })
             let shakeItems = views.map { view -> ShakeItem in
                 return ShakeItem(view: view, rect: view.frame, tempRect: self.bubbleView.convert(view.frame, from: view.superview))
@@ -1816,6 +1863,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let view = adminBadge {
             transition.updateFrame(view: view, frame: CGRect(origin: adminBadgePoint(item), size: view.frame.size))
+        }
+        if let view = boostBadge {
+            transition.updateFrame(view: view, frame: CGRect(origin: boostBadgePoint(item), size: view.frame.size))
         }
         if let view = viaAccessory {
             transition.updateFrame(view: view, frame: CGRect(origin: viaAccesoryPoint(item), size: view.frame.size))

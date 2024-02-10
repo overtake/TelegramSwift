@@ -522,6 +522,10 @@
 		27BCE40F2A409FDD0015E5EE /* StoryContactHiddenItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */; };
 		27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */; };
 		27BCE41D2A49D0F10015E5EE /* ChatListEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */; };
+		27C1FF452B71F35A00B086E3 /* InteractiveTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */; };
+		27C1FF472B7275EE00B086E3 /* PeerInfoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */; };
+		27C1FF4D2B749D6D00B086E3 /* ShelfPack in Frameworks */ = {isa = PBXBuildFile; productRef = 27C1FF4C2B749D6D00B086E3 /* ShelfPack */; };
+		27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */ = {isa = PBXBuildFile; productRef = 27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */; };
 		27C2B1A627C3CF13004BC87B /* FetchManager in Frameworks */ = {isa = PBXBuildFile; productRef = 27C2B1A527C3CF13004BC87B /* FetchManager */; };
 		27C2B1A827C3D54F004BC87B /* StoreDownloadedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C2B1A727C3D54F004BC87B /* StoreDownloadedMedia.swift */; };
 		27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */; };
@@ -1977,6 +1981,8 @@
 		27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryContactHiddenItem.swift; sourceTree = "<group>"; };
 		27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_save_to_profile.tgs; sourceTree = "<group>"; };
 		27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListEmptyItem.swift; sourceTree = "<group>"; };
+		27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveTextView.swift; sourceTree = "<group>"; };
+		27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = PrivateCallScreen; path = packages/PrivateCallScreen; sourceTree = "<group>"; };
 		27C2B1A727C3D54F004BC87B /* StoreDownloadedMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDownloadedMedia.swift; sourceTree = "<group>"; };
 		27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralLoadingRowItem.swift; sourceTree = "<group>"; };
 		27C4089025B068C300372302 /* InviteLinkRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinkRowItem.swift; sourceTree = "<group>"; };
@@ -2931,6 +2937,7 @@
 				277C209527A2F5940070B3BF /* ManagedFile in Frameworks */,
 				2745FED1274F950100546B05 /* Svg in Frameworks */,
 				278926C927550C8C00923087 /* Colors in Frameworks */,
+				27C1FF4D2B749D6D00B086E3 /* ShelfPack in Frameworks */,
 				2745FED3274F951100546B05 /* FastBlur in Frameworks */,
 				27F3B75E2739320F00B81F10 /* TGUIKit in Frameworks */,
 				27F3B75C2739320000B81F10 /* SwiftSignalKit in Frameworks */,
@@ -2943,6 +2950,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */,
 				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
 				27034076282CF79E00D0156C /* SceneKit.framework in Frameworks */,
 				27D43DA1279176E0006968A6 /* libavutil.a in Frameworks */,
@@ -3560,6 +3568,13 @@
 			name = viewers;
 			sourceTree = "<group>";
 		};
+		27C1FF482B7499DF00B086E3 /* modern */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = modern;
+			sourceTree = "<group>";
+		};
 		27CE153E297966A6001F8CE8 /* categories */ = {
 			isa = PBXGroup;
 			children = (
@@ -3826,6 +3841,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
 				27B8361A2B5FCCF800E82683 /* Dock */,
 				27B6AFB22B555C03001D0983 /* CallVideoLayer */,
 				27F3BB752B48373A00BC37C2 /* TelegramMedia */,
@@ -5337,6 +5353,7 @@
 			isa = PBXGroup;
 			children = (
 				C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */,
+				27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */,
 			);
 			name = controls;
 			sourceTree = "<group>";
@@ -5679,6 +5696,7 @@
 		D00B191A24E54B83006CCB87 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				27C1FF482B7499DF00B086E3 /* modern */,
 				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
 				D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */,
 				D00B191D24E54F20006CCB87 /* CallStatusView.swift */,
@@ -6087,6 +6105,7 @@
 				27EE444B297FD91B0077AA0F /* DateUtils */,
 				27EE444D297FD9950077AA0F /* CalendarUtils */,
 				27AAAD5B29A4A2E600F70A9A /* System */,
+				27C1FF4C2B749D6D00B086E3 /* ShelfPack */,
 			);
 			productName = TelegramShare;
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
@@ -6183,6 +6202,7 @@
 				27F3BB762B48375800BC37C2 /* TelegramMedia */,
 				27B6AFB32B557BEE001D0983 /* CallVideoLayer */,
 				27B8361B2B5FCD0300E82683 /* Dock */,
+				27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -6734,6 +6754,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27C1FF472B7275EE00B086E3 /* PeerInfoUtils.swift in Sources */,
 				275C14182A67F1CB000DDACF /* AvatarStoryControl.swift in Sources */,
 				27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */,
 				2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */,
@@ -7403,6 +7424,7 @@
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
 				C29C3E5B1E421F1700193A7E /* ChatAccessoryModel.swift in Sources */,
 				274B9E4227300C79009993C7 /* ChatCalendarMonthRowItem.swift in Sources */,
+				27C1FF452B71F35A00B086E3 /* InteractiveTextView.swift in Sources */,
 				9FC4DA9A21DD0BE6003E2A62 /* CachedChannelAdmins.swift in Sources */,
 				9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */,
 				C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */,
@@ -8326,6 +8348,14 @@
 		27B8E7C527425279001B8DF7 /* TGModernGrowingTextView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGModernGrowingTextView;
+		};
+		27C1FF4C2B749D6D00B086E3 /* ShelfPack */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ShelfPack;
+		};
+		27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PrivateCallScreen;
 		};
 		27C2B1A527C3CF13004BC87B /* FetchManager */ = {
 			isa = XCSwiftPackageProductDependency;

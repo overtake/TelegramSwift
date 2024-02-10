@@ -242,11 +242,16 @@ class GeneralTextRowView : GeneralRowView {
         if let text = item.rightItem.text {
             if self.rightTextView == nil {
                 self.rightTextView = TextView()
+                rightTextView?.layer?.cornerRadius = .cornerRadius
                 addSubview(self.rightTextView!)
             }
             
+            if let wrap = item.rightItem.wrap {
+                rightTextView?.backgroundColor = wrap
+            }
             
-            let textLayout = TextViewLayout(text)
+            let textLayout = TextViewLayout(text, alignment: .center)
+            
             textLayout.measure(width: .greatestFiniteMagnitude)
             
             var animatedData:InputDataTextInsertAnimatedViewData?
@@ -269,16 +274,24 @@ class GeneralTextRowView : GeneralRowView {
                 self.animatedView = nil
             }
             
-            self.rightTextView?.update(textLayout)
-            self.rightTextView?.isSelectable = false
-            self.rightTextView?.userInteractionEnabled = item.rightItem.action != nil
-            
-            if let action = item.rightItem.action {
-                self.rightTextView?.removeAllHandlers()
-                self.rightTextView?.set(handler: { _ in
-                    action()
-                }, for: .Click)
+            if let rightTextView = rightTextView {
+                rightTextView.update(textLayout)
+                
+                if item.rightItem.alignToText {
+                    rightTextView.setFrameSize(rightTextView.frame.width + 6, rightTextView.frame.height + 4)
+                }
+                
+                rightTextView.isSelectable = false
+                rightTextView.userInteractionEnabled = item.rightItem.action != nil
+                
+                if let action = item.rightItem.action {
+                    rightTextView.removeAllHandlers()
+                    rightTextView.set(handler: { _ in
+                        action()
+                    }, for: .Click)
+                }
             }
+           
         } else {
             self.rightTextView?.removeFromSuperview()
             self.rightTextView = nil
@@ -346,7 +359,12 @@ class GeneralTextRowView : GeneralRowView {
                         progressView.progressColor = item.textColor
                     }
                     if let rightTextView = self.rightTextView {
-                        rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, frame.height - insets.bottom - rightTextView.frame.height))
+                        
+                        if item.rightItem.alignToText {
+                            rightTextView.setFrameOrigin(NSMakePoint(textView.frame.maxX + 3, textView.frame.minY - 1))
+                        } else {
+                            rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, frame.height - insets.bottom - rightTextView.frame.height))
+                        }
                         
                         if let layout = rightTextView.textLayout {
                             var animatedRange: NSRange? = nil

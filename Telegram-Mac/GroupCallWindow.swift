@@ -26,13 +26,13 @@ private func generatePeerControl(_ icon: CGImage, background: NSColor) -> CGImag
 
 struct GroupCallTheme {
     static var membersColor:NSColor {
-        darkAppearance.colors.background
+        return darkAppearance.colors.background
     }
     static var windowBackground: NSColor {
-        darkAppearance.colors.listBackground
+        return darkAppearance.colors.listBackground
     }
     static var grayStatusColor: NSColor {
-        darkAppearance.colors.grayText
+        return darkAppearance.colors.grayText
     }
     static var blueStatusColor: NSColor {
         return darkAppearance.colors.accent

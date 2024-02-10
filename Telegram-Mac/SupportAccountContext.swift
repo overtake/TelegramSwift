@@ -34,7 +34,7 @@ final class SupportAccountContext {
     func open(account: Account) {
         
         let data = combineLatest(TelegramEngine(account: account).peers.updatedChatListFilters(), chatListFolderSettings(account.postbox)) |> map {
-            return ChatListFolders(list: $0, sidebar: $1.sidebar)
+            return ChatListFolders(list: $0, sidebar: $1.sidebar, showTags: $1.showTags)
         }
         |> deliverOnMainQueue
         |> take(1)

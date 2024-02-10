@@ -310,11 +310,20 @@ func checkMediaPermission(_ media: Media, for peer: Peer?) -> String? {
     }
 }
 
-func permissionText(from peer: Peer?, for flags: TelegramChatBannedRightsFlags) -> String? {
+func permissionText(from peer: Peer?, for flags: TelegramChatBannedRightsFlags, cachedData: CachedPeerData? = nil) -> String? {
     guard let peer = peer else {
         return nil
     }
     var bannedPermission: (Int32, Bool)?
+    
+    if let cachedData = cachedData as? CachedChannelData, !peer.isAdmin {
+        if let boostsToUnrestrict = cachedData.boostsToUnrestrict {
+            let appliedBoosts = cachedData.appliedBoosts ?? 0
+            if boostsToUnrestrict <= appliedBoosts {
+                return nil
+            }
+        }
+    }
     
     let get:(TelegramChatBannedRightsFlags) -> (Int32, Bool)? = { flags in
         if let channel = peer as? TelegramChannel {
@@ -469,7 +478,7 @@ extension Peer {
         return false
     }
     
-    func canSendMessage(_ isThreadMode: Bool = false, media: Media? = nil, threadData: MessageHistoryThreadData? = nil) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false, media: Media? = nil, threadData: MessageHistoryThreadData? = nil, cachedData: CachedPeerData? = nil) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
@@ -485,6 +494,13 @@ extension Peer {
                 if let data = threadData {
                     if data.isClosed, channel.adminRights == nil && !channel.flags.contains(.isCreator) && !data.isOwnedByMe {
                         return false
+                    }
+                }
+                
+                if let cachedData = cachedData as? CachedChannelData, let boostsToUnrestrict = cachedData.boostsToUnrestrict {
+                    let appliedBoosts = cachedData.appliedBoosts ?? 0
+                    if boostsToUnrestrict <= appliedBoosts {
+                        return true
                     }
                 }
                 

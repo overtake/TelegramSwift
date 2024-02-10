@@ -252,6 +252,10 @@ private struct State : Equatable {
     var boosted: Bool {
         return status.boostedByMe
     }
+    var boostedByMe: Int32 {
+        return Int32(myStatus?.boosts.filter { $0.peer?.id == self.peer.peer.id }.count ?? 0)
+    }
+    
     var link: String {
         if let address = peer.peer.addressName {
             return "https://t.me/\(address)?boost"
@@ -419,9 +423,9 @@ private final class BoostRowItem : TableRowItem {
                     let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     if remaining == 0 {
                         if state.isGroup {
-                            string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level + 1)")
+                            string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level)")
                         } else {
-                            string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level + 1)")
+                            string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level)")
                         }
                     } else {
                         string = strings().channelBoostBoostedChannelMoreRequiredNew(valueString)
@@ -443,16 +447,16 @@ private final class BoostRowItem : TableRowItem {
                         }
                     } else {
                         if state.isGroup {
-                            string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level + 1)")
+                            string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level)")
                         } else {
-                            string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level + 1)")
+                            string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level)")
                         }
                     }
                 } else {
                     if state.isGroup {
-                        string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level + 1)")
+                        string = strings().channelBoostBoostedChannelReachedLevelGroup("\(level)")
                     } else {
-                        string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level + 1)")
+                        string = strings().channelBoostBoostedChannelReachedLevelChannel("\(level)")
                     }
                 }
             }
@@ -464,6 +468,26 @@ private final class BoostRowItem : TableRowItem {
             }
         }
        
+        switch state.source {
+        case let .unblockText(count):
+            if count > state.boostedByMe {
+                if state.status.nextLevelBoosts == nil {
+                    string = strings().channelBoostUnblockTextGroupFull("\(count - state.boostedByMe)")
+                } else {
+                    string = strings().channelBoostUnblockTextGroup("\(count - state.boostedByMe)", state.peer.peer.displayTitle)
+                }
+            }
+        case let .unblockSlowmode(count):
+            if count > state.boostedByMe {
+                if state.status.nextLevelBoosts == nil {
+                    string = strings().channelBoostUnblockSlowmodeGroupFull("\(count - state.boostedByMe)")
+                } else {
+                    string = strings().channelBoostUnblockSlowmodeGroup("\(count - state.boostedByMe)", state.peer.peer.displayTitle)
+                }
+            }
+        default:
+            break
+        }
 
         
         let textString = NSMutableAttributedString()
@@ -775,7 +799,7 @@ private final class BoostRowItemView : TableRowView {
         
         if self.text?.textLayout?.attributedString.string != item.text.attributedString.string {
             if let view = self.text {
-                performSubviewRemoval(view, animated: animated, scale: true)
+                performSubviewRemoval(view, animated: animated, scale: false)
                 self.text = nil
             }
             let text: TextView = TextView()
@@ -783,11 +807,10 @@ private final class BoostRowItemView : TableRowView {
             text.isSelectable = false
             self.text = text
             addSubview(text)
-            text.frame = text.centerFrameX(y: frame.height - 20 - 30 - text.frame.height - 20)
+            text.frame = text.centerFrameX(y: frame.height - text.frame.height)
             text.update(item.text)
             if animated {
                 text.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                text.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
             }
         }
        
@@ -1178,6 +1201,8 @@ enum BoostChannelSource : Equatable {
     case emojiStatus(Int32)
     case emojiPack(Int32)
     case wallpaper(Int32)
+    case unblockText(Int32)
+    case unblockSlowmode(Int32)
 }
 
 func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, onlyFeatures: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
