@@ -35,6 +35,20 @@ open class ImageView: NSView {
             }
         }
     }
+    
+    open var nsImage:NSImage? {
+        didSet {
+            let wasImage = self.layer?.contents != nil
+            self.layer?.contents = nsImage
+            if animates {
+                if !wasImage {
+                    self.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                } else {
+                    animate()
+                }
+            }
+        }
+    }
 
     open var contentGravity: CALayerContentsGravity = .center {
         didSet {

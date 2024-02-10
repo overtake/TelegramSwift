@@ -168,7 +168,8 @@ class ChatRowItem: TableRowItem {
     private(set) var authorText:TextViewLayout?
     private(set) var adminBadge:TextViewLayout?
     
-    
+    private(set) var boostBadge:TextViewLayout?
+
     
 
     var replyModel:ChatAccessoryModel?
@@ -1553,7 +1554,7 @@ class ChatRowItem: TableRowItem {
             }
             let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == chatInteraction.peerId)
             let currentTag: MessageReaction.Reaction?
-            if case let .customTag(buffer) = chatInteraction.presentation.searchMode.tag {
+            if case let .customTag(buffer, _) = chatInteraction.presentation.searchMode.tag {
                 currentTag = ReactionsMessageAttribute.reactionFromMessageTag(tag: buffer)
             } else {
                 currentTag = nil
@@ -1569,7 +1570,7 @@ class ChatRowItem: TableRowItem {
                     if !context.isPremium {
                         showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
-                        chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction)))
+                        chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction), nil))
                     }
                 })
                 
@@ -2112,6 +2113,18 @@ class ChatRowItem: TableRowItem {
                             adminBadge?.mayItems = false
                             adminBadge?.measure(width: .greatestFiniteMagnitude)
                         }
+                        
+                        var boostBadge: NSMutableAttributedString? = nil
+                        if let boostAttribute = message.boostAttribute {
+                            boostBadge = NSMutableAttributedString()
+                            boostBadge?.append(string: " \(boostAttribute.count)", color: nameColor, font: .normal(.short))
+                            boostBadge?.insert(.embedded(name: boostAttribute.count > 1 ? "Icon_Boost_Indicator_Multiple" : "Icon_Boost_Indicator_Single", color: nameColor, resize: false), at: 1)
+                        }
+                        if let boostBadge = boostBadge {
+                            self.boostBadge = TextViewLayout(boostBadge, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
+                            self.boostBadge?.mayItems = false
+                            self.boostBadge?.measure(width: .greatestFiniteMagnitude)
+                        }
                     }
                     
                     if attr.length > 0 {
@@ -2164,7 +2177,7 @@ class ChatRowItem: TableRowItem {
             //
             var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
-            let threadId: MessageId? = chatInteraction.chatLocation.threadMsgId
+            let threadId: Int64? = chatInteraction.chatLocation.threadId
             
             if let message = effectiveCommentMessage {
                 for attribute in message.attributes {
@@ -2212,7 +2225,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if attribute.messageId == attribute.threadMessageId || attribute.messageId == threadId, chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode {
+                    if attribute.messageId == attribute.threadMessageId || Int64(attribute.messageId.id) == threadId, chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode {
                         ignore = true
                     }
                     
@@ -2583,9 +2596,11 @@ class ChatRowItem: TableRowItem {
         if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, replyModel.isSideAccessory {
             var adminWidth: CGFloat = 0
             if let adminBadge = adminBadge {
-                adminWidth = adminBadge.layoutSize.width
+                adminWidth += adminBadge.layoutSize.width
             }
-            
+            if let boostBadge = boostBadge {
+                adminWidth += boostBadge.layoutSize.width
+            }
             authorText.measure(width: replyModel.size.width - 10 - adminWidth)
             
             replyModel.topOffset = authorText.layoutSize.height + 6
@@ -2593,9 +2608,11 @@ class ChatRowItem: TableRowItem {
         } else {
             var adminWidth: CGFloat = 0
             if let adminBadge = adminBadge {
-                adminWidth = adminBadge.layoutSize.width
+                adminWidth += adminBadge.layoutSize.width
             }
-            
+            if let boostBadge = boostBadge {
+                adminWidth += boostBadge.layoutSize.width
+            }
             var supplyOffset: CGFloat = 0
             if !isBubbled {
                 supplyOffset += rightSize.width
@@ -2690,7 +2707,7 @@ class ChatRowItem: TableRowItem {
     var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0) + (boostBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
@@ -2741,7 +2758,7 @@ class ChatRowItem: TableRowItem {
          
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0) + (boostBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
@@ -2978,6 +2995,25 @@ class ChatRowItem: TableRowItem {
     
     override func viewClass() -> AnyClass {
         return ChatRowView.self
+    }
+    
+    func boost() {
+        if let peerId = self.message?.id.peerId {
+            let context = self.context
+            
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        }
     }
     
     func replyAction() -> Bool {

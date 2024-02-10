@@ -102,7 +102,7 @@ extension EngineChatList.Item {
 
 
 enum UIChatListEntry : Identifiable, Comparable {
-    case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool)
+    case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool, folders: FilterData?)
     case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool, EngineStorySubscriptions?)
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
@@ -113,8 +113,8 @@ enum UIChatListEntry : Identifiable, Comparable {
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
-        case let .chat(entry, activity, additionItem, filter, generalStatus, selectedForum, appearMode, hideContent):
-            if case .chat(entry, activity, additionItem, filter, generalStatus, selectedForum, appearMode, hideContent) = rhs {
+        case let .chat(entry, activity, additionItem, filter, generalStatus, selectedForum, appearMode, hideContent, folders):
+            if case .chat(entry, activity, additionItem, filter, generalStatus, selectedForum, appearMode, hideContent, folders) = rhs {
                return true
             } else {
                 return false
@@ -172,7 +172,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var index: ChatListIndex {
         switch self {
-        case let .chat(entry, _, additionItem, _, _, _, _, _):
+        case let .chat(entry, _, additionItem, _, _, _, _, _, _):
             if let additionItem = additionItem {
                 var current = MessageIndex.absoluteUpperBound().globalPredecessor()
                 for _ in 0 ..< additionItem.index {
@@ -228,7 +228,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var stableId: UIChatListEntryId {
         switch self {
-        case let .chat(entry, _, _, filterId, _, _, _, _):
+        case let .chat(entry, _, _, filterId, _, _, _, _, _):
             if entry.renderedPeer.peer?._asPeer().isForum == true, entry.threadData == nil {
                 return .forum(entry.renderedPeer.peerId)
             } else {
@@ -263,7 +263,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 
         func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
             switch entry.entry {
-            case let .chat(item, activities, addition, filter, hideStatus, selectedForum, appearMode, hideContent):
+            case let .chat(item, activities, addition, filter, hideStatus, selectedForum, appearMode, hideContent, filterData):
                 var pinnedType: ChatListPinnedType = .some
                 if let addition = addition {
                     pinnedType = .ad(addition.item)
@@ -286,7 +286,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 
                 
                 
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact, displayAsTopics: item.displayAsTopicList)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact, displayAsTopics: item.displayAsTopicList, folders: filterData)
 
             case let .group(_, item, animated, hideStatus, appearMode, hideContent, storyState):
                 var messages:[Message] = []
@@ -371,14 +371,16 @@ struct FilterData : Equatable {
     let filter: ChatListFilter
     let tabs: [ChatListFilter]
     let sidebar: Bool
+    let showTags: Bool
     let request: ChatListIndexRequest
     let badges: ChatListFilterBadges
-    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: [])) {
+    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, showTags: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: [])) {
         self.filter = filter
         self.tabs = tabs
         self.sidebar = sidebar
         self.request = request
         self.badges = badges
+        self.showTags = showTags
     }
     
     var isEmpty: Bool {
@@ -390,23 +392,26 @@ struct FilterData : Equatable {
     }
     func withUpdatedFilterId(_ filterId: Int32?) -> FilterData {
         let filter = self.tabs.first(where: { $0.id == filterId }) ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request, badges: self.badges)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges)
     }
     func withUpdatedFilter(_ filter: ChatListFilter?) -> FilterData {
         let filter = filter ?? self.tabs.first ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request, badges: self.badges)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges)
     }
     func withUpdatedTabs(_ tabs:  [ChatListFilter]) -> FilterData {
-        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, request: self.request, badges: self.badges)
+        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges)
     }
     func withUpdatedSidebar(_ sidebar: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: self.request, badges: self.badges)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: self.request, badges: self.badges)
+    }
+    func withUpdatedShowTags(_ showTags: Bool) -> FilterData {
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: self.sidebar, showTags: showTags, request: self.request, badges: self.badges)
     }
     func withUpdatedRequest(_ request: ChatListIndexRequest) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: request, badges: self.badges)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: self.badges)
     }
     func withUpdatedBadges(_ badges: ChatListFilterBadges) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: request, badges: badges)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges)
     }
 }
 
@@ -693,7 +698,7 @@ class ChatListController : PeersListController {
                 case let .chatList(peerId):
                     space = .init(peerId: peerId, category: .global)
                 }
-                return .chat(item.0, state.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state.selectedForum, appearMode: state.controllerAppear, hideContent: state.appear == .short)
+                return .chat(item.0, state.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state.selectedForum, appearMode: state.controllerAppear, hideContent: state.appear == .short, folders: state.filterData)
             }
             
             if case .filter = filterData.filter, mapped.isEmpty {} else {
@@ -885,13 +890,23 @@ class ChatListController : PeersListController {
                 }
             }))
         case .folder:
-            break
+            filterDisposable.set(filterView.start(next: { [weak self] filters in
+                self?.updateFilter( { current in
+                    var current = current
+                    current = current.withUpdatedTabs(filters.list)
+                        .withUpdatedSidebar(filters.sidebar)
+                        .withUpdatedShowTags(filters.showTags)
+                    return current
+                } )
+            }))
         default:
             var first: Bool = true
             filterDisposable.set(combineLatest(filterView, filterBadges).start(next: { [weak self] filters, badges in
                 self?.updateFilter( { current in
                     var current = current
-                    current = current.withUpdatedTabs(filters.list).withUpdatedSidebar(filters.sidebar)
+                    current = current.withUpdatedTabs(filters.list)
+                        .withUpdatedSidebar(filters.sidebar)
+                        .withUpdatedShowTags(filters.showTags)
                     if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
                         current = current.withUpdatedFilter(updated)
                     } else {

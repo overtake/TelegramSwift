@@ -21,13 +21,15 @@ private final class ChatListPresetArguments {
     let addFeatured: (ChatListFeaturedFilter)->Void
     let toggleSidebar: (Bool)->Void
     let limitExceeded:()->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void, limitExceeded:@escaping()->Void) {
+    let toggleTags:()->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void, limitExceeded:@escaping()->Void, toggleTags:@escaping()->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
         self.addFeatured = addFeatured
         self.toggleSidebar = toggleSidebar
         self.limitExceeded = limitExceeded
+        self.toggleTags = toggleTags
     }
 }
 private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
@@ -42,7 +44,9 @@ private let _id_badge_tabs = InputDataIdentifier("_id_badge_tabs")
 
 private let _id_header = InputDataIdentifier("_id_header")
 
-private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], sidebar: Bool, suggested: ChatListFiltersFeaturedState?, arguments: ChatListPresetArguments) -> [InputDataEntry] {
+private let _id_show_tags = InputDataIdentifier("_id_show_tags")
+
+private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], sidebar: Bool, showTags: Bool, suggested: ChatListFiltersFeaturedState?, arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -144,9 +148,17 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
                 index += 1
             }
         }
-        
-        
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
+    //TODO:LANG
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_tags, data: .init(name: "Show Folders Tags", color: theme.colors.text, type: .switchable(showTags), viewType: .singleItem, action: arguments.toggleTags)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Display folder names for each chat in the chat list."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    index += 1
+
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -204,6 +216,10 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         }).start()
     }, limitExceeded: {
         showModal(with: PremiumLimitController(context: context, type: .folders), for: context.window)
+    }, toggleTags: {
+        _ = updateChatListFolderSettings(context.account.postbox, {
+            $0.withUpdatedShowTags(!$0.showTags)
+        }).start()
     })
     
     
@@ -211,8 +227,8 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     
     let filtersWithCounts = chatListFilterPreferences(engine: context.engine)
         |> distinctUntilChanged
-        |> mapToSignal { filters -> Signal<([(ChatListFilter, Int)], Bool), NoError> in
-            return context.account.postbox.transaction { transaction -> ([(ChatListFilter, Int)], Bool) in
+        |> mapToSignal { filters -> Signal<([(ChatListFilter, Int)], Bool, Bool), NoError> in
+            return context.account.postbox.transaction { transaction -> ([(ChatListFilter, Int)], Bool, Bool) in
                 return (filters.list.map { filter -> (ChatListFilter, Int) in
                     let count: Int
                     if let cachedValue = chatCountCache.with({ dict -> Int? in
@@ -240,7 +256,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
                         count = 0
                     }
                     return (filter, count)
-                }, filters.sidebar)
+                }, filters.sidebar, filters.showTags)
             }
     }
     
@@ -250,7 +266,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
 
     
     let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, filtersWithCounts, suggested) |> map { _, filtersWithCounts, suggested in
-        return chatListPresetEntries(filtersWithCounts: filtersWithCounts.0, sidebar: filtersWithCounts.1, suggested: suggested, arguments: arguments)
+        return chatListPresetEntries(filtersWithCounts: filtersWithCounts.0, sidebar: filtersWithCounts.1, showTags: filtersWithCounts.2, suggested: suggested, arguments: arguments)
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }

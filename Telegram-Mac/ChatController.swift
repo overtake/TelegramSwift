@@ -742,7 +742,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             
             let selected: EmojiTag?
-            if let tag = interfaceState.searchMode.tag, case let .customTag(memoryBuffer) = tag {
+            if let tag = interfaceState.searchMode.tag, case let .customTag(memoryBuffer, _) = tag {
                 let tag = ReactionsMessageAttribute.reactionFromMessageTag(tag: memoryBuffer)
                 selected = tags?.first(where: { $0.tag.reaction == tag })
             } else {
@@ -2089,8 +2089,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         let takeReplyId:()->EngineMessageReplySubject? = { [weak self] in
             var reply = self?.chatInteraction.presentation.interfaceState.replyMessageId
-            if reply == nil, let threadId = threadId {
-                reply = .init(messageId: threadId, quote: nil)
+            if reply == nil, let threadId64 = threadId64 {
+                reply = .init(messageId: MessageId(peerId: chatLocation.peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId64)), quote: nil)
             }
             return reply
         }
@@ -2652,9 +2652,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 updateType = _type
                 if !wasUsedLocation {
                     scrollPosition = searchStateUpdated ? nil : _scrollPosition
-                    delay(2.0, onQueue: messagesViewQueue.queue, closure: {
-                        wasUsedLocation = true
-                    })
+//                    delay(2.0, onQueue: messagesViewQueue.queue, closure: {
+//                        wasUsedLocation = true
+//                    })
                 } else {
                     scrollPosition = nil
                 }
@@ -2827,7 +2827,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             if let peer = self.chatInteraction.presentation.mainPeer {
                 let threadInfo = self.chatInteraction.presentation.threadInfo
-                if let subject = subject, !peer.canSendMessage(self.mode.isThreadMode, threadData: threadInfo) {
+                if let subject = subject, !peer.canSendMessage(self.mode.isThreadMode, threadData: threadInfo, cachedData: self.chatInteraction.presentation.cachedData) {
                     self.chatInteraction.replyToAnother(subject, false)
                     return
                 }
@@ -2885,7 +2885,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .voice:
                     flags = .banSendVoice
                 }
-                if let permissionText = permissionText(from: peer, for: flags) {
+                if let permissionText = permissionText(from: peer, for: flags, cachedData: chatInteraction.presentation.cachedData) {
                     showModalText(for: context.window, text: permissionText)
                     return
                 }
@@ -3125,7 +3125,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, !strongSelf.nextTransaction.isExutable {
                 let presentation = strongSelf.chatInteraction.presentation
                 let peerId = strongSelf.chatInteraction.peerId
-                let threadId = strongSelf.chatInteraction.mode.threadId
                 let currentSendAsPeerId = presentation.currentSendAsPeerId
                 if presentation.abilityToSend {
                     func apply(_ controller: ChatController, atDate: Date?) {
@@ -3146,7 +3145,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         let fwdIds: [MessageId] = presentation.interfaceState.forwardMessageIds
                         let hideNames = presentation.interfaceState.hideSendersName
                         let hideCaptions = presentation.interfaceState.hideCaptions
-
+                        let cachedData = presentation.cachedData
                         if !fwdIds.isEmpty {
                             setNextToTransaction = true
                             
@@ -3156,7 +3155,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     
                                     for attr in message.attributes {
                                         if let _ = attr as? InlineBotMessageAttribute, peer.hasBannedRights(.banSendInline) {
-                                            return permissionText(from: peer, for: .banSendInline)
+                                            return permissionText(from: peer, for: .banSendInline, cachedData: cachedData)
                                         }
                                     }
                                     
@@ -3338,7 +3337,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendPlainText = { [weak self] text in
-            if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
+            if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData) {
                 
                 let chatInteraction = strongSelf.chatInteraction
                 let presentation = chatInteraction.presentation
@@ -3375,6 +3374,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         chatInteraction.enableTranslatePaywall = { [weak self] in
             self?.liveTranslate?.enablePaywall()
+        }
+        
+        chatInteraction.boostToUnrestrict = { source in
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2, source: source), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
         }
         
         chatInteraction.forwardMessages = { [weak self] messages in
@@ -3502,7 +3516,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     index += 1
 
-                                    _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
+                                    _ = combineLatest(signals).startStandalone()
                                     strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
                                 }), for: context.window)
                                 
@@ -4395,7 +4409,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendAppFile = { [weak self] file, silent, query, schedule, collectionId in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, media: file, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, media: file, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData) {
                 let hasFwd = !strongSelf.chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: file, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64, silent: silent, atDate: atDate, query: query, collectionId: collectionId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
@@ -4434,7 +4448,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                 
                 let canSend = medias.map {
-                    return peer.canSendMessage(strongSelf.mode.isThreadMode, media: $0, threadData: strongSelf.chatInteraction.presentation.threadInfo)
+                    return peer.canSendMessage(strongSelf.mode.isThreadMode, media: $0, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                 }.allSatisfy { $0 }
                 
                 if canSend {
@@ -4471,7 +4485,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                 if let myPeer = context.myPeer as? TelegramUser {
                     let media = TelegramMediaContact(firstName: myPeer.firstName ?? "", lastName: myPeer.lastName ?? "", phoneNumber: myPeer.phone ?? "", peerId: myPeer.id, vCardData: nil)
-                    let canSend = peer.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo)
+                    let canSend = peer.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                     if canSend {
                         _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId64, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
                         strongSelf.nextTransaction.set(handler: afterSentTransition)
@@ -4490,7 +4504,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendCommand = { [weak self] command in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     var commandText = "/" + command.command.text
                     if controller.chatInteraction.peerId.namespace != Namespaces.Peer.CloudUser {
@@ -4564,7 +4578,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self else {
                 return
             }
-            if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
+            if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData) {
                 _ = (context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peer.id, timeout: seconds) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                 strongSelf.nextTransaction.set(handler: afterSentTransition)
             }
@@ -4809,12 +4823,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.shareContact = { [weak self] peer in
             if let strongSelf = self, let main = strongSelf.chatInteraction.peer {
-                if let permissionText = permissionText(from: main, for: .banSendText) {
+                if let permissionText = permissionText(from: main, for: .banSendText, cachedData: strongSelf.chatInteraction.presentation.cachedData) {
                     showModalText(for: context.window, text: permissionText)
                     return
                 }
                 let media = TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)
-                let canSend = main.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo)
+                let canSend = main.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                 if canSend {
                     _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, media: media, replyId: takeReplyId(), threadId: threadId64).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: afterSentTransition)
@@ -7384,6 +7398,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     text = strings().chatSendVoicePrivacyError(peer?.compactDisplayTitle ?? "")
                 case .sendingTooFast:
                     text = strings().chatSendMessageErrorTooFast
+                case .nonPremiumMessagesForbidden:
+                    let peer = strongSelf.chatInteraction.presentation.mainPeer
+                    text = strings().chatSendMessageErrorNonPremiumForbidden(peer?.compactDisplayTitle ?? "")
                 }
                 verifyAlert_button(for: context.window, information: text, cancel: "", option: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}

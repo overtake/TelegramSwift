@@ -289,10 +289,14 @@ struct InputDataGeneralTextRightData : Equatable {
     let isLoading: Bool
     let text: NSAttributedString?
     let action:(()->Void)?
+    let alignToText: Bool
+    let wrap: NSColor?
     private let update: UInt32?
-    init(isLoading: Bool, text: NSAttributedString?, action:(()->Void)? = nil, update: UInt32? = nil) {
+    init(isLoading: Bool, text: NSAttributedString?, action:(()->Void)? = nil, update: UInt32? = nil, alignToText: Bool = false, wrap: NSColor? = nil) {
         self.isLoading = isLoading
         self.text = text
+        self.alignToText = alignToText
+        self.wrap = wrap
         self.action = action
         self.update = update
     }

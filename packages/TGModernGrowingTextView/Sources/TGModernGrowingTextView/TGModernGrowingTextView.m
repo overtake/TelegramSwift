@@ -1443,7 +1443,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     
     
     NSSize size = [_placeholder.attributedStringValue size];
-    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder, size.width + 10), size.height)];
+    [_placeholder setFrameSize:NSMakeSize(MAX(0, MIN(NSWidth(_textView.frame) - self._startXPlaceholder, size.width + 10)), size.height)];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
 }
     
@@ -1466,7 +1466,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     
    // [_placeholder sizeToFit];
     NSSize size = [_placeholder.attributedStringValue size];
-    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10, size.width + 10), size.height)];
+    [_placeholder setFrameSize:NSMakeSize(MAX(0, MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10, size.width + 10)), size.height)];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0)))];
     BOOL animates = _animates;
     _animates = NO;

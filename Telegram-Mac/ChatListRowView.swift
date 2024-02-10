@@ -249,6 +249,62 @@ private final class AvatarBadgeView: ImageView {
     }
 }
 
+private final class ChatListTagsView : View {
+    
+    class TagView : View {
+        private let textView = TextView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            addSubview(textView)
+        }
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(item: ChatListTag, selected: Bool, animated: Bool) {
+            self.textView.update(selected ? item.selected : item.text)
+            self.backgroundColor = selected ? item.selectedColor : item.color
+        }
+        
+        override func layout() {
+            super.layout()
+            textView.center()
+            textView.setFrameOrigin(NSMakePoint(textView.frame.minX, textView.frame.minY + System.pixel))
+        }
+    }
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer?.masksToBounds = false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(items: [ChatListTag], item: ChatListRowItem, animated: Bool) {
+        
+        
+        while subviews.count > items.count {
+            subviews.removeLast()
+        }
+        while subviews.count < items.count {
+            let view = TagView(frame: .zero)
+            view.layer?.cornerRadius = 4
+            subviews.append(view)
+        }
+        
+        var x: CGFloat = 0
+        for (i, tag) in items.enumerated() {
+            let view = subviews[i] as! TagView
+            view.frame = CGRect(origin: CGPoint(x: x, y: 0), size: tag.size)
+            view.set(item: tag, selected: item.isActiveSelected, animated: animated)
+            x += tag.size.width + 3
+        }
+    }
+}
 
 
 
@@ -917,6 +973,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
     private var mediaPreviewViews: [MessageId: ChatListMediaPreviewView] = [:]
+    
+    private var tagsView: ChatListTagsView?
 
     
     private var revealActionInvoked: Bool = false {
@@ -2021,6 +2079,25 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  performSubviewRemoval(view, animated: animated, scale: true)
                  self.reactionsView = nil
              }
+             
+             if let tags = item.tags {
+                 let current: ChatListTagsView
+                 if let view = self.tagsView {
+                     current = view
+                 } else {
+                     current = ChatListTagsView(frame: NSMakeRect(0, 0, 100, tags.tags[0].size.height))
+                     self.contentView.addSubview(current)
+                     self.tagsView = current
+                     
+                     if animated {
+                         current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 }
+                 current.update(items: tags.effective, item: item, animated: animated)
+             } else if let view = self.tagsView {
+                 performSubviewRemoval(view, animated: animated)
+                 self.tagsView = nil
+             }
 
             
              if let peerId = item.peerId, item.forumTopicItems.isEmpty {
@@ -2865,9 +2942,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 messageOffset += min(chatNameLayout.layoutSize.height, 17) + 2
             }
             let displayHeight = displayNameView.frame.height
-            if let messageTextView = messageTextView {
-                messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
-            }
+            
             
             if let topicsView = topicsView, let layout = item.topicsLayout {
                 var inset: CGPoint = .zero
@@ -2887,6 +2962,24 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     forumTopicTextView.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 12, displayHeight + item.margin + 2))
                 }
             }
+            
+            
+            if let messageTextView = messageTextView {
+                if tagsView == nil || chatNameTextView == nil {
+                    
+                    
+                    messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
+                } else if let chatNameTextView = chatNameTextView {
+                    let maxX = [chatNameTextView, forumTopicTextView].compactMap { $0 }.map { $0.frame.maxX + 3 }.max()
+                    if let maxX = maxX {
+                        messageTextView.setFrameOrigin(NSMakePoint(maxX, chatNameTextView.frame.minY))
+                    }
+                }
+            }
+        }
+        
+        if let tagsView = tagsView {
+            tagsView.setFrameOrigin(NSMakePoint(item.leftInset, contentView.frame.height - tagsView.frame.height - 7))
         }
         
         if let delta = internalDelta {

@@ -206,6 +206,8 @@ final class ChatInteraction : InterfaceObserver  {
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
     
+    var boostToUnrestrict:(BoostChannelSource)->Void = { _ in }
+    
     var toggleUnderMouseMessage:()->Void = { }
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }

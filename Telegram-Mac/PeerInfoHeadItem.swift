@@ -279,10 +279,12 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 arguments.toggleNotifications(value)
             }))
         }
-        
-        items.append(ActionItem(text: strings().peerInfoActionBoostGroup, color: item.accentColor, image: theme.icons.profile_boost, animation: .menu_boost, action: {
-            arguments.boosts(peer.groupAccess)
-        }))
+        if peer.isSupergroup {
+            items.append(ActionItem(text: strings().peerInfoActionBoostGroup, color: item.accentColor, image: theme.icons.profile_boost, animation: .menu_boost, action: {
+                arguments.boosts(peer.groupAccess)
+            }))
+        }
+       
         
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData, let peer = peer as? TelegramChannel {

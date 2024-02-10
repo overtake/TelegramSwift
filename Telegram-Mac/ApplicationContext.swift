@@ -10,6 +10,7 @@ import InAppSettings
 import IOKit
 import CodeSyntax
 import Dock
+import PrivateCallScreen
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -523,7 +524,17 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
+        var peerCall: PeerCallScreen?
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            
+            peerCall = PeerCallScreen(external: PeerCallArguments(engine: context.engine, peerId: context.peerId, makeAvatar: { view, peer in
+                let control = view as? AvatarControl ?? AvatarControl(font: .avatar(17))
+                control.setFrameSize(NSMakeSize(120, 120))
+                control.userInteractionEnabled = false
+                control.setPeer(account: context.account, peer: peer)
+                return control
+            }))
+            peerCall?.show()
 //            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
             //setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
             return .invoked

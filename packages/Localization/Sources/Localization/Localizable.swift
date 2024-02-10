@@ -715,6 +715,10 @@ public final class L10n {
   public static var boostGiftStartConfirmationTitle: String  { return L10n.tr("Localizable", "BoostGift.StartConfirmation.Title") }
   /// Boost this group to send messages
   public static var boostGroupChatInputAction: String  { return L10n.tr("Localizable", "BoostGroup.ChatInput.Action") }
+  /// Boost
+  public static var boostGroupChatInputBoost: String  { return L10n.tr("Localizable", "BoostGroup.ChatInput.Boost") }
+  /// Boost this group to send media.
+  public static var boostGroupChatInputSendMedia: String  { return L10n.tr("Localizable", "BoostGroup.ChatInput.SendMedia") }
   /// To boost **%1$@**, reassign a previous boost or gift **Telegram Premium** to a friend to get **%2$@** additional boosts
   public static func boostReassignInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "BoostReassign.Info", p1, p2)
@@ -2043,7 +2047,7 @@ public final class L10n {
   public static var channelBoostAdditionalFeaturesText: String  { return L10n.tr("Localizable", "ChannelBoost.AdditionalFeatures.Text") }
   /// Additional Features
   public static var channelBoostAdditionalFeaturesTitle: String  { return L10n.tr("Localizable", "ChannelBoost.AdditionalFeatures.Title") }
-  /// %1$@ more boosts needed to unlock new features.
+  /// %1$@ needed to unlock new features.
   public static func channelBoostBoostedChannelMoreRequiredNew(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.BoostedChannelMoreRequired.New", p1)
   }
@@ -2387,6 +2391,22 @@ public final class L10n {
   public static var channelBoostTitleChannel: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Channel") }
   /// Boost Group
   public static var channelBoostTitleGroup: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Group") }
+  /// Boost the group **%1$@** times to remove slow mode restrictions. Your boosts will help **%2$@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroup(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group", p1, p2)
+  }
+  /// Boost the group **%1$@** times to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFull(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full", p1)
+  }
+  /// Boost the group **%1$@** times to remove messaging restrictions. Your boosts will help **%2$@** to unlock new features.
+  public static func channelBoostUnblockTextGroup(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group", p1, p2)
+  }
+  /// Boost the group **%1$@** times to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFull(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full", p1)
+  }
   /// Your channel needs %1$@ to get access to features.\n\nAsk your **Premium** subscribers to boost your channel with this link:
   public static func channelBoostZeroLevelTextChannel(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.ZeroLevelText.Channel", p1)
@@ -2699,6 +2719,10 @@ public final class L10n {
   public static var chatSendMessageErrorFlood: String  { return L10n.tr("Localizable", "Chat.SendMessageErrorFlood") }
   /// Sorry, you are currently restricted from posting to public groups.
   public static var chatSendMessageErrorGroupRestricted: String  { return L10n.tr("Localizable", "Chat.SendMessageErrorGroupRestricted") }
+  /// Only Premium users can message %@
+  public static func chatSendMessageErrorNonPremiumForbidden(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.SendMessageErrorNonPremiumForbidden", p1)
+  }
   /// Slowmode is enabled.
   public static var chatSendMessageSlowmodeError: String  { return L10n.tr("Localizable", "Chat.SendMessageSlowmodeError") }
   /// Share
@@ -7003,6 +7027,8 @@ public final class L10n {
   public static func emojiPackSetsAddZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Sets.Add_zero", p1)
   }
+  /// GROUP EMOJI
+  public static var emojiSectionGroupEmoji: String  { return L10n.tr("Localizable", "EmojiSection.GroupEmoji") }
   /// Appearance
   public static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
   /// Suggest Stickers By Emoji
@@ -7723,7 +7749,7 @@ public final class L10n {
   }
   /// CHANNELS INCLUDED IN THE GIVEAWAY
   public static var giveawayChannelsHeader: String  { return L10n.tr("Localizable", "Giveaway.Channels.Header") }
-  /// Add Group
+  /// Add Group Or Channel
   public static var giveawayChannelsAddGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Group") }
   /// Select Channel
   public static var giveawayChannelsAddSelectChannel: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.SelectChannel") }
@@ -7771,7 +7797,7 @@ public final class L10n {
   }
   /// Remove
   public static var giveawayChannelsContextRemove: String  { return L10n.tr("Localizable", "Giveaway.Channels.Context.Remove") }
-  /// GROUPS INCLUDED IN THE GIVEAWAY
+  /// GROUPS AND CHANNEL INCLUDED IN THE GIVEAWAY
   public static var giveawayChannelsHeaderGroup: String  { return L10n.tr("Localizable", "Giveaway.Channels.Header.Group") }
   /// Ends
   public static var giveawayDateEnds: String  { return L10n.tr("Localizable", "Giveaway.Date.Ends") }
@@ -7899,7 +7925,7 @@ public final class L10n {
   public static var giveawayTypeSpecificModalSelectUsers: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Modal.SelectUsers") }
   /// Choose the channels users need to be subscribed to take part in the giveaway.
   public static var givewayChannelsInfo: String  { return L10n.tr("Localizable", "Giveway.Channels.Info") }
-  /// Choose the groups users need to be subscribed to take part in the giveaway.
+  /// Choose the groups or channels users need to be subscribed to take part in the giveaway.
   public static var givewayChannelsInfoGroup: String  { return L10n.tr("Localizable", "Giveway.Channels.Info.Group") }
   /// Off
   public static var globalTimerOff: String  { return L10n.tr("Localizable", "GlobalTimer.Off") }
@@ -11345,6 +11371,10 @@ public final class L10n {
   }
   /// Six Month
   public static var premiumPeriodSixMonth: String  { return L10n.tr("Localizable", "Premium.Period.SixMonth") }
+  /// %@/year
+  public static func premiumPeriodPriceYear(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Period.Price.Year", p1)
+  }
   /// In-app purchases are not allowed on this device.
   public static var premiumPurchaseErrorCantMakePayments: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorCantMakePayments") }
   /// Please check your internet connection and try again.

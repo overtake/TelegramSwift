@@ -421,7 +421,7 @@ private final class PreviewRowView : GeneralContainableRowView {
 
 
 
-private func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
+func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
     return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
@@ -432,7 +432,7 @@ private func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
     })!
 }
 
-private func generateFillImage(nameColor: PeerNameColors.Colors) -> CGImage {
+func generateFillImage(nameColor: PeerNameColors.Colors) -> CGImage {
     return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
