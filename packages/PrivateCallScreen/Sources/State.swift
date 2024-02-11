@@ -9,6 +9,8 @@ import Foundation
 import TelegramCore
 import Localization
 import Postbox
+import QuartzCore
+import CoreFoundation
 
 private extension EnginePeer {
     var compactDisplayTitle: String {
@@ -77,8 +79,8 @@ public struct ExternalPeerCallState: Equatable {
        case ringing
        case requesting(ringing: Bool)
        case connecting
-       case active(duration: Double, reception: Int32?, emoji: String)
-       case reconnecting(duration: Double, reception: Int32?, emoji: String)
+       case active(startTime: Double, reception: Int32?, emoji: String)
+       case reconnecting(startTime: Double, reception: Int32?, emoji: String)
        case terminating
        case terminated(PeerCallSessionTerminationReason?)
    }
@@ -183,10 +185,28 @@ extension ExternalPeerCallState.State {
 
 public struct PeerCallState : Equatable {
     
+    public enum SecretKeyViewState : Equatable {
+        case revealed
+        case concealed
+        
+        var rev: SecretKeyViewState {
+            switch self {
+            case .concealed:
+                return .revealed
+            case .revealed:
+                return .concealed
+            }
+        }
+    }
+    
     public var peer: EnginePeer?
     public var accountPeer: EnginePeer?
     
-    public var externalState: ExternalPeerCallState = .init(state: .waiting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .normal, isScreenCapture: false)
+    public var secretKeyViewState: SecretKeyViewState = .concealed
+    
+    var statusTooltip: String? = nil
+    
+    public var externalState: ExternalPeerCallState = .init(state: .active(startTime: CFAbsoluteTimeGetCurrent(), reception: 1, emoji: "😁 🤷 😘 ❤️"), videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false)
     
     var status: PeerCallStatusValue {
         return self.externalState.state.statusText(accountPeer, externalState.videoState)
@@ -198,6 +218,12 @@ public struct PeerCallState : Equatable {
         }
         return nil
     }
+    var compactTitle: String {
+        if let peer = peer?._asPeer() as? TelegramUser {
+            return peer.firstName ?? peer.lastName ?? ""
+        }
+        return ""
+    }
     
     var reception: Int32? {
         switch externalState.state {
@@ -205,6 +231,17 @@ public struct PeerCallState : Equatable {
             return reception
         case let .reconnecting(_, reception, _):
             return reception
+        default:
+            return nil
+        }
+    }
+    
+    var secretKey: String? {
+        switch self.externalState.state {
+        case .active(_, _, let emoji):
+            return emoji
+        case .reconnecting(_, _, let emoji):
+            return emoji
         default:
             return nil
         }

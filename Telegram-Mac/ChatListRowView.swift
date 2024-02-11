@@ -2089,9 +2089,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      self.contentView.addSubview(current)
                      self.tagsView = current
                      
-                     if animated {
-                         current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                     }
                  }
                  current.update(items: tags.effective, item: item, animated: animated)
              } else if let view = self.tagsView {

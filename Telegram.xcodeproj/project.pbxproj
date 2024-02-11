@@ -3568,13 +3568,6 @@
 			name = viewers;
 			sourceTree = "<group>";
 		};
-		27C1FF482B7499DF00B086E3 /* modern */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = modern;
-			sourceTree = "<group>";
-		};
 		27CE153E297966A6001F8CE8 /* categories */ = {
 			isa = PBXGroup;
 			children = (
@@ -5696,7 +5689,6 @@
 		D00B191A24E54B83006CCB87 /* ui */ = {
 			isa = PBXGroup;
 			children = (
-				27C1FF482B7499DF00B086E3 /* modern */,
 				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
 				D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */,
 				D00B191D24E54F20006CCB87 /* CallStatusView.swift */,

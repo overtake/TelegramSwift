@@ -14,9 +14,11 @@ import AppKit
 internal final class Arguments {
     let external: PeerCallArguments
     let toggleAnim:()->Void
-    init(external: PeerCallArguments, toggleAnim:@escaping()->Void) {
+    let toggleSecretKey:()->Void
+    init(external: PeerCallArguments, toggleAnim:@escaping()->Void, toggleSecretKey:@escaping()->Void) {
         self.external = external
         self.toggleAnim = toggleAnim
+        self.toggleSecretKey = toggleSecretKey
     }
 }
 
