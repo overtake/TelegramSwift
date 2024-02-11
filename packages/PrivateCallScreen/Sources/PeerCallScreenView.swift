@@ -31,6 +31,10 @@ private final class InfoHelpView : NSVisualEffectView {
         self.blendingMode = .withinWindow
     }
     
+    var string: String? {
+        return textView.textLayout?.attributedString.string
+    }
+    
     func set(string: String, hasShimm: Bool = false) {
         let layout = TextViewLayout(.initialize(string: string, color: NSColor.white, font: .medium(.text)), alignment: .center)
         layout.measure(width: .greatestFiniteMagnitude)
@@ -76,7 +80,7 @@ private final class InfoHelpView : NSVisualEffectView {
 final class PeerCallScreenView : Control {
     private let backgroundLayer: CallBackgroundLayer = .init()
     private let photoView = PeerCallPhotoView(frame: NSMakeRect(0, 0, 120, 120))
-    private let statusView: PeerCallStatusView = PeerCallStatusView(frame: NSMakeRect(0, 0, 300, 58))
+    private let statusView = PeerCallStatusView(frame: NSMakeRect(0, 0, 300, 58))
     
     
     private var arguments: Arguments?
@@ -88,7 +92,10 @@ final class PeerCallScreenView : Control {
     private var endAction: PeerCallActionView? = PeerCallActionView()
 
     
-    private var weakSignal: InfoHelpView?
+    private var statusTooltip: InfoHelpView?
+    
+    private var secretView: SecretKeyView?
+    private var revealedKey: PeerCallRevealedSecretKeyView?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -136,6 +143,10 @@ final class PeerCallScreenView : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        guard let state = self.state else {
+            return
+        }
+        
         backgroundLayer.frame = size.bounds
         backgroundLayer.blurredLayer.frame = size.bounds
         
@@ -149,8 +160,18 @@ final class PeerCallScreenView : Control {
         statusView.updateLayout(size: statusView.frame.size, transition: transition)
         
         
-        if let weakSignal {
-            transition.updateFrame(view: weakSignal, frame: weakSignal.centerFrameX(y: statusView.frame.maxY + 12))
+        if let statusTooltip {
+            transition.updateFrame(view: statusTooltip, frame: statusTooltipFrame(view: statusTooltip, state: state))
+        }
+        
+        if let secretView {
+            transition.updateFrame(view: secretView, frame: secretKeyFrame(view: secretView, state: state))
+            secretView.updateLayout(size: secretView.frame.size, transition: transition)
+        }
+        
+        if let revealedKey {
+            transition.updateFrame(view: revealedKey, frame: revealedKeyFrame(view: revealedKey, state: state))
+            revealedKey.updateLayout(size: revealedKey.frame.size, transition: transition)
         }
 
         let actions = [self.videoAction, self.screencastAction, self.muteAction, self.endAction].compactMap { $0 }
@@ -173,30 +194,114 @@ final class PeerCallScreenView : Control {
         self.backgroundLayer.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
         
         
-        if let reception = state.reception, reception < 2 {
-            let current: InfoHelpView
+        if let tooltip = state.statusTooltip {
+            if self.statusTooltip?.string != tooltip {
+                if let statusTooltip = self.statusTooltip {
+                    performSubviewRemoval(statusTooltip, animated: transition.isAnimated, scale: true)
+                    self.statusTooltip = nil
+                }
+                
+                let current: InfoHelpView
+                let isNew = true
+                current = InfoHelpView(frame: .zero)
+                self.addSubview(current, positioned: .below, relativeTo: subviews.first)
+                self.statusTooltip = current
+                current.set(string: tooltip, hasShimm: true)
+                
+                if isNew {
+                    ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: statusTooltipFrame(view: current, state: state))
+                    if transition.isAnimated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
+                    }
+                }
+            }
+        } else if let statusTooltip = self.statusTooltip {
+            performSubviewRemoval(statusTooltip, animated: transition.isAnimated, scale: true)
+            self.statusTooltip = nil
+        }
+        
+        
+        
+        if state.secretKeyViewState == .revealed {
+            let current: PeerCallRevealedSecretKeyView
             let isNew: Bool
-            if let view = self.weakSignal {
+            if let view = self.revealedKey {
                 current = view
                 isNew = false
             } else {
-                current = InfoHelpView(frame: .zero)
-                self.addSubview(current)
-                self.weakSignal = current
+                current = PeerCallRevealedSecretKeyView(frame: NSMakeRect(0, 0, 300, 300))
+                self.addSubview(current, positioned: .below, relativeTo: secretView)
+                self.revealedKey = current
                 isNew = true
             }
-            current.set(string: "Weak network signal", hasShimm: true)
+            current.updateState(state, arguments: arguments, transition: isNew ? .immediate : transition)
             
             if isNew {
-                ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: current.centerFrameX(y: statusView.frame.maxY + 12))
+                ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: revealedKeyFrame(view: current, state: state))
+                if transition.isAnimated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.8, to: 1, duration: 0.2, bounce: false)
+                }
+            }
+        } else if let revealedKey = self.revealedKey {
+            performSubviewRemoval(revealedKey, animated: transition.isAnimated, scale: false)
+            self.revealedKey = nil
+        }
+        
+        
+        if let _ = state.secretKey {
+            let current: SecretKeyView
+            let isNew: Bool
+            if let view = self.secretView {
+                current = view
+                isNew = false
+            } else {
+                current = SecretKeyView(frame: NSMakeRect(0, 0, 100, 25))
+                self.addSubview(current, positioned: .above, relativeTo: revealedKey)
+                self.secretView = current
+                isNew = true
+            }
+            current.updateState(state, arguments: arguments, transition: isNew ? .immediate : transition)
+            
+            if isNew {
+                ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: secretKeyFrame(view: current, state: state))
                 if transition.isAnimated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
                 }
             }
-        } else if let weakSignal = self.weakSignal {
-            performSubviewRemoval(weakSignal, animated: transition.isAnimated, scale: true)
-            self.weakSignal = nil
+        } else if let secretView = self.secretView {
+            performSubviewRemoval(secretView, animated: transition.isAnimated, scale: true)
+            self.secretView = nil
         }
+        
+    }
+}
+
+
+
+
+
+//RECT
+
+extension PeerCallScreenView {
+    func statusTooltipFrame(view: NSView, state: PeerCallState) -> NSRect {
+        return view.centerFrameX(y: statusView.frame.maxY + 12)
+    }
+    func secretKeyFrame(view: NSView, state: PeerCallState) -> NSRect {
+        if state.secretKeyViewState == .revealed {
+            var rect = focus(NSMakeSize(200, 50))
+            rect.origin.y -= 30
+            return rect
+        } else {
+            var rect = focus(NSMakeSize(100, 25))
+            rect.origin.y = 16
+            return rect
+        }
+    }
+    
+    func revealedKeyFrame(view: NSView, state: PeerCallState) -> NSRect {
+        return view.centerFrame()
     }
 }

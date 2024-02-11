@@ -2531,6 +2531,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             if case .forum(peerId, _, _) = current?.mode {
                 navigationController?.back()
             } else {
+                if current?.mode.isForum == true {
+                    navigationController?.back()
+                }
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
         case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:

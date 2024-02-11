@@ -21,6 +21,8 @@ let package = Package(
         .package(name: "MetalEngine", path: "../submodules/telegram-ios/submodules/MetalEngine"),
         .package(name: "TGUIKit", path: "../TGUIKit"),
         .package(name: "TelegramMedia", path: "../TelegramMedia"),
+        .package(name: "ColorPalette", path: "../ColorPalette"),
+        .package(name: "KeyboardKey", path: "../KeyboardKey"),
         .package(name: "Localization", path: "../Localization"),
         .package(name: "CallVideoLayer", path: "../CallVideoLayer"),
     ],
@@ -36,6 +38,8 @@ let package = Package(
                            .product(name: "TGUIKit", package: "TGUIKit", condition: nil),
                            .product(name: "TelegramMedia", package: "TelegramMedia", condition: nil),
                            .product(name: "Localization", package: "Localization", condition: nil),
+                           .product(name: "KeyboardKey", package: "KeyboardKey", condition: nil),
+                           .product(name: "ColorPalette", package: "ColorPalette", condition: nil),
                            .product(name: "CallVideoLayer", package: "CallVideoLayer", condition: nil)],
             path: "Sources/",
             resources: [.copy("Resources/Assets.xcassets")])
