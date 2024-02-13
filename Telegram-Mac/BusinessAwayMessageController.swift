@@ -13,6 +13,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+#if DEBUG
+
 class BusinessSelectChatsCallbackObject : ShareObject {
     private let callback:([PeerId])->Signal<Never, NoError>
     private let limitReachedText: String
@@ -418,3 +420,6 @@ func BusinessAwayMessageController(context: AccountContext, peerId: PeerId) -> I
     return controller
     
 }
+
+
+#endif

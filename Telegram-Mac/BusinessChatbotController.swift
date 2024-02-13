@@ -13,6 +13,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+#if DEBUG
+
 private final class Arguments {
     let context: AccountContext
     let toggleAccess:(State.Access)->Void
@@ -288,3 +290,5 @@ func BusinessChatbotController(context: AccountContext, peerId: PeerId) -> Input
     return controller
     
 }
+
+#endif
