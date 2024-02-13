@@ -950,7 +950,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        
+        #if DEBUG
         if "".isEmpty {
             
             let colors = [theme.colors.peerColors(0).top,
@@ -982,7 +982,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
-        
+        #endif
         
         if true {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterInviteLinkHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
