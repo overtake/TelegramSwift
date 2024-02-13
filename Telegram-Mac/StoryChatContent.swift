@@ -107,13 +107,20 @@ final class StoryContentContextState {
         let canViewStats: Bool
         let premiumRequired: Bool
         let preferHighQualityStories: Bool
+        let slowModeTimeout: Int32?
+        let slowModeValidUntilTimestamp: Int32?
+        let canAvoidRestrictions: Bool
+
         init(
             isMuted: Bool,
             areVoiceMessagesAvailable: Bool,
             presence: EnginePeer.Presence?,
             canViewStats: Bool,
             premiumRequired: Bool,
-            preferHighQualityStories: Bool
+            preferHighQualityStories: Bool,
+            slowModeTimeout: Int32?,
+            slowModeValidUntilTimestamp: Int32?,
+            canAvoidRestrictions: Bool
         ) {
             self.isMuted = isMuted
             self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
@@ -121,6 +128,9 @@ final class StoryContentContextState {
             self.canViewStats = canViewStats
             self.premiumRequired = premiumRequired
             self.preferHighQualityStories = preferHighQualityStories
+            self.slowModeTimeout = slowModeTimeout
+            self.slowModeValidUntilTimestamp = slowModeValidUntilTimestamp
+            self.canAvoidRestrictions = canAvoidRestrictions
         }
     }
 
@@ -311,6 +321,11 @@ final class StoryContentContextImpl: StoryContentContext {
                                         forwardInfoStories.updateValue(nil, forKey: storyId)
                                     }
                                 }
+                                if let peerId = itemValue.authorId {
+                                    if let peer = transaction.getPeer(peerId) {
+                                        peers[peer.id] = peer
+                                    }
+                                }
                                 for entity in itemValue.entities {
                                     if case let .CustomEmoji(_, fileId) = entity.type {
                                         let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
@@ -407,16 +422,24 @@ final class StoryContentContextImpl: StoryContentContext {
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                             canViewStats: false,
                             premiumRequired: cachedUserData.flags.contains(.premiumRequired),
-                            preferHighQualityStories: preferHighQualityStories
+                            preferHighQualityStories: preferHighQualityStories,
+                            slowModeTimeout: nil,
+                            slowModeValidUntilTimestamp: nil,
+                            canAvoidRestrictions: true
                         )
                     } else if let cachedChannelData = cachedPeerDataView.cachedPeerData as? CachedChannelData {
+                        let boostsToUnrestrict = cachedChannelData.boostsToUnrestrict
+                        let appliedBoosts = cachedChannelData.appliedBoosts ?? 0
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
                             isMuted: true,
                             areVoiceMessagesAvailable: true,
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                             canViewStats: cachedChannelData.flags.contains(.canViewStats), 
                             premiumRequired: false,
-                            preferHighQualityStories: preferHighQualityStories
+                            preferHighQualityStories: preferHighQualityStories,
+                            slowModeTimeout: cachedChannelData.slowModeTimeout,
+                            slowModeValidUntilTimestamp: cachedChannelData.slowModeValidUntilTimestamp,
+                            canAvoidRestrictions: boostsToUnrestrict != nil ? boostsToUnrestrict! <= appliedBoosts : false
                         )
                     } else {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
@@ -425,7 +448,10 @@ final class StoryContentContextImpl: StoryContentContext {
                             presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                             canViewStats: false,
                             premiumRequired: false,
-                            preferHighQualityStories: preferHighQualityStories
+                            preferHighQualityStories: preferHighQualityStories,
+                            slowModeTimeout: nil,
+                            slowModeValidUntilTimestamp: nil,
+                            canAvoidRestrictions: true
                         )
                     }
                 }
@@ -436,7 +462,10 @@ final class StoryContentContextImpl: StoryContentContext {
                         presence: peerPresence.flatMap { EnginePeer.Presence($0) },
                         canViewStats: false,
                         premiumRequired: false,
-                        preferHighQualityStories: preferHighQualityStories
+                        preferHighQualityStories: preferHighQualityStories,
+                        slowModeTimeout: nil,
+                        slowModeValidUntilTimestamp: nil,
+                        canAvoidRestrictions: true
                     )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
@@ -492,7 +521,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isEdited: item.isEdited,
                         isMy: item.isMy,
                         myReaction: item.myReaction,
-                        forwardInfo: forwardInfo
+                        forwardInfo: forwardInfo, 
+                        author: item.authorId.flatMap { peers[$0].flatMap(EnginePeer.init) }
                     )
                 }
                 var totalCount = peerStoryItemsView.items.count
@@ -528,7 +558,8 @@ final class StoryContentContextImpl: StoryContentContext {
                                 isEdited: false,
                                 isMy: true,
                                 myReaction: nil,
-                                forwardInfo: pendingForwardsInfo[item.randomId]
+                                forwardInfo: pendingForwardsInfo[item.randomId],
+                                author: nil
                             ))
                             totalCount += 1
                         }
@@ -1342,7 +1373,10 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.CanViewStats(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global(),
-                TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: storyId.peerId)
+                TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.SlowmodeTimeout(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.SlowmodeValidUntilTimeout(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: storyId.peerId)
             ),
             item |> mapToSignal { item -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]), NoError> in
                 return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]) in
@@ -1369,6 +1403,11 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                                 stories[storyId] = story
                             } else {
                                 stories.updateValue(nil, forKey: storyId)
+                            }
+                        }
+                        if let peerId = item.authorId {
+                            if let peer = transaction.getPeer(peerId) {
+                                peers[peer.id] = peer
                             }
                         }
                         for entity in item.entities {
@@ -1407,7 +1446,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions) = data
             let (item, peers, allEntityFiles, forwardInfoStories) = itemAndPeers
             
             guard let peer = peer else {
@@ -1422,7 +1461,10 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 presence: presence,
                 canViewStats: canViewStats,
                 premiumRequired: false,
-                preferHighQualityStories: preferHighQualityStories
+                preferHighQualityStories: preferHighQualityStories,
+                slowModeTimeout: slowmodeTimeout,
+                slowModeValidUntilTimestamp: slowmodeValidUntilTimeout, 
+                canAvoidRestrictions: canAvoidGroupRestrictions
             )
             
             for (storyId, story) in forwardInfoStories {
@@ -1496,7 +1538,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isEdited: itemValue.isEdited,
                     isMy: itemValue.isMy,
                     myReaction: itemValue.myReaction,
-                    forwardInfo: itemValue.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, peers: peers) }
+                    forwardInfo: itemValue.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, peers: peers) }, 
+                    author: itemValue.authorId.flatMap { peers[$0].flatMap(EnginePeer.init) }
                 )
                 
                 let mainItem = StoryContentItem(
@@ -1618,7 +1661,10 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.CanViewStats(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global(),
-                TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId)
+                TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.SlowmodeTimeout(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.SlowmodeValidUntilTimeout(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: peerId)
             ),
             listContext.state,
             self.focusedIdUpdated.get(),
@@ -1629,7 +1675,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions) = data
             
             guard let peer = peer else {
                 return
@@ -1643,7 +1689,10 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 presence: presence,
                 canViewStats: canViewStats,
                 premiumRequired: premiumRequired,
-                preferHighQualityStories: preferHighQualityStories
+                preferHighQualityStories: preferHighQualityStories,
+                slowModeTimeout: slowmodeTimeout,
+                slowModeValidUntilTimestamp: slowmodeValidUntilTimeout, 
+                canAvoidRestrictions: canAvoidGroupRestrictions
             )
             
             self.listState = state
@@ -2372,7 +2421,8 @@ private func getCachedStory(storyId: StoryId, transaction: Transaction) -> Engin
             isEdited: item.isEdited,
             isMy: item.isMy,
             myReaction: item.myReaction,
-            forwardInfo: item.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, transaction: transaction) }
+            forwardInfo: item.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, transaction: transaction) }, 
+            author: item.authorId.flatMap { transaction.getPeer($0).flatMap(EnginePeer.init) }
         )
     } else {
         return nil

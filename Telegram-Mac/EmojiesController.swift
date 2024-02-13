@@ -2495,7 +2495,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         self.chatInteraction = chatInteraction
         let context = chatInteraction.context
         
-        if mode == .emoji {
+        if mode == .emoji || mode == .stories {
             if let peer = chatInteraction.peer, peer.isSupergroup {
                 let emojiPack = getCachedDataView(peerId: peer.id, postbox: context.account.postbox) |> map { $0 as? CachedChannelData } |> map { $0?.emojiPack }
                 groupEmojiPack = emojiPack |> mapToSignal { info in

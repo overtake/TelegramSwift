@@ -575,10 +575,10 @@ private extension ChatListFilter {
 class SelectCallbackObject : ShareObject {
     private let callback:([PeerId])->Signal<Never, NoError>
     private let limitReachedText: String
-    init(_ context: AccountContext, defaultSelectedIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>) {
+    init(_ context: AccountContext, defaultSelectedIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>, excludePeerIds: Set<PeerId> = Set()) {
         self.callback = callback
         self.limitReachedText = limitReachedText
-        super.init(context, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
+        super.init(context, excludePeerIds: excludePeerIds, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
     }
     
     override var selectTopics: Bool {
@@ -1445,7 +1445,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                                 peers.append(peer)
                             }
                         }
-                        return !peers.filter { peerCanBeSharedInFolder($0) }.isEmpty
+                        return !peers.filter( { peerCanBeSharedInFolder($0) }).isEmpty
                     } |> deliverOnMainQueue
                     
                     _ = combineLatest(folderLimits, canCreateLink).start(next: { limits, canCreateLink in

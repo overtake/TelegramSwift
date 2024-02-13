@@ -1945,7 +1945,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
             switch state.state {
             case .Focus:
-                assert(self?.searchController == nil)
+                //assert(self?.searchController == nil)
                 self?.showSearchController(animated: animated)
                 
             case .None:

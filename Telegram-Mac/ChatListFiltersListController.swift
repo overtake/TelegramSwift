@@ -154,9 +154,12 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     sectionId += 1
 
     //TODO:LANG
+    #if DEBUG
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_tags, data: .init(name: "Show Folders Tags", color: theme.colors.text, type: .switchable(showTags), viewType: .singleItem, action: arguments.toggleTags)))
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Display folder names for each chat in the chat list."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
+    #endif
+   
 
     
     

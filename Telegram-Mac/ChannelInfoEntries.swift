@@ -1267,8 +1267,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             }
             
             if channel.hasPermission(.changeInfo) {
-                entries.append(.signMessages(sectionId: .sign, sign: messagesShouldHaveSignatures, viewType: .singleItem))
-                entries.append(.signDesc(sectionId: .sign, viewType: .textBottomItem))
+//                entries.append(.signMessages(sectionId: .sign, sign: messagesShouldHaveSignatures, viewType: .singleItem))
+//                entries.append(.signDesc(sectionId: .sign, viewType: .textBottomItem))
             }
             if channel.flags.contains(.isCreator) {
                 entries.append(.leave(sectionId: .destruct, isCreator: channel.flags.contains(.isCreator), viewType: .singleItem))

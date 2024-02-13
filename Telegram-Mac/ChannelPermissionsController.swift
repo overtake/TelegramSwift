@@ -672,14 +672,18 @@ final class ChannelPermissionsController : TableViewController {
         let updateDefaultRightsDisposable = MetaDisposable()
         actionsDisposable.add(updateDefaultRightsDisposable)
         
+        var first: Bool = true
         actionsDisposable.add(context.account.viewTracker.peerView(peerId).start(next: { peerView in
             updateState { current in
                 var current = current
                 current.peer = PeerEquatable(peerView.peers[peerId])
                 current.cachedData = CachedDataEquatable(peerView.cachedData)
-                current.restrictBoosters = (peerView.cachedData as? CachedChannelData)?.boostsToUnrestrict
+                if first {
+                    current.restrictBoosters = (peerView.cachedData as? CachedChannelData)?.boostsToUnrestrict
+                }
                 return current
             }
+            first = false
         }))
         
         
