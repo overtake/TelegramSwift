@@ -14,6 +14,8 @@ import TGUIKit
 import SwiftSignalKit
 import MapKit
 
+#if DEBUG
+
 private final class AnnotationView : MKAnnotationView {
     private let locationPin = ImageView()
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
@@ -325,3 +327,5 @@ func BusinessLocationController(context: AccountContext, peerId: PeerId) -> Inpu
     return controller
     
 }
+
+#endif

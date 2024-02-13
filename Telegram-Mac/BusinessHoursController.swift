@@ -13,6 +13,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+#if DEBUG
+
 private struct GMTZone : Equatable, Comparable {
     static func < (lhs: GMTZone, rhs: GMTZone) -> Bool {
         return lhs.hoursFromGMT < rhs.hoursFromGMT
@@ -446,3 +448,5 @@ private func BusinessdayHoursController(context: AccountContext, stateSignal: Si
     
 }
 
+
+#endif
