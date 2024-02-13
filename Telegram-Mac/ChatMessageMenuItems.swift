@@ -102,13 +102,15 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let storyMedia = message.media.first as? TelegramMediaStory
     let isMediaStory = storyMedia?.storyId.peerId == context.peerId ? false : storyMedia != nil
     
+    
+    let incoming: Bool = message.isIncoming(context.account, false)
     let isRead: Bool
     if case let .MessageEntry(_, _, _isRead, _, _, _, _) = entry {
-        isRead = _isRead
+        isRead = _isRead || incoming
     } else if case let .groupedPhotos(entries, _) = entry, case let .MessageEntry(_, _, _isRead, _, _, _, _) = entries.first {
-        isRead = _isRead
+        isRead = _isRead || incoming
     } else {
-        isRead = false
+        isRead = incoming
     }
     
     var file: TelegramMediaFile? = nil

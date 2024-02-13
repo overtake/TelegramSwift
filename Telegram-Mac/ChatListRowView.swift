@@ -2927,6 +2927,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             var mediaPreviewOffset = NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset)
             let contentImageSpacing: CGFloat = 2.0
             
+            if tagsView != nil {
+                if let chatNameTextView = chatNameTextView {
+                    mediaPreviewOffset.y -= displayNameView.frame.height
+                    mediaPreviewOffset.x += chatNameTextView.frame.width + 3
+                }
+
+            }
+            
             for (message, _, mediaSize) in self.currentMediaPreviewSpecs {
                 if let previewView = self.mediaPreviewViews[message.id] {
                     previewView.frame = CGRect(origin: mediaPreviewOffset, size: mediaSize)
@@ -2963,8 +2971,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             if let messageTextView = messageTextView {
                 if tagsView == nil || chatNameTextView == nil {
-                    
-                    
                     messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
                 } else if let chatNameTextView = chatNameTextView {
                     let maxX = [chatNameTextView, forumTopicTextView].compactMap { $0 }.map { $0.frame.maxX + 3 }.max()

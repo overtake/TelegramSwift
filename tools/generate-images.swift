@@ -926,6 +926,8 @@ func initialize() -> [String] {
     array.append("chat_my_notes")
     
     array.append("premium_required_forward")
+    
+    array.append("create_new_message_general")
 
     return array
 }

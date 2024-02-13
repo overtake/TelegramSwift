@@ -8715,6 +8715,8 @@ public final class L10n {
   public static var locationSendTitle: String  { return L10n.tr("Localizable", "Location.Send.Title") }
   /// Unknown Location
   public static var locationSendThisLocationUnknown: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation.Unknown") }
+  /// Set This Location
+  public static var locationSetLocation: String  { return L10n.tr("Localizable", "Location.Set.Location") }
   /// %@ away
   public static func locationPreviewDistanceAway(_ p1: String) -> String {
     return L10n.tr("Localizable", "LocationPreview.DistanceAway", p1)
@@ -14465,6 +14467,8 @@ public final class L10n {
   public static var storyInputFile: String  { return L10n.tr("Localizable", "Story.Input.File") }
   /// Reply Privately...
   public static var storyInputPlaceholder: String  { return L10n.tr("Localizable", "Story.Input.Placeholder") }
+  /// Comment Story...
+  public static var storyInputGroupPlaceholder: String  { return L10n.tr("Localizable", "Story.Input.Group.Placeholder") }
   /// This story is not supported by your version of Telegram. Please update the app to the latest version.
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
   /// Copy Link
@@ -14539,6 +14543,10 @@ public final class L10n {
   public static var storyNoReplyInputNoReply: String  { return L10n.tr("Localizable", "Story.NoReplyInput.NoReply") }
   /// Telegram moderators will review your report. Thank you!
   public static var storyReportSuccessText: String  { return L10n.tr("Localizable", "Story.Report.SuccessText") }
+  /// Slow Mode - %@
+  public static func storySlowModePlaceholder(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.SlowMode.Placeholder", p1)
+  }
   /// Stealth Mode - %@
   public static func storyStealthModePlaceholder(_ p1: String) -> String {
     return L10n.tr("Localizable", "Story.StealthMode.Placeholder", p1)

@@ -3240,6 +3240,13 @@ func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) ->
 
 struct PeerEquatable: Equatable {
     let peer: Peer
+    
+    var peerId: PeerId {
+        return peer.id
+    }
+    var id: PeerId {
+        return peer.id
+    }
     init(peer: Peer) {
         self.peer = peer
     }

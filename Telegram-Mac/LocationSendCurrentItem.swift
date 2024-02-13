@@ -17,8 +17,10 @@ enum LocationSelectCurrentState : Equatable {
 class LocationSendCurrentItem: GeneralRowItem {
     fileprivate let statusLayout: TextViewLayout
     fileprivate let state: LocationSelectCurrentState
-    init(_ initialSize: NSSize, stableId: AnyHashable, state: LocationSelectCurrentState, action:@escaping()->Void) {
+    fileprivate let destination: SelectLocationDestination
+    init(_ initialSize: NSSize, stableId: AnyHashable, state: LocationSelectCurrentState, destination: SelectLocationDestination, action:@escaping()->Void) {
         self.state = state
+        self.destination = destination
         let text: String
         switch state {
         case let .accurate(location, _):
@@ -87,9 +89,19 @@ private final class LocationSendCurrentView : TableRowView {
         let text: String
         switch item.state {
         case .accurate:
-            text = strings().locationSendMyLocation
+            switch item.destination {
+            case .chat:
+                text = strings().locationSendMyLocation
+            case .business:
+                text = strings().locationSetLocation
+            }
         case .selected:
-            text = strings().locationSendThisLocation
+            switch item.destination {
+            case .chat:
+                text = strings().locationSendThisLocation
+            case .business:
+                text = strings().locationSetLocation
+            }
         }
         button.set(text: text, for: .Normal)
         _ = button.sizeToFit()
@@ -97,7 +109,7 @@ private final class LocationSendCurrentView : TableRowView {
         statusView.update(item.statusLayout)
         
         iconView.image = theme.icons.locationPin
-        _ = iconView.sizeToFit()
+        iconView.sizeToFit()
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
