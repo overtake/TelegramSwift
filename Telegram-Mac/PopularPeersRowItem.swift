@@ -118,6 +118,8 @@ private final class PopularPeerItemView : HorizontalRowView {
             item.actionHandler(item.type)
         }, for: .Click)
         
+        self.container.layer?.masksToBounds = false
+        self.layer?.masksToBounds = false
         
     }
 //    
@@ -187,8 +189,9 @@ private final class PopularPeerItemView : HorizontalRowView {
             }
         }
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .normal(11)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 15)
+        layout.measure(width: frame.width - 2)
         textView.update(layout)
+        
         
         self.needsLayout = true
     }
