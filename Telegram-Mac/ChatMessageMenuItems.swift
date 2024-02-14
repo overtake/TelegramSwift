@@ -418,7 +418,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if data.chatMode.threadId == nil, let peer = peer, peer.isSupergroup {
-            if let attr = data.message.threadAttr, attr.count > 0 {
+            if let attr = data.message.threadAttr, attr.count > 0, mode != .scheduled {
                 var messageId: MessageId = message.id
                 var modeIsReplies = true
                 if let source = message.sourceReference {

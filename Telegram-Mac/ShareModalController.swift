@@ -1065,6 +1065,9 @@ final class ReplyForwardMessageObject : ShareObject {
     
     override func possibilityPerformTo(_ peer: Peer) -> Bool {
         let canSend = peer.canSendMessage(media: message.media.first)
+        if peer.id.namespace == Namespaces.Peer.SecretChat {
+            return false
+        }
         return !excludePeerIds.contains(peer.id) && canSend
     }
     
