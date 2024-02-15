@@ -1230,7 +1230,7 @@ class PhoneCallWindowController {
     @objc open func windowDidResignKey() {
         keyStateDisposable.set((session.state |> deliverOnMainQueue).start(next: { [weak self] state in
             if let strongSelf = self {
-                if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.window.isKeyWindow {
+                if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.session.isScreenCapture, !strongSelf.window.isKeyWindow {
                     switch state.videoState {
                     case .active, .paused:
                         break

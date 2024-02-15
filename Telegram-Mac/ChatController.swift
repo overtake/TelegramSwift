@@ -6540,8 +6540,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 return true
             })
-            self.dustLayerView = ApplyDustAnimations(for: foundItemViews, superview: self.dustLayerView)
-
+            if dustLayerView == nil {
+                self.dustLayerView = ApplyDustAnimations(for: foundItemViews, superview: self.dustLayerView)
+            }
         }
         CATransaction.commit()
     }

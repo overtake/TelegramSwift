@@ -49,7 +49,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     
-    open private(set) weak var item:TableRowItem?
+    open private(set) var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
     // var selected:Bool?
     

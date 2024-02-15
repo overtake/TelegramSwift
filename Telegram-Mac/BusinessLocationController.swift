@@ -74,10 +74,10 @@ private final class AnnotationView : MKAnnotationView {
 private class MapRowItem: GeneralRowItem {
     let context: AccountContext
     fileprivate let location: State.Location
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, location: State.Location, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, location: State.Location, viewType: GeneralViewType, action: @escaping()->Void) {
         self.context = context
         self.location = location
-        super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
+        super.init(initialSize, height: height, stableId: stableId, viewType: viewType, action: action)
     }
     
     deinit {
@@ -92,6 +92,7 @@ private class MapRowItem: GeneralRowItem {
 
 private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegate {
     private let mapView: MKMapView = MKMapView()
+    private let overlay = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(mapView)
@@ -101,7 +102,17 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
         mapView.showsZoomControls = false
         mapView.showsUserLocation = false
         
+        mapView.isZoomEnabled = false
+        mapView.isScrollEnabled = false
+        
         mapView.showsBuildings = false
+        addSubview(overlay)
+        
+        overlay.set(handler: { [weak self] _ in
+            if let item = self?.item as? GeneralRowItem {
+                item.action()
+            }
+        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -115,6 +126,7 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
     override func layout() {
         super.layout()
         mapView.frame = bounds
+        overlay.frame = bounds
     }
 
     
@@ -204,9 +216,11 @@ extension CLLocationCoordinate2D : Equatable {
 private final class Arguments {
     let context: AccountContext
     let setLocation:()->Void
-    init(context: AccountContext, setLocation:@escaping()->Void) {
+    let openMap:()->Void
+    init(context: AccountContext, setLocation:@escaping()->Void, openMap:@escaping()->Void) {
         self.context = context
         self.setLocation = setLocation
+        self.openMap = openMap
     }
 }
 
@@ -257,7 +271,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let location = state.location {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map_map, equatable: .init(state.location), comparable: nil, item: { initialSize, stableId in
-            return MapRowItem(initialSize, height: 200, stableId: stableId, context: arguments.context, location: location, viewType: .lastItem)
+            return MapRowItem(initialSize, height: 200, stableId: stableId, context: arguments.context, location: location, viewType: .lastItem, action: arguments.openMap)
         }))
     }
     
@@ -284,6 +298,19 @@ func BusinessLocationController(context: AccountContext, peerId: PeerId) -> Inpu
     let chatInteraction = ChatInteraction(chatLocation: .peer(peerId), context: context)
     
     chatInteraction.sendLocation = { location, venue in
+        
+        let signal = reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude) |> deliverOnMainQueue
+        
+        if stateValue.with({ $0.address == nil || $0.address!.isEmpty }) {
+            _ = signal.startStandalone(next: { value in
+                updateState { current in
+                    var current = current
+                    current.address = value?.fullAddress
+                    return current
+                }
+            })
+        }
+        
         updateState { current in
             var current = current
             current.location = .init(coordinate: location, venue: venue)
@@ -301,8 +328,10 @@ func BusinessLocationController(context: AccountContext, peerId: PeerId) -> Inpu
                 return current
             }
         } else {
-            showModal(with: LocationModalController(chatInteraction, destination: .business), for: context.window)
+            showModal(with: LocationModalController(chatInteraction, destination: .business(value?.coordinate)), for: context.window)
         }
+    }, openMap: {
+        showModal(with: LocationModalController(chatInteraction, destination: .business(stateValue.with { $0.location?.coordinate })), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
