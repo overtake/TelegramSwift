@@ -314,7 +314,7 @@ final class StoryControlsView : Control {
         
         if let author = story.storyItem.author {
             
-            date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
+            date.append(string: "\(strings().bullet) ", color: color, font: .medium(.small))
             
             let current: AuthorView
             var isNew = false

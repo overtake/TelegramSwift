@@ -528,7 +528,7 @@ func initialize() -> [String] {
     array.append("profile_translate")
     array.append("profile_join_channel")
     array.append("profile_boost")
-    
+    array.append("profile_archive")
     
     array.append("stats_boost_boost")
     array.append("stats_boost_giveaway")
