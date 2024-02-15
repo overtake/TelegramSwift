@@ -283,6 +283,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: strings().peerInfoActionBoostGroup, color: item.accentColor, image: theme.icons.profile_boost, animation: .menu_boost, action: {
                 arguments.boosts(peer.groupAccess)
             }))
+            items.append(ActionItem(text: strings().peerInfoActionAcrhivedStories, color: item.accentColor, image: theme.icons.profile_archive, animation: .menu_archive, action: {
+                arguments.archiveStories()
+            }))
         }
        
         
@@ -381,6 +384,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
+        
+        items.append(ActionItem(text: strings().peerInfoActionAcrhivedStories, color: item.accentColor, image: theme.icons.profile_archive, animation: .menu_archive, action: {
+            arguments.archiveStories()
+        }))
+        
         if let address = peer.addressName, !address.isEmpty {
             items.append(ActionItem(text: strings().peerInfoActionShare, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_share, action: arguments.share))
         }

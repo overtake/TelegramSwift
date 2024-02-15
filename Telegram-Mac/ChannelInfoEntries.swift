@@ -238,6 +238,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(SelectColorController(context: context, peer: peer))
     }
     
+    func archiveStories() {
+        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true), standalone: true, isArchived: true))
+    }
+    
     func openRequests() {
         pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
             self?.openInviteLinks()

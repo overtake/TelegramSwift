@@ -10533,6 +10533,8 @@ public final class L10n {
   public static var peerInfoUsername: String  { return L10n.tr("Localizable", "PeerInfo.username") }
   /// Description
   public static var peerInfoAboutPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.About.Placeholder") }
+  /// Acrhived Stories
+  public static var peerInfoActionAcrhivedStories: String  { return L10n.tr("Localizable", "PeerInfo.Action.AcrhivedStories") }
   /// Add
   public static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
   /// Boost Group
