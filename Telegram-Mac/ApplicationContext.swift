@@ -562,6 +562,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 
             return .invoked
         }, with: self, for: .J, priority: .supreme, modifierFlags: [.command])
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            context.bindings.rootNavigation().push(BusinessQuickReplyController(context: context, peerId: context.peerId))
+
+            return .invoked
+        }, with: self, for: .R, priority: .supreme, modifierFlags: [.command])
         #endif
         
         

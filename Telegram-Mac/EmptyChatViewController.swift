@@ -238,9 +238,9 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         }, for: .Click)
     }
     
-    override func firstResponder() -> NSResponder? {
-        return context.bindings.mainController().chatList.firstResponder()
-    }
+//    override func firstResponder() -> NSResponder? {
+//        return context.bindings.mainController().chatList.firstResponder()
+//    }
     
     override var window: Window? {
         return context.window

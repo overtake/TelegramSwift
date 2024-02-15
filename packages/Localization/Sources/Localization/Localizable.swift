@@ -2391,21 +2391,117 @@ public final class L10n {
   public static var channelBoostTitleChannel: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Channel") }
   /// Boost Group
   public static var channelBoostTitleGroup: String  { return L10n.tr("Localizable", "ChannelBoost.Title.Group") }
-  /// Boost the group **%1$@** times to remove slow mode restrictions. Your boosts will help **%2$@** to unlock new features.
-  public static func channelBoostUnblockSlowmodeGroup(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group", p1, p2)
+  /// %d %@
+  public static func channelBoostUnblockSlowmodeGroupCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_countable", p1, p2)
   }
-  /// Boost the group **%1$@** times to remove slow mode restrictions.
-  public static func channelBoostUnblockSlowmodeGroupFull(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full", p1)
+  /// Boost the group **%d** times to remove slow mode restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroupFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_few", p1, p2)
   }
-  /// Boost the group **%1$@** times to remove messaging restrictions. Your boosts will help **%2$@** to unlock new features.
-  public static func channelBoostUnblockTextGroup(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group", p1, p2)
+  /// Boost the group **%d** times to remove slow mode restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroupMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_many", p1, p2)
   }
-  /// Boost the group **%1$@** times to remove messaging restrictions.
-  public static func channelBoostUnblockTextGroupFull(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full", p1)
+  /// Boost the group **%d** time to remove slow mode restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroupOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_one", p1, p2)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroupOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_other", p1, p2)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroupTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_two", p1, p2)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockSlowmodeGroupZero(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group_zero", p1, p2)
+  }
+  /// %d
+  public static func channelBoostUnblockSlowmodeGroupFullCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_countable", p1)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFullFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_few", p1)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFullMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_many", p1)
+  }
+  /// Boost the group **%d** time to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFullOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_one", p1)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFullOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_other", p1)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFullTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_two", p1)
+  }
+  /// Boost the group **%d** times to remove slow mode restrictions.
+  public static func channelBoostUnblockSlowmodeGroupFullZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockSlowmode.Group.Full_zero", p1)
+  }
+  /// %d %@
+  public static func channelBoostUnblockTextGroupCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_countable", p1, p2)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockTextGroupFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_few", p1, p2)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockTextGroupMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_many", p1, p2)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockTextGroupOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_one", p1, p2)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockTextGroupOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_other", p1, p2)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockTextGroupTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_two", p1, p2)
+  }
+  /// Boost the group **%d** time to remove messaging restrictions. Your boosts will help **%@** to unlock new features.
+  public static func channelBoostUnblockTextGroupZero(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group_zero", p1, p2)
+  }
+  /// %d
+  public static func channelBoostUnblockTextGroupFullCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_countable", p1)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFullFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_few", p1)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFullMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_many", p1)
+  }
+  /// Boost the group **%d** time to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFullOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_one", p1)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFullOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_other", p1)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFullTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_two", p1)
+  }
+  /// Boost the group **%d** times to remove messaging restrictions.
+  public static func channelBoostUnblockTextGroupFullZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.UnblockText.Group.Full_zero", p1)
   }
   /// Your channel needs %1$@ to get access to features.\n\nAsk your **Premium** subscribers to boost your channel with this link:
   public static func channelBoostZeroLevelTextChannel(_ p1: String) -> String {

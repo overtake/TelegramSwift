@@ -387,6 +387,7 @@
 		27916F2D287D77660046DB44 /* objects.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27916F25287D77640046DB44 /* objects.tgs */; };
 		27916F2E287D77660046DB44 /* activity.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27916F26287D77650046DB44 /* activity.tgs */; };
 		27916F2F287D77660046DB44 /* animals.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27916F27287D77660046DB44 /* animals.tgs */; };
+		279338872B7E2B070096A292 /* BusinessQuickReplyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */; };
 		2795578E2AB86A65007EC996 /* libsharpyuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2795578D2AB86A5C007EC996 /* libsharpyuv.a */; };
 		2796FEEF273E503200DA653C /* ChatInputSendAsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */; };
 		2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FEF127423A8600DA653C /* EmojiSuggestions */; };
@@ -1886,6 +1887,7 @@
 		27916F25287D77640046DB44 /* objects.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = objects.tgs; sourceTree = "<group>"; };
 		27916F26287D77650046DB44 /* activity.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = activity.tgs; sourceTree = "<group>"; };
 		27916F27287D77660046DB44 /* animals.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = animals.tgs; sourceTree = "<group>"; };
+		279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessQuickReplyController.swift; sourceTree = "<group>"; };
 		2795578D2AB86A5C007EC996 /* libsharpyuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsharpyuv.a; path = "core-xprojects/libwebp/build/libwebp/lib/libsharpyuv.a"; sourceTree = "<group>"; };
 		2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputSendAsView.swift; sourceTree = "<group>"; };
 		2796FEF02742390000DA653C /* EmojiSuggestions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = EmojiSuggestions; path = packages/EmojiSuggestions; sourceTree = "<group>"; };
@@ -3495,6 +3497,7 @@
 				27E1F2412B7AD47F00DCF241 /* BusinessAwayMessageController.swift */,
 				27E1F2432B7B007B00DCF241 /* BusinessLocationController.swift */,
 				27E1F2452B7B876800DCF241 /* BusinessChatbotController.swift */,
+				279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */,
 			);
 			name = business;
 			sourceTree = "<group>";
@@ -6973,6 +6976,7 @@
 				27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				27F67417297682880014DCB9 /* ChatLiveTranslateContext.swift in Sources */,
+				279338872B7E2B070096A292 /* BusinessQuickReplyController.swift in Sources */,
 				27F3BB8E2B4C399400BC37C2 /* PremiumShowStatusController.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				9F0367F0227208E000456348 /* QRCode.swift in Sources */,

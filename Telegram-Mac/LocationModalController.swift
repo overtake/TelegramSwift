@@ -453,11 +453,25 @@ private class MapDelegate : NSObject, MKMapViewDelegate {
         mapView.setRegion(region, animated: animated)
         animated = true
     }
+    
+    func focusVenue(mapView: MKMapView, _ location: CLLocationCoordinate2D) {
+        let userLocation = location
+        var region = MKCoordinateRegion()
+        var span = MKCoordinateSpan()
+        span.latitudeDelta = CLLocationDegrees(0.005)
+        span.longitudeDelta = CLLocationDegrees(0.005)
+        var location = CLLocationCoordinate2D()
+        location.latitude = userLocation.latitude
+        location.longitude = userLocation.longitude
+        region.span = span
+        region.center = location
+        mapView.setRegion(region, animated: true)
+    }
 }
 
-enum SelectLocationDestination {
+enum SelectLocationDestination : Equatable {
     case chat
-    case business
+    case business(CLLocationCoordinate2D?)
 }
 
 class LocationModalController: ModalViewController {
@@ -559,6 +573,16 @@ class LocationModalController: ModalViewController {
         if let _ = genericView.mapView.userLocation.location {
             delegate.location.set(.single(genericView.mapView.userLocation))
             delegate.focusUserLocation(genericView.mapView)
+        }
+        
+        switch destination {
+        case let .business(coordinate):
+            if let coordinate = coordinate {
+                delegate.focusVenue(mapView: genericView.mapView, coordinate)
+                self.delegate.isPinRaised = true
+            }
+        default:
+            break
         }
         
         var handleRegion: Bool = true

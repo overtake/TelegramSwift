@@ -1224,6 +1224,9 @@ class ChatListRowItem: TableRowItem {
         if let topicsLayout = forumTopicNameLayout, let _ = tags {
             w += topicsLayout.layoutSize.width + 5
         }
+        if let _ = tags, !contentImageSpecs.isEmpty {
+            w += CGFloat(contentImageSpecs.count) * 16
+        }
         
         return (max(200, size.width) - margin * 3) - w - (chatNameLayout != nil ? textLeftCutout : 0)
     }

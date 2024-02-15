@@ -1883,7 +1883,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func insert(item:TableRowItem, at:Int = 0, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Bool {
-        assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className), stableId: \(item.stableId)")
+       // assert(self.item(stableId:item.stableId) == nil, "inserting existing row inTable: \(self.item(stableId:item.stableId)!.className), new: \(item.className), stableId: \(item.stableId)")
         self.listhash[item.stableId] = item;
         let at = min(at, list.count)
         self.list.insert(item, at: at);

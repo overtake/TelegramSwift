@@ -90,6 +90,36 @@ private func formatHourToLocaleTime(hour: Int) -> String {
     return formattedTime
 }
 
+private func formatMinutesToLocaleTime(minutes: Int) -> String {
+    
+    // Create a DateComponents object with the hour set to the provided value
+    var components = DateComponents()
+    components.minute = minutes
+    
+    // Use the current calendar to ensure the components are interpreted correctly
+    let calendar = Calendar.current
+    
+    // Optional: you might want to ensure you're using the current time zone
+    components.timeZone = TimeZone.current
+    
+    // Create a Date from components
+    guard let date = calendar.date(from: components) else {
+        print("Failed to create date from components.")
+        return ""
+    }
+    
+    // Create a DateFormatter and set its dateStyle to .none and timeStyle to .short
+    // This will ensure that the time is formatted according to the user's locale
+    let formatter = DateFormatter()
+    formatter.dateStyle = .none
+    formatter.timeStyle = .short
+    
+    // Format the date to a string
+    let formattedTime = formatter.string(from: date)
+    
+    return formattedTime
+}
+
 // Example usage
 let formattedTime = formatHourToLocaleTime(hour: 3)
 
@@ -269,6 +299,8 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
+    
+    
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
@@ -293,14 +325,23 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
                 end = 24
             }
             
+            let minutes = ContextMenu()
+            for j in 0 ..< 60 {
+                minutes.addItem(ContextMenuItem(formatMinutesToLocaleTime(minutes: j)))
+            }
+            
             for i in start ..< end {
-                items.append(.init(formatHourToLocaleTime(hour: i), handler: {
+                let item = ContextMenuItem(formatHourToLocaleTime(hour: i), handler: {
                     arguments.editSpefic(day, .init(from: from ? i : hour.from, to: !from ? i : hour.to, uniqueId: hour.uniqueId))
-                }, state: i == (from ? hour.from : hour.to) ? .on : nil))
+                }, state: i == (from ? hour.from : hour.to) ? .on : nil)
+                
+                
+                item.submenu = minutes
+                items.append(item)
             }
             return items
         }
-        
+                
         for hour in hours.list {
             
             entries.append(.sectionId(sectionId, type: .normal))
@@ -317,20 +358,19 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
         }
     }
     
-    
+
     let count = state.data[day]?.list.count ?? 0
+        
+    sectionId = 1000
     
-    if count < 3 {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_specific, data: .init(name: "Add a Set of Hours", color: theme.colors.accent, type: .none, viewType: .singleItem, action: {
-            arguments.addSpecific(day)
-        })))
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Specify your working hours during the day."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
-    }
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_specific, data: .init(name: "Add a Set of Hours", color: theme.colors.accent, type: .none, viewType: .singleItem, action: {
+        arguments.addSpecific(day)
+    })))
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Specify your working hours during the day."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     
     
     entries.append(.sectionId(sectionId, type: .normal))

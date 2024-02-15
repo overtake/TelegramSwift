@@ -472,17 +472,17 @@ private final class BoostRowItem : TableRowItem {
         case let .unblockText(count):
             if count > state.boostedByMe {
                 if state.status.nextLevelBoosts == nil {
-                    string = strings().channelBoostUnblockTextGroupFull("\(count - state.boostedByMe)")
+                    string = strings().channelBoostUnblockTextGroupFullCountable(Int(count - state.boostedByMe))
                 } else {
-                    string = strings().channelBoostUnblockTextGroup("\(count - state.boostedByMe)", state.peer.peer.displayTitle)
+                    string = strings().channelBoostUnblockTextGroupCountable(Int(count - state.boostedByMe), state.peer.peer.displayTitle)
                 }
             }
         case let .unblockSlowmode(count):
             if count > state.boostedByMe {
                 if state.status.nextLevelBoosts == nil {
-                    string = strings().channelBoostUnblockSlowmodeGroupFull("\(count - state.boostedByMe)")
+                    string = strings().channelBoostUnblockSlowmodeGroupFullCountable(Int(state.boostedByMe))
                 } else {
-                    string = strings().channelBoostUnblockSlowmodeGroup("\(count - state.boostedByMe)", state.peer.peer.displayTitle)
+                    string = strings().channelBoostUnblockSlowmodeGroupCountable(Int(count - state.boostedByMe), state.peer.peer.displayTitle)
                 }
             }
         default:
