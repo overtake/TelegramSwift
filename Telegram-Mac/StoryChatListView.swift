@@ -818,7 +818,7 @@ private final class StoryListEntryRowItem : TableRowItem {
                 if !isChannel {
                     items.append(.init(strings().storyListContextViewProfile, handler: {
                         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-                    }, itemImage: MenuAnimation.menu_open_profile.value))
+                    }, itemImage: self.entry.item.peer._asPeer().isSupergroup ? MenuAnimation.menu_create_group.value : MenuAnimation.menu_open_profile.value))
                 }
                 
                 
