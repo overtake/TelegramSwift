@@ -1822,8 +1822,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private func moveHole(at fromIndex: Int, to toIndex: Int, animated: Bool) {
         var y: CGFloat = 0
-        
-        
+                
         guard let controller = resortController, let resortRow = controller.resortRow, let resortView = controller.resortView else {return}
         if controller.resortRange.location == NSNotFound {
             self.stopResorting()
@@ -1868,12 +1867,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         guard let controller = resortController else {return}
         
-        let row = min(max(tableView.row(at: point), controller.resortRange.location), controller.resortRange.max - 1)
-        controller.prevHoleIndex = controller.currentHoleIndex
-        controller.currentHoleIndex = row
-        if controller.prevHoleIndex != controller.currentHoleIndex {
-            moveHole(at: controller.prevHoleIndex!, to: controller.currentHoleIndex!, animated: true)
-            controller.updateItems(controller.resortView, self.list.filter { controller.canResort($0.index) })
+        let row = tableView.row(at: point)
+        if row != -1 {
+            let row = min(max(tableView.row(at: point), controller.resortRange.location), controller.resortRange.max - 1)
+            controller.prevHoleIndex = controller.currentHoleIndex
+            controller.currentHoleIndex = row
+            if controller.prevHoleIndex != controller.currentHoleIndex {
+                moveHole(at: controller.prevHoleIndex!, to: controller.currentHoleIndex!, animated: true)
+                controller.updateItems(controller.resortView, self.list.filter { controller.canResort($0.index) })
+            }
         }
     }
 

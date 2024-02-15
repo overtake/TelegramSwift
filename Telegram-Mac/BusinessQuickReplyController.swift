@@ -52,7 +52,7 @@ private final class QuickReplyRowItem : GeneralRowItem {
         var width = blockWidth
         width -= (leftInset + viewType.innerInset.left)
         
-        width -= 30 // photo
+        width -= 40 // photo
         width -= viewType.innerInset.left // photo
 
 
@@ -92,7 +92,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
     private let container = View()
     
     private var remove: ImageButton?
-    
+    private var sort: ImageButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(container)
@@ -101,6 +101,9 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         
         imageView.layer?.backgroundColor = theme.colors.grayIcon.cgColor
         imageView.layer?.cornerRadius = imageView.frame.height / 2
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
     }
     
     required init?(coder: NSCoder) {
@@ -117,37 +120,88 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         textView.update(item.textLayout)
         
         if item.editing {
-            let current: ImageButton
-            var isNew = false
-            if let view = self.remove {
-                current = view
-            } else {
-                current = ImageButton()
-                current.scaleOnClick = true
-                current.autohighlight = false
-                addSubview(current)
-                self.remove = current
+            if "".isEmpty {
+                let current: ImageButton
+                var isNew = false
+                if let view = self.remove {
+                    current = view
+                } else {
+                    current = ImageButton()
+                    current.scaleOnClick = true
+                    current.autohighlight = false
+                    addSubview(current)
+                    self.remove = current
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let item = self?.item as? QuickReplyRowItem {
+                            item.remove(item.reply)
+                        }
+                    }, for: .Click)
+                    
+                    isNew = true
+                }
+                current.set(image: theme.icons.deleteItem, for: .Normal)
+                current.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
                 
-                current.set(handler: { [weak self] _ in
-                    if let item = self?.item as? QuickReplyRowItem {
-                        item.remove(item.reply)
+                if isNew {
+                    current.centerY(x: item.leftInset)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
-                }, for: .Click)
-                
-                isNew = true
-            }
-            current.set(image: theme.icons.deleteItem, for: .Normal)
-            current.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
-            
-            if isNew {
-                current.centerY(x: item.leftInset)
-                if animated {
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-        } else if let view = remove {
-            performSubviewRemoval(view, animated: animated)
-            self.remove = nil
+            if "".isEmpty {
+                let current: ImageButton
+                var isNew = false
+                if let view = self.sort {
+                    current = view
+                } else {
+                    current = ImageButton()
+                    current.scaleOnClick = true
+                    current.autohighlight = false
+                    addSubview(current)
+                    self.sort = current
+                    
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let event = NSApp.currentEvent {
+                            self?.mouseDown(with: event)
+                        }
+                    }, for: .Down)
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let event = NSApp.currentEvent {
+                            self?.mouseDragged(with: event)
+                        }
+                    }, for: .MouseDragging)
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let event = NSApp.currentEvent {
+                            self?.mouseUp(with: event)
+                        }
+                    }, for: .Up)
+                    
+                    isNew = true
+                }
+                current.set(image: theme.icons.resort, for: .Normal)
+                current.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+                
+                if isNew {
+                    current.centerY(x: containerView.frame.width - current.frame.width - item.viewType.innerInset.right)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+            }
+        } else {
+            if let view = remove {
+                performSubviewRemoval(view, animated: animated)
+                self.remove = nil
+            }
+            if let view = sort {
+                performSubviewRemoval(view, animated: animated)
+                self.sort = nil
+            }
         }
         
         self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
@@ -169,6 +223,11 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         let containerRect = NSMakeRect(contentInset, 0, containerView.frame.width - contentInset, containerView.frame.height)
         
         transition.updateFrame(view: container, frame: containerRect)
+        
+        
+        if let sort = sort {
+            transition.updateFrame(view: sort, frame: sort.centerFrameY(x: containerView.frame.width - sort.frame.width - item.viewType.innerInset.right))
+        }
         
         transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 0))
         transition.updateFrame(view: textView, frame: textView.centerFrameY(x: imageView.frame.maxX + 10))
@@ -282,6 +341,9 @@ func BusinessQuickReplyController(context: AccountContext, peerId: PeerId) -> In
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let nextTransactionNonAnimated = Atomic(value: false)
+
 
     let arguments = Arguments(context: context, add: {
         showModal(with: BusinessAddQuickReply(context: context, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: nil), for: context.window)
@@ -297,8 +359,8 @@ func BusinessQuickReplyController(context: AccountContext, peerId: PeerId) -> In
         showModal(with: BusinessAddQuickReply(context: context, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: reply), for: context.window)
     })
     
-    let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+    let signal = statePromise.get() |> deliverOnMainQueue |> map { state in
+        return InputDataSignalValue(entries: entries(state, arguments: arguments), animated: !nextTransactionNonAnimated.swap(false))
     }
     
     let controller = InputDataController(dataSignal: signal, title: "Quick Replies", removeAfterDisappear: false)
@@ -347,7 +409,7 @@ func BusinessQuickReplyController(context: AccountContext, peerId: PeerId) -> In
                 let toValue = to - range.location
                 var replies = stateValue.with { $0.replies }
                 replies.move(at: fromValue, to: toValue)
-//                _ = nextTransactionNonAnimated.swap(true)
+                _ = nextTransactionNonAnimated.swap(true)
                 updateState { current in
                     var current = current
                     current.replies = replies
