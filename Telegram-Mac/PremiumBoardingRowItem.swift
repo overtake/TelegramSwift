@@ -21,6 +21,7 @@ final class PremiumBoardingRowItem : GeneralRowItem {
     fileprivate let callback: (PremiumValue)->Void
 
     fileprivate let premValueIndex: Int
+    fileprivate let business: Bool
     fileprivate let presentation: TelegramPresentationTheme
     fileprivate let isNew: Bool
     init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, presentation: TelegramPresentationTheme, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, isNew: Bool, callback: @escaping(PremiumValue)->Void) {
@@ -30,6 +31,7 @@ final class PremiumBoardingRowItem : GeneralRowItem {
         self.premValueIndex = index
         self.isLastItem = isLast
         self.callback = callback
+        self.business = value.isBusiness
         self.isNew = isNew
         self.titleLayout = .init(.initialize(string: value.title(limits), color: presentation.colors.text, font: .medium(.title)))
         self.infoLayout = .init(.initialize(string: value.info(limits), color: presentation.colors.grayText, font: .normal(.text)))
@@ -134,7 +136,7 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
             return
         }
         
-        imageView.image = item.value.icon(item.premValueIndex, presentation: item.presentation)
+        imageView.image = item.value.icon(item.premValueIndex, business: item.business, presentation: item.presentation)
         imageView.sizeToFit()
         
         nextView.image = item.presentation.icons.premium_boarding_feature_next

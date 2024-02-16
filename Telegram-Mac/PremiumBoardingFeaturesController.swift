@@ -311,6 +311,18 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 17, animated: false)
         case .message_privacy:
             slideView.displaySlide(at: 18, animated: false)
+        case .business_location:
+            fatalError()
+        case .business_hours:
+            fatalError()
+        case .business_quick_replies:
+            fatalError()
+        case .business_greeting_messages:
+            fatalError()
+        case .business_away_messages:
+            fatalError()
+        case .business_chatbots:
+            fatalError()
         }
         
         needsLayout = true
