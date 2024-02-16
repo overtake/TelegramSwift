@@ -279,6 +279,7 @@
 		276E767B2B3BEA9B00440A4F /* ChannelWallpapersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */; };
 		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
 		276F9B8A2935FD7800E35997 /* pirate_flag.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B892935FD7800E35997 /* pirate_flag.tgs */; };
+		27716D2C2B7E95CD00244412 /* CallScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27716D2B2B7E95CD00244412 /* CallScreenController.swift */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
 		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
@@ -1777,6 +1778,7 @@
 		276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelWallpapersController.swift; sourceTree = "<group>"; };
 		276F9B872931155D00E35997 /* menu_bio.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_bio.tgs; sourceTree = "<group>"; };
 		276F9B892935FD7800E35997 /* pirate_flag.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = pirate_flag.tgs; sourceTree = "<group>"; };
+		27716D2B2B7E95CD00244412 /* CallScreenController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallScreenController.swift; sourceTree = "<group>"; };
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
 		2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = text; path = voice_chat_raise_hand_1.tgs; sourceTree = "<group>"; };
 		2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertController.swift; sourceTree = "<group>"; };
@@ -5718,6 +5720,7 @@
 				D0530D3D24E69132003273BC /* CallControl.swift */,
 				D0530D3F24E693A5003273BC /* CameraViews.swift */,
 				D0530D4124E69459003273BC /* CallTooltipView.swift */,
+				27716D2B2B7E95CD00244412 /* CallScreenController.swift */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -6881,6 +6884,7 @@
 				2703406E282A657300D0156C /* PremiumBoardingController.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */,
+				27716D2C2B7E95CD00244412 /* CallScreenController.swift in Sources */,
 				9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */,
 				277E228A28EC93AD00001689 /* UsernameController.swift in Sources */,
 				2751018129D6C0AD004CEFF3 /* EditBotUsernameController.swift in Sources */,

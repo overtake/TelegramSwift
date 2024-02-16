@@ -96,7 +96,11 @@ final class PeerCallScreenView : Control {
     
     private var secretView: SecretKeyView?
     private var revealedKey: PeerCallRevealedSecretKeyView?
+    private var keyoverlay: Control?
     
+    private var tooltipsViews: [PeerCallTooltipStatusView] = []
+    private var tooltips: [PeerCallTooltipStatusView.TooltipType] = []
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.layer?.addSublayer(backgroundLayer)
@@ -110,14 +114,7 @@ final class PeerCallScreenView : Control {
         addSubview(muteAction!)
         addSubview(endAction!)
         
-        muteAction?.update(makeAction(text: "Mute", resource: .icMute), animated: false)
-        videoAction?.update(makeAction(text: "Video", resource: .icVideo), animated: false)
-        screencastAction?.update(makeAction(text: "Screen", resource: .icScreen), animated: false)
-        endAction?.update(makeAction(text: "End Call", resource: .icDecline, interactive: false), animated: false)
-
-        photoView.set(handler: { [weak self] _ in
-            self?.arguments?.toggleAnim()
-        }, for: .Click)
+        
         
         updateLayout(size: self.frame.size, transition: .immediate)
     }
@@ -173,6 +170,12 @@ final class PeerCallScreenView : Control {
             transition.updateFrame(view: revealedKey, frame: revealedKeyFrame(view: revealedKey, state: state))
             revealedKey.updateLayout(size: revealedKey.frame.size, transition: transition)
         }
+        if let keyoverlay {
+            transition.updateFrame(view: keyoverlay, frame: size.bounds)
+        }
+        
+        
+        
 
         let actions = [self.videoAction, self.screencastAction, self.muteAction, self.endAction].compactMap { $0 }
         
@@ -182,6 +185,13 @@ final class PeerCallScreenView : Control {
         for action in actions {
             transition.updateFrame(view: action, frame: CGRect(origin: CGPoint(x: x, y: size.height - action.frame.height - 40), size: action.frame.size))
             x += action.frame.width + 36
+        }
+        
+        var y: CGFloat = size.height - 70 - 40
+        for tooltip in tooltipsViews {
+            y -= (tooltip.frame.height + 10)
+            transition.updateFrame(view: tooltip, frame: tooltip.centerFrameX(y: y))
+            tooltip.reveal(animated: transition.isAnimated)
         }
     }
     
@@ -193,6 +203,12 @@ final class PeerCallScreenView : Control {
         self.statusView.updateState(state, arguments: arguments, transition: transition)
         self.backgroundLayer.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
         
+        
+        muteAction?.update(makeAction(text: "Mute", resource: .icMute, active: state.externalState.isMuted, action: arguments.external.toggleMute), animated: false)
+        videoAction?.update(makeAction(text: "Video", resource: .icVideo, action: arguments.external.toggleCamera), animated: false)
+        screencastAction?.update(makeAction(text: "Screen", resource: .icScreen, action: arguments.external.toggleScreencast), animated: false)
+        endAction?.update(makeAction(text: "End Call", resource: .icDecline, interactive: false, action: arguments.external.endcall), animated: false)
+
         
         if let tooltip = state.statusTooltip {
             if self.statusTooltip?.string != tooltip {
@@ -244,9 +260,33 @@ final class PeerCallScreenView : Control {
                     current.layer?.animateScaleSpring(from: 0.8, to: 1, duration: 0.2, bounce: false)
                 }
             }
-        } else if let revealedKey = self.revealedKey {
-            performSubviewRemoval(revealedKey, animated: transition.isAnimated, scale: false)
-            self.revealedKey = nil
+            
+            if "".isEmpty {
+                let current: Control
+                if let view = self.keyoverlay {
+                    current = view
+                } else {
+                    current = Control(frame: bounds)
+                    self.addSubview(current, positioned: .below, relativeTo: revealedKey)
+                    self.keyoverlay = current
+                    
+                    current.set(handler: { [weak arguments] _ in
+                        arguments?.toggleSecretKey()
+                    }, for: .Click)
+                }
+                ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: bounds)
+            }
+            
+            
+        } else {
+            if let revealedKey = self.revealedKey {
+                performSubviewRemoval(revealedKey, animated: transition.isAnimated, scale: false)
+                self.revealedKey = nil
+            }
+            if let keyoverlay = self.keyoverlay {
+                performSubviewRemoval(keyoverlay, animated: transition.isAnimated, scale: false)
+                self.keyoverlay = nil
+            }
         }
         
         
@@ -276,6 +316,38 @@ final class PeerCallScreenView : Control {
             self.secretView = nil
         }
         
+        var tooltips:[PeerCallTooltipStatusView.TooltipType] = []
+        
+        if state.externalState.isMuted, state.isActive {
+            tooltips.append(.yourMicroOff)
+        }
+        if state.externalState.remoteAudioState == .muted, state.isActive {
+            tooltips.append(.microOff(state.compactTitle))
+        }
+        
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.tooltips, rightList: tooltips)
+        
+        for deleteIndex in deleteIndices.reversed() {
+            let view = self.tooltipsViews.remove(at: deleteIndex)
+            performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
+        }
+        for indicesAndItem in indicesAndItems {
+            let view = PeerCallTooltipStatusView(frame: .zero)
+            view.set(type: indicesAndItem.1)
+            tooltipsViews.insert(view, at: indicesAndItem.0)
+        }
+        for updateIndex in updateIndices {
+            let view = self.tooltipsViews[updateIndex.0]
+            view.set(type: updateIndex.1)
+        }
+        CATransaction.begin()
+        for view in self.tooltipsViews {
+            view.removeFromSuperview()
+        }
+        self.subviews.insert(contentsOf: self.tooltipsViews, at: 0)
+        CATransaction.commit()
+        
+        self.tooltips = tooltips
     }
 }
 

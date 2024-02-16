@@ -569,6 +569,11 @@ final class InlineStickerItemLayer : SimpleLayer {
                         layer?.animateContents()
                         layer?.isPreviousPreview = false
                     }
+                    if self?.superview?.window == nil {
+                        DispatchQueue.main.async {
+                            self?.set(nil, force: true)
+                        }
+                    }
                 }, release: {
 
                 }, updateState: { [weak self] state in

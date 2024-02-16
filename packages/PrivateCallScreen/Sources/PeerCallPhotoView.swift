@@ -34,6 +34,7 @@ final class PeerCallPhotoView : Control, CallViewUpdater {
         self.addSubview(photoView)
         self.photoView = photoView
         
+        
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         if let photoView = photoView {

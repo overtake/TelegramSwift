@@ -1015,6 +1015,8 @@ public final class L10n {
   public static func callToastMicroOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.MicroOff", p1)
   }
+  /// Your microphone is off
+  public static var callToastMicroOffYour: String  { return L10n.tr("Localizable", "Call.Toast.MicroOff.Your") }
   /// Add an optional comment
   public static var callFeedbackAddComment: String  { return L10n.tr("Localizable", "CallFeedback.AddComment") }
   /// Include technical information

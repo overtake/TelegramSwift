@@ -212,6 +212,15 @@ public struct PeerCallState : Equatable {
         return self.externalState.state.statusText(accountPeer, externalState.videoState)
     }
     
+    var isActive: Bool {
+        switch externalState.state {
+        case .active, .reconnecting:
+            return true
+        default:
+            return false
+        }
+    }
+    
     var title: String? {
         if let peer = peer?._asPeer() as? TelegramUser {
             return [peer.firstName, peer.lastName].compactMap { $0 }.joined(separator: " ")
@@ -256,14 +265,14 @@ public struct PeerCallState : Equatable {
         case .requesting:
             return 0
         case .connecting:
-            return 0
+            return 2
         case let .active(_, reception, _):
             if let reception = reception, reception < 2 {
-                return 1
+                return 2
             }
-            return 2
-        case .reconnecting:
             return 1
+        case .reconnecting:
+            return 2
         case .terminating:
             return 0
         case .terminated:

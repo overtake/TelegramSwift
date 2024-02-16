@@ -3372,6 +3372,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsBusiness: CGImage {
+      if let image = cached.with({ $0["settingsBusiness"] }) {
+          return image
+      } else {
+          let image = _settingsBusiness()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsBusiness"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var generalCheck: CGImage {
       if let image = cached.with({ $0["generalCheck"] }) {
           return image
@@ -10548,6 +10561,7 @@ public final class TelegramIconsTheme {
   private let _settingsUpdateActive: ()->CGImage
   private let _settingsFiltersActive: ()->CGImage
   private let _settingsProfile: ()->CGImage
+  private let _settingsBusiness: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
   private let _settingsLogout: ()->CGImage
@@ -11341,6 +11355,7 @@ public final class TelegramIconsTheme {
       settingsUpdateActive: @escaping()->CGImage,
       settingsFiltersActive: @escaping()->CGImage,
       settingsProfile: @escaping()->CGImage,
+      settingsBusiness: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
       settingsLogout: @escaping()->CGImage,
@@ -12133,6 +12148,7 @@ public final class TelegramIconsTheme {
       self._settingsUpdateActive = settingsUpdateActive
       self._settingsFiltersActive = settingsFiltersActive
       self._settingsProfile = settingsProfile
+      self._settingsBusiness = settingsBusiness
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
       self._settingsLogout = settingsLogout

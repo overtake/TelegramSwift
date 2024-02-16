@@ -261,6 +261,7 @@ func initialize() -> [String] {
     array.append("settingsUpdateActive")
     array.append("settingsFiltersActive")
     array.append("settingsProfile")
+    array.append("settingsBusiness")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")

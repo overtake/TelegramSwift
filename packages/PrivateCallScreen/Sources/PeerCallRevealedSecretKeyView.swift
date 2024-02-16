@@ -107,7 +107,7 @@ internal final class PeerCallRevealedSecretKeyView : NSVisualEffectView, CallVie
         self.arguments = arguments
         
         let text = "If emoji on **\(state.compactTitle)** screen are the same, this call is 100% secure."
-        let textLayout = TextViewLayout(.initialize(string: text, color: darkPalette.grayIcon.withAlphaComponent(0.7), font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
+        let textLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         textLayout.measure(width: 300 - 40)
         
         textView.update(textLayout)
