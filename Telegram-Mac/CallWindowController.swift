@@ -15,6 +15,7 @@ import SwiftSignalKit
 import TgVoipWebrtc
 import TelegramVoip
 import ColorPalette
+import PrivateCallScreen
 
 private let defaultWindowSize = NSMakeSize(720, 560)
 extension CallState {
@@ -1455,7 +1456,19 @@ func closeCall(minimisize: Bool = false) {
 }
 
 
+
+
+
+private var peerCall: PeerCallScreen?
 func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
+    
+    #if DEBUG
+    
+    callScreen(context, result)
+    
+    return
+    #endif
+    
     assertOnMainThread()
     switch result {
     case let .success(session):

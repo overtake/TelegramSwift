@@ -70,7 +70,7 @@ private class ActiveCallView : View {
             let time = Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
             let text = String.durationTransformed(elapsed: Int(time))
             
-            let value = DynamicCounterTextView.make(for: text, count: text, font: .normal(.text), textColor: .white, width: .greatestFiniteMagnitude)
+            let value = DynamicCounterTextView.make(for: text, count: text, font: .roundTimer(.text), textColor: .white, width: .greatestFiniteMagnitude)
             
             duration.update(value, animated: transition.isAnimated)
             duration.change(size: value.size, animated: transition.isAnimated)
@@ -144,25 +144,27 @@ internal final class PeerCallStatusView : View, CallViewUpdater {
                 performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
                 self.activeView = nil
             }
-            if let view = networkStatus {
-                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
-                self.networkStatus = nil
-            }
-            let current: TextView = TextView()
-            current.userInteractionEnabled = false
-            current.isSelectable = false
-            let layout = TextViewLayout(.initialize(string: string, color: NSColor.white, font: .normal(.header)))
-            layout.measure(width: .greatestFiniteMagnitude)
-            current.update(layout)
-            
-            addSubview(current)
-            self.networkStatus = current
-            
-            current.centerX(y: textView.frame.maxY + 10)
-            
-            if transition.isAnimated {
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
+            if string != self.networkStatus?.textLayout?.attributedString.string {
+                if let view = networkStatus {
+                    performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
+                    self.networkStatus = nil
+                }
+                let current: TextView = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                let layout = TextViewLayout(.initialize(string: string, color: NSColor.white, font: .roundTimer(.header)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                current.update(layout)
+                
+                addSubview(current)
+                self.networkStatus = current
+                
+                current.centerX(y: textView.frame.maxY + 10)
+                
+                if transition.isAnimated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
+                }
             }
         case .timer(let double, let int32):
             

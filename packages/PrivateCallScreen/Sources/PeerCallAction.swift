@@ -27,6 +27,8 @@ struct PeerCallAction {
     var loading: Bool = false
     var enabled: Bool = true
     var interactive: Bool = true
+    
+    var action:()->Void
 }
 
 private let actionSize = NSMakeSize(50, 50)
@@ -58,9 +60,9 @@ func makeActiveAction(_ image: NSImage) -> CGImage {
     })!
 }
 
-func makeAction(text: String, resource: ImageResource, interactive: Bool = true) -> PeerCallAction {
+func makeAction(text: String, resource: ImageResource, active: Bool = false, enabled: Bool = true, loading: Bool = false, interactive: Bool = true, action: @escaping()->Void) -> PeerCallAction {
     let image = NSImage(resource: resource)
-    return .init(text: text, normal: !interactive ? image._cgImage! : makeNormalAction(image), activeImage: !interactive ? nil : makeActiveAction(image), active: false, loading: false, enabled: true, interactive: interactive)
+    return .init(text: text, normal: !interactive ? image._cgImage! : makeNormalAction(image), activeImage: !interactive ? nil : makeActiveAction(image), active: active, loading: loading, enabled: enabled, interactive: interactive, action: action)
 }
 
 
@@ -99,7 +101,6 @@ final class PeerCallActionView : Control {
         
         imageLayer.cornerRadius = imageLayer.frame.height / 2
         backgroundLayer.cornerRadius = imageLayer.frame.height / 2
-
         backgroundView.layer?.cornerRadius = backgroundView.frame.height / 2
         
         addSubview(backgroundView)
@@ -108,9 +109,8 @@ final class PeerCallActionView : Control {
         scaleOnClick = true
         
         set(handler: { [weak self] _ in
-            if var state = self?.state {
-                state.active = !state.active
-                self?.update(state, animated: true)
+            if let state = self?.state {
+                state.action()
             }
         }, for: .Click)
         
@@ -178,7 +178,7 @@ final class PeerCallActionView : Control {
                 current.isEventLess = true
                 addSubview(current)
             }
-            let layout = TextViewLayout(.initialize(string: text, color: .white, font: .normal(12)), maximumNumberOfLines: 1)
+            let layout = TextViewLayout(.initialize(string: text, color: .white, font: .roundTimer(12)), maximumNumberOfLines: 1)
             layout.measure(width: 100)
             current.update(layout)
         } else if let textView = self.textView {

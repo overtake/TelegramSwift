@@ -1460,7 +1460,7 @@ final class AnimatedEmojiesView : Control {
 
     func updateSearchState(_ searchState: SearchState, animated: Bool) {
         
-        if let window = kitWindow, self.mode == .reactions {
+        if let window = kitWindow, self.mode == .reactions || self.mode == .defaultTags {
             switch searchState.state {
             case .Focus:
                 window._canBecomeKey = true

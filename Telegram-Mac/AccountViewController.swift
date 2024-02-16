@@ -141,6 +141,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case update(index: Int, viewType: GeneralViewType, state: AnyUpdateStateEquatable)
     case filters(index: Int, viewType: GeneralViewType)
     case premium(index: Int, viewType: GeneralViewType)
+    case business(index: Int, viewType: GeneralViewType)
     case giftPremium(index: Int, viewType: GeneralViewType)
     case about(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
@@ -190,16 +191,18 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(17)
         case .premium:
             return .index(18)
-        case .giftPremium:
+        case .business:
             return .index(19)
-        case .faq:
+        case .giftPremium:
             return .index(20)
-        case .ask:
+        case .faq:
             return .index(21)
-        case .about:
+        case .ask:
             return .index(22)
+        case .about:
+            return .index(23)
         case let .attach(index, _, _):
-            return .index(23 + index)
+            return .index(24 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -248,6 +251,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .filters(index, _):
             return index
         case let .premium(index, _):
+            return index
+        case let .business(index, _):
             return index
         case let .giftPremium(index, _):
             return index
@@ -397,6 +402,11 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .premium(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPremium, icon: theme.icons.settingsPremium, activeIcon: theme.icons.settingsPremium, type: .next, viewType: viewType, action: {
+                arguments.openPremium()
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .business(_, viewType):
+            //TODO LANG
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Telegram Business", icon: theme.icons.settingsBusiness, activeIcon: theme.icons.settingsBusiness, type: .next, viewType: viewType, action: {
                 arguments.openPremium()
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .giftPremium(_, viewType):
@@ -607,6 +617,10 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     if !context.premiumIsBlocked {
         entries.append(.premium(index: index, viewType: .singleItem))
         index += 1
+        #if DEBUG
+        entries.append(.business(index: index, viewType: .singleItem))
+        index += 1
+        #endif
         
         entries.append(.giftPremium(index: index, viewType: .singleItem))
         index += 1

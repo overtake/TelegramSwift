@@ -57,15 +57,11 @@ private func getAllGMTTimeZones() -> [GMTZone] {
 }
 
 private func formatHourToLocaleTime(hour: Int) -> String {
-    guard hour >= 0 && hour < 24 else {
-        print("Invalid hour. Please provide a value between 0 and 23.")
-        return ""
-    }
-    
     // Create a DateComponents object with the hour set to the provided value
     var components = DateComponents()
-    components.hour = hour
-    
+    components.hour = Int(Float(hour) / 60)
+    components.minute = hour % 60
+
     // Use the current calendar to ensure the components are interpreted correctly
     let calendar = Calendar.current
     
@@ -89,6 +85,14 @@ private func formatHourToLocaleTime(hour: Int) -> String {
     
     return formattedTime
 }
+
+private let formattedMinutes: [Int: String] = {
+    var values: [Int: String] = [:]
+    for i in 0 ..< 60 {
+        values[i] = formatMinutesToLocaleTime(minutes: i)
+    }
+    return values
+}()
 
 private func formatMinutesToLocaleTime(minutes: Int) -> String {
     
@@ -120,19 +124,16 @@ private func formatMinutesToLocaleTime(minutes: Int) -> String {
     return formattedTime
 }
 
-// Example usage
-let formattedTime = formatHourToLocaleTime(hour: 3)
-
 private final class Arguments {
     let context: AccountContext
     let toggleEnabled:()->Void
     let toggleDay:(State.Day)->Void
     let enableDay:(State.Day)->Void
     let addSpecific:(State.Day)->Void
-    let editSpefic:(State.Day, State.Hours.Hour)->Void
-    let removeSpefic:(State.Day, State.Hours.Hour)->Void
+    let editSpefic:(State.Day, State.Hours.MinutesInDay)->Void
+    let removeSpefic:(State.Day, State.Hours.MinutesInDay)->Void
     let selectTimezone:(GMTZone)->Void
-    init(context: AccountContext, toggleEnabled:@escaping()->Void, toggleDay:@escaping(State.Day)->Void, enableDay:@escaping(State.Day)->Void, addSpecific:@escaping(State.Day)->Void, removeSpefic:@escaping(State.Day, State.Hours.Hour)->Void, editSpefic:@escaping(State.Day, State.Hours.Hour)->Void, selectTimezone:@escaping(GMTZone)->Void) {
+    init(context: AccountContext, toggleEnabled:@escaping()->Void, toggleDay:@escaping(State.Day)->Void, enableDay:@escaping(State.Day)->Void, addSpecific:@escaping(State.Day)->Void, removeSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, editSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, selectTimezone:@escaping(GMTZone)->Void) {
         self.context = context
         self.toggleEnabled = toggleEnabled
         self.toggleDay = toggleDay
@@ -178,12 +179,12 @@ private struct State : Equatable {
         }
     }
     struct Hours: Equatable {
-        struct Hour : Equatable {
+        struct MinutesInDay : Equatable {
             var from: Int
             var to: Int
             var uniqueId: Int64
         }
-        var list:[Hour] = []
+        var list:[MinutesInDay] = []
     }
     
     var enabled: Bool = false
@@ -222,13 +223,13 @@ private let _id_timezone = InputDataIdentifier("_id_timezone")
 
 private let _id_add_specific = InputDataIdentifier("_id_add_specific")
 
-private func _id_opening_time(_ day: State.Hours.Hour) -> InputDataIdentifier {
+private func _id_opening_time(_ day: State.Hours.MinutesInDay) -> InputDataIdentifier {
     return InputDataIdentifier("_id_opening_time\(day.uniqueId)")
 }
-private func _id_closing_time(_ day: State.Hours.Hour) -> InputDataIdentifier {
+private func _id_closing_time(_ day: State.Hours.MinutesInDay) -> InputDataIdentifier {
     return InputDataIdentifier("_id_closing_time\(day.uniqueId)")
 }
-private func _id_remove_opening(_ day: State.Hours.Hour) -> InputDataIdentifier {
+private func _id_remove_opening(_ day: State.Hours.MinutesInDay) -> InputDataIdentifier {
     return InputDataIdentifier("_id_remove_opening\(day.uniqueId)")
 }
 
@@ -311,30 +312,44 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
     // entries
     
     if let hours = state.data[day] {
-        let getHoursMenu:(State.Hours.Hour, Bool)->[ContextMenuItem] = { hour, from in
+        let getHoursMenu:(State.Hours.MinutesInDay, Bool)->[ContextMenuItem] = { hour, from in
             var items:[ContextMenuItem] = []
             
             var start: Int = 0
-            var end: Int = 24
+            var end: Int = 24 * 60
             
             if from {
                 start = 0
                 end = hour.to
             } else {
                 start = hour.from
-                end = 24
+                end = 23 * 60
             }
             
-            let minutes = ContextMenu()
-            for j in 0 ..< 60 {
-                minutes.addItem(ContextMenuItem(formatMinutesToLocaleTime(minutes: j)))
-            }
+         
             
-            for i in start ..< end {
-                let item = ContextMenuItem(formatHourToLocaleTime(hour: i), handler: {
-                    arguments.editSpefic(day, .init(from: from ? i : hour.from, to: !from ? i : hour.to, uniqueId: hour.uniqueId))
-                }, state: i == (from ? hour.from : hour.to) ? .on : nil)
+            let s = Int(Float(start) / 60.0)
+            let e = Int(Float(end) / 60.0)
+
+            let from_hours = Int(Float(hour.from) / 60)
+            let to_hours = Int(Float(hour.to) / 60)
+
+            for i in s ... e {
+                let state: NSControl.StateValue? = i == (from ? from_hours : to_hours) ? .on : nil
+                let item = ContextMenuItem(formatHourToLocaleTime(hour: i * 60), handler: {
+                    arguments.editSpefic(day, .init(from: from ? i * 60 : hour.from, to: !from ? i * 60 : hour.to, uniqueId: hour.uniqueId))
+                }, state: state)
                 
+                let minutes = ContextMenu()
+                var minuteItems:[ContextMenuItem] = []
+                for j in 0 ..< 60 {
+                    let item = ContextMenuItem(formattedMinutes[j]!, handler: {
+                        arguments.editSpefic(day, .init(from: from ? i * 60 + j : hour.from, to: !from ? i * 60 + j : hour.to, uniqueId: hour.uniqueId))
+                    }, state: state == .on && j == (from ? hour.from % 60 : hour.to % 60) ? .on : nil)
+                    
+                    minuteItems.append(item)
+                }
+                minutes.items = minuteItems
                 
                 item.submenu = minutes
                 items.append(item)
@@ -422,7 +437,7 @@ func BusinessHoursController(context: AccountContext, peerId: PeerId) -> InputDa
         updateState { current in
             var current = current
             var hours = current.data[day] ?? .init()
-            hours.list.append(.init(from: 9, to: 23, uniqueId: arc4random64()))
+            hours.list.append(.init(from: 9 * 60, to: 23 * 60, uniqueId: arc4random64()))
             current.data[day] = hours
             return current
         }

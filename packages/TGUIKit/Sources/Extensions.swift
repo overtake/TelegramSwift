@@ -582,7 +582,7 @@ public extension CALayer {
     }
     
     func animatePath(duration: Double = 0.2) {
-        let animation = CABasicAnimation(keyPath: "path")
+        let animation = makeSpringAnimation("path")
         animation.duration = duration
         self.add(animation, forKey: "path")
     }

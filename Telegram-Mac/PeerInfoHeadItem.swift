@@ -634,7 +634,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 colors = .default
             }
             
-            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme, activeColors: colors)
+            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme, activeColors: colors, isRoundedRect: peer?.isForum == true)
             self.avatarStoryComponent = compoment
         } else {
             self.avatarStoryComponent = nil

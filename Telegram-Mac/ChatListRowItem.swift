@@ -795,7 +795,7 @@ class ChatListRowItem: TableRowItem {
         self.readState = readState
         
         if let story = story, peer?.id != context.peerId {
-            self.avatarStoryIndicator = .init(stats: story, presentation: theme)
+            self.avatarStoryIndicator = .init(stats: story, presentation: theme, isRoundedRect: peer?.isForum == true)
         } else {
             self.avatarStoryIndicator = nil
         }
@@ -1961,6 +1961,9 @@ class ChatListRowItem: TableRowItem {
     
     var isReplyToStory: Bool {
         if self.messages.first(where: { $0.storyAttribute != nil }) != nil {
+            if isForum && !isTopic {
+                return false
+            }
             return true
         }
         return false

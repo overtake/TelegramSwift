@@ -186,7 +186,7 @@ private final class ChatSearchTagsView: View {
                     
                     self.change(opacity: item.enabled ? 1.0 : 0.8, animated: animated)
                                         
-                    let image = NSImage(named: "Icon_SearchTagTokenBackground")!
+                    let image = NSImage(named: "Icon_SavedMessages_Premium_Tag")!
                     let background = NSImage(cgImage: generateTintedImage(image: image._cgImage, color: selected ? theme.colors.accent : theme.colors.grayBackground)!, size: image.size)
                     
                     self.backgroundView.image = background
@@ -304,7 +304,7 @@ private final class ChatSearchTagsView: View {
             return 40
         }
         override var height: CGFloat {
-            var width: CGFloat = 50
+            var width: CGFloat = 40
             
             if let textViewLayout = textViewLayout {
                 width += textViewLayout.layoutSize.width + 5
@@ -519,7 +519,7 @@ private final class ChatSearchTagsView: View {
             let image = NSImage(named: "Icon_SavedMessages_Premium_Tag")!
 
             tagImageView.image = NSImage(cgImage: generateTintedImage(image: image._cgImage, color: theme.colors.accent.withAlphaComponent(0.2))!, size: image.size)
-            tagImageView.setFrameSize(NSMakeSize(tagLayout.layoutSize.width + 12, 22))
+            tagImageView.setFrameSize(NSMakeSize(tagLayout.layoutSize.width + 6, 22))
             
             chevron.image = theme.icons.generalNext
             chevron.sizeToFit()
