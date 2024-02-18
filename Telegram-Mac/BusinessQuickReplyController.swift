@@ -330,7 +330,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 }
 
 
-func BusinessQuickReplyController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func BusinessQuickReplyController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 

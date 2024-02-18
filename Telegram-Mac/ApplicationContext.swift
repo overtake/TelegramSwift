@@ -540,33 +540,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(BusinessHoursController(context: context, peerId: context.peerId))
-
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
-        
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(BusinessAwayMessageController(context: context, peerId: context.peerId))
-
-            return .invoked
-        }, with: self, for: .U, priority: .supreme, modifierFlags: [.command])
-        
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(BusinessLocationController(context: context, peerId: context.peerId))
-
-            return .invoked
-        }, with: self, for: .I, priority: .supreme, modifierFlags: [.command])
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(BusinessChatbotController(context: context, peerId: context.peerId))
-
-            return .invoked
-        }, with: self, for: .J, priority: .supreme, modifierFlags: [.command])
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(BusinessQuickReplyController(context: context, peerId: context.peerId))
-
-            return .invoked
-        }, with: self, for: .R, priority: .supreme, modifierFlags: [.command])
         #endif
         
         

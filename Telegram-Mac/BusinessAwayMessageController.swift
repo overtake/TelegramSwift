@@ -308,7 +308,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func BusinessAwayMessageController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func BusinessAwayMessageController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 

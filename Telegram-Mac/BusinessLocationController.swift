@@ -279,7 +279,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func BusinessLocationController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func BusinessLocationController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
@@ -291,7 +291,7 @@ func BusinessLocationController(context: AccountContext, peerId: PeerId) -> Inpu
         statePromise.set(stateValue.modify (f))
     }
 
-    let chatInteraction = ChatInteraction(chatLocation: .peer(peerId), context: context)
+    let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
     
     chatInteraction.sendLocation = { location, venue in
         

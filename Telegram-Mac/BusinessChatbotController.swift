@@ -407,7 +407,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func BusinessChatbotController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func BusinessChatbotController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 

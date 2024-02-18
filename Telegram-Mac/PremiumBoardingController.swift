@@ -269,6 +269,8 @@ enum PremiumValue : String {
     case last_seen
     case message_privacy
     
+    case business
+    
     case business_location
     case business_hours
     case business_quick_replies
@@ -287,6 +289,7 @@ enum PremiumValue : String {
     
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xef6922),
+                                 NSColor(rgb: 0xD6593E),
                                  NSColor(rgb: 0xe95a2c),
                                  NSColor(rgb: 0xe74e33),
                                  NSColor(rgb: 0xe54837),
@@ -399,6 +402,8 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBoardingLastSeen).precomposed(presentation.colors.accent)
         case .message_privacy:
             return NSImage(resource: .iconPremiumBoardingMessagePrivacy).precomposed(presentation.colors.accent)
+        case .business:
+            return NSImage(resource: .iconPremiumBoardingBusiness).precomposed(presentation.colors.accent)
         case .business_location:
             return NSImage(resource: .iconPremiumBusinessLocation).precomposed(presentation.colors.accent)
         case .business_hours:
@@ -454,6 +459,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingLastSeenTitle
         case .message_privacy:
             return strings().premiumBoardingMessagePrivacyTitle
+        case .business:
+            return "Telegram Business"
         case .business_location:
             //TODOLANG
             return "Location"
@@ -509,6 +516,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingLastSeenInfo
         case .message_privacy:
             return strings().premiumBoardingMessagePrivacyInfo
+        case .business:
+            return "Upgrade your account with business features such as location, opening hours and quick replies."
         case .business_location:
             //TODOLANG
             return "Display the location of your business on your account."
@@ -837,7 +846,7 @@ private final class PremiumBoardingView : View {
     }
 
     
-    private let headerView: HeaderView
+    let headerView: HeaderView
     let tableView = TableView()
     private var bottomView: View?
     private let bottomBorder = View()
@@ -1167,6 +1176,14 @@ final class PremiumBoardingController : ModalViewController {
         super.loadView()
     }
     
+    override var defaultBarTitle: String {
+        if source == .business_standalone {
+            //TODOLANG
+            return "Telegram Business"
+        }
+        return super.defaultBarTitle
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -1190,7 +1207,13 @@ final class PremiumBoardingController : ModalViewController {
         canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
         
-        let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
+        var initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
+        
+        #if DEBUG
+        if source != .business && source != .business_standalone {
+            initialState.values.insert(.business, at: 1)
+        }
+        #endif
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1215,7 +1238,28 @@ final class PremiumBoardingController : ModalViewController {
             
             close()
         }, openFeature: { [weak self] value, animated in
+            
             guard let strongSelf = self else {
+                return
+            }
+            
+            if strongSelf.source == .business_standalone {
+                switch value {
+                case .business_location:
+                    strongSelf.navigationController?.push(BusinessLocationController(context: context))
+                case .business_hours:
+                    strongSelf.navigationController?.push(BusinessHoursController(context: context))
+                case .business_quick_replies:
+                    strongSelf.navigationController?.push(BusinessQuickReplyController(context: context))
+                case .business_greeting_messages:
+                    strongSelf.navigationController?.push(BusinessAwayMessageController(context: context))
+                case .business_away_messages:
+                    strongSelf.navigationController?.push(BusinessAwayMessageController(context: context))
+                case .business_chatbots:
+                    strongSelf.navigationController?.push(BusinessChatbotController(context: context))
+                default:
+                    fatalError("not possible")
+                }
                 return
             }
             strongSelf.genericView.append(PremiumBoardingFeaturesController(context, presentation: strongSelf.presentation, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
@@ -1510,6 +1554,9 @@ final class PremiumBoardingController : ModalViewController {
                 close()
             }
         }
+        
+        genericView.headerView.isHidden = source == .business_standalone
+        
         genericView.accept = {
             
             
