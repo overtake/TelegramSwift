@@ -395,7 +395,7 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
 }
 
 
-func BusinessHoursController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func BusinessHoursController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     

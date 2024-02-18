@@ -12,9 +12,9 @@ import TGUIKit
 final class PremiumBoardingStoryRowItem : GeneralRowItem {
     let title: TextViewLayout
     let info: TextViewLayout
-    let itemType: PremiumBoardingStoriesItem
+    let itemType: PremiumBoardingExtraFeatureItem
     let presentation: TelegramPresentationTheme
-    init(_ initialSize: NSSize, type: PremiumBoardingStoriesItem, presentation: TelegramPresentationTheme) {
+    init(_ initialSize: NSSize, type: PremiumBoardingExtraFeatureItem, presentation: TelegramPresentationTheme) {
         self.itemType = type
         self.presentation = presentation
         self.title = .init(.initialize(string: type.title, color: presentation.colors.text, font: .medium(.title)))
@@ -108,7 +108,7 @@ private final class PremiumBoardingStoriesRowView : TableRowView {
 
 
 
-enum PremiumBoardingStoriesItem {
+enum PremiumBoardingExtraFeatureItem {
     case priority
     case stealth
     case permanentViews
@@ -117,7 +117,16 @@ enum PremiumBoardingStoriesItem {
     case longerCaption
     case linksAndFormating
     case highQuality
-    static var all: [PremiumBoardingStoriesItem] {
+    
+    case business_location
+    case business_hours
+    case business_quick_replies
+    case business_greeting_messages
+    case business_away_messages
+    case business_chatbots
+    
+    
+    static var stories: [PremiumBoardingExtraFeatureItem] {
         return [.priority,
                 .stealth,
                 .highQuality,
@@ -127,6 +136,16 @@ enum PremiumBoardingStoriesItem {
                 .longerCaption,
                 .linksAndFormating]
     }
+    
+    static var business: [PremiumBoardingExtraFeatureItem] {
+        return [.business_location,
+                .business_hours,
+                .business_quick_replies,
+                .business_greeting_messages,
+                .business_away_messages]
+    }
+    
+    
     
     var title: String {
         switch self {
@@ -146,6 +165,19 @@ enum PremiumBoardingStoriesItem {
             return strings().premiumBoardingStoriesLinkFormattingTitle
         case .highQuality:
             return strings().premiumBoardingStoriesHighQualityTitle
+        case .business_location:
+            //TODOLANG
+            return "Location"
+        case .business_hours:
+            return "Opening Hours"
+        case .business_quick_replies:
+            return "Quick Replies"
+        case .business_greeting_messages:
+            return "Greeting Messages"
+        case .business_away_messages:
+            return "Away Messages"
+        case .business_chatbots:
+            return "ChatBots"
         }
     }
     var info: String {
@@ -166,35 +198,60 @@ enum PremiumBoardingStoriesItem {
             return strings().premiumBoardingStoriesLinkFormattingInfo
         case .highQuality:
             return strings().premiumBoardingStoriesHighQualityInfo
+        case .business_location:
+            //TODOLANG
+            return "Display the location of your business on your account."
+        case .business_hours:
+            return "Show to your customers when you are open for business."
+        case .business_quick_replies:
+            return "Set up shortcuts with rich text and media to respond to messages faster."
+        case .business_greeting_messages:
+            return "Create greetings that will be automatically sent to new customers."
+        case .business_away_messages:
+            return "Define messages that are automatically sent when you are off."
+        case .business_chatbots:
+            return "Add any third party chatbots that will process customer interactions."
         }
     }
     
     var color: NSColor {
         return .random
     }
-    var image: CGImage? {
+    var image: CGImage {
         switch self {
         case .priority:
-            return NSImage(named: "Icon_PremiumBoarding_PriorityOrder")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingPriorityOrder).precomposed()
         case .stealth:
-            return NSImage(named: "Icon_PremiumBoarding_StealthMode")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingStealthMode).precomposed()
         case .permanentViews:
-            return NSImage(named: "Icon_PremiumBoarding_PermanentViewsHistory")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingPermanentViewsHistory).precomposed()
         case .expiratationDuration:
-            return NSImage(named: "Icon_PremiumBoarding_ExpirationDurations")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingExpirationDurations).precomposed()
         case .saveToGallery:
-            return NSImage(named: "Icon_PremiumBoarding_SaveStoriesToGallery")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingSaveStoriesToGallery).precomposed()
         case .longerCaption:
-            return NSImage(named: "Icon_PremiumBoarding_LongerCaptions")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingLongerCaptions).precomposed()
         case .linksAndFormating:
-            return NSImage(named: "Icon_PremiumBoarding_LinksAndFormatting")?.precomposed()
+            return NSImage(resource: .iconPremiumBoardingLinksAndFormatting).precomposed()
         case .highQuality:
-            return NSImage(named: "Icon_PremiumBoarding_HighQuality")?.precomposed(NSColor(0x9A64EE))
+            return NSImage(resource: .iconPremiumBoardingHighQuality).precomposed(NSColor(0x9A64EE))
+        case .business_location:
+            return NSImage(resource: .iconPremiumBusinessFeatureLocation).precomposed()
+        case .business_hours:
+            return NSImage(resource: .iconPremiumBusinessFeatureHours).precomposed()
+        case .business_quick_replies:
+            return NSImage(resource: .iconPremiumBusinessFeatureReply).precomposed()
+        case .business_greeting_messages:
+            return NSImage(resource: .iconPremiumBusinessFeatureGreeting).precomposed()
+        case .business_away_messages:
+            return NSImage(resource: .iconPremiumBusinessFeatureAway).precomposed()
+        case .business_chatbots:
+            return NSImage(resource: .iconPremiumBusinessFeatureBot).precomposed()
         }
     }
 }
 
-final class PremiumBoardingStoriesView: View, PremiumSlideView {
+final class PremiumBoardingExtraFeaturesView: View, PremiumSlideView {
     
     final class HeaderView: View {
         private let container = View()
@@ -221,6 +278,13 @@ final class PremiumBoardingStoriesView: View, PremiumSlideView {
             
             addSubview(container)
 
+        }
+        
+        func set(string: String) {
+            let layout = TextViewLayout(.initialize(string: string, color: presentation.colors.text, font: .medium(.header)))
+            layout.measure(width: 300)
+            
+            titleView.update(layout)
         }
         
         
@@ -279,10 +343,13 @@ final class PremiumBoardingStoriesView: View, PremiumSlideView {
     }
     
     
-    func initialize(context: AccountContext, initialSize: NSSize) {
+    func initialize(context: AccountContext, initialSize: NSSize, list: [PremiumBoardingExtraFeatureItem], title: String) {
+        
+        self.headerView.set(string: title)
+        
         _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15, backgroundColor: presentation.colors.background))
         
-        for type in PremiumBoardingStoriesItem.all {
+        for type in list {
             let item = PremiumBoardingStoryRowItem(initialSize, type: type, presentation: presentation)
             _ = self.tableView.addItem(item: item)
             _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15, backgroundColor: presentation.colors.background))
