@@ -34,9 +34,14 @@ private final class QuickReplyRowItem : GeneralRowItem {
         let attr = NSMutableAttributedString()
         attr.append(string: "/\(reply.name)", color: theme.colors.text, font: .normal(.text))
         attr.append(string: " ", color: theme.colors.text, font: .normal(.text))
-        attr.append(string: reply.messages[0], color: theme.colors.grayText, font: .normal(.text))
         
-        self.textLayout = TextViewLayout(attr)
+        let texts = reply.messages.map {
+            chatListText(account: context.account, for: $0).string
+        }.joined(separator: ", ")
+        
+        attr.append(string: texts, color: theme.colors.grayText, font: .normal(.text))
+        
+        self.textLayout = TextViewLayout(attr, maximumNumberOfLines: 4)
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
@@ -78,7 +83,7 @@ private final class QuickReplyRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 44
+        return max(44, 10 + textLayout.layoutSize.height)
     }
     
     var leftInset: CGFloat {
@@ -88,7 +93,7 @@ private final class QuickReplyRowItem : GeneralRowItem {
 
 private final class QuickReplyRowItemView: GeneralContainableRowView {
     private let textView = TextView()
-    private let imageView = ImageView(frame: NSMakeRect(0, 0, 30, 30))
+    private let imageView = AvatarControl(font: .avatar(10))
     private let container = View()
     
     private var remove: ImageButton?
@@ -99,11 +104,18 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         container.addSubview(imageView)
         container.addSubview(textView)
         
-        imageView.layer?.backgroundColor = theme.colors.grayIcon.cgColor
+        imageView.setFrameSize(NSMakeSize(30, 30))
+        
         imageView.layer?.cornerRadius = imageView.frame.height / 2
         
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        containerView.set(handler: { [weak self] _ in
+            if let item = self?.item as? QuickReplyRowItem {
+                item.open(item.reply)
+            }
+        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -116,6 +128,8 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         guard let item = item as? QuickReplyRowItem else {
             return
         }
+        
+        imageView.setPeer(account: item.context.account, peer: item.context.myPeer)
         
         textView.update(item.textLayout)
         
@@ -204,7 +218,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
             }
         }
         
-        self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+//        self.updateLayout(size: nsmakesi, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -229,7 +243,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
             transition.updateFrame(view: sort, frame: sort.centerFrameY(x: containerView.frame.width - sort.frame.width - item.viewType.innerInset.right))
         }
         
-        transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 0))
+        transition.updateFrame(view: imageView, frame: CGRect(origin: NSMakePoint(0, 7), size: imageView.frame.size))
         transition.updateFrame(view: textView, frame: textView.centerFrameY(x: imageView.frame.maxX + 10))
     }
 }
@@ -239,21 +253,23 @@ private final class Arguments {
     let context: AccountContext
     let add:()->Void
     let edit:(State.Reply)->Void
+    let open:(State.Reply)->Void
     let editName:(State.Reply)->Void
     let remove:(State.Reply)->Void
-    init(context: AccountContext, add:@escaping()->Void, edit:@escaping(State.Reply)->Void, remove:@escaping(State.Reply)->Void, editName:@escaping(State.Reply)->Void) {
+    init(context: AccountContext, add:@escaping()->Void, edit:@escaping(State.Reply)->Void, remove:@escaping(State.Reply)->Void, editName:@escaping(State.Reply)->Void, open:@escaping(State.Reply)->Void) {
         self.context = context
         self.add = add
         self.edit = edit
         self.remove = remove
         self.editName = editName
+        self.open = open
     }
 }
 
 private struct State : Equatable {
     struct Reply : Equatable {
         var name: String
-        var messages: [String]
+        var messages: [Message]
         var id: Int64
     }
     
@@ -319,7 +335,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     for tuple in tuples {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_reply(tuple.reply.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-            return QuickReplyRowItem(initialSize, stableId: stableId, reply: tuple.reply, context: arguments.context, editing: tuple.editing, viewType: tuple.viewType, open: arguments.edit, editName: arguments.editName, remove: arguments.remove)
+            return QuickReplyRowItem(initialSize, stableId: stableId, reply: tuple.reply, context: arguments.context, editing: tuple.editing, viewType: tuple.viewType, open: arguments.open, editName: arguments.editName, remove: arguments.remove)
         }))
     }
         
@@ -343,10 +359,12 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
     }
     
     let nextTransactionNonAnimated = Atomic(value: false)
+    
+    
 
 
     let arguments = Arguments(context: context, add: {
-        showModal(with: BusinessAddQuickReply(context: context, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: nil), for: context.window)
+        showModal(with: BusinessAddQuickReply(context: context, actionsDisposable: actionsDisposable, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: nil), for: context.window)
     }, edit: { reply in
         
     }, remove: { reply in
@@ -356,7 +374,28 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
             return current
         }
     }, editName: { reply in
-        showModal(with: BusinessAddQuickReply(context: context, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: reply), for: context.window)
+        showModal(with: BusinessAddQuickReply(context: context, actionsDisposable: actionsDisposable, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: reply), for: context.window)
+    }, open: { reply in
+        var reply = reply
+        
+        let messages = GreetingMessageSetupChatContents(context: context, messages: reply.messages.map(EngineMessage.init), kind: .quickReplyMessageInput(shortcut: reply.name))
+        
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
+
+        actionsDisposable.add(messages.messages.start(next: { messages in
+            updateState { current in
+                var current = current
+                reply.messages = messages
+                if messages.isEmpty {
+                    current.replies.removeAll(where: { $0.id == reply.id })
+                } else if let index = current.replies.firstIndex(where: { $0.id == reply.id }) {
+                    current.replies[index] = reply
+                } else {
+                    current.replies.append(reply)
+                }
+                return current
+            }
+        }))
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in
@@ -457,11 +496,9 @@ private func newReplyEntries(_ state: State) -> [InputDataEntry] {
     return entries
 }
 
-private func BusinessAddQuickReply(context: AccountContext, stateSignal: Signal<State, NoError>, stateValue: Atomic<State>, updateState: @escaping((State) -> State) -> Void, reply: State.Reply?) -> InputDataModalController {
+private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: DisposableSet, stateSignal: Signal<State, NoError>, stateValue: Atomic<State>, updateState: @escaping((State) -> State) -> Void, reply: State.Reply?) -> InputDataModalController {
     
     var close:(()->Void)? = nil
-
-    let actionsDisposable = DisposableSet()
 
     updateState { current in
         var current = current
@@ -473,12 +510,9 @@ private func BusinessAddQuickReply(context: AccountContext, stateSignal: Signal<
         return InputDataSignalValue(entries: newReplyEntries(state))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "New Quick Reply")
     
-    controller.onDeinit = {
-        actionsDisposable.dispose()
-    }
-
+    let controller = InputDataController(dataSignal: signal, title: reply == nil ? "New Quick Reply" : "Edit Quick Reply")
+    
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
@@ -503,6 +537,10 @@ private func BusinessAddQuickReply(context: AccountContext, stateSignal: Signal<
         
         let value = data[_id_input]?.stringValue
         
+        guard let value else {
+            return .fail(.fields([_id_input : .shake]))
+        }
+        
         let replies = stateValue.with { $0.replies }
         let contains = replies.contains(where: { $0.name == value })
         
@@ -515,21 +553,46 @@ private func BusinessAddQuickReply(context: AccountContext, stateSignal: Signal<
             return .fail(.fields([_id_input : .shake]))
         }
         
-        if value?.isEmpty == true {
+        if value.isEmpty {
             return .fail(.fields([_id_input : .shake]))
         }
         
-        updateState { current in
-            var current = current
-            if let input = current.creatingName, !input.isEmpty {
-                if let index = current.replies.firstIndex(where: { $0.id == reply?.id }) {
-                    current.replies[index].name = input
-                } else {
-                    current.replies.append(.init(name: input, messages: ["text"], id: arc4random64()))
+        if reply == nil {
+            
+            var reply: State.Reply = .init(name: value, messages: [], id: arc4random64())
+            
+            let messages = GreetingMessageSetupChatContents(context: context, messages: [], kind: .quickReplyMessageInput(shortcut: value))
+            
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
+
+            actionsDisposable.add(messages.messages.start(next: { messages in
+                updateState { current in
+                    var current = current
+                    reply.messages = messages
+                    if messages.isEmpty {
+                        current.replies.removeAll(where: { $0.id == reply.id })
+                    } else if let index = current.replies.firstIndex(where: { $0.id == reply.id }) {
+                        current.replies[index] = reply
+                    } else {
+                        current.replies.append(reply)
+                    }
+                    return current
                 }
+            }))
+            
+        } else {
+            updateState { current in
+                var current = current
+                if let input = current.creatingName, !input.isEmpty {
+                    if let index = current.replies.firstIndex(where: { $0.id == reply?.id }) {
+                        current.replies[index].name = input
+                    }
+                }
+                return current
             }
-            return current
         }
+        
+        
         close?()
         return .none
     }

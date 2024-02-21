@@ -1677,7 +1677,7 @@ class ChatListController : PeersListController {
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController, !(item.isForum && !item.isTopic) {
                 switch controller.mode {
-                case .history, .thread:
+                case .history, .thread, .customChatContents:
                     if let modalAction = navigation.modalAction {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }

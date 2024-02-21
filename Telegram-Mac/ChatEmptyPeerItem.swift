@@ -121,6 +121,8 @@ class ChatEmptyPeerItem: TableRowItem {
         case .pinned:
             lineSpacing = nil
             _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
+        case let .customChatContents(contents):
+            _ = attr.append(string: contents.kind.text, color: textColor, font: .medium(.text))
         }
         
         

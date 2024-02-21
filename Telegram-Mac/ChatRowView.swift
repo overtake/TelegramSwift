@@ -738,6 +738,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if !item.isBubbled {
             point.x += max(0, item.statusSize - 2)
         }
+        if !item.isBubbled, let boostBadge = item.boostBadge {
+            point.x += boostBadge.layoutSize.width
+        }
 
         if item.isBubbled {
             point.y -= item.topInset

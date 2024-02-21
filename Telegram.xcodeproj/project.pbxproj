@@ -563,6 +563,16 @@
 		27CB177027638F4000DD25E0 /* menu_replace.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB176F27638F4000DD25E0 /* menu_replace.tgs */; };
 		27CB1772276392EB00DD25E0 /* menu_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB1771276392EB00DD25E0 /* menu_folder.tgs */; };
 		27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB177327648DAF00DD25E0 /* menu_calendar.tgs */; };
+		27CCE82C2B839AB800F7C687 /* PremiumCoinSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */; };
+		27CCE8312B839B7100F7C687 /* coin.scn in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE82D2B839B6E00F7C687 /* coin.scn */; };
+		27CCE8322B839B7100F7C687 /* coin.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE82E2B839B6F00F7C687 /* coin.png */; };
+		27CCE8332B839B7100F7C687 /* coin_anim.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE82F2B839B7000F7C687 /* coin_anim.png */; };
+		27CCE8342B839B7100F7C687 /* coin_edge.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8302B839B7100F7C687 /* coin_edge.png */; };
+		27CCE8372B839C0000F7C687 /* diagonal_shine.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8352B839BFF00F7C687 /* diagonal_shine.png */; };
+		27CCE8382B839C0000F7C687 /* darkerTexture.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8362B839C0000F7C687 /* darkerTexture.jpg */; };
+		27CCE83A2B839C1200F7C687 /* lighterTexture.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8392B839C1200F7C687 /* lighterTexture.jpg */; };
+		27CCE83C2B83D6B100F7C687 /* GreetingMessageSetupChatContents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CCE83B2B83D6B100F7C687 /* GreetingMessageSetupChatContents.swift */; };
+		27CCE83E2B84ABE700F7C687 /* PeerInfoBusinessItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CCE83D2B84ABE700F7C687 /* PeerInfoBusinessItems.swift */; };
 		27CE153D29780578001F8CE8 /* LanguageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE153C29780578001F8CE8 /* LanguageController.swift */; };
 		27CE1558297966D8001F8CE8 /* emoji_category_party.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE153F297966B4001F8CE8 /* emoji_category_party.tgs */; };
 		27CE1559297966D8001F8CE8 /* emoji_category_food.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1540297966B5001F8CE8 /* emoji_category_food.tgs */; };
@@ -2025,6 +2035,16 @@
 		27CB176F27638F4000DD25E0 /* menu_replace.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_replace.tgs; sourceTree = "<group>"; };
 		27CB1771276392EB00DD25E0 /* menu_folder.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder.tgs; sourceTree = "<group>"; };
 		27CB177327648DAF00DD25E0 /* menu_calendar.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_calendar.tgs; sourceTree = "<group>"; };
+		27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumCoinSceneView.swift; sourceTree = "<group>"; };
+		27CCE82D2B839B6E00F7C687 /* coin.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = coin.scn; sourceTree = "<group>"; };
+		27CCE82E2B839B6F00F7C687 /* coin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = coin.png; sourceTree = "<group>"; };
+		27CCE82F2B839B7000F7C687 /* coin_anim.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = coin_anim.png; sourceTree = "<group>"; };
+		27CCE8302B839B7100F7C687 /* coin_edge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = coin_edge.png; sourceTree = "<group>"; };
+		27CCE8352B839BFF00F7C687 /* diagonal_shine.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = diagonal_shine.png; sourceTree = "<group>"; };
+		27CCE8362B839C0000F7C687 /* darkerTexture.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = darkerTexture.jpg; sourceTree = "<group>"; };
+		27CCE8392B839C1200F7C687 /* lighterTexture.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = lighterTexture.jpg; sourceTree = "<group>"; };
+		27CCE83B2B83D6B100F7C687 /* GreetingMessageSetupChatContents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreetingMessageSetupChatContents.swift; sourceTree = "<group>"; };
+		27CCE83D2B84ABE700F7C687 /* PeerInfoBusinessItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoBusinessItems.swift; sourceTree = "<group>"; };
 		27CE153C29780578001F8CE8 /* LanguageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageController.swift; sourceTree = "<group>"; };
 		27CE153F297966B4001F8CE8 /* emoji_category_party.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_party.tgs; sourceTree = "<group>"; };
 		27CE1540297966B5001F8CE8 /* emoji_category_food.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_food.tgs; sourceTree = "<group>"; };
@@ -3101,6 +3121,13 @@
 				27D9131A283BC0E7007CF40F /* flecks.jpg */,
 				27D9131D283BC0EA007CF40F /* particles.png */,
 				27D9131C283BC0E9007CF40F /* shine.png */,
+				27CCE82F2B839B7000F7C687 /* coin_anim.png */,
+				27CCE8302B839B7100F7C687 /* coin_edge.png */,
+				27CCE82E2B839B6F00F7C687 /* coin.png */,
+				27CCE8362B839C0000F7C687 /* darkerTexture.jpg */,
+				27CCE8352B839BFF00F7C687 /* diagonal_shine.png */,
+				27CCE8392B839C1200F7C687 /* lighterTexture.jpg */,
+				27CCE82D2B839B6E00F7C687 /* coin.scn */,
 				27D9131E283BC0EB007CF40F /* star */,
 				27D9131B283BC0E8007CF40F /* texture.jpg */,
 			);
@@ -3249,6 +3276,7 @@
 				2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */,
 				275E85532B284AF0007A72CA /* PremiumGiftingController.swift */,
 				27F3BB8D2B4C399400BC37C2 /* PremiumShowStatusController.swift */,
+				27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -4375,6 +4403,7 @@
 				270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */,
 				276885022770D7BE0021C891 /* AddReactionManager.swift */,
 				2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */,
+				27CCE83B2B83D6B100F7C687 /* GreetingMessageSetupChatContents.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -4553,6 +4582,7 @@
 				27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */,
 				27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */,
 				276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */,
+				27CCE83D2B84ABE700F7C687 /* PeerInfoBusinessItems.swift */,
 			);
 			name = table;
 			sourceTree = "<group>";
@@ -6411,6 +6441,7 @@
 				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
 				27D91315283646CA007CF40F /* voice_to_text.tgs in Resources */,
 				27803BEF27A3E944007B0FA9 /* menu_folder_like.tgs in Resources */,
+				27CCE8322B839B7100F7C687 /* coin.png in Resources */,
 				27916F2E287D77660046DB44 /* activity.tgs in Resources */,
 				27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
@@ -6448,6 +6479,7 @@
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
 				27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */,
 				27916F2B287D77660046DB44 /* food.tgs in Resources */,
+				27CCE8382B839C0000F7C687 /* darkerTexture.jpg in Resources */,
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
 				27F3BB922B4C3D6600BC37C2 /* show_status_read.tgs in Resources */,
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
@@ -6486,6 +6518,7 @@
 				27803BF927A3E944007B0FA9 /* menu_folder_read.tgs in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				27CE155B297966D8001F8CE8 /* emoji_category_away.tgs in Resources */,
+				27CCE83A2B839C1200F7C687 /* lighterTexture.jpg in Resources */,
 				27ABFD252858C221006C3301 /* chars.png in Resources */,
 				27C50ADE2AC6F87000FED2E4 /* premium_gift_6.tgs in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
@@ -6605,6 +6638,7 @@
 				277DFE6C2784846200F78396 /* menu_moon.tgs in Resources */,
 				27D91321283BC0EB007CF40F /* shine.png in Resources */,
 				27916F2A287D77660046DB44 /* flags.tgs in Resources */,
+				27CCE8332B839B7100F7C687 /* coin_anim.png in Resources */,
 				2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */,
 				2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */,
 				D07450F32340E89100769D7F /* sad_man.tgs in Resources */,
@@ -6622,6 +6656,7 @@
 				27CE37702760B11B007E6F1B /* menu_unarchive.tgs in Resources */,
 				274BB56D264013AD00620D03 /* cameraon.tgs in Resources */,
 				D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */,
+				27CCE8312B839B7100F7C687 /* coin.scn in Resources */,
 				D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */,
 				27916F28287D77660046DB44 /* places.tgs in Resources */,
 				27ABFD1E2858BAE9006C3301 /* swirl.scn in Resources */,
@@ -6661,6 +6696,8 @@
 				9F03681522771A9700456348 /* anim_hide.json in Resources */,
 				27ABFD2B2858C6F5006C3301 /* lightspeed.scn in Resources */,
 				2733671727620B720027441E /* menu_forward.tgs in Resources */,
+				27CCE8342B839B7100F7C687 /* coin_edge.png in Resources */,
+				27CCE8372B839C0000F7C687 /* diagonal_shine.png in Resources */,
 				2733672327620BAC0027441E /* menu_reply.tgs in Resources */,
 				270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */,
 				27F2BBC927BE79ED00A37463 /* email_recovery.tgs in Resources */,
@@ -6860,6 +6897,7 @@
 				27A69762273D08B600B33415 /* PCallSession.swift in Sources */,
 				27A69761273D08A000B33415 /* GroupCallUIState.swift in Sources */,
 				27A69760273D088B00B33415 /* GroupCallDisplayAsController.swift in Sources */,
+				27CCE83C2B83D6B100F7C687 /* GreetingMessageSetupChatContents.swift in Sources */,
 				27A6975F273D087300B33415 /* GroupCallInvitation.swift in Sources */,
 				A7ADC47A2587B3750069737A /* VoiceChatActionButton.swift in Sources */,
 				2700B21E273AD71E003E4018 /* GroupCallNavigationHeaderView.swift in Sources */,
@@ -7312,6 +7350,7 @@
 				A7D2822F236C549B0000A9BF /* SyncCoreExtension.swift in Sources */,
 				C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */,
 				2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */,
+				27CCE83E2B84ABE700F7C687 /* PeerInfoBusinessItems.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
 				C2DE5D401F3CB0380081EC1E /* InstantPageTileView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
@@ -7483,6 +7522,7 @@
 				27C50AE92AC7492A00FED2E4 /* InputDataCloseItem.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
 				C224675B1FA8546200F03E27 /* GroupedLayout.swift in Sources */,
+				27CCE82C2B839AB800F7C687 /* PremiumCoinSceneView.swift in Sources */,
 				C230BEBA1EE9AEB80029586C /* ChannelEventLogItem.swift in Sources */,
 				277E228D28EEC4BD00001689 /* ExternalUsernameRowItem.swift in Sources */,
 				C26A37EE1E5DE48F006977AC /* ChannelBlocklistViewController.swift in Sources */,

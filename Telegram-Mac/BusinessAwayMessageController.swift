@@ -15,6 +15,136 @@ import SwiftSignalKit
 
 #if DEBUG
 
+
+private final class MessageRowItem : GeneralRowItem {
+    
+    let messages: [Message]
+    let context: AccountContext
+    let myPeer: EnginePeer
+    let textLayout: TextViewLayout
+    let titleLayout: TextViewLayout
+    let open: ()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, messages: [Message], myPeer: EnginePeer, context: AccountContext, viewType: GeneralViewType, open: @escaping()->Void) {
+        self.messages = messages
+        self.myPeer = myPeer
+        self.open = open
+        self.context = context
+        let attr = chatListText(account: context.account, for: messages[0])
+        
+        self.textLayout = TextViewLayout(attr)
+        self.titleLayout = TextViewLayout(.initialize(string: myPeer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.title)))
+        super.init(initialSize, stableId: stableId, viewType: viewType)
+    }
+    
+    
+    private var textWidth: CGFloat {
+        var width = blockWidth
+        width -= (leftInset + viewType.innerInset.left)
+        
+        width -= 60 // photo
+        width -= viewType.innerInset.left // photo
+        
+        return width
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        
+        textLayout.measure(width: textWidth)
+        titleLayout.measure(width: textWidth)
+
+        return true
+    }
+    
+    override func viewClass() -> AnyClass {
+        return MessageRowItemView.self
+    }
+    
+    override var height: CGFloat {
+        return 70
+    }
+    
+    var leftInset: CGFloat {
+        return 20
+    }
+}
+
+private final class MessageRowItemView: GeneralContainableRowView {
+    private let textView = TextView()
+    private let titleView = TextView()
+    private let imageView = AvatarControl(font: .avatar(15))
+    private let container = View()
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(container)
+        container.addSubview(imageView)
+        container.addSubview(textView)
+        container.addSubview(titleView)
+
+        imageView.setFrameSize(NSMakeSize(50, 50))
+        
+        imageView.layer?.cornerRadius = imageView.frame.height / 2
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
+        containerView.set(handler: { [weak self] _ in
+            if let item = self?.item as? MessageRowItem {
+                item.open()
+            }
+        }, for: .Click)
+        
+        containerView.scaleOnClick = true
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? MessageRowItem else {
+            return
+        }
+        
+        imageView.setPeer(account: item.context.account, peer: item.myPeer._asPeer())
+        
+        textView.update(item.textLayout)
+        titleView.update(item.titleLayout)
+        
+        self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        guard let item = item as? MessageRowItem else {
+            return
+        }
+        
+        let contentInset: CGFloat = 16
+        
+        let containerRect = NSMakeRect(contentInset, 0, containerView.frame.width - contentInset, containerView.frame.height)
+        
+        transition.updateFrame(view: container, frame: containerRect)
+        
+        transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 0))
+        
+        transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(imageView.frame.maxX + 10, imageView.frame.minY), size: titleView.frame.size))
+        
+        transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(imageView.frame.maxX + 10, titleView.frame.maxY + 6), size: textView.frame.size))
+    }
+}
+
+
+
 class BusinessSelectChatsCallbackObject : ShareObject {
     private let callback:([PeerId])->Signal<Never, NoError>
     private let limitReachedText: String
@@ -119,7 +249,8 @@ private struct State : Equatable {
     }
     
     var enabled: Bool = false
-    
+    var messages: [Message] = []
+    var myPeer: EnginePeer?
     var schedule: Schedule = .alwaysSend
     var recepient: Recepient = .all
     
@@ -182,7 +313,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("AWAY MESSAGE"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_create_message, data: .init(name: "Create an Away Message", color: theme.colors.accent, icon: theme.icons.create_new_message_general, type: .next, viewType: .singleItem, action: arguments.createMessage)))
+        if state.messages.isEmpty {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_create_message, data: .init(name: "Create an Away Message", color: theme.colors.accent, icon: theme.icons.create_new_message_general, type: .next, viewType: .singleItem, action: arguments.createMessage)))
+        } else if let myPeer = state.myPeer {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return MessageRowItem(initialSize, stableId: stableId, messages: state.messages, myPeer: myPeer, context: arguments.context, viewType: .singleItem, open: arguments.createMessage)
+            }))
+        }
+        
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -337,6 +475,17 @@ func BusinessAwayMessageController(context: AccountContext) -> InputDataControll
             return current
         }
     }))
+    
+    let messages = GreetingMessageSetupChatContents(context: context, messages: [], kind: .awayMessageInput)
+    
+    actionsDisposable.add(combineLatest(messages.messages, context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId))).startStandalone(next: { messages, myPeer in
+        updateState { current in
+            var current = current
+            current.messages = messages
+            current.myPeer = myPeer
+            return current
+        }
+    }))
 
     let arguments = Arguments(context: context, toggleEnabled: {
         updateState { current in
@@ -345,7 +494,7 @@ func BusinessAwayMessageController(context: AccountContext) -> InputDataControll
             return current
         }
     }, createMessage: {
-        
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
     }, toggleSchedule: { schedule in
         updateState { current in
             var current = current

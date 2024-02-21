@@ -135,7 +135,7 @@ private final class ConnectingStatusView: View {
         self.imageView.center()
 //        self.visualEffect.frame = bounds
         self.backgroundView?.frame = bounds
-        updateAnimation()
+      //  updateAnimation()
     }
     
     
@@ -218,7 +218,7 @@ private final class ConnectingStatusView: View {
         })
         imageView.sizeToFit()
         
-        updateAnimation()
+//        updateAnimation()
         
 //        self.visualEffect.bgColor = .clear
         

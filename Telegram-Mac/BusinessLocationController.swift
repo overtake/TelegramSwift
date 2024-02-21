@@ -213,10 +213,12 @@ private final class Arguments {
     let context: AccountContext
     let setLocation:()->Void
     let openMap:()->Void
-    init(context: AccountContext, setLocation:@escaping()->Void, openMap:@escaping()->Void) {
+    let remove:()->Void
+    init(context: AccountContext, setLocation:@escaping()->Void, openMap:@escaping()->Void, remove:@escaping()->Void) {
         self.context = context
         self.setLocation = setLocation
         self.openMap = openMap
+        self.remove = remove
     }
 }
 
@@ -238,6 +240,8 @@ private let _id_input = InputDataIdentifier("_id_enabled")
 
 private let _id_map_enabled = InputDataIdentifier("_id_map_enabled")
 private let _id_map_map = InputDataIdentifier("_id_map_enabled")
+
+private let _id_remove = InputDataIdentifier("_id_remove")
 
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -267,8 +271,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let location = state.location {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map_map, equatable: .init(state.location), comparable: nil, item: { initialSize, stableId in
-            return MapRowItem(initialSize, height: 200, stableId: stableId, context: arguments.context, location: location, viewType: .lastItem, action: arguments.openMap)
+            return MapRowItem(initialSize, height: 200, stableId: stableId, context: arguments.context, location: location, viewType: .innerItem, action: arguments.openMap)
         }))
+        
+        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_remove, data: .init(name: "Remove", color: theme.colors.redUI, type: .none, viewType: .lastItem, action: arguments.setLocation, autoswitch: false)))
     }
     
     // entries
@@ -328,6 +334,12 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
         }
     }, openMap: {
         showModal(with: LocationModalController(chatInteraction, destination: .business(stateValue.with { $0.location?.coordinate })), for: context.window)
+    }, remove: {
+        updateState { current in
+            var current = current
+            current.location = nil
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

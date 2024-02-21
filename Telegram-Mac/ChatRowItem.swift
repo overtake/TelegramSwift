@@ -276,6 +276,9 @@ class ChatRowItem: TableRowItem {
         if let _ = message?.adAttribute {
             return .zero
         }
+        if let _ = chatInteraction.mode.customChatContents {
+            return .zero
+        }
         if let frames = rightFrames {
             return NSMakeSize(frames.width, rightHeight)
         } else {
@@ -2135,7 +2138,7 @@ class ChatRowItem: TableRowItem {
                 }
                 
             }
-            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil {
+            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil, chatInteraction.mode.customChatContents == nil {
                 var time:TimeInterval = TimeInterval(message.timestamp)
                 time -= context.timeDifference
                 
@@ -2301,7 +2304,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
 
-            if message.adAttribute == nil {
+            if message.adAttribute == nil, chatInteraction.mode.customChatContents == nil {
                 self.fullDate = fullDate
                 self.originalFullDate = fullDate
             }

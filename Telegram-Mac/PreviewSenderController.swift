@@ -989,7 +989,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                     self?.sendCurrentMedia?(silent, date, asSpoiler)
                 }), for: context.window)
             }
-        case .history, .thread:
+        case .history, .thread, .customChatContents:
             sendCurrentMedia?(silent, atDate, asSpoiler)
         case .pinned:
             break
