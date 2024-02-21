@@ -27,11 +27,8 @@ final class PremiumPromoOrder {
             }
             
             #if DEBUG
-            if !premiumValues.contains(.last_seen) {
-                premiumValues.append(.last_seen)
-            }
-            if !premiumValues.contains(.message_privacy) {
-                premiumValues.append(.message_privacy)
+            if !premiumValues.contains(.folder_tags) {
+                premiumValues.append(.folder_tags)
             }
             #endif
         }

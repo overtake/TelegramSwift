@@ -449,7 +449,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
     //    if !data.message.isCopyProtected() {
-        if let textLayout = data.textLayout?.0 {
+        if let textLayout = data.textLayout?.0, mode.customChatContents == nil {
             
             if !textLayout.selectedRange.hasSelectText {
                 let text = message.text

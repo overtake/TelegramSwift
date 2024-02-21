@@ -291,6 +291,14 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(messagesPrivacy)
         
+        let folderTags = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        folderTags.setup(context: context, type: .folder_tags, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.folder_tags.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(folderTags)
+        
         switch value {
         case .stories:
             slideView.displaySlide(at: 0, animated: false)
@@ -332,6 +340,8 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 18, animated: false)
         case .message_privacy:
             slideView.displaySlide(at: 19, animated: false)
+        case .folder_tags:
+            slideView.displaySlide(at: 20, animated: false)
         case .business_location:
             fatalError()
         case .business_hours:

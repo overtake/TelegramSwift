@@ -1,9 +1,9 @@
 //
-//  PremiumStartSceneView.swift
+//  PremiumCoinSceneView.swift
 //  Telegram
 //
-//  Created by Mike Renoir on 12.05.2022.
-//  Copyright © 2022 Telegram. All rights reserved.
+//  Created by Mikhail Filimonov on 19.02.2024.
+//  Copyright © 2024 Telegram. All rights reserved.
 //
 
 import Foundation
@@ -12,16 +12,10 @@ import SceneKit
 import SwiftSignalKit
 import GZIP
 
-private let sceneVersion: Int = 2
+private let sceneVersion: Int = 0
 
 
-
-protocol PremiumSceneView {
-    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
-    func playAgain()
-}
-
-final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneView {
+final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneView {
    
     private let sceneView: SCNView
     
@@ -164,18 +158,10 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
     }
     
     private func setup() {
-        guard let url = Bundle.main.url(forResource: "star", withExtension: ""),
-              let compressedData = try? Data(contentsOf: url),
-              let decompressedData = TGGUnzipData(compressedData, 8 * 1024 * 1024) else {
+        guard let url = Bundle.main.url(forResource: "coin", withExtension: "scn") else {
             return
         }
-        let fileName = "star_\(sceneVersion).scn"
-        let tmpURL = URL(fileURLWithPath: NSTemporaryDirectory() + fileName)
-        if !FileManager.default.fileExists(atPath: tmpURL.path) {
-            try? decompressedData.write(to: tmpURL)
-        }
-        
-        guard let scene = try? SCNScene(url: tmpURL, options: nil) else {
+        guard let scene = try? SCNScene(url: url, options: nil) else {
             return
         }
         

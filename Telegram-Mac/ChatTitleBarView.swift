@@ -646,7 +646,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             let mode = chatInteraction.mode
             
 
-            self.hasPhoto = (!mode.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled)
+            self.hasPhoto = (!mode.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled) && mode.customChatContents == nil
             
             self.photoContainer.isHidden = !hasPhoto
 
@@ -774,7 +774,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if let peerView = self.peerView, let peer = peerViewMainPeer(peerView) {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: chatInteraction.mode.isSavedMessagesThread)
             
-            if chatInteraction.mode == .pinned {
+            if let customChatContents = chatInteraction.mode.customChatContents {
+                result = result.withUpdatedTitle(customChatContents.kind.text).withUpdatedStatus("")
+            } else if chatInteraction.mode == .pinned {
                 result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0)).withUpdatedStatus("")
             } else if chatInteraction.mode == .scheduled {
                 result = result.withUpdatedTitle(strings().chatTitleScheduledMessages)

@@ -2880,3 +2880,11 @@ public final class TransformImageResult {
         
     }
 }
+
+public func deg2rad(_ number: Float) -> Float {
+    return number * .pi / 180
+}
+
+public func rad2deg(_ number: Float) -> Float {
+    return number * 180.0 / .pi
+}

@@ -966,6 +966,9 @@ fileprivate let edit_limit_time:Int32 = 48*60*60
 
 func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
     
+    if mode.customChatContents != nil {
+        return true
+    }
     if mode.threadId == message.id {
         return false
     }
@@ -975,6 +978,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if mode.isSavedMode {
         return false
     }
+    
     
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
@@ -1006,6 +1010,10 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
 func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
         
     if message.peers[message.id.peerId] is TelegramSecretChat {
+        return false
+    }
+    
+    if chatInteraction.mode.customChatContents != nil {
         return false
     }
     
@@ -1128,10 +1136,13 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
         if message.isScheduledMessage {
             return false
         }
+        if mode.customChatContents != nil, message.id.namespace == Namespaces.Message.Local {
+            return false
+        }
         if peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && (message.id.namespace != Namespaces.Message.Local || message.id.peerId.namespace == Namespaces.Peer.SecretChat) {
             
             switch mode {
-            case .history:
+            case .history, .customChatContents:
                 if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
                     return true
                 } else {
@@ -1164,6 +1175,12 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
 }
 
 func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
+    
+    
+    if chatInteraction.mode.customChatContents != nil {
+        return true
+    }
+    
     if message.forwardInfo != nil {
         return false
     }
@@ -3275,6 +3292,12 @@ struct CachedDataEquatable: Equatable {
         }
     }
     init?(_ data: CachedPeerData?) {
+        self.init(data: data)
+    }
+    init(data: CachedPeerData) {
+        self.data = data
+    }
+    init(_ data: CachedPeerData) {
         self.init(data: data)
     }
     static func ==(lhs: CachedDataEquatable, rhs: CachedDataEquatable) -> Bool {

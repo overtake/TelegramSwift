@@ -464,8 +464,8 @@ class ChatInputView: View, Notifable {
                 layout.measure(width: frame.width - 40)
                 layout.interactions = globalLinkExecutor
                 textView.update(layout)
-                
                 current.addSubview(textView)
+                textView.center()
             } else if let view = blockText {
                 performSubviewRemoval(view, animated: animated)
                 blockText = nil

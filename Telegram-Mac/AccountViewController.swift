@@ -880,7 +880,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }, openPremium: { [weak self] business in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             if business, context.isPremium {
-                navigation.push(PremiumBoardingController(context: context, source: .business_standalone), false)
+                navigation.push(PremiumBoardingController(context: context, source: .business_standalone), true)
             } else {
                 showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
             }

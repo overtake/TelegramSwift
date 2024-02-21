@@ -656,6 +656,11 @@ class ChatPresentationInterfaceState: Equatable {
 //                }, nil)
 //            }
 //            #endif
+            if chatMode.customChatContents != nil, let count = self.historyCount {
+                if count == 20 {
+                    return .block("Limit of \(count) messages reached")
+                }
+            }
             
             if searchMode.tag != nil {
                 return .action(!searchMode.showAll ? strings().chatStateShowOtherMessages : strings().chatStateHideOtherMessages, { chatInteraction in

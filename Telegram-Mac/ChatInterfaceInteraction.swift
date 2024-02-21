@@ -891,6 +891,10 @@ final class ChatInteraction : InterfaceObserver  {
     
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil, sync: Bool = false) {
         
+        if mode.customChatContents != nil {
+            return
+        }
+        
         let peerId = self.peerId
         let context = self.context
         let timestamp = Int32(Date().timeIntervalSince1970)

@@ -278,6 +278,8 @@ enum PremiumValue : String {
     case business_away_messages
     case business_chatbots
     
+    case folder_tags
+    
     var isBusiness: Bool {
         switch self {
         case .business_location, .business_hours, .business_quick_replies, .business_greeting_messages, .business_away_messages, .business_chatbots:
@@ -302,6 +304,7 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x7861ff),
                                  NSColor(rgb: 0x8958ff),
                                  NSColor(rgb: 0x676bff),
+                                 NSColor(rgb: 0x4e8aea),
                                  NSColor(rgb: 0x5b79ff),
                                  NSColor(rgb: 0x4492ff),
                                  NSColor(rgb: 0x429bd5),
@@ -416,6 +419,8 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessAway).precomposed(presentation.colors.accent)
         case .business_chatbots:
             return NSImage(resource: .iconPremiumBusinessBot).precomposed(presentation.colors.accent)
+        case .folder_tags:
+            return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
         }
     }
     
@@ -474,6 +479,8 @@ enum PremiumValue : String {
             return "Away Messages"
         case .business_chatbots:
             return "ChatBots"
+        case .folder_tags:
+            return "Tag Your Chats"
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -531,6 +538,8 @@ enum PremiumValue : String {
             return "Define messages that are automatically sent when you are off."
         case .business_chatbots:
             return "Add any third party chatbots that will process customer interactions."
+        case .folder_tags:
+            return "Add colorful labels to chats for faster access in chat list."
         }
     }
 }
@@ -597,7 +606,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy, sceneType: state.source == .business_standalone || state.source == .business ? .coin : .star)
     }))
     index += 1
     
@@ -1166,6 +1175,7 @@ final class PremiumBoardingController : ModalViewController {
     override var enableBack: Bool {
         return true
     }
+    
     
     override func loadView() {
         if self.source == .business_standalone {
