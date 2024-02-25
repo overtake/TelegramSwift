@@ -188,8 +188,8 @@ final class EditImageControlsArguments {
 }
 
 final class EditImageControlsView : View {
-    let cancel = TitleButton()
-    private let success = TitleButton()
+    let cancel = TextButton()
+    private let success = TextButton()
     private let controlsContainer = View()
     private let flipper = ImageButton()
     private let draw = ImageButton()

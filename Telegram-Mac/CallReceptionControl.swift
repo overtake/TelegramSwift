@@ -32,8 +32,9 @@ class CallReceptionControl: View {
             if i >= reception {
                 context.setAlpha(0.4)
             }
-            let path = NSBezierPath(roundedRect: rect, xRadius: 0.5, yRadius: 0.5)
-            context.addPath(path.cgPath)
+            let path = CGMutablePath()
+            path.addRoundedRect(in: rect, cornerWidth: 0.5, cornerHeight: 0.5)
+            context.addPath(path)
             context.fillPath()
         }
     }

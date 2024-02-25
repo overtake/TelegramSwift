@@ -146,12 +146,12 @@ class ModalPreviewHandler : NSObject {
                     strongSelf.modal.update(with: reference.0)
                 }
                 return .invoked
-            }, with: self, for: .leftMouseDragged, priority: .modal)
+            }, with: self, for: .leftMouseDragged, priority: .supreme)
             
             window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
                 self?.stopHandler()
                 return .invoked
-            }, with: self, for: .leftMouseUp, priority: .modal)
+            }, with: self, for: .leftMouseUp, priority: .supreme)
         }
        
     }

@@ -57,7 +57,7 @@ final class SupportAccountContext {
             }
             
             let context = AccountContext(sharedContext: sharedContext, window: window, account: account, isSupport: true)
-            let applicationContext = AuthorizedApplicationContext(window: window, context: context, launchSettings: LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), folders: folders)
+            let applicationContext = AuthorizedApplicationContext(window: window, context: context, launchSettings: LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), inlinePlayerContext: sharedContext.getCrossInlinePlayer(), folders: folders)
 
             let out = account.loggedOut
             |> filter { $0 }

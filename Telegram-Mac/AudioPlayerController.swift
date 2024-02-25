@@ -14,7 +14,7 @@ import SwiftSignalKit
 import TGUIKit
 import AVKit
 import RangeSet
-
+import TelegramMedia
 
 
 class APSingleWrapper {
@@ -23,8 +23,8 @@ class APSingleWrapper {
     let mimeType: String
     let performer:String?
     let id:AnyHashable
-    let duration: Int32?
-    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, duration: Int32?, id: AnyHashable) {
+    let duration: Double?
+    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, duration: Double?, id: AnyHashable) {
         self.resource = resource
         self.name = name
         self.mimeType = mimeType
@@ -284,7 +284,7 @@ class APSongItem : APItem {
         }
     }
 
-    var duration: Int32? {
+    var duration: Double? {
         switch entry {
         case let .song(message):
             return (message.anyMedia as? TelegramMediaFile)?.duration
@@ -459,7 +459,7 @@ func ==(lhs:APHistoryLocation, rhs:APHistoryLocation) -> Bool {
     }
 }
 
-protocol APDelegate : class {
+protocol APDelegate : AnyObject {
     func songDidChanged(song:APSongItem, for controller:APController, animated: Bool)
     func songDidChangedState(song:APSongItem, for controller:APController, animated: Bool)
     func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool)
@@ -688,11 +688,6 @@ class APController : NSResponder {
     }
     fileprivate var _commandCenter: Any? = nil
     
-    @available(macOS 10.12.2, *)
-    private func commandCenter()->AudioCommandCenter? {
-        return self._commandCenter as? AudioCommandCenter
-    }
-    
     init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
         self.state.volume = volume
@@ -716,10 +711,7 @@ class APController : NSResponder {
     }
 
     func start() {
-        context.audioPlayer?.stop()
-        context.audioPlayer?.cleanup()
-
-        context.audioPlayer = self
+        
     }
 
 
@@ -1089,8 +1081,6 @@ class APController : NSResponder {
 
     func cleanup() {
         listeners.removeAll()
-        context.audioPlayer = nil
-        mainWindow.applyResponderIfNeeded()
         stop()
     }
 
@@ -1167,7 +1157,7 @@ class APChatController : APController {
 
     override func start() {
         super.start()
-        let tagMask:MessageTags = self.tags
+        let tagMask:HistoryViewInputTag = .tag(self.tags)
         let list = self.entries
         let items = self.items
         let account = self.context.account
@@ -1183,9 +1173,9 @@ class APChatController : APController {
                 default:
                     switch location {
                     case .initial:
-                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tag: tagMask, orderStatistics: [], additionalData: [])
                     case let .index(index):
-                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tag: tagMask, orderStatistics: [], additionalData: [])
                     }
                 }
                
@@ -1194,7 +1184,9 @@ class APChatController : APController {
                     var entries:[APEntry] = []
                     for viewEntry in view.0.entries {
                         if let media = viewEntry.message.anyMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
-                            entries.append(.song(viewEntry.message))
+                            if viewEntry.message.id.peerId.isSecretChat || viewEntry.message.autoclearTimeout == nil {
+                                entries.append(.song(viewEntry.message))
+                            }
                         }
                     }
                     
@@ -1254,9 +1246,6 @@ class APChatMusicController : APChatController {
 
     init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, volume: Float = 1.0, messages: [Message] = []) {
         super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index: index, streamable: true, baseRate: baseRate, volume: volume, messages: messages)
-        if #available(macOS 10.12.2, *) {
-            self._commandCenter = AudioCommandCenter(self)
-        }
     }
 
     required init?(coder: NSCoder) {

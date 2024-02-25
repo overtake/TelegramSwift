@@ -309,7 +309,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
         
         pausepip()
         
-        if let pauseMusic = context.audioPlayer?.pause() {
+        if let pauseMusic = context.sharedContext.getAudioPlayer()?.pause() {
             isPausedGlobalPlayer = pauseMusic
         }
         
@@ -332,7 +332,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
     override func disappear(for view: NSView?) {
         super.disappear(for: view)
         if isPausedGlobalPlayer {
-            _ = context.audioPlayer?.play()
+            _ = context.sharedContext.getAudioPlayer()?.play()
         }
         if let view = view as? VideoPlayerView, !view.isPip {
             view.player?.pause()

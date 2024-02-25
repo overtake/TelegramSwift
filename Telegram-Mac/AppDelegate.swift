@@ -24,13 +24,42 @@ import ThemeSettings
 import ColorPalette
 import WebKit
 import System
+import CodeSyntax
+import MetalEngine
+import TelegramMedia
+import RLottie
 
 #if !APP_STORE
 import AppCenter
 import AppCenterCrashes
 #endif
 
-
+final class CodeSyntax {
+    private let syntaxer: Syntaxer
+    private init() {
+        let pathFile = Bundle.main.path(forResource: "grammars", ofType: "dat")!
+        let data = try! Data(contentsOf: URL(fileURLWithPath: pathFile))
+        self.syntaxer = Syntaxer(data)!
+    }
+    private static let standart: CodeSyntax = .init()
+    
+    fileprivate static func initialize() {
+        _ = CodeSyntax.standart
+    }
+    
+    static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
+        return standart.syntaxer.syntax(code, language: language, theme: theme)
+    }
+    static func apply(_ code: NSAttributedString, to: NSMutableAttributedString, offset: Int) {
+        code.enumerateAttributes(in: code.range, using: { value, innerRange, _ in
+            if let font = value[.foregroundColor] as? NSColor {
+                to.addAttribute(.foregroundColor, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            } else if let font = value[.font] as? NSFont {
+                to.addAttribute(.font, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            }
+        })
+    }
+}
 
 let enableBetaFeatures = true
 
@@ -122,6 +151,10 @@ private final class CtxInstallLayer : SimpleLayer {
     }
 }
 
+extension RLottieBridge : R_LottieBridge {
+   
+}
+
 
 @NSApplicationMain
 class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
@@ -191,6 +224,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        CodeSyntax.initialize()
        // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
      //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
@@ -216,24 +250,43 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func updateGraphicContext() {
         ctxLayer?.display()
     }
+
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
+       // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
       
+//        window.styleMask.insert(.fullSizeContentView)
+//        window.styleMask.insert(.unifiedTitleAndToolbar)
+        //window.styleMask.insert(.borderless)
+//        let customToolbar = NSToolbar(identifier: "main")
+//        customToolbar.showsBaselineSeparator = false
+////        window.titlebarAppearsTransparent = true
+////        window.titleVisibility = .hidden
+//        window.toolbar = customToolbar
+        
+        
+        
+//        titleBarAccessoryViewController.view = View()
+//        titleBarAccessoryViewController.view.background = .random
+//
+//        titleBarAccessoryViewController.view.frame = NSMakeRect(0, 0, 0, 100) // Width not used.
+//        window.addTitlebarAccessoryViewController(titleBarAccessoryViewController)
         
         appDelegate = self
         ApiEnvironment.migrate()
         
         initializeSelectManager()
         startLottieCacheCleaner()
-                
-        if #available(OSX 10.12.2, *) {
-            NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
+        
+        makeRLottie = { json, key in
+            return RLottieBridge(json: json, key: key)
         }
         
         guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }
+        
         
         self.containerUrl = containerUrl.path
         
@@ -246,13 +299,19 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView?.autoresizingMask = [.width, .height]
         window.contentView?.autoresizesSubviews = true
         
+
+//        delay(2.0, closure: {
+        #if arch(arm64)
+            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+        #endif
+//        })
         
-        let ctxLayer = CtxInstallLayer()
-        self.ctxLayer = ctxLayer
-        window.contentView?.layer?.addSublayer(ctxLayer)
+//        let ctxLayer = CtxInstallLayer()
+//        self.ctxLayer = ctxLayer
+//        window.contentView?.layer?.addSublayer(ctxLayer)
         
-        ctxLayer.setNeedsDisplay()
-        ctxLayer.display()
+//        ctxLayer.setNeedsDisplay()
+//        ctxLayer.display()
                 
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
@@ -309,7 +368,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         mw = window
         
-        #if !APP_STORE
+        #if BETA || DEBUG
             if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
                 AppCenter.start(withAppSecret: secret, services: [Crashes.self])
             }
@@ -359,6 +418,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
         let rootPath = containerUrl!
         let window = self.window!
+        
         System.updateScaleFactor(window.backingScaleFactor)
         window.minSize = NSMakeSize(380, 500)
         
@@ -456,7 +516,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let networkDisposable = MetaDisposable()
         
-//        
+        
+       
+//
 //        self.window.closeInterceptor = {
 //            if !self.terminated {
 //                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
@@ -702,9 +764,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             let navigation = contextValue.context.bindings.rootNavigation()
                             let controller: ChatController
                             if addition {
-                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             } else {
-                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             }
                             navigation.push(controller)
                         }
@@ -719,7 +781,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         } else {
                             
                             if let _ = threadData {
-                                _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: contextValue.context).start()
+                                
+                                _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: contextValue.context).start()
                             } else if let fromId = fromId {
                                 let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
                                 
@@ -819,7 +882,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 if let account = account {
                                                                     
                                     let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, account: account)
-                                    return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), folders: folders)
+                                    return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), inlinePlayerContext: sharedContext.getCrossInlinePlayer(), folders: folders)
                                     
                                 } else {
                                     return nil
@@ -1075,11 +1138,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func navigateProfile(_ peerId: PeerId, account: Account) {
         if let context = self.contextValue?.context, context.peerId == account.peerId {
-            context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
             context.window.makeKeyAndOrderFront(nil)
             context.window.orderFrontRegardless()
         } else {
-            sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(peerId, necessary: true))
+            let signal = account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+            _ = signal.start(next: { peer in
+                self.sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(EnginePeer(peer), necessary: true))
+            })
         }
     }
     func navigateChat(_ peerId: PeerId, account: Account) {
@@ -1171,7 +1237,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 AppDelegate.eventProcessed = nil
                 
                 let link = inApp(for: url as NSString, context: context, openInfo: { (peerId, isChat, postId, action) in
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId:postId, initialAction:action), true)
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction:action), true)
                 }, applyProxy: { proxy in
                     applyExternalProxy(proxy, accountManager: context.sharedContext.accountManager)
                 })
@@ -1462,15 +1528,21 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     @IBAction func showQuickSwitcher(_ sender: Any) {
-        
-        if let context = contextValue?.context, authContextValue == nil {
+        if authContextValue == nil {
             _ = sharedContextOnce.start(next: { applicationContext in
                 if !applicationContext.notificationManager.isLocked {
-                    showModal(with: QuickSwitcherModalController(context), for: self.window)
+                    self.enumerateApplicationContexts { applicationContext in
+                        if applicationContext.context.window.isKeyWindow {
+                            if !hasModals(applicationContext.context.window) {
+                                showModal(with: QuickSwitcherModalController(applicationContext.context), for: applicationContext.context.window)
+                                applicationContext.context.window.makeKeyAndOrderFront(sender)
+                            }
+                        }
+                    }
                 }
             })
         }
-        window.makeKeyAndOrderFront(sender)
+        
     }
     
     func applyExternalLoginCode(_ code: String) {

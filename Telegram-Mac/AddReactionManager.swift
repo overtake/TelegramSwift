@@ -13,6 +13,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import ObjcUtils
+import TelegramMedia
 
 func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil) {
     
@@ -175,26 +176,31 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var currentKey: String?
         
         private var selectionView : View?
+        private let presentation: TelegramPresentationTheme
         
-        
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, theme: TelegramPresentationTheme) {
             
             let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
             let rect = CGRect(origin: .zero, size: size)
             
             let isLite = context.isLite(.emoji)
             
+            self.presentation = theme
             self.player = LottiePlayerView(frame: rect)
             self.reaction = reaction
             self.context = context
            
             super.init(frame: frameRect)
             
+            let imageView: InlineStickerView
             if let file = reaction.selectedAnimation {
-                let imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
-                self.imageView = imageView
-                addSubview(imageView)
+                imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
+            } else {
+                imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: nil, emoji: clown), size: size, isPlayable: false)
             }
+            self.imageView = imageView
+            addSubview(imageView)
+
             addSubview(player)
             self.player.isHidden = false
 
@@ -349,11 +355,11 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
           
             
             
-            if let appearAnimation = reaction.appearAnimation {
+            if let appearAnimation = reaction.selectedAnimation {
                 let signal = context.account.postbox.mediaBox.resourceData(appearAnimation.resource, attemptSynchronously: true)
                 |> filter {
                     $0.complete
-                }
+                } |> take(1)
                 |> deliverOnMainQueue
                 
 //                self.imageView?.removeFromSuperview()
@@ -383,7 +389,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     
     class ShowMore : Control {
         private let imageView = ImageView()
-        required init(frame frameRect: NSRect) {
+        required init(frame frameRect: NSRect, theme: TelegramPresentationTheme) {
             super.init(frame: frameRect)
             self.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1)
             self.scaleOnClick = true
@@ -401,6 +407,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+        
+        required init(frame frameRect: NSRect) {
+            fatalError("init(frame:) has not been implemented")
+        }
     }
     
     private let scrollView = HorizontalScrollView()
@@ -414,26 +424,35 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let visualEffect = NSVisualEffectView(frame: .zero)
     private let radiusLayer: CGFloat?
     
-    private let showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34))
-    private let revealReactions:((NSView & StickerFramesCollector)->Void)?
+    private var aboveTextView: TextView?
+    
+    private let showMore: ShowMore
+    private let revealReactions:((ContextAddReactionsListView & StickerFramesCollector)->Void)?
     
     private let maskLayer = SimpleShapeLayer()
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
-    
-    
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
+    private let presentation: TelegramPresentationTheme
+    private let hasBubble: Bool
+    private let aboveText: TextViewLayout?
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((ContextAddReactionsListView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme, hasBubble: Bool = true, aboveText: TextViewLayout? = nil) {
         self.list = list
+        self.showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34), theme: presentation)
         self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
+        self.presentation = presentation
+        self.hasBubble = hasBubble
+        self.aboveText = aboveText
         super.init(frame: frameRect)
         
+        
+        let theme = presentation
         
         backgroundView.layer?.mask = maskLayer
         if !isLite(.blur) {
             self.visualEffect.state = .active
             self.visualEffect.wantsLayer = true
-            self.visualEffect.blendingMode = .behindWindow
+            self.visualEffect.blendingMode = hasBubble ? .behindWindow : .withinWindow
         }
         
         
@@ -511,12 +530,18 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         let size = ContextAddReactionsListView.size
         var x: CGFloat = 1
         
+       
         
+        
+        var y: CGFloat = 3
+        if let aboveText = aboveText {
+            y += aboveText.layoutSize.height + 2
+        }
         
         for reaction in list {
             let add:(ContextReaction)->Void = { reaction in
                 let itemSize = size.bounds
-                let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
+                let reaction = ReactionView(frame: NSMakeRect(x, y, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add, theme: presentation)
                 
                 self.documentView.addSubview(reaction)
                 x += size.width + 4
@@ -530,7 +555,14 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             }
         }
         
-        
+        if let aboveText = aboveText {
+            let aboveTextView = TextView()
+            aboveTextView.userInteractionEnabled = true
+            aboveTextView.isSelectable = false
+            addSubview(aboveTextView)
+            self.aboveTextView = aboveTextView
+            aboveTextView.update(aboveText)
+        }
         
         updateLayout(size: frame.size, transition: .immediate)
         
@@ -551,6 +583,15 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             }
         }
         return frames
+    }
+    
+    func invokeFirst() {
+        for view in self.documentView.subviews {
+            if let view = view as? ReactionView {
+                view.send(event: .Click)
+                return
+            }
+        }
     }
     
     static var size: CGSize {
@@ -649,6 +690,20 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         var rect = size.bounds.insetBy(dx: 10, dy: 10)
         rect.origin.y -= 5
         
+        for subview in documentView.subviews {
+            let point: NSPoint
+            if let aboveText = aboveText {
+                point = NSMakePoint(subview.frame.minX, aboveText.layoutSize.height + 2 + 3)
+            } else {
+                point = NSMakePoint(subview.frame.minX, 3)
+            }
+            transition.updateFrame(view: subview, frame: CGRect(origin: point, size: subview.frame.size))
+        }
+        
+        if let aboveTextView = aboveTextView {
+            aboveTextView.centerX(y: 8)
+        }
+        
         
         let documentRect = NSMakeSize(ContextAddReactionsListView.width(for: self.list.count), rect.height).bounds
         var scrollRect = rect
@@ -666,15 +721,19 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         transition.updateFrame(view: backgroundView, frame: size.bounds)
         transition.updateFrame(view: backgroundColorView, frame: size.bounds)
         
-        transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3, showMore.frame.width, showMore.frame.height))
+        if let aboveText = aboveText {
+            transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3 + aboveText.layoutSize.height + 2, showMore.frame.width, showMore.frame.height))
+        } else {
+            transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3, showMore.frame.width, showMore.frame.height))
+        }
         
 //        transition.updateFrame(layer: maskLayer, frame: rect.size.bounds)
         transition.updateFrame(layer: shadowLayer, frame: size.bounds)
 
-        maskLayer.path = getMaskPath(rect: rect)
+        maskLayer.path = getMaskPath(rect: rect, hasBubble: self.hasBubble)
         
-        shadowLayer.path = getMaskPath(rect: rect)
-        shadowLayer.shadowPath = getMaskPath(rect: rect)
+        shadowLayer.path = getMaskPath(rect: rect, hasBubble: self.hasBubble)
+        shadowLayer.shadowPath = getMaskPath(rect: rect, hasBubble: self.hasBubble)
 
         
         if transition.isAnimated {
@@ -682,48 +741,49 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         }
     }
     
-    private func getMaskPath(rect: CGRect) -> CGPath {
+    private func getMaskPath(rect: CGRect, hasBubble: Bool = true) -> CGPath {
         
         let mutablePath = CGMutablePath()
-        mutablePath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
+        mutablePath.addRoundedRect(in: rect, cornerWidth: 20, cornerHeight: 20)
         
-        let bubbleRect = NSMakeRect(rect.width - 40, rect.maxY - 10, 20, 20)
-
-        mutablePath.addRoundedRect(in: bubbleRect, cornerWidth: bubbleRect.width / 2, cornerHeight: bubbleRect.width / 2)
+        if hasBubble {
+            let bubbleRect = NSMakeRect(rect.width - 40, rect.maxY - 10, 20, 20)
+            mutablePath.addRoundedRect(in: bubbleRect, cornerWidth: bubbleRect.width / 2, cornerHeight: bubbleRect.width / 2)
+        }
 
         return mutablePath
     }
 }
-
-private final class LockView : View {
-    private let visualEffect = NSVisualEffectView()
-    override init() {
-        let frameRect = NSMakeSize(20, 20).bounds
-        super.init(frame: frameRect)
-        addSubview(visualEffect)
-        visualEffect.wantsLayer = true
-        visualEffect.blendingMode = .withinWindow
-        visualEffect.state = .active
-        visualEffect.material = theme.dark ? .dark : .light
-        
-        let maskLayer = CALayer()
-        maskLayer.frame = frameRect
-        maskLayer.contents = theme.icons.premium_reaction_lock
-        
-        self.layer?.mask = maskLayer
-        
-        self.background = theme.colors.grayText.withAlphaComponent(0.5)
-        
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
-}
+//
+//private final class LockView : View {
+//    private let visualEffect = NSVisualEffectView()
+//    override init() {
+//        let frameRect = NSMakeSize(20, 20).bounds
+//        super.init(frame: frameRect, theme: TelegramPresentationTheme)
+//        addSubview(visualEffect)
+//        visualEffect.wantsLayer = true
+//        visualEffect.blendingMode = .withinWindow
+//        visualEffect.state = .active
+//        visualEffect.material = theme.dark ? .dark : .light
+//
+//        let maskLayer = CALayer()
+//        maskLayer.frame = frameRect
+//        maskLayer.contents = theme.icons.premium_reaction_lock
+//
+//        self.layer?.mask = maskLayer
+//
+//        self.background = theme.colors.grayText.withAlphaComponent(0.5)
+//
+//    }
+//
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//
+//    required init(frame frameRect: NSRect) {
+//        fatalError("init(frame:) has not been implemented")
+//    }
+//}
 
 
 /*

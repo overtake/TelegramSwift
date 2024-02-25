@@ -12,6 +12,7 @@ import SwiftSignalKit
 import AppKit
 import TelegramCore
 import Postbox
+import TelegramMedia
 
 typealias MenuAnimation = LocalAnimatedSticker
 

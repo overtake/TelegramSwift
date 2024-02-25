@@ -353,7 +353,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
                 arguments.resetDownloadSettings()
             }, enabled: enabled)
         case let .downloadFolder(_, path, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageDownloadFolder, type: .context(path), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageDownloadFolder, type: .nextContext(path), viewType: viewType, action: {
                 arguments.selectDownloadFolder()
             })
         case let .autoplayHeader(_, viewType):
@@ -379,7 +379,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
                 arguments.openProxySettings()
             })
         default:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -558,7 +558,7 @@ class DataAndStorageViewController: TableViewController {
                 return current.withUpdatedAutomaticDownload(enabled)
             }).start()
         }, resetDownloadSettings: {
-            _ = (confirmSignal(for: context.window, header: appName, information: strings().dataAndStorageConfirmResetSettings, okTitle: strings().modalOK, cancelTitle: strings().modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, NoError> in
+            _ = (verifyAlertSignal(for: context.window, header: appName, information: strings().dataAndStorageConfirmResetSettings, ok: strings().modalOK, cancel: strings().modalCancel) |> filter { $0 == .basic } |> mapToSignal { _ -> Signal<Void, NoError> in
                 return updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, { _ -> AutomaticMediaDownloadSettings in
                     return AutomaticMediaDownloadSettings.defaultSettings
                 })

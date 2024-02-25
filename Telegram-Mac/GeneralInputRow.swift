@@ -62,9 +62,9 @@ class GeneralInputRowItem: TableRowItem {
         self.text = text
         self.inputType = inputType
         self.textFilter = textFilter
-        self.placeholder = .initialize(string: placeholder, color: theme.colors.grayText, font: .normal(.text), coreText: false)
+        self.placeholder = .initialize(string: placeholder, color: theme.colors.grayText, font: .normal(.text))
         
-        let textStorage = NSTextStorage(attributedString: .initialize(string: text, font: font, coreText: false))
+        let textStorage = NSTextStorage(attributedString: .initialize(string: text, font: font))
         let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - insets.left - insets.right, .greatestFiniteMagnitude))
         
         let layoutManager = NSLayoutManager();

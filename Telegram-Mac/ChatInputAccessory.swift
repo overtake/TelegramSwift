@@ -24,7 +24,7 @@ class ChatInputAccessory: View {
     private var displayNode:ChatAccessoryModel?
     
     private let dismiss:ImageButton = ImageButton()
-    private let iconView = ImageView()
+    private let iconView = ImageButton()
     private var progress: Control?
     let container:ChatAccessoryView = ChatAccessoryView()
     
@@ -38,11 +38,15 @@ class ChatInputAccessory: View {
         self.addSubview(iconView)
         self.addSubview(container)
         self.addSubview(dismiss)
+        
+        iconView.autohighlight = false
+        
+        
         dismissForward = { [weak self] in
             self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
         }
         dismissReply = { [weak self] in
-            self?.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil).withUpdatedDismissedForceReplyId($0.replyMessageId)})})
+            self?.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil).withUpdatedDismissedForceReplyId($0.replyMessageId?.messageId)})})
         }
         dismissEdit = { [weak self] in
             self?.chatInteraction.cancelEditing()
@@ -87,14 +91,70 @@ class ChatInputAccessory: View {
         container.removeAllStateHandlers()
 
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
-            iconView.image = theme.icons.chat_action_url_preview
+            iconView.set(image: theme.icons.chat_action_url_preview, for: .Normal)
             displayNode = ChatUrlPreviewModel(context: context, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissUrlPreview()
             }, for: .Click)
+            
+            let toggleLinkPosition:(Bool)->Void = { [weak self] below in
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedLinkBelowMessage(below)
+                    }
+                }
+            }
+            let toggleLinkSize:(Bool)->Void = { [weak self] big in
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedLargeMedia(big)
+                    }
+                }
+            }
+            
+            container.contextMenu = { [weak self] in
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().chatInputEditLinkAboveTheMessage, handler: {
+                    toggleLinkPosition(false)
+                }, itemImage: state.interfaceState.linkBelowMessage ? nil : MenuAnimation.menu_check_selected.value))
+                
+                menu.addItem(ContextMenuItem(strings().chatInputEditLinkBelowTheMessage, handler: {
+                    toggleLinkPosition(true)
+                }, itemImage: !state.interfaceState.linkBelowMessage ? nil : MenuAnimation.menu_check_selected.value))
+                
+                if let presentation = self?.chatInteraction.presentation, let urlPreview = presentation.urlPreview {
+                    switch urlPreview.1.content {
+                    case let .Loaded(content):
+                        if let defaultValue = content.isMediaLargeByDefault {
+                            menu.addItem(ContextSeparatorItem())
+                            
+                            let value = state.interfaceState.largeMedia ?? defaultValue
+                            
+                            menu.addItem(ContextMenuItem(strings().chatInputEditLinkLargerMedia, handler: {
+                                toggleLinkSize(true)
+                            }, itemImage: value ? MenuAnimation.menu_check_selected.value : nil))
+                            
+                            menu.addItem(ContextMenuItem(strings().chatInputEditLinkSmallerMedia, handler: {
+                                toggleLinkSize(false)
+                            }, itemImage: !value ? MenuAnimation.menu_check_selected.value : nil))
+                        }
+                    default:
+                        break
+                    }
+                }
+                
+                menu.addItem(ContextSeparatorItem())
+
+                menu.addItem(ContextMenuItem(strings().chatInputEditLinkRemovePreview, handler: { [weak self] in
+                    self?.dismissUrlPreview()
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                
+                return menu
+            }
+            
         } else if let editState = state.interfaceState.editState {
             displayNode = EditMessageModel(state: editState, context: context)
-            iconView.image = theme.icons.chat_action_edit_message
+            iconView.set(image: theme.icons.chat_action_edit_message, for: .Normal)
             iconView.isHidden = editState.loadingState != .none
             progress?.isHidden = editState.loadingState == .none
             updateProgress(editState.loadingState)
@@ -108,7 +168,7 @@ class ChatInputAccessory: View {
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, context: context)
            
-            iconView.image = theme.icons.chat_action_forward_message
+            iconView.set(image: theme.icons.chat_action_forward_message, for: .Normal)
 
             let anotherAction = { [weak self] in
                 guard let context = self?.chatInteraction.context else {
@@ -120,17 +180,22 @@ class ChatInputAccessory: View {
                     self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
                 })
             }
-            let setHideAction = { [weak self] hide in
+            let setHideAction:(Bool)->Void = { [weak self] hide in
                 self?.chatInteraction.update {
                     $0.updatedInterfaceState {
-                        $0.withUpdatedHideSendersName(hide)
+                        $0.withUpdatedHideSendersName(hide, saveTempValue: true)
                     }
                 }
             }
-            let setHideCaption = { [weak self] hide in
+            let setHideCaption:(Bool)->Void = { [weak self] hide in
                 self?.chatInteraction.update {
-                    $0.updatedInterfaceState {
-                        $0.withUpdatedHideCaption(hide)
+                    $0.updatedInterfaceState { current in
+                        var current = current
+                        current = current.withUpdatedHideCaption(hide)
+                        if current.tempSenderName == nil {
+                            current = current.withUpdatedHideSendersName(hide, saveTempValue: false)
+                        }
+                        return current
                     }
                 }
             }
@@ -187,15 +252,25 @@ class ChatInputAccessory: View {
             
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, dismissReply: dismissReply)
-            iconView.image = theme.icons.chat_action_reply_message
+            displayNode = ReplyModel(message: nil, replyMessageId: replyMessageId.messageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, quote: replyMessageId.quote, dismissReply: dismissReply, forceClassic: true)
+            iconView.set(image: theme.icons.chat_action_reply_message, for: .Normal)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)
             
             container.set(handler: { [weak self] _ in
-               self?.chatInteraction.focusMessageId(nil, replyMessageId, .CenterEmpty)
-            }, for: .Click)
+                self?.chatInteraction.focusMessageId(nil, .init(messageId: replyMessageId.messageId, string: nil), .CenterEmpty)
+             }, for: .Click)
+
+            
+            container.contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().chatInputReplyReplyToAnother, handler: {
+                    self.chatInteraction.replyToAnother(replyMessageId, true)
+                }, itemImage: MenuAnimation.menu_replace.value))
+                return menu
+                
+            }
         }
         
         if let displayNode = displayNode {
@@ -203,6 +278,7 @@ class ChatInputAccessory: View {
         } else {
             nodeReady.set(.single(animated))
         }
+        iconView.contextMenu = container.contextMenu
         iconView.sizeToFit()
         displayNode?.view = container
     }
@@ -246,7 +322,7 @@ class ChatInputAccessory: View {
         
         transition.updateFrame(view: self.container, frame: NSMakeRect(49, 0, size.width, size.height))
         transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 2))
-        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width))
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width + 3))
         if let view = progress {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: 5))
         }
@@ -272,12 +348,13 @@ class ChatInputAccessory: View {
 
     
     func measureSize(_ width: CGFloat) {
-        displayNode?.measureSize(width - 59)
+        displayNode?.measureSize(width - 59 - (displayNode?.cutout?.topLeft?.width ?? 0))
         
         if let displayNode = displayNode {
             self.size = NSMakeSize(width, displayNode.size.height)
         }
     }
+    
     
     
 }

@@ -271,7 +271,7 @@
 					"$(PROJECT_DIR)/build/ffmpeg/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.ffmpeg;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -361,7 +361,7 @@
 					"$(PROJECT_DIR)/build/ffmpeg/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.ffmpeg;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

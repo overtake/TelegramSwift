@@ -42,24 +42,25 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     var sectionId: Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: GeneralRowTextType.markdown(strings().twoStepAuthRecoveryCodeHelp + "\n\n" + strings().twoStepAuthRecoveryEmailUnavailableNew(pattern), linkHandler: { _ in
         unavailable()
-    }), data: InputDataGeneralTextData(detectBold: false)))
+    }), data: InputDataGeneralTextData(color: theme.colors.listGrayText, detectBold: false, viewType: .textBottomItem)))
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
 }
 
-func ForgotUnauthorizedPasswordController(accountManager: AccountManager<TelegramAccountManagerTypes>, engine: TelegramEngineUnauthorized, emailPattern: String) -> InputDataModalController {
+func ForgotUnauthorizedPasswordController(accountManager: AccountManager<TelegramAccountManagerTypes>, engine: TelegramEngineUnauthorized?, emailPattern: String) -> InputDataModalController {
     
     
     let initialState = ForgotPasswordState(code: "", error: nil, checking: false)
@@ -84,7 +85,7 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
                     return state.withUpdatedChecking(true)
                 }
                 
-                if code.length == 6 {
+                if code.length == 6, let engine = engine {
                     disposable.set(showModalProgress(signal: engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
                         
                         let auth = loginWithRecoveredAccountData(accountManager: accountManager, account: engine.account, recoveredAccountData: data, syncContacts: true) |> deliverOnMainQueue
@@ -160,13 +161,13 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
         }
     }, hasDone: true)
     
-    controller.getBackgroundColor = {
-        theme.colors.background
-    }
+//    controller.getBackgroundColor = {
+//        theme.colors.background
+//    }
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalSend, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

@@ -13,7 +13,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import RangeSet
-
+import TelegramMedia
 
 private func effectivePlayingRate(for controller: APController) -> Double {
     if controller is APChatMusicController {
@@ -360,9 +360,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private func gotoMessage() {
         if let message = message, let context = context, context.peerId == controller?.context.peerId {
             if let controller = context.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
-                controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+                controller.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
             } else {
-                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), focusTarget: .init(messageId: message.id)))
             }
         }
     }
@@ -640,17 +640,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             x -= 10
         }
         
-//        if repeatControl.isHidden {
-//            if playingSpeed.isHidden {
-//                volumeControl.centerY(x: dismiss.frame.minX - 10 - volumeControl.frame.width)
-//            } else {
-//                volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
-//            }
-//        } else {
-//            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
-//        }
-        
-        
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
@@ -678,7 +667,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         controller?.cleanup()
         instantVideoPip?.hide()
         instantVideoPip = nil
-        self.hide(animated)
+        context?.sharedContext.endInlinePlayer(animated: animated)
     }
     
     required init(frame frameRect: NSRect) {

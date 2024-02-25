@@ -166,13 +166,17 @@ private final class WallpaperColorBrightnessView: View {
         
         
         
-        let path = NSBezierPath(roundedRect: bounds, xRadius: bounds.height / 2.0, yRadius: bounds.height / 2.0)
-        context.addPath(path.cgPath)
+        let path = CGMutablePath()
+        path.addRoundedRect(in: bounds, cornerWidth: bounds.height / 2.0, cornerHeight: bounds.height / 2.0)
+        context.addPath(path)
         context.setFillColor(NSColor.white.cgColor)
         context.fillPath()
         
-        let innerPath = NSBezierPath(roundedRect: bounds.insetBy(dx: 1.0, dy: 1.0), xRadius: bounds.height / 2.0, yRadius: bounds.height / 2.0)
-        context.addPath(innerPath.cgPath)
+        
+        let innerPath = CGMutablePath()
+        let rect = bounds.insetBy(dx: 1.0, dy: 1.0)
+        innerPath.addRoundedRect(in: rect, cornerWidth: rect.height / 2.0, cornerHeight: rect.height / 2.0)
+        context.addPath(innerPath)
         context.clip()
         
         let color = NSColor(hue: parameters.hue, saturation: parameters.saturation, brightness: 1.0, alpha: 1.0)

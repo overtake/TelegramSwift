@@ -23,7 +23,7 @@ final class StorageUsageClearButtonItem : GeneralRowItem {
 
 
 private final class StorageUsageClearButtonView: GeneralContainableRowView {
-    private let button = TitleButton()
+    private let button = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         button.scaleOnClick = true

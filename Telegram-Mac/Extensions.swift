@@ -20,6 +20,7 @@ import ObjcUtils
 import TGModernGrowingTextView
 import ThemeSettings
 import InAppSettings
+import InputView
 
 extension Message {
     
@@ -127,6 +128,7 @@ extension NSMutableAttributedString {
 public extension String {
     var fixed:String {
         var str:String = self
+        
 //        str = str.replacingOccurrences(of: "✌", with: "✌️")
 //        str = str.replacingOccurrences(of: "☺", with: "☺️")
 //        str = str.replacingOccurrences(of: "☝", with: "☝️")
@@ -1775,6 +1777,9 @@ extension Array {
 }
 extension Array {
     func chunks(_ chunkSize: Int) -> [[Element]] {
+        if self.count == 0 || chunkSize == 0 {
+            return [self]
+        }
         return stride(from: 0, to: self.count, by: chunkSize).map {
             Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
         }
@@ -1904,10 +1909,10 @@ extension CGImage {
         
         
         
-        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) {
             
                         
-            let colorQuality: Float = 1
+            let colorQuality: Float = 0.8
             
             let options = NSMutableDictionary()
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
@@ -2286,11 +2291,8 @@ public extension NSAttributedString {
                     string = link
                 }
                 if let string = string {
-                    let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                    modified.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute.init(url: string), range: range)
                 }
-            } else if let _ = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
-               
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
                 if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {
@@ -2340,109 +2342,6 @@ public extension NSAttributedString {
 
 
 
-private let colorKeyRegex = try? NSRegularExpression(pattern: "\"k\":\\[[\\d\\.]+\\,[\\d\\.]+\\,[\\d\\.]+\\,[\\d\\.]+\\]")
-
-func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModifier?) -> Data {
-    if let fitzModifier = fitzModifier, var string = String(data: data, encoding: .utf8) {
-        let color1: NSColor
-        let color2: NSColor
-        let color3: NSColor
-        let color4: NSColor
-        
-        var colors: [NSColor] = [0xf77e41, 0xffb139, 0xffd140, 0xffdf79].map { NSColor(rgb: $0) }
-        let replacementColors: [NSColor]
-        switch fitzModifier {
-        case .type12:
-            replacementColors = [0xca907a, 0xedc5a5, 0xf7e3c3, 0xfbefd6].map { NSColor(rgb: $0) }
-        case .type3:
-            replacementColors = [0xaa7c60, 0xc8a987, 0xddc89f, 0xe6d6b2].map { NSColor(rgb: $0) }
-        case .type4:
-            replacementColors = [0x8c6148, 0xad8562, 0xc49e76, 0xd4b188].map { NSColor(rgb: $0) }
-        case .type5:
-            replacementColors = [0x6e3c2c, 0x925a34, 0xa16e46, 0xac7a52].map { NSColor(rgb: $0) }
-        case .type6:
-            replacementColors = [0x291c12, 0x472a22, 0x573b30, 0x68493c].map { NSColor(rgb: $0) }
-        }
-        
-        func colorToString(_ color: NSColor) -> String {
-            var r: CGFloat = 0.0
-            var g: CGFloat = 0.0
-            var b: CGFloat = 0.0
-            color.getRed(&r, green: &g, blue: &b, alpha: nil)
-            return "\"k\":[\(r),\(g),\(b),1]"
-        }
-        
-        func match(_ a: Double, _ b: Double, eps: Double) -> Bool {
-            return abs(a - b) < eps
-        }
-        
-        var replacements: [(NSTextCheckingResult, String)] = []
-        
-        if let colorKeyRegex = colorKeyRegex {
-            let results = colorKeyRegex.matches(in: string, range: NSRange(string.startIndex..., in: string))
-            for result in results.reversed()  {
-                if let range = Range(result.range, in: string) {
-                    let substring = String(string[range])
-                    let color = substring[substring.index(string.startIndex, offsetBy: "\"k\":[".count) ..< substring.index(before: substring.endIndex)]
-                    let components = color.split(separator: ",")
-                    if components.count == 4, let r = Double(components[0]), let g = Double(components[1]), let b = Double(components[2]), let a = Double(components[3]) {
-                        if match(a, 1.0, eps: 0.01) {
-                            for i in 0 ..< colors.count {
-                                let color = colors[i]
-                                var cr: CGFloat = 0.0
-                                var cg: CGFloat = 0.0
-                                var cb: CGFloat = 0.0
-                                color.getRed(&cr, green: &cg, blue: &cb, alpha: nil)
-                                if match(r, Double(cr), eps: 0.01) && match(g, Double(cg), eps: 0.01) && match(b, Double(cb), eps: 0.01) {
-                                    replacements.append((result, colorToString(replacementColors[i])))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        for (result, text) in replacements {
-            if let range = Range(result.range, in: string) {
-                string = string.replacingCharacters(in: range, with: text)
-            }
-        }
-        
-        return string.data(using: .utf8) ?? data
-    } else {
-        return data
-    }
-}
-
-func applyLottieColor(data: Data, color: NSColor) -> Data {
-    if var string = String(data: data, encoding: .utf8) {
-        func colorToString(_ color: NSColor) -> String {
-            var r: CGFloat = 0.0
-            var g: CGFloat = 0.0
-            var b: CGFloat = 0.0
-            color.getRed(&r, green: &g, blue: &b, alpha: nil)
-            return "\"k\":[\(r),\(g),\(b),1]"
-        }
-        var replacements: [(NSTextCheckingResult, String)] = []
-        if let colorKeyRegex = colorKeyRegex {
-            let results = colorKeyRegex.matches(in: string, range: NSRange(string.startIndex..., in: string))
-            for result in results.reversed()  {
-                replacements.append((result, colorToString(color)))
-            }
-        }
-        for (result, text) in replacements {
-            if let range = Range(result.range, in: string) {
-                string = string.replacingCharacters(in: range, with: text)
-            }
-        }
-        return string.data(using: .utf8) ?? data
-    } else {
-        return data
-    }
-}
-
-
 
 extension Double {
     
@@ -2481,6 +2380,14 @@ extension CGImage {
     var data: Data? {
         guard let mutableData = CFDataCreateMutable(nil, 0),
             let destination = CGImageDestinationCreateWithData(mutableData, "public.png" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(destination, self, nil)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return mutableData as Data
+    }
+    
+    var jpegData: Data? {
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+            let destination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) else { return nil }
         CGImageDestinationAddImage(destination, self, nil)
         guard CGImageDestinationFinalize(destination) else { return nil }
         return mutableData as Data
@@ -2555,45 +2462,6 @@ func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: Accoun
 
 
 
-extension NSCursor  {
-    static var set_windowResizeNorthWestSouthEastCursor: NSCursor? {
-        return ObjcUtils.windowResizeNorthWestSouthEastCursor()
-    }
-    static var set_windowResizeNorthEastSouthWestCursor: NSCursor? {
-        return ObjcUtils.windowResizeNorthEastSouthWestCursor()
-    }
-}
-
-extension NSImage {
-    var _cgImage: CGImage? {
-        return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
-    }
-    
-    var jpegCGImage: CGImage? {
-        guard let tiffData = self.tiffRepresentation,
-              let bitmapImageRep = NSBitmapImageRep(data: tiffData) else {
-            return nil
-        }
-
-        let compressionFactor: CGFloat = 1.0
-        
-        guard let jpegData = bitmapImageRep.representation(using: .jpeg, properties: [.compressionFactor: compressionFactor]),
-              let dataProvider = CGDataProvider(data: jpegData as CFData),
-              let cgImage = CGImage(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else {
-            return nil
-        }
-        
-        return cgImage
-    }
-}
-
-
-func truncate(double: Double, places : Int)-> Double
-{
-    return Double(floor(pow(10.0, Double(places)) * double)/pow(10.0, Double(places)))
-}
-
-
 
 
 struct DateSelectorUtil {
@@ -2656,7 +2524,7 @@ struct DateSelectorUtil {
     static let mediaFileDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeZone = NSTimeZone.local
-        formatter.dateFormat = "MMM d, yyyy, h a"
+        formatter.dateFormat = "MMM d, yyyy"
         return formatter
     }()
     
@@ -2728,19 +2596,8 @@ func smartTimeleftText( _ left: Int) -> String {
 }
 
 
-public typealias UIImage = NSImage
 
-extension NSImage {
-    
-    enum Orientation {
-        case up
-        case down
-    }
-    
-    convenience init(cgImage: CGImage, scale: CGFloat, orientation: UIImage.Orientation) {
-        self.init(cgImage: cgImage, size: cgImage.systemSize)
-    }
-}
+
 
 public extension DataSizeStringFormatting {
     

@@ -23,7 +23,7 @@ class ChatInputActionsView: View {
     private let voice:ImageButton = ImageButton()
     private let muteChannelMessages:ImageButton = ImageButton()
     let entertaiments:ImageButton = ImageButton()
-    private let slowModeTimeout:TitleButton = TitleButton()
+    private let slowModeTimeout:TextButton = TextButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
     private var scheduled:ImageButton?
@@ -157,7 +157,9 @@ class ChatInputActionsView: View {
             }
             return emoji
         }
-        return chatInteraction.context.bindings.entertainment()
+        let controller = chatInteraction.context.bindings.entertainment()
+        controller.update(with: chatInteraction)
+        return controller
     }
     
     private func addHoverObserver() {
@@ -178,7 +180,7 @@ class ChatInputActionsView: View {
         let rect = NSMakeRect(0, 0, 350, min(max(chatInteraction.context.window.frame.height - 250, 300), 550))
         entertaimentsPopover._frameRect = rect
         entertaimentsPopover.view.frame = rect
-        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 38, 10), delayBeforeShown: 0.1)
+        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 38, 10), delayBeforeShown: 0.0)
     }
     
     private func addClickObserver() {

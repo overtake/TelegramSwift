@@ -411,7 +411,7 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }
     
     let arguments = NotificationArguments(resetAllNotifications: {
-        confirm(for: context.window, header: strings().notificationSettingsConfirmReset, information: strings().chatConfirmActionUndonable, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().notificationSettingsConfirmReset, information: strings().chatConfirmActionUndonable, successHandler: { _ in
             _ = resetPeerNotificationSettings(network: context.account.network).start()
         })
     }, toggleMessagesPreview: {
@@ -502,7 +502,7 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     
     
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         if let focusOnItemTag = focusOnItemTag {
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
         }

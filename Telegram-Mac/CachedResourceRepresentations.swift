@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
@@ -144,9 +144,9 @@ final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentati
     var uniqueId: String {
         let version: Int = 17
         if let fitzModifier = self.fitzModifier {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
+            return "1animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
         } else {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
+            return "1animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
         }
     }
     let thumb: Bool
@@ -253,31 +253,6 @@ final class CachedSlotMachineRepresentation: CachedMediaResourceRepresentation {
 }
 
 
-
-public enum EmojiFitzModifier: Int32, Equatable {
-    case type12
-    case type3
-    case type4
-    case type5
-    case type6
-    
-    public init?(emoji: String) {
-        switch emoji.unicodeScalars.first?.value {
-        case 0x1f3fb:
-            self = .type12
-        case 0x1f3fc:
-            self = .type3
-        case 0x1f3fd:
-            self = .type4
-        case 0x1f3fe:
-            self = .type5
-        case 0x1f3ff:
-            self = .type6
-        default:
-            return nil
-        }
-    }
-}
 
 
 

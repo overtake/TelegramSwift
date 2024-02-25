@@ -207,7 +207,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         }
                         
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_posters_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
@@ -268,7 +268,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         }
                         
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier.init("top_admin_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
@@ -331,7 +331,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         
                         
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_inviter_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
@@ -367,7 +367,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
 }
 
 
-func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacenterId: Int32) -> ViewController {
+func GroupStatsViewController(_ context: AccountContext, peerId: PeerId) -> ViewController {
     
     let initialState = UIStatsState(loading: [])
     
@@ -378,10 +378,10 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
     }
     
     let openPeerInfo:(PeerId)->Void = { peerId in
-        return context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }
     
-    let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, peerId: peerId)
+    let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId)
 
     let peersPromise = Promise<[PeerId: Peer]?>(nil)
     
@@ -434,7 +434,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
     let controller = InputDataController(dataSignal: signal, title: strings().groupStatsTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.contextObject = statsContext
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true
     }

@@ -164,6 +164,9 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
+    private static let kStoryMuted = "kStoryMuted"
+    private static let kStoryHD = "kStoryHD"
+
 
     
     static var sendingType:SendingType {
@@ -518,6 +521,15 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static var storyIsMuted: Bool {
+        get {
+            return UserDefaults.standard.value(forKey: kStoryMuted) as? Bool ?? false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kStoryMuted)
+        }
+    }
+    
     
     private static let kDefaultScreenShareKey = "kDefaultScreenShare"
     private static let kDefaultVideoShare = "kDefaultVideoShare"
@@ -555,7 +567,7 @@ class FastSettings {
                 
         let localizedHeader = _NSLocalizedString("Confirm.Header.\(permission.rawValue)")
         let localizedDesc = _NSLocalizedString("Confirm.Desc.\(permission.rawValue)")
-        confirm(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
+        verifyAlert_button(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
             success()
         })
     }
@@ -617,61 +629,50 @@ class FastSettings {
     }
     
     
+    static var premiumPerks:[String] {
+        let perks = [PremiumValue.stories.rawValue, PremiumValue.wallpapers.rawValue, PremiumValue.peer_colors.rawValue, PremiumValue.saved_tags.rawValue]
+        let dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
+        return perks.filter { !dismissedPerks.contains($0) }
+    }
+    static func dismissPremiumPerk(_ string: String) {
+        var dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
+        dismissedPerks.append(string)
+        UserDefaults.standard.setValue(dismissedPerks, forKey: "dismissedPerks")
+    }
     
-    /*
- 
-     +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {
-     
-     static NSMutableDictionary *denied;
-     
-     static dispatch_once_t onceToken;
-     dispatch_once(&onceToken, ^{
-     denied =  [NSMutableDictionary dictionary];
-     });
-     
-     
-     
-     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-     
-     NSString *key = [NSString stringWithFormat:@"%@:%d",permissionKey,peer_id];
-     
-     BOOL access = [defaults boolForKey:key];
-     
-     
-     if(access) {
-     if(handler)
-     handler(access);
-     } else {
-     
-     if([denied[key] boolValue]) {
-     if(handler)
-     handler(NO);
-     return;
-     }
-     
-     NSString *localizeHeaderKey = [NSString stringWithFormat:@"Confirm.Header.%@",permissionKey];
-     NSString *localizeDescKey = [NSString stringWithFormat:@"Confirm.Desc.%@",permissionKey];
-     confirm(NSLocalizedString(localizeHeaderKey, nil), NSLocalizedString(localizeDescKey, nil), ^{
-     if(handler)
-     handler(YES);
-     
-     [defaults setBool:YES forKey:key];
-     [defaults synchronize];
-     }, ^{
-     if(handler)
-     handler(NO);
-     
-     [denied setValue:@(YES) forKey:key];
-     
-     [defaults setBool:NO forKey:key];
-     [defaults synchronize];
-     });
-     }
-     
-     }
+    static func getUUID(_ id: Int64) -> UUID? {
+        let stored = UserDefaults.standard.string(forKey: "_uuid_\(id)")
+        if let stored = stored {
+            return .init(uuidString: stored)
+        } else {
+            let uuid: UUID = UUID()
+            UserDefaults.standard.setValue(uuid.uuidString, forKey: "_uuid_\(id)")
+            return uuid
+        }
+    }
+    
+    static func isDefaultAccount(_ id: Int64) -> Bool {
+        let accountId = UserDefaults.standard.value(forKey: "_default_account_id")
+        
+        if let accountId = accountId as? Int64 {
+            return accountId == id
+        } else {
+            UserDefaults.standard.setValue(id, forKey: "_default_account_id")
+            return true
+        }
 
- */
+    }
     
+    static func clear_uuid(_ id: Int64) {
+//#if DEBUG
+        if #available(macOS 14.0, *) {
+            if let uuid = FastSettings.getUUID(id) {
+//                WKWebsiteDataStore.remove(forIdentifier: uuid, completionHandler: { _ in
+//                })
+            }
+        }
+//#endif
+    }
 }
 
 fileprivate let TelegramFileMediaBoxPath:String = "TelegramFileMediaBoxPathAttributeKey"
@@ -729,7 +730,7 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
         
 //        setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
         
-       // removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
+        //removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
         
         let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
         
@@ -787,13 +788,14 @@ func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
             } else {
-                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
-                    if let folder = FastSettings.downloadsFolder {
-                        let ext = ext == "*" || ext == nil ? "file" : ext!
-                        return .single((data.path, "\(folder)/\(fileName).\( ext )"))
-                    }
-                    return .single(nil)
-                }
+                return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension)"))
+//                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
+//                    if let folder = FastSettings.downloadsFolder {
+//                        let ext = ext == "*" || ext == nil ? "file" : ext!
+//                        return .single((data.path, "\(folder)/\(fileName).\( ext )"))
+//                    }
+//                    return .single(nil)
+//                }
             }
         } else {
             return .single(nil)
@@ -860,7 +862,7 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
 //                setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
 
-              //  removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
+                    // removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
 
                 
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970

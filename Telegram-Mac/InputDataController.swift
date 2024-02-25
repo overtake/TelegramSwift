@@ -18,15 +18,23 @@ public class InputDataModalController : ModalViewController {
     private let _modalInteractions: ModalInteractions?
     private let closeHandler: (@escaping()-> Void) -> Void
     private let themeDisposable = MetaDisposable()
-    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(380, 300)) {
+    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme) {
         self.controller = controller
         self._modalInteractions = modalInteractions
-        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 340), size.height)
+        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 280), size.height)
         self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
+        
+        self.getModalTheme = {
+            return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
+        }
     }
     
+    var _hasBorder: Bool = true
+    public override var hasBorder: Bool {
+        return _hasBorder
+    }
     
     var getHeaderColor: (()->NSColor)? = nil
     public override var headerBackground: NSColor {
@@ -41,6 +49,7 @@ public class InputDataModalController : ModalViewController {
         return getModalTheme?() ?? super.modalTheme
     }
 
+    
     
     var isFullScreenImpl: (()->Bool)? = nil
     
@@ -60,6 +69,10 @@ public class InputDataModalController : ModalViewController {
     }
     public override var shouldCloseAllTheSameModals: Bool {
         return false
+    }
+    
+    public override var isVisualEffectContainer: Bool {
+        return true
     }
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -104,8 +117,8 @@ public class InputDataModalController : ModalViewController {
         return result
     }
     
-    public override var haveNextResponder: Bool {
-        return controller.haveNextResponder
+    public override var hasNextResponder: Bool {
+        return controller.hasNextResponder
     }
     
     public override func nextResponder() -> NSResponder? {
@@ -119,6 +132,7 @@ public class InputDataModalController : ModalViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         controller.viewDidAppear(animated)
+        controller.tableView.notifyScrollHandlers()
     }
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -149,12 +163,14 @@ public class InputDataModalController : ModalViewController {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(size.width, 350))), min(size.height - 150, controller.tableView.listHeight)), animated: false)
+        let topHeight = controller.genericView.topView?.frame.height ?? 0
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
+        let topHeight = controller.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(contentSize.height - 150, controller.tableView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -190,7 +206,33 @@ public class InputDataModalController : ModalViewController {
                 first = false
             }
         }
+        
+
+        
+        controller.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            if self.controller.tableView.documentSize.height > self.controller.tableView.frame.height {
+                self.controller.tableView.verticalScrollElasticity = .automatic
+            } else {
+                self.controller.tableView.verticalScrollElasticity = .none
+            }
+            if position.rect.minY - self.controller.tableView.frame.height > 0 {
+                self.modal?.makeHeaderState(state: .active, animated: true)
+            } else {
+                self.modal?.makeHeaderState(state: .normal, animated: true)
+            }
+        }))
+        
     }
+    
+    public override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        controller.genericView.change(size: frame.size, animated: transition.isAnimated)
+        controller.genericView.change(pos: frame.origin, animated: transition.isAnimated)
+        self.controller.genericView.updateLayout(size: frame.size, transition: transition)
+    }
+    
     deinit {
         themeDisposable.dispose()
     }
@@ -306,19 +348,37 @@ struct InputDataSignalValue {
 }
 
 final class InputDataView : BackgroundView {
-    let tableView = TableView()
+    let tableView: TableView
+    
+    fileprivate var topView: NSView?
+    
     required init(frame frameRect: NSRect) {
+        tableView = TableView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
-        tableView.frame = bounds
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
     }
     
+    override var frame: NSRect {
+        didSet {
+            var bp = 0
+            bp == 1
+        }
+    }
+    
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        if newOrigin.y == 0 {
+            var bp = 0
+            bp += 1
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -326,8 +386,77 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
-        tableView.frame = bounds
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
+    
+    
+    func set(_ topView: NSView?) {
+        if let topView = self.topView {
+            topView.removeFromSuperview()
+        }
+        self.topView = topView
+        if let topView = topView {
+            addSubview(topView)
+        }
+        self.needsLayout = true
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        let tableRect: NSRect
+        if let view = self.topView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, size.width, view.frame.height))
+            tableRect = NSMakeRect(0, view.frame.height, size.width, size.height - view.frame.height)
+        } else {
+            tableRect = size.bounds
+        }
+        
+//        transition.updateFrame(view: tableView.contentView, frame: tableRect.size.bounds)
+        transition.updateFrame(view: tableView, frame: tableRect)
+//        transition.updateFrame(view: tableView.documentView!, frame: tableView.documentSize.bounds)
+        
+    }
+}
+
+
+final class InputDataMediaSearchContext {
+    let searchState:Promise<SearchState> = Promise()
+    let mediaSearchState:ValuePromise<MediaSearchState> = ValuePromise(ignoreRepeated: true)
+    var inSearch: Bool = false
+}
+
+extension InputDataController : PeerMediaSearchable {
+    func toggleSearch() {
+        guard let context = self.searchContext else {
+            return
+        }
+        context.inSearch = !context.inSearch
+        if context.inSearch {
+            context.searchState.set(.single(.init(state: .Focus, request: nil)))
+        } else {
+            context.searchState.set(.single(.init(state: .None, request: nil)))
+        }
+    }
+    
+    fileprivate var searchContext: InputDataMediaSearchContext? {
+        return self.contextObject as? InputDataMediaSearchContext
+    }
+    
+    func setSearchValue(_ value: Signal<SearchState, NoError>) {
+        self.searchContext?.searchState.set(value)
+    }
+    
+    func setExternalSearch(_ value: Signal<ExternalSearchMessages?, NoError>, _ loadMore: @escaping () -> Void) {
+        
+    }
+    
+    var mediaSearchValue: Signal<MediaSearchState, NoError> {
+        if let context = self.searchContext {
+            return context.mediaSearchState.get()
+        }
+        return .complete()
+    }
+    
 }
 
 class InputDataController: GenericViewController<InputDataView> {
@@ -342,7 +471,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var validateData:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
     var afterDisappear: ()->Void
     var updateDatas:([InputDataIdentifier : InputDataValue]) -> InputDataValidation
-    var didLoaded:(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void
+    var didLoad:(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void
     private let _removeAfterDisappear: Bool
     private let hasDone: Bool
     var updateDoneValue:([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void
@@ -365,26 +494,29 @@ class InputDataController: GenericViewController<InputDataView> {
     var ignoreRightBarHandler: Bool = false
     
     var inputLimitReached:(Int)->Void = { _ in }
-    
+    var _externalFirstResponder:(()->NSResponder?)? = nil
+    var _becomeFirstResponder:(()->Bool)?
     var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
+    var didDisappear: ((InputDataController)->Void)?
+
+    var afterViewDidLoad:(()->Void)?
     
     var _abolishWhenNavigationSame: Bool = false
 
     var getTitle:(()->String)? = nil
     var getStatus:(()->String?)? = nil
-    
     var doneString: ()->String
     
     var autoInputAction: Bool = false
     
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
         self.updateDatas = updateDatas
         self.doneString = doneString
-        self.didLoaded = didLoaded
+        self.didLoad = didLoad
         self.identifier = identifier
         self._removeAfterDisappear = removeAfterDisappear
         self.hasDone = hasDone
@@ -433,7 +565,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override var responderPriority: HandlerPriority {
-        return .modal
+        return .medium
     }
     var tableView: TableView {
         return self.genericView.tableView
@@ -514,7 +646,6 @@ class InputDataController: GenericViewController<InputDataView> {
                     self?.proccessValidation(validation)
                 }
             default:
-                //TODO IF NEEDED
                 break
             }
         case let .success(behaviour):
@@ -565,7 +696,7 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        self.afterViewDidLoad?()
         genericView.tableView.getBackgroundColor = self.getBackgroundColor
         
         
@@ -635,7 +766,7 @@ class InputDataController: GenericViewController<InputDataView> {
             let wasReady: Bool = self.didSetReady
             self.readyOnce()
             if !wasReady {
-                self.didLoaded(self, self.fetchData())
+                self.didLoad(self, self.fetchData())
             }
         }))
     }
@@ -671,12 +802,15 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     func jumpNext() {
-        if haveNextResponder {
+        if hasNextResponder {
             _ = window?.makeFirstResponder(self.nextResponder())
         }
     }
     
     override func becomeFirstResponder() -> Bool? {
+        if let value = _becomeFirstResponder?() {
+            return value
+        }
         return true
     }
     
@@ -692,6 +826,9 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func firstResponder() -> NSResponder? {
         
+        if let responder = _externalFirstResponder?() {
+            return responder
+        }
         let responder = window?.firstResponder as? NSView
         
         var responderInController: Bool = false
@@ -758,7 +895,7 @@ class InputDataController: GenericViewController<InputDataView> {
         return BarView(controller: self)
     }
     
-    override var haveNextResponder: Bool {
+    override var hasNextResponder: Bool {
         return true
     }
     
@@ -768,6 +905,11 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func backKeyAction() -> KeyHandlerResult {
         return .invokeNext
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.didDisappear?(self)
     }
     
     override func viewDidAppear(_ animated: Bool) {

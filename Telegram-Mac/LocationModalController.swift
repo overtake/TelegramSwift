@@ -80,7 +80,7 @@ private final class LocationMapView : View {
     private let headerTextView: TextView = TextView()
     private let header: View = View()
     private let expandContainer: Control = Control(frame: NSMakeRect(0, 0, 0, 50))
-    private let expandButton: TitleButton = TitleButton()
+    private let expandButton: TextButton = TextButton()
     private var state: LocationViewState = .normal(.user(nil))
     private var hasExpand: Bool = true
     private let loadingView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))
@@ -581,7 +581,14 @@ class LocationModalController: ModalViewController {
         
         
         
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare") |> map { $0?._asPeer().id })
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare") |> mapToSignal { result in
+            switch result {
+            case .progress:
+                return .never()
+            case let .result(peer):
+                return .single(peer?._asPeer().id)
+            }
+        })
         let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
             |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {

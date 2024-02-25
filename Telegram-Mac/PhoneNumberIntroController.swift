@@ -9,14 +9,14 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import SwiftSignalKit
 
 class ChaneNumberIntroView : View {
     let imageView:LottiePlayerView = LottiePlayerView()
     let textView:TextView = TextView()
     private let containerView:View = View()
-    fileprivate let next = TitleButton()
+    fileprivate let next = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(containerView)
@@ -107,11 +107,15 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     
     
     func executeNext() {
-        confirm(for: context.window, information: strings().changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
-            if let context = self?.context {
-                self?.navigationController?.push(PhoneNumberConfirmController(context: context))
-            }
-        })
+        alert(for: context.window, info: strings().changePhoneUseMobile)
+
+        return
+        
+//        confirm(for: context.window, information: strings().changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
+//            if let context = self?.context {
+//                self?.navigationController?.push(PhoneNumberConfirmController(context: context))
+//            }
+//        })
     }
     
 }

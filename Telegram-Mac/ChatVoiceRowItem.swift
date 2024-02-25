@@ -19,10 +19,32 @@ import TelegramCore
 import InAppSettings
 import SwiftSignalKit
 import Postbox
+import TelegramMedia
+
+
+func canTranscribeMessage(_ message: Message, context: AccountContext) -> Bool {
+    if message.autoclearTimeout != nil {
+        return false
+    }
+    let file = message.media.first! as! TelegramMediaFile
+    if context.isPremium {
+        return true
+    } else {
+        let has_trial = context.appConfiguration.getGeneralValue("transcribe_audio_trial_weekly_number", orElse: 0) > 0
+        let max_trial_duration = context.appConfiguration.getGeneralValue("transcribe_audio_trial_duration_max", orElse: 0)
+        if has_trial, max_trial_duration > Int(file.duration ?? 0) {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     
     enum TranscribeState {
         case possible
+        case locked
         case state(TranscribeAudioState)
     }
     
@@ -45,6 +67,8 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
         func makeSize(_ width: CGFloat) -> NSSize? {
             switch state {
             case .possible:
+                self.size = nil
+            case .locked:
                 self.size = nil
             case  let .state(state):
                 switch state {
@@ -81,13 +105,13 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     let isWebpage:Bool
     let resource: TelegramMediaResource
     fileprivate(set) var waveformWidth:CGFloat = 120
-    let duration:Int
+    let duration: Double
     
     var transcribe:()->Void = {}
     
     fileprivate(set) var transcribeData: TranscribeData?
     
-    init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
+    init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration: Double, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.showPlayer = showPlayer
         self.waveform = waveform
         self.duration = duration
@@ -113,14 +137,14 @@ class ChatVoiceRowItem: ChatMediaItem {
         let file = media as! TelegramMediaFile
 
         var waveform:AudioWaveform? = nil
-        var duration:Int = 0
+        var duration:Double = 0
         for attr in file.attributes {
             switch attr {
             case let .Audio(_, _duration, _, _, _data):
                 if let data = _data {
                     waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
                 }
-                duration = _duration
+                duration = Double(_duration)
             default:
                 break
             }
@@ -135,7 +159,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         self.parameters = parameters
         
         
-        let canTranscribe = context.isPremium
+        let canTranscribe = canTranscribeMessage(object.message!, context: context)
 
         if canTranscribe, let message = object.message {
             var pending: Bool
@@ -187,8 +211,16 @@ class ChatVoiceRowItem: ChatMediaItem {
                 }
                 
                 parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+            } else if let attributes = message.audioTranscription {
+                parameters.transcribeData = .init(state: .state(.collapsed(true)), text: nil, isPending: false, fontColor: transcribtedColor, backgroundColor: bgColor)
             } else {
-                parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+                let locked: Bool
+                if let cooldown = context.audioTranscriptionTrial.cooldownUntilTime, cooldown > Int32(Date().timeIntervalSince1970) {
+                    locked = true
+                } else {
+                    locked = false
+                }
+                parameters.transcribeData = .init(state: locked ? .locked : .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
             }
             parameters.transcribe = { [weak self] in
                 self?.chatInteraction.transcribeAudio(message)
@@ -229,7 +261,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)
             
-            let canTranscribe = context.isPremium
+            let canTranscribe = canTranscribeMessage(message!, context: context)
 
             
             let maxVoiceWidth:CGFloat = min(min(250, blockWidth), width - 50 - (canTranscribe ? 35 : 0))

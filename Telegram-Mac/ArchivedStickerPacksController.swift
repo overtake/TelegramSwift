@@ -108,7 +108,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
                 arguments.removePack(info)
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case .loading(let loading):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().archivedStickersEmpty)
         }
@@ -251,7 +251,7 @@ class ArchivedStickerPacksController: TableViewController {
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         }, removePack: { info in
-            confirm(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
                 var remove = false
                 updateState { state in
                     var removingPackIds = state.removingPackIds

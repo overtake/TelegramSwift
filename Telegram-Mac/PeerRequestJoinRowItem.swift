@@ -45,11 +45,10 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
         
         if data.added || data.dismissed {
             let text: String
-            //TODOLANG
             if data.added {
-                text = "Approved"
+                text = strings().requestJoinListStatusApproved
             } else {
-                text = "Dismissed"
+                text = strings().requestJoinListStatusDismissed
             }
             self.statusLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .medium(.text)))
         } else {
@@ -90,8 +89,8 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
     private let timeView = TextView()
     private let nameView = TextView()
     private let aboutView = TextView()
-    private let addButton = TitleButton()
-    private let dismissButton = TitleButton()
+    private let addButton = TextButton()
+    private let dismissButton = TextButton()
     
     private var statusView: TextView?
     private var progressIndicator: ProgressIndicator?

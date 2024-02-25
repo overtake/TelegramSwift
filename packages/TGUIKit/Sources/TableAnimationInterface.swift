@@ -30,21 +30,13 @@ open class TableAnimationInterface: NSObject {
         
         var height:CGFloat = 0
         
-        table.tile()
-       
-        
-        let contentView = table.contentView
+        let contentView = table.clipView
         let bounds = contentView.bounds
         
         var scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
         var checkBelowAfter: Bool = false
         
-        if scrollBelow {
-            contentView.scroll(to: NSMakePoint(0, min(0, documentOffset.y)))
-            contentView.layer?.removeAllAnimations()
-        } else {
-            checkBelowAfter = true
-        }
+       
         
         var range:NSRange = table.visibleRows(height)
         
@@ -82,13 +74,20 @@ open class TableAnimationInterface: NSObject {
             return []
         }
         
+        if scrollBelow, documentOffset.y >= 0 {
+            table.tile()
+            contentView.updateBounds(to: NSMakePoint(0, min(0, documentOffset.y)))
+        } else {
+            checkBelowAfter = true
+        }
+        
         var animatedItems:[AnimateItem] = []
         
         scrollBelow = scrollBelow || (checkBelowAfter && (bounds.minY - height) < 0)
       
         if height - bounds.height < table.frame.height || bounds.minY > height, scrollBelow {
             
-            contentView.scroll(to: NSMakePoint(0, min(0, documentOffset.y)))
+            contentView.updateBounds(to: NSMakePoint(0, min(0, documentOffset.y)))
             
             if range.length >= added[0].index {
                 for idx in added[0].index ..< range.length {

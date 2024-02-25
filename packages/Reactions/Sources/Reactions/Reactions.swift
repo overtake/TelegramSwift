@@ -23,6 +23,7 @@ public final class Reactions {
     }
     
     private(set) public var available: AvailableReactions?
+        
     public var stateValue: Signal<AvailableReactions?, NoError> {
         return state.get() |> distinctUntilChanged |> deliverOnMainQueue
     }
@@ -60,14 +61,14 @@ public final class Reactions {
     
     public func react(_ messageId: MessageId, values: [UpdateMessageReaction], fromRect: NSRect? = nil, storeAsRecentlyUsed: Bool = false) {
         _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
-        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
+        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
     public func updateQuick(_ value: MessageReaction.Reaction) {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
     
-    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?) {
+    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?, handleInteractive: Bool = true) {
         
         let emojiStatus = (peer as? TelegramUser)?.emojiStatus
         
@@ -78,18 +79,25 @@ public final class Reactions {
             expiryDate = nil
         }
         if file.mimeType.hasPrefix("bundle") {
-            if emojiStatus != nil {
-                _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))
-            } else {
-                _ = _interactiveStatus.swap(nil)
+            if handleInteractive {
+                if emojiStatus != nil {
+                    _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                } else {
+                    _ = _interactiveStatus.swap(nil)
+                }
             }
+            
             _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
         } else {
             if file.fileId.id == emojiStatus?.fileId {
-                _ = _interactiveStatus.swap(nil)
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(nil)
+                }
                 _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
             } else {
-                _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                }
                 _ = engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
             }
         }

@@ -103,7 +103,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 for item in items {
                     entries.append(.custom(sectionId: sectionId, index: item.index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, height: 42, photoSize: NSMakeSize(32, 32), status: "t.me/\(item.peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+                        return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, height: 42, photoSize: NSMakeSize(32, 32), status: "t.me/\(item.peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 20, right: 20), interactionType:.deletable(onRemove: { peerId in
                             arguments.revokePeerId(peerId)
                         }, deletable: true), viewType: item.viewType)
                     }))
@@ -226,8 +226,8 @@ func CreateChannelController(context: AccountContext, requires: CreateChannelReq
             }
         }
     }, revokePeerId: { peerId in
-        revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
-            if !result {
+        revokeAddressNameDisposable.set((verifyAlertSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+            if result == nil {
                 return .fail(.generic)
             } else {
                 return .single(true)
@@ -253,7 +253,7 @@ func CreateChannelController(context: AccountContext, requires: CreateChannelReq
     let addressNameAssignment: Signal<[Peer]?, NoError> = .single(nil) |> then(context.engine.peers.channelAddressNameAssignmentAvailability(peerId: nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
         if case .addressNameLimitReached = result {
             return context.engine.peers.adminedPublicChannels()
-                |> map { Optional($0) }
+            |> map { Optional($0.map { $0._asPeer() }) }
         } else {
             return .single(nil)
         }

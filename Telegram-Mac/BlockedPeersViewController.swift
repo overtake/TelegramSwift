@@ -121,7 +121,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openPeer(peer.id)
             }, contextMenuItems: {
                 if case .plain = interactionType {
@@ -136,7 +136,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
         case let .empty(progress):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: strings().blockedPeersEmptyDescrpition, viewType: .singleItem)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -265,7 +265,9 @@ class BlockedPeersViewController: EditableViewController<TableView> {
             }))
         }, openPeer: { [weak self] peerId in
             guard let `self` = self else {return}
-            self.navigationController?.push(PeerInfoController(context: self.context, peerId: peerId))
+            if let navigation = self.navigationController {
+                PeerInfoController.push(navigation: navigation, context: self.context, peerId: peerId)
+            }
         })
         
         

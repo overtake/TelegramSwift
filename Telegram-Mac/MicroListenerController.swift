@@ -11,7 +11,7 @@ import SwiftSignalKit
 import TelegramCore
 import InAppSettings
 import Postbox
-
+import TelegramMedia
 
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
@@ -80,7 +80,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
             paused = false
             self.always = always
             self.onSpeaking = onSpeaking
-            let signal = combineLatest(devices.signal, voiceCallSettings(accountManager), requestMicrophonePermission()) |> deliverOn(queue)
+            let signal = combineLatest(queue: queue, devices.signal, voiceCallSettings(accountManager), requestMicrophonePermission())
             
             devicesDisposable.set(signal.start(next: { [weak self] devices, settings, permission in
                 let device = settings.audioInputDeviceId == nil ? devices.audioInput.first : devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
@@ -218,9 +218,10 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
         }
     }
     
-    private func stop() {
+    func stop() {
         device = nil
         assert(queue.isCurrent())
+        
         
         self.paused = true
         
@@ -230,6 +231,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
             status = AudioUnitUninitialize(audioUnit)
             status = AudioComponentInstanceDispose(audioUnit)
         }
+        removeAudioUnitHolder(self.id)
 
     }
     
@@ -344,6 +346,12 @@ final class MicroListenerContext {
     init(devices:DevicesContext, accountManager: AccountManager<TelegramAccountManagerTypes>) {
         contextRef = .init(queue: queue, generate: {
             return MicroListenerContextObject(queue: queue, devices: devices, accountManager: accountManager)
+        })
+    }
+    
+    deinit {
+        contextRef.syncWith({
+            $0.stop()
         })
     }
     

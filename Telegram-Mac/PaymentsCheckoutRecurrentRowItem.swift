@@ -15,13 +15,15 @@ final class PaymentsCheckoutRecurrentRowItem : GeneralRowItem {
     let botName: String
     let layout: TextViewLayout
     let toggle: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, termsUrl: String, botName: String, accept: Bool, toggle:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, termsUrl: String, botName: String, accept: Bool, isReccurent: Bool, toggle:@escaping()->Void) {
         self.accept = accept
         self.termsUrl = termsUrl
         self.toggle = toggle
         self.botName = botName
         
-        let attr = parseMarkdownIntoAttributedString(strings().paymentsRecurrentAccept(botName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+        let text: String = isReccurent ? strings().paymentsRecurrentAccept(botName) : strings().paymentsNonRecurrentAccept(botName)
+        
+        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, contents)
         })).mutableCopy() as! NSMutableAttributedString
         

@@ -10,16 +10,18 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import ColorPalette
+import SwiftSignalKit
 
 
 struct WPLayoutPresentation {
     let text: NSColor
-    let activity: NSColor
+    let activity: PeerNameColors.Colors
     let link: NSColor
     let selectText: NSColor
     let ivIcon: CGImage
     let renderType: ChatItemRenderType
+    let pattern: Int64?
 }
 
 class WPLayout: Equatable {
@@ -36,11 +38,9 @@ class WPLayout: Equatable {
     
     private(set) var textLayout:TextViewLayout?
     private let mayCopyText: Bool
-    private(set) var siteName:(TextNodeLayout, TextNode)?
-    private var _nameNode:TextNode?
     
-    var insets: NSEdgeInsets = NSEdgeInsets(left:8.0, top:0.0)
-    
+    var insets: NSEdgeInsets = NSEdgeInsets(left: 8.0, right: 6, top: 3, bottom: 5)
+    var imageInsets: NSEdgeInsets = NSEdgeInsets(left: 0, right: 0, top: 3, bottom: 0)
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
@@ -70,12 +70,13 @@ class WPLayout: Equatable {
     
     var webPage: TelegramMediaWebpage {
         if let game = parent.anyMedia as? TelegramMediaGame {
-            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
         }
         return parent.anyMedia as! TelegramMediaWebpage
     }
     
     let presentation: WPLayoutPresentation
+    let chatInteraction: ChatInteraction
     
     private var _approximateSynchronousValue: Bool = false
     var approximateSynchronousValue: Bool {
@@ -85,15 +86,21 @@ class WPLayout: Equatable {
             return result
         }
     }
+    private let entities: [MessageTextEntity]?
+    private let adAttribute: AdMessageAttribute?
     
-    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil) {
         self.content = content
         self.context = context
         self.presentation = presentation
+        self.chatInteraction = chatInteraction
         self.mayCopyText = mayCopyText
         self.parent = parent
         self.fontSize = fontSize
+        self.entities = entities
+        self.adAttribute = adAttribute
         self._approximateSynchronousValue = approximateSynchronousValue
+        
         if let websiteName = content.websiteName {
             let siteName: String
             switch content.type {
@@ -104,22 +111,46 @@ class WPLayout: Equatable {
             default:
                 siteName = websiteName
             }
-            _siteNameAttr = .initialize(string: siteName, color: presentation.activity, font: .medium(.text))
-            _nameNode = TextNode()
+            _siteNameAttr = .initialize(string: siteName, color: presentation.activity.main, font: .medium(.text))
         }
         
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
         
-        let text = content.type != "telegram_background" ? content.text?.trimmed : nil
+        
+        if let siteName = _siteNameAttr {
+            attributedText.append(siteName)
+            attributedText.append(string: "\n", font: .normal(.text))
+        }
+        var text = content.type != "telegram_background" ? content.text?.trimmed : nil
+        
+        if text == nil, let story = content.story, let storedItem = parent.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+            switch storedItem {
+            case let .item(item):
+                text = item.text.prefixWithDots(100)
+            default:
+                break
+            }
+        }
+        
         if let title = content.title ?? content.author, content.type != "telegram_background" {
             _ = attributedText.append(string: title, color: presentation.text, font: .medium(fontSize))
             if text != nil {
                 _ = attributedText.append(string: "\n")
             }
         }
+        
+        
         if let text = text {
-            _ = attributedText.append(string: text, color: presentation.text, font: .normal(fontSize))
+            
+            let entitites = entities ?? []
+
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entitites)], for: text, message: nil, context: context, fontSize: fontSize, openInfo: chatInteraction.openInfo, textColor: presentation.text, linkColor: presentation.link, monospacedPre: presentation.text, monospacedCode: presentation.text, isDark: false, bubbled: false).mutableCopy() as! NSMutableAttributedString
+
+            InlineStickerItem.apply(to: attributed, associatedMedia: parent.associatedMedia, entities: entitites, isPremium: true, offset: 0)
+
+            attributedText.insert(attributed, at: attributedText.length)
+            
         }
         if attributedText.length > 0 {
             var p: ParsingType = [.Links]
@@ -127,9 +158,13 @@ class WPLayout: Equatable {
             if wname == "instagram" || wname == "twitter" {
                 p = [.Links, .Mentions, .Hashtags]
             }
+            if adAttribute == nil {
+                attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
+            }
+
             
-            attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true, mayItems: mayCopyText)
+            
             
             let interactions = globalLinkExecutor
             interactions.resolveLink = { link in
@@ -183,7 +218,9 @@ class WPLayout: Equatable {
                             break
                         }
                     }
-                    
+                    if let adAttribute = adAttribute {
+                        chatInteraction.markAdAction(adAttribute.opaqueId)
+                    }
                     execute(inapp: link)
                 }
             }
@@ -195,11 +232,24 @@ class WPLayout: Equatable {
         
     }
     
+    var isStory: Bool {
+        return content.story != nil
+    }
+    
+    func openStory() {
+        if let story = content.story {
+            chatInteraction.openStory(parent.id, story.storyId)
+        }
+    }
+    
     var isGalleryAssemble: Bool {
-        // && content.instantPage != nil
+        if content.story != nil {
+            return false
+        }
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
             return !content.url.isEmpty && content.type != "telegram_background" && content.type != "telegram_theme"
         }
+       
         return content.type == "telegram_album" && content.type != "telegram_background" && content.type != "telegram_theme"
     }
     
@@ -247,21 +297,189 @@ class WPLayout: Equatable {
     private(set) var oldWidth:CGFloat = 0
     
     func measure(width: CGFloat)  {
-        if oldWidth != width {
-            self.oldWidth = width
-            siteName = TextNode.layoutText(maybeNode: _nameNode, _siteNameAttr, nil, 1, .end, NSMakeSize(width - 50, 20), nil, false, .left)
-        }
-        
-        if let siteName = siteName {
-            insets.top = siteName.0.size.height + 2.0
-        }
         
     }
     
     func layout(with size:NSSize) -> Void {
-        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width) , size.height + (hasInstantPage ? 30 + 6 : 0) + (isProxyConfig ? 30 + 6 : 0))
+        
+        var buttonSize: CGFloat = 0
+        if action_text != nil {
+            buttonSize += 39
+        }
+        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width), size.height + buttonSize)
+        
         self.contentRect = NSMakeRect(insets.left, insets.top, size.width, size.height)
-        self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.top + insets.bottom)
+        self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.bottom + insets.top)
+    }
+    
+    var action_text:String? {
+        
+        if let adAtribute = parent.adAttribute, let author = parent.author {
+            if let text = adAtribute.buttonText {
+                return text
+            } else if case .botApp = adAtribute.target {
+                return strings().chatMessageLaunchBot
+            } else if case .webPage = adAtribute.target {
+                return strings().chatMessageOpenLink
+            } else if author.isBot {
+                return strings().chatMessageViewBot
+            } else if author.isGroup || author.isSupergroup {
+                return strings().chatMessageViewGroup
+            } else {
+                return strings().chatMessageViewChannel
+            }
+        }
+        
+        if self.isProxyConfig {
+            return strings().chatApplyProxy
+        } else if hasInstantPage {
+            return strings().chatInstantView
+        }
+        if !self.hasInstantPage {
+            let content = self.content
+            let link = inApp(for: content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
+            switch link {
+            case let .followResolvedName(_, _, postId, _, action, _):
+                var actionIsSource: Bool = false
+                if case .source = action {
+                    actionIsSource = true
+                }
+                if let action = action, !actionIsSource {
+                    inner: switch action {
+                    case let .joinVoiceChat(hash):
+                        if hash != nil {
+                            return strings().chatMessageJoinVoiceChatAsSpeaker
+                        } else {
+                            return strings().chatMessageJoinVoiceChatAsListener
+                        }
+                    case .makeWebview:
+                        return strings().chatMessageOpenApp
+                    default:
+                        break inner
+                    }
+                } else {
+                    switch content.type {
+                    case "telegram_channel":
+                        return strings().chatMessageViewChannel
+                    case "telegram_group":
+                        return strings().chatMessageViewGroup
+                    case "telegram_megagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_gigagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_user":
+                        return strings().chatMessageSendMessage
+                    default:
+                        break
+                    }
+                }
+                if let postId = postId, postId > 0 {
+                    return strings().chatMessageActionShowMessage
+                }
+            case .folder:
+                return strings().chatMessageViewChatList
+            case .story:
+                return strings().chatMessageOpenStory
+            case .boost:
+                return strings().chatMessageBoostChannel
+            default:
+                break
+            }
+            if self.wallpaper != nil {
+                return strings().chatViewBackground
+            }
+            if self.isTheme {
+                return strings().chatActionViewTheme
+            }
+        }
+        return nil
+    }
+    
+    func premiumBoarding() {
+        showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+    }
+    
+    func invokeAction() {
+        if self.hasInstantPage {
+            showInstantPage(InstantPageViewController(context, webPage: parent.media[0] as! TelegramMediaWebpage, message: parent.text))
+        } else if let proxyConfig = self.proxyConfig {
+            applyExternalProxy(proxyConfig, accountManager: context.sharedContext.accountManager)
+        } else if let adAttribute = parent.adAttribute {
+            let link: inAppLink?
+            switch adAttribute.target {
+            case let .peer(id, messageId, startParam):
+                let action: ChatInitialAction?
+                if let startParam = startParam {
+                    action = .start(parameter: startParam, behavior: .none)
+                } else {
+                    action = nil
+                }
+                link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: true, postId: messageId?.id, callback: chatInteraction.openInfo)
+            case let .join(_, joinHash, _):
+                link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
+            case let .webPage(_, url: url):
+                link = .external(link: url, false)
+            case let .botApp(peerId, botApp, startParam):
+                        
+                let context = self.context
+
+                let openWebview:(ChatInitialAction)->Void = { [weak self] action in
+                    self?.chatInteraction.invokeInitialAction(action: action)
+                }
+                
+                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestAppWebViewError> = { botApp, allowWrite in
+                    return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: startParam, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
+                        return (botApp, $0)
+                    }
+                }
+
+                var signal: Signal<(BotApp, String?), RequestAppWebViewError> = .single(botApp) |> mapToSignal { botApp in
+                    if botApp.flags.contains(.notActivated) {
+                        return .single((botApp, nil))
+                    } else {
+                        return makeRequestAppWebView(botApp, false)
+                    }
+                }
+                signal = showModalProgress(signal: signal, for: context.window)
+                _ = combineLatest(signal, context.account.postbox.loadedPeerWithId(peerId) |> castError(RequestAppWebViewError.self)).start(next: { botData, peer in
+                    let url = botData.1
+                    let botApp = botData.0
+                    
+                    if let url = url {
+                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                    } else {
+                        
+                        var options: [ModalAlertData.Option] = []
+                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                        
+                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                        showModalAlert(for: context.window, data: data, completion: { result in
+                            FastSettings.markWebAppAsConfirmed(peer.id)
+                            
+                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: context.window)
+                            
+                            _ = signal.start(next: { botApp, url in
+                                if let url = url {
+                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                }
+                            }, error: { error in
+                                
+                            })
+                        })
+                    }
+                }, error: { error in
+                    
+                })
+                link = nil
+            }
+            chatInteraction.markAdAction(adAttribute.opaqueId)
+            if let link = link {
+                execute(inapp: link)
+            }
+        } else {
+            let link = inApp(for: self.content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
+            execute(inapp: link)
+        }
     }
     
     var hasInstantPage: Bool {

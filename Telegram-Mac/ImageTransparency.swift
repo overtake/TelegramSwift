@@ -132,6 +132,7 @@ func generateTintedImage(image: CGImage?, color: NSColor, backgroundColor: NSCol
     }
     let imageSize = image.size
     return generateImage(imageSize, contextGenerator: { size, context in
+        context.clear(size.bounds)
         if let backgroundColor = backgroundColor {
             context.setFillColor(backgroundColor.cgColor)
             context.fill(CGRect(origin: CGPoint(), size: imageSize))

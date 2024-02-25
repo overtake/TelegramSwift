@@ -254,12 +254,13 @@ final class WallpaperColorPickerContainerView : View {
     var colorChanged: ((WallpaperColorSelectMode) -> Void)? = nil
 
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: colorPicker, frame: NSMakeRect(0, 38, frame.width, frame.height - 38))
-        transition.updateFrame(view: colorsContainer, frame: NSMakeRect(0, 0, frame.width, 38))
+        let pickerHeight: CGFloat = 138
+        transition.updateFrame(view: colorPicker, frame: NSMakeRect(0, 38, size.width, pickerHeight - 38))
+        transition.updateFrame(view: colorsContainer, frame: NSMakeRect(0, 0, size.width, 38))
         
         transition.updateFrame(view: colorsView, frame: CGRect(origin: .init(x: 10, y: 4), size: colorsView.size()))
 
-        var c_e_w: CGFloat = colorsView.frame.width > 0 ? frame.width - (colorsView.frame.width + 30) : (frame.width - 20)
+        var c_e_w: CGFloat = colorsView.frame.width > 0 ? frame.width - (colorsView.frame.width + 30) : (size.width - 20)
         
         if colorsView.count < 4, !addColor.isHidden {
             c_e_w -= (addColor.frame.width + 10)

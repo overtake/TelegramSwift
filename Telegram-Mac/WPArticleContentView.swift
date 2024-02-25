@@ -29,12 +29,7 @@ class WPArticleContentView: WPContentView {
     
     private var groupedContents: [ChatMediaContentView] = []
     private let groupedContentView: View = View()
-    override var backgroundColor: NSColor {
-        didSet {
-            self.setNeedsDisplay()
-        }
-    }
-    
+
     override func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let _ = imageView, let content = content as? WPArticleLayout, content.isFullImageSize, let image = content.content.image {
             return (.image(ImageMediaReference.webPage(webPage: WebpageReference(content.webPage), media: image), ImagePreviewModalView.self), imageView)
@@ -44,7 +39,7 @@ class WPArticleContentView: WPContentView {
     
     override func previewMediaIfPossible() -> Bool {
         guard  let window = self.kitWindow, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let imageView = imageView, imageView._mouseInside(), playIcon == nil, !content.hasInstantPage else {return false}
-        _ = startModalPreviewHandle(table, window: window, context: content.context)
+        startModalPreviewHandle(table, window: window, context: content.context)
         return true
     }
     
@@ -92,17 +87,22 @@ class WPArticleContentView: WPContentView {
                 showInstantPage(InstantPageViewController(layout.context, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))
                 return
             }
-            
-            if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
-                showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
-            } else if layout.isGalleryAssemble {
+            /*
+             if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
+                 showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
+             } else
+             */
+            if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
+            } else if layout.isStory {
+                layout.openStory()
             } else if let wallpaper = layout.wallpaper {
                 execute(inapp: wallpaper)
             } else if let link = layout.themeLink {
                 execute(inapp: link)
             } else if !content.url.isEmpty {
-                execute(inapp: .external(link: content.url, false))
+                let safe = layout.parent.webpagePreviewAttribute?.isSafe == true
+                execute(inapp: .external(link: content.url, !safe))
             }
 
         }
@@ -134,6 +134,14 @@ class WPArticleContentView: WPContentView {
         }
     }
     
+    override func mouseDown(with event: NSEvent) {
+        if let imageView = imageView, imageView._mouseInside(), event.clickCount == 1 {
+            
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
+    
     override func mouseUp(with event: NSEvent) {
         if let imageView = imageView, imageView._mouseInside(), event.clickCount == 1 {
             if let downloadProgressView = downloadIndicator {
@@ -150,7 +158,7 @@ class WPArticleContentView: WPContentView {
     
 
     
-    override func update(with layout: WPLayout) {
+    override func update(with layout: WPLayout, animated: Bool) {
         let newLayout = self.content?.content.displayUrl != layout.content.displayUrl
         if let layout = layout as? WPArticleLayout {
             
@@ -367,7 +375,7 @@ class WPArticleContentView: WPContentView {
                 }
                 
             } else if let palette = layout.content.crossplatformPalette, let wallpaper = layout.content.crossplatformWallpaper, let settings = layout.content.themeSettings {
-                updateImageSignal = crossplatformPreview(account: layout.context.account, palette: palette, wallpaper: wallpaper, mode: .thumbnail)
+                updateImageSignal = crossplatformPreview(accountContext: layout.context, palette: palette, wallpaper: wallpaper, mode: .thumbnail)
                 
                 
                 self.playIcon?.removeFromSuperview()
@@ -459,7 +467,7 @@ class WPArticleContentView: WPContentView {
             }
         }
         
-        super.update(with: layout)
+        super.update(with: layout, animated: animated)
         
         if let layout = layout as? WPArticleLayout, layout.isAutoDownloable {
             fetch()
@@ -496,11 +504,11 @@ class WPArticleContentView: WPContentView {
                 progressIndicator?.center()
                 downloadIndicator?.center()
                 
-                var origin:NSPoint = NSMakePoint(layout.contentRect.width - imageView.frame.width - 10, 0)
+                var origin:NSPoint = NSMakePoint(layout.contentRect.width - imageView.frame.width, layout.imageInsets.top)
                 if layout.textLayout?.cutout == nil {
                     var y:CGFloat = 0
                     if let textLayout = layout.textLayout {
-                        y += textLayout.layoutSize.height + 6.0
+                        y += textLayout.layoutSize.height + layout.imageInsets.top
                     }
                     origin = NSMakePoint(0, y)
                 }
@@ -539,6 +547,10 @@ class WPArticleContentView: WPContentView {
             return groupedContentView.convert(point, from: nil)
         }
         return super.convertWindowPointToContent(point)
+    }
+    
+    override var mediaContentView: NSView? {
+        return self.imageView
     }
     
 }

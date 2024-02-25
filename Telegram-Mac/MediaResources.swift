@@ -364,11 +364,12 @@ public class LocalBundleResource: TelegramMediaResource {
     public let name: String
     public let ext: String
     public let color: NSColor?
-    
-    public init(name: String, ext: String, color: NSColor? = nil) {
+    public let resize: Bool
+    public init(name: String, ext: String, color: NSColor? = nil, resize: Bool = true) {
         self.name = name
         self.ext = ext
         self.color = color
+        self.resize = resize
     }
     
     public var size: Int64? {
@@ -383,6 +384,7 @@ public class LocalBundleResource: TelegramMediaResource {
         } else {
             self.color = nil
         }
+        self.resize = decoder.decodeBoolForKey("nr", orElse: true)
     }
     
     public func encode(_ encoder: PostboxEncoder) {
@@ -393,6 +395,7 @@ public class LocalBundleResource: TelegramMediaResource {
         } else {
             encoder.encodeNil(forKey: "c")
         }
+        encoder.encodeBool(self.resize, forKey: "nr")
     }
     
     public var id: MediaResourceId {

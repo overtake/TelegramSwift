@@ -11,6 +11,7 @@ import TelegramCore
 import TGUIKit
 import SwiftSignalKit
 import Postbox
+import TelegramMedia
 
 final class StorageUsageMediaItem : GeneralRowItem {
     let context: AccountContext
@@ -437,17 +438,17 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
         let pause = theme.icons.storage_music_pause
         let inset = NSEdgeInsets(left: 3, top: 3)
 
-        if let controller = item.context.audioPlayer, let song = controller.currentSong {
+        if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: item.message), case .playing = song.state {
                 audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: pause, iconInset: inset)
-                audio.state = .Icon(image: pause, mode: .normal)
+                audio.state = .Icon(image: pause)
             } else {
                 audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: play, iconInset: inset)
-                audio.state = .Icon(image: play, mode: .normal)
+                audio.state = .Icon(image: play)
             }
         } else {
             audio.theme = RadialProgressTheme(backgroundColor: activityBackground, foregroundColor: activityForeground, icon: play, iconInset: inset)
-            audio.state = .Icon(image: play, mode: .normal)
+            audio.state = .Icon(image: play)
         }
     }
     

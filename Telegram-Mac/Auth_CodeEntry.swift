@@ -12,7 +12,7 @@ import TelegramCore
 import AppKit
 import KeyboardKey
 import SwiftSignalKit
-
+import TelegramMedia
 
 private final class Auth_CodeEntryHeaderView : View {
     

@@ -13,12 +13,61 @@ import SwiftSignalKit
 enum TokenSearchState : Equatable {
     case none
     case from(query: String, complete: Bool)
+    case emojiTag(tag: EmojiTag)
+}
+
+private final class TagTokenView: Control {
+    fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 14, 14))
+    private let backgroundView: NinePathImage = NinePathImage()
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        self.backgroundColor = .clear
+        self.backgroundView.capInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 17)
+
+        
+        addSubview(backgroundView)
+        
+        addSubview(imageView)
+        
+        
+
+    }
+    
+    func update(with tag: EmojiTag, context: AccountContext, animated: Bool) {
+        let layer: InlineStickerItemLayer = .init(account: context.account, file: tag.file, size: NSMakeSize(14, 14))
+        imageView.updateLayer(layer, isLite: true, animated: animated)
+        
+        let image = NSImage(named: "Icon_SearchInputTag")!
+        let background = NSImage(cgImage: generateTintedImage(image: image._cgImage, color: theme.colors.accent)!, size: image.size)
+        self.backgroundView.image = background
+
+    }
+    
+    deinit {
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: self.backgroundView, frame: size.bounds)
+        transition.updateFrame(view: self.imageView, frame: imageView.centerFrameY(x: 5))
+    }
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
 }
 
 
 class ChatSearchView: SearchView {
-    private let fromView: TextView = TextView()
-    private let tokenView: TextView = TextView()
+    
+    private var fromView: TextView?
+    private var textTokenView: TextView?
+    private var emojiTokenView: TagTokenView?
     private let countView:TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -42,6 +91,9 @@ class ChatSearchView: SearchView {
         if case .from = tokenState {
             return false
         }
+        if case .emojiTag = tokenState {
+            return false
+        }
         return super.isEmpty
     }
     
@@ -56,15 +108,23 @@ class ChatSearchView: SearchView {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let fromLayout = TextViewLayout(.initialize(string: "\(strings().chatSearchFrom) ", color: theme.colors.text, font: .normal(.text)))
         fromLayout.measure(width: .greatestFiniteMagnitude)
-        fromView.update(fromLayout)
-        fromView.backgroundColor = theme.colors.grayBackground
-        tokenView.backgroundColor = theme.colors.grayBackground
+        
+        fromView?.update(fromLayout)
+        fromView?.backgroundColor = theme.colors.grayBackground
+        textTokenView?.backgroundColor = theme.colors.grayBackground
         
         countView.backgroundColor = theme.colors.grayBackground
 
         let countLayout = TextViewLayout(.initialize(string: strings().chatSearchCount(countValue.current, countValue.total), color: theme.search.placeholderColor, font: .normal(.text)))
         countLayout.measure(width: .greatestFiniteMagnitude)
         countView.update(countLayout)
+        
+        if case let .emojiTag(tag) = tokenState {
+            if let context = context {
+                emojiTokenView?.update(with: tag, context: context, animated: false)
+            }
+        }
+        
         super.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -81,12 +141,22 @@ class ChatSearchView: SearchView {
                     setString("")
                 } else {
                     tokenState = .from(query: "", complete: false)
+                    self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
                 }
             } else if !q.isEmpty {
                 setString("")
                 tokenState = .from(query: "", complete: false)
+                self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
             } else {
                 tokenState = .none
+                self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
+            }
+        case .emojiTag:
+            if !query.isEmpty {
+                setString("")
+            } else {
+                tokenState = .none
+                self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
             }
         case .none:
             super.cancelSearch()
@@ -123,18 +193,36 @@ class ChatSearchView: SearchView {
     }
     
     override var placeholderTextInset:CGFloat {
+        var x = super.startTextInset
         switch tokenState {
         case .none:
-            return super.startTextInset
+            break
         case .from(_, let complete):
-            return super.startTextInset + fromView.frame.width + 3 + (complete ? tokenView.frame.width + 3 : 0)
+            if let fromView = fromView {
+                x += (fromView.frame.width + 3)
+            }
+            if complete, let textTokenView = textTokenView {
+                x += textTokenView.frame.width + 3
+            }
+        case .emojiTag:
+            if let emojiTokenView = emojiTokenView {
+                x += (emojiTokenView.frame.width + 3)
+            }
         }
+        return x
     }
     
     override func layout() {
         super.layout()
-        fromView.centerY(x: startTextInset + leftInset)
-        tokenView.centerY(x: fromView.frame.maxX + 3)
+        if let fromView = fromView {
+            fromView.centerY(x: startTextInset + leftInset)
+        }
+        if let textTokenView = textTokenView, let fromView = fromView {
+            textTokenView.centerY(x: fromView.frame.maxX + 3)
+        }
+        if let emojiTokenView = emojiTokenView {
+            emojiTokenView.centerY(x: startTextInset + leftInset)
+        }
         countView.centerY(x: frame.width - countView.frame.width - leftInset)
     }
     
@@ -149,6 +237,21 @@ class ChatSearchView: SearchView {
         self.setString("")
     }
     
+    private var context: AccountContext?
+    func completeEmojiToken(_ tag: EmojiTag, context: AccountContext) {
+        self.context = context
+        self.tokenState = .emojiTag(tag: tag)
+        self.change(state: .Focus, true)
+        
+        self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
+    }
+    
+    func cancelEmojiToken(animated: Bool) {
+        self.tokenState = .none
+        self.change(state: .Focus, animated)
+        self.searchInteractions?.textModified(.init(state: self.state, request: self.query, responder: true))
+    }
+    
     let tokenPromise:ValuePromise<TokenSearchState> = ValuePromise(.none, ignoreRepeated: true)
     
     var tokenState:TokenSearchState = .none {
@@ -156,17 +259,65 @@ class ChatSearchView: SearchView {
             tokenPromise.set(tokenState)
             switch tokenState {
             case .none:
-                fromView.removeFromSuperview()
-                tokenView.removeFromSuperview()
+                if let fromView = fromView {
+                    performSubviewRemoval(fromView, animated: true)
+                    self.fromView = nil
+                }
+                if let textTokenView = textTokenView {
+                    performSubviewRemoval(textTokenView, animated: true)
+                    self.textTokenView = nil
+                }
+                if let emojiTokenView = emojiTokenView {
+                    performSubviewRemoval(emojiTokenView, animated: true)
+                    self.emojiTokenView = nil
+                }
             case .from(let text, let complete):
-                addSubview(fromView)
+                if let emojiTokenView = emojiTokenView {
+                    performSubviewRemoval(emojiTokenView, animated: true)
+                    self.emojiTokenView = nil
+                }
+                if fromView == nil {
+                    let fromView = TextView()
+                    self.fromView = fromView
+                    addSubview(fromView)
+                }
                 if complete {
+                    let current: TextView
+                    if let view = self.textTokenView {
+                        current = view
+                    } else {
+                        current = TextView()
+                        addSubview(current)
+                        self.textTokenView = current
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                     let layout:TextViewLayout = TextViewLayout(.initialize(string: text, color: theme.colors.link, font: .normal(.text)), maximumNumberOfLines: 1)
                     layout.measure(width: 50)
-                    tokenView.update(layout)
-                    addSubview(tokenView)
+                    current.update(layout)
+                } else if let tokenView = textTokenView {
+                    performSubviewRemoval(tokenView, animated: true)
+                    self.textTokenView = nil
+                }
+            case let .emojiTag(tag):
+                if let fromView = fromView {
+                    performSubviewRemoval(fromView, animated: true)
+                    self.fromView = nil
+                }
+                if let textTokenView = textTokenView {
+                    performSubviewRemoval(textTokenView, animated: true)
+                    self.textTokenView = nil
+                }
+                let current: TagTokenView
+                if let view = self.emojiTokenView {
+                    current = view
                 } else {
-                    tokenView.removeFromSuperview()
+                    current = TagTokenView(frame: NSMakeRect(0, 0, 36, 20))
+                    addSubview(current)
+                    self.emojiTokenView = current
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                if let context = context {
+                    current.update(with: tag, context: context, animated: true)
                 }
             }
             updateLocalizationAndTheme(theme: theme)

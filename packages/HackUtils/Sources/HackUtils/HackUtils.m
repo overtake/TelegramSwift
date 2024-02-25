@@ -1,3 +1,10 @@
+//
+//  HackUtils.m
+//  Telegram
+//
+//  Created by Dmytro Kondratiev on 23/05/2014.
+//  Copyright © 2014 Telegram. All rights reserved.
+//
 
 #import "HackUtils.h"
 #import <Cocoa/Cocoa.h>

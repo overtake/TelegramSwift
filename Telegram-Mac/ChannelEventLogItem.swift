@@ -775,6 +775,31 @@ class ServiceEventLogItem: TableRowItem {
                     text = strings().channelEventLogServiceAntispamDisabled(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .toggleCopyProtection(isEnabled):
+                let text: String
+                if isEnabled {
+                    text = strings().channelEventLogMessageToggleNoForwardsOn(peer.displayTitle)
+                } else {
+                    text = strings().channelEventLogMessageToggleNoForwardsOff(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .changeNameColor(prevColor, prevIcon, newColor, newIcon):
+                let text: String
+                
+                if prevColor != newColor, prevIcon == newIcon {
+                    text = strings().channelEventLogMessageChangedNameColorSetNew(peer.displayTitle)
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                } else if prevIcon != newIcon, prevColor == newColor {
+                    text = strings().channelEventLogMessageChangedBackgroundEmojiSetNew(peer.displayTitle)
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                } else {
+                    text = strings().channelEventLogMessageChangedNameAndBackground(peer.displayTitle)
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                }
+            case let .changeWallpaper(prev, new):
+                let text = strings().channelEventLogMessageChangedWallpaper(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+
             default:
                 break
             }

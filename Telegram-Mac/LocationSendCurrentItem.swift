@@ -54,7 +54,7 @@ class LocationSendCurrentItem: GeneralRowItem {
 private final class LocationSendCurrentView : TableRowView {
     private let iconView: ImageView = ImageView()
     private let statusView = TextView()
-    private let button: TitleButton = TitleButton()
+    private let button: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(button)

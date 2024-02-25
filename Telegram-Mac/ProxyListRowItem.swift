@@ -77,7 +77,7 @@ class ProxyListRowItem: GeneralRowItem {
         statusText = title.lowercased() + ": " + statusText
 
         self.statusLayout = TextViewLayout(.initialize(string: statusText, color: color, font: .normal(.text)), maximumNumberOfLines: 1)
-        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType, action: action, inset: NSEdgeInsetsMake(0, 30, 0, 30))
+        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType, action: action, inset: NSEdgeInsetsMake(0, 20, 0, 20))
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {

@@ -139,13 +139,13 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
             let nextDateId = mediaDateId(for: nextMessage.timestamp - timeDifference)
             if dateId != nextDateId {
                 let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: 0), timestamp: Int32(dateId))
-                var viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                var viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 if !entries.isEmpty {
                     entries.append(.section(index: index.peerLocalSuccessor()))
                     entries.append(.date(index: index))
                 } else {
                     if !isExternalSearch {
-                        viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                        viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                     }
                 }
                 entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
@@ -162,7 +162,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                     if prevDateId != dateId {
                         entries.append(.section(index: index.peerLocalSuccessor()))
                         entries.append(.date(index: index))
-                        entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                        entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                     } else {
                         entries[entries.count - 1] = .line(index: prevIndex, stableId: stableId, items: items + temp, galleryType: galleryType, viewType: viewType)
                     }
@@ -171,9 +171,9 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 }
             } else {
                 if isExternalSearch {
-                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                 } else {
-                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                 }
             }
             
@@ -200,7 +200,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 if i == 0 && j == 0 {
                     viewType = chunks.count > 1 ? .innerItem : .lastItem
                 }
-                let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 updated.append(.line(index: index, stableId: stableId, items: chunk, galleryType: galleryType, viewType: updatedViewType))
             }
             j += 1
@@ -413,7 +413,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         let mode: ChatMode
         let contextHolder: Atomic<ChatLocationContextHolder?>
         if let threadInfo = threadInfo {
-            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
             contextHolder = threadInfo.contextHolder
         } else {
             mode = .history
@@ -423,7 +423,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         let arguments = PeerMediaPhotosArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, gallery: { [weak self] message, type in
             
             let parameters = ChatMediaGalleryParameters(showMedia: { _ in }, showMessage: { message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
+                self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
             }, isWebpage: false, media: message.anyMedia!, automaticDownload: true)
             
             showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, contextHolder: contextHolder)
@@ -456,11 +456,11 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 return .single((nil, SearchResult(result: externalSearch.messages), search, nil))
             } else if !search.request.isEmpty {
                 
-                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, topMsgId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
+                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, reactions: [], threadId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
                 
                 return .single((nil, SearchResult(result: nil), search, nil)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search, nil) })
             } else {
-                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags, chatLocationInput: chatLocationInput) |> map { ($0, nil, search, location.side) }
+                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(tags), chatLocationInput: chatLocationInput) |> map { ($0, nil, search, location.side) }
             }
         }
         
@@ -644,7 +644,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     
     func jumpTo(_ toMessage: Message) -> Void {
 
-        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: .photoOrVideo, additionalData: [], chatLocationInput: self.chatLocationInput)
+        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id, nil), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(.photoOrVideo), additionalData: [], chatLocationInput: self.chatLocationInput)
         
         struct FindSearchMessage {
             let message:Message?

@@ -216,19 +216,22 @@ yi += stride;
 
 
 
-void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride, void *pixels) {
+
+void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride, void * _Nonnull pixels) {
     vImage_Buffer srcBuffer;
     srcBuffer.width = imageWidth;
     srcBuffer.height = imageHeight;
     srcBuffer.rowBytes = imageStride;
     srcBuffer.data = pixels;
     
+    void *tempBytes = malloc(imageHeight * imageStride);
+    
     {
         vImage_Buffer dstBuffer;
         dstBuffer.width = imageWidth;
         dstBuffer.height = imageHeight;
         dstBuffer.rowBytes = imageStride;
-        dstBuffer.data = pixels;
+        dstBuffer.data = tempBytes;
         
         int boxSize = 2;
         boxSize = boxSize - (boxSize % 2) + 1;
@@ -236,4 +239,7 @@ void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride,
         vImageBoxConvolve_ARGB8888(&srcBuffer, &dstBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
     }
     
+    memcpy(pixels, tempBytes, imageHeight * imageStride);
+    free(tempBytes);
 }
+

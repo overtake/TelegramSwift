@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import TelegramCore
 import Postbox
+import TelegramMedia
 
 final class Avatar_EmojiListView : View {
     

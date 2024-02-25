@@ -246,9 +246,9 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         statePromise.set(stateValue.modify (f))
     }
     
-    let searchStatePromise = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
-    let searchStateValue = Atomic(value: SearchState(state: .None, request: nil))
-    let updateSearchState: ((SearchState) -> SearchState) -> Void = { f in
+    let searchStatePromise = ValuePromise<SearchState?>(nil, ignoreRepeated: true)
+    let searchStateValue = Atomic<SearchState?>(value: nil)
+    let updateSearchState: ((SearchState?) -> SearchState?) -> Void = { f in
         searchStatePromise.set(searchStateValue.modify (f))
     }
 
@@ -288,7 +288,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         }
         manager?.update(userId, action: .deny)
     }, openInfo: { peerId in
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }, openInviteLinks: openInviteLinks)
     
     let peerSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
@@ -319,7 +319,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     actionsDisposable.add(searchStatePromise.get().start(next: { state in
         
         let result: State.SearchResult?
-        if !state.request.isEmpty {
+        if let state = state, !state.request.isEmpty {
             result = .init(isLoading: true, result: nil)
         } else {
             result = nil
@@ -330,7 +330,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
             current.searchResult = result
             return current
         }
-        if result != nil {
+        if result != nil, let state = state {
             let manager = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: state.request))
             manager.loadMore()
             searchManager = manager
@@ -441,7 +441,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     }
     
     
-    controller.didLoaded = { [weak manager] controller, _ in
+    controller.didLoad = { [weak manager] controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:

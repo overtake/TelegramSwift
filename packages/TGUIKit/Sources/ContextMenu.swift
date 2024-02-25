@@ -60,8 +60,24 @@ open class ContextMenuItem : NSMenuItem {
     
     public var contextObject: Any? = nil
     
-    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
-    public let itemMode: AppMenu.ItemMode
+    public var itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? {
+        didSet {
+            redraw?()
+        }
+    }
+    public var itemMode: AppMenu.ItemMode {
+        didSet {
+            redraw?()
+        }
+    }
+    
+    public internal(set) var redraw:(()->Void)?
+    
+    public var stateOnImage: NSImage? {
+        didSet {
+            redraw?()
+        }
+    }
     
     public let keyEquivalentValue: KeyEquiavalent
     let overrideWidth: CGFloat?
@@ -113,7 +129,7 @@ open class ContextMenuItem : NSMenuItem {
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
 
-    let presentation: AppMenu.Presentation
+    public let presentation: AppMenu.Presentation
     let betterInside: Bool
     let maxHeight: CGFloat
     let isLegacy: Bool

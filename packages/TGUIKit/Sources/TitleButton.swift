@@ -1,5 +1,5 @@
 //
-//  TitleButton.swift
+//  TextButton.swift
 //  TGUIKit
 //
 //  Created by keepcoder on 05/10/2016.
@@ -8,7 +8,7 @@
 
 import Cocoa
 
-public enum TitleButtonImageDirection {
+public enum TextButtonImageDirection {
     case left
     case right
     case top
@@ -17,12 +17,25 @@ public enum TitleButtonImageDirection {
 public class TextLayerExt: CATextLayer {
     
     public override func draw(in ctx: CGContext) {
-        ctx.setAllowsFontSubpixelPositioning(true)
-        ctx.setShouldSubpixelPositionFonts(true)
+        
         ctx.setAllowsAntialiasing(true)
-        ctx.setShouldAntialias(true)
-        ctx.setAllowsFontSmoothing(System.backingScale == 1.0)
-        ctx.setShouldSmoothFonts(System.backingScale == 1.0)
+                
+        ctx.setAllowsFontSmoothing(true)
+        ctx.setShouldSmoothFonts(true)
+        
+        ctx.setAllowsFontSubpixelPositioning(System.backingScale == 1.0)
+        ctx.setShouldSubpixelPositionFonts(System.backingScale == 1.0)
+        
+        ctx.setAllowsFontSubpixelQuantization(true)
+        ctx.setShouldSubpixelQuantizeFonts(true)
+
+        
+//        ctx.setAllowsFontSubpixelPositioning(true)
+//        ctx.setShouldSubpixelPositionFonts(true)
+//        ctx.setAllowsAntialiasing(true)
+//        ctx.setShouldAntialias(true)
+//        ctx.setAllowsFontSmoothing(System.backingScale == 1.0)
+//        ctx.setShouldSmoothFonts(System.backingScale == 1.0)
         
         super.draw(in: ctx)
     }
@@ -30,9 +43,9 @@ public class TextLayerExt: CATextLayer {
 }
 
 
-open class TitleButton: ImageButton {
+open class TextButton: ImageButton {
 
-    private var text:TextLayerExt = TextLayerExt()
+    private var text:TextViewLabel = TextViewLabel(frame: NSMakeRect(0, 0, 16, 14))
     
     private var stateText:[ControlState:String] = [:]
     private var stateColor:[ControlState:NSColor] = [:]
@@ -42,7 +55,7 @@ open class TitleButton: ImageButton {
     
     public var autoSizeToFit: Bool = true
     
-    public var direction: TitleButtonImageDirection = .left {
+    public var direction: TextButtonImageDirection = .left {
         didSet {
             if direction != oldValue {
                 updateLayout()
@@ -77,13 +90,15 @@ open class TitleButton: ImageButton {
         let state:ControlState = self.isSelected ? .Highlight : state
         super.apply(state: state)
         
+        let text: String
         if let stateText = stateText[state] {
-            text.string = stateText
+            text = stateText
         } else {
-            text.string = stateText[.Normal]
+            text = stateText[.Normal] ?? ""
         }
         
-        let color: NSColor
+        
+        var color: NSColor
         if let stateColor = stateColor[state] {
             color = stateColor
         } else if let stateColor = stateColor[.Normal] {
@@ -91,29 +106,27 @@ open class TitleButton: ImageButton {
         } else {
             color = style.foregroundColor
         }
-        if isEnabled {
-            text.foregroundColor = color.cgColor
-        } else {
-            text.foregroundColor = color.withAlphaComponent(0.8).cgColor
+        
+        if !isEnabled {
+            color = color.withAlphaComponent(0.8)
         }
         
-        text.backgroundColor = .clear
+        self.text.backgroundColor = .clear
         
+        let font: NSFont
         if let stateFont = stateFont[state] {
-            text.font = stateFont.fontName as CFTypeRef
-            text.fontSize = stateFont.pointSize
+            font = stateFont
         } else if let stateFont = stateFont[.Normal] {
-            text.font = stateFont.fontName as CFTypeRef
-            text.fontSize = stateFont.pointSize
+            font = stateFont
         } else {
-            text.font = style.font.fontName as CFTypeRef
-            text.fontSize = style.font.pointSize
+            font = style.font
         }
-        
+        let attributedString = NSAttributedString.initialize(string: text, color: color, font: font)
+        self.text.attributedString = attributedString
     }
     
     public var isEmpty: Bool {
-        if let string = text.string as? String {
+        if let string = text.attributedString?.string {
             return string.isEmpty
         } else {
             return true
@@ -121,16 +134,21 @@ open class TitleButton: ImageButton {
     }
     
     @discardableResult public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
-        _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
-        var font:NSFont?
-        if let fontName = self.text.font as? String {
-            font = NSFont(name: fontName, size: text.fontSize)
-        } else if let _font = self.text.font as? NSFont {
-            font = NSFont(name: _font.fontName, size: text.fontSize)
+        
+        if isEmpty {
+            return super.sizeToFit(addition, maxSize, thatFit: thatFit)
+        } else {
+            _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         }
-        font = font ?? .normal(text.fontSize)
-        let size:NSSize = TitleButton.size(with: self.text.string as! String?, font: font)
+        let font: NSFont
+        if let stateFont = stateFont[.Normal] {
+            font = stateFont
+        } else {
+            font = style.font
+        }
+        
+        let size:NSSize = TextButton.size(with: string, font: font)
         self.currentTextSize = size
         var msize:NSSize = size
         
@@ -176,13 +194,17 @@ open class TitleButton: ImageButton {
         return frame.width >= maxWidth
     }
     
+    var string: String? {
+        return text.attributedString?.string
+    }
+    
     public override func updateLayout() {
         super.updateLayout()
         
         var textFocus:NSRect = focus(currentTextSize ?? self.text.frame.size)
 //        textFocus.origin.y -= 1
         if let _ = imageView.image {
-            if let string = self.text.string as? String, !string.isEmpty {
+            if let string = self.string, !string.isEmpty {
                 let imageFocus:NSRect = focus(self.imageView.frame.size)
                 switch direction {
                 case .left:
@@ -211,7 +233,7 @@ open class TitleButton: ImageButton {
          guard let font = font, let string = string else {
              return .zero
          }
-         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
+         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font)
         let layout = TextViewLayout(attributedString)
         layout.measure(width: .greatestFiniteMagnitude)
         var size:NSSize = layout.layoutSize
@@ -238,11 +260,9 @@ open class TitleButton: ImageButton {
     
     override func prepare() {
         super.prepare()
-        text.truncationMode = .end;
-        text.alignmentMode = .center;
-        self.layer?.addSublayer(text)
-        
-        text.actions = ["bounds":NSNull(),"position":NSNull()]
+        text.alignment = .center
+        text.isEventLess = true
+        self.addSubview(text)
     }
     
     public override func draw(_ dirtyRect: NSRect) {
@@ -257,25 +277,16 @@ open class TitleButton: ImageButton {
     public override var backgroundColor: NSColor {
         set {
             super.backgroundColor = newValue
-            self.text.backgroundColor = newValue.cgColor
+            self.text.backgroundColor = newValue
         }
         get {
             return super.backgroundColor
         }
     }
     
-    public override func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-        if let screen = NSScreen.main {
-            self.text.contentsScale = screen.backingScaleFactor
-        }
-        
-    }
-    
     public override func disableActions() {
         super.disableActions()
         
-        self.text.disableActions()
         self.layer?.disableActions()
     }
     

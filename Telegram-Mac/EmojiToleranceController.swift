@@ -20,7 +20,7 @@ private class EmojiTolerance : View {
         var x:CGFloat = 2
         
         let add:(String, String, String?)->Void = { [weak self] emoji, notModified, modifier in
-            let button: TitleButton = TitleButton()
+            let button: TextButton = TextButton()
             button.set(font: .normal(.header), for: .Normal)
             button.set(text: emoji, for: .Normal)
             button.setFrameSize(NSMakeSize(30, 30))

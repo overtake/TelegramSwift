@@ -87,7 +87,7 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
         case let .preloadLargeVideosDesc(_, limit, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageCategoryPreloadLargeVideosDesc(limit), viewType: viewType)
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
     

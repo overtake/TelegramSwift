@@ -29,6 +29,53 @@ extension ChatListFilterPeerCategories {
 }
 
 
+final class TelegramStoryRepostPeerObject : Peer {
+    
+    var timeoutAttribute: UInt32?
+    
+    var id: PeerId
+    
+    var indexName: PeerIndexNameRepresentation
+    
+    var associatedPeerId: PeerId?
+    var associatedMediaIds: [MediaId]?
+    var notificationSettingsPeerId: PeerId?
+    
+    func isEqual(_ other: Peer) -> Bool {
+        if let other = other as? TelegramStoryRepostPeerObject {
+            return true
+        }
+        return false
+    }
+    
+    
+    init() {
+        self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt64Value(Int64(1000)))
+        self.indexName = .title(title: "", addressNames: [""])
+        self.notificationSettingsPeerId = nil
+    }
+    
+    var displayTitle: String? {
+        return "Repost Story"
+    }
+    
+    var icon: EmptyAvatartType? {
+        return .icon(colors: theme.colors.peerColors(4), icon: NSImage(named: "Icon_StoryRepost")!.precomposed(), iconSize: NSMakeSize(36, 36), cornerRadius: nil)
+    }
+    
+    
+    init(decoder: PostboxDecoder) {
+        self.id = PeerId(0)
+        self.indexName = .title(title: "", addressNames: [""])
+        self.notificationSettingsPeerId = nil
+    }
+    func encode(_ encoder: PostboxEncoder) {
+        
+    }
+}
+
+
+
 final class TelegramFilterCategory : Peer {
     
     var timeoutAttribute: UInt32? 
@@ -231,7 +278,10 @@ let publicGroupRestrictedPermissions: TelegramChatBannedRightsFlags = [
 
 
 
-func checkMediaPermission(_ media: Media, for peer: Peer) -> String? {
+func checkMediaPermission(_ media: Media, for peer: Peer?) -> String? {
+    guard let peer = peer else {
+        return nil
+    }
     switch media {
     case _ as TelegramMediaPoll:
         return permissionText(from: peer, for: .banSendPolls)
@@ -260,7 +310,10 @@ func checkMediaPermission(_ media: Media, for peer: Peer) -> String? {
     }
 }
 
-func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -> String? {
+func permissionText(from peer: Peer?, for flags: TelegramChatBannedRightsFlags) -> String? {
+    guard let peer = peer else {
+        return nil
+    }
     var bannedPermission: (Int32, Bool)?
     
     let get:(TelegramChatBannedRightsFlags) -> (Int32, Bool)? = { flags in
@@ -486,12 +539,18 @@ extension Peer {
         if let peer = self as? TelegramFilterCategory {
             return peer.icon
         }
+        if let peer = self as? TelegramStoryRepostPeerObject {
+            return peer.icon
+        }
         return nil
     }
     
     public var displayTitle: String {
         switch self {
         case let user as TelegramUser:
+            if user.id.isAnonymousSavedMessages {
+                return strings().chatListAuthorHidden
+            }
             if user.firstName == nil && user.lastName == nil {
                 return strings().peerDeletedUser
             } else {
@@ -505,17 +564,38 @@ extension Peer {
                     }
                     name += lastName
                 }
-                
+                if name.isEmpty {
+                    if let phone = user.phone {
+                        if !phone.isEmpty {
+                            name = phone
+                        }
+                    }
+                }
+                if name.isEmpty {
+                    return " "
+                }
                 return name
             }
         case let group as TelegramGroup:
+            if group.title.isEmpty {
+                return " "
+            }
             return group.title
         case let channel as TelegramChannel:
+            if channel.title.isEmpty {
+                return " "
+            }
             return channel.title
         case let filter as TelegramFilterCategory:
-            return filter.displayTitle ?? ""
+            let folder = filter.displayTitle ?? ""
+            if folder.isEmpty {
+                return " "
+            }
+            return folder
+        case let repost as TelegramStoryRepostPeerObject:
+            return repost.displayTitle ?? ""
         default:
-            return ""
+            return " "
         }
     }
     
@@ -549,21 +629,30 @@ extension Peer {
     public var compactDisplayTitle: String {
         switch self {
         case let user as TelegramUser:
+            if user.id.isAnonymousSavedMessages {
+                return strings().chatListAuthorHidden
+            }
             if let firstName = user.firstName {
-                return firstName.replacingOccurrences(of: "􀇻", with: "")
-            } else if let lastName = user.lastName {
-                return lastName.replacingOccurrences(of: "􀇻", with: "")
-            } else {
+                if !firstName.isEmpty {
+                    return firstName
+                }
+            }
+            if let lastName = user.lastName {
+                if !lastName.isEmpty {
+                    return lastName
+                }
+            }
+            if let phone = user.phone {
+                if !phone.isEmpty {
+                    return phone
+                }
+            }
+            if user.firstName == nil, user.lastName == nil {
                 return strings().peerDeletedUser
             }
-        case let group as TelegramGroup:
-            return group.title.replacingOccurrences(of: "􀇻", with: "")
-        case let channel as TelegramChannel:
-            return channel.title.replacingOccurrences(of: "􀇻", with: "")
-        case let filter as TelegramFilterCategory:
-            return filter.displayTitle ?? ""
+            return " "
         default:
-            return ""
+            return displayTitle
         }
     }
     
@@ -600,16 +689,7 @@ extension Peer {
             return []
         }
     }
-    
-    var isVerified: Bool {
-        if let peer = self as? TelegramUser {
-            return peer.flags.contains(.isVerified)
-        } else if let peer = self as? TelegramChannel {
-            return peer.flags.contains(.isVerified)
-        } else {
-            return false
-        }
-    }
+
     
     
     var isPremium: Bool {
@@ -654,5 +734,19 @@ func getPeerView(peerId: PeerId, postbox: Postbox) -> Signal<Peer?, NoError> {
 func getCachedDataView(peerId: PeerId, postbox: Postbox) -> Signal<CachedPeerData?, NoError> {
     return postbox.combinedView(keys: [.cachedPeerData(peerId: peerId)]) |> map { view in
         return (view.views[.cachedPeerData(peerId: peerId)] as? CachedPeerDataView)?.cachedPeerData
+    }
+}
+struct StoryInitialIndex {
+    let peerId: PeerId
+    let id: Int32?
+    let messageId: MessageId?
+    let takeControl:((PeerId, MessageId?, Int32?)->NSView?)?
+    let setProgress:((Signal<Never, NoError>)->Void)?
+    init(peerId: PeerId, id: Int32?, messageId: MessageId?, takeControl: ((PeerId, MessageId?, Int32?) -> NSView?)?, setProgress: ((Signal<Never, NoError>) -> Void)? = nil) {
+        self.peerId = peerId
+        self.id = id
+        self.messageId = messageId
+        self.takeControl = takeControl
+        self.setProgress = setProgress
     }
 }

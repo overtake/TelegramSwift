@@ -22,6 +22,7 @@ open class AppMenuBasicItem : TableRowItem {
         public let presentSubmenu:(ContextMenuItem)->Void
         public let cancelSubmenu:(ContextMenuItem)->Void
         public let hover:(ContextMenuItem)->Void
+        public let close:()->Void
     }
     
     fileprivate(set) public var menuItem: ContextMenuItem?
@@ -174,6 +175,9 @@ open class AppMenuRowItem : AppMenuBasicItem {
         self.observation_t = item.observe(\.title, options: .new, changeHandler: { [weak self] object, change in
             self?.redraw(animated: true)
         })
+        item.redraw = { [weak self] in
+            self?.redraw(animated: true)
+        }
     }
     
     open var imageSize: CGFloat {
@@ -396,18 +400,22 @@ open class AppMenuRowView: AppMenuBasicItemView {
             if !CheckWindow() {
                 return
             }
-            guard let item = self?.item as? AppMenuRowItem else {
-                return
-            }
-            item.interaction?.action(item.item)
+            self?.invokeClick()
         }, for: .SingleClick)
         
         containerView.set(handler: { [weak self] _ in
-            guard let item = self?.item as? AppMenuRowItem else {
+            if !CheckWindow() {
                 return
             }
-            item.interaction?.action(item.item)
+            self?.invokeClick()
         }, for: .RightDown)
+    }
+    
+    open func invokeClick() {
+        guard let item = self.item as? AppMenuRowItem else {
+            return
+        }
+        item.interaction?.action(item.item)
     }
     
     open override func addSubview(_ view: NSView) {
@@ -592,11 +600,13 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 } else {
                     current.setFrameSize(item.moreSize)
                 }
+                current.layer?.masksToBounds = false
                 current.contentGravity = .center
                 contentView.addSubview(current)
                 self.more = current
             }
-            current.image = item.item.state == .on ? item.presentation.selected : item.presentation.more
+            let stateOnImage = item.item.stateOnImage?.precomposed(item.presentation.primaryColor(item.item))
+            current.image = item.item.state == .on ? stateOnImage ?? item.presentation.selected : item.presentation.more
             current.layer?.opacity = item.item.isEnabled ? 1 : 0.4
         } else if let view = self.more {
             self.more = nil

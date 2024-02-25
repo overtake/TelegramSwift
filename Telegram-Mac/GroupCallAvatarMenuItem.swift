@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-
+import TelegramMedia
 
 private final class PhotoOrVideoView: View, SlideViewProtocol {
     private let imageView: TransformImageView

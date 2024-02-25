@@ -24,6 +24,10 @@ public struct SwitchViewAppearance : Equatable {
         self.borderColor = borderColor
         
     }
+    
+    public init(theme presentation: PresentationTheme) {
+        self.init(backgroundColor: presentation.colors.background, stateOnColor: presentation.colors.accent, stateOffColor: presentation.colors.grayForeground, disabledColor: presentation.colors.grayTransparent, borderColor: presentation.colors.border)
+    }
 }
 
 public var switchViewAppearance: SwitchViewAppearance {
@@ -178,11 +182,5 @@ public class SwitchView: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func draw(_ layer: CALayer, in ctx: CGContext) {
-//        super.draw(layer, in: ctx)
-//        ctx.setFillColor(NSColor.grayBackground.cgColor)
-//        ctx.round(frame.size, frame.height/2.0)
-//        ctx.fill(layer.bounds)
-    }
     
 }

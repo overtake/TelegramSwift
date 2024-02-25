@@ -12,6 +12,7 @@ import TelegramCore
 
 import Postbox
 import SwiftSignalKit
+import WebKit
 
 private struct LogoutControllerState : Equatable {
     
@@ -49,7 +50,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -62,7 +63,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     }
 
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: strings().logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: .innerItem, description: strings().logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: strings().logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: activeAccounts.count < 3 ? .innerItem : .firstItem, description: strings().logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
     index += 1
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_cache, data: InputDataGeneralData(name: strings().logoutOptionsClearCacheTitle, color: theme.colors.text, icon: theme.icons.logoutOptionClearCache, type: .next, viewType: .innerItem, description: strings().logoutOptionsClearCacheText, action: arguments.clearCache)))
@@ -74,7 +75,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: strings().logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, viewType: .lastItem, description: strings().logoutOptionsContactSupportText, action: arguments.contactSupport)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     
@@ -109,7 +110,7 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         navigation.readyOnce()
         showModal(with: navigation, for: context.window)
     }, contactSupport: {
-        confirm(for: context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+        verifyAlert_button(for: context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
             closeAllModals()
             switch result {
             case .basic:
@@ -124,9 +125,12 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
             }
         })
     }, logout: {
-        confirm(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
             closeAllModals()
             _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+            
+            FastSettings.clear_uuid(context.account.id.int64)
+            
         })
     })
     
@@ -139,11 +143,11 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
     
     let modalController = InputDataModalController(controller, modalInteractions: ModalInteractions(acceptTitle: strings().logoutOptionsLogOut, accept: {
         arguments.logout()
-    }, drawBorder: true, height: 50, singleButton: true))
+    }, singleButton: true))
     
     controller.afterTransaction = { [weak modalController] controller in
         modalController?.modalInteractions?.updateDone { button in
-            button.set(color: theme.colors.redUI, for: .Normal)
+            button.set(background: theme.colors.redUI, for: .Normal)
         }
     }
     

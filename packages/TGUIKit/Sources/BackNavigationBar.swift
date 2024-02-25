@@ -13,7 +13,7 @@ open class BackNavigationBar: TextButtonBarView {
     
     public init(_ controller:ViewController, canBeEmpty: Bool = false) {
         let backSettings = controller.backSettings()
-        super.init(controller: controller, text: backSettings.0, style: navigationButtonStyle, alignment: .Left, canBeEmpty: canBeEmpty)
+        super.init(controller: controller, text: backSettings.0, style: controller.barPresentation, alignment: .Left, canBeEmpty: canBeEmpty)
 
         if let image = backSettings.1 {
             set(image: image, for: .Normal)
@@ -30,14 +30,17 @@ open class BackNavigationBar: TextButtonBarView {
     }
     
     public func requestUpdate() {
-        let backSettings = controller?.backSettings() ?? ("",nil)
+        guard let controller = self.controller else {
+            return
+        }
+        let backSettings = controller.backSettings()
         set(text: backSettings.0, for: .Normal)
         if let image = backSettings.1 {
              set(image: image, for: .Normal)
         } else {
             removeImage(for: .Normal)
         }
-        style = navigationButtonStyle
+        style = controller.barPresentation
         needsLayout = true
     }
     

@@ -62,7 +62,8 @@ public struct RadialProgressTheme : Equatable {
     public let diameter:CGFloat?
     public let lineWidth: CGFloat
     public let clockwise: Bool
-    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, cancelFetchingIcon: CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2, clockwise: Bool = true) {
+    public let blendMode: CGBlendMode
+    public init(backgroundColor:NSColor, foregroundColor:NSColor, icon:CGImage? = nil, cancelFetchingIcon: CGImage? = nil, iconInset:NSEdgeInsets = NSEdgeInsets(), diameter: CGFloat? = nil, lineWidth: CGFloat = 2, clockwise: Bool = true, blendMode: CGBlendMode = .normal) {
         self.iconInset = iconInset
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
@@ -71,11 +72,12 @@ public struct RadialProgressTheme : Equatable {
         self.diameter = diameter
         self.lineWidth = lineWidth
         self.clockwise = clockwise
+        self.blendMode = blendMode
     }
 }
 
 public func ==(lhs:RadialProgressTheme, rhs:RadialProgressTheme) -> Bool {
-    return lhs.backgroundColor == rhs.backgroundColor && lhs.foregroundColor == rhs.foregroundColor && ((lhs.icon == nil) == (rhs.icon == nil))
+    return lhs.backgroundColor == rhs.backgroundColor && lhs.foregroundColor == rhs.foregroundColor && ((lhs.icon == nil) == (rhs.icon == nil)) && lhs.blendMode == rhs.blendMode
 }
 
 public enum RadialProgressState: Equatable {
@@ -84,7 +86,7 @@ public enum RadialProgressState: Equatable {
     case Fetching(progress: Float, force: Bool)
     case ImpossibleFetching(progress: Float, force: Bool)
     case Play
-    case Icon(image:CGImage, mode:CGBlendMode)
+    case Icon(image:CGImage)
     case Success
 }
 
@@ -114,14 +116,14 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
         } else {
             return false
         }
-    case let .Fetching(lhsProgress):
-        if case let .Fetching(rhsProgress) = rhs, lhsProgress == rhsProgress {
+    case let .Fetching(progress, force):
+        if case .Fetching(progress, force) = rhs {
             return true
         } else {
             return false
         }
-    case let .ImpossibleFetching(lhsProgress):
-            if case let .ImpossibleFetching(rhsProgress) = rhs, lhsProgress == rhsProgress {
+    case let .ImpossibleFetching(progress, force):
+            if case .ImpossibleFetching(progress, force) = rhs {
                 return true
             } else {
                 return false
@@ -136,16 +138,22 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
 }
 
 
-private class RadialProgressOverlayLayer: SimpleLayer {
+private class RadialProgressOverlayLayer {
     var theme: RadialProgressTheme
     let twist: Bool
     private var timer: SwiftSignalKit.Timer?
     private var _progress: Float = 0
     private var progress: Float = 0
+    
+    var display:(()->Void)? = nil
+    
     var parameters:RadialProgressParameters {
-        return RadialProgressParameters(theme: self.theme, diameter: theme.diameter ?? frame.width, state: self.state, twist: twist)
+        return RadialProgressParameters(theme: self.theme, diameter: theme.diameter ?? 40, state: self.state, twist: twist)
     }
-
+    
+    func setNeedsDisplay() {
+        display?()
+    }
     
     var state: RadialProgressState = .None {
         didSet {
@@ -196,64 +204,40 @@ private class RadialProgressOverlayLayer: SimpleLayer {
     init(theme: RadialProgressTheme, twist: Bool) {
         self.theme = theme
         self.twist = twist
-        super.init()
-        
     }
     
-    
-    override func removeAllAnimations() {
-        super.removeAllAnimations()
-    }
-    
-    override init(layer: Any) {
-        let layer = layer as! RadialProgressOverlayLayer
-        self.theme = layer.theme
-        self.twist = layer.twist
-        super.init(layer: layer)
-    }
-    
-    fileprivate override func draw(in ctx: CGContext) {
+    func draw(in ctx: CGContext, diameter: CGFloat) {
         ctx.setStrokeColor(theme.foregroundColor.cgColor)
-        let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2
-        let endAngle = -(CGFloat.pi / 2)
+        let startAngle = 2.0 * (CGFloat.pi) * CGFloat(_progress) - CGFloat.pi / 2 + rotation
+        let endAngle = -(CGFloat.pi / 2) + rotation
         
-        let pathDiameter = !twist ? parameters.diameter - parameters.theme.lineWidth : parameters.diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
-        ctx.addArc(center: NSMakePoint(parameters.diameter / 2.0, floorToScreenPixels(System.backingScale, parameters.diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
+        let pathDiameter = !twist ? diameter - parameters.theme.lineWidth : diameter - parameters.theme.lineWidth - parameters.theme.lineWidth * parameters.theme.lineWidth
+        ctx.addArc(center: NSMakePoint(diameter / 2.0, floorToScreenPixels(System.backingScale, diameter / 2.0)), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.clockwise)
         
         ctx.setLineWidth(parameters.theme.lineWidth);
         ctx.setLineCap(.round);
         ctx.strokePath()
     }
     
+    private var rotator: ConstantDisplayLinkAnimator?
     
-    fileprivate func mayAnimate(_ animate: Bool) {
-        
-        
-        if animate, parameters.twist {
-            let fromValue: Float = 0
-            
-            if animation(forKey: "progressRotation") != nil {
-                return
-            }
-            removeAllAnimations()
-            CATransaction.begin()
-            
-            let basicAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
-            basicAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-            basicAnimation.duration = 2.0
-            basicAnimation.fromValue = NSNumber(value: fromValue)
-            basicAnimation.toValue = NSNumber(value: Float.pi * 2.0)
-            basicAnimation.repeatCount = .infinity
-            basicAnimation.isRemovedOnCompletion = false
-
-            basicAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-            self.add(basicAnimation, forKey: "progressRotation")
-            CATransaction.commit()
-        } else {
-            removeAllAnimations()
+    private var rotation : CGFloat = 0 {
+        didSet {
+            setNeedsDisplay()
         }
     }
     
+    fileprivate func mayAnimate(_ animate: Bool) {
+        if animate, parameters.twist {
+            self.rotator = ConstantDisplayLinkAnimator(update: { [weak self] in
+                self?.rotation += (CGFloat.pi * 2.0) / 120.0
+            })
+            self.rotator?.isPaused = false
+        } else {
+            self.rotator?.isPaused = true
+            self.rotator = nil
+        }
+    }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -287,84 +271,28 @@ public class RadialProgressView: Control {
     }
     
     
-    
+    public var badge: CGRect? {
+        didSet {
+            _layer.setNeedsDisplay()
+        }
+    }
     
     public var state: RadialProgressState = .None {
         didSet {
             self.overlay.state = self.state
-            if case .Fetching = state {
-                if self.overlay.superlayer == nil {
-                    self.layer?.addSublayer(self.overlay)
-                }
-            } else if case .ImpossibleFetching = state {
-                if self.overlay.superlayer == nil {
-                    self.layer?.addSublayer(self.overlay)
-                }
-            } else {
-                if self.overlay.superlayer != nil {
-                    self.overlay.removeFromSuperlayer()
-                }
-            }
-            switch oldValue {
-            case .Fetching:
-                switch self.state {
-                case .Fetching:
-                    break
-                default:
-                    self.setNeedsDisplay()
-                }
-            case .ImpossibleFetching:
-                switch self.state {
-                case .ImpossibleFetching:
-                    break
-                default:
-                    self.setNeedsDisplay()
-                }
-            case .Remote:
-                switch self.state {
-                case .Remote:
-                    break
-                default:
-                    self.setNeedsDisplay()
-                }
-            case .None:
-                switch self.state {
-                case .None:
-                    break
-                default:
-                    self.setNeedsDisplay()
-                }
-            case .Play:
-                switch self.state {
-                case .Play:
-                    break
-                default:
-                    self.setNeedsDisplay()
-                }
-            case .Success:
-                switch self.state {
-                case .Success:
-                    break
-                default:
-                    self.setNeedsDisplay()
-                }
-            case .Icon:
-                switch self.state {
-                case .Icon:
-                    self.setNeedsDisplay()
-                default:
-                    self.setNeedsDisplay()
-                }
-            }
-            
+            self.setNeedsDisplay()
         }
+    }
+    
+    public override func setNeedsDisplay() {
+        super.setNeedsDisplay()
+        _layer.setNeedsDisplay()
+        overlay.setNeedsDisplay()
     }
     
     public override func viewDidMoveToSuperview() {
         overlay.mayAnimate(superview != nil)
     }
-    
-    
     
     
     required public init?(coder aDecoder: NSCoder) {
@@ -383,33 +311,46 @@ public class RadialProgressView: Control {
             super.frame = value
             
             if redraw {
-                self.overlay.frame = CGRect(origin: CGPoint(), size: value.size)
                 self.setNeedsDisplay()
                 self.overlay.setNeedsDisplay()
+                self._layer.frame = CGRect(origin: CGPoint(), size: value.size)
             }
         }
     }
+    private let _layer = SimpleLayer()
     
     public init(theme: RadialProgressTheme = RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil), twist: Bool = true, size: NSSize = NSMakeSize(40, 40)) {
         self.theme = theme
         self.overlay = RadialProgressOverlayLayer(theme: theme, twist: twist)
         super.init()
-        self.overlay.contentsScale = backingScaleFactor
         self.frame = NSMakeRect(0, 0, size.width, size.height)
-    
+        self.layer?.addSublayer(_layer)
+        
+        overlay.display = { [weak self] in
+            self?._layer.setNeedsDisplay()
+        }
+        
+        layer?.masksToBounds = false
+        _layer.masksToBounds = false
+        
+        _layer.frame = self.bounds
+        _layer.onDraw = { [weak self] _, ctx in
+            self?.draw(context: ctx)
+        }
+        _layer.setNeedsDisplay()
     }
     
     public override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-    //    overlay.mayAnimate(superview != nil && window != nil)
     }
     
-    
-    
-    
-    public override func draw(_ layer: CALayer, in context: CGContext) {
+        
+    func draw(context: CGContext) {
         context.setFillColor(parameters.theme.backgroundColor.cgColor)
         context.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: parameters.diameter, height: parameters.diameter)))
+        
+        context.saveGState()
+
         
         switch parameters.state {
         case .None:
@@ -420,20 +361,18 @@ public class RadialProgressView: Control {
             let progress: CGFloat = 1.0
             
             var pathLineWidth: CGFloat = 2.0
-            var pathDiameter: CGFloat = diameter - pathLineWidth
             
             if (abs(diameter - 37.0) < 0.1) {
                 pathLineWidth = 2.5
-                pathDiameter = diameter - pathLineWidth * 2.0 - 1.5
             } else if (abs(diameter - 32.0) < 0.1) {
                 pathLineWidth = 2.0
-                pathDiameter = diameter - pathLineWidth * 2.0 - 1.5
             } else {
                 pathLineWidth = 2.5
-                pathDiameter = diameter - pathLineWidth * 2.0 - 1.5
             }
             
             let center = CGPoint(x: diameter / 2.0, y: diameter / 2.0)
+            
+            context.setBlendMode(parameters.theme.blendMode)
             
             context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
             context.setLineWidth(pathLineWidth)
@@ -472,8 +411,23 @@ public class RadialProgressView: Control {
                 f.origin.x -= parameters.theme.iconInset.right
                 f.origin.y += parameters.theme.iconInset.top
                 f.origin.y -= parameters.theme.iconInset.bottom
-                context.draw(icon, in: f)
+                if parameters.theme.blendMode == .clear {
+                    context.clip(to: f, mask: icon)
+                    context.clear(f)
+                } else {
+                    context.setBlendMode(parameters.theme.blendMode)
+                    context.draw(icon, in: f)
+                }
+                
+                context.setBlendMode(parameters.theme.blendMode)
+                overlay.draw(in: context, diameter: parameters.diameter)
+                
             } else {
+                
+                context.setBlendMode(parameters.theme.blendMode)
+
+                overlay.draw(in: context, diameter: parameters.diameter)
+                
                 context.setStrokeColor(parameters.theme.foregroundColor.cgColor)
                 context.setLineWidth(2.0)
                 context.setLineCap(.round)
@@ -493,7 +447,12 @@ public class RadialProgressView: Control {
            
         case .Remote:
             let color = parameters.theme.foregroundColor
-            let diameter = layer.frame.height
+            let diameter = _layer.frame.height
+            
+            context.saveGState()
+            
+            context.setBlendMode(parameters.theme.blendMode)
+
             
             context.setStrokeColor(color.cgColor)
             var lineWidth: CGFloat = 2.0
@@ -518,11 +477,16 @@ public class RadialProgressView: Control {
             context.addLine(to: CGPoint(x: diameter / 2.0, y: diameter / 2.0 + arrowLength / 2.0 + arrowHeadOffset))
             context.addLine(to: CGPoint(x: diameter / 2.0 + arrowHeadSize / 2.0, y: diameter / 2.0 + arrowLength / 2.0 - arrowHeadSize / 2.0 + arrowHeadOffset))
             context.strokePath()
+            
+            context.restoreGState()
+               
         case .Play:
             let color = parameters.theme.foregroundColor
-            let diameter = layer.frame.height
+            let diameter = _layer.frame.height
             context.setFillColor(color.cgColor)
             
+            context.setBlendMode(parameters.theme.blendMode)
+
             let factor = diameter / 50.0
             
             let size = CGSize(width: 15.0, height: 18.0)
@@ -541,17 +505,37 @@ public class RadialProgressView: Control {
             }
             context.translateBy(x: -(diameter - size.width) / 2.0 - 1.5, y: -(diameter - size.height) / 2.0)
         case .ImpossibleFetching:
-            break
-        case let .Icon(image: icon, mode:blendMode):
+            context.setBlendMode(parameters.theme.blendMode)
+            overlay.draw(in: context, diameter: parameters.diameter)
+        case let .Icon(icon):
             var f = focus(icon.backingSize)
             f.origin.x += parameters.theme.iconInset.left
             f.origin.x -= parameters.theme.iconInset.right
             f.origin.y += parameters.theme.iconInset.top
             f.origin.y -= parameters.theme.iconInset.bottom
-            context.setBlendMode(blendMode)
-            context.draw(icon, in: f)
+            
+            
+            if parameters.theme.blendMode == .clear {
+                context.clip(to: f, mask: icon)
+                context.clear(f)
+            } else {
+                context.setBlendMode(parameters.theme.blendMode)
+                context.draw(icon, in: f)
+            }
+            
         }
+        context.restoreGState()
 
+        if let badge = badge {
+            context.saveGState()
+            let rect = badge
+            let path = CGMutablePath()
+            path.addEllipse(in: rect)
+            context.addPath(path)
+            context.clip()
+            context.clear(rect)
+            context.restoreGState()
+        }
     }
     
     public override func copy() -> Any {
@@ -560,7 +544,6 @@ public class RadialProgressView: Control {
         view.frame = self.frame
         view.layer?.contents = progressInteractiveThumb(backgroundColor: parameters.theme.backgroundColor, foregroundColor: parameters.theme.foregroundColor)
         return view
-
     }
     
     public override func apply(state: ControlState) {

@@ -416,7 +416,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let historyPromise: Promise<PeerMediaUpdate> = Promise()
         let context = self.context
         let peerId = self.peerId
-        let threadId = self.threadInfo?.message.messageId
+        let threadId = self.threadInfo?.message.threadId
         
         let chatLocationInput = self.chatLocationInput
 
@@ -427,7 +427,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                 if let externalSearch = externalSearch {
                     return .single(PeerMediaUpdate(messages: externalSearch.messages, updateType: .history, laterId: nil, earlierId: nil, searchState: searchState, contentSettings: context.contentSettings))
                 } else if searchState.request.isEmpty {
-                    return combineLatest(queue: prepareQueue, chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: [], chatLocationInput: chatLocationInput), automaticDownloadSettings(postbox: context.account.postbox)) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
+                    return combineLatest(queue: prepareQueue, chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(tagMask), additionalData: [], chatLocationInput: chatLocationInput), automaticDownloadSettings(postbox: context.account.postbox)) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())
@@ -445,7 +445,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                     }
                 } else {
                     let searchMessagesLocation: SearchMessagesLocation
-                    searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask, topMsgId: threadId, minDate: nil, maxDate: nil)
+                    searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask, reactions: nil, threadId: threadId, minDate: nil, maxDate: nil)
                     
                     let signal = context.engine.messages.searchMessages(location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil, searchState: searchState, contentSettings: context.contentSettings)
@@ -478,7 +478,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let mode: ChatMode
         let contextHolder: Atomic<ChatLocationContextHolder?>
         if let threadInfo = threadInfo {
-            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
             contextHolder = threadInfo.contextHolder
         } else {
             mode = .history
@@ -490,13 +490,13 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
             if let media = message.media.first {
                 let interactions = ChatMediaLayoutParameters(presentation: .Empty, media: media)
                 interactions.showMedia = { message in
-                    self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
+                    self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
                 }
                 showChatGallery(context: context, message: message, self?.genericView, interactions, type: type, chatMode: mode, contextHolder: contextHolder)
             }
         }, music: { message, type in
             
-            if let controller = context.audioPlayer, controller.playOrPause(message.id) {
+            if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(message.id) {
                 return
             }
             let messages: [Message]
@@ -549,7 +549,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
             self.genericView.merge(with: values.transition)
             self.mediaSearchState.set(state)
             self.readyOnce()
-            if let controller = context.audioPlayer, let header = self.navigationController?.header, header.needShown {
+            if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {
                 let tableView = (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView
                 let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: tableView, supportTableView: self.genericView)
                 header.view.update(with: object)

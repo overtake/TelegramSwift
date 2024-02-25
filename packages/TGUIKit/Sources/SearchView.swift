@@ -12,11 +12,7 @@ import ColorPalette
 
 
 public class SearchTextField: NSTextView {
-    
-    @available(OSX 10.12.2, *)
-    override public func makeTouchBar() -> NSTouchBar? {
-        return viewEnableTouchBar ? super.makeTouchBar() : nil
-    }
+
     
     public init() {
         super.init(frame: .zero)
@@ -118,7 +114,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         var x: CGFloat = 35
         
         for title in tags {
-            let tagView = TitleButton()
+            let tagView = TextButton()
             tagView.animates = false
             tagView.set(font: .normal(12), for: .Normal)
             tagView.set(color: presentation.colors.underSelectedColor, for: .Normal)
@@ -183,7 +179,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var lock:Bool = false
     
-    private var tags: [TitleButton] = []
+    private var tags: [TextButton] = []
     
     private let clear:ImageButton = ImageButton()
     private let search:ImageButton = ImageButton()
@@ -228,7 +224,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         inputContainer.background = .clear
         inputContainer.backgroundColor = .clear
-        input.textColor = searchTheme?.textColor ?? presentation.search.textColor
+        input.textColor = searchTheme?.textColor ?? theme.search.textColor
         input.backgroundColor = .clear
         
         search.autohighlight = false
@@ -307,7 +303,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.isVerticallyResizable = false
 
         
-        //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
+        //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text))
         
         input.font = .normal(.text)
         input.textColor = .text

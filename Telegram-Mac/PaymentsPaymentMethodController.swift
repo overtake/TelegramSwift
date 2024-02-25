@@ -139,11 +139,13 @@ private struct State : Equatable {
     }
 }
 
-private func validateSmartGlobal(_ publicToken: String, isTesting: Bool, state: State) -> Signal<BotCheckoutPaymentMethod, Error> {
+private func validateSmartGlobal(_ publicToken: String, isTesting: Bool, state: State, customTokenizeUrl: String?) -> Signal<BotCheckoutPaymentMethod, Error> {
     return Signal { subscriber in
         
         let url: String
-        if isTesting {
+        if let customTokenizeUrl {
+            url = customTokenizeUrl
+        } else if isTesting {
             url = "https://tgb-playground.smart-glocal.com/cds/v1/tokenize/card"
         } else {
             url = "https://tgb.smart-glocal.com/cds/v1/tokenize/card"
@@ -273,7 +275,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
   
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutNewCardPaymentCard), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -351,7 +353,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
     if state.holderName != nil {
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutNewCardCardholderNameTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -363,7 +365,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     if state.billingAddress.country != nil || state.billingAddress.zipCode != nil {
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutNewCardPostcodeTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -408,7 +410,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_card_save_info, data: .init(name: strings().checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, enabled: !arguments.passwordMissing, action: arguments.toggleSaveInfo)))
@@ -420,7 +422,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -480,8 +482,8 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                 }
                 return nil
             }
-        case .smartglocal:
-            tokenSignal = validateSmartGlobal(publishableKey, isTesting: isTesting, state: stateValue.with { $0 }) |> map(Optional.init)
+        case let .smartglocal(customTokenizeUrl):
+            tokenSignal = validateSmartGlobal(publishableKey, isTesting: isTesting, state: stateValue.with { $0 }, customTokenizeUrl: customTokenizeUrl) |> map(Optional.init)
         }
         _ = showModalProgress(signal: tokenSignal, for: context.window).start(next: { token in
             if let token = token {
@@ -615,7 +617,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

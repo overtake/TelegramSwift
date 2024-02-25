@@ -1,4 +1,5 @@
 import Foundation
+import WebKit
 import UserNotifications
 import TGUIKit
 import SwiftSignalKit
@@ -7,6 +8,8 @@ import TelegramCore
 import Localization
 import InAppSettings
 import IOKit
+import CodeSyntax
+import Dock
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -188,7 +191,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, folders: ChatListFolders?) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, inlinePlayerContext: InlineAudioPlayerView.ContextObject?, folders: ChatListFolders?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -322,6 +325,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
                 let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+                FastSettings.clear_uuid(context.account.id.int64)
             }
         }))
         
@@ -515,18 +519,21 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
-                
+              
+        
         
         #if DEBUG
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showInactiveChannels(context: context, source: .join)
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+//            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
+            //setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+//        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+//            showModal(with: GiveawayModalController(context: context, peerId: context.peerId), for: context.window)
+//
+//            return .invoked
+//        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         
@@ -593,13 +600,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 self.launchAction = .preferences
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
-            case let .profile(peerId, necessary):
+            case let .profile(peer, necessary):
                 
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
 
                 if (necessary || context.layout != .single) {
-                    let controller = PeerInfoController(context: context, peerId: peerId)
+                    let controller = PeerInfoController(context: context, peer: peer._asPeer())
                     controller.navigationController = self.rightController
                     controller.loadViewIfNeeded(self.rightController.bounds)
 
@@ -637,7 +644,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 if let fromId = fromId {
                     context.navigateToThread(threadId, fromId: fromId)
                 } else if let _ = threadData {
-                    _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context).start()
+                    _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: context).start()
                 }
             }
         } else {
@@ -654,15 +661,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if let groupCallContext = groupCallContext {
             rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
-        
+        if let inlinePlayerContext = inlinePlayerContext {
+            rightController.header?.show(true, contextObject: inlinePlayerContext)
+        }
         self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutValue).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
-        
-        
-        if let controller = context.audioPlayer, let _ = self.rightController.header {
-            self.rightController.header?.show(false, contextObject: InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: nil, supportTableView: nil))
-        }
         
        // _ready.set(.single(true))
     }
@@ -671,9 +675,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var previousLayout: SplitViewState?
     private let foldersReadyDisposable = MetaDisposable()
     private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
+        
+        if let window = self.window as? AppWindow {
+            if (folders.sidebar && !folders.isEmpty) || layout == .minimisize {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = 0
+                window.initialButtonPoint = .system
+            } else {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = layout == .single ? Window.controlsInset : 0
+                window.initialButtonPoint = .app
+            }
+        }
+
                 
-        let currentSidebar = !folders.isEmpty && (folders.sidebar || layout == .minimisize)
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
+        let currentSidebar = !folders.isEmpty && (folders.sidebar)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar)
 
         let readySignal: Signal<Bool, NoError>
         

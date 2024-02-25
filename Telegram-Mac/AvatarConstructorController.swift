@@ -15,6 +15,7 @@ import ThemeSettings
 import ColorPalette
 import ObjcUtils
 import AppKit
+import TelegramMedia
 
 private final class Arguments {
     let context: AccountContext
@@ -868,7 +869,7 @@ private final class AvatarConstructorView : View {
     
     private var premiumView: StickerPremiumHolderView?
     
-    let setView = TitleButton()
+    let setView = TextButton()
     private let containerView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

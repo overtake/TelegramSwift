@@ -21,15 +21,18 @@ final class PremiumBoardingRowItem : GeneralRowItem {
     fileprivate let callback: (PremiumValue)->Void
 
     fileprivate let premValueIndex: Int
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, callback: @escaping(PremiumValue)->Void) {
+    fileprivate let presentation: TelegramPresentationTheme
+    fileprivate let isNew: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, presentation: TelegramPresentationTheme, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, isNew: Bool, callback: @escaping(PremiumValue)->Void) {
         self.value = value
         self.limits = limits
+        self.presentation = presentation
         self.premValueIndex = index
         self.isLastItem = isLast
         self.callback = callback
-        self.titleLayout = .init(.initialize(string: value.title(limits), color: theme.colors.text, font: .medium(.title)))
-        self.infoLayout = .init(.initialize(string: value.info(limits), color: theme.colors.grayText, font: .normal(.text)))
+        self.isNew = isNew
+        self.titleLayout = .init(.initialize(string: value.title(limits), color: presentation.colors.text, font: .medium(.title)))
+        self.infoLayout = .init(.initialize(string: value.info(limits), color: presentation.colors.grayText, font: .normal(.text)))
 
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 20, right: 20))
         _ = self.makeSize(initialSize.width)
@@ -60,6 +63,7 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
     private let imageView = ImageView()
     private let nextView = ImageView()
     private let overlay = Control()
+    private var newBadge: ImageView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
@@ -88,6 +92,19 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
         
     }
     
+    override var borderColor: NSColor {
+        guard let item = item as? PremiumBoardingRowItem else {
+            return super.backdorColor
+        }
+        return item.presentation.colors.border
+    }
+    
+    override var backdorColor: NSColor {
+        guard let item = item as? PremiumBoardingRowItem else {
+            return super.backdorColor
+        }
+        return item.presentation.colors.background
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -103,6 +120,10 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
         
         nextView.centerY(x: containerView.frame.width - 20 - nextView.frame.width)
         
+        if let newBadge = newBadge {
+            newBadge.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 5, titleView.frame.minY + 1))
+        }
+        
         overlay.frame = bounds
     }
     
@@ -113,16 +134,31 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
             return
         }
         
-        imageView.image = item.value.icon(item.premValueIndex)
+        imageView.image = item.value.icon(item.premValueIndex, presentation: item.presentation)
         imageView.sizeToFit()
         
-        nextView.image = theme.icons.premium_boarding_feature_next
+        nextView.image = item.presentation.icons.premium_boarding_feature_next
         nextView.sizeToFit()
         
         titleView.update(item.titleLayout)
         infoView.update(item.infoLayout)
         
         
+        if item.isNew {
+            let current: ImageView
+            if let view = self.newBadge {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.newBadge = current
+            }
+            current.image = generateTextIcon_NewBadge(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor)
+            current.sizeToFit()
+        } else if let view = self.newBadge {
+            performSubviewRemoval(view, animated: animated)
+            self.newBadge = nil
+        }
         
         
         needsLayout = true

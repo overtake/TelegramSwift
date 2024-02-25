@@ -94,7 +94,7 @@ public enum Wallpaper : Equatable, Codable {
     case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
     case custom(TelegramMediaImageRepresentation, blurred: Bool)
-    
+    case emoticon(String)
     public init(_ wallpaper: TelegramWallpaper) {
         switch wallpaper {
         case .builtin:
@@ -107,6 +107,8 @@ public enum Wallpaper : Equatable, Codable {
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
         case let .gradient(gradient):
             self = .gradient(gradient.id, gradient.colors, gradient.settings.rotation)
+        case let .emoticon(emoticon):
+            self = .emoticon(emoticon)
         }
     }
     
@@ -126,6 +128,12 @@ public enum Wallpaper : Equatable, Codable {
             }
         case let .gradient(id, colors, rotation):
             if case .gradient(id, colors, rotation) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .emoticon(emoticon):
+            if case .emoticon(emoticon) = rhs {
                 return true
             } else {
                 return false
@@ -279,6 +287,10 @@ public enum Wallpaper : Equatable, Codable {
             } else {
                 try container.encodeNil(forKey: "id")
             }
+        case let .emoticon(emoticon):
+            try container.encode(Int32(7), forKey: "v")
+            try container.encode(emoticon, forKey: "e")
+
         }
     }
     
@@ -297,6 +309,8 @@ public enum Wallpaper : Equatable, Codable {
         case let .custom(path, _):
             return .custom(path, blurred: blurred)
         case .none:
+            return self
+        case .emoticon:
             return self
         }
     }
@@ -317,6 +331,9 @@ public enum Wallpaper : Equatable, Codable {
             return self
         case .none:
             return self
+        case .emoticon:
+            return self
+
         }
     }
     
@@ -335,6 +352,8 @@ public enum Wallpaper : Equatable, Codable {
         case let .custom(_, blurred):
             return blurred
         case .none:
+            return false
+        case .emoticon:
             return false
         }
     }
@@ -382,6 +401,8 @@ public enum Wallpaper : Equatable, Codable {
             } else {
                 return false
             }
+        case .emoticon:
+            return other == self
         }
     }
 }

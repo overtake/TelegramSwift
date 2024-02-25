@@ -8,7 +8,7 @@ BUILD_DIR=$(echo "$(cd "$(dirname "$3")"; pwd -P)/$(basename "$3")")
 
 
 
-SOURCE_DIR="$BUILD_DIR/source"
+SOURCE_DIR="${BUILD_DIR}source"
 
 
 pushd "$BUILD_DIR"
@@ -33,7 +33,8 @@ CONFIGURE_ARGS="--disable-examples
                     --disable-docs
                     --enable-vp8
                     --enable-vp9
-                    --enable-webm-io"
+                    --enable-webm-io
+                    --size-limit=8192x8192"
                 
 DIST_DIR="_dist"
 FRAMEWORK_DIR="build/libvpx"

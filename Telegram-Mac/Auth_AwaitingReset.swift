@@ -11,6 +11,7 @@ import TGUIKit
 import AppKit
 import TelegramCore
 import SwiftSignalKit
+import TelegramMedia
 
 private func timerValueString(days: Int32, hours: Int32, minutes: Int32) -> String {
     var string = NSMutableAttributedString()

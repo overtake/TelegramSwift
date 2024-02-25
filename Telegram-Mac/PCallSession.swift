@@ -167,29 +167,6 @@ public struct CallAuxiliaryServer {
 }
 
 
-private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc  {
-    private let queue: Queue
-    
-    init(queue: Queue) {
-        self.queue = queue
-        
-        super.init()
-    }
-    
-    func dispatch(_ f: @escaping () -> Void) {
-        self.queue.async {
-            f()
-        }
-    }
-    
-    func dispatch(after seconds: Double, block f: @escaping () -> Void) {
-        self.queue.after(seconds, f)
-    }
-    
-    func isCurrent() -> Bool {
-        return self.queue.isCurrent()
-    }
-}
 
 
 let callQueue = Queue(name: "VoIPQueue")
@@ -376,9 +353,6 @@ class PCallSession {
     let accountContext: AccountContext
     init(accountContext: AccountContext, account: Account, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool, data: PCallSession.InitialData) {
         
-        DispatchQueue.main.async {
-            _ = accountContext.audioPlayer?.pause()
-        }
         self.account = account
         self.accountContext = accountContext
         self.peerId = peerId
@@ -549,7 +523,7 @@ class PCallSession {
             if access {
                 self?.acceptAfterAccess()
             } else {
-                confirm(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
+                verifyAlert_button(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
                     switch result {
                     case .thrid:
                         openSystemSettings(.microphone)
@@ -1200,7 +1174,7 @@ func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, 
                 return .success(PCallSession(accountContext: context, account: context.account, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible, data: data))
             }
         } else {
-            confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+            verifyAlert_button(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
@@ -1270,7 +1244,7 @@ func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId, 
                     text = strings().callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             }
-            return confirmSignal(for: accountContext.window, header: header, information: text, okTitle: strings().modalYes, cancelTitle: strings().modalCancel) |> filter { $0 }
+            return verifyAlertSignal(for: accountContext.window, header: header, information: text, ok: strings().modalYes, cancel: strings().modalCancel) |> map { $0 == .basic }
         }
     } else {
         return .single(true)

@@ -62,7 +62,7 @@ open class OverlayControl: Control {
             externalScroll(event)
             return
         }
-        if userInteractionEnabled {
+        if userInteractionEnabled, handleScrollEventOnInteractionEnabled {
             updateState()
         } else {
             super.scrollWheel(with: event)

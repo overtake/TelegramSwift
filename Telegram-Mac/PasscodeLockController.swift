@@ -16,7 +16,7 @@ import LocalAuthentication
 import BuildConfig
 
 private class TouchIdContainerView : View {
-    fileprivate let button: TitleButton = TitleButton()
+    fileprivate let button: TextButton = TextButton()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -460,7 +460,7 @@ class PasscodeLockController: ModalViewController {
         genericView.logoutImpl = { [weak self] in
             guard let window = self?.window else { return }
             
-            confirm(for: window, information: strings().accountConfirmLogoutText, successHandler: { [weak self] _ in
+            verifyAlert_button(for: window, information: strings().accountConfirmLogoutText, successHandler: { [weak self] _ in
                 guard let `self` = self else { return }
                 _ = showModalProgress(signal: self.logoutImpl(), for: window).start(completed: { [weak self] in
                     delay(0.2, closure: { [weak self] in

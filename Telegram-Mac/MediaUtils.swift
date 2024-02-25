@@ -20,61 +20,7 @@ import ColorPalette
 import ThemeSettings
 import RangeSet
 
-extension FileMediaReference {
-    var userLocation: MediaResourceUserLocation {
-        switch self {
-        case let .message(message, _):
-            if let peerId = message.id?.peerId {
-                return .peer(peerId)
-            } else {
-                return .other
-            }
-        default:
-            return .other
-        }
-    }
-    var userContentType: MediaResourceUserContentType {
-        return .init(file: media)
-    }
-}
 
-extension ImageMediaReference {
-    var userLocation: MediaResourceUserLocation {
-        switch self {
-        case let .message(message, _):
-            if let peerId = message.id?.peerId {
-                return .peer(peerId)
-            } else {
-                return .other
-            }
-        default:
-            return .other
-        }
-    }
-    var userContentType: MediaResourceUserContentType {
-        return .image
-    }
-}
-
-public final class ImageDataTransformation {
-    let data: ImageRenderData
-    let execute:(TransformImageArguments, ImageRenderData)->DrawingContext?
-    init(data: ImageRenderData = ImageRenderData(nil, nil, false), execute:@escaping(TransformImageArguments, ImageRenderData)->DrawingContext? = { _, _ in return nil}) {
-        self.data = data
-        self.execute = execute
-    }
-}
-
-final class ImageRenderData {
-    let thumbnailData: Data?
-    let fullSizeData:Data?
-    let fullSizeComplete:Bool
-    init(_ thumbnailData: Data?, _ fullSizeData: Data?, _ fullSizeComplete: Bool) {
-        self.thumbnailData = thumbnailData
-        self.fullSizeData = fullSizeData
-        self.fullSizeComplete = fullSizeComplete
-    }
-}
 
 let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
@@ -783,7 +729,7 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.setFillColor(theme.colors.grayBackground.cgColor)
+                   // c.setFillColor(theme.colors.grayBackground.cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -939,15 +885,16 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
             }
             
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
+                c.clear(drawingRect)
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
                     switch color {
                     case let .color(color):
                         c.setFillColor(color.cgColor)
+                        c.fill(drawingRect)
                     default:
                         break
                     }
-                    c.fill(drawingRect)
                 } else {
                     c.setBlendMode(.copy)
                 }
@@ -960,10 +907,13 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
                 
                 if let fullSizeImage = fullSizeImage {
                     let cgImage = fullSizeImage
-                    c.setBlendMode(.normal)
-                    c.interpolationQuality = .medium
-                    
-                    c.draw(cgImage, in: fittedRect)
+                    if case let .fill(color) = arguments.emptyColor {
+                        c.clip(to: fittedRect, mask: cgImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(fittedRect)
+                    } else {
+                        c.draw(cgImage, in: fittedRect)
+                    }
                 }
             })
             
@@ -1615,8 +1565,8 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 
-func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largest = photo.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280))) {
+func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false, dimension: NSSize = NSMakeSize(1280, 1280)) -> Signal<MediaResourceStatus, NoError> {
+    if let largest = photo.representationForDisplayAtSize(PixelDimensions(dimension)) {
         if largest.resource is LocalFileReferenceMediaResource {
             return .single(.Local)
         } else {
@@ -2241,7 +2191,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
             
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
-                c.setFillColor(theme.colors.grayBackground.cgColor)
+             //   c.setFillColor(theme.colors.grayBackground.cgColor)
                 if arguments.boundingSize != arguments.imageSize {
                     c.fill(arguments.drawingRect)
                 }
@@ -3144,14 +3094,14 @@ enum PatternWallpaperDrawMode {
 }
 
 
-func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
+func crossplatformPreview(accountContext: AccountContext, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: accountContext.account.postbox, wallpaper: wallpaper)
     
     return signal |> map { wallpaper in
         return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
             
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
-            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600))))
+            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)), emoticonThemes: accountContext.emoticonThemes))
             
             context.withContext { ctx in
                 ctx.draw(preview, in: arguments.drawingRect)
@@ -3164,14 +3114,14 @@ func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wa
     }
 }
 
-func wallpaperPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
+func wallpaperPreview(accountContext: AccountContext, palette: ColorPalette, wallpaper: Wallpaper, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: accountContext.account.postbox, wallpaper: wallpaper)
     
     return signal |> map { wallpaper in
         return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
             
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
-            let preview = generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(arguments.boundingSize))
+            let preview = generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(arguments.boundingSize), emoticonThemes: accountContext.emoticonThemes)
             
             
             context.withContext { ctx in

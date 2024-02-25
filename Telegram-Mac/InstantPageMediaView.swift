@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import TelegramMedia
 import SwiftSignalKit
 
 final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {

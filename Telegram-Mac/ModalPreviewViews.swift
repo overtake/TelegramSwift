@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 
@@ -341,7 +341,12 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                         type = .lottie
                     }
                     
-                    player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), type: type, cachePurpose: .none))
+                    var colors:[LottieColor] = []
+                    if reference.media.isCustomTemplateEmoji {
+                        colors.append(.init(keyPath: "", color: theme.colors.text))
+                    }
+                    
+                    player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), type: type, cachePurpose: .none, colors: colors))
                 } else {
                     player?.set(nil)
                 }

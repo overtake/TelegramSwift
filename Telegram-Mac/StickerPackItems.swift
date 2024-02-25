@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 
@@ -72,6 +72,22 @@ class StickerPackRowItem: TableRowItem {
         items.append(ContextMenuItem(strings().emojiContextRemove, handler: {
             _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: option).start()
         }, itemImage: animation.value))
+        
+        if let file = self.topItem?.file {
+            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                            if let path = path {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.writeObjects([NSURL(fileURLWithPath: path)])
+                            }
+                        })
+                    }, itemImage: MenuAnimation.menu_copy_media.value))
+                }
+            }
+        }
         
         return .single(items)
     }
@@ -220,7 +236,6 @@ class StickerSpecificPackView: HorizontalRowView {
     
     
     deinit {
-        
     }
     
     required init?(coder: NSCoder) {
@@ -239,7 +254,7 @@ class StickerSpecificPackView: HorizontalRowView {
 private final class StickerPackRowView : HorizontalRowView {
     
     private var inlineSticker: InlineStickerItemLayer?
-    
+    private let fetchDisposable = MetaDisposable()
     
     
     func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
@@ -287,6 +302,10 @@ private final class StickerPackRowView : HorizontalRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        fetchDisposable.dispose()
+    }
+    
     
     override var backdorColor: NSColor {
         return .clear
@@ -308,9 +327,6 @@ private final class StickerPackRowView : HorizontalRowView {
     
     override var isEmojiLite: Bool {
         if let item = item as? StickerPackRowItem {
-            if item.isTopic {
-                return true
-            }
             return item.context.isLite(.emoji)
         }
         return super.isEmojiLite
@@ -324,6 +340,7 @@ private final class StickerPackRowView : HorizontalRowView {
             lockedView.frame = CGRect.init(origin: point, size: lockedView.frame.size)
         }
     }
+    private var previousColor: NSColor? = nil
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
@@ -341,19 +358,52 @@ private final class StickerPackRowView : HorizontalRowView {
             
             
             let current: InlineStickerItemLayer?
-            if let view = self.inlineSticker, view.file?.fileId == file?.fileId {
+            let color = item.color ?? theme.colors.accent
+            let animated = animated && previousColor == color
+
+            if let view = self.inlineSticker, view.file?.fileId == file?.fileId, view.textColor == color {
                 current = view
             } else {
-                self.inlineSticker?.removeFromSuperlayer()
+                if let itemLayer = self.inlineSticker {
+                    if previousColor != color {
+                        delay(0.1, closure: {
+                            performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                        })
+                    } else {
+                        performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                    }
+                }
+                
                 self.inlineSticker = nil
                 if let file = file {
-                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), textColor: item.color ?? theme.colors.accent)
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), playPolicy: item.isTopic ? .framesCount(1) : .loop, textColor: color)
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {
                     current = nil
                 }
             }
+            
+            if let file = file {
+                let reference: FileMediaReference
+                let mediaResource: MediaResourceReference
+                if let stickerReference = file.stickerReference ?? file.emojiReference {
+                    if file.resource is CloudStickerPackThumbnailMediaResource {
+                        reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
+                        mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)
+                    } else {
+                        reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
+                        mediaResource = reference.resourceReference(file.resource)
+                    }
+                } else {
+                    reference = FileMediaReference.standalone(media: file)
+                    mediaResource = reference.resourceReference(file.resource)
+                }
+                fetchDisposable.set(fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
+            }
+            
+            
+
             current?.superview = self.container
             current?.frame = CGRect(origin: NSMakePoint(5, 5), size: NSMakeSize(26, 26))
             
@@ -367,7 +417,7 @@ private final class StickerPackRowView : HorizontalRowView {
             }
             
             self.set(locked: (!item.context.isPremium && item.isPremium) || (item.installed != nil && !item.installed!), unlock: unlock, animated: animated)
-
+            previousColor = color
         }
         
         

@@ -127,7 +127,12 @@ class ChatListRowItem: TableRowItem {
     
     let chatListIndex:ChatListIndex?
     var peerId:PeerId? {
-        return renderedPeer?.peerId
+        switch mode {
+        case .savedMessages:
+            return context.peerId
+        default:
+            return renderedPeer?.peerId
+        }
     }
     
     let photo: AvatarNodeState
@@ -165,7 +170,7 @@ class ChatListRowItem: TableRowItem {
         switch self.mode {
         case .topic:
             return true
-        case .chat:
+        case .chat, .savedMessages:
             return false
         }
     }
@@ -250,6 +255,9 @@ class ChatListRowItem: TableRowItem {
     
     var canArchive: Bool {
         if groupId != .root {
+            return false
+        }
+        if mode.savedMessages {
             return false
         }
         if context.peerId == peerId {
@@ -361,6 +369,9 @@ class ChatListRowItem: TableRowItem {
     var isSavedMessage: Bool {
         return peer?.id == context.peerId
     }
+    var isAnonynousSavedMessage: Bool {
+        return peer?.id.isAnonymousSavedMessages == true
+    }
     var isRepliesChat: Bool {
         return peer?.id == repliesPeerId
     }
@@ -403,7 +414,7 @@ class ChatListRowItem: TableRowItem {
 
     let isArchiveItem: Bool
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, hideStatus: ItemHideStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, hideStatus: ItemHideStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false) {
         self.groupId = groupId
         self.peer = nil
         self.mode = .chat
@@ -414,6 +425,10 @@ class ChatListRowItem: TableRowItem {
         self.mentionsCount = nil
         self.reactionsCount = nil
         self.selectedForum = nil
+        self.story = nil
+        self.displayAsTopics = false
+        self.openStory = openStory
+        self.storyState = storyState
         self._stableId = stableId
         self.pinnedType = pinnedType
         self.splitState = context.layout
@@ -423,6 +438,7 @@ class ChatListRowItem: TableRowItem {
         self.associatedGroupId = .root
         self.appearMode = appearMode
         self.isMuted = false
+        self.isContact = false
         self.isOnline = nil
         self.getHideProgress = getHideProgress
         self.hideStatus = hideStatus
@@ -436,6 +452,15 @@ class ChatListRowItem: TableRowItem {
         self.filter = filter
         self.hasFailed = hasFailed
         self.isArchiveItem = true
+        
+        if let storyState = storyState, storyState.items.count > 0 {
+            let unseenCount: Int = storyState.items.reduce(0, {
+                $0 + ($1.unseenCount > 0 ? 1 : 0)
+            })
+            self.avatarStoryIndicator = .init(stats: .init(totalCount: storyState.items.count, unseenCount: unseenCount, hasUnseenCloseFriends: false), presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
                 
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: strings().chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
@@ -482,7 +507,6 @@ class ChatListRowItem: TableRowItem {
         
         photo = .ArchivedChats
         self.titleMode = .normal
-        
         super.init(initialSize)
         
         if case .hidden(true) = hideStatus {
@@ -501,7 +525,7 @@ class ChatListRowItem: TableRowItem {
 
         }
         
-        let messageText: NSAttributedString
+        var messageText: NSAttributedString
         if groupItems.count == 1 {
             messageText = chatListText(account: context.account, for: message, messagesCount: 1, folder: true)
         } else {
@@ -522,6 +546,11 @@ class ChatListRowItem: TableRowItem {
             }
             messageText = textString
         }
+        
+        if messageText.string.isEmpty, let storyState = storyState, storyState.items.count > 0 {
+            messageText = .initialize(string: strings().chatListArchiveStoryCountCountable(storyState.items.count), color: theme.chatList.grayTextColor, font: .normal(.text))
+        }
+        
         if let messageText = messageText.mutableCopy() as? NSMutableAttributedString, !messageText.string
             .isEmpty {
             self.messageLayout = .init(messageText, maximumNumberOfLines: 2)
@@ -541,11 +570,23 @@ class ChatListRowItem: TableRowItem {
     
     enum Mode {
         case chat
+        case savedMessages(Int64)
         case topic(Int64, MessageHistoryThreadData)
+        
+        var savedMessages: Bool {
+            switch self {
+            case .savedMessages:
+                return true
+            default:
+                return false
+            }
+        }
         
         var threadId: Int64? {
             switch self {
             case let .topic(threadId, _):
+                return threadId
+            case let .savedMessages(threadId):
                 return threadId
             default:
                 return nil
@@ -574,7 +615,18 @@ class ChatListRowItem: TableRowItem {
     let getHideProgress:(()->CGFloat?)?
     let selectedForum: PeerId?
     let autoremoveTimeout: Int32?
+    let isContact: Bool
     
+    
+    let story: EngineChatList.StoryStats?
+    let storyState: EngineStorySubscriptions?
+    let avatarStoryIndicator: AvatarStoryIndicatorComponent?
+    
+    let openStory:(StoryInitialIndex?, Bool, Bool)->Void
+
+
+    
+
     var isSelectedForum: Bool {
         if let selectedForum = selectedForum, isForum {
             if selectedForum == peerId {
@@ -584,7 +636,9 @@ class ChatListRowItem: TableRowItem {
         return false
     }
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil) {
+    let displayAsTopics: Bool
+    
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false) {
         
         
         
@@ -626,6 +680,8 @@ class ChatListRowItem: TableRowItem {
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.context = context
+        self.story = story
+        self.openStory = openStory
         self.messages = messages
         self.activities = activities
         self.pinnedType = pinnedType
@@ -636,6 +692,7 @@ class ChatListRowItem: TableRowItem {
         self.forumTopicData = forumTopicData
         self.forumTopicItems = forumTopicItems
         self.selectedForum = selectedForum
+        self.storyState = storyState
         self.hasDraft = draft != nil
         self.draft = draft
         self.peer = renderedPeer.chatMainPeer?._asPeer()
@@ -643,11 +700,13 @@ class ChatListRowItem: TableRowItem {
         self.hasFailed = hasFailed
         self.filter = filter
         self.isArchiveItem = false
+        self.displayAsTopics = displayAsTopics
         self.hideContent = hideContent
         self.appearMode = appearMode
         self.associatedGroupId = associatedGroupId
         self.highlightText = highlightText
         self._stableId = stableId
+        self.isContact = isContact
         if let peer = peer {
             self.isVerified = peer.isVerified
             self.isPremium = peer.isPremium && peer.id != context.peerId
@@ -664,12 +723,26 @@ class ChatListRowItem: TableRowItem {
         self.isMuted = isMuted
         self.readState = readState
         
+        if let story = story, peer?.id != context.peerId {
+            self.avatarStoryIndicator = .init(stats: story, presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
+        
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let isTopic: Bool
         switch mode {
-        case .chat:
-            let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+        case .chat, .savedMessages:
+            let text: String?
+            if case .savedMessages = mode, peer?.id == context.peerId {
+                text = strings().peerMyNotes
+            } else if peer?.id == context.peerId {
+                text = strings().peerSavedMessages
+            } else {
+                text = peer?.displayTitle
+            }
+            let _ = titleText.append(string: text, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
             isTopic = false
         case let .topic(_, data):
             let _ = titleText.append(string: data.info.title, color: theme.chatList.textColor, font: .medium(.title))
@@ -736,7 +809,7 @@ class ChatListRowItem: TableRowItem {
                     if let peer = info.author {
                         author = peer
                     } else if let signature = info.authorSignature {
-                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
+                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil)
                     }
                 } else {
                     author = message.author
@@ -819,7 +892,10 @@ class ChatListRowItem: TableRowItem {
                 textLeftCutout += contentImageTrailingSpace
             }
         }
-        
+        if let _ = messages.first(where: { $0.storyAttribute != nil }) {
+            textLeftCutout += 20
+        }
+
         if hasUnreadMentions {
             self.mentionsCount = 1
         } else {
@@ -837,11 +913,12 @@ class ChatListRowItem: TableRowItem {
         switch mode {
         case .topic:
             isEmpty = titleMode == .normal
-        case .chat:
+        case .chat, .savedMessages:
             isEmpty = false
         }
-        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !isEmpty {
-            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil, peer.isForum)
+        
+        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !peer.id.isAnonymousSavedMessages, !isEmpty {
+            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum)
         } else {
             self.photo = .Empty
         }
@@ -951,7 +1028,7 @@ class ChatListRowItem: TableRowItem {
         switch self.mode {
         case let .topic(_, threadData):
             return threadData.isClosed
-        case .chat:
+        case .chat, .savedMessages:
             return false
         }
     }
@@ -1075,7 +1152,7 @@ class ChatListRowItem: TableRowItem {
     
     var leftInset:CGFloat {
         switch mode {
-        case .chat:
+        case .chat, .savedMessages:
             return 50 + (10 * 2.0)
         case .topic:
             if titleMode == .forumInfo {
@@ -1125,8 +1202,46 @@ class ChatListRowItem: TableRowItem {
     }
     
     
+    func openPeerStory() {
+        if let peerId = peerId {
+            let table = self.table
+            self.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+                var view: NSView?
+                table?.enumerateItems(with: { item in
+                    if let item = item as? ChatListRowItem, item.peerId == peerId {
+                        view = item.takeStoryControl()
+                    }
+                    return view == nil
+                })
+                return view
+            }, setProgress: { [weak self] signal in
+                self?.setStoryProgress(signal)
+            }), true, false)
+        } else if let storyState = self.storyState, !storyState.items.isEmpty {
+            let table = self.table
+            self.openStory(.init(peerId: storyState.items[0].peer.id, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+                var view: NSView?
+                table?.enumerateItems(with: { item in
+                    if let item = item as? ChatListRowItem, item.peerId == nil {
+                        view = item.takeStoryControl()
+                    }
+                    return view == nil
+                })
+                return view
+            }, setProgress: { [weak self] signal in
+                self?.setStoryProgress(signal)
+            }), false, true)
+        }
+    }
+    private func takeStoryControl() -> NSView? {
+        (self.view as? ChatListRowView)?.takeStoryControl()
+    }
+    private func setStoryProgress(_ signal:Signal<Never, NoError>)  {
+        (self.view as? ChatListRowView)?.setStoryProgress(signal)
+    }
+    
     var markAsUnread: Bool {
-        return !isSecret && !isUnreadMarked && badgeNode == nil && mentionsCount == nil
+        return !isSecret && !isUnreadMarked && badgeNode == nil && mentionsCount == nil && !self.mode.savedMessages
     }
     
     func collapseOrExpandArchive() {
@@ -1151,6 +1266,8 @@ class ChatListRowItem: TableRowItem {
             case .chat:
                 _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: nil).start()
             case .topic:
+                break
+            case .savedMessages:
                 break
             }
         }
@@ -1220,6 +1337,16 @@ class ChatListRowItem: TableRowItem {
                     alert(for: context.window, info: strings().unknownError)
                 }
             })
+        case .savedMessages:
+            let signal = context.engine.peers.toggleForumChannelTopicPinned(id: context.peerId, threadId: peerId.toInt64()) |> deliverOnMainQueue
+            _ = signal.start(error: { error in
+                switch error {
+                case let .limitReached(count):
+                    alert(for: context.window, info: strings().chatListContextPinErrorTopicsCountable(count))
+                default:
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
         case .chat:
             let location: TogglePeerChatPinnedLocation
             let itemId: PinnedItemId = .peer(peerId)
@@ -1234,7 +1361,7 @@ class ChatListRowItem: TableRowItem {
                 switch result {
                 case .limitExceeded:
                     if context.isPremium {
-                        confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                        verifyAlert_button(for: context.window, information: strings().chatListContextPinErrorNew2, ok: strings().alertOK, cancel: "", option: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                             switch result {
                             case .thrid:
                                 context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
@@ -1261,8 +1388,8 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    func toggleArchive() {
-        ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
+    func toggleArchive(unarchive: Bool = false) {
+        ChatListRowItem.toggleArchive(context: context, associatedGroupId: unarchive ? .archive : associatedGroupId, peerId: peerId)
     }
     
     static func toggleArchive(context: AccountContext, associatedGroupId: EngineChatList.Group?, peerId: PeerId?) {
@@ -1274,6 +1401,7 @@ class ChatListRowItem: TableRowItem {
             default:
                 _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
             }
+            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 2.0).start()
         }
     }
     
@@ -1304,7 +1432,7 @@ class ChatListRowItem: TableRowItem {
         let mode = self.mode
         let isClosedTopic = self.isClosedTopic
         let isForum = self.isForum
-        
+        let entryId = self.entryId
        
         let deleteChat:()->Void = {
             if let peerId = peerId {
@@ -1319,9 +1447,9 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        let toggleArchive:()->Void = {
+        let toggleArchive:(Bool)->Void = { unarchive in
             if let peerId = peerId {
-                ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
+                ChatListRowItem.toggleArchive(context: context, associatedGroupId: unarchive ? .archive : associatedGroupId, peerId: peerId)
             }
         }
         
@@ -1389,8 +1517,10 @@ class ChatListRowItem: TableRowItem {
                 return nil
             }
         })
+        
+        
 
-        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData, soundsDataSignal) |> take(1) |> map { filters, cachedData, soundsData -> [ContextMenuItem] in
+        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData, soundsDataSignal, context.engine.messages.chatList(group: .archive, count: 1000) |> take(1), context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics())) |> take(1) |> map { filters, cachedData, soundsData, archived, displaySavedChatsAsTopics -> [ContextMenuItem] in
             
             var items:[ContextMenuItem] = []
             
@@ -1401,21 +1531,42 @@ class ChatListRowItem: TableRowItem {
                 canDeleteForAll = nil
             }
             
+            var zeroGroup: [ContextMenuItem] = []
             var firstGroup:[ContextMenuItem] = []
             var secondGroup:[ContextMenuItem] = []
             var thirdGroup:[ContextMenuItem] = []
 
             if let mainPeer = peer, let peerId = peerId, let peer = renderedPeer?.peers[peerId] {
+                
+                
+                if peerId == context.peerId, case .chat = mode {
+                    zeroGroup.append(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: {
+                        context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
+                    }, itemImage: !displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    zeroGroup.append(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: {
+                        context.engine.peers.updateSavedMessagesViewAsTopics(value: true)
+                    }, itemImage: displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
+                }
                                     
                 if !isAd && groupId == .root {
                     firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
                 }
                 
-                if groupId == .root, (canArchive || associatedGroupId != .root), filter == .allChats {
-                    secondGroup.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive, itemImage: associatedGroupId == .root ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
+                
+                
+                
+                if groupId == .root, (canArchive || associatedGroupId != .root) {
+                    
+                    let isArchived = archived.items.contains(where: { $0.renderedPeer.peerId == peerId })
+
+                    
+                    secondGroup.append(ContextMenuItem(associatedGroupId == .root && !isArchived ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: {
+                        toggleArchive(isArchived)
+                    }, itemImage: associatedGroupId == .root && !isArchived ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
                 }
                 
-                if context.peerId != peer.id, !isAd {
+                if context.peerId != peer.id, !isAd, !mode.savedMessages {
                     let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value)
                     
                     let sound: ContextMenuItem = ContextMenuItem(strings().chatListContextSound, handler: {
@@ -1552,7 +1703,7 @@ class ChatListRowItem: TableRowItem {
                     firstGroup.append(muteItem)
                 }
                 
-                if mainPeer is TelegramUser {
+                if mainPeer is TelegramUser, !mode.savedMessages {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer._asPeer(), mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_clear_history.value))
@@ -1577,12 +1728,12 @@ class ChatListRowItem: TableRowItem {
                         context.bindings.mainController().chatList.hidePromoItem(peerId)
                     }, itemImage: MenuAnimation.menu_archive.value))
                 }
-                if let peer = peer._asPeer() as? TelegramGroup, !isAd {
+                if let peer = peer._asPeer() as? TelegramGroup, !isAd, !mode.savedMessages {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_delete.value))
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                } else if let peer = peer._asPeer() as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
+                } else if let peer = peer._asPeer() as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo), !mode.savedMessages {
                     
                     if case .broadcast = peer.info {
                         thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveChannel, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_leave.value))
@@ -1602,7 +1753,12 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus {
+            if mode.savedMessages {
+                thirdGroup.append(ContextSeparatorItem())
+                thirdGroup.append(ContextMenuItem(strings().chatListContextDelete, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            }
+            
+            if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus, !mode.savedMessages {
                 switch hideStatus {
                 case .collapsed:
                     firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
@@ -1616,7 +1772,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             var submenu: [ContextMenuItem] = []
-            if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat {
+            if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat, !mode.savedMessages {
                 for item in filters.list {
                     inner: switch item {
                     case .allChats:
@@ -1669,22 +1825,18 @@ class ChatListRowItem: TableRowItem {
                 secondGroup.append(item)
             }
             
-            if !firstGroup.isEmpty {
-                items.append(contentsOf: firstGroup)
-            }
-            if !secondGroup.isEmpty {
-                if !firstGroup.isEmpty {
-                    items.append(ContextSeparatorItem())
-                }
-                items.append(contentsOf: secondGroup)
-            }
-            if !thirdGroup.isEmpty {
-                if !firstGroup.isEmpty || !secondGroup.isEmpty {
-                    items.append(ContextSeparatorItem())
-                }
-                items.append(contentsOf: thirdGroup)
-            }
+            let blocks:[[ContextMenuItem]] = [zeroGroup, firstGroup,
+                                              secondGroup,
+                                              thirdGroup].filter { !$0.isEmpty }
             
+            for (i, block) in blocks.enumerated() {
+                if i == 0 {
+                    items.append(contentsOf: block)
+                } else {
+                    items.append(ContextSeparatorItem())
+                    items.append(contentsOf: block)
+                }
+            }
             return items
         }
     }
@@ -1698,6 +1850,13 @@ class ChatListRowItem: TableRowItem {
     
     var isActiveSelected: Bool {
         return isSelected && context.layout != .single && !(isForum && !isTopic)
+    }
+    
+    var isReplyToStory: Bool {
+        if self.messages.first(where: { $0.storyAttribute != nil }) != nil {
+            return true
+        }
+        return false
     }
     
     var ctxChatNameLayout:TextViewLayout? {
@@ -1782,7 +1941,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         switch mode {
-        case .chat:
+        case .chat, .savedMessages:
             return 70
         case .topic:
             return 53 + (displayLayout?.layoutSize.height ?? 17)

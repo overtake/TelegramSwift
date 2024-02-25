@@ -30,9 +30,7 @@ class GeneralInteractedRowView: GeneralRowView {
         
         
         if let item = item as? GeneralInteractedRowItem {
-            
-            nextView.image = theme.icons.generalNext
-            
+                        
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
                     descriptionView = TextView()
@@ -65,15 +63,20 @@ class GeneralInteractedRowView: GeneralRowView {
                 switchView = nil
             }
             if case let .selectableLeft(value) = item.type {
+                
+                let unselected: CGImage = item.customTheme?.unselectedImage ?? theme.icons.chatToggleUnselected
+                let selected: CGImage = item.customTheme?.selectedImage ?? theme.icons.chatToggleSelected
+
                 let current: SelectingControl
                 if let view = self.selectLeftControl {
                     current = view
                 } else {
-                    current = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    
+                    current = SelectingControl(unselectedImage: unselected, selectedImage: selected)
                     containerView.addSubview(current)
                     self.selectLeftControl = current
                 }
-                current.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected, selected: value, animated: animated)
+                current.update(unselectedImage: unselected, selectedImage: selected, selected: value, animated: animated)
                 
                 current.layer?.opacity = item.enabled ? 1 : 0.7
             } else if let view = self.selectLeftControl {
@@ -109,7 +112,10 @@ class GeneralInteractedRowView: GeneralRowView {
                     textView?.isEventLess = true
                     containerView.addSubview(textView!)
                 }
-                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+                let grayText = item.customTheme?.grayTextColor ?? theme.colors.grayText
+                let underselect = item.customTheme?.underSelectedColor ?? theme.colors.underSelectedColor
+
+                let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? underselect : grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
                 textView?.set(layout: layout)
                 var nextVisible: Bool = true
@@ -117,6 +123,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     nextVisible = !items.isEmpty && !value.isEmpty
                 } else if case .imageContext = item.type {
                     nextVisible = true
+                } else if case .context = item.type {
+                    nextVisible = false
                 }
                 nextView.isHidden = !nextVisible
             default:
@@ -142,7 +150,9 @@ class GeneralInteractedRowView: GeneralRowView {
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
-                nextView.image = #imageLiteral(resourceName: "Icon_Check").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
+                
+                nextView.image = generateCheckSelected(foregroundColor: item.customTheme?.accentColor ?? theme.colors.accent, backgroundColor: item.customTheme?.underSelectedColor ?? theme.colors.underSelectedColor)
+                
                 nextView.sizeToFit()
             }
             if case let .imageContext(image, _) = item.type {
@@ -169,7 +179,9 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             if needNextImage {
                 nextView.isHidden = false
-                nextView.image = item.isSelected ? nil : theme.icons.generalNext
+                                
+                let color = (item.customTheme?.grayTextColor ?? theme.colors.grayText).withAlphaComponent(0.5)
+                nextView.image = item.isSelected ? nil : NSImage(named: "Icon_GeneralNext")?.precomposed(color)
                 nextView.sizeToFit()
             }
             switch item.viewType {
@@ -239,7 +251,7 @@ class GeneralInteractedRowView: GeneralRowView {
         return theme.colors.grayHighlight
     }
     
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         guard let item = item as? GeneralInteractedRowItem else {
             return theme.colors.border
         }
@@ -326,11 +338,17 @@ class GeneralInteractedRowView: GeneralRowView {
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
                     var f = focus(thumb.thumb.backingSize)
-                    if item.descLayout != nil {
-                        f.origin.y = insets.top
+                    
+                    let icon = thumb.thumb
+                    var x: CGFloat = insets.left + (thumb.thumbInset ?? 0)
+                    if case .selectableLeft = item.type {
+                        x += 35
+                    } else {
+                        if item.descLayout != nil {
+                           // f.origin.y = insets.top
+                        }
                     }
-                    let icon = thumb.thumb 
-                    ctx.draw(icon, in: NSMakeRect(insets.left + (thumb.thumbInset ?? 0), f.minY, f.width, f.height))
+                    ctx.draw(icon, in: NSMakeRect(x, f.minY, f.width, f.height))
                 }
                 
                 if position.border, !isSelect && !self.isResorting  {
@@ -341,10 +359,20 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
                     var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
                     textRect.origin.x = insets.left + textXAdditional
-                    textRect.origin.y = insets.top - 1
+                    if item.descLayout == nil {
+                        textRect.origin.y = insets.top - 1
+                    } else {
+                        textRect.origin.y = 5
+                    }
                     
                     nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    
+                    if let afterNameImage = item.afterNameImage {
+                        ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.backingSize.width, height: afterNameImage.backingSize.height))
+                    }
                 }
+                
+               
                 
                 if case let .colorSelector(stateback) = item.type {
                     ctx.setFillColor(stateback.cgColor)
@@ -359,6 +387,7 @@ class GeneralInteractedRowView: GeneralRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        containerView.layerContentsRedrawPolicy = .duringViewResize
         
         nextView.sizeToFit()
         containerView.addSubview(nextView)
@@ -521,7 +550,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                 
                 if let descriptionView = self.descriptionView {
-                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
+                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - 5)
                 }
                 var nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
                 
@@ -564,8 +593,6 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
             }
         }
-        
-        
     }
     
 }

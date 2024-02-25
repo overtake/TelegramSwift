@@ -319,7 +319,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     
     private let packNameView = TextView()
     private var clearRecentButton: ImageButton?
-    private var addButton:TitleButton?
+    private var addButton:TextButton?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -549,7 +549,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         if let reference = item.packReference, item.packInfo.featured {
             if !item.packInfo.installed {
-                self.addButton = TitleButton()
+                self.addButton = TextButton()
                 self.addButton!.set(background: theme.colors.accentSelect, for: .Normal)
                 self.addButton!.set(background: theme.colors.accentSelect.withAlphaComponent(0.8), for: .Highlight)
                 self.addButton!.set(font: .medium(.text), for: .Normal)
@@ -563,7 +563,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                     item?.arguments.addPack(reference)
                 }, for: .Click)
             } else {
-                self.addButton = TitleButton()
+                self.addButton = TextButton()
                 self.addButton!.set(background: theme.colors.grayForeground, for: .Normal)
                 self.addButton!.set(background: theme.colors.grayForeground.withAlphaComponent(0.8), for: .Highlight)
                 self.addButton!.set(font: .medium(.text), for: .Normal)

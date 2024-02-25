@@ -1,0 +1,447 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		270D04622AEA755700EFF1E1 /* CodeSyntax.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D04612AEA755700EFF1E1 /* CodeSyntax.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270D04982AEA7CA300EFF1E1 /* Syntaxer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D04962AEA7CA300EFF1E1 /* Syntaxer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270D04AF2AEA8ABB00EFF1E1 /* SyntaxHighlighter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 270D04A02AEA8ABB00EFF1E1 /* SyntaxHighlighter.cpp */; };
+		270D04B12AEA8ABB00EFF1E1 /* LanguageTree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 270D04A22AEA8ABB00EFF1E1 /* LanguageTree.cpp */; };
+		270D04B22AEA8ABB00EFF1E1 /* TokenList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 270D04A32AEA8ABB00EFF1E1 /* TokenList.cpp */; };
+		270D04B42AEA8ABB00EFF1E1 /* Highlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 270D04A52AEA8ABB00EFF1E1 /* Highlight.cpp */; };
+		270D04BC2AEA8CFE00EFF1E1 /* Highlight.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D049F2AEA8ABB00EFF1E1 /* Highlight.h */; };
+		270D04BD2AEA8D0100EFF1E1 /* LanguageTree.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D049E2AEA8ABB00EFF1E1 /* LanguageTree.h */; };
+		270D04BE2AEA8D0400EFF1E1 /* TokenList.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D04A12AEA8ABB00EFF1E1 /* TokenList.h */; };
+		270D04BF2AEA8D0600EFF1E1 /* SyntaxHighlighter.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D04A42AEA8ABB00EFF1E1 /* SyntaxHighlighter.h */; };
+		270D04C32AEA8E9200EFF1E1 /* Syntaxer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270D04C22AEA8E9200EFF1E1 /* Syntaxer.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		270D045E2AEA755700EFF1E1 /* CodeSyntax.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CodeSyntax.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		270D04612AEA755700EFF1E1 /* CodeSyntax.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeSyntax.h; sourceTree = "<group>"; };
+		270D04892AEA771D00EFF1E1 /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
+		270D04962AEA7CA300EFF1E1 /* Syntaxer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Syntaxer.h; sourceTree = "<group>"; };
+		270D049B2AEA8ABB00EFF1E1 /* isEqual.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = isEqual.js; sourceTree = "<group>"; };
+		270D049C2AEA8ABB00EFF1E1 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		270D049E2AEA8ABB00EFF1E1 /* LanguageTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LanguageTree.h; sourceTree = "<group>"; };
+		270D049F2AEA8ABB00EFF1E1 /* Highlight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Highlight.h; sourceTree = "<group>"; };
+		270D04A02AEA8ABB00EFF1E1 /* SyntaxHighlighter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SyntaxHighlighter.cpp; sourceTree = "<group>"; };
+		270D04A12AEA8ABB00EFF1E1 /* TokenList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TokenList.h; sourceTree = "<group>"; };
+		270D04A22AEA8ABB00EFF1E1 /* LanguageTree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LanguageTree.cpp; sourceTree = "<group>"; };
+		270D04A32AEA8ABB00EFF1E1 /* TokenList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TokenList.cpp; sourceTree = "<group>"; };
+		270D04A42AEA8ABB00EFF1E1 /* SyntaxHighlighter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyntaxHighlighter.h; sourceTree = "<group>"; };
+		270D04A52AEA8ABB00EFF1E1 /* Highlight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Highlight.cpp; sourceTree = "<group>"; };
+		270D04A62AEA8ABB00EFF1E1 /* grammars.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = grammars.dat; sourceTree = "<group>"; };
+		270D04A72AEA8ABB00EFF1E1 /* generate.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = generate.js; sourceTree = "<group>"; };
+		270D04A82AEA8ABB00EFF1E1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		270D04A92AEA8ABB00EFF1E1 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		270D04AA2AEA8ABB00EFF1E1 /* .gitattributes */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitattributes; sourceTree = "<group>"; };
+		270D04BB2AEA8BE000EFF1E1 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		270D04C02AEA8E0E00EFF1E1 /* libc++abi.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++abi.tbd"; path = "usr/lib/libc++abi.tbd"; sourceTree = SDKROOT; };
+		270D04C22AEA8E9200EFF1E1 /* Syntaxer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Syntaxer.mm; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		270D045B2AEA755700EFF1E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		270D04542AEA755700EFF1E1 = {
+			isa = PBXGroup;
+			children = (
+				270D04602AEA755700EFF1E1 /* CodeSyntax */,
+				270D045F2AEA755700EFF1E1 /* Products */,
+				270D04882AEA771D00EFF1E1 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		270D045F2AEA755700EFF1E1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				270D045E2AEA755700EFF1E1 /* CodeSyntax.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		270D04602AEA755700EFF1E1 /* CodeSyntax */ = {
+			isa = PBXGroup;
+			children = (
+				270D049A2AEA8ABB00EFF1E1 /* libprisma */,
+				270D04612AEA755700EFF1E1 /* CodeSyntax.h */,
+				270D04C22AEA8E9200EFF1E1 /* Syntaxer.mm */,
+				270D04962AEA7CA300EFF1E1 /* Syntaxer.h */,
+			);
+			path = CodeSyntax;
+			sourceTree = "<group>";
+		};
+		270D04882AEA771D00EFF1E1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				270D04C02AEA8E0E00EFF1E1 /* libc++abi.tbd */,
+				270D04BB2AEA8BE000EFF1E1 /* libc++.tbd */,
+				270D04892AEA771D00EFF1E1 /* libc++.1.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		270D049A2AEA8ABB00EFF1E1 /* libprisma */ = {
+			isa = PBXGroup;
+			children = (
+				270D049B2AEA8ABB00EFF1E1 /* isEqual.js */,
+				270D049C2AEA8ABB00EFF1E1 /* LICENSE */,
+				270D049D2AEA8ABB00EFF1E1 /* libprisma */,
+				270D04A72AEA8ABB00EFF1E1 /* generate.js */,
+				270D04A82AEA8ABB00EFF1E1 /* README.md */,
+				270D04A92AEA8ABB00EFF1E1 /* .gitignore */,
+				270D04AA2AEA8ABB00EFF1E1 /* .gitattributes */,
+			);
+			name = libprisma;
+			path = ../../../libprisma;
+			sourceTree = "<group>";
+		};
+		270D049D2AEA8ABB00EFF1E1 /* libprisma */ = {
+			isa = PBXGroup;
+			children = (
+				270D049E2AEA8ABB00EFF1E1 /* LanguageTree.h */,
+				270D049F2AEA8ABB00EFF1E1 /* Highlight.h */,
+				270D04A02AEA8ABB00EFF1E1 /* SyntaxHighlighter.cpp */,
+				270D04A12AEA8ABB00EFF1E1 /* TokenList.h */,
+				270D04A22AEA8ABB00EFF1E1 /* LanguageTree.cpp */,
+				270D04A32AEA8ABB00EFF1E1 /* TokenList.cpp */,
+				270D04A42AEA8ABB00EFF1E1 /* SyntaxHighlighter.h */,
+				270D04A52AEA8ABB00EFF1E1 /* Highlight.cpp */,
+				270D04A62AEA8ABB00EFF1E1 /* grammars.dat */,
+			);
+			path = libprisma;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		270D04592AEA755700EFF1E1 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270D04622AEA755700EFF1E1 /* CodeSyntax.h in Headers */,
+				270D04982AEA7CA300EFF1E1 /* Syntaxer.h in Headers */,
+				270D04BC2AEA8CFE00EFF1E1 /* Highlight.h in Headers */,
+				270D04BD2AEA8D0100EFF1E1 /* LanguageTree.h in Headers */,
+				270D04BF2AEA8D0600EFF1E1 /* SyntaxHighlighter.h in Headers */,
+				270D04BE2AEA8D0400EFF1E1 /* TokenList.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		270D045D2AEA755700EFF1E1 /* CodeSyntax */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 270D04652AEA755700EFF1E1 /* Build configuration list for PBXNativeTarget "CodeSyntax" */;
+			buildPhases = (
+				270D04592AEA755700EFF1E1 /* Headers */,
+				270D045A2AEA755700EFF1E1 /* Sources */,
+				270D045B2AEA755700EFF1E1 /* Frameworks */,
+				270D045C2AEA755700EFF1E1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CodeSyntax;
+			productName = CodeSyntax;
+			productReference = 270D045E2AEA755700EFF1E1 /* CodeSyntax.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		270D04552AEA755700EFF1E1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					270D045D2AEA755700EFF1E1 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 270D04582AEA755700EFF1E1 /* Build configuration list for PBXProject "CodeSyntax" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 270D04542AEA755700EFF1E1;
+			productRefGroup = 270D045F2AEA755700EFF1E1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				270D045D2AEA755700EFF1E1 /* CodeSyntax */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		270D045C2AEA755700EFF1E1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		270D045A2AEA755700EFF1E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270D04AF2AEA8ABB00EFF1E1 /* SyntaxHighlighter.cpp in Sources */,
+				270D04C32AEA8E9200EFF1E1 /* Syntaxer.mm in Sources */,
+				270D04B42AEA8ABB00EFF1E1 /* Highlight.cpp in Sources */,
+				270D04B12AEA8ABB00EFF1E1 /* LanguageTree.cpp in Sources */,
+				270D04B22AEA8ABB00EFF1E1 /* TokenList.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		270D04632AEA755700EFF1E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		270D04642AEA755700EFF1E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		270D04662AEA755700EFF1E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../../regex/include/;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.CodeSyntax;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		270D04672AEA755700EFF1E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../../regex/include/;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.CodeSyntax;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		270D04582AEA755700EFF1E1 /* Build configuration list for PBXProject "CodeSyntax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				270D04632AEA755700EFF1E1 /* Debug */,
+				270D04642AEA755700EFF1E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		270D04652AEA755700EFF1E1 /* Build configuration list for PBXNativeTarget "CodeSyntax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				270D04662AEA755700EFF1E1 /* Debug */,
+				270D04672AEA755700EFF1E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 270D04552AEA755700EFF1E1 /* Project object */;
+}

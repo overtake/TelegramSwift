@@ -19,7 +19,7 @@ import SwiftSignalKit
 private class PasscodeLockView : Control, NSTextFieldDelegate {
     fileprivate let nameView:TextView = TextView()
     fileprivate let input:NSSecureTextField
-    private let nextButton:TitleButton = TitleButton()
+    private let nextButton:TextButton = TextButton()
     
     fileprivate var cancel:ImageButton = ImageButton()
     

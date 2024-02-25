@@ -62,15 +62,39 @@ struct ForumUI {
         if let threadId = threadId {
             signal = openTopic(threadId, peerId: peerId, context: context) |> map { _ in context.layout == .dual }
         } else {
-            signal = .single(true)
+            let viewAsMessages: Signal<Bool?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+            |> map { $0 as? CachedChannelData }
+            |> map { $0?.viewForumAsMessages.knownValue }
+            |> deliverOnMainQueue
+            |> take(1)
+            
+            signal = viewAsMessages |> mapToSignal { value in
+                if let value = value {
+                    if !value {
+                        return .single(true)
+                    } else {
+                        let ready = Promise<Bool>()
+                        
+                        let controller = ChatController(context: context, chatLocation: .peer(peerId))
+
+                        context.bindings.rootNavigation().push(controller)
+                        
+                        ready.set(controller.ready.get() |> map { context.layout == .single ? false : $0 })
+                        
+                        return ready.get() |> take(1)
+                    }
+                } else {
+                    return .single(true)
+                }
+            }
         }
         
         _ = signal.start(next: { value in
             if value {
+                var parentIsArchive = false
                 let navigation = context.bindings.mainController().effectiveNavigation
-                var isFull: Bool = false
                 if let controller = navigation.controller as? ChatListController {
-                    if case .forum(peerId, _) = controller.mode {
+                    if controller.mode.isForumLike {
                         if context.layout == .single {
                             context.bindings.rootNavigation().gotoEmpty()
                         } else {
@@ -78,14 +102,13 @@ struct ForumUI {
                                 controller.view.shake(beep: false)
                             }
                         }
-                        
                         return
                     }
-                    if case .folder = controller.mode {
-                        isFull = true
-                    }
+                    parentIsArchive = controller.mode.groupId == .archive
                 }
-                navigation.push(ChatListController(context, modal: false, mode: .forum(peerId, isFull)))
+                
+                let mode: PeerListMode = peerId == context.peerId ? .savedMessagesChats : .forum(peerId, false, parentIsArchive)
+                navigation.push(ChatListController(context, modal: false, mode: mode))
                 if context.layout == .single {
                     context.bindings.rootNavigation().gotoEmpty()
                 }
@@ -99,7 +122,7 @@ struct ForumUI {
         
         if let controller = controller, controller.chatLocation.peerId == peerId, controller.chatLocation.threadId == threadId {
             if let messageId = messageId {
-                controller.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+                controller.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
             } else {
                 controller.scrollup()
             }
@@ -114,17 +137,20 @@ struct ForumUI {
         let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)
         |> deliverOnMainQueue
         
+        _ = context.engine.peers.updateForumViewAsMessages(peerId: peerId, value: false).start()
+        
         let ready: Promise<Bool> = Promise()
         
         _ = signal.start(next: { result in
             
             let updatedMode: ReplyThreadMode = .topic(origin: threadMessageId)
             
+            
             let controller: ChatController
             if addition {
-                controller = ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
+                controller = ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: messageId), initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
             } else {
-                controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
+                controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: messageId), initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
             }
             
             context.bindings.rootNavigation().push(controller, style: animated ? .push : nil)
@@ -136,6 +162,42 @@ struct ForumUI {
         
         return ready.get()
     }
+    
+    static func openSavedMessages(_ threadId: Int64, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) -> Signal<Bool, NoError> {
+        
+        let controller = context.bindings.rootNavigation().controller as? ChatController
+        
+        if let controller = controller, controller.chatLocation.peerId == context.peerId, controller.chatLocation.threadId == threadId {
+            if let messageId = messageId {
+                controller.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
+            } else {
+                controller.scrollup()
+            }
+            if let initialAction = initialAction {
+                controller.chatInteraction.invokeInitialAction(animated: true,action: initialAction)
+            }
+            return controller.ready.get()
+        }
+        
+        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
+        let threadMessageId = makeThreadIdMessageId(peerId: context.peerId, threadId: threadId)
+
+        
+        let newController: ChatController
+        
+                
+        if addition {
+            newController = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
+        } else {
+            newController = ChatController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
+        }
+        
+        context.bindings.rootNavigation().push(newController, style: animated ? .push : nil)
+        
+        
+        return newController.ready.get()
+    }
+    
     static func addMembers(_ peerId: PeerId, context: AccountContext) {
         
     }
@@ -146,11 +208,11 @@ struct ForumUI {
                 return
             }
         }
-        navigation.push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
     }
     static func openTopicInfo(_ threadId: Int64, peerId: PeerId, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()
-        navigation.push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
     }
     static func createTopic(_ peerId: PeerId, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()

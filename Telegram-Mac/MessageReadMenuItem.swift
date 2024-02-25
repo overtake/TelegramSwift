@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TGUIKit
 import Postbox
 import AppKit
-
+import TelegramMedia
 
 final class MessageReadMenuRowItem : AppMenuRowItem {
     
@@ -36,8 +36,8 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             }
         }
         
-        func isLoading(_ message: Message) -> Bool {
-            return self.text(message).isEmpty
+        func isLoading(_ message: Message, context: AccountContext) -> Bool {
+            return self.text(message, context: context).isEmpty
         }
         
         var emojiReferences: [StickerPackReference] {
@@ -55,6 +55,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 return []
             case let .stats(read, _, reactions, _):
                 var photos:[Peer] = []
+                if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                    return []
+                }
                 if let reactions = reactions {
                     photos = Array(reactions.items.map { $0.peer._asPeer() }.prefix(3))
                 }
@@ -95,9 +98,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         }
  
         
-        func text(_ message: Message) -> String {
+        func text(_ message: Message, context: AccountContext) -> String {
             switch self {
-            case let .stats(read, _, reactions, _):
+            case let .stats(read, readTimestamps, reactions, _):
                 if let reactions = reactions, !reactions.items.isEmpty {
                     if let read = read, read.count > reactions.totalCount {
                         return strings().chatContextReacted("\(reactions.totalCount)", "\(read.count)")
@@ -106,8 +109,15 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                     }
                 } else if let peers = read {
                     if peers.isEmpty {
-                        return strings().chatMessageReadStatsEmptyViews
+                        if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                            return strings().chatMessageReadStatsShowDate
+                        } else {
+                            return strings().chatMessageReadStatsEmptyViews
+                        }
                     } else if peers.count == 1 {
+                        if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let readTimestamp = readTimestamps[peers[0].id] {
+                            return stringForRelativeTimestamp(relativeTimestamp: readTimestamp, relativeTo: context.timestamp)
+                        }
                         return peers[0].compactDisplayTitle.prefixWithDots(20)
                     } else {
                         if let media = message.anyMedia as? TelegramMediaFile {
@@ -123,7 +133,11 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                         }
                     }
                 } else {
-                    return strings().chatMessageReadStatsEmptyViews
+                    if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                        return strings().chatMessageReadStatsShowDate
+                    } else {
+                        return strings().chatMessageReadStatsEmptyViews
+                    }
                 }
             case .loading:
                 if let attr = message.reactionsAttribute {
@@ -145,6 +159,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     override var textMaxWidth: CGFloat {
         let value = super.textMaxWidth
         if self.state.isEmpty {
+            return value
+        }
+        if state.photos(message).isEmpty {
             return value
         }
         return value - 60
@@ -174,9 +191,13 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         self.load()
     }
     
+    var isTags: Bool {
+        return self.chatInteraction.peerId == context.peerId
+    }
+    
     func load() {
         
-        let customIds:[Int64] = message.effectiveReactions?.compactMap { value in
+        let customIds:[Int64] = message.effectiveReactions(isTags: isTags)?.compactMap { value in
             switch value.value {
             case let .custom(fileId):
                 return fileId
@@ -242,7 +263,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
             }, peer: peer.0, context: context, reaction: reaction, readTimestamp: peer.2)
             let signal:Signal<(CGImage?, Bool), NoError>
-            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.nameColor, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
                 if let image = image {
                     item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
@@ -258,7 +279,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let hasReactions = state.peers.contains(where: { $0.1 != nil })
         let hasRead = state.peers.contains(where: { $0.2 != nil })
 
-        if items.count > 1 || hasReactions || hasRead {
+        if items.count > 1 || hasReactions || hasRead, message.id.peerId.namespace != Namespaces.Peer.CloudUser {
             
             let references:[StickerPackReference] = state.emojiReferences.uniqueElements
             
@@ -311,7 +332,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             
         }
         
-        self.item.title = state.text(self.message)
+        self.item.title = state.text(self.message, context: context)
+        
+        
         
     }
     
@@ -325,7 +348,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let viewSize = NSMakeSize(15 * CGFloat(3) - (CGFloat(3) - 1) * 1, 15)
         size.width += viewSize.width + 6
 
-        size.width += 80
+        size.width += 100
         
         return size
     }
@@ -352,7 +375,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
+                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
                 })
                 
                 
@@ -442,7 +465,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
         guard let item = item as? MessageReadMenuRowItem else {
             return
         }
-        if item.state.isLoading(item.message) {
+        if item.state.isLoading(item.message, context: item.context) {
             if loadingView == nil {
                 loadingView = View(frame: NSMakeRect(0, 0, 20, 6))
                 loadingView?.layer?.cornerRadius = 3
@@ -460,9 +483,9 @@ private final class MessageReadMenuItemView : AppMenuRowView {
         let photos = item.state.photos(item.message)
         
         let updated = photos.map { $0.id }
-        if updated != self.photos || self.isLoading != item.state.isLoading(item.message) {
+        if updated != self.photos || self.isLoading != item.state.isLoading(item.message, context: item.context), item.message.id.peerId.namespace != Namespaces.Peer.CloudUser {
             self.photos = updated
-            self.isLoading = item.state.isLoading(item.message)
+            self.isLoading = item.state.isLoading(item.message, context: item.context)
             if self.isLoading {
                 avatars = .init(context: item.context, message: item.message, peers: nil, size: NSMakeSize(18, 18))
             } else {
@@ -504,6 +527,16 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             let contentSize = avatars?.frame.width ?? 0
             loadingView.setFrameSize(NSMakeSize(self.rightX - self.textX - 10 - contentSize, loadingView.frame.height))
             loadingView.centerY(x: self.textX)
+        }
+    }
+    
+    override func invokeClick() {
+        guard let item = self.item as? MessageReadMenuRowItem else {
+            return
+        }
+        if item.state.isEmpty, !item.state.isLoading(item.message, context: item.context), item.message.id.peerId.namespace == Namespaces.Peer.CloudUser, let peer = item.message.peers[item.message.id.peerId] {
+            showModal(with: PremiumShowStatusController(context: item.context, peer: .init(peer), source: .read), for: item.context.window)
+            item.interaction?.close()
         }
     }
 }
@@ -598,6 +631,14 @@ final class MessageReadMenuItem : ContextMenuItem {
             if group.participantCount > maxParticipantCount {
                 return false
             }
+        case _ as TelegramUser:
+            if let cachedData = chatInteraction.presentation.cachedData as? CachedUserData {
+                if cachedData.flags.contains(.readDatesPrivate) {
+                    return false
+                }
+            } else {
+                return false
+            }
         default:
             return false
         }
@@ -613,10 +654,10 @@ final class MessageReadMenuItem : ContextMenuItem {
 }
 
 extension ContextMenuItem {
-    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto) {
+    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto, selfAsSaved: Bool = true) {
         let signal:Signal<(CGImage?, Bool), NoError>
         
-        if peer.id == account.peerId {
+        if peer.id == account.peerId, selfAsSaved {
             let icon = theme.icons.searchSaved
             signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
         } else {
@@ -630,6 +671,36 @@ extension ContextMenuItem {
     }
 }
 
+
+
+extension ContextMenuItem {
+    static func checkPremiumRequired(_ item: ContextMenuItem, context: AccountContext, peer: Peer) {
+        if let peer = peer as? TelegramUser {
+            if peer.maybePremiumRequired, !context.isPremium {
+                let premRequired = getCachedDataView(peerId: peer.id, postbox: context.account.postbox)
+                |> map { $0 as? CachedUserData }
+                |> filter { $0 != nil }
+                |> take(1)
+                |> map { $0!.flags.contains(.premiumRequired) }
+                |> deliverOnMainQueue
+                
+                _ = premRequired.startStandalone(next: { [weak item] value in
+                    //item?.isEnabled = !value
+                    let image = NSImage(named: "menu_lock")!
+                    item?.state = .on
+                    item?.stateOnImage = image
+                    item?.handler = {
+                        showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                        })
+                    }
+                    item?.redraw?()
+                    
+                })
+            }
+        }
+    }
+}
 
 final class ReactionPeerMenu : ContextMenuItem {
     enum Source : Equatable {
@@ -680,6 +751,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                                 }
                             })
                             ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
+                            ContextMenuItem.checkPremiumRequired(menuItem, context: context, peer: peer)
                             menu.addItem(menuItem)
                         }
                        
@@ -688,6 +760,8 @@ final class ReactionPeerMenu : ContextMenuItem {
                 self?.submenu = menu
             }))
         }
+        
+        ContextMenuItem.checkPremiumRequired(self, context: context, peer: peer)
     }
     
     deinit {
@@ -774,7 +848,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
 }
 
 
-private func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
     var t: time_t = time_t(relativeTimestamp)
     var timeinfo: tm = tm()
     localtime_r(&t, &timeinfo)
@@ -791,7 +865,7 @@ private func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo tim
     if dayDifference == 0 {
         return strings().timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
     } else {
-        return DateSelectorUtil.mediaMediumDate.string(from: Date.init(timeIntervalSince1970: TimeInterval(relativeTimestamp)))
+        return DateSelectorUtil.chatFullDateFormatter.string(from: Date.init(timeIntervalSince1970: TimeInterval(relativeTimestamp)))
     }
 }
 
@@ -945,6 +1019,8 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
         }
+        
+        statusControl?.alphaValue = item.item.isEnabled ? 1 : 0.6
         
         self.imageView.isHidden = item.reaction == nil
         

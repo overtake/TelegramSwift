@@ -24,6 +24,10 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
         self.updateWebpage()
     }
     
+    override var modelType: ChatAccessoryModel.ModelType {
+        return .classic
+    }
+    
     deinit {
         self.webpageDisposable.dispose()
     }

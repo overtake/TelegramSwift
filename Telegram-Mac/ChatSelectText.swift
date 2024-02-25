@@ -61,7 +61,7 @@ class SelectManager : NSResponder {
     
     var selectedText: NSAttributedString {
         let string:NSMutableAttributedString = NSMutableAttributedString()
-        _ = ranges.with { ranges in
+        ranges.with { ranges in
             for i in stride(from: ranges.count - 1, to: -1, by: -1) {
                 let container = ranges[i].2
                 if let header = container.header, ranges.count > 1 {
@@ -243,6 +243,7 @@ class ChatSelectText : NSObject {
     private var lastPressureEventStage = 0
     private var inPressedState = false
     private var locationInWindow: NSPoint? = nil
+    private var reversible: Bool = false
     
     private var lastSelectdMessageId: MessageId?
     
@@ -256,6 +257,8 @@ class ChatSelectText : NSObject {
     }
     
     func initializeHandlers(for window:Window, chatInteraction:ChatInteraction) {
+        
+        self.reversible = chatInteraction.mode.isSavedMode
         
         selectManager.chatInteraction = chatInteraction
         
@@ -399,19 +402,8 @@ class ChatSelectText : NSObject {
             
             guard let `self` = self else {return .rejected}
             
-//            if let locationInWindow = self.locationInWindow {
-//                let old = (ceil(locationInWindow.x), ceil(locationInWindow.y))
-//                let new = (ceil(event.locationInWindow.x), round(event.locationInWindow.y))
-//                if abs(old.0 - new.0) <= 1 && abs(old.1 - new.1) <= 1 {
-//                    return .rejected
-//                }
-//            }
-            
             self.endInnerLocation = self.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             
-//            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {
-//                 self?.started = overView.userInteractionEnabled == true
-//            }
             if self.started {
                 self.started = !hasPopover(window) && self.beginInnerLocation != NSZeroPoint
             }
@@ -537,32 +529,51 @@ class ChatSelectText : NSObject {
                             }
                             
                            
-                            
+                            let fillEnd = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude)
                             
                             if (i > startIndex && i < endIndex) {
                                 startPoint = NSMakePoint(0, 0);
-                                endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                endPoint = fillEnd;
                             } else if(i == startIndex) {
                                 if(!isMultiple) {
                                     startPoint = beginViewLocation;
                                     endPoint = endViewLocation;
                                 } else {
                                     if(!reversed) {
-                                        startPoint = beginViewLocation
-                                        endPoint = NSMakePoint(0, 0);
+                                        if reversible {
+                                            startPoint = beginViewLocation
+                                            endPoint = fillEnd;
+                                        } else {
+                                            startPoint = beginViewLocation
+                                            endPoint = NSMakePoint(0, 0);
+                                        }
                                     } else {
-                                        startPoint = NSMakePoint(0, 0);
-                                        endPoint = endViewLocation;
+                                        if reversible {
+                                            startPoint = fillEnd;
+                                            endPoint = endViewLocation;
+                                        } else {
+                                            startPoint = NSMakePoint(0, 0);
+                                            endPoint = endViewLocation;
+                                        }
                                     }
                                 }
                                 
                             } else if(i == endIndex) {
                                 if(!reversed) {
-                                    startPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
-                                    endPoint = endViewLocation;
+                                    if reversible {
+                                        startPoint = .zero;
+                                        endPoint = endViewLocation;
+                                    } else {
+                                        startPoint = fillEnd;
+                                        endPoint = endViewLocation;
+                                    }
                                 } else {
                                     startPoint = beginViewLocation;
-                                    endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                    if reversible {
+                                        endPoint = .zero
+                                    } else {
+                                        endPoint = fillEnd;
+                                    }
                                 }
                             }
                             

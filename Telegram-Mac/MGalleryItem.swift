@@ -453,20 +453,20 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                     if toChat {
                         if peerId == (controller as? ChatController)?.chatInteraction.peerId {
                             if let postId = postId {
-                                (controller as? ChatController)?.chatInteraction.focusMessageId(nil, postId, TableScrollState.CenterEmpty)
+                                (controller as? ChatController)?.chatInteraction.focusMessageId(nil, .init(messageId: postId, string: nil), TableScrollState.CenterEmpty)
                             }
                         } else {
-                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
                         }
                     } else {
-                        navigation.push(PeerInfoController(context: context, peerId: peerId))
+                        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
                     }
                     viewer?.close()
                 }, hashtag: { hashtag in
                     context.bindings.globalSearch(hashtag)
                     viewer?.close()
                 }, command: { commandText in
-                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: peer.id, replyId: nil, atDate: nil).start()
+                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: peer.id, replyId: nil, threadId: message.threadId, atDate: nil).start()
                     viewer?.close()
                 }, applyProxy: { server in
                     applyExternalProxy(server, accountManager: context.sharedContext.accountManager)

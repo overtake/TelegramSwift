@@ -147,7 +147,7 @@ private final class BackView : Control {
 
 private final class SelfPresentationPlaceholder : View {
     private let textView = TextView()
-    private let button = TitleButton()
+    private let button = TextButton()
     private let visualEffect = NSVisualEffectView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -307,7 +307,7 @@ final class GroupCallMainVideoContainerView: Control {
         self.set(handler: { [weak self] control in
             if let data = self?.participant {
                 if let menuItems = self?.arguments?.contextMenuItems(data), let event = NSApp.currentEvent {
-                    ContextMenu.show(items: menuItems, view: control, event: event, presentation: .current(darkPalette), isLegacy: false)
+                    ContextMenu.show(items: menuItems, view: control, event: event, presentation: .current(darkAppearance.colors), isLegacy: false)
                 }
             }
         }, for: .RightDown)
@@ -539,7 +539,7 @@ final class GroupCallMainVideoContainerView: Control {
             
             if let videoView = videoView {
                 
-                videoView.change(opacity: isPaused ? 0 : 1, animated: animated)
+                videoView._change(opacity: isPaused ? 0 : 1, animated: animated)
                 
                 let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
                 if prevIsPaused != isPaused {

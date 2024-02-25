@@ -408,7 +408,7 @@ class ChatPollItem: ChatRowItem {
     override var isForceRightLine: Bool {
         var size: NSSize = .zero
         if let action = self.actionButtonText {
-            size = TitleButton.size(with: action, font: .normal(.text))
+            size = TextButton.size(with: action, font: .normal(.text))
         } else if let totalVotesText = self.totalVotesText {
             size = totalVotesText.layoutSize
         }
@@ -823,7 +823,7 @@ private final class PollOptionView : Control {
         if option.isSelected, let isCorrect = option.isCorrect {
             votedColor = isCorrect ? option.presentation.chat.greenUI(option.isIncoming, option.isBubbled) : option.presentation.chat.redUI(option.isIncoming, option.isBubbled)
         } else {
-            votedColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
+            votedColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
         }
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
 
@@ -932,7 +932,7 @@ private final class PollOptionView : Control {
                     }
                 }
 //                progressIndicator?.lineWidth = 1.0
-                progressIndicator?.progressColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
+                progressIndicator?.progressColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
                 progressIndicator?.setFrameOrigin(NSMakePoint(defaultInset, 0))
 
             } else {
@@ -977,7 +977,7 @@ private final class PollOptionView : Control {
 private final class PollView : Control {
     fileprivate let titleView: TextView = TextView()
     private let typeView: TextView = TextView()
-    private var actionButton: TitleButton?
+    private var actionButton: TextButton?
     private var totalVotesTextView: TextView?
     
     private var mergedAvatarsView: MergedAvatarsView?
@@ -1046,7 +1046,7 @@ private final class PollView : Control {
         if let actionText = item.actionButtonText {
             y += item.defaultContentInnerInset - 4
             if self.actionButton == nil {
-                self.actionButton = TitleButton()
+                self.actionButton = TextButton()
                 self.addSubview(self.actionButton!)
             }
             guard let actionButton = self.actionButton else {
@@ -1061,7 +1061,7 @@ private final class PollView : Control {
             }, for: .SingleClick)
             
             actionButton.set(font: .normal(.text), for: .Normal)
-            actionButton.set(color: item.presentation.chat.webPreviewActivity(item.isIncoming, item.isBubbled), for: .Normal)
+            actionButton.set(color: item.presentation.chat.activityColor(item.isIncoming, item.isBubbled), for: .Normal)
             actionButton.set(text: actionText, for: .Normal)
             _ = actionButton.sizeToFit(NSMakeSize(10, 4), thatFit: false)
             actionButton.centerX(y: y)
@@ -1128,7 +1128,7 @@ private final class PollView : Control {
                 guard let item = item else {
                     return
                 }
-                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
+                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil, isDark: item.presentation.colors.isDark, bubbled: item.presentation.bubbled)
                 
                 tooltip(for: control, text: solution.text, attributedText: text, interactions: globalLinkExecutor, timeout: 10.0)
             }, for: .Click)

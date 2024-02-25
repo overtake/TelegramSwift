@@ -101,8 +101,8 @@ class SelectAccountView: Control {
 class ShareModalView : View {
     let searchView:SearchView = SearchView(frame: NSZeroRect)
     let tableView:TableView = TableView()
-    let acceptView:TitleButton = TitleButton()
-    let cancelView:TitleButton = TitleButton()
+    let acceptView:TextButton = TextButton()
+    let cancelView:TextButton = TextButton()
     private var photoView: AvatarControl?
     private var control: Control = Control()
     let borderView:View = View()
@@ -532,11 +532,11 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                     
                     for entry in value.0.entries {
                         switch entry {
-                        case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer {
+                        case let .MessageEntry(data):
+                            if let peer = data.renderedPeer.chatMainPeer {
                                 if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
                                     if peer.canSendMessage(false) {
-                                        entries.append(.plain(peer,id))
+                                        entries.append(.plain(peer, data.index))
                                         contains[peer.id] = peer
                                     }
                                 } else {

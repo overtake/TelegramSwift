@@ -387,9 +387,9 @@ __attribute__((noreturn)) static void uncaught_cxx_exception_handler(const MSACC
       self.memoryPressureSource =
           dispatch_source_create(DISPATCH_SOURCE_TYPE_MEMORYPRESSURE, 0, DISPATCH_MEMORYPRESSURE_WARN | DISPATCH_MEMORYPRESSURE_CRITICAL,
                                  dispatch_get_main_queue());
-      __weak typeof(self) weakSelf = self;
+      __weak MSACCrashes * weakSelf = self;
       dispatch_source_set_event_handler(self.memoryPressureSource, ^{
-        typeof(self) strongSelf = weakSelf;
+          MSACCrashes * strongSelf = weakSelf;
         [strongSelf didReceiveMemoryWarning:nil];
       });
       dispatch_resume(self.memoryPressureSource);

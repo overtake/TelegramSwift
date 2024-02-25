@@ -13,7 +13,6 @@ import Postbox
 import SwiftSignalKit
 import TGUIKit
 import BuildConfig
-import InAppPurchaseManager
 import ApiCredentials
 
 
@@ -72,6 +71,10 @@ class SharedAccountContext {
     
     var baseSettings: BaseApplicationSettings {
         return _baseSettings.with { $0 }
+    }
+    
+    var baseApplicationSettings: Signal<BaseApplicationSettings, NoError> {
+        return baseAppSettings(accountManager: self.accountManager)
     }
     
    
@@ -520,7 +523,7 @@ class SharedAccountContext {
         
         let signal = self.activeAccountsWithInfoPromise.get() |> mapToSignal { (primary, accounts) -> Signal<(primary: AccountRecordId?, accounts: [AccountWithInfo], [PeerId : CGImage]), NoError> in
             let photos:[Signal<(PeerId, CGImage?), NoError>] = accounts.map { info in
-                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.displayLetters, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
+                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.nameColor, info.peer.displayLetters, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
                     (info.account.peerId, $0.0)
                 }
             }
@@ -589,6 +592,7 @@ class SharedAccountContext {
     func getCrossAccountGroupCall() -> GroupCallContext? {
         return crossGroupCall.with { $0 }
     }
+   
     #endif
     
     
@@ -726,6 +730,36 @@ class SharedAccountContext {
     }
     
     #endif
+    
+    
+    #if !SHARE
+    private let crossInlinePlayer: Atomic<InlineAudioPlayerView.ContextObject?> = Atomic<InlineAudioPlayerView.ContextObject?>(value: nil)
+
+    func getCrossInlinePlayer() -> InlineAudioPlayerView.ContextObject? {
+        return crossInlinePlayer.with { $0 }
+    }
+    func endInlinePlayer(animated: Bool) -> Void {
+        let value = crossInlinePlayer.swap(nil)
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let header = accountContext.bindings.rootNavigation().header
+            header?.hide(animated)
+        }
+    }
+    
+    func showInlinePlayer(_ object: InlineAudioPlayerView.ContextObject) {
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let header = accountContext.bindings.rootNavigation().header
+            header?.show(true, contextObject: object)
+        }
+        _ = crossInlinePlayer.swap(object)
+    }
+    
+    func getAudioPlayer() -> APController? {
+        return getCrossInlinePlayer()?.controller
+    }
+    
+    #endif
+    
     deinit {
         batteryLevelTimer?.invalidate()
     }

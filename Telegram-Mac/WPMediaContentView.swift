@@ -67,8 +67,8 @@ class WPMediaContentView: WPContentView {
     }
 
     
-    override func update(with layout: WPLayout) {
-        super.update(with: layout)
+    override func update(with layout: WPLayout, animated: Bool) {
+        super.update(with: layout, animated: animated)
         
         if let layout = layout as? WPMediaLayout {
             if contentNode == nil || !contentNode!.isKind(of: layout.contentNode())  {
@@ -89,13 +89,17 @@ class WPMediaContentView: WPContentView {
     override func layout() {
         super.layout()
         if let contentNode = contentNode, let content = content as? WPMediaLayout {
-            let rect = CGRect(origin: NSMakePoint(0, containerView.frame.height - content.mediaSize.height - (content.hasInstantPage || content.isProxyConfig ? 36 : 0)), size: content.mediaSize)
+            let rect = CGRect(origin: NSMakePoint(0, containerView.frame.height - content.mediaSize.height - (content.action_text != nil ? 36 : 0)), size: content.mediaSize)
             contentNode.frame = rect
         }
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return contentNode?.interactionContentView(for: innerId, animateIn: animateIn) ?? self
+    }
+    
+    override var mediaContentView: NSView? {
+        return contentNode
     }
     
 }

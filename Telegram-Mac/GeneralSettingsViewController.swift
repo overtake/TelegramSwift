@@ -148,7 +148,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     func item(_ arguments:GeneralSettingsArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
         case let .liteMode(_, enabled: enabled, viewType):

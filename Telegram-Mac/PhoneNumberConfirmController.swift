@@ -16,7 +16,7 @@ final class PhoneNumberConfirmView : View {
     private let title = TextView()
     private let desc = TextView()
     fileprivate let input: Auth_PhoneInput = Auth_PhoneInput(frame: .zero)
-    fileprivate let next = TitleButton()
+    fileprivate let next = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(title)
@@ -103,7 +103,7 @@ final class PhoneNumberConfirmController : GenericViewController<PhoneNumberConf
         self.locked = true
         
         let context = self.context
-        _ = showModalProgress(signal: context.engine.accountData.requestChangeAccountPhoneNumberVerification(phoneNumber: phoneNumber) |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
+        _ = showModalProgress(signal: context.engine.accountData.requestChangeAccountPhoneNumberVerification(phoneNumber: phoneNumber, pushNotificationConfiguration: nil, firebaseSecretStream: .complete()) |> deliverOnMainQueue, for: context.window).start(next: { [weak self] data in
             self?.navigationController?.push(PhoneNumberCodeConfirmController(context: context, data: data, phoneNumber: formatPhoneNumber(phoneNumber)))
             self?.locked = false
         }, error: { [weak self] error in

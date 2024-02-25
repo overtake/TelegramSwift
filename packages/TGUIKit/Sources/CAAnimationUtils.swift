@@ -32,13 +32,13 @@ public extension NSView {
 private let completionKey = "CAAnimationUtils_completion"
 
 public extension CAMediaTimingFunctionName {
-    public static var spring: CAMediaTimingFunctionName {
+    static var spring: CAMediaTimingFunctionName {
         return CAMediaTimingFunctionName(rawValue: "CAAnimationUtilsSpringCurve")
     }
 }
 
 public extension CAAnimation {
-    public var completion: ((Bool) -> Void)? {
+    var completion: ((Bool) -> Void)? {
         get {
             if let delegate = self.delegate as? CALayerAnimationDelegate {
                 return delegate.completion
@@ -319,7 +319,6 @@ public extension CALayer {
         tr = CATransform3DTranslate(tr, -anchor.x, -anchor.y, 0)
         animation.toValue = NSValue(caTransform3D: tr)
 
-        
         self.add(animation, forKey: "transform.scale.x")
     }
 

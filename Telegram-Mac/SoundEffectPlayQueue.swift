@@ -9,9 +9,11 @@
 import Foundation
 import SwiftSignalKit
 import Postbox
-
+import TelegramMedia
+import MediaPlayer
 import TelegramCore
 import TGUIKit
+
 final class SoundEffectPlay {
     private static var queue: [String: MediaPlayer] = [:]
     

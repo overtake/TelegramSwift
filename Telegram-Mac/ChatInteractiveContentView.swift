@@ -12,7 +12,8 @@ import Postbox
 import TelegramCore
 import TextRecognizing
 import TGUIKit
-
+import TelegramMedia
+import MediaPlayer
 
 extension AutoremoveTimeoutMessageAttribute : Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
@@ -506,6 +507,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         
+        
         if let progressView = progressView {
             switch progressView.state {
             case .Fetching:
@@ -527,11 +529,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
     }
     
+    var isStory: Bool {
+        return parent?.media.first is TelegramMediaStory
+    }
+    
     var autoplayVideo: Bool {
         if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60 {
            return false
         }
-
+        if parent?.media.first is TelegramMediaStory {
+            return false
+        }
         if let media = media as? TelegramMediaFile, let parameters = self.parameters {
             let autoplay = (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
             return autoplay
@@ -540,7 +548,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     var blurBackground: Bool {
-        return (parent != nil && parent?.groupingKey == nil) || parent == nil
+        let blur = ((parent != nil && parent?.groupingKey == nil) || parent == nil)
+        if let fillContent = parameters?.fillContent, fillContent {
+            return false
+        }
+        return blur
     }
 
     override func update(size: NSSize) {
@@ -595,7 +607,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
 
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || animated || self.frame.size != size || previousIsSpoiler != isSpoiler
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || self.frame.size != size || previousIsSpoiler != isSpoiler
         
         self.previousIsSpoiler = isSpoiler
 
@@ -643,8 +655,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
             dimensions = file.dimensions?.size ?? size
         }
         
-        let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
-
 
         
 
@@ -654,7 +664,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if mediaUpdated /*mediaUpdated*/ {
             
             
+            var dimensions: NSSize = size
             
+            if let image = media as? TelegramMediaImage {
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+            } else if let file = media as? TelegramMediaFile {
+                dimensions = file.dimensions?.size ?? size
+            }
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
+
+
             
             if let image = media as? TelegramMediaImage {
                 
@@ -794,9 +814,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     }
                 }
                 current.removeAllHandlers()
-                current.set(handler: { current in
-                    if let parent = parent {
-                        parameters?.revealMedia(parent)
+                current.set(handler: { [weak self] current in
+                    if let parent = self?.parent {
+                        self?.parameters?.revealMedia(parent)
                     }
                 }, for: .Click)
                 
@@ -926,6 +946,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
                                 removeProgress = true
                             }
+                            if strongSelf.isStory {
+                                removeProgress = true
+                            }
                             
                             if removeProgress {
                                  if let progressView = strongSelf.progressView {
@@ -976,7 +999,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         case .Local:
                             var state: RadialProgressState = .None
                             if containsSecretMedia {
-                                state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb, mode:.normal)
+                                state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb)
                                 
                                 if let attribute = parent?.autoremoveAttribute, let countdownBeginTime = attribute.countdownBeginTime {
                                     let difference:TimeInterval = TimeInterval((countdownBeginTime + attribute.timeout)) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
@@ -1050,6 +1073,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let context = context, !isLite(.any) {
             if let media = media as? TelegramMediaFile, let parent = parent {
                 let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
+                
+               // preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                
                 
                 let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                 partDisposable.set(preload.start())

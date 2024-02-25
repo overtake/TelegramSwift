@@ -202,7 +202,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
             }
         case .music, .voice:
             if let file = message.anyMedia as? TelegramMediaFile {
-                if let controller = context.audioPlayer, let song = controller.currentSong, song.entry.isEqual(to: message) {
+                if let controller = context.sharedContext.getAudioPlayer(), let song = controller.currentSong, song.entry.isEqual(to: message) {
                     controller.playOrPause()
                 } else {
                     
@@ -268,7 +268,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
                 if peer.isForum, let threadId = message.threadId {
                     ForumUI.open(message.id.peerId, context: context, threadId: threadId)
                 } else {
-                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(message.id.peerId), focusTarget: .init(messageId: message.id)))
                 }
             }
         }, itemImage: MenuAnimation.menu_show_message.value))
@@ -298,7 +298,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
     
     let controller = InputDataController(dataSignal: signal, title: " ")
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         gallery = .init(tableView: controller.tableView)
         getTableView = { [weak controller] in
             return controller?.tableView

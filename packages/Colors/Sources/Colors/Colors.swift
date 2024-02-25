@@ -58,7 +58,8 @@ public extension NSColor {
         let r: CGFloat = ((CGFloat)((rgbValue & 0xFF0000) >> 16))
         let g: CGFloat = ((CGFloat)((rgbValue & 0xFF00) >> 8))
         let b: CGFloat = ((CGFloat)(rgbValue & 0xFF))
-        self.init(srgbRed: r/255.0, green: g/255.0, blue: b/255.0, alpha: alpha)
+        self.init(rgb: rgbValue, alpha: alpha)
+        //self.init(srgbRed: r/255.0, green: g/255.0, blue: b/255.0, alpha: alpha)
        // self.init(deviceRed: r/255.0, green: g/255.0, blue: b/255.0, alpha: alpha)
     }
     

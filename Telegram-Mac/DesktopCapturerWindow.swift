@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import TgVoipWebrtc
 import SwiftSignalKit
-
+import TelegramMedia
 
 
 
@@ -73,8 +73,8 @@ private final class DesktopCapturerView : View {
     private let titleContainer = View()
     private let controls = View()
     
-    let cancel = TitleButton()
-    let share = TitleButton()
+    let cancel = TextButton()
+    let share = TextButton()
     
     fileprivate class Micro : Control {
         

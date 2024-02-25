@@ -9,7 +9,7 @@
 import Cocoa
 
 import TelegramCore
-
+import Postbox
 
 private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case inAppNotificationSettings
@@ -32,6 +32,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case recentEmoji = 52
     case downloadedPaths = 53
     case someSettings = 54
+    case dockSettings = 55
 }
 
 public struct ApplicationSpecificPreferencesKeys {
@@ -58,6 +59,7 @@ public struct ApplicationSharedPreferencesKeys {
     public static let voiceCallSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.voiceCallSettings.rawValue)
     public static let passcodeSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.passcodeSettings.rawValue)
     public static let appConfiguration = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.appConfiguration.rawValue)
+    public static let dockSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.dockSettings.rawValue)
 }
 
 
@@ -65,12 +67,19 @@ private enum ApplicationSpecificItemCacheCollectionIdValues: Int8 {
     case instantPageStoredState = 0
     case cachedInstantPages = 1
     case translationState = 2
+    case pendingInAppPurchaseState = 3
+    case storyPostState = 5
+
 }
 
 public struct ApplicationSpecificItemCacheCollectionId {
     public static let instantPageStoredState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.instantPageStoredState.rawValue)
     public static let cachedInstantPages = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.cachedInstantPages.rawValue)
     public static let translationState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.translationState.rawValue)
+    public static let pendingInAppPurchaseState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.pendingInAppPurchaseState.rawValue)
+    public static let storyPostState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.storyPostState.rawValue)
+    
+
 }
 private enum ApplicationSpecificOrderedItemListCollectionIdValues: Int32 {
     case settingsSearchRecentItems = 0

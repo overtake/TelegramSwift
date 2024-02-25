@@ -11,8 +11,9 @@ import TGUIKit
 
 
 class GeneralLoadingRowItem: GeneralRowItem {
-
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType) {
+    let color: NSColor?
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, color: NSColor? = nil) {
+        self.color = color
         super.init(initialSize, height: 42, stableId: stableId, viewType: viewType)
     }
     
@@ -34,13 +35,25 @@ private final class GeneralLoadingRowView: GeneralContainableRowView {
         indicator.center()
     }
     
+    override var backdorColor: NSColor {
+        if let item = item as? GeneralLoadingRowItem {
+            if item.viewType == .legacy {
+                return .clear
+            }
+        }
+        return super.backdorColor
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     override func updateColors() {
         super.updateColors()
-        indicator.progressColor = theme.colors.text
+        guard let item = self.item as? GeneralLoadingRowItem else {
+            return
+        }
+        indicator.progressColor = item.color ?? theme.colors.text
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

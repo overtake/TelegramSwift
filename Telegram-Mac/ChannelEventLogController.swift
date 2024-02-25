@@ -73,7 +73,7 @@ enum ChannelEventLogState {
 private class SearchContainerView : View {
     let searchView: SearchView = SearchView(frame: NSZeroRect)
     let separator:View = View()
-    let cancelButton = TitleButton()
+    let cancelButton = TextButton()
     var hideSearch:(()->Void)?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -119,7 +119,7 @@ private class SearchContainerView : View {
 
 class ChannelEventLogView : View {
     fileprivate let tableView:TableView = TableView(frame: NSZeroRect, isFlipped: false)
-    private let whatButton: TitleButton = TitleButton()
+    private let whatButton: TextButton = TextButton()
     private let separator:View = View()
     private var emptyTextView:TextView = TextView()
     private(set) var inSearch:Bool = false
@@ -429,14 +429,14 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
 
         self.chatInteraction.openInfo = { [weak self] peerId, _, _, _ in
-            if let strongSelf = self {
-               strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
             }
         }
         
         self.chatInteraction.inlineAudioPlayer = { [weak self] controller in
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: self?.genericView.tableView, supportTableView: nil)
-            self?.navigationController?.header?.show(true, contextObject: object)
+            context.sharedContext.showInlinePlayer(object)
         }
  
 

@@ -77,7 +77,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.poll.text), data: InputDataGeneralTextData(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 16, 0, 16)), fontSize: .huge)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.poll.text), data: InputDataGeneralTextData(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0)), fontSize: .huge)))
     index += 1
     
     
@@ -197,7 +197,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                             }
                         }
                         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 20, right: 20), generalType: .none, viewType: viewType, action: {
                                 openProfile(peer.id)
                             }, highlightVerified: true)
                         }))
@@ -345,7 +345,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
    
     
     openProfile = { [weak modalController] peerId in
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
         modalController?.close()
     }
     controller.afterTransaction = { controller in
@@ -359,13 +359,13 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         }
     }
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.set(stickClass: PollResultStickItem.self, handler: { _ in
             
         })
     }
     
-//    controller.didLoaded = { controller, _ in
+//    controller.didLoad = { controller, _ in
 //        controller.tableView.setScrollHandler { position in
 //            switch position.direction {
 //            case .bottom:

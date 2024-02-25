@@ -80,12 +80,12 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         
         linearProgress.fetchingColor = theme.colors.grayText
         
-        if let current = context.audioPlayer?.currentSong {
+        if let current = context.sharedContext.getAudioPlayer()?.currentSong {
             if current.entry.isEqual(to: self.wrapper) {
-                context.audioPlayer?.add(listener: self)
+                context.sharedContext.getAudioPlayer()?.add(listener: self)
             }
         }
-        statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+        statusView.state = .Icon(image: theme.icons.ivAudioPlay)
         linearProgress.set(progress: 0, animated:true)
 
     }
@@ -141,15 +141,16 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
     }
     
     func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
+        statusView.theme =  RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil, blendMode: .copy)
         switch song.state {
         case .waiting, .paused:
-            statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+            statusView.state = .Icon(image: theme.icons.ivAudioPlay)
         case .stoped:
-            statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+            statusView.state = .Icon(image: theme.icons.ivAudioPlay)
             linearProgress.set(progress: 0, animated:true)
         case let .playing(_, _, progress):
             linearProgress.set(progress: CGFloat(progress), animated: animated)
-            statusView.state = .Icon(image: theme.icons.ivAudioPause, mode: .copy)
+            statusView.state = .Icon(image: theme.icons.ivAudioPause)
             break
         case .fetching:
             break
@@ -162,7 +163,7 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
     
     func songDidStopPlaying(song: APSongItem, for controller: APController, animated: Bool) {
         self.bufferingStatusDisposable.set(nil)
-        statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+        statusView.state = .Icon(image: theme.icons.ivAudioPlay)
         linearProgress.set(progress: 0)
         linearProgress.set(fetchingProgress: 0)
         linearProgress.onUserChanged = nil

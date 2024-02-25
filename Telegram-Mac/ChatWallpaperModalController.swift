@@ -104,8 +104,8 @@ class ChatWallpaperModalController: ModalViewController {
     private var disposable: Disposable?
     private let selected: Wallpaper
     private let source: WallpaperSource
-    private let onComplete:(()->Void)?
-    init(_ context: AccountContext, selected: Wallpaper = theme.wallpaper.wallpaper, source: WallpaperSource = .none, onComplete:(()->Void)? = nil) {
+    private let onComplete:((TelegramWallpaper?)->Void)?
+    init(_ context: AccountContext, selected: Wallpaper = theme.wallpaper.wallpaper, source: WallpaperSource = .none, onComplete:((TelegramWallpaper?)->Void)? = nil) {
         self.context = context
         self.selected = selected
         self.source = source
@@ -154,7 +154,7 @@ class ChatWallpaperModalController: ModalViewController {
                     }
                 }
             })
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, drawBorder: true, height: 50)
        
         return interactions
     }
@@ -215,7 +215,7 @@ class ChatWallpaperModalController: ModalViewController {
                 close()
                 switch source {
                 case let .chat(peer, _):
-                    _ = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: nil).start()
+                    _ = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: nil, forBoth: false).start()
                 default:
                     delay(0.2, closure: {
                         _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in

@@ -13,6 +13,7 @@ import Postbox
 import TGUIKit
 import Accelerate
 import AppKit
+import TelegramMedia
 
 class InlineStickerLockLayer : SimpleLayer {
     private let lockedView: SimpleLayer = SimpleLayer()
@@ -49,7 +50,7 @@ class InlineStickerLockLayer : SimpleLayer {
 
 
             context.withContext { c in
-                c.setFillColor((color ?? .white).cgColor)
+                c.setFillColor((color ?? NSColor(0xffffff)).cgColor)
                 c.fill(CGRect(origin: CGPoint(), size: size))
                 
                 let rect = CGRect(origin: CGPoint(x: -size.width / 2.0, y: -size.height / 2.0), size: CGSize(width: size.width * 1.8, height: size.height * 1.8))
@@ -103,7 +104,7 @@ class InlineStickerLockLayer : SimpleLayer {
             vImageMatrixMultiply_ARGB8888(&destinationBuffer, &destinationBuffer, &matrix, divisor, nil, nil, vImage_Flags(kvImageDoNotTile))
             
             context.withFlippedContext { c in
-                c.setFillColor((color ?? .white).withMultipliedAlpha(0.6).cgColor)
+                c.setFillColor((color ?? NSColor(0xffffff)).withMultipliedAlpha(0.6).cgColor)
                 c.fill(CGRect(origin: CGPoint(), size: size))
             }
             
@@ -183,7 +184,8 @@ private final class MultiTargetAnimationContext {
     }
     
     deinit {
-       
+       var bp = 0
+        bp += 1
     }
     
     func add(_ handlers: Handlers) -> Int {
@@ -194,6 +196,10 @@ private final class MultiTargetAnimationContext {
     func remove(_ token: Int) -> Bool {
         self.handlers.removeValue(forKey: token)
         return self.handlers.isEmpty
+    }
+    
+    func playAgain() {
+        self.context.playAgain()
     }
 }
 
@@ -246,19 +252,22 @@ private final class MultiTargetContextCache {
 
 final class InlineStickerView: View {
     private let isPlayable: Bool
+    let controlContent: Bool
     let animateLayer: InlineStickerItemLayer
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
+        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
         self.isPlayable = isPlayable
         self.animateLayer = layer
+        self.controlContent = controlContent
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
         self.isPlayable = isPlayable
         self.animateLayer = layer
+        self.controlContent = controlContent
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
@@ -266,15 +275,17 @@ final class InlineStickerView: View {
     
     
     @objc func updateAnimatableContent() -> Void {
-        var isKeyWindow: Bool = false
-        if let window = window {
-            if !window.canBecomeKey {
-                isKeyWindow = true
-            } else {
-                isKeyWindow = window.isKeyWindow
+        if controlContent {
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
             }
+            animateLayer.isPlayable = isKeyWindow && isPlayable
         }
-        animateLayer.isPlayable = isKeyWindow && isPlayable
     }
     
     
@@ -321,9 +332,26 @@ final class InlineStickerView: View {
 
 
 final class InlineStickerItemLayer : SimpleLayer {
+    
+    override init(layer: Any) {
+        let layer = layer as! InlineStickerItemLayer
+        self.aspectFilled = layer.aspectFilled
+        self.account = layer.account
+        self.playPolicy = layer.playPolicy
+        self.getColors = layer.getColors
+        self.textColor = layer.textColor
+        self.shimmerColor = layer.shimmerColor
+        self.fileId = layer.fileId
+        self.size = layer.size
+        self.ignorePreview = layer.ignorePreview
+        self.synchronyous = layer.synchronyous
+        super.init()
+    }
+    
     struct Key: Hashable {
         var id: Int64
         var index: Int
+        var color: NSColor? = nil
     }
     private let account: Account
     private var infoDisposable: Disposable?
@@ -426,7 +454,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.frame = size.bounds
         self.initialize()
         self.file = file
-        self.updateSize(size: size, sync: true)
+        self.updateSize(size: size, sync: synchronyous)
         
     }
 
@@ -451,6 +479,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.contentsGravity = .center
         self.masksToBounds = false
         self.isOpaque = true
+        self.contentsScale = System.backingScale
     }
     
     override var masksToBounds: Bool {
@@ -472,12 +501,19 @@ final class InlineStickerItemLayer : SimpleLayer {
             if let value = playerState {
                 self.triggerNextState?(value)
                 self.triggerNextState = nil
+                
+                if let triggerOnState = triggerOnState, value == triggerOnState.0 {
+                    triggerOnState.1(value)
+                    self.triggerOnState = nil
+                }
             }
         }
     }
     private let playPolicy: LottiePlayPolicy
     
     var triggerNextState: ((LottiePlayerState)->Void)? = nil
+    var triggerOnState: (LottiePlayerState, (LottiePlayerState)->Void)? = nil
+
     
     private var unique: Int = 0
     var stopped: Bool = false
@@ -505,7 +541,18 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
         }
     }
+    
+    func playAgain() {
+        if let key = self.contextToken {
+            if let context = MultiTargetContextCache.find(key.1) {
+                context.playAgain()
+            }
+        }
+    }
+    
     private var isPreviousPreview: Bool = false
+    
+    var noDelayBeforeplay = false
     
     private var contextToken: (Int, MultiTargetContextCache.Key)?
     private func set(_ animation: LottieAnimation?, force: Bool = false) {
@@ -514,7 +561,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             weak var layer: InlineStickerItemLayer? = self
             let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
             
-            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force ? 0 : 0.1).start(completed: { [weak self] in
+            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force || noDelayBeforeplay ? 0 : 0.1).start(completed: { [weak self] in
 
                 self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
                     layer?.contents = image
@@ -590,7 +637,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             dimensionSize = file.dimensions?.size ?? size
             let reference: FileMediaReference
             let mediaResource: MediaResourceReference
-             if let stickerReference = file.stickerReference {
+            if let stickerReference = file.stickerReference ?? file.emojiReference {
                 if file.resource is CloudStickerPackThumbnailMediaResource {
                     reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
                     mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)
@@ -651,7 +698,6 @@ final class InlineStickerItemLayer : SimpleLayer {
                 self.resourceDisposable.set(nil)
             }
             
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
             let shimmerColor = self.shimmerColor
             let fillColor: NSColor? = getColors?(file).first?.color
             let emptyColor: TransformImageEmptyColor?
@@ -662,9 +708,13 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
             
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
-                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon)
+                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon, scale: System.backingScale)
                 self.contents = image
-                self.contentsGravity = .resizeAspect
+                if resource.resize {
+                    self.contentsGravity = .resizeAspect
+                } else {
+                    self.contentsGravity = .center
+                }
             } else {
                 self.contentsGravity = .center
 
@@ -697,8 +747,8 @@ final class InlineStickerItemLayer : SimpleLayer {
                 })
                 if self.playerState != .playing {
                     self.contents = result?.image
-
                     if let image = result?.image {
+                        self.contentDidUpdate?(image)
                         self.preview = image
                         self.isPreviousPreview = false
                     }

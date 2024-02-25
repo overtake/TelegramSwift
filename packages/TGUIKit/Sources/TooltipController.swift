@@ -15,7 +15,7 @@ private final class TooltipView: View {
     private let textContainer = View()
     let cornerView = ImageView()
     
-    var button: TitleButton?
+    var button: TextButton?
     
     var didRemoveFromWindow:(()->Void)?
     weak var view: NSView? {
@@ -76,9 +76,9 @@ private final class TooltipView: View {
     func update(text: NSAttributedString, button: (String, ()->Void)?, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
         
         if let buttonData = button {
-            let button: TitleButton
+            let button: TextButton
             if self.button == nil {
-                button = TitleButton()
+                button = TextButton()
                 self.button = button
                 textContainer.addSubview(button)
             } else {
@@ -152,7 +152,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     guard let window = view.window as? Window else { return }
     
     if view.visibleRect.height != view.frame.height {
-        return
+      //  return
     }
     
     let tooltip: TooltipView
@@ -197,11 +197,11 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
             }
             point.y += offset.y
             let pos = NSMakePoint(min(max(floorToScreenPixels(System.backingScale, point.x - (tooltip.frame.width - view.frame.width) / 2), 10), window.frame.width - tooltip.frame.width - 10), point.y)
-            if view.visibleRect.height != view.frame.height {
-                removeTooltip(true)
-            } else {
+//            if view.visibleRect.height != view.frame.height {
+//                removeTooltip(true)
+//            } else {
                 tooltip.change(pos: pos, animated: isExists || animated)
-            }
+//            }
         }
         
     }

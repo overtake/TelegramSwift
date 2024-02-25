@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import QuartzCore
 import AppKit
+import TelegramMedia
 
 final class VoiceTranscriptionControl: Control {
     
@@ -18,7 +19,7 @@ final class VoiceTranscriptionControl: Control {
         case possible(Bool)
         case expanded(Bool)
         case collapsed(Bool)
-        
+        case locked
         func isSameState(to value: TranscriptionState?) -> Bool {
             switch self {
             case .possible:
@@ -33,6 +34,10 @@ final class VoiceTranscriptionControl: Control {
                 if case .collapsed = value {
                     return true
                 } else if case .possible = value {
+                    return true
+                }
+            case .locked:
+                if case .locked = value {
                     return true
                 }
             }
@@ -104,6 +109,8 @@ final class VoiceTranscriptionControl: Control {
         switch state {
         case let .expanded(progress), let .collapsed(progress), let .possible(progress):
             inProgress = progress
+        case .locked:
+            inProgress = false
         }
         
         if inProgress {
@@ -163,6 +170,8 @@ final class VoiceTranscriptionControl: Control {
             animation = previousState == nil ? .voice_to_text : .text_to_voice
         case .expanded:
             animation = previousState == nil ? .text_to_voice : .voice_to_text
+        case .locked:
+            animation = .transcription_locked
         }
         
         let colors:[LottieColor] = [.init(keyPath: "", color: activityBackground)]
@@ -180,10 +189,8 @@ final class VoiceTranscriptionControl: Control {
             }
             
             let animation = LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: size), playPolicy: play, colors: colors, runOnQueue: .mainQueue(), metalSupport: false)
-            
             animationView.set(animation)
         }
-
     }
     
     override func removeFromSuperview() {

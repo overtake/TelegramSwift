@@ -76,7 +76,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -86,7 +86,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         }))
         index += 1
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
 
@@ -97,7 +97,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         }))
         index += 1
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
     
@@ -117,12 +117,12 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
             let equatable = _Equatable(channel: channel, viewType: viewType)
             
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select, side: .right), viewType: viewType)
+                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 20, right: 20), interactionType: .selectable(arguments.select, side: .right), viewType: viewType)
             }))
             index += 1
         }
         if !channels.isEmpty {
-            entries.append(.sectionId(sectionId, type: .normal))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
         
@@ -132,7 +132,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return LoadingTableItem(initialSize, height: 42, stableId: stableId, viewType: .singleItem)
         }))
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
 
@@ -172,20 +172,15 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
         close?()
         
         if !arguments.select.presentation.selected.isEmpty {
-            let removeSignal = combineLatest(arguments.select.presentation.selected.map { context.engine.peers.removePeerChat(peerId: $0, reportChatSpam: false)})
+            let removeSignal = combineLatest(arguments.select.presentation.selected.map { context.engine.peers.removePeerChat(peerId: $0, reportChatSpam: false)}) |> ignoreValues
             let peers = arguments.select.presentation.peers.map { $0.value }
-            let signal = context.account.postbox.transaction { transaction in
-                updatePeers(transaction: transaction, peers: peers, update: { _, updated in
-                    return updated
-                })
-                } |> mapToSignal { _ in
-                    return removeSignal
-            }
+            
+            let signal = context.engine.peers.ensurePeersAreLocallyAvailable(peers: peers.map(EnginePeer.init)) |> then(removeSignal)
             
             _ = showModalProgress(signal: signal, for: context.window).start()
         }
         
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     arguments.select.singleUpdater = { [weak modalInteractions] presentation in

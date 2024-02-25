@@ -36,7 +36,7 @@ class StoragePieChartItem : GeneralRowItem {
 }
 private class StoragePieChartItemView : GeneralRowView {
     private let pieChart = PieChartView(frame: NSMakeRect(0, 0, 200, 200), presentation: .init(strokeColor: theme.colors.background, strokeSize: 1, bgColor: theme.colors.background, totalTextColor: theme.colors.text, itemTextColor: .white))
-    private var avatar: ChatAvatarView?
+    private var avatar: AvatarControl?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(pieChart)
@@ -65,16 +65,17 @@ private class StoragePieChartItemView : GeneralRowView {
         self.pieChart.toggleSelected = item.toggleSelected
         
         if let peer = item.peer {
-            let current: ChatAvatarView
+            let current: AvatarControl
             if let view = self.avatar {
                 current = view
             } else {
-                current = ChatAvatarView(frame: NSMakeRect(0, 0, 70, 70))
+                current = AvatarControl(font: .avatar(.title))
+                current.setFrameSize(NSMakeSize(70, 70))
                 addSubview(current, positioned: .below, relativeTo: pieChart)
                 current.center()
                 self.avatar = current
             }
-            current.setPeer(context: item.context, peer: peer, disableForum: true)
+            current.setPeer(account: item.context.account, peer: peer)
         } else if let view = self.avatar {
             performSubviewRemoval(view, animated: animated)
             self.avatar = nil

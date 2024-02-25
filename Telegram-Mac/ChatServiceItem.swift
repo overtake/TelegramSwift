@@ -15,7 +15,8 @@ import SwiftSignalKit
 import InAppSettings
 import CurrencyFormat
 import ThemeSettings
-
+import TelegramMedia
+import MediaPlayer
 
 class ChatServiceItem: ChatRowItem {
     
@@ -87,22 +88,57 @@ class ChatServiceItem: ChatRowItem {
         let aesthetic: TelegramWallpaper
         let peerId: PeerId
         let isIncoming: Bool
-        init(wallpaper: Wallpaper, aesthetic: TelegramWallpaper, peerId: PeerId, isIncoming: Bool) {
+        let forBoth: Bool
+        let installed: TelegramWallpaper?
+        init(wallpaper: Wallpaper, aesthetic: TelegramWallpaper, peerId: PeerId, isIncoming: Bool, forBoth: Bool, installed: TelegramWallpaper?) {
             self.wallpaper = wallpaper
             self.aesthetic = aesthetic
             self.peerId = peerId
             self.isIncoming = isIncoming
+            self.forBoth = forBoth
+            self.installed = installed
         }
         
         var height: CGFloat {
             return 160
         }
     }
-
+    struct StoryData {
+        let media: TelegramMediaStory
+        let storyItem: Stories.StoredItem
+        let text: TextViewLayout
+        let isIncoming: Bool
+        let avatar: AvatarStoryIndicatorComponent?
+        let context: AccountContext
+        let peer: PeerReference
+        init(context: AccountContext, peer: PeerReference, maxReadId: Int32?, media: TelegramMediaStory, storyItem: Stories.StoredItem, text: TextViewLayout, theme: TelegramPresentationTheme, isIncoming: Bool) {
+            self.media = media
+            self.context = context
+            self.storyItem = storyItem
+            self.text = text
+            self.peer = peer
+            self.isIncoming = isIncoming
+            
+            if storyItem.expirationTimestamp > context.timestamp, let maxReadId = maxReadId {
+                let isUnread: Bool = maxReadId < storyItem.id && isIncoming
+                self.avatar = .init(hasUnseen: isUnread, hasUnseenCloseFriendsItems: false, theme: theme, activeLineWidth: 1.5, inactiveLineWidth: 1.5, counters: .init(totalCount: 1, unseenCount: isUnread ? 1 : 0))
+            } else {
+                self.avatar = nil
+            }
+            self.text.measure(width: 140)
+        }
+        
+        var height: CGFloat {
+            return 10 + 80 + 10 + text.layoutSize.height + 10
+        }
+    }
+    
     
     private(set) var giftData: GiftData? = nil
     private(set) var suggestPhotoData: SuggestPhotoData? = nil
     private(set) var wallpaperData: WallpaperData? = nil
+    private(set) var storydata: StoryData? = nil
+    private(set) var suggestChannelsData: ChannelSuggestData? = nil
 
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
@@ -116,7 +152,6 @@ class ChatServiceItem: ChatRowItem {
         if let displayTitle = message.author?.displayTitle {
             authorName = displayTitle
         }
-        
         let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
         
@@ -240,8 +275,18 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                case .customText(let text, _):
+                case let .customText(text, _, additionalAttributes):
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    if let additionalAttributes = additionalAttributes {
+                        for (range, key, value) in additionalAttributes.attributes {
+                            attributedString.addAttribute(key, value: value, range: range)
+                        }
+                    }
+
+                case let .botDomainAccessGranted(domain):
+                    let _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case let .botAppAccessGranted(appName, _):
+                    let _ = attributedString.append(string: strings().authSessionsMessageApp(appName ?? ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case .pinnedMessageUpdated:
                     var replyMessageText = ""
                     var pinnedId: MessageId?
@@ -258,7 +303,7 @@ class ChatServiceItem: ChatRowItem {
                     if pinnedRange.location != NSNotFound {
                         attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
                             if let pinnedId = pinnedId {
-                                chatInteraction?.focusMessageId(nil, pinnedId, .CenterEmpty)
+                                chatInteraction?.focusMessageId(nil, .init(messageId: pinnedId, string: nil), .CenterEmpty)
                             }
                         }), for: pinnedRange, color: grayTextColor)
                         attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: pinnedRange)
@@ -413,8 +458,6 @@ class ChatServiceItem: ChatRowItem {
                         }
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                     }
-                case let .botDomainAccessGranted(domain):
-                    _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .botSentSecureValues(types):
                     let permissions = types.map({$0.rawValue}).joined(separator: ", ")
                      _ = attributedString.append(string: strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -618,6 +661,7 @@ class ChatServiceItem: ChatRowItem {
                     let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .giftPremium(currency, amount, months, cryptoCurrency, cryptoCurrencyAmount):
                     
+                    
                     let info = NSMutableAttributedString()
                     _ = info.append(string: strings().chatServicePremiumGiftInfoCountable(Int(months)), color: grayTextColor, font: .normal(theme.fontSize))
                     info.detectBoldColorInString(with: .medium(theme.fontSize))
@@ -785,19 +829,49 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case .attachMenuBotAllowed:
                     _ = attributedString.append(string: strings().chatServiceBotWriteAllowed, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .requestedPeer(_, peerId):
-                    if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
-                        let name = peer.displayTitle
-                        _ = attributedString.append(string: strings().chatServicePeerRequested(name, botPeer.displayTitle), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                        let range = attributedString.string.nsstring.range(of: name)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
-                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                case let .requestedPeer(_, peerIds):
+                    
+                    if let botPeer = message.peers[message.id.peerId] {
+                        let botName = botPeer.displayTitle
+                        let resultTitleString: String
+                        if peerIds.count == 1 {
+                            if let peer = message.peers[peerIds[0]] {
+                                resultTitleString = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
+                            } else {
+                                resultTitleString = ""
+                            }
+                        } else {
+                            let peers: [String] = peerIds.compactMap { message.peers[$0]?.displayTitle }
+                            resultTitleString = strings().chatServicePeerRequestedMultiple(peers.joined(separator: ", "), botPeer.displayTitle)
+                        }
+
+                        _ = attributedString.append(string: resultTitleString, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        
+                        for peerId in peerIds {
+                            if let peer = message.peers[peerId] {
+                                let range = attributedString.string.nsstring.range(of: peer.displayTitle)
+                                if range.location != NSNotFound {
+                                    attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
+                                    attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                                }
+                            }
+
+                        }
+                        
+
                     }
-                case let .setChatWallpaper(wallpaper):
+                    
+                    
+                case let .setChatWallpaper(wallpaper, forBoth):
                     
                     let text: String
                     if authorId == context.peerId {
-                        text = strings().chatServiceYouChangedWallpaper
+                        if forBoth {
+                            let peerName = message.peers[message.id.peerId]?.compactDisplayTitle ?? ""
+                            text = strings().chatServiceYouChangedWallpaperBoth(peerName)
+                        } else {
+                            text = strings().chatServiceYouChangedWallpaper
+                        }
                     } else {
                         text = strings().chatServiceChangedWallpaper(authorName)
                     }
@@ -808,7 +882,9 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId)
+                    
+                    let cachedData = entry.additionalData.cachedData?.data as? CachedUserData
+                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId, forBoth: forBoth, installed: cachedData?.wallpaper)
                 case .setSameChatWallpaper:
                     let text: String
                     if authorId == context.peerId {
@@ -822,6 +898,43 @@ class ChatServiceItem: ChatRowItem {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
+                case .giveawayLaunched:
+                    let text = strings().chatServiceGiveawayStarted(authorName)
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
+                case .joinedChannel:
+                    let text = strings().chatServiceJoinedChannel
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    if let recommendedChannels = entry.additionalData.recommendedChannels, !recommendedChannels.channels.isEmpty, !recommendedChannels.isHidden {
+                        self.suggestChannelsData = .init(channels: recommendedChannels, context: context, presentation: theme)
+                    }
+                case let .giveawayResults(winners, unclaimed):
+                    var text: String
+                    if winners == 0 {
+                        text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+                    } else if unclaimed > 0 {
+                        text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                        let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                        let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                        text = winnersString + "\n" + unclaimedString
+                    } else {
+                        text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                    }
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
+                    
+                    let messageId: MessageId? = message.replyAttribute?.messageId
+                    
+                    if let messageId = messageId {
+                        attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                            chatInteraction?.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
+                        }), for: attributedString.range, color: grayTextColor)
                     }
                 default:
                     break
@@ -838,14 +951,59 @@ class ChatServiceItem: ChatRowItem {
                 } else {
                     text = strings().serviceMessageExpiredVideo
                 }
+            case .voiceMessage:
+                text = strings().serviceMessageExpiredVoiceMessage
+            case .videoMessage:
+                text = strings().serviceMessageExpiredVideoMessage
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+            
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, message.autoremoveAttribute != nil || message.autoclearTimeout != nil {
             let isPhoto: Bool = message.anyMedia is TelegramMediaImage
             if authorId == context.peerId {
                 _ = attributedString.append(string: isPhoto ? strings().serviceMessageDesturctingPhotoYou(authorName) : strings().serviceMessageDesturctingVideoYou(authorName), color: grayTextColor, font: .normal(theme.fontSize))
             } else if let _ = authorId {
                 _ = attributedString.append(string:  isPhoto ? strings().serviceMessageDesturctingPhoto(authorName) : strings().serviceMessageDesturctingVideo(authorName), color: grayTextColor, font: .normal(theme.fontSize))
+            }
+        } else if let story = message.media.first as? TelegramMediaStory {
+            
+            if message.isExpiredStory {
+                if isIncoming {
+                    _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextIncoming, color: grayTextColor, font: .normal(theme.fontSize))
+                } else {
+                    var name: String = ""
+                    if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
+                        name = displayTitle
+                    }
+                    _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextOutgoing(name), color: grayTextColor, font: .normal(theme.fontSize))
+                }
+                
+                attributedString.insert(.initialize(string: clown, color: grayTextColor, font: .normal(theme.fontSize)), at: 0)
+                let file = LocalAnimatedSticker.expired_story.monochromeFile
+                
+                attributedString.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: clown))), range: NSMakeRange(0, 2))
+
+                
+            } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self), let peer = message.author, let peerReference = PeerReference(peer) {
+                let info = NSMutableAttributedString()
+                
+                let text: String
+                
+                var authorName: String = ""
+                if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
+                    authorName = displayTitle
+                }
+                
+                if isIncoming {
+                    text = strings().chatServiceStoryMentioned(authorName)
+                } else {
+                    text = strings().chatServiceStoryMentionedYou(authorName)
+                }
+                
+                _ = info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+                info.detectBoldColorInString(with: .medium(theme.fontSize))
+                
+                self.storydata = .init(context: context, peer: peerReference, maxReadId: entry.additionalData.storyReadMaxId, media: story, storyItem: item, text: TextViewLayout(info, alignment: .center), theme: theme, isIncoming: isIncoming)
             }
         }
         
@@ -859,6 +1017,53 @@ class ChatServiceItem: ChatRowItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         return NSZeroSize
     }
+    
+    func removeBackground() {
+        if let id = self.message?.id.peerId {
+            _ = context.engine.themes.revertChatWallpaper(peerId: id).start()
+        }
+    }
+    
+    func openChannel(_ peerId: PeerId) {
+        guard let message = self.message else {
+            return
+        }
+        chatInteraction.openInfo(peerId, true, nil, nil)
+        
+        var jsonString: String = "{"
+        jsonString += "\"ref_channel_id\": \"\(message.id.peerId.id._internalGetInt64Value())\","
+        jsonString += "\"open_channel_id\": \"\(peerId.id._internalGetInt64Value())\""
+        jsonString += "}"
+        
+        if let data = jsonString.data(using: .utf8), let json = JSON(data: data) {
+            addAppLogEvent(postbox: context.account.postbox, type: "channels.open_recommended_channel", data: json)
+        }
+        
+    }
+    
+    func openPremiumBoarding() {
+        let context = self.context
+        let limit = context.appConfiguration.getGeneralValue("recommended_channels_limit_premium", orElse: 0)
+
+        showModalText(for: context.window, text: strings().similarChannelAlertText(Int(limit)), callback: { _ in
+            showModal(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
+        })
+    }
+    func dismissRecommendedChannels() {
+        guard let message = self.message else {
+            return
+        }
+        _ = context.engine.peers.toggleRecommendedChannelsHidden(peerId: message.id.peerId, hidden: true).start()
+    }
+    func revealRecommendedChannels() {
+        guard let message = self.message else {
+            return
+        }
+        if let data = self.entry.additionalData.recommendedChannels {
+            _ = context.engine.peers.toggleRecommendedChannelsHidden(peerId: message.id.peerId, hidden: !data.isHidden).start()
+        }
+    }
+
     
     override var isBubbled: Bool {
         return presentation.wallpaper.wallpaper != .none && super.isBubbled
@@ -877,6 +1082,13 @@ class ChatServiceItem: ChatRowItem {
         }
         if let data = self.wallpaperData {
             height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.storydata {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.suggestChannelsData {
+            data.makeSize(width: width - 80)
+            height += data.size.height + (isBubbled ? 9 : 6)
         }
         return height
     }
@@ -1123,7 +1335,7 @@ class ChatServiceRowView: TableRowView {
         
         private let textView = TextView()
                 
-        fileprivate let viewButton = TitleButton()
+        fileprivate let viewButton = TextButton()
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -1295,7 +1507,7 @@ class ChatServiceRowView: TableRowView {
 
         private var visualEffect: VisualEffect?
                         
-        fileprivate let viewButton = TitleButton()
+        fileprivate let viewButton = TextButton()
         private var progressView: RadialProgressView?
         private let statusDisposable = MetaDisposable()
         private var progressText: TextView?
@@ -1322,7 +1534,6 @@ class ChatServiceRowView: TableRowView {
                 return
             }
             
-            viewButton.isHidden = messageId.namespace == Namespaces.Message.Local
             
             self.message = item.message
             
@@ -1361,11 +1572,11 @@ class ChatServiceRowView: TableRowView {
                 self.visualEffect = nil
                 self.backgroundColor = item.presentation.chatServiceItemColor
             }
-            let updateImageSignal = wallpaperPreview(account: item.context.account, palette: item.presentation.colors, wallpaper: data.wallpaper, mode: .thumbnail)
+            let updateImageSignal = wallpaperPreview(accountContext: item.context, palette: item.presentation.colors, wallpaper: data.wallpaper, mode: .thumbnail)
             
             let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
             
-            let settings = TelegramThemeSettings.init(baseTheme: .classic, accentColor: 0, outgoingAccentColor: nil, messageColors: [], animateMessageColors: false, wallpaper: data.aesthetic)
+            let settings = TelegramThemeSettings(baseTheme: .classic, accentColor: 0, outgoingAccentColor: nil, messageColors: [], animateMessageColors: false, wallpaper: data.aesthetic)
             
             wallpaper.setSignal(signal: cachedMedia(media: settings, arguments: arguments, scale: System.backingScale), clearInstantly: mediaUpdated)
             
@@ -1380,15 +1591,31 @@ class ChatServiceRowView: TableRowView {
             viewButton.set(font: .normal(.text), for: .Normal)
             viewButton.set(color: item.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
             viewButton.set(background: item.shouldBlurService ? item.presentation.chatServiceItemColor.withAlphaComponent(0.5) : item.presentation.colors.accent, for: .Normal)
-            viewButton.set(text: data.isIncoming ? strings().chatServiceViewBackground : strings().chatServiceUpdateBackground, for: .Normal)
-            viewButton.sizeToFit(NSMakeSize(20, 12))
             
+            
+            let text: String
+            if data.isIncoming {
+                if data.forBoth, data.installed?.isBasicallyEqual(to: data.aesthetic) == true {
+                    text = strings().chatServiceRemoveBackground
+                } else {
+                    text = strings().chatServiceViewBackground
+                }
+            } else {
+                text = strings().chatServiceUpdateBackground
+            }
+            
+            viewButton.set(text: text, for: .Normal)
+            viewButton.sizeToFit(NSMakeSize(20, 12))
+                        
             viewButton.layer?.cornerRadius = viewButton.frame.height / 2
             needsLayout = true
         }
         
         
         private func updateProgress(_ progress: Float?, messageId: MessageId, item: ChatServiceItem, context: AccountContext) {
+                        
+            self.viewButton.isHidden = progress != nil
+
             if let progress = progress {
                 let current: RadialProgressView
                 if let view = self.progressView {
@@ -1456,6 +1683,124 @@ class ChatServiceRowView: TableRowView {
         }
     }
 
+    private class _StoryView : Control {
+        
+        private let disposable = MetaDisposable()
+        fileprivate let mediaView: TransformImageView = TransformImageView(frame: NSMakeSize(74, 74).bounds)
+        fileprivate let avatar: AvatarControl = AvatarControl(font: .avatar(.title))
+        private let statusView: AvatarStoryIndicatorComponent.IndicatorView = .init(frame: NSMakeSize(80, 80).bounds)
+        
+        private var visualEffect: VisualEffect?
+        
+        private let textView = TextView()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            avatar.setFrameSize(NSMakeSize(74, 74))
+            addSubview(mediaView)
+            addSubview(avatar)
+            addSubview(statusView)
+            addSubview(textView)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+            avatar.userInteractionEnabled = false
+            
+            self.scaleOnClick = true
+            layer?.cornerRadius = 10
+                        
+            mediaView.layer?.cornerRadius = mediaView.frame.height / 2
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.StoryData, animated: Bool) {
+            guard let message = item.message else {
+                return
+            }
+            let context = item.context
+                    
+            switch data.storyItem {
+            case let .item(storyItem):
+                if let media = storyItem.media {
+                    
+                    let updateImageSignal: Signal<ImageDataTransformation, NoError>
+
+                    let imageSize: NSSize
+                    if let media = media as? TelegramMediaImage {
+                        let reference = ImageMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
+                        updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false)
+                        imageSize = media.representations.last?.dimensions.size ?? StoryLayoutView.size
+                    } else if let media = media as? TelegramMediaFile {
+                        let reference = FileMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
+                        updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference:reference, scale: backingScaleFactor)
+                        imageSize = media.dimensions?.size ?? StoryLayoutView.size
+                    } else {
+                        updateImageSignal = .complete()
+                        imageSize = StoryLayoutView.size
+                    }
+                    
+                    let arguments = TransformImageArguments.init(corners: .init(radius: 0), imageSize: imageSize, boundingSize: mediaView.frame.size, intrinsicInsets: .init())
+                    
+                    mediaView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
+                    
+                    if !mediaView.isFullyLoaded {
+                        mediaView.setSignal(updateImageSignal, cacheImage: { result in
+                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                        })
+                    }
+                    mediaView.set(arguments: arguments)
+                    avatar.setPeer(account: item.context.account, peer: item.message?.author)
+                    avatar.isHidden = !storyItem.isForwardingDisabled
+                }
+            case .placeholder:
+                break
+            }
+            
+            if let component = data.avatar {
+                statusView.update(component: component, availableSize: NSMakeSize(74, 74), transition: .immediate)
+                statusView.isHidden = false
+            } else {
+                statusView.isHidden = true
+            }
+            textView.update(data.text)
+                        
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+        }
+        
+        
+        override func layout() {
+            super.layout()
+            statusView.centerX(y: 10)
+            mediaView.centerX(y: 13)
+            avatar.centerX(y: 13)
+            textView.centerX(y: statusView.frame.maxY + 10)
+        }
+        
+        deinit {
+            disposable.dispose()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+
     
     
     private var textView:TextView
@@ -1465,8 +1810,10 @@ class ChatServiceRowView: TableRowView {
     private var photoVideoPlayer: MediaPlayer?
     
     private var giftView: GiftView?
+    private var storyView: _StoryView?
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
+    private var suggestChannelsView: ChatChannelSuggestView?
 
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
@@ -1483,7 +1830,9 @@ class ChatServiceRowView: TableRowView {
 
         textView.set(handler: { [weak self] control in
             if let item = self?.item as? ChatServiceItem {
-                if let message = item.message, let action = message.extendedMedia as? TelegramMediaAction {
+                if let _ = item.entry.additionalData.recommendedChannels {
+                    item.revealRecommendedChannels()
+                } else if let message = item.message, let action = message.extendedMedia as? TelegramMediaAction {
                     switch action.action {
                     case let .messageAutoremoveTimeoutUpdated(timeout, _):
                         if let peer = item.chatInteraction.peer {
@@ -1523,13 +1872,10 @@ class ChatServiceRowView: TableRowView {
                 self.imageView?.set(arguments: imageArguments)
                 self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
-            if let view = giftView {
-                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-            if let view = suggestView {
-                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-            if let view = wallpaperView {
+            
+            let activeView = [giftView, suggestView, wallpaperView, storyView, suggestChannelsView].compactMap { $0 }.first
+            
+            if let view = activeView {
                 view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
         }
@@ -1538,8 +1884,8 @@ class ChatServiceRowView: TableRowView {
     
     override func doubleClick(in location: NSPoint) {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
-            if self.hitTest(location) == nil || self.hitTest(location) == self {
-                item.chatInteraction.setupReplyMessage(item.message?.id)
+            if self.hitTest(location) == nil || self.hitTest(location) == self, let message = item.message {
+                item.chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil) )
             }
         }
     }
@@ -1664,12 +2010,16 @@ class ChatServiceRowView: TableRowView {
                 }
                 
             } else {
-                imageView?.removeFromSuperview()
-                imageView = nil
+                self.imageView?.removeFromSuperview()
+                self.imageView = nil
+                self.photoVideoView?.removeFromSuperview()
+                self.photoVideoView = nil
             }
         } else {
-            imageView?.removeFromSuperview()
-            imageView = nil
+            self.imageView?.removeFromSuperview()
+            self.imageView = nil
+            self.photoVideoView?.removeFromSuperview()
+            self.photoVideoView = nil
         }
         
         
@@ -1684,7 +2034,7 @@ class ChatServiceRowView: TableRowView {
                 addSubview(current)
                 
                 current.set(handler: { _ in 
-                    showModal(with: PremiumBoardingController(context: item.context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months)), for: context.window)
+                    showModal(with: PremiumBoardingController(context: item.context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months, slug: nil, unclaimed: false)), for: context.window)
                 }, for: .Click)
             }
             
@@ -1733,13 +2083,17 @@ class ChatServiceRowView: TableRowView {
                 
                 let open: (Control)->Void = { [weak self] _ in
                     if let item = self?.item as? ChatServiceItem, let messageId = item.message?.id, let data = item.wallpaperData {
-                        if data.isIncoming {
-                            let chatInteraction = item.chatInteraction
-                            showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] in
-                                chatInteraction?.closeChatThemes()
-                            }), for: item.context.window)
+                        if data.forBoth, data.installed?.isBasicallyEqual(to: data.aesthetic) == true, data.isIncoming {
+                            item.removeBackground()
                         } else {
-                            item.chatInteraction.setupChatThemes()
+                            if data.isIncoming {
+                                let chatInteraction = item.chatInteraction
+                                showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] _ in
+                                    chatInteraction?.closeChatThemes()
+                                }), for: item.context.window)
+                            } else {
+                                item.chatInteraction.setupChatThemes()
+                            }
                         }
                     }
                 }
@@ -1751,6 +2105,49 @@ class ChatServiceRowView: TableRowView {
         } else if let view = self.wallpaperView {
             performSubviewRemoval(view, animated: animated)
             self.wallpaperView = nil
+        }
+
+        if let storyData = item.storydata {
+            let current: _StoryView
+            if let view = self.storyView {
+                current = view
+            } else {
+                current = _StoryView(frame: NSMakeRect(0, 0, 160, storyData.height))
+                self.storyView = current
+                addSubview(current)
+                
+                current.set(handler: { [weak self] _ in
+                    if let item = self?.item as? ChatRowItem, let message = item.message {
+                        item.chatInteraction.openStory(message.id, storyData.media.storyId)
+                    }
+                }, for: .Click)
+            }
+            
+            current.update(item: item, data: storyData, animated: animated)
+        } else if let view = self.storyView {
+            performSubviewRemoval(view, animated: animated)
+            self.storyView = nil
+        }
+        
+        if let data = item.suggestChannelsData {
+            let current: ChatChannelSuggestView
+            if let view = self.suggestChannelsView {
+                current = view
+            } else {
+                current = ChatChannelSuggestView(frame: data.size.bounds)
+                self.suggestChannelsView = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2, timingFunction: .easeOut)
+                }
+            }
+            current.setFrameSize(data.size)
+            current.set(item: item, data: data, animated: animated)
+        } else if let view = self.suggestChannelsView {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.suggestChannelsView = nil
         }
 
         
@@ -1860,6 +2257,14 @@ class ChatServiceRowView: TableRowView {
                 self.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
             }
         }
+    }
+    
+    func storyControl(_ storyId: StoryId) -> NSView? {
+        return storyView?.mediaView
+    }
+    
+    var storyMediaControl: NSView? {
+        return storyView?.avatar
     }
     
 }

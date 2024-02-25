@@ -9,6 +9,7 @@
 import Foundation
 import SwiftSignalKit
 import AppKit
+import ColorPalette
 
 public final class BackgroundGradientView : View {
     public var values:(top: NSColor?, bottom: NSColor?, rotation: Int32?)? {
@@ -154,7 +155,7 @@ open class BackgroundView: View {
     deinit {
     }
     
-    private let imageView: CALayer = CALayer()
+    private let imageView: SimpleLayer = SimpleLayer()
     private var backgroundView: NSView?
     
     public var useSharedAnimationPhase: Bool = true
@@ -217,8 +218,8 @@ open class BackgroundView: View {
     open var backgroundMode:TableBackgroundMode = .plain {
         didSet {
             if oldValue != backgroundMode {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
+//                CATransaction.begin()
+//                CATransaction.setDisableActions(true)
                 tileControl.validLayout = nil
                 var backgroundView: NSView? = nil
                 switch backgroundMode {
@@ -322,11 +323,11 @@ open class BackgroundView: View {
                     self.backgroundView = nil
                 }
             }
-            CATransaction.commit()
+//            CATransaction.commit()
         }
     }
     
-    public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+    open func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(layer: imageView, frame: size.bounds)
         transition.updateFrame(view: container, frame: size.bounds)
         tileControl.update(frame: size.bounds, transition: transition)
@@ -471,7 +472,7 @@ open class ViewController : NSObject {
         public let keepLeft: CGFloat
         public let straightMove: Bool
         public let keepIn: Bool
-        
+        public let keepTop: ()->CGFloat
         public var isCustom: Bool {
             if keepLeft > 0 {
                 return true
@@ -482,19 +483,25 @@ open class ViewController : NSObject {
             if keepIn {
                 return true
             }
+            if keepTop() > 0 {
+                return true
+            }
             return false
         }
         
-        public init(keepLeft: CGFloat, straightMove: Bool, keepIn: Bool) {
+        public init(keepLeft: CGFloat, keepTop: @escaping()->CGFloat, straightMove: Bool, keepIn: Bool) {
             self.keepLeft = keepLeft
             self.straightMove = straightMove
             self.keepIn = keepIn
+            self.keepTop = keepTop
         }
         
         public static var `default`: StakeSettings {
-            return .init(keepLeft: 0, straightMove: false, keepIn: false)
+            return .init(keepLeft: 0, keepTop: { 0 }, straightMove: false, keepIn: false)
         }
     }
+    
+    
     
     fileprivate var _view:NSView?
     public var _frameRect:NSRect
@@ -513,6 +520,10 @@ open class ViewController : NSObject {
         }
     }
     
+    open func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+        self.navigationController?.swapNavigationBar(leftView: leftView, centerView: centerView, rightView: rightView, animation: animation)
+    }
+    
     public var noticeResizeWhenLoaded: Bool = true
     
     public var animationStyle:AnimationStyle = AnimationStyle(duration: 0.4, function:CAMediaTimingFunctionName.spring)
@@ -524,6 +535,14 @@ open class ViewController : NSObject {
     
     public var popover:Popover?
     open var modal:Modal?
+    
+    open var barHeight: CGFloat {
+        return bar.height
+    }
+    
+    open var barPresentation: ControlStyle {
+        return navigationButtonStyle
+    }
     
     var widthOnDisappear: CGFloat? = nil
     
@@ -648,33 +667,24 @@ open class ViewController : NSObject {
         return {}
     }
     
-    
-    @available(OSX 10.12.2, *)
-    open func makeTouchBar() -> NSTouchBar? {
-        return nil//window?.firstResponder?.makeTouchBar()
-    }
-    
-    @available(OSX 10.12.2, *)
-    @objc public var touchBar: NSTouchBar? {
-        return window?.touchBar
-    }
-    @available(OSX 10.12.2, *)
-    open func layoutTouchBar() {
-        
-    }
-    
+
     
     open func requestUpdateBackBar() {
         if isLoaded(), let leftBarView = leftBarView as? BackNavigationBar {
             leftBarView.requestUpdate()
         }
-        self.leftBarView.style = navigationButtonStyle
+        self.leftBarView.style = barPresentation
     }
     
     open func requestUpdateCenterBar() {
         setCenterTitle(defaultBarTitle)
         setCenterStatus(defaultBarStatus)
+        self.centerBarView.style = barPresentation
     }
+    open func requestUpdateRightBar() {
+        self.rightBarView.style = barPresentation
+    }
+    
     
     open func dismiss() {
         if navigationController?.controller == self {
@@ -682,11 +692,7 @@ open class ViewController : NSObject {
         } 
     }
     
-    open func requestUpdateRightBar() {
-        (self.rightBarView as? TextButtonBarView)?.style = navigationButtonStyle
-        self.rightBarView.style = navigationButtonStyle
-    }
-    
+
     
     @objc func viewFrameChanged(_ notification:Notification) {
         if atomicSize.with({ $0 != frame.size}) {
@@ -749,15 +755,15 @@ open class ViewController : NSObject {
 
     
     open func getCenterBarViewOnce() -> TitledBarView {
-        return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
+        return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: barPresentation.textColor, font: .medium(.title)))
     }
     
-    public func setCenterTitle(_ text:String) {
-        self.centerBarView.text = .initialize(string: text, color: presentation.colors.text, font: .medium(.title))
+    open func setCenterTitle(_ text:String) {
+        self.centerBarView.text = .initialize(string: text, color: barPresentation.textColor, font: .medium(.title))
     }
-    public func setCenterStatus(_ text: String?) {
+    open func setCenterStatus(_ text: String?) {
         if let text = text {
-            self.centerBarView.status = .initialize(string: text, color: presentation.colors.grayText, font: .normal(.text))
+            self.centerBarView.status = .initialize(string: text, color: barPresentation.grayTextColor, font: .normal(.text))
         } else {
             self.centerBarView.status = nil
         }
@@ -838,7 +844,7 @@ open class ViewController : NSObject {
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
         }
-        if haveNextResponder {
+        if hasNextResponder {
             self.window?.remove(object: self, for: .Tab)
         }
         NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
@@ -857,7 +863,7 @@ open class ViewController : NSObject {
                 self.window?.touchBar = self.window?.makeTouchBar()
           //  }
         }
-        if haveNextResponder {
+        if hasNextResponder {
             self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
                 guard let `self` = self else {return .rejected}
                 
@@ -905,16 +911,10 @@ open class ViewController : NSObject {
     
     @objc open func windowDidBecomeKey() {
         isKeyWindow.set(.single(true))
-        if #available(OSX 10.12.2, *) {
-            window?.touchBar = window?.makeTouchBar()
-        }
     }
     
     @objc open func windowDidResignKey() {
         isKeyWindow.set(.single(false))
-        if #available(OSX 10.12.2, *) {
-            window?.touchBar = nil
-        }
     }
     
     open var canBecomeResponder: Bool {
@@ -980,7 +980,7 @@ open class ViewController : NSObject {
         return nil
     }
     
-    open var haveNextResponder: Bool {
+    open var hasNextResponder: Bool {
         return false
     }
     
@@ -1028,7 +1028,7 @@ open class ViewController : NSObject {
     
     
     open func backSettings() -> (String,CGImage?) {
-        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(presentation.colors.accentIcon))
+        return (localizedString("Navigation.back"),#imageLiteral(resourceName: "Icon_NavigationBack").precomposed(barPresentation.foregroundColor))
     }
     
     open var popoverClass:AnyClass {
@@ -1149,18 +1149,39 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let border: NSColor
         let accent: NSColor
         let grayForeground: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground) {
+        let activeBackground: NSColor
+        let activeBorder: NSColor
+        let listBackground: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground) {
             self.text = text
             self.grayText = grayText
             self.background = background
             self.border = border
             self.accent = accent
             self.grayForeground = grayForeground
+            self.activeBackground = activeBackground
+            self.activeBorder = activeBorder
+            self.listBackground = listBackground
+        }
+        public init(presentation: PresentationTheme) {
+            self.text = presentation.colors.text
+            self.grayText = presentation.colors.grayText
+            self.background = presentation.colors.background
+            self.border = presentation.colors.border
+            self.accent = presentation.colors.accent
+            self.grayForeground = presentation.colors.grayForeground
+            self.activeBackground = presentation.colors.background
+            self.activeBorder = presentation.colors.border
+            self.listBackground = presentation.colors.listBackground
         }
     }
     
     open var modalTheme:Theme {
         return Theme()
+    }
+    
+    open var hasBorder: Bool {
+        return true
     }
     
     open var closable:Bool {
@@ -1176,21 +1197,6 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         return true
     }
     
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    open override func makeTouchBar() -> NSTouchBar? {
-        guard let modal = modal, let interactions = modal.interactions else {
-            if temporaryTouchBar == nil {
-                temporaryTouchBar = NSTouchBar()
-            }
-            return temporaryTouchBar as? NSTouchBar
-        }
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = ModalTouchBar(interactions, modal: modal)
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
     
     open var hasOwnTouchbar: Bool {
         return true
@@ -1205,6 +1211,9 @@ open class ModalViewController : ViewController, ModalControllerHelper {
     }
     
     open var isVisualEffectBackground: Bool {
+        return false
+    }
+    open var isVisualEffectContainer: Bool {
         return false
     }
     
@@ -1329,7 +1338,7 @@ open class ModalController : ModalViewController {
     }
 
     
-    open override var haveNextResponder: Bool {
+    open override var hasNextResponder: Bool {
         return true
     }
     
@@ -1362,12 +1371,12 @@ open class TableModalViewController : ModalViewController {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 120, genericView.listHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 200, genericView.listHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 120, genericView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 200, genericView.listHeight)), animated: animated)
         }
     }
     
