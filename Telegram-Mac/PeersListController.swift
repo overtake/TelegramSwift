@@ -2077,16 +2077,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     }
                 }
 
-                if peer.peer.hasPermission(.manageTopics) {
-                    if topicController?.identifier != "ForumTopic" {
-                        if !items.isEmpty {
-                            items.append(ContextSeparatorItem())
-                        }
-                        items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
-                            ForumUI.createTopic(peer.peer.id, context: context)
-                        }, itemImage: MenuAnimation.menu_edit.value))
+                if topicController?.identifier != "ForumTopic" {
+                    if !items.isEmpty {
+                        items.append(ContextSeparatorItem())
                     }
+                    items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
+                        ForumUI.createTopic(peer.peer.id, context: context)
+                    }, itemImage: MenuAnimation.menu_edit.value))
                 }
+                
 
                 for item in items {
                     menu.addItem(item)
@@ -2213,7 +2212,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private var takeArguments:()->Arguments? = {
         return nil
     }
-
+    
     private func checkSearchMedia() {
         let destroy:()->Void = { [weak self] in
             if let previous = self?.mediaSearchController {
