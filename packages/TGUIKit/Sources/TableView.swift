@@ -947,7 +947,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.columnAutoresizingStyle = .noColumnAutoresizing
 //        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
 //        tableColumn.width = frame.width
-//
+
 //        self.tableView.addTableColumn(tableColumn)
        
         
@@ -1791,15 +1791,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                 }
             }, completionHandler: {
+                
+                CATransaction.begin()
+                
+                self.beginTableUpdates()
                 let view = controller.resortView
                 controller.clear()
                 if let view = view {
                     view.frame = self.tableView.convert(view.frame, from: view.superview)
                     self.tableView.addSubview(view)
                 }
+                self.moveItem(from: start, to: current, redraw: false, animation: .none)
+                self.tableView.removeRows(at: IndexSet(integer: start), withAnimation: .none)
+                self.tableView.insertRows(at: IndexSet(integer: current), withAnimation: .none)
+                self.endTableUpdates()
+                CATransaction.commit()
+                
                 if controller.resortRange.location != NSNotFound {
-                    controller.complete(start, current)
+                    delay(0.2, closure: {
+                        controller.complete(start, current)
+                    })
                 }
+                
             })
             
             
@@ -1978,20 +1991,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 transition.updateFrame(view: view, frame: rect)
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                self.tableView.beginUpdates()
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-                self.tableView.endUpdates()
                 
                 return
             }
         }
-        if let _ = self.optionalItem(at: row) {
-            self.tableView.beginUpdates()
+        if let item = self.optionalItem(at: row) {
+            let animated = visibleRows().contains(row) && item.view != nil && animated
             NSAnimationContext.current.duration = animated ? duration : 0.0
             NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+            self.tableView.beginUpdates()
+            self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
+            self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
             self.tableView.endUpdates()
         }
+
     }
     
     fileprivate func reloadHeightItems() {
@@ -3023,7 +3037,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             listhash[item.stableId] = item
             item.table = self
             item._index = index
-            reloadData(row: index, animated: animated, presentAsNew: prev.identifier != item.identifier)
+            reloadData(row: index, animated: animated, presentAsNew: false)
         }
     }
 

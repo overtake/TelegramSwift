@@ -423,17 +423,6 @@ class ChatRowItem: TableRowItem {
             return id
         }
         var id: String = super.identifier
-        id += "_message"
-        if self.topicLinkLayout != nil {
-            id += "_topicLinkLayout"
-        }
-        if self.forwardNameLayout != nil {
-            id += "_forwardNameLayout"
-        }
-        if self.replyMarkupModel != nil {
-            id += "_replyMarkupModel"
-        }
-
         _id = id
         return id
     }
