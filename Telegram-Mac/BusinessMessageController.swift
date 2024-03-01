@@ -758,14 +758,14 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
                 if let awayMessage {
                     current.shortcut = shortcuts.items.first(where: { $0.id == awayMessage.shortcutId })
                 } else {
-                    current.shortcut = shortcuts.items.first(where: { $0.shortcut == "away" })
+                    current.shortcut = shortcuts.items.first(where: { $0.shortcut == "away" || $0.shortcut == "_away" })
                     current.recepient = .all
                 }
             case .greetings:
                 if let greetingMessage {
                     current.shortcut = shortcuts.items.first(where: { $0.id == greetingMessage.shortcutId })
                 } else {
-                    current.shortcut = shortcuts.items.first(where: { $0.shortcut == "greeting" })
+                    current.shortcut = shortcuts.items.first(where: { $0.shortcut == "greeting" || $0.shortcut == "_greeting" })
                     current.recepient = .all
                 }
             }
@@ -1025,13 +1025,15 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
     controller.updateDoneValue = { data in
         return { f in
             let state = stateValue.with { $0 }
-            let isEnabled: Bool = state.enabled
-//            switch type {
-//            case .away:
-//                isEnabled = state.initialAway != state.mappedAway
-//            case .greetings:
-//                isEnabled = state.initialGreeting != state.mappedGreeting
-//            }
+            var isEnabled: Bool = state.enabled
+            if state.shortcut != nil {
+                switch type {
+                case .away:
+                    isEnabled = state.initialAway != state.mappedAway
+                case .greetings:
+                    isEnabled = state.initialGreeting != state.mappedGreeting
+                }
+            }
             if isEnabled {
                 f(.enabled(strings().navigationDone))
             } else {
