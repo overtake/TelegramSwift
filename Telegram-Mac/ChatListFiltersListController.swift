@@ -92,13 +92,49 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             viewType = .innerItem
         }
         
-        
         switch filter {
         case .allChats:
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(emoticon: .allChats).icon(for: .preview), type: .none, viewType: viewType)))
             index += 1
         case let .filter(_, title, _, data):
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: data.isShared ? .nextImage(sharedImage) :  .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+            
+            var image: CGImage?
+            if let color = data.color, showTags {
+                
+                let colors = [theme.colors.peerColors(0).bottom,
+                              theme.colors.peerColors(1).bottom,
+                              theme.colors.peerColors(2).bottom,
+                              theme.colors.peerColors(3).bottom,
+                              theme.colors.peerColors(4).bottom,
+                              theme.colors.peerColors(5).bottom,
+                              theme.colors.peerColors(6).bottom]
+
+                image = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(colors[Int(color.rawValue) % 7].cgColor)
+                    ctx.fillEllipse(in: size.bounds)
+                })
+                
+                if data.isShared {
+                    image = generateImage(NSMakeSize(20 + 3 + sharedImage.backingSize.width, 20), contextGenerator: { size, ctx in
+                        ctx.clear(size.bounds)
+                        var rect = size.bounds.focus(sharedImage.backingSize)
+                        rect.origin.x = 0
+                        ctx.draw(sharedImage, in: rect)
+                        
+                        var rect2 = size.bounds.focus(image!.backingSize)
+                        rect2.origin.x = rect.maxX + 3
+                        ctx.draw(image!, in: rect2)
+                    })
+                }
+                
+            } else if data.isShared {
+                image = sharedImage
+            } else {
+                image = nil
+            }
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
                 arguments.openPreset(filter, false)
             }, menuItems: {
                 return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)

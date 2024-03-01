@@ -379,6 +379,10 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
     
     controller.validateData = { data in
         let state = stateValue.with { $0 }
+        
+        if state.address == nil || state.address?.isEmpty == true, state.location != nil {
+            return .fail(.fields([_id_input : .shake]))
+        }
         if state.initial != state.mapped {
             _ = context.engine.accountData.updateAccountBusinessLocation(businessLocation: state.mapped).start()
             showModalText(for: context.window, text: strings().businessUpdated)

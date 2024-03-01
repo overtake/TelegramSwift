@@ -439,6 +439,18 @@ enum LocalAnimatedSticker : String {
             playPolicy = .onceEnd
         case .show_status_profile:
             playPolicy = .onceEnd
+        case .business_hours:
+            playPolicy = .onceEnd
+        case .business_location:
+            playPolicy = .onceEnd
+        case .business_quick_reply:
+            playPolicy = .onceEnd
+        case .business_chatbot:
+            playPolicy = .onceEnd
+        case .business_away_message:
+            playPolicy = .onceEnd
+        case .business_greeting_message:
+            playPolicy = .onceEnd
         default:
             playPolicy = .loop
             hidePlayer = false

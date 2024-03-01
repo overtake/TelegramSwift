@@ -499,7 +499,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             case forward
             case backward
         }
-        
+                
         arrowView.isHidden = data.isLoading || !data.bubbleMode
         
         if animated {
