@@ -3157,19 +3157,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 media = state.editMedia
             }
             
-            if let customChatContents {
-                customChatContents.editMessage(id: state.message.id, text: inputState.inputText, media: media, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), webpagePreviewAttribute: webpagePreviewAttribute, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
-                self.chatInteraction.beginEditingMessage(nil)
-                self.chatInteraction.update({
-                    $0.updatedInterfaceState({
-                        $0.withUpdatedComposeDisableUrlPreview(nil).updatedEditState({
-                            $0?.withUpdatedLoadingState(.none)
-                        })
-                    })
-                })
-                return
-            }
-            
             
             if atDate == nil {
                 self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: media, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, webpagePreviewAttribute: webpagePreviewAttribute, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)

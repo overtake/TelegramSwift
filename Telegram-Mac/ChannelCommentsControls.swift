@@ -437,6 +437,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         super.update(data: data, size: size, animated: animated)
         
         
+        
         let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.peers, rightList: data.peers)
         
         for removed in removed.reversed() {
@@ -499,7 +500,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             case backward
         }
         
-        arrowView.isHidden = data.isLoading
+        arrowView.isHidden = data.isLoading || !data.bubbleMode
         
         if animated {
             var f = size.bounds.focus(arrowView.frame.size)
