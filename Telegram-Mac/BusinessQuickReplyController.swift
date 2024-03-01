@@ -453,7 +453,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let limit = arguments.context.appConfiguration.getGeneralValue("quick_replies_limit", orElse: 20) - 2
+    var limit = arguments.context.appConfiguration.getGeneralValue("quick_replies_limit", orElse: 20) - 2
+    
+    let hasAway = state.replies?.items.contains(where: { $0.shortcut == "away" || $0.shortcut == "_away" }) ?? false
+    let hasGreeting = state.replies?.items.contains(where: { $0.shortcut == "greeting" || $0.shortcut == "_greeting" }) ?? false
+
+    if hasGreeting {
+        limit += 1
+    }
+    if hasAway {
+        limit += 1
+    }
     
     let count = state.replies?.items.count ?? 0
     let isFull = limit <= count
