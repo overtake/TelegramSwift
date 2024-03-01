@@ -191,8 +191,8 @@ private final class ChatSearchTagsView: View {
                     
                     self.backgroundView.image = background
                     
-                    let layer: InlineStickerItemLayer = .init(account: item.arguments.context.account, file: item.tag.file, size: NSMakeSize(16, 16))
-                    imageView.updateLayer(layer, isLite: true, animated: animated)
+                    let layer: InlineStickerItemLayer = .init(account: item.arguments.context.account, file: item.tag.file, size: NSMakeSize(16, 16), playPolicy: .framesCount(1))
+                    imageView.updateLayer(layer, isLite: isLite(.emoji), animated: animated)
                     
                     if let layout = item.countViewLayout {
                         let current: TextView

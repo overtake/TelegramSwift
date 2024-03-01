@@ -760,14 +760,22 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             for tab in filtered {
-                let color = theme.colors.peerColors(Int(tab.id) % 7).top
-                let text = TextViewLayout(.initialize(string: tab.title.uppercased(), color: color, font: .bold(10)))
-                text.measure(width: .greatestFiniteMagnitude)
-                
-                let textSelected = TextViewLayout(.initialize(string: tab.title.uppercased(), color: theme.colors.accentSelect, font: .bold(10)))
-                textSelected.measure(width: .greatestFiniteMagnitude)
+                let color: NSColor?
+                if let dataColor = tab.data?.color {
+                    let index = Int(dataColor.rawValue)
+                    color = theme.colors.peerColors(index % 7).bottom
+                } else {
+                    color = nil
+                }
+                if let color = color {
+                    let text = TextViewLayout(.initialize(string: tab.title.uppercased(), color: color, font: .bold(10)))
+                    text.measure(width: .greatestFiniteMagnitude)
+                    
+                    let textSelected = TextViewLayout(.initialize(string: tab.title.uppercased(), color: theme.colors.accentSelect, font: .bold(10)))
+                    textSelected.measure(width: .greatestFiniteMagnitude)
 
-                tags.append(.init(text: text, selected: textSelected, color: color.withAlphaComponent(0.4), selectedColor: theme.colors.underSelectedColor))
+                    tags.append(.init(text: text, selected: textSelected, color: color.withAlphaComponent(0.1), selectedColor: theme.colors.underSelectedColor))
+                }
             }
             if !tags.isEmpty {
                 self.tags = .init(tags: tags, extender: nil)
@@ -1282,7 +1290,7 @@ class ChatListRowItem: TableRowItem {
         
         if let tags = self.tags {
             var maxX: CGFloat = 0
-            var prevExtender = tags.extender
+            let prevExtender = tags.extender
             tags.extender = nil
             for i in 0 ..< tags.tags.count {
                 maxX += tags.tags[i].size.width + 3
@@ -1294,7 +1302,7 @@ class ChatListRowItem: TableRowItem {
                         
                         text.measure(width: .greatestFiniteMagnitude)
                         selectedText.measure(width: .greatestFiniteMagnitude)
-                        let tag = ChatListTag(text: text, selected: selectedText, color: color.withAlphaComponent(0.5), selectedColor: theme.colors.underSelectedColor)
+                        let tag = ChatListTag(text: text, selected: selectedText, color: color.withAlphaComponent(0.1), selectedColor: theme.colors.underSelectedColor)
                         tags.extender = .init(tag: tag, index: i)
                     } else {
                         tags.extender = prevExtender

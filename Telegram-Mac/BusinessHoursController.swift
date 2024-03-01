@@ -13,47 +13,20 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
-#if DEBUG
 
-private struct GMTZone : Equatable, Comparable {
-    static func < (lhs: GMTZone, rhs: GMTZone) -> Bool {
-        return lhs.hoursFromGMT < rhs.hoursFromGMT
-    }
-    let timeZone: TimeZone
-
-    init(timeZone: TimeZone, abbreviation: String) {
-        self.timeZone = timeZone
-        self.hoursFromGMT = TimeInterval(timeZone.secondsFromGMT()) / 60.0 / 60.0
-        self.abbreviation = abbreviation.replacingOccurrences(of: "_", with: " ")
-    }
-    let hoursFromGMT: TimeInterval
-    let abbreviation: String
-    
+private extension TimeZoneList.Item {
     var text: String {
+        let hoursFromGMT = TimeInterval(self.utcOffset) / 60.0 / 60.0
         let gmtText = "\(hoursFromGMT)"
             .replacingOccurrences(of: ".5", with: ":30")
             .replacingOccurrences(of: ".0", with: "")
 
         if hoursFromGMT >= 0 {
-            return "GMT+\(gmtText), \(abbreviation)"
+            return "\(strings().businessHoursUTC)+\(gmtText), \(title)"
         } else {
-            return "GMT\(gmtText), \(abbreviation)"
+            return "\(strings().businessHoursUTC)\(gmtText), \(title)"
         }
     }
-}
-
-private func getAllGMTTimeZones() -> [GMTZone] {
-    // Fetch all known timezone identifiers
-    let allTimeZoneIdentifiers = TimeZone.abbreviationDictionary.map { $0.value }
-    
-    let gmtTimeZones = allTimeZoneIdentifiers
-    
-    // Optionally, sort the array if you need the time zones in a specific order
-    let sortedGMTTimeZones = gmtTimeZones.uniqueElements
-    
-    return sortedGMTTimeZones.map {
-        GMTZone(timeZone: TimeZone(identifier: $0)!, abbreviation: $0)
-    }.sorted(by: <)
 }
 
 private func formatHourToLocaleTime(hour: Int) -> String {
@@ -132,8 +105,8 @@ private final class Arguments {
     let addSpecific:(State.Day)->Void
     let editSpefic:(State.Day, State.Hours.MinutesInDay)->Void
     let removeSpefic:(State.Day, State.Hours.MinutesInDay)->Void
-    let selectTimezone:(GMTZone)->Void
-    init(context: AccountContext, toggleEnabled:@escaping()->Void, toggleDay:@escaping(State.Day)->Void, enableDay:@escaping(State.Day)->Void, addSpecific:@escaping(State.Day)->Void, removeSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, editSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, selectTimezone:@escaping(GMTZone)->Void) {
+    let selectTimezone:(TimeZoneList.Item)->Void
+    init(context: AccountContext, toggleEnabled:@escaping()->Void, toggleDay:@escaping(State.Day)->Void, enableDay:@escaping(State.Day)->Void, addSpecific:@escaping(State.Day)->Void, removeSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, editSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, selectTimezone:@escaping(TimeZoneList.Item)->Void) {
         self.context = context
         self.toggleEnabled = toggleEnabled
         self.toggleDay = toggleDay
@@ -146,6 +119,12 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
+    
+    enum ValidationError: Error {
+        case intersectingRanges
+    }
+
+    
     enum Day : Int32 {
         case monday
         case tuesday
@@ -158,19 +137,19 @@ private struct State : Equatable {
         var title: String {
             switch self {
             case .monday:
-                return "Monday"
+                return strings().weekdayMonday
             case .tuesday:
-                return "Tuesday"
+                return strings().weekdayTuesday
             case .wednesday:
-                return "Wednesday"
+                return strings().weekdayWednesday
             case .thrusday:
-                return "Thrusday"
+                return strings().weekdayThursday
             case .friday:
-                return "Friday"
+                return strings().weekdayFriday
             case .saturday:
-                return "Saturday"
+                return strings().weekdaySaturday
             case .sunday:
-                return "Sunday"
+                return strings().weekdaySunday
             }
         }
         
@@ -191,12 +170,16 @@ private struct State : Equatable {
     
     var data:[Day: Hours] = [:]
     
-    var timezone: GMTZone
+    var timezone: TimeZoneList.Item?
+    
+    var initial: TelegramBusinessHours?
+    
+    var timeZones: TimeZoneList?
     
     func openingHours(_ day: Day) -> String {
         if let hours = data[day] {
-            if hours.list.isEmpty {
-                return "24 hours"
+            if hours.list.isEmpty || hours.list[0].from == 0 && hours.list[0].to == 60 * 24 {
+                return strings().businessHours24Hours
             } else {
                 var text: String = ""
                 for (i, hour) in hours.list.enumerated() {
@@ -208,9 +191,58 @@ private struct State : Equatable {
                 return text
             }
         } else {
-            return "Closed"
+            return strings().businessHoursClosed
         }
     }
+    
+    
+    func mapped() throws -> TelegramBusinessHours? {
+        
+        if !enabled {
+            return nil
+        }
+        guard let timezone = self.timezone else {
+            return nil
+        }
+        var mappedIntervals: [TelegramBusinessHours.WorkingTimeInterval] = []
+        
+        var filledMinutes = IndexSet()
+        for i in 0 ..< 7 {
+            let today: State.Day = .init(rawValue: Int32(i))!
+            
+            let dayStartMinute = i * 24 * 60
+            guard var effectiveRanges = self.data[today]?.list else {
+                continue
+            }
+        
+
+            for range in effectiveRanges {
+                let minuteRange: Range<Int> = (dayStartMinute + range.from) ..< (dayStartMinute + range.to)
+                
+                var wrappedMinutes = IndexSet()
+                if minuteRange.upperBound > 7 * 24 * 60 {
+                    wrappedMinutes.insert(integersIn: minuteRange.lowerBound ..< 7 * 24 * 60)
+                    wrappedMinutes.insert(integersIn: 0 ..< (7 * 24 * 60 - minuteRange.upperBound))
+                } else {
+                    wrappedMinutes.insert(integersIn: minuteRange)
+                }
+                
+                if !filledMinutes.intersection(wrappedMinutes).isEmpty {
+                    throw ValidationError.intersectingRanges
+                }
+                filledMinutes.formUnion(wrappedMinutes)
+                mappedIntervals.append(TelegramBusinessHours.WorkingTimeInterval(startMinute: minuteRange.lowerBound, endMinute: minuteRange.upperBound))
+            }
+            if effectiveRanges.isEmpty {
+                let minuteRange: Range<Int> = (dayStartMinute + 0) ..< (dayStartMinute + 24 * 60)
+                mappedIntervals.append(TelegramBusinessHours.WorkingTimeInterval(startMinute: minuteRange.lowerBound, endMinute: minuteRange.upperBound))
+            }
+        }
+        
+        return TelegramBusinessHours(timezoneId: timezone.id, weeklyTimeIntervals: mappedIntervals)
+    }
+
+    
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -244,13 +276,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.fly_dollar, text: .initialize(string: "Turn this on to show your opening hours schedule to your customers.", color: theme.colors.listGrayText, font: .normal(.text)))
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.business_hours, text: .initialize(string: strings().businessHoursHeader, color: theme.colors.listGrayText, font: .normal(.text)))
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: .init(name: "Show Business Hours", color: theme.colors.text, type: .switchable(state.enabled), viewType: .singleItem, action: arguments.toggleEnabled)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: .init(name: strings().businessHoursShowHours, color: theme.colors.text, type: .switchable(state.enabled), viewType: .singleItem, action: arguments.toggleEnabled)))
     
     // entries
     
@@ -260,27 +292,31 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("BUSINESS HOURS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessHoursBusinessHours), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         for (i, day) in State.Day.all.enumerated() {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_day(day), data: .init(name: day.title, color: theme.colors.text, type: .switchable(state.data[day] != nil), viewType: bestGeneralViewType(State.Day.all, for: i), description: state.openingHours(day), descTextColor: theme.colors.accent, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_day(day), data: .init(name: day.title, color: theme.colors.text, type: .switchable(state.data[day] != nil), viewType: bestGeneralViewType(State.Day.all, for: i), description: state.openingHours(day), descTextColor: state.data[day] != nil ? theme.colors.accent : theme.colors.grayText, action: {
                 arguments.toggleDay(day)
             }, switchAction: {
                 arguments.enableDay(day)
             })))
         }
         
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        let zones: [ContextMenuItem] = getAllGMTTimeZones().map { zone in
-            return ContextMenuItem(zone.text, handler: {
-                arguments.selectTimezone(zone)
-            }, state: zone.abbreviation == state.timezone.abbreviation ? .on : nil)
+        if let zones = state.timeZones, let timezone = state.timezone {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            
+            let zones: [ContextMenuItem] = zones.items.map { zone in
+                return ContextMenuItem(zone.text, handler: {
+                    arguments.selectTimezone(zone)
+                }, state: nil)
+            }
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timezone, data: .init(name: strings().businessHoursTimezone, color: theme.colors.text, type: .contextSelector(timezone.text, zones), viewType: .singleItem)))
         }
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timezone, data: .init(name: "Timezone", color: theme.colors.text, type: .contextSelector(state.timezone.text, zones), viewType: .singleItem)))
 
         
     }
@@ -305,13 +341,19 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: .init(name: "Open On This Day", color: theme.colors.text, type: .switchable(state.data[day] != nil), viewType: .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_enabled, data: .init(name: strings().businessHoursSetTitle, color: theme.colors.text, type: .switchable(state.data[day] != nil), viewType: .singleItem, action: {
         arguments.enableDay(day)
     })))
     
     // entries
     
     if let hours = state.data[day] {
+        
+        let startMinute = hours.list.min(by: { $0.from < $1.from })?.from
+        let endMinute = hours.list.max(by: { $0.to < $1.to })?.to
+
+        
+        
         let getHoursMenu:(State.Hours.MinutesInDay, Bool)->[ContextMenuItem] = { hour, from in
             var items:[ContextMenuItem] = []
             
@@ -323,7 +365,7 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
                 end = hour.to
             } else {
                 start = hour.from
-                end = 23 * 60
+                end = 24 * 60
             }
             
          
@@ -333,26 +375,47 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
 
             let from_hours = Int(Float(hour.from) / 60)
             let to_hours = Int(Float(hour.to) / 60)
+            
+           
 
             for i in s ... e {
-                let state: NSControl.StateValue? = i == (from ? from_hours : to_hours) ? .on : nil
-                let item = ContextMenuItem(formatHourToLocaleTime(hour: i * 60), handler: {
-                    arguments.editSpefic(day, .init(from: from ? i * 60 : hour.from, to: !from ? i * 60 : hour.to, uniqueId: hour.uniqueId))
-                }, state: state)
-                
-                let minutes = ContextMenu()
-                var minuteItems:[ContextMenuItem] = []
-                for j in 0 ..< 60 {
-                    let item = ContextMenuItem(formattedMinutes[j]!, handler: {
-                        arguments.editSpefic(day, .init(from: from ? i * 60 + j : hour.from, to: !from ? i * 60 + j : hour.to, uniqueId: hour.uniqueId))
-                    }, state: state == .on && j == (from ? hour.from % 60 : hour.to % 60) ? .on : nil)
-                    
-                    minuteItems.append(item)
+                let minuteRange = i * 60
+
+                var intersected = false
+                let hourRange = NSMakeRange(minuteRange, minuteRange + 60)
+                if let startMinute, let endMinute {
+                    let range = NSMakeRange(startMinute, endMinute - startMinute)
+                    intersected = range.intersection(hourRange) == hourRange
                 }
-                minutes.items = minuteItems
                 
-                item.submenu = minutes
-                items.append(item)
+                if !intersected {
+                    let state: NSControl.StateValue? = i == (from ? from_hours : to_hours) ? .on : nil
+                    let item = ContextMenuItem(formatHourToLocaleTime(hour: minuteRange), handler: {
+                        arguments.editSpefic(day, .init(from: from ? minuteRange : hour.from, to: !from ? minuteRange : hour.to, uniqueId: hour.uniqueId))
+                    }, state: state)
+                    
+                    let minutes = ContextMenu()
+                    var minuteItems:[ContextMenuItem] = []
+                    for j in 0 ..< 60 {
+                        let hourRange = NSMakeRange(minuteRange, minuteRange + i)
+                        if let startMinute, let endMinute {
+                            let range = NSMakeRange(startMinute, endMinute - startMinute)
+                            intersected = range.intersection(hourRange) == hourRange
+                        }
+                        if !intersected {
+                            let item = ContextMenuItem(formattedMinutes[j]!, handler: {
+                                arguments.editSpefic(day, .init(from: from ? minuteRange + j : hour.from, to: !from ? minuteRange + j : hour.to, uniqueId: hour.uniqueId))
+                            }, state: state == .on && j == (from ? hour.from % 60 : hour.to % 60) ? .on : nil)
+                            
+                            minuteItems.append(item)
+                        }
+                    }
+                    minutes.items = minuteItems
+                    
+                    item.submenu = minutes
+                    items.append(item)
+                }
+             
             }
             return items
         }
@@ -362,11 +425,11 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
 
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_opening_time(hour), data: .init(name: "Opening Time", color: theme.colors.text, type: .contextSelector(formatHourToLocaleTime(hour: hour.from), getHoursMenu(hour, true)), viewType: .firstItem)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_opening_time(hour), data: .init(name: strings().businessHoursSetOpeningTime, color: theme.colors.text, type: .contextSelector(formatHourToLocaleTime(hour: hour.from), getHoursMenu(hour, true)), viewType: .firstItem)))
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_closing_time(hour), data: .init(name: "Closing Time", color: theme.colors.text, type: .contextSelector(formatHourToLocaleTime(hour: hour.to), getHoursMenu(hour, false)), viewType: .innerItem)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_closing_time(hour), data: .init(name: strings().businessHoursSetClosingTime, color: theme.colors.text, type: .contextSelector(formatHourToLocaleTime(hour: hour.to), getHoursMenu(hour, false)), viewType: .innerItem)))
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_remove_opening(hour), data: .init(name: "Remove", color: theme.colors.redUI, type: .none, viewType: .lastItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_remove_opening(hour), data: .init(name: strings().businessHoursSetRemove, color: theme.colors.redUI, type: .none, viewType: .lastItem, action: {
                 arguments.removeSpefic(day, hour)
             })))
 
@@ -378,15 +441,27 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
         
     sectionId = 1000
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+    
+    let hours = state.data[day]
+    var filled: Bool = false
+    if let lastHour = hours?.list.max(by: { $0.to < $1.to }) {
+        if lastHour.to == 24 * 60 {
+            filled = true
+        }
+    }
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_specific, data: .init(name: "Add a Set of Hours", color: theme.colors.accent, type: .none, viewType: .singleItem, action: {
-        arguments.addSpecific(day)
-    })))
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Specify your working hours during the day."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    
+    if !filled {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_specific, data: .init(name: strings().businessHoursAddSet, color: theme.colors.accent, type: .none, viewType: .singleItem, action: {
+            arguments.addSpecific(day)
+        })))
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessHoursAddSetInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        
+    }
+
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -398,18 +473,57 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
 func BusinessHoursController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
-    
-    let timezone = GMTZone(timeZone: TimeZone.current, abbreviation: "")
-    
-    let effectiveTimezone = getAllGMTTimeZones().first(where: { $0.hoursFromGMT == timezone.hoursFromGMT })!
+        
 
-    let initialState = State(timezone: effectiveTimezone)
+    let initialState = State()
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let businessHours = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessHours(id: context.peerId)) |> deliverOnMainQueue
+
+    
+    actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().start())
+    
+
+
+    actionsDisposable.add(combineLatest(businessHours, context.engine.accountData.cachedTimeZoneList()).start(next: { hours, timezones in
+        updateState { current in
+            var current = current
+            current.initial = hours
+            current.enabled = hours != nil
+            current.timeZones = timezones
+
+            if current.timezone == nil {
+                if let hours = hours {
+                    current.timezone = timezones?.items.first(where: { $0.id == hours.timezoneId })
+                } else {
+                    current.timezone = timezones?.items.first { $0.utcOffset == TimeZone.current.secondsFromGMT() }
+                }
+            }
+            
+            if let hours = hours {
+                let weekDays = hours.splitIntoWeekDays()
+                for (i, day) in weekDays.enumerated() {
+                    let today = State.Day(rawValue: Int32(i))!
+                    switch day {
+                    case let .intervals(intervals):
+                        current.data[today] = .init(list: intervals.map { .init(from: $0.startMinute, to: $0.endMinute, uniqueId: arc4random64()) })
+                    case .closed:
+                        current.data.removeValue(forKey: today)
+                    case .open:
+                        current.data[today] = .init()
+                    }
+                }
+            } else {
+                current.enabled = false
+            }
+            return current
+        }
+    }))
     
     var getArguments:(()->Arguments?)? = nil
 
@@ -437,7 +551,19 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
         updateState { current in
             var current = current
             var hours = current.data[day] ?? .init()
-            hours.list.append(.init(from: 9 * 60, to: 23 * 60, uniqueId: arc4random64()))
+            
+            
+            var rangeStart = 9 * 60
+            if let lastRange = hours.list.last {
+                rangeStart = lastRange.to + 1
+            }
+            if rangeStart >= 24 * 60 - 1 {
+                return current
+            }
+            
+            let rangeEnd = min(rangeStart + 9 * 60, 24 * 60)
+            
+            hours.list.append(.init(from: rangeStart, to: rangeEnd, uniqueId: arc4random64()))
             current.data[day] = hours
             return current
         }
@@ -459,6 +585,7 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
             current.data[day] = hours
             return current
         }
+        
     }, selectTimezone: { timezone in
         updateState { current in
             var current = current
@@ -476,7 +603,33 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments), grouping: false)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Business Hours", removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessHoursTitle, removeAfterDisappear: false, hasDone: true)
+    
+    controller.validateData = { _ in
+        let state = stateValue.with { $0 }
+        do {
+            let hours = try state.mapped()
+            _ = context.engine.accountData.updateAccountBusinessHours(businessHours: hours).start()
+            showModalText(for: context.window, text: strings().businessUpdated)
+            return .success(.navigationBack)
+        } catch {
+            return .fail(.alert("Intersection Error"))
+        }
+        
+    }
+    
+    controller.updateDoneValue = { data in
+        return { f in
+            let mapped = stateValue.with { try? $0.mapped() }
+            let isEnabled = stateValue.with { $0.initial != mapped }
+            if isEnabled {
+                f(.enabled(strings().navigationDone))
+            } else {
+                f(.disabled(strings().navigationDone))
+            }
+        }
+    }
+
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -503,5 +656,3 @@ private func BusinessdayHoursController(context: AccountContext, stateSignal: Si
     
 }
 
-
-#endif

@@ -2583,6 +2583,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_filter_large_groups_avatar: { NSImage(named: "Icon_FilterLargeGroups")!.precomposed(.white) },
                                                chat_filter_non_contacts_avatar: { NSImage(named: "Icon_FilterNonContacts")!.precomposed(.white) },
                                                chat_filter_archive_avatar: { NSImage(named: "Icon_FilterArchive")!.precomposed(.white) },
+                                               chat_filter_new_chats: { NSImage(resource: .iconFilterNewChats).precomposed(.white) },
+                                               chat_filter_existing_chats: { NSImage(resource: .iconFilterExistingChats).precomposed(.white) },
                                                group_invite_via_link: { NSImage(named: "Icon_InviteViaLink")!.precomposed(palette.accentIcon) },
                                                tab_contacts: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.grayIcon) },
                                                tab_contacts_active: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.accentIcon) },

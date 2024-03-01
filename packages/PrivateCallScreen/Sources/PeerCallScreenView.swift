@@ -76,6 +76,25 @@ private final class InfoHelpView : NSVisualEffectView {
     }
 }
 
+struct PeerCallVideoViewState {
+    var incomingView: MetalCallVideoView?
+    var outgoingView: MetalCallVideoView?
+    
+    var incomingInited: Bool {
+        return self.incomingView?.videoMetrics != nil
+    }
+    var outgoingInited: Bool {
+        return self.outgoingView?.videoMetrics != nil
+    }
+    
+    var smallVideoSize: NSSize {
+        if let outgoingView, let metrics = outgoingView.videoMetrics {
+            let targetSize = NSMakeSize(180, 180)
+            return metrics.resolution.aspectFitted(targetSize)
+        }
+        return NSMakeSize(180, 100)
+    }
+}
 
 final class PeerCallScreenView : Control {
     private let backgroundLayer: CallBackgroundLayer = .init()
@@ -86,10 +105,7 @@ final class PeerCallScreenView : Control {
     private var arguments: Arguments?
     private var state: PeerCallState?
     
-    private var videoAction: PeerCallActionView? = PeerCallActionView()
-    private var screencastAction: PeerCallActionView? = PeerCallActionView()
-    private var muteAction: PeerCallActionView? = PeerCallActionView()
-    private var endAction: PeerCallActionView? = PeerCallActionView()
+    private let actions = View()
 
     
     private var statusTooltip: InfoHelpView?
@@ -100,6 +116,13 @@ final class PeerCallScreenView : Control {
     
     private var tooltipsViews: [PeerCallTooltipStatusView] = []
     private var tooltips: [PeerCallTooltipStatusView.TooltipType] = []
+    
+    private var videoViewState: PeerCallVideoViewState?
+    
+    
+    private var actionsViews: [PeerCallActionView] = []
+    private var actionsList: [PeerCallAction] = []
+
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -109,12 +132,9 @@ final class PeerCallScreenView : Control {
         addSubview(photoView)
         addSubview(statusView)
         
-        addSubview(videoAction!)
-        addSubview(screencastAction!)
-        addSubview(muteAction!)
-        addSubview(endAction!)
+        addSubview(actions)
         
-        
+        actions.layer?.masksToBounds = false
         
         updateLayout(size: self.frame.size, transition: .immediate)
     }
@@ -150,11 +170,23 @@ final class PeerCallScreenView : Control {
         self.backgroundLayer.renderSpec = RenderLayerSpec(size: RenderSize(width: Int(size.width), height: Int(size.height)), edgeInset: 0)
                 
         
-        transition.updateFrame(view: photoView, frame: photoView.centerFrameX(y: 128))
+        transition.updateFrame(view: photoView, frame: photoView.centerFrameX(y: floorToScreenPixels(size.height / 3) - 50))
         photoView.updateLayout(size: photoView.frame.size, transition: transition)
         
         transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: photoView.frame.maxY + 32))
         statusView.updateLayout(size: statusView.frame.size, transition: transition)
+        
+        if let videoViewState {
+            if let incomingVideoView = videoViewState.incomingView {
+                transition.updateFrame(view: incomingVideoView, frame: size.bounds)
+            }
+            
+            if let outgointVideoView = videoViewState.outgoingView {
+                let videoSize = videoViewState.smallVideoSize
+                transition.updateFrame(view: outgointVideoView, frame: CGRect(origin: NSMakePoint(size.width - videoSize.width - 10, size.height - videoSize.height - 10), size: videoSize))
+            }
+        }
+        
         
         
         if let statusTooltip {
@@ -174,16 +206,17 @@ final class PeerCallScreenView : Control {
             transition.updateFrame(view: keyoverlay, frame: size.bounds)
         }
         
-        
+        transition.updateFrame(view: actions, frame: NSMakeRect(0, size.height - 70 - 40, size.width, 70))
         
 
-        let actions = [self.videoAction, self.screencastAction, self.muteAction, self.endAction].compactMap { $0 }
+        
+        let actions = self.actionsViews
         
         let width = actions.reduce(0, { $0 + $1.frame.width}) + 36 * CGFloat(actions.count - 1)
         
         var x = floorToScreenPixels((size.width - width) / 2)
         for action in actions {
-            transition.updateFrame(view: action, frame: CGRect(origin: CGPoint(x: x, y: size.height - action.frame.height - 40), size: action.frame.size))
+            transition.updateFrame(view: action, frame: CGRect(origin: CGPoint(x: x, y: 0), size: action.frame.size))
             x += action.frame.width + 36
         }
         
@@ -195,20 +228,31 @@ final class PeerCallScreenView : Control {
         }
     }
     
-    func updateState(_ state: PeerCallState, arguments: Arguments, transition: ContainedViewLayoutTransition) {
+    func updateState(_ state: PeerCallState, videoViewState: PeerCallVideoViewState, arguments: Arguments, transition: ContainedViewLayoutTransition) {
         self.state = state
         self.arguments = arguments
+        self.videoViewState = videoViewState
         
         self.photoView.updateState(state, arguments: arguments, transition: transition)
         self.statusView.updateState(state, arguments: arguments, transition: transition)
         self.backgroundLayer.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
         
         
-        muteAction?.update(makeAction(text: "Mute", resource: .icMute, active: state.externalState.isMuted, action: arguments.external.toggleMute), animated: false)
-        videoAction?.update(makeAction(text: "Video", resource: .icVideo, action: arguments.external.toggleCamera), animated: false)
-        screencastAction?.update(makeAction(text: "Screen", resource: .icScreen, action: arguments.external.toggleScreencast), animated: false)
-        endAction?.update(makeAction(text: "End Call", resource: .icDecline, interactive: false, action: arguments.external.endcall), animated: false)
-
+        if let incomingView = videoViewState.incomingView {
+            if videoViewState.incomingInited {
+                addSubview(incomingView, positioned: .below, relativeTo: actions)
+            }
+        } else if let view = self.videoViewState?.incomingView {
+            performSubviewRemoval(view, animated: transition.isAnimated)
+        }
+        
+        if let outgoingView = videoViewState.outgoingView {
+            if videoViewState.outgoingInited {
+                addSubview(outgoingView, positioned: .below, relativeTo: videoViewState.incomingView ?? actions)
+            }
+        } else if let view = self.videoViewState?.outgoingView {
+            performSubviewRemoval(view, animated: transition.isAnimated)
+        }
         
         if let tooltip = state.statusTooltip {
             if self.statusTooltip?.string != tooltip {
@@ -239,7 +283,7 @@ final class PeerCallScreenView : Control {
         
         
         
-        if state.secretKeyViewState == .revealed {
+        if state.secretKeyViewState == .revealed, let secretView {
             let current: PeerCallRevealedSecretKeyView
             let isNew: Bool
             if let view = self.revealedKey {
@@ -316,38 +360,86 @@ final class PeerCallScreenView : Control {
             self.secretView = nil
         }
         
-        var tooltips:[PeerCallTooltipStatusView.TooltipType] = []
+        do {
+            var tooltips:[PeerCallTooltipStatusView.TooltipType] = []
+            
+            if state.externalState.isMuted, state.isActive {
+                tooltips.append(.yourMicroOff)
+            }
+            if state.externalState.remoteAudioState == .muted, state.isActive {
+                tooltips.append(.microOff(state.compactTitle))
+            }
+            
+            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.tooltips, rightList: tooltips)
+            
+            for deleteIndex in deleteIndices.reversed() {
+                let view = self.tooltipsViews.remove(at: deleteIndex)
+                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
+            }
+            for indicesAndItem in indicesAndItems {
+                let view = PeerCallTooltipStatusView(frame: .zero)
+                view.set(type: indicesAndItem.1)
+                tooltipsViews.insert(view, at: indicesAndItem.0)
+            }
+            for updateIndex in updateIndices {
+                let view = self.tooltipsViews[updateIndex.0]
+                view.set(type: updateIndex.1)
+            }
+            CATransaction.begin()
+            for view in self.tooltipsViews {
+                view.removeFromSuperview()
+            }
+            self.subviews.insert(contentsOf: self.tooltipsViews, at: 0)
+            CATransaction.commit()
+            
+            self.tooltips = tooltips
+        }
         
-        if state.externalState.isMuted, state.isActive {
-            tooltips.append(.yourMicroOff)
+        do {
+
+            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.actionsList, rightList: state.actions)
+            
+            var deletedViews: [Int: PeerCallActionView] = [:]
+            
+            for deleteIndex in deleteIndices.reversed() {
+                let view = self.actionsViews.remove(at: deleteIndex)
+                deletedViews[deleteIndex] = view
+            }
+            for indicesAndItem in indicesAndItems {
+                let previous: PeerCallActionView?
+                if let previousIndex = indicesAndItem.2 {
+                    previous = deletedViews[previousIndex]
+                    deletedViews.removeValue(forKey: previousIndex)
+                } else {
+                    previous = nil
+                }
+                let view = previous ?? PeerCallActionView()
+                view.setFrameOrigin(actions.focus(view.frame.size).origin)
+                view.update(indicesAndItem.1, animated: false)
+                actionsViews.insert(view, at: indicesAndItem.0)
+                if transition.isAnimated, indicesAndItem.2 == nil {
+                    view.layer?.animateAlpha(from: 0, to: indicesAndItem.1.enabled ? 1.0 : 0.7, duration: 0.2)
+                    view.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
+                }
+            }
+            for updateIndex in updateIndices {
+                let view = self.actionsViews[updateIndex.0]
+                view.update(updateIndex.1, animated: transition.isAnimated)
+            }
+            
+            for (_, view) in deletedViews {
+                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
+            }
+            
+            CATransaction.begin()
+            for view in self.actionsViews {
+                view.removeFromSuperview()
+            }
+            self.actions.subviews.insert(contentsOf: self.actionsViews, at: 0)
+            CATransaction.commit()
+            
+            self.actionsList = state.actions
         }
-        if state.externalState.remoteAudioState == .muted, state.isActive {
-            tooltips.append(.microOff(state.compactTitle))
-        }
-        
-        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.tooltips, rightList: tooltips)
-        
-        for deleteIndex in deleteIndices.reversed() {
-            let view = self.tooltipsViews.remove(at: deleteIndex)
-            performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
-        }
-        for indicesAndItem in indicesAndItems {
-            let view = PeerCallTooltipStatusView(frame: .zero)
-            view.set(type: indicesAndItem.1)
-            tooltipsViews.insert(view, at: indicesAndItem.0)
-        }
-        for updateIndex in updateIndices {
-            let view = self.tooltipsViews[updateIndex.0]
-            view.set(type: updateIndex.1)
-        }
-        CATransaction.begin()
-        for view in self.tooltipsViews {
-            view.removeFromSuperview()
-        }
-        self.subviews.insert(contentsOf: self.tooltipsViews, at: 0)
-        CATransaction.commit()
-        
-        self.tooltips = tooltips
     }
 }
 

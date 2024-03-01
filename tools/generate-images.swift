@@ -495,6 +495,8 @@ func initialize() -> [String] {
     array.append("chat_filter_non_contacts_avatar")
     array.append("chat_filter_archive_avatar")
     
+    array.append("chat_filter_new_chats")
+    array.append("chat_filter_existing_chats")
 
     array.append("group_invite_via_link")
     

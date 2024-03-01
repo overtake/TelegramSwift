@@ -264,6 +264,8 @@ private final class PopularPeersRowView : TableRowView {
         tableView.beginTableUpdates()
         tableView.removeAll(animation: .effectFade)
         
+        _ = tableView.addItem(item: GeneralRowItem(.zero, height: 5, stableId: arc4random64()))
+        
         guard let item = item as? PopularPeersRowItem else {return}
         _ = tableView.addItem(item: PopularPeerItem(type: .savedMessages(item.selfPeer), context: item.context, action: item.actionHandler))
         if item.articlesEnabled {
@@ -273,7 +275,7 @@ private final class PopularPeersRowView : TableRowView {
         for peer in item.peers {
             _ = tableView.addItem(item: PopularPeerItem(type: .peer(peer, item.unread[peer.id], item.online[peer.id] ?? false), context: item.context, action: item.actionHandler))
         }
-        
+                
         tableView.endTableUpdates()
         separator.backgroundColor = theme.colors.border
     }

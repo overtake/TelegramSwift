@@ -423,7 +423,11 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(GroupStatsViewController(context, peerId: peerId))
+        if self.peer?.isSupergroup == true {
+            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: false))
+        } else {
+            self.pushViewController(GroupStatsViewController(context, peerId: peerId))
+        }
     }
     
     func archiveStories() {

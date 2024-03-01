@@ -907,7 +907,9 @@ final class BackCategoryControl : Control {
             return [.init(keyPath: "", color: theme.colors.grayIcon.withMultipliedAlpha(0.8))]
         }, ignorePreview: true)
         super.init(frame: frameRect)
+        
         self.sticker.isPlayable = true
+        self.sticker.superview = self
         self.layer?.addSublayer(self.sticker)
         
         self.scaleOnClick = true
@@ -926,6 +928,7 @@ final class BackCategoryControl : Control {
         }, ignorePreview: true)
 
         self.sticker.isPlayable = true
+        self.sticker.superview = self
         self.layer?.addSublayer(self.sticker)
         
         needsLayout = true
@@ -982,12 +985,13 @@ final class AnimatedEmojiesCategories : Control {
             self.context = context
            
             super.init(frame: frameRect)
+                        
             self.toolTip = category.title
 
             scaleOnClick = true
             
             let lite = self.isLite
-            if lite, let image = category.icon {
+            if let image = category.icon {
                 let imageView = ImageView()
                 imageView.image = image
                 imageView.sizeToFit()
@@ -1015,6 +1019,7 @@ final class AnimatedEmojiesCategories : Control {
                     return [.init(keyPath: "", color: color)]
                 }, ignorePreview: true)
                 self.player = inline
+                inline.superview = self
                 inline.frame = focus(NSMakeSize(23, 23))
                 inline.isPlayable = visibleRect != .zero
                 self.layer?.addSublayer(inline)
@@ -1609,6 +1614,7 @@ final class AnimatedEmojiesView : Control {
                 currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context, presentation: presentation ?? theme)
                 self.closeCategories = currentClose
                 searchInside.addSubview(currentClose)
+                
                 
                 currentClose.set(handler: { [weak self] _ in
                     self?.arguments?.selectEmojiCategory(nil)

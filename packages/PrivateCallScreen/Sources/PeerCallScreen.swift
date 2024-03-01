@@ -15,6 +15,7 @@ import TGUIKit
 import MetalEngine
 import AppKit
 import KeyboardKey
+import TelegramMedia
 
 protocol CallViewUpdater {
     func updateState(_ state: PeerCallState, arguments: Arguments, transition: ContainedViewLayoutTransition)
@@ -22,10 +23,16 @@ protocol CallViewUpdater {
 }
 
 public final class PeerCallScreen : ViewController {
-    private let external: PeerCallArguments
+    private var external: PeerCallArguments
     private let screen: Window
     
     private let actionsDisposable = DisposableSet()
+    
+    public var onCompletion: (()->Void)? = nil
+    
+    public var contextObject: Any?
+    
+    private var videoViewState: PeerCallVideoViewState = .init()
 
     
     private let statePromise = ValuePromise<PeerCallState>(ignoreRepeated: true)
@@ -34,6 +41,10 @@ public final class PeerCallScreen : ViewController {
         statePromise.set(stateValue.modify (f))
     }
     
+    
+    public func update(arguments: PeerCallArguments) {
+        self.external = arguments
+    }
     
     
     public init(external: PeerCallArguments) {
@@ -55,10 +66,94 @@ public final class PeerCallScreen : ViewController {
     }
     
     public func setState(_ signal: Signal<ExternalPeerCallState, NoError>) {
-        actionsDisposable.add(signal.start(next: { [weak self] external in
+        actionsDisposable.add((signal |> deliverOnMainQueue).start(next: { [weak self] external in
+            
+            var actions: [PeerCallAction] = []
+            
+            let disableEverything: Bool
+            switch external.state {
+            case .terminating, .terminated:
+                disableEverything = true
+            default:
+                disableEverything = false
+            }
+            
+            let videoEnabled: Bool
+            switch external.state {
+            case .reconnecting, .active:
+                videoEnabled = !external.canBeRemoved
+            default:
+                videoEnabled = false
+            }
+            
+            var redial: Bool = false
+            switch external.state {
+            case let .terminated(reason):
+                redial = reason?.recall ?? false
+            default:
+                break
+            }
+            
+            let muteEnabled = !external.canBeRemoved && !disableEverything && !redial
+            let endEnabled = !external.canBeRemoved
+
+            
+            
+            var isActive: Bool = false
+            switch external.state {
+            case .active, .reconnecting, .connecting, .requesting:
+                isActive = !external.canBeRemoved
+            default:
+                break
+            }
+            
+            switch external.videoState {
+            case .notAvailable:
+                break
+            default:
+                
+                switch external.state {
+                case .ringing:
+                    break
+                default:
+                    if !redial {
+                        actions.append(makeAction(type: .video, text: "Video", resource: .icVideo, enabled: videoEnabled, action: {
+                            
+                        }))
+                        actions.append(makeAction(type: .video, text: "Screen", resource: .icScreen, enabled: videoEnabled, action: {
+                            
+                        }))
+                    }
+                }
+            }
+  
+            actions.append(makeAction(type: .mute, text: "Mute", resource: .icMute, active: external.isMuted && isActive, enabled: muteEnabled, action: {
+                self?.external.toggleMute()
+            }))
+            switch external.state {
+            case .ringing:
+                actions.append(makeAction(type: .accept, text: "Accept", resource: .icAccept, interactive: true, attract: true, action: {
+                    self?.external.acceptcall()
+                }))
+            default:
+                break
+            }
+            
+            if redial {
+                actions.append(makeAction(type: .redial, text: "Redial", resource: .icRedial, interactive: true, attract: false, action: {
+                    self?.external.recall()
+                }))
+            }
+            
+            actions.append(makeAction(type: .mute, text: "End", resource: .icDecline, enabled: endEnabled, interactive: true, action: {
+                self?.external.endcall(external)
+            }))
+            
+            
             self?.updateState { current in
                 var current = current
                 current.externalState = external
+                current.actions = actions
                 return current
             }
         }))
@@ -87,12 +182,18 @@ public final class PeerCallScreen : ViewController {
         }
         
         
-        let arguments = Arguments(external: external, toggleSecretKey: {
+        let arguments = Arguments(toggleSecretKey: {
             updateState { current in
                 var current = current
-                current.secretKeyViewState = current.secretKeyViewState.rev
+                if current.secretKey != nil {
+                    current.secretKeyViewState = current.secretKeyViewState.rev
+                } else {
+                    current.secretKeyViewState = .concealed
+                }
                 return current
             }
+        }, makeAvatar: { [weak self] view, peerId in
+            return self?.external.makeAvatar(view, peerId)
         })
         
         
@@ -134,7 +235,7 @@ public final class PeerCallScreen : ViewController {
         }
         
         let statusTooltip: Signal<TooltipTuple, NoError> =  statePromise.get() |> map {
-            .init(lowSignal: $0.reception != nil && $0.reception! < 2, lowBattery: $0.externalState.remoteBatteryLevel == .low)
+            .init(lowSignal: $0.reception != nil && $0.reception! < 2 && $0.seconds > 4, lowBattery: $0.externalState.remoteBatteryLevel == .low)
         } |> distinctUntilChanged
         
         
@@ -211,20 +312,96 @@ public final class PeerCallScreen : ViewController {
 
     }
     
+    private var previousState: PeerCallState?
+    
     private func applyState(_ state: PeerCallState, arguments: Arguments, animated: Bool) {
+        
+        let previousState = self.previousState
+        
+        var videoViewState: PeerCallVideoViewState = self.videoViewState
+        switch state.externalState.remoteVideoState {
+        case .active:
+            if videoViewState.outgoingView == nil {
+                if let video = external.video(true) {
+                    let view = MetalVideoMakeView(videoStreamSignal: video)
+                    
+                    view.videoMetricsDidUpdate = { [weak self] _ in
+                        self?.applyState(state, arguments: arguments, animated: animated)
+                    }
+                    videoViewState.incomingView = view
+                } else {
+                    videoViewState.incomingView = nil
+                }
+            }
+        default:
+            videoViewState.incomingView = nil
+        }
+        
+        switch state.externalState.videoState {
+        case .active:
+            if videoViewState.outgoingView == nil {
+                if let video = external.video(false) {
+                    let view = MetalVideoMakeView(videoStreamSignal: video)
+                    
+                    view.videoMetricsDidUpdate = { [weak self] _ in
+                        self?.applyState(state, arguments: arguments, animated: animated)
+                    }
+                    videoViewState.outgoingView = view
+                } else {
+                    videoViewState.outgoingView = nil
+                }
+            }
+        default:
+            videoViewState.outgoingView = nil
+        }
+        
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .spring) : .immediate
-        genericView.updateState(state, arguments: arguments, transition: transition)
+        genericView.updateState(state, videoViewState: videoViewState, arguments: arguments, transition: transition)
         genericView.updateLayout(size: self.frame.size, transition: transition)
+        
+        if state.externalState.canBeRemoved, self.onCompletion != nil {
+            closeAllModals(window: screen)
+            if screen.isFullScreen {
+                screen.toggleFullScreen(nil)
+            }
+            delay(1.3, closure: {
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    self.screen.animator().alphaValue = 0
+                }, completionHandler: {
+                    self.screen.orderOut(nil)
+                })
+            })
+            self.onCompletion?()
+            self.onCompletion = nil
+        }
+       
+        self.videoViewState = videoViewState
+        self.previousState = state
     }
     
     public func show() {
         
         screen.contentView = view
         
-        self.screen.makeKeyAndOrderFront(self)
-        self.screen.orderFrontRegardless()
+        if !screen.isOnActiveSpace {
+            self.screen.alphaValue = 0
+            self.screen.makeKeyAndOrderFront(self)
+            self.screen.orderFrontRegardless()
+            
+            NSAnimationContext.runAnimationGroup({ ctx in
+                self.screen.animator().alphaValue = 1
+            }, completionHandler: { })
+        } else {
+            self.screen.makeKeyAndOrderFront(self)
+            self.screen.orderFrontRegardless()
+        }
         
         self.genericView.updateLayout(size: screen.frame.size, transition: .immediate)
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 

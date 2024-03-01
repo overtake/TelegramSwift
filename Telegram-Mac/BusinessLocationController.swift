@@ -14,8 +14,6 @@ import TGUIKit
 import SwiftSignalKit
 import MapKit
 
-#if DEBUG
-
 private final class AnnotationView : MKAnnotationView {
     private let locationPin = ImageView()
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
@@ -157,15 +155,11 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
     }
     
     func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
-        guard let item = item as? MapRowItem, let location = userLocation.location else {
-            return
-        }
+        
     }
     
     func mapViewDidStopLocatingUser(_ mapView: MKMapView) {
-        guard let item = item as? MapRowItem, let location = mapView.userLocation.location else {
-            return
-        }
+        
     }
     
         
@@ -233,6 +227,15 @@ private struct State : Equatable {
     }
     var address: String?
     var location: Location?
+    
+    var initial: TelegramBusinessLocation?
+    
+    var mapped: TelegramBusinessLocation? {
+        if let address = address, !address.isEmpty {
+            return .init(address: address, coordinates: location.map { .init(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude) })
+        }
+        return nil
+    }
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -255,26 +258,29 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     entries.append(.custom(sectionId: sectionId, index: 0, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.fly_dollar, text: .initialize(string: "Display the location of your business on your account.", color: theme.colors.listGrayText, font: .normal(.text)))
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.business_location, text: .initialize(string: strings().businessLocationHeader, color: theme.colors.listGrayText, font: .normal(.text)))
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.address), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Enter Address", filter: { $0 }, limit: 256))
+    entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.address), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().businessLocationEnterAddress, filter: { $0 }, limit: 256))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_map_enabled, data: .init(name: "Set Location on Map", color: theme.colors.text, type: .switchable(state.location != nil), viewType: state.location != nil ? .firstItem : .singleItem, action: arguments.setLocation, autoswitch: false)))
+    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_map_enabled, data: .init(name: strings().businessLocationSetOnMap, color: theme.colors.text, type: .switchable(state.location != nil), viewType: state.location != nil ? .firstItem : .singleItem, action: arguments.setLocation, autoswitch: false)))
     
     if let location = state.location {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map_map, equatable: .init(state.location), comparable: nil, item: { initialSize, stableId in
-            return MapRowItem(initialSize, height: 200, stableId: stableId, context: arguments.context, location: location, viewType: .innerItem, action: arguments.openMap)
+            return MapRowItem(initialSize, height: 200, stableId: stableId, context: arguments.context, location: location, viewType: .lastItem, action: arguments.openMap)
         }))
         
-        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_remove, data: .init(name: "Remove", color: theme.colors.redUI, type: .none, viewType: .lastItem, action: arguments.setLocation, autoswitch: false)))
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_remove, data: .init(name: strings().businessLocationRemove, color: theme.colors.redUI, type: .none, viewType: .singleItem, action: arguments.setLocation, autoswitch: false)))
     }
     
     // entries
@@ -298,6 +304,20 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
     }
 
     let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+    
+    let businessLocation = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessLocation(id: context.peerId)) |> deliverOnMainQueue
+    
+    actionsDisposable.add(businessLocation.start(next: { location in
+        updateState { current in
+            var current = current
+            current.address = location?.address
+            current.initial = location
+            if let coordinates = location?.coordinates {
+                current.location = .init(coordinate: .init(latitude: coordinates.latitude, longitude: coordinates.longitude), venue: nil)
+            }
+            return current
+        }
+    }))
     
     chatInteraction.sendLocation = { location, venue in
         
@@ -346,7 +366,7 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Location", removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessLocationTitle, removeAfterDisappear: false, hasDone: true)
     
     controller.updateDatas = { datas in
         updateState { current in
@@ -357,6 +377,27 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
         return .none
     }
     
+    controller.validateData = { data in
+        let state = stateValue.with { $0 }
+        if state.initial != state.mapped {
+            _ = context.engine.accountData.updateAccountBusinessLocation(businessLocation: state.mapped).start()
+            showModalText(for: context.window, text: strings().businessUpdated)
+            return .success(.navigationBack)
+        }
+        return .none
+    }
+    
+    controller.updateDoneValue = { data in
+        return { f in
+            let isEnabled = stateValue.with { $0.initial != $0.mapped }
+            if isEnabled {
+                f(.enabled(strings().navigationDone))
+            } else {
+                f(.disabled(strings().navigationDone))
+            }
+        }
+    }
+    
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
@@ -364,5 +405,3 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
     return controller
     
 }
-
-#endif

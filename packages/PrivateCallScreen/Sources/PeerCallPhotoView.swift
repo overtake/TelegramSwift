@@ -23,6 +23,7 @@ final class PeerCallPhotoView : Control, CallViewUpdater {
         super.init(frame: frameRect)
         addSubview(self.blobView)
         layer?.masksToBounds = false
+        userInteractionEnabled = false
     }
     
     required init?(coder: NSCoder) {
@@ -30,11 +31,11 @@ final class PeerCallPhotoView : Control, CallViewUpdater {
     }
     
     func updateState(_ state: PeerCallState, arguments: Arguments, transition: ContainedViewLayoutTransition) {
-        let photoView = arguments.external.makeAvatar(self.photoView, state.peer?._asPeer())
-        self.addSubview(photoView)
-        self.photoView = photoView
-        
-        
+        let photoView = arguments.makeAvatar(self.photoView, state.peer?._asPeer())
+        if let photoView = photoView {
+            self.addSubview(photoView)
+            self.photoView = photoView
+        }
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         if let photoView = photoView {

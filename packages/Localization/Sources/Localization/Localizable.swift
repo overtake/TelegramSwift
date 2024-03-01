@@ -841,6 +841,160 @@ public final class L10n {
   }
   /// Limit Reached
   public static var broadcastGroupsLimitAlertTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.Title") }
+  /// Schedule End
+  public static var businessScheduleEnd: String  { return L10n.tr("Localizable", "Business.ScheduleEnd") }
+  /// Schedule Start
+  public static var businessScheduleStart: String  { return L10n.tr("Localizable", "Business.ScheduleStart") }
+  /// Your Telegram Business has been updated
+  public static var businessUpdated: String  { return L10n.tr("Localizable", "Business.Updated") }
+  /// Only if Offline
+  public static var businessAwayOnlyOffline: String  { return L10n.tr("Localizable", "Business.Away.OnlyOffline") }
+  /// Don't send the away message if you've recently been online.
+  public static var businessAwayOnlyOfflineInfo: String  { return L10n.tr("Localizable", "Business.Away.OnlyOffline.Info") }
+  /// Create an Away Message
+  public static var businessAwayMessageCreateMessage: String  { return L10n.tr("Localizable", "Business.AwayMessage.CreateMessage") }
+  /// Send Away Message
+  public static var businessAwayMessageEnable: String  { return L10n.tr("Localizable", "Business.AwayMessage.Enable") }
+  /// Automatically reply with a message when you are away.
+  public static var businessAwayMessageHeader: String  { return L10n.tr("Localizable", "Business.AwayMessage.Header") }
+  /// Away Message
+  public static var businessAwayMessageTitle: String  { return L10n.tr("Localizable", "Business.AwayMessage.Title") }
+  /// ADD
+  public static var businessChatbotsAdd: String  { return L10n.tr("Localizable", "Business.Chatbots.Add") }
+  /// CHATS
+  public static var businessChatbotsChats: String  { return L10n.tr("Localizable", "Business.Chatbots.Chats") }
+  /// CHATS ACCESSIBLE FOR THE BOT
+  public static var businessChatbotsChatTypes: String  { return L10n.tr("Localizable", "Business.Chatbots.ChatTypes") }
+  /// Add a bot to your account to help you automatically process and respond to the messages you receive. [Learn More >](https://telegram.org)
+  public static var businessChatbotsHeader: String  { return L10n.tr("Localizable", "Business.Chatbots.Header") }
+  /// No bots found
+  public static var businessChatbotsNotFound: String  { return L10n.tr("Localizable", "Business.Chatbots.NotFound") }
+  /// Reply to Messages
+  public static var businessChatbotsPermission: String  { return L10n.tr("Localizable", "Business.Chatbots.Permission") }
+  /// Bot Username
+  public static var businessChatbotsPlaceholder: String  { return L10n.tr("Localizable", "Business.Chatbots.Placeholder") }
+  /// Chatbot
+  public static var businessChatbotsTitle: String  { return L10n.tr("Localizable", "Business.Chatbots.Title") }
+  /// BOT PERMISSION
+  public static var businessChatbotsPermissionHeader: String  { return L10n.tr("Localizable", "Business.Chatbots.Permission.Header") }
+  /// The bot will be able to view all new incoming messages, but not the messages that had been sent before you added the bot.
+  public static var businessChatbotsPermissionInfo: String  { return L10n.tr("Localizable", "Business.Chatbots.Permission.Info") }
+  /// Remove Bot
+  public static var businessChatbotsPermissionRemoveBot: String  { return L10n.tr("Localizable", "Business.Chatbots.Permission.RemoveBot") }
+  /// Create an Greeting Message
+  public static var businessGreetingMessageCreateMessage: String  { return L10n.tr("Localizable", "Business.GreetingMessage.CreateMessage") }
+  /// Send Greeting Message
+  public static var businessGreetingMessageEnable: String  { return L10n.tr("Localizable", "Business.GreetingMessage.Enable") }
+  /// Greet customers when they message you the first time or after a period of no activity.
+  public static var businessGreetingMessageHeader: String  { return L10n.tr("Localizable", "Business.GreetingMessage.Header") }
+  /// Greeting Message
+  public static var businessGreetingMessageTitle: String  { return L10n.tr("Localizable", "Business.GreetingMessage.Title") }
+  /// %d Days
+  public static func businessGreetingMessageNoActivityDays(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days", p1)
+  }
+  /// Choose how many days should pass after your last interaction with a recepient to send them the greeting in response to their message.
+  public static var businessGreetingMessageNoActivityInfo: String  { return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Info") }
+  /// PERIOD OF NO ACTIVITY
+  public static var businessGreetingMessageNoActivityTitle: String  { return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Title") }
+  /// 24 hours
+  public static var businessHours24Hours: String  { return L10n.tr("Localizable", "Business.Hours.24Hours") }
+  /// Add a Set of Hours
+  public static var businessHoursAddSet: String  { return L10n.tr("Localizable", "Business.Hours.AddSet") }
+  /// BUSINESS HOURS
+  public static var businessHoursBusinessHours: String  { return L10n.tr("Localizable", "Business.Hours.BusinessHours") }
+  /// 24 hours
+  public static var businessHoursClosed: String  { return L10n.tr("Localizable", "Business.Hours.Closed") }
+  /// Turn this on to show your opening hours schedule to your customers.
+  public static var businessHoursHeader: String  { return L10n.tr("Localizable", "Business.Hours.Header") }
+  /// Show Business Hours
+  public static var businessHoursShowHours: String  { return L10n.tr("Localizable", "Business.Hours.ShowHours") }
+  /// Timezone
+  public static var businessHoursTimezone: String  { return L10n.tr("Localizable", "Business.Hours.Timezone") }
+  /// Business Hours
+  public static var businessHoursTitle: String  { return L10n.tr("Localizable", "Business.Hours.Title") }
+  /// UTC
+  public static var businessHoursUTC: String  { return L10n.tr("Localizable", "Business.Hours.UTC") }
+  /// Specify your working hours during the day.
+  public static var businessHoursAddSetInfo: String  { return L10n.tr("Localizable", "Business.Hours.AddSet.Info") }
+  /// Closing Time
+  public static var businessHoursSetClosingTime: String  { return L10n.tr("Localizable", "Business.Hours.Set.ClosingTime") }
+  /// Opening Time
+  public static var businessHoursSetOpeningTime: String  { return L10n.tr("Localizable", "Business.Hours.Set.OpeningTime") }
+  /// Remove
+  public static var businessHoursSetRemove: String  { return L10n.tr("Localizable", "Business.Hours.Set.Remove") }
+  /// Open On This Day
+  public static var businessHoursSetTitle: String  { return L10n.tr("Localizable", "Business.Hours.Set.Title") }
+  /// Enter Address
+  public static var businessLocationEnterAddress: String  { return L10n.tr("Localizable", "Business.Location.EnterAddress") }
+  /// Display the location of your business on your account.
+  public static var businessLocationHeader: String  { return L10n.tr("Localizable", "Business.Location.Header") }
+  /// Remove Location
+  public static var businessLocationRemove: String  { return L10n.tr("Localizable", "Business.Location.Remove") }
+  /// Set Location on Map
+  public static var businessLocationSetOnMap: String  { return L10n.tr("Localizable", "Business.Location.SetOnMap") }
+  /// Location
+  public static var businessLocationTitle: String  { return L10n.tr("Localizable", "Business.Location.Title") }
+  /// contact
+  public static var businessMessageContact: String  { return L10n.tr("Localizable", "Business.Message.Contact") }
+  /// non contact
+  public static var businessMessageNonContact: String  { return L10n.tr("Localizable", "Business.Message.NonContact") }
+  /// All 1-to-1 Chats Except...
+  public static var businessMessageRecepientsAll: String  { return L10n.tr("Localizable", "Business.Message.Recepients.All") }
+  /// Exclude Chats...
+  public static var businessMessageRecepientsExclude: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Exclude") }
+  /// Select Chats...
+  public static var businessMessageRecepientsInclude: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Include") }
+  /// Only Selected Chats
+  public static var businessMessageRecepientsSelected: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Selected") }
+  /// RECIPIENTS
+  public static var businessMessageRecepientsTitle: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Title") }
+  /// EXCLUDE CHATS
+  public static var businessMessageRecepientsExcludeTitle: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Exclude.Title") }
+  /// INCLUDE CHATS
+  public static var businessMessageRecepientsIncludeTitle: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Include.Title") }
+  /// Always Send
+  public static var businessMessageScheduleAlwaysSend: String  { return L10n.tr("Localizable", "Business.Message.Schedule.AlwaysSend") }
+  /// Custom Schedule
+  public static var businessMessageScheduleCustom: String  { return L10n.tr("Localizable", "Business.Message.Schedule.Custom") }
+  /// Outside of Business Hours
+  public static var businessMessageScheduleOutsideHours: String  { return L10n.tr("Localizable", "Business.Message.Schedule.OutsideHours") }
+  /// SCHEDULE
+  public static var businessMessageScheduleTitle: String  { return L10n.tr("Localizable", "Business.Message.Schedule.Title") }
+  /// End Time
+  public static var businessMessageScheduleCustomEndTime: String  { return L10n.tr("Localizable", "Business.Message.Schedule.Custom.EndTime") }
+  /// Start Time
+  public static var businessMessageScheduleCustomStartTime: String  { return L10n.tr("Localizable", "Business.Message.Schedule.Custom.StartTime") }
+  /// CHAT
+  public static var businessMessageSelectPeersChats: String  { return L10n.tr("Localizable", "Business.Message.SelectPeers.Chats") }
+  /// CHAT TYPES
+  public static var businessMessageSelectPeersChatTypes: String  { return L10n.tr("Localizable", "Business.Message.SelectPeers.ChatTypes") }
+  /// Add Quick Reply
+  public static var businessQuickReplyAdd: String  { return L10n.tr("Localizable", "Business.QuickReply.Add") }
+  /// Edit Name
+  public static var businessQuickReplyEditName: String  { return L10n.tr("Localizable", "Business.QuickReply.EditName") }
+  /// Set up shortcuts with rich text and media to respond to messages faster.
+  public static var businessQuickReplyHeader: String  { return L10n.tr("Localizable", "Business.QuickReply.Header") }
+  /// +%d MORE
+  public static func businessQuickReplyMore(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More", p1)
+  }
+  /// Quick Replies
+  public static var businessQuickReplyTitle: String  { return L10n.tr("Localizable", "Business.QuickReply.Title") }
+  /// Shortcut with that name already exists.
+  public static var businessQuickReplyAddError: String  { return L10n.tr("Localizable", "Business.QuickReply.Add.Error") }
+  /// Add a shortcut for your quick reply.
+  public static var businessQuickReplyAddInfo: String  { return L10n.tr("Localizable", "Business.QuickReply.Add.Info") }
+  /// Enter name...
+  public static var businessQuickReplyAddPlaceholder: String  { return L10n.tr("Localizable", "Business.QuickReply.Add.Placeholder") }
+  /// New Quick Reply
+  public static var businessQuickReplyAddTitle: String  { return L10n.tr("Localizable", "Business.QuickReply.Add.Title") }
+  /// Add a shortcut for your quick reply.
+  public static var businessQuickReplyEditInfo: String  { return L10n.tr("Localizable", "Business.QuickReply.Edit.Info") }
+  /// Edit Quick Reply
+  public static var businessQuickReplyEditTitle: String  { return L10n.tr("Localizable", "Business.QuickReply.Edit.Title") }
+  /// Limit Reached
+  public static var businessSelectPeersLimit: String  { return L10n.tr("Localizable", "Business.SelectPeers.Limit") }
   /// Hide Telegram
   public static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
   /// F
@@ -3423,6 +3577,22 @@ public final class L10n {
   }
   /// No replies here yet
   public static var chatEmptyReplies: String  { return L10n.tr("Localizable", "Chat.Empty.Replies") }
+  /// New Away Message
+  public static var chatEmptyBusinessAwayMessage: String  { return L10n.tr("Localizable", "Chat.Empty.Business.AwayMessage") }
+  /// New Greeting Message
+  public static var chatEmptyBusinessGreetingMessage: String  { return L10n.tr("Localizable", "Chat.Empty.Business.GreetingMessage") }
+  /// New Quick Reply
+  public static var chatEmptyBusinessQuickReply: String  { return L10n.tr("Localizable", "Chat.Empty.Business.QuickReply") }
+  /// Add messages that are automatically sent when you are off.
+  public static var chatEmptyBusinessAwayMessageInfo: String  { return L10n.tr("Localizable", "Chat.Empty.Business.AwayMessage.Info") }
+  /// Create greetings that will be automatically sent to new customers.
+  public static var chatEmptyBusinessGreetingMessageInfo: String  { return L10n.tr("Localizable", "Chat.Empty.Business.GreetingMessage.Info") }
+  /// • Enter a message below that\nwill be sent in chats when you type **"/%@"**
+  public static func chatEmptyBusinessQuickReplyInfo1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Empty.Business.QuickReply.Info1", p1)
+  }
+  /// • You can access Quick Replies\nin any chat by typing "/" or using the Attach menu.
+  public static var chatEmptyBusinessQuickReplyInfo2: String  { return L10n.tr("Localizable", "Chat.Empty.Business.QuickReply.Info2") }
   /// Add Premium
   public static var chatEmptyPremiumRequiredAction: String  { return L10n.tr("Localizable", "Chat.Empty.PremiumRequired.Action") }
   /// Previewing this file can potentially expose your IP address to its sender.
@@ -3915,6 +4085,8 @@ public final class L10n {
   public static var chatInputUnmute: String  { return L10n.tr("Localizable", "Chat.Input.Unmute") }
   /// Edit Message
   public static var chatInputAccessoryEditMessage: String  { return L10n.tr("Localizable", "Chat.Input.Accessory.EditMessage") }
+  /// Quick Reply
+  public static var chatInputAttachQuickReply: String  { return L10n.tr("Localizable", "Chat.Input.Attach.QuickReply") }
   /// Messages in this chat are automatically deleted 1 day after they have been sent.
   public static var chatInputAutoDelete1Day: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.1Day") }
   /// Messages in this chat are automatically deleted 1 week after they have been sent.
@@ -3953,6 +4125,8 @@ public final class L10n {
   public static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
   }
+  /// Edit Quick Replies
+  public static var chatInputContextEditQuickReply: String  { return L10n.tr("Localizable", "Chat.InputContext.EditQuickReply") }
   /// Contact
   public static var chatListContact: String  { return L10n.tr("Localizable", "Chat.List.Contact") }
   /// GIF
@@ -5367,6 +5541,12 @@ public final class L10n {
   public static var chatInputOpenChat: String  { return L10n.tr("Localizable", "ChatInput.OpenChat") }
   /// Show Next
   public static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
+  /// Away Message...
+  public static var chatInputBusinessAway: String  { return L10n.tr("Localizable", "ChatInput.Business.Away") }
+  /// Greeting Message...
+  public static var chatInputBusinessGreeting: String  { return L10n.tr("Localizable", "ChatInput.Business.Greeting") }
+  /// Quick Reply Message...
+  public static var chatInputBusinessQuickReply: String  { return L10n.tr("Localizable", "ChatInput.Business.QuickReply") }
   /// Above the Message
   public static var chatInputEditLinkAboveTheMessage: String  { return L10n.tr("Localizable", "ChatInput.EditLink.AboveTheMessage") }
   /// Below the Message
@@ -5571,6 +5751,8 @@ public final class L10n {
   public static var chatListFilterExcludeMuted: String  { return L10n.tr("Localizable", "ChatList.Filter.ExcludeMuted") }
   /// Exclude Read
   public static var chatListFilterExcludeRead: String  { return L10n.tr("Localizable", "ChatList.Filter.ExcludeRead") }
+  /// Existing Chats
+  public static var chatListFilterExistingChats: String  { return L10n.tr("Localizable", "ChatList.Filter.ExistingChats") }
   /// Groups
   public static var chatListFilterGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Groups") }
   /// Create folders for different groups of chats and quickly switch between them.
@@ -5611,6 +5793,8 @@ public final class L10n {
   public static var chatListFilterMuteAll: String  { return L10n.tr("Localizable", "ChatList.Filter.MuteAll") }
   /// Muted
   public static var chatListFilterMutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.MutedChats") }
+  /// New Chats
+  public static var chatListFilterNewChats: String  { return L10n.tr("Localizable", "ChatList.Filter.NewChats") }
   /// Create Folder
   public static var chatListFilterNewTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.NewTitle") }
   /// Non-Contacts
@@ -5799,6 +5983,18 @@ public final class L10n {
   public static var chatListFilterTilteDefaultUnmuted: String  { return L10n.tr("Localizable", "ChatList.Filter.Tilte.Default.Unmuted") }
   /// Unread
   public static var chatListFilterTilteDefaultUnread: String  { return L10n.tr("Localizable", "ChatList.Filter.Tilte.Default.Unread") }
+  /// This color will be used for the folder's tag in the chat list.
+  public static var chatListFolderColorInfo: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorInfo") }
+  /// Reset Color
+  public static var chatListFolderColorReset: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorReset") }
+  /// FOLDER COLOR
+  public static var chatListFolderColorTitle: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorTitle") }
+  /// Subscribe to Telegram Premium to add colors for your folders.
+  public static var chatListFolderPremiumAlert: String  { return L10n.tr("Localizable", "ChatList.Folder.PremiumAlert") }
+  /// Show Folders Tags
+  public static var chatListFolderTags: String  { return L10n.tr("Localizable", "ChatList.Folder.Tags") }
+  /// Display folder names for each chat in the chat list.
+  public static var chatListFolderTagsInfo: String  { return L10n.tr("Localizable", "ChatList.Folder.Tags.Info") }
   /// Click here to view them
   public static var chatListFolderUpdatesInfo: String  { return L10n.tr("Localizable", "ChatList.FolderUpdates.Info") }
   /// %d
@@ -6161,6 +6357,10 @@ public final class L10n {
   }
   /// Report Messages
   public static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
+  /// Away Messages
+  public static var chatTitleBusinessAwayMessages: String  { return L10n.tr("Localizable", "ChatTitle.Business.AwayMessages") }
+  /// Greeting Messages
+  public static var chatTitleBusinessGreetingMessages: String  { return L10n.tr("Localizable", "ChatTitle.Business.GreetingMessages") }
   /// Default
   public static var chatWallpaperEmpty: String  { return L10n.tr("Localizable", "ChatWallpaper.Empty") }
   /// E-Mail
@@ -10041,6 +10241,8 @@ public final class L10n {
   public static var peerMyNotes: String  { return L10n.tr("Localizable", "Peer.MyNotes") }
   /// Replies Notifications
   public static var peerRepliesNotifications: String  { return L10n.tr("Localizable", "Peer.RepliesNotifications") }
+  /// Repost Story
+  public static var peerReportStory: String  { return L10n.tr("Localizable", "Peer.ReportStory") }
   /// Saved Messages
   public static var peerSavedMessages: String  { return L10n.tr("Localizable", "Peer.SavedMessages") }
   /// Service Notifications
@@ -10539,6 +10741,8 @@ public final class L10n {
   public static var peerInfoActionAcrhivedStories: String  { return L10n.tr("Localizable", "PeerInfo.Action.AcrhivedStories") }
   /// Add
   public static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
+  /// Boost Channel
+  public static var peerInfoActionBoostChannel: String  { return L10n.tr("Localizable", "PeerInfo.Action.BoostChannel") }
   /// Boost Group
   public static var peerInfoActionBoostGroup: String  { return L10n.tr("Localizable", "PeerInfo.Action.BoostGroup") }
   /// Call
@@ -10609,6 +10813,82 @@ public final class L10n {
   public static var peerInfoBotStatusHasAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasAccess") }
   /// has no access to messages
   public static var peerInfoBotStatusHasNoAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasNoAccess") }
+  /// business hours
+  public static var peerInfoBusinessHours: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours") }
+  /// location
+  public static var peerInfoBusinessLocation: String  { return L10n.tr("Localizable", "PeerInfo.Business.Location") }
+  /// closed
+  public static var peerInfoBusinessHoursClosed: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours.Closed") }
+  /// local time
+  public static var peerInfoBusinessHoursLocal: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours.local") }
+  /// my time
+  public static var peerInfoBusinessHoursMy: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours.my") }
+  /// open 24 hours
+  public static var peerInfoBusinessHoursOpens24Hours: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours.Opens24Hours") }
+  /// Closed
+  public static var peerInfoBusinessHoursCurrentClosed: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.Closed") }
+  /// Open
+  public static var peerInfoBusinessHoursCurrentOpen: String  { return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.Open") }
+  /// Opens %@
+  public static func peerInfoBusinessHoursCurrentOpenIn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenIn", p1)
+  }
+  /// %d
+  public static func peerInfoBusinessHoursCurrentOpenInHoursCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_countable", p1)
+  }
+  /// Opens in %d hours
+  public static func peerInfoBusinessHoursCurrentOpenInHoursFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_few", p1)
+  }
+  /// Opens in %d hours
+  public static func peerInfoBusinessHoursCurrentOpenInHoursMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_many", p1)
+  }
+  /// Opens in %d hour
+  public static func peerInfoBusinessHoursCurrentOpenInHoursOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_one", p1)
+  }
+  /// Opens in %d hours
+  public static func peerInfoBusinessHoursCurrentOpenInHoursOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_other", p1)
+  }
+  /// Opens in %d hours
+  public static func peerInfoBusinessHoursCurrentOpenInHoursTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_two", p1)
+  }
+  /// Opens in %d hours
+  public static func peerInfoBusinessHoursCurrentOpenInHoursZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInHours_zero", p1)
+  }
+  /// %d
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_countable", p1)
+  }
+  /// Opens in %d minutes
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_few", p1)
+  }
+  /// Opens in %d minutes
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_many", p1)
+  }
+  /// Opens in %d minute
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_one", p1)
+  }
+  /// Opens in %d minutes
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_other", p1)
+  }
+  /// Opens in %d minutes
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_two", p1)
+  }
+  /// Opens in %d minutes
+  public static func peerInfoBusinessHoursCurrentOpenInMinutesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Business.Hours.Current.OpenInMinutes_zero", p1)
+  }
   /// Channel Name
   public static var peerInfoChannelNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.ChannelName.Placeholder") }
   /// Channel Name
@@ -11525,8 +11805,42 @@ public final class L10n {
   }
   /// Activate For Free
   public static var premiumBoardingActivateForFree: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree") }
+  /// Tag Your Chats
+  public static var premiumBoardingTagFolders: String  { return L10n.tr("Localizable", "PremiumBoarding.TagFolders") }
   /// You are already Telegram Premium subscriber.
   public static var premiumBoardingActivateForFreeAlready: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree.Already") }
+  /// Away Messages
+  public static var premiumBoardingBusinessAwayMessages: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.AwayMessages") }
+  /// ChatBots
+  public static var premiumBoardingBusinessChatBots: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.ChatBots") }
+  /// Greeting Messages
+  public static var premiumBoardingBusinessGreetingMessages: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.GreetingMessages") }
+  /// Location
+  public static var premiumBoardingBusinessLocation: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Location") }
+  /// Opening Hours
+  public static var premiumBoardingBusinessOpeningHours: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.OpeningHours") }
+  /// Quick Replies
+  public static var premiumBoardingBusinessQuickReplies: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.QuickReplies") }
+  /// Telegram Business
+  public static var premiumBoardingBusinessTelegramBusiness: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.TelegramBusiness") }
+  /// Define messages that are automatically sent when you are off.
+  public static var premiumBoardingBusinessAwayMessagesInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.AwayMessages.Info") }
+  /// Add any third party chatbots that will process customer interactions.
+  public static var premiumBoardingBusinessChatBotsInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.ChatBots.Info") }
+  /// Create greetings that will be automatically sent to new customers.
+  public static var premiumBoardingBusinessGreetingMessagesInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.GreetingMessages.Info") }
+  /// Display the location of your business on your account.
+  public static var premiumBoardingBusinessLocationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Location.Info") }
+  /// Show to your customers when you are open for business.
+  public static var premiumBoardingBusinessOpeningHoursInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.OpeningHours.Info") }
+  /// Set up shortcuts with rich text and media to respond to messages faster.
+  public static var premiumBoardingBusinessQuickRepliesInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.QuickReplies.Info") }
+  /// You have now unlocked these additional business features.
+  public static var premiumBoardingBusinessTelegramBusinessHeaderInfo1: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.TelegramBusiness.HeaderInfo1") }
+  /// Turn your account into a business page with these additional features.
+  public static var premiumBoardingBusinessTelegramBusinessHeaderInfo2: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.TelegramBusiness.HeaderInfo2") }
+  /// Upgrade your account with business features such as location, opening hours and quick replies.
+  public static var premiumBoardingBusinessTelegramBusinessInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.TelegramBusiness.Info") }
   /// Set custom expiration durations like 6 or 48 hours for your stories.
   public static var premiumBoardingStoriesExpirationDurationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.ExpirationDuration.Info") }
   /// Expiration Options
@@ -11559,6 +11873,8 @@ public final class L10n {
   public static var premiumBoardingStoriesStealthModeInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.StealthMode.Info") }
   /// Stealth Mode
   public static var premiumBoardingStoriesStealthModeTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.StealthMode.Title") }
+  /// Add colorful labels to chats for faster access in chat list.
+  public static var premiumBoardingTagFoldersInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.TagFolders.Info") }
   /// Gift subscription for %@
   public static func premiumGiftButtonText(_ p1: String) -> String {
     return L10n.tr("Localizable", "PremiumGift.ButtonText", p1)
@@ -16771,6 +17087,12 @@ public final class L10n {
   public static var webpageConfirmClose: String  { return L10n.tr("Localizable", "Webpage.Confirm.Close") }
   /// Close Anyway
   public static var webpageConfirmOk: String  { return L10n.tr("Localizable", "Webpage.Confirm.Ok") }
+  /// Friday
+  public static var weekdayFriday: String  { return L10n.tr("Localizable", "Weekday.Friday") }
+  /// Monday
+  public static var weekdayMonday: String  { return L10n.tr("Localizable", "Weekday.Monday") }
+  /// Saturday
+  public static var weekdaySaturday: String  { return L10n.tr("Localizable", "Weekday.Saturday") }
   /// Fri
   public static var weekdayShortFriday: String  { return L10n.tr("Localizable", "Weekday.ShortFriday") }
   /// Mon
@@ -16785,6 +17107,14 @@ public final class L10n {
   public static var weekdayShortTuesday: String  { return L10n.tr("Localizable", "Weekday.ShortTuesday") }
   /// Wed
   public static var weekdayShortWednesday: String  { return L10n.tr("Localizable", "Weekday.ShortWednesday") }
+  /// Sunday
+  public static var weekdaySunday: String  { return L10n.tr("Localizable", "Weekday.Sunday") }
+  /// Thursday
+  public static var weekdayThursday: String  { return L10n.tr("Localizable", "Weekday.Thursday") }
+  /// Tuesday
+  public static var weekdayTuesday: String  { return L10n.tr("Localizable", "Weekday.Tuesday") }
+  /// Weddnesday
+  public static var weekdayWednesday: String  { return L10n.tr("Localizable", "Weekday.Wednesday") }
   /// More trending stickers are available in\nSettings ⟶ Stickers ⟶ [Trending Stickers](trending).
   public static var widgedStickersInfoText: String  { return L10n.tr("Localizable", "Widged.Stickers.InfoText") }
   /// More data and storage settings are available in\nSettings ⟶ [Data And Storage](storage).

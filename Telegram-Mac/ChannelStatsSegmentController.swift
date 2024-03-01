@@ -61,14 +61,17 @@ final class ChannelStatsSegmentController : SectionViewController {
     init(_ context: AccountContext, peerId: PeerId, isChannel: Bool) {
         self.context = context
         self.peerId = peerId
-        self.stats = ChannelStatsViewController(context, peerId: peerId)
+        if isChannel {
+            self.stats = ChannelStatsViewController(context, peerId: peerId)
+        } else {
+            self.stats = GroupStatsViewController(context, peerId: peerId)
+        }
         self.boosts = ChannelBoostStatsController(context: context, peerId: peerId)
 
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title: { "" }, controller: stats))
-        if isChannel {
-            items.append(SectionControllerItem(title: { "" }, controller: boosts))
-        }
+        items.append(SectionControllerItem(title: { "" }, controller: boosts))
+
         super.init(sections: items, selected: 0, hasHeaderView: false, hasBar: true)
 
     }

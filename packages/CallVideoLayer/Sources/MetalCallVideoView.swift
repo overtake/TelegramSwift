@@ -18,11 +18,11 @@ private func resolveVideoRotationAngle(angle: Float, followsDeviceOrientation: B
 
 public class MetalCallVideoView : LayerBackedView {
     
-    struct VideoMetrics: Equatable {
-           var resolution: CGSize
-           var rotationAngle: Float
-           var followsDeviceOrientation: Bool
-           var sourceId: Int
+    public struct VideoMetrics: Equatable {
+           public var resolution: CGSize
+           public var rotationAngle: Float
+           public var followsDeviceOrientation: Bool
+           public var sourceId: Int
            
            init(resolution: CGSize, rotationAngle: Float, followsDeviceOrientation: Bool, sourceId: Int) {
                self.resolution = resolution
@@ -51,10 +51,14 @@ public class MetalCallVideoView : LayerBackedView {
         fatalError("init(coder:) has not been implemented")
     }
     private var videoOnUpdatedListener: Disposable?
-    private var videoMetrics: VideoMetrics? {
+    
+    public var videoMetricsDidUpdate:((VideoMetrics?)->Void)?
+    
+    public private(set) var videoMetrics: VideoMetrics? {
         didSet {
             if oldValue != videoMetrics {
                 updateLayout(size: self.frame.size, transition: .immediate)
+                videoMetricsDidUpdate?(videoMetrics)
             }
         }
     }

@@ -61,13 +61,12 @@ public enum ChatCustomContentsKind: Equatable {
     case awayMessageInput
     case quickReplyMessageInput(shortcut: String)
     
-    //TODOLANG
     var text: String {
         switch self {
         case .greetingMessageInput:
-            return "Greeting Messages"
+            return strings().chatTitleBusinessGreetingMessages
         case .awayMessageInput:
-            return "Away Messages"
+            return strings().chatTitleBusinessAwayMessages
         case .quickReplyMessageInput(let shortcut):
             return shortcut
         }
@@ -77,9 +76,9 @@ public enum ChatCustomContentsKind: Equatable {
 
 public protocol ChatCustomContentsProtocol: AnyObject {
     var kind: ChatCustomContentsKind { get }
-    var messages: Signal<[Message], NoError> { get }
     var messageLimit: Int? { get }
-    
+    var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> { get }
+
     func enqueueMessages(messages: [EnqueueMessage]) -> Signal<[MessageId?],NoError>
     func deleteMessages(ids: [EngineMessage.Id])
     func editMessage(id: EngineMessage.Id, text: String, media: RequestEditMessageMedia, entities: TextEntitiesMessageAttribute?, webpagePreviewAttribute: WebpagePreviewMessageAttribute?, disableUrlPreview: Bool)
@@ -1618,7 +1617,6 @@ private final class ChatAdData {
         for (messageId, index) in allVisibleAnchorMessageIds {
             let itemHeight = tableView.item(at: index).height
             
-            //TODO:loc optimize eviction
             if self.seenMessageIds.insert(messageId).inserted, let remainingDynamicAdMessageIntervalValue = self.remainingDynamicAdMessageInterval, let remainingDynamicAdMessageDistanceValue = self.remainingDynamicAdMessageDistance {
                 
                 let remainingDynamicAdMessageInterval = remainingDynamicAdMessageIntervalValue - 1
@@ -1713,6 +1711,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let presentationDisposable = DisposableSet()
     private let storiesDisposable = MetaDisposable()
     private let answersAndOnlineDisposable = MetaDisposable()
+    private let keepShortcutDisposable = MetaDisposable()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     private var keepSavedMessagesSyncrhonizedDisposable: Disposable?
@@ -2125,6 +2124,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        keepShortcutDisposable.set(context.engine.accountData.keepShortcutMessageListUpdated().start())
         
         
         sizeValue.set(frame.size)
@@ -3772,6 +3773,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }, setProgress: setProgress), singlePeer: true)
         }
         
+        chatInteraction.sendMessageShortcut = { item in
+            context.engine.accountData.sendMessageShortcut(peerId: peerId, id: item.id)
+        }
         
         chatInteraction.openProxySettings = { [weak self] in
             let controller = proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, pushController: { [weak self] controller in
@@ -4074,6 +4078,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
         }
+        
+        
         
         
         chatInteraction.scrollToTheFirst = { [weak self] in
@@ -5574,7 +5580,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
 
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics())).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics in
+        let shortcuts: Signal<ShortcutMessageList?, NoError>
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            shortcuts = context.engine.accountData.shortcutMessageList() |> map(Optional.init)
+        } else {
+            shortcuts = .single(nil)
+        }
+        
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics()), shortcuts).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts in
             
                         
             guard let `self` = self else {return}
@@ -5656,6 +5669,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedDiscussionGroupId(discussionGroupId)
                         present = present.withUpdatedPinnedMessageId(pinnedMsg)
                         present = present.withUpdatedAttachItems(attachItems)
+                        present = present.withUpdatedShortcuts(shortcuts)
                         
                         var contactStatus: ChatPeerStatus?
                         if let cachedData = peerView.cachedData as? CachedUserData {
@@ -7426,6 +7440,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         presentationDisposable.dispose()
         storiesDisposable.dispose()
         keepSavedMessagesSyncrhonizedDisposable?.dispose()
+        keepShortcutDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -8001,7 +8016,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
 
         self.unsupportedMessageProcessingManager.process = { messageIds in
-            context.account.viewTracker.updateUnsupportedMediaForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
+            let msgIds = messageIds.filter { $0.namespace == Namespaces.Message.Cloud }.map { MessageAndThreadId(messageId: $0, threadId: mode.threadId64) }
+            context.account.viewTracker.updateUnsupportedMediaForMessageIds(messageIds: Set(msgIds) )
         }
         self.messageMentionProcessingManager.process = { messageIds in
             context.account.viewTracker.updateMarkMentionsSeenForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))

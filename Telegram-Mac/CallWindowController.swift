@@ -1134,7 +1134,7 @@ class PhoneCallWindowController {
             } else {
                 self?.session.setToRemovableState()
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         self.window.contentView = view
@@ -1399,6 +1399,12 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 }
 
 func showCallWindow(_ session:PCallSession) {
+    
+    #if DEBUG
+    callScreen(session.accountContext, .success(session))
+    return
+    #endif
+    
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
             _ = controller?.session.hangUpCurrentCall().start()

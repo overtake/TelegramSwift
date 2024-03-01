@@ -13,8 +13,6 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
-#if DEBUG
-
 private final class BusinessBotRowItem : GeneralRowItem {
     let bot: EnginePeer
     let context: AccountContext
@@ -26,7 +24,7 @@ private final class BusinessBotRowItem : GeneralRowItem {
         self.context = context
         self.selected = selected
         titleLayout = .init(.initialize(string: bot._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)))
-        statusLayout = .init(.initialize(string: "bot", color: theme.colors.grayText, font: .normal(.text)))
+        statusLayout = .init(.initialize(string: "@\(bot.addressName ?? "")", color: theme.colors.grayText, font: .normal(.text)))
         super.init(initialSize, stableId: stableId, viewType: viewType, action: action)
     }
     
@@ -131,7 +129,7 @@ private final class BusinessBotRowView: GeneralContainableRowView {
             current.set(font: .medium(.text), for: .Normal)
             current.set(color: theme.colors.underSelectedColor, for: .Normal)
             current.set(background: theme.colors.accent, for: .Normal)
-            current.set(text: "ADD", for: .Normal)
+            current.set(text: strings().businessChatbotsAdd, for: .Normal)
             current.sizeToFit(NSMakeSize(10, 6))
             current.layer?.cornerRadius = current.frame.height / 2
         }
@@ -161,16 +159,16 @@ private final class BusinessBotRowView: GeneralContainableRowView {
 private final class Arguments {
     let context: AccountContext
     let toggleAccess:(State.Access)->Void
-    let selectChats:()->Void
+    let selectChats:(SelectChatType)->Void
     let toggleReplyAccess:()->Void
-    let removeIncluded:(PeerId)->Void
+    let removeSelected:(SelectChatType, PeerId)->Void
     let setBot:(EnginePeer?)->Void
-    init(context: AccountContext, toggleAccess:@escaping(State.Access)->Void, selectChats:@escaping()->Void, toggleReplyAccess:@escaping()->Void, removeIncluded:@escaping(PeerId)->Void, setBot:@escaping(EnginePeer?)->Void) {
+    init(context: AccountContext, toggleAccess:@escaping(State.Access)->Void, selectChats:@escaping(SelectChatType)->Void, toggleReplyAccess:@escaping()->Void, removeSelected:@escaping(SelectChatType, PeerId)->Void, setBot:@escaping(EnginePeer?)->Void) {
         self.context = context
         self.toggleAccess = toggleAccess
         self.selectChats = selectChats
         self.toggleReplyAccess = toggleReplyAccess
-        self.removeIncluded = removeIncluded
+        self.removeSelected = removeSelected
         self.setBot = setBot
     }
 }
@@ -193,10 +191,57 @@ private struct State : Equatable {
     var replyAccess: Bool = true
 
     
-    var selectedIds: [PeerId] = []
-    
-    var selectedPeers: [EnginePeer] = []
+    var includeIds: [PeerId] = []
+    var excludeIds: [PeerId] = []
 
+    var includePeers: [EnginePeer] = []
+    var excludePeers: [EnginePeer] = []
+
+    var contacts: Set<PeerId> = Set()
+    
+    
+    var initialBot: TelegramAccountConnectedBot?
+    
+    var mapped: TelegramAccountConnectedBot? {
+        if let bot = bot {
+            var categories: TelegramBusinessRecipients.Categories = []
+            let peerIds: Set<PeerId>
+            let catpeers: Set<PeerId>
+            switch self.access {
+            case .all:
+                peerIds = Set(self.excludeIds.filter {
+                    $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace
+                })
+                catpeers = Set(self.excludeIds.filter {
+                    $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
+                })
+            case .selected:
+                peerIds = Set(self.includeIds.filter {
+                    $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace
+                })
+                catpeers = Set(self.includeIds.filter {
+                    $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
+                })
+            }
+            for peerId in catpeers {
+                if peerId.id == PeerId.Id._internalFromInt64Value(Int64(ChatListFilterPeerCategories.contacts.rawValue)) {
+                    categories.insert(.contacts)
+                }
+                if peerId.id == PeerId.Id._internalFromInt64Value(Int64(ChatListFilterPeerCategories.nonContacts.rawValue)) {
+                    categories.insert(.nonContacts)
+                }
+                if peerId.id == PeerId.Id._internalFromInt64Value(Int64(ChatListFilterPeerCategories.newChats.rawValue)) {
+                    categories.insert(.newChats)
+                }
+                if peerId.id == PeerId.Id._internalFromInt64Value(Int64(ChatListFilterPeerCategories.existingChats.rawValue)) {
+                    categories.insert(.existingChats)
+                }
+            }
+            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, exclude: self.access == .all), canReply: self.replyAccess)
+        } else {
+            return nil
+        }
+    }
 }
 
 
@@ -233,13 +278,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    let hText = "Add a bot to your account to help you automatically process and respond to the messages you receive. [Learn More >](learnmore)."
+    let hText = strings().businessChatbotsHeader
     
     let attr = parseMarkdownIntoAttributedString(hText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
-        return (NSAttributedString.Key.link.rawValue, contents)
+        return (NSAttributedString.Key.link.rawValue, inApp(for: contents.nsstring, context: arguments.context))
     }))
     entries.append(.custom(sectionId: sectionId, index: 0, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.fly_dollar, text: attr)
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.business_chatbot, text: attr)
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -250,7 +295,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .firstItem, text: "https://t.me/\(bot.addressName ?? "")", font: .normal(.text), color: theme.colors.text)
         }))
     } else {
-        entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .firstItem, defaultText: ""), placeholder: nil, inputPlaceholder: "Bot Username", filter: { $0 }, limit: 60))
+        entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .firstItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessChatbotsPlaceholder, filter: { $0 }, limit: 60))
     }
     
     if let result = state.botsResult {
@@ -269,7 +314,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             if peers.isEmpty {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_bot(.init(0)), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .lastItem, text: "No bots found", font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
+                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .lastItem, text: strings().businessChatbotsNotFound, font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
                 }))
             } else {
                 for (i, peer) in peers.enumerated() {
@@ -303,14 +348,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("CHATS ACCESSIBLE FOR THE BOT"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatbotsChatTypes), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_access_1x1, data: .init(name: "All 1-to-1 Chats Except...", color: theme.colors.text, type: .selectable(state.access == .all), viewType: .firstItem, action: {
+    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_access_1x1, data: .init(name: strings().businessMessageRecepientsAll, color: theme.colors.text, type: .selectable(state.access == .all), viewType: .firstItem, action: {
         arguments.toggleAccess(.all)
     })))
     
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_access_selected, data: .init(name: "Only Selected Chats", color: theme.colors.text, type: .selectable(state.access == .selected), viewType: .lastItem, action: {
+    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_access_selected, data: .init(name: strings().businessMessageRecepientsSelected, color: theme.colors.text, type: .selectable(state.access == .selected), viewType: .lastItem, action: {
         arguments.toggleAccess(.selected)
     })))
     
@@ -320,37 +365,59 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     switch state.access {
     case .all:
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("EXCLUDE CHATS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessMessageRecepientsExcludeTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_exclude_chats, data: .init(name: "Exclude Chats...", color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.selectedPeers.isEmpty ? .singleItem : .firstItem, action: arguments.selectChats)))
+        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_exclude_chats, data: .init(name: strings().businessMessageRecepientsExclude, color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.excludeIds.isEmpty ? .singleItem : .firstItem, action: {
+            arguments.selectChats(.exclude)
+        })))
         
     case .selected:
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INCLUDE CHATS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessMessageRecepientsIncludeTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_include_chats, data: .init(name: "Include Chats...", color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.selectedPeers.isEmpty ? .singleItem : .firstItem, action: arguments.selectChats)))
+        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_include_chats, data: .init(name: strings().businessMessageRecepientsExclude, color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.includeIds.isEmpty ? .singleItem : .firstItem, action: {
+            arguments.selectChats(.include)
+        })))
     }
     
     
     struct Tuple : Equatable {
         let peer: PeerEquatable
+        let type: State.Access
         let viewType: GeneralViewType
         let status: String?
     }
     var tuples: [Tuple] = []
 
     var selectedPeers: [Peer] = []
-
-    let categories = state.selectedIds.filter {
-        $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
+    
+    
+    
+    let categories: [PeerId]
+    
+    switch state.access {
+    case .all:
+        categories = state.excludeIds.filter {
+            $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
+        }
+    case .selected:
+        categories = state.includeIds.filter {
+            $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
+        }
     }
+    
     for category in categories {
         let cat = ChatListFilterPeerCategories(rawValue: Int32(category.id._internalGetInt64Value()))
         selectedPeers.append(TelegramFilterCategory(category: cat))
     }
-
-    selectedPeers.append(contentsOf: state.selectedPeers.map { $0._asPeer() })
+    
+    switch state.access {
+    case .all:
+        selectedPeers.append(contentsOf: state.excludePeers.map { $0._asPeer() })
+    case .selected:
+        selectedPeers.append(contentsOf: state.includePeers.map { $0._asPeer() })
+    }
 
 
     for (i, peer) in selectedPeers.enumerated() {
@@ -362,8 +429,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 viewType = .lastItem
             }
         }
-        let status: String? = nil
-        tuples.append(.init(peer: .init(peer), viewType: viewType, status: nil))
+        let status: String?
+        if peer is TelegramFilterCategory {
+            status = nil
+        } else {
+            status = state.contacts.contains(peer.id) ? strings().businessMessageContact : strings().businessMessageNonContact
+        }
+        tuples.append(.init(peer: .init(peer), type: state.access, viewType: viewType, status: status))
     }
 
     for tuple in tuples {
@@ -371,10 +443,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), status: tuple.status, inset: NSEdgeInsets(left: 20, right: 20), viewType: tuple.viewType, action: {
                 //arguments.openInfo(peer.id)
             }, contextMenuItems: {
-                return .single([ContextMenuItem("Remove", handler: {
-                    arguments.removeIncluded(tuple.peer.id)
+                return .single([ContextMenuItem(strings().contextRemove, handler: {
+                    if state.access == .all {
+                        arguments.removeSelected(.exclude, tuple.peer.id)
+                    } else {
+                        arguments.removeSelected(.include, tuple.peer.id)
+                    }
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
-            }, highlightVerified: true)
+            }, highlightVerified: true, menuOnAction: true)
         }))
     }
 
@@ -383,21 +459,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("BOT PERMISSIONS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatbotsPermissionHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_reply_to_message, data: .init(name: "Reply to Messages", color: theme.colors.text, type: .switchable(state.replyAccess), viewType: .singleItem, action: arguments.toggleReplyAccess)))
+    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_reply_to_message, data: .init(name: strings().businessChatbotsPermission, color: theme.colors.text, type: .switchable(state.replyAccess), viewType: .singleItem, action: arguments.toggleReplyAccess)))
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("The bot will be able to view all new incoming messages, but not the messages that had been sent before you added the bot."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatbotsPermissionInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
   
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_remove, data: .init(name: "Remove Bot", color: theme.colors.redUI, type: .none, viewType: .singleItem, action: {
-       
-    })))
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
+//    
+//    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_remove, data: .init(name: strings().businessChatbotsPermissionRemoveBot, color: theme.colors.redUI, type: .none, viewType: .singleItem, action: {
+//       
+//    })))
     
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -419,7 +495,8 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         statePromise.set(stateValue.modify (f))
     }
     
-    let peers: Signal<[EnginePeer], NoError> = statePromise.get() |> map { $0.selectedIds } |> distinctUntilChanged |> mapToSignal { peerIds in
+    
+    let includePeers: Signal<[EnginePeer], NoError> = statePromise.get() |> map { $0.includeIds } |> distinctUntilChanged |> mapToSignal { peerIds in
         return context.account.postbox.transaction { transaction -> [EnginePeer] in
             return peerIds.compactMap {
                 transaction.getPeer($0)
@@ -429,14 +506,79 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         }
     } |> deliverOnMainQueue
     
-    actionsDisposable.add(peers.start(next: { peers in
+    actionsDisposable.add(includePeers.start(next: { peers in
         updateState { current in
             var current = current
-            current.selectedPeers = peers
+            current.includePeers = peers
             return current
         }
     }))
+    
+    let excludedPeers: Signal<[EnginePeer], NoError> = statePromise.get() |> map { $0.excludeIds } |> distinctUntilChanged |> mapToSignal { peerIds in
+        return context.account.postbox.transaction { transaction -> [EnginePeer] in
+            return peerIds.compactMap {
+                transaction.getPeer($0)
+            }.map {
+                .init($0)
+            }
+        }
+    } |> deliverOnMainQueue
+    
+    actionsDisposable.add(excludedPeers.start(next: { peers in
+        updateState { current in
+            var current = current
+            current.excludePeers = peers
+            return current
+        }
+    }))
+    
+    let contacts = context.engine.data.get(TelegramEngine.EngineData.Item.Contacts.List(includePresences: false))
+    actionsDisposable.add(contacts.start(next: { contacts in
+        updateState { current in
+            var current = current
+            current.contacts = Set(contacts.peers.map { $0.id })
+            return current
+        }
+    }))
+    
+    let chatbot = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessConnectedBot(id: context.peerId)) |> take(1)
 
+    
+    actionsDisposable.add(chatbot.start(next: { connectedBot in
+        updateState { current in
+            var current = current
+            current.initialBot = connectedBot
+            if let connectedBot = connectedBot {
+                
+                var categories: [PeerId] = []
+                if connectedBot.recipients.categories.contains(.nonContacts) {
+                    categories.insert(TelegramFilterCategory(category: .nonContacts).id, at: 0)
+                }
+                if connectedBot.recipients.categories.contains(.contacts) {
+                    categories.insert(TelegramFilterCategory(category: .contacts).id, at: 0)
+                }
+                if connectedBot.recipients.categories.contains(.newChats) {
+                    categories.insert(TelegramFilterCategory(category: .newChats).id, at: 0)
+                }
+                if connectedBot.recipients.categories.contains(.existingChats) {
+                    categories.insert(TelegramFilterCategory(category: .existingChats).id, at: 0)
+                }
+                
+                current.access = connectedBot.recipients.exclude ? .all : .selected
+                switch current.access {
+                case .all:
+                    current.excludeIds = Array(connectedBot.recipients.additionalPeers)
+                    current.excludeIds.insert(contentsOf: categories, at: 0)
+                case .selected:
+                    current.includeIds = Array(connectedBot.recipients.additionalPeers)
+                    current.includeIds.insert(contentsOf: categories, at: 0)
+                }
+                current.replyAccess = connectedBot.canReply
+            }
+            return current
+        }
+        
+    }))
 
     let arguments = Arguments(context: context, toggleAccess: { value in
         updateState { current in
@@ -444,26 +586,39 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
             current.access = value
             return current
         }
-    }, selectChats: {
+    }, selectChats: { type in
         
         var items: [ShareAdditionItem] = []
-        
+        switch type {
+        case .exclude:
+            items.append(.init(peer: TelegramFilterCategory(category: .existingChats), status: ""))
+        case .include:
+            items.append(.init(peer: TelegramFilterCategory(category: .newChats), status: ""))
+        }
         items.append(.init(peer: TelegramFilterCategory(category: .contacts), status: ""))
         items.append(.init(peer: TelegramFilterCategory(category: .nonContacts), status: ""))
         
-        let additionTopItems = ShareAdditionItems(items: items, topSeparator: "CHAT TYPES", bottomSeparator: "CHATS")
+        let additionTopItems = ShareAdditionItems(items: items, topSeparator: strings().businessMessageSelectPeersChatTypes, bottomSeparator: strings().businessSelectPeersLimit)
 
+        let selected: Set<PeerId>
+        switch type {
+        case .exclude:
+            selected = stateValue.with { Set($0.excludeIds) }
+        case .include:
+            selected = stateValue.with { Set($0.includeIds) }
+        }
         
-        showModal(with: ShareModalController(BusinessSelectChatsCallbackObject(context, defaultSelectedIds: Set(), additionTopItems: additionTopItems, limit: 100, limitReachedText: "Limit reached", callback: { peerIds in
+        
+        showModal(with: ShareModalController(BusinessSelectChatsCallbackObject(context, defaultSelectedIds: selected, contacts: stateValue.with { $0.contacts }, additionTopItems: additionTopItems, limit: 100, limitReachedText: strings().businessSelectPeersLimit, callback: { peerIds in
             
-//            let categories = peerIds.filter {
-//                $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
-//            }
-//            let peerIds = Set(peerIds).subtracting(categories)
-
             updateState { current in
                 var current = current
-                current.selectedIds = Array(peerIds)
+                switch type {
+                case .exclude:
+                    current.excludeIds = Array(peerIds)
+                case .include:
+                    current.includeIds = Array(peerIds)
+                }
                 return current
             }
             
@@ -475,10 +630,15 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
             current.replyAccess = !current.replyAccess
             return current
         }
-    }, removeIncluded: { peerId in
+    }, removeSelected: { type, peerId in
         updateState { current in
             var current = current
-            current.selectedIds.removeAll(where: { $0 == peerId })
+            switch type {
+            case .exclude:
+                current.excludeIds.removeAll(where: { $0 == peerId })
+            case .include:
+                current.includeIds.removeAll(where: { $0 == peerId })
+            }
             return current
         }
     }, setBot: { bot in
@@ -499,7 +659,7 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Chat Bot", removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessChatbotsTitle, removeAfterDisappear: false, hasDone: true)
     
     
     controller.updateDatas = { datas in
@@ -509,6 +669,27 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
             return current
         }
         return .none
+    }
+    
+    controller.validateData = { data in
+        let state = stateValue.with { $0 }
+        if state.initialBot != state.mapped {
+            _ = context.engine.accountData.setAccountConnectedBot(bot: state.mapped).start()
+            showModalText(for: context.window, text: strings().businessUpdated)
+            return .success(.navigationBack)
+        }
+        return .none
+    }
+    
+    controller.updateDoneValue = { data in
+        return { f in
+            let isEnabled = stateValue.with { $0.initialBot != $0.mapped }
+            if isEnabled {
+                f(.enabled(strings().navigationDone))
+            } else {
+                f(.disabled(strings().navigationDone))
+            }
+        }
     }
     
     let usernameUpdate: Signal<State.BotsResult?, NoError> = statePromise.get() |> filter { $0.bot == nil }
@@ -524,10 +705,34 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         }
     }
     
+    
+    let initialIdUpdate: Signal<EnginePeer?, NoError> = statePromise.get() |> filter { $0.bot == nil }
+    |> map { $0.initialBot?.id }
+    |> distinctUntilChanged
+    |> mapToSignal { peerId in
+        if let peerId = peerId {
+            return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
+        } else {
+            return .single(nil)
+        }
+    }
+    
+    
     actionsDisposable.add(usernameUpdate.startStandalone(next: { result in
         updateState { current in
             var current = current
             current.botsResult = result
+            return current
+        }
+    }))
+    
+    actionsDisposable.add(initialIdUpdate.start(next: { result in
+        updateState { current in
+            var current = current
+            current.bot = result
+            if let result {
+                current.botsResult = .found([result])
+            }
             return current
         }
     }))
@@ -540,5 +745,3 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
     return controller
     
 }
-
-#endif

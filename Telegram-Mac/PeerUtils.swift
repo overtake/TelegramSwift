@@ -25,6 +25,10 @@ extension ChatListFilterPeerCategories {
     static let excludeMuted = ChatListFilterPeerCategories(rawValue: 1 << 7)
     static let excludeArchived = ChatListFilterPeerCategories(rawValue: 1 << 8)
     
+    static let existingChats = ChatListFilterPeerCategories(rawValue: 1 << 9)
+    static let newChats = ChatListFilterPeerCategories(rawValue: 1 << 10)
+
+    
     static let Namespace: Int32 = 7
 }
 
@@ -42,7 +46,7 @@ final class TelegramStoryRepostPeerObject : Peer {
     var notificationSettingsPeerId: PeerId?
     
     func isEqual(_ other: Peer) -> Bool {
-        if let other = other as? TelegramStoryRepostPeerObject {
+        if let _ = other as? TelegramStoryRepostPeerObject {
             return true
         }
         return false
@@ -56,7 +60,7 @@ final class TelegramStoryRepostPeerObject : Peer {
     }
     
     var displayTitle: String? {
-        return "Repost Story"
+        return strings().peerReportStory
     }
     
     var icon: EmptyAvatartType? {
@@ -129,6 +133,12 @@ final class TelegramFilterCategory : Peer {
         if category == .excludeArchived {
             return strings().chatListFilterArchive
         }
+        if category == .existingChats {
+            return strings().chatListFilterExistingChats
+        }
+        if category == .newChats {
+            return strings().chatListFilterNewChats
+        }
         return nil
     }
     
@@ -156,6 +166,12 @@ final class TelegramFilterCategory : Peer {
         }
         if category == .excludeArchived {
             return .icon(colors: theme.colors.peerColors(5), icon: theme.icons.chat_filter_archive_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
+        }
+        if category == .newChats {
+            return .icon(colors: theme.colors.peerColors(2), icon: theme.icons.chat_filter_new_chats, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
+        }
+        if category == .existingChats {
+            return .icon(colors: theme.colors.peerColors(2), icon: theme.icons.chat_filter_existing_chats, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         return nil
     }

@@ -25,12 +25,9 @@ final class PremiumPromoOrder {
             if let order = data["premium_promo_order"] as? [String] {
                 premiumValues = order.compactMap { PremiumValue(rawValue: $0) }
             }
-            
-            #if DEBUG
-            if !premiumValues.contains(.folder_tags) {
-                premiumValues.append(.folder_tags)
+            if let order = data["business_promo_order"] as? [String] {
+                premiumValues.append(contentsOf: order.compactMap { PremiumValue(rawValue: $0) })
             }
-            #endif
         }
     }
 }

@@ -130,7 +130,7 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                 return .never()
             }
             var first = true
-            return account.viewTracker.aroundChatListView(groupId: groupId, filterPredicate: filterPredicate, index: index, count: 80)
+            return account.viewTracker.aroundChatListView(groupId: groupId, filterPredicate: filterPredicate, index: index, count: 100)
             |> map { view, updateType -> ChatListViewUpdate in
                 let genericType: ViewUpdateType
                 if first {

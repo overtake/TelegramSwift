@@ -299,6 +299,59 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(folderTags)
         
+        
+        
+        let business_hours = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_hours.setup(context: context, type: .business_hours, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_hours.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_hours)
+        
+        let business_location = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_location.setup(context: context, type: .business_location, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_location.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_location)
+        
+        let quick_replies = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        quick_replies.setup(context: context, type: .quick_replies, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.quick_replies.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(quick_replies)
+        
+        let greeting_message = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        greeting_message.setup(context: context, type: .greeting_message, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.greeting_message.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(greeting_message)
+        
+        
+        let away_message = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        away_message.setup(context: context, type: .away_message, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.away_message.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(away_message)
+        
+        let business_bots = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_bots.setup(context: context, type: .business_bots, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_bots.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_bots)
+        
+        
+        
         switch value {
         case .stories:
             slideView.displaySlide(at: 0, animated: false)
@@ -343,17 +396,17 @@ final class PremiumBoardingFeaturesView: View {
         case .folder_tags:
             slideView.displaySlide(at: 20, animated: false)
         case .business_location:
-            fatalError()
+            slideView.displaySlide(at: 21, animated: false)
         case .business_hours:
-            fatalError()
-        case .business_quick_replies:
-            fatalError()
-        case .business_greeting_messages:
-            fatalError()
-        case .business_away_messages:
-            fatalError()
-        case .business_chatbots:
-            fatalError()
+            slideView.displaySlide(at: 22, animated: false)
+        case .quick_replies:
+            slideView.displaySlide(at: 23, animated: false)
+        case .greeting_message:
+            slideView.displaySlide(at: 24, animated: false)
+        case .away_message:
+            slideView.displaySlide(at: 25, animated: false)
+        case .business_bots:
+            slideView.displaySlide(at: 26, animated: false)
         }
         
         needsLayout = true

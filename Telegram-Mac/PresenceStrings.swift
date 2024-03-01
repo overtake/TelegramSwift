@@ -213,26 +213,56 @@ func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo tim
 
 
 func stringForShortTimestamp(hours: Int32, minutes: Int32) -> String {
-    let hourString: String
-    if hours == 0 {
-        hourString = "12"
-    } else if hours > 12 {
-        hourString = "\(hours - 12)"
-    } else {
-        hourString = "\(hours)"
+    
+    
+    
+    var components = DateComponents()
+    components.hour = Int(hours)
+    components.minute = Int(minutes)
+
+    // Use the current calendar to ensure the components are interpreted correctly
+    let calendar = Calendar.current
+    
+    // Optional: you might want to ensure you're using the current time zone
+    components.timeZone = TimeZone.current
+    
+    // Create a Date from components
+    guard let date = calendar.date(from: components) else {
+        print("Failed to create date from components.")
+        return ""
     }
     
-    let periodString: String
-    if hours >= 12 {
-        periodString = "PM"
-    } else {
-        periodString = "AM"
-    }
-    if minutes >= 10 {
-        return "\(hourString):\(minutes) \(periodString)"
-    } else {
-        return "\(hourString):0\(minutes) \(periodString)"
-    }
+    // Create a DateFormatter and set its dateStyle to .none and timeStyle to .short
+    // This will ensure that the time is formatted according to the user's locale
+    let formatter = DateFormatter()
+    formatter.dateStyle = .none
+    formatter.timeStyle = .short
+    
+    // Format the date to a string
+    let formattedTime = formatter.string(from: date)
+    
+    return formattedTime
+//    
+//    let hourString: String
+//    if hours == 0 {
+//        hourString = "12"
+//    } else if hours > 12 {
+//        hourString = "\(hours - 12)"
+//    } else {
+//        hourString = "\(hours)"
+//    }
+//    
+//    let periodString: String
+//    if hours >= 12 {
+//        periodString = "PM"
+//    } else {
+//        periodString = "AM"
+//    }
+//    if minutes >= 10 {
+//        return "\(hourString):\(minutes) \(periodString)"
+//    } else {
+//        return "\(hourString):0\(minutes) \(periodString)"
+//    }
 }
 
 func stringForDuration(_ duration: Int32) -> String {

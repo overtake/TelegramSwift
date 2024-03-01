@@ -212,6 +212,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
     
+    var sendMessageShortcut:(ShortcutMessageList.Item)->Void = { _ in }
+    
     var replyToAnother:(EngineMessageReplySubject, Bool)->Void = { _, _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
@@ -742,6 +744,10 @@ final class ChatInteraction : InterfaceObserver  {
             }
         })
         
+    }
+    
+    func openEditReplies() {
+        context.bindings.rootNavigation().push(BusinessQuickReplyController(context: context))
     }
     
     func openWebview(bot:Peer, title: String?, buttonText: String, url: String, simple: Bool, inline: Bool) {

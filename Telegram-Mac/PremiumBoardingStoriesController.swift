@@ -166,18 +166,17 @@ enum PremiumBoardingExtraFeatureItem {
         case .highQuality:
             return strings().premiumBoardingStoriesHighQualityTitle
         case .business_location:
-            //TODOLANG
-            return "Location"
+            return strings().premiumBoardingBusinessLocation
         case .business_hours:
-            return "Opening Hours"
+            return strings().premiumBoardingBusinessOpeningHours
         case .business_quick_replies:
-            return "Quick Replies"
+            return strings().premiumBoardingBusinessQuickReplies
         case .business_greeting_messages:
-            return "Greeting Messages"
+            return strings().premiumBoardingBusinessGreetingMessages
         case .business_away_messages:
-            return "Away Messages"
+            return strings().premiumBoardingBusinessAwayMessages
         case .business_chatbots:
-            return "ChatBots"
+            return strings().premiumBoardingBusinessChatBots
         }
     }
     var info: String {
@@ -199,18 +198,17 @@ enum PremiumBoardingExtraFeatureItem {
         case .highQuality:
             return strings().premiumBoardingStoriesHighQualityInfo
         case .business_location:
-            //TODOLANG
-            return "Display the location of your business on your account."
+            return strings().premiumBoardingBusinessLocationInfo
         case .business_hours:
-            return "Show to your customers when you are open for business."
+            return strings().premiumBoardingBusinessOpeningHoursInfo
         case .business_quick_replies:
-            return "Set up shortcuts with rich text and media to respond to messages faster."
+            return strings().premiumBoardingBusinessQuickRepliesInfo
         case .business_greeting_messages:
-            return "Create greetings that will be automatically sent to new customers."
+            return strings().premiumBoardingBusinessGreetingMessagesInfo
         case .business_away_messages:
-            return "Define messages that are automatically sent when you are off."
+            return strings().premiumBoardingBusinessAwayMessagesInfo
         case .business_chatbots:
-            return "Add any third party chatbots that will process customer interactions."
+            return strings().premiumBoardingBusinessChatBotsInfo
         }
     }
     

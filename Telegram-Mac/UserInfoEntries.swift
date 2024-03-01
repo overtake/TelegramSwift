@@ -49,12 +49,14 @@ final class UserInfoState : PeerInfoState {
     let updatingPhotoState:PeerInfoUpdatingPhotoState?
     let suggestingPhotoState:PeerInfoUpdatingPhotoState?
     let businessHoursRevealed: Bool
-    init(editingState: UserInfoEditingState?, savingData: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, suggestingPhotoState:PeerInfoUpdatingPhotoState?, businessHoursRevealed: Bool) {
+    let businessHoursDisplayMyTimezone: Bool
+    init(editingState: UserInfoEditingState?, savingData: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, suggestingPhotoState:PeerInfoUpdatingPhotoState?, businessHoursRevealed: Bool, businessHoursDisplayMyTimezone: Bool) {
         self.editingState = editingState
         self.savingData = savingData
         self.updatingPhotoState = updatingPhotoState
         self.suggestingPhotoState = suggestingPhotoState
         self.businessHoursRevealed = businessHoursRevealed
+        self.businessHoursDisplayMyTimezone = businessHoursDisplayMyTimezone
     }
     
     override init() {
@@ -63,6 +65,7 @@ final class UserInfoState : PeerInfoState {
         self.updatingPhotoState = nil
         self.suggestingPhotoState = nil
         self.businessHoursRevealed = false
+        self.businessHoursDisplayMyTimezone = true
     }
     
     func isEqual(to: PeerInfoState) -> Bool {
@@ -88,32 +91,38 @@ final class UserInfoState : PeerInfoState {
         if lhs.businessHoursRevealed != rhs.businessHoursRevealed {
             return false
         }
+        if lhs.businessHoursDisplayMyTimezone != rhs.businessHoursDisplayMyTimezone {
+            return false
+        }
         return true
     }
     
     func withUpdatedSavingData(_ savingData: Bool) -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed)
+        return UserInfoState(editingState: self.editingState, savingData: savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     
     func withUpdatedEditingState(_ editingState: UserInfoEditingState?) -> UserInfoState {
-        return UserInfoState(editingState: editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed)
+        return UserInfoState(editingState: editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: f(self.updatingPhotoState), suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed)
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: f(self.updatingPhotoState), suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     func withoutUpdatingPhotoState() -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: nil, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed)
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: nil, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     
     func withUpdatedSuggestingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: f(self.updatingPhotoState), businessHoursRevealed: self.businessHoursRevealed)
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: f(self.updatingPhotoState), businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     func withoutSuggestingPhotoState() -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: nil, businessHoursRevealed: self.businessHoursRevealed)
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: nil, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     func withBusinessHoursRevealed(_ revealed: Bool) -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: revealed)
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: revealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
+    }
+    func withBusinessHoursTimeZoneUpdated(_ businessHoursDisplayMyTimezone: Bool) -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: businessHoursDisplayMyTimezone)
     }
 }
 
@@ -312,15 +321,26 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     
-    func openLocation(_ peer: Peer, _ cachedData: CachedUserData) {
-        showModal(with: LocationModalPreview(context, map: .init(latitude: 25.08405406819793, longitude: 55.13948416803165, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil), peer: peer, messageId: nil), for: context.window)
+    func openLocation(_ peer: Peer, _ location: TelegramBusinessLocation) {
+        if let coordinates = location.coordinates {
+            showModal(with: LocationModalPreview(context, map: .init(latitude: coordinates.latitude, longitude: coordinates.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil), peer: peer, messageId: nil), for: context.window)
+        }
     }
-    func openHours(_ peer: Peer, _ cachedData: CachedUserData) {
+    func openHours(_ peer: Peer, _ businessHours: TelegramBusinessHours) {
         let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
             self?.updateState(f)
         }
         updateState { state in
             return state.withBusinessHoursRevealed(!state.businessHoursRevealed)
+        }
+    }
+    
+    func toggleDisplayZoneTime() {
+        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        updateState { state in
+            return state.withBusinessHoursTimeZoneUpdated(!state.businessHoursDisplayMyTimezone).withBusinessHoursRevealed(true)
         }
     }
         
@@ -943,8 +963,8 @@ enum UserInfoEntry: PeerInfoEntry {
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
     case userName(sectionId:Int, value: [String], viewType: GeneralViewType)
-    case businessLocation(sectionId:Int, peer: EnginePeer, cachedData: CachedDataEquatable, viewType: GeneralViewType)
-    case businessHours(sectionId:Int, peer: EnginePeer, cachedData: CachedDataEquatable, revealed: Bool, viewType: GeneralViewType)
+    case businessLocation(sectionId:Int, peer: EnginePeer, businessLocation: TelegramBusinessLocation, viewType: GeneralViewType)
+    case businessHours(sectionId:Int, peer: EnginePeer, businessHours: TelegramBusinessHours, revealed: Bool, displayMyZone: Bool, viewType: GeneralViewType)
     case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
     case sendMessage(sectionId:Int, viewType: GeneralViewType)
     case shareContact(sectionId:Int, viewType: GeneralViewType)
@@ -985,8 +1005,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
-        case let .businessLocation(sectionId, peer, cachedData, _): return .businessLocation(sectionId: sectionId, peer: peer, cachedData: cachedData, viewType: viewType)
-        case let .businessHours(sectionId, peer, cachedData, revealed, _): return .businessHours(sectionId: sectionId, peer: peer, cachedData: cachedData, revealed: revealed, viewType: viewType)
+        case let .businessLocation(sectionId, peer, location, _): return .businessLocation(sectionId: sectionId, peer: peer, businessLocation: location, viewType: viewType)
+        case let .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, _): return .businessHours(sectionId: sectionId, peer: peer, businessHours: businessHours, revealed: revealed, displayMyZone: displayMyZone, viewType: viewType)
         case let .reportReaction(sectionId, value, _): return .reportReaction(sectionId: sectionId, value: value, viewType: viewType)
         case let .sendMessage(sectionId, _): return .sendMessage(sectionId: sectionId, viewType: viewType)
         case let .shareContact(sectionId, _): return .shareContact(sectionId: sectionId, viewType: viewType)
@@ -1162,16 +1182,16 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .businessLocation(sectionId, peer, cachedData, viewType):
+        case let .businessLocation(sectionId, peer, location, viewType):
             switch entry {
-            case .businessLocation(sectionId, peer: peer, cachedData: cachedData, viewType):
+            case .businessLocation(sectionId, peer: peer, businessLocation: location, viewType):
                 return true
             default:
                 return false
             }
-        case let .businessHours(sectionId, peer, cachedData, revealed, viewType):
+        case let .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, viewType):
             switch entry {
-            case .businessHours(sectionId, peer: peer, cachedData: cachedData, revealed, viewType):
+            case .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, viewType):
                 return true
             default:
                 return false
@@ -1461,7 +1481,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .businessHours(sectionId, _, _, _, _):
+        case let .businessHours(sectionId, _, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .businessLocation(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1618,14 +1638,14 @@ enum UserInfoEntry: PeerInfoEntry {
             return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
-        case let .businessLocation(_, peer, cachedData, viewType):
-            return PeerInfoLocationRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peer: peer._asPeer(), cachedData: cachedData.data as! CachedUserData, viewType: viewType, open: {
-                arguments.openLocation(peer._asPeer(), cachedData.data as! CachedUserData)
+        case let .businessLocation(_, peer, location, viewType):
+            return PeerInfoLocationRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peer: peer._asPeer(), location: location, viewType: viewType, open: {
+                arguments.openLocation(peer._asPeer(), location)
             })
-        case let .businessHours(_, peer, cachedData, revealed, viewType):
-            return PeerInfoHoursRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, revealed: revealed, peer: peer._asPeer(), cachedData: cachedData.data as! CachedUserData, viewType: viewType, open: {
-                arguments.openHours(peer._asPeer(), cachedData.data as! CachedUserData)
-            })
+        case let .businessHours(_, peer, businessHours, revealed, displayMyZone, viewType):
+            return PeerInfoHoursRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, revealed: revealed, peer: peer._asPeer(), businessHours: businessHours, displayLocalTimezone: displayMyZone, viewType: viewType, open: {
+                arguments.openHours(peer._asPeer(), businessHours)
+            }, toggleDisplayZoneTime: arguments.toggleDisplayZoneTime)
         case let .reportReaction(_, value, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReportReaction, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.reportReaction(value)
@@ -1807,12 +1827,14 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
-                #if DEBUG
                 if let cachedUserData = view.cachedData as? CachedUserData {
-                    infoBlock.append(.businessHours(sectionId: sectionId, peer: .init(peer), cachedData: .init(cachedUserData), revealed: state.businessHoursRevealed, viewType: .singleItem))
-                    infoBlock.append(.businessLocation(sectionId: sectionId, peer: .init(peer), cachedData: .init(cachedUserData), viewType: .singleItem))
+                    if let hours = cachedUserData.businessHours {
+                        infoBlock.append(.businessHours(sectionId: sectionId, peer: .init(peer), businessHours: hours, revealed: state.businessHoursRevealed, displayMyZone: state.businessHoursDisplayMyTimezone, viewType: .singleItem))
+                    }
+                    if let location = cachedUserData.businessLocation {
+                        infoBlock.append(.businessLocation(sectionId: sectionId, peer: .init(peer), businessLocation: location, viewType: .singleItem))
+                    }
                 }
-                #endif
                 
                 if !user.isBot {
                     if !view.peerIsContact, user.id != arguments.context.peerId {

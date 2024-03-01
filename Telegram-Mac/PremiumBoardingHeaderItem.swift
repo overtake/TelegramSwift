@@ -38,14 +38,13 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         let title: NSAttributedString
         var info = NSMutableAttributedString()
         
-        //TODOLANG
         switch sceneType {
         case .coin:
-            title = .initialize(string: "Telegram Business", color: presentation.colors.text, font: .medium(.header))
+            title = .initialize(string: strings().premiumBoardingBusinessTelegramBusiness, color: presentation.colors.text, font: .medium(.header))
             if isPremium {
-                _ = info.append(string: "You have now unlocked these additional business features.", color: presentation.colors.text, font: .normal(.text))
+                _ = info.append(string: strings().premiumBoardingBusinessTelegramBusinessHeaderInfo1, color: presentation.colors.text, font: .normal(.text))
             } else {
-                _ = info.append(string: "Turn your account into a business page with these additional features.", color: presentation.colors.text, font: .normal(.text))
+                _ = info.append(string: strings().premiumBoardingBusinessTelegramBusinessHeaderInfo2, color: presentation.colors.text, font: .normal(.text))
             }
         case .star:
             if let peer = peer {

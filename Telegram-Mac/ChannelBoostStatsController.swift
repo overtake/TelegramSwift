@@ -146,8 +146,8 @@ private final class BoosterRowItem : GeneralRowItem {
             expiresString = "\(durationString) • \(stringForFullDate(timestamp: boost.expires))"
         }
        
-        self.name = .init(.initialize(string: nameString, color: theme.colors.text, font: .medium(.text)))
-        self.status = .init(.initialize(string: expiresString, color: theme.colors.grayText, font: .normal(.text)))
+        self.name = .init(.initialize(string: nameString, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.status = .init(.initialize(string: expiresString, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         
         var label: String?
         if boost.flags.contains(.isGiveaway) {

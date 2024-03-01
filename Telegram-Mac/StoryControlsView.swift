@@ -168,6 +168,8 @@ final class StoryControlsView : Control {
         userContainer.addSubview(privacy)
         userContainer.addSubview(muted)
         
+        avatarAndText.layer?.masksToBounds = false
+        
 
         addSubview(userContainer)
         shadowView.direction = .vertical(false)

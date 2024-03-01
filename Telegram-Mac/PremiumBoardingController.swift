@@ -66,6 +66,7 @@ enum PremiumLogEventsSource : Equatable {
     case saved_tags
     case business
     case business_standalone
+    case folder_tags
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -118,6 +119,8 @@ enum PremiumLogEventsSource : Equatable {
             return "business"
         case .business_standalone:
             return "business_standalone"
+        case .folder_tags:
+            return "folder_tags"
         }
     }
     
@@ -169,6 +172,8 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .business_standalone:
             return nil
+        case .folder_tags:
+            return .folder_tags
         }
     }
     
@@ -273,16 +278,16 @@ enum PremiumValue : String {
     
     case business_location
     case business_hours
-    case business_quick_replies
-    case business_greeting_messages
-    case business_away_messages
-    case business_chatbots
+    case quick_replies
+    case greeting_message
+    case away_message
+    case business_bots
     
     case folder_tags
     
     var isBusiness: Bool {
         switch self {
-        case .business_location, .business_hours, .business_quick_replies, .business_greeting_messages, .business_away_messages, .business_chatbots:
+        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots:
             return true
         default:
             return false
@@ -411,13 +416,13 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessLocation).precomposed(presentation.colors.accent)
         case .business_hours:
             return NSImage(resource: .iconPremiumBusinessHours).precomposed(presentation.colors.accent)
-        case .business_quick_replies:
+        case .quick_replies:
             return NSImage(resource: .iconPremiumBusinessQuickReply).precomposed(presentation.colors.accent)
-        case .business_greeting_messages:
+        case .greeting_message:
             return NSImage(resource: .iconPremiumBusinessGreeting).precomposed(presentation.colors.accent)
-        case .business_away_messages:
+        case .away_message:
             return NSImage(resource: .iconPremiumBusinessAway).precomposed(presentation.colors.accent)
-        case .business_chatbots:
+        case .business_bots:
             return NSImage(resource: .iconPremiumBusinessBot).precomposed(presentation.colors.accent)
         case .folder_tags:
             return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
@@ -465,22 +470,21 @@ enum PremiumValue : String {
         case .message_privacy:
             return strings().premiumBoardingMessagePrivacyTitle
         case .business:
-            return "Telegram Business"
+            return strings().premiumBoardingBusinessTelegramBusiness
         case .business_location:
-            //TODOLANG
-            return "Location"
+            return strings().premiumBoardingBusinessLocation
         case .business_hours:
-            return "Opening Hours"
-        case .business_quick_replies:
-            return "Quick Replies"
-        case .business_greeting_messages:
-            return "Greeting Messages"
-        case .business_away_messages:
-            return "Away Messages"
-        case .business_chatbots:
-            return "ChatBots"
+            return strings().premiumBoardingBusinessOpeningHours
+        case .quick_replies:
+            return strings().premiumBoardingBusinessQuickReplies
+        case .greeting_message:
+            return strings().premiumBoardingBusinessGreetingMessages
+        case .away_message:
+            return strings().premiumBoardingBusinessAwayMessages
+        case .business_bots:
+            return strings().premiumBoardingBusinessChatBots
         case .folder_tags:
-            return "Tag Your Chats"
+            return strings().premiumBoardingTagFolders
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -524,22 +528,21 @@ enum PremiumValue : String {
         case .message_privacy:
             return strings().premiumBoardingMessagePrivacyInfo
         case .business:
-            return "Upgrade your account with business features such as location, opening hours and quick replies."
+            return strings().premiumBoardingBusinessTelegramBusinessInfo
         case .business_location:
-            //TODOLANG
-            return "Display the location of your business on your account."
+            return strings().premiumBoardingBusinessLocationInfo
         case .business_hours:
-            return "Show to your customers when you are open for business."
-        case .business_quick_replies:
-            return "Set up shortcuts with rich text and media to respond to messages faster."
-        case .business_greeting_messages:
-            return "Create greetings that will be automatically sent to new customers."
-        case .business_away_messages:
-            return "Define messages that are automatically sent when you are off."
-        case .business_chatbots:
-            return "Add any third party chatbots that will process customer interactions."
+            return strings().premiumBoardingBusinessOpeningHoursInfo
+        case .quick_replies:
+            return strings().premiumBoardingBusinessQuickRepliesInfo
+        case .greeting_message:
+            return strings().premiumBoardingBusinessGreetingMessagesInfo
+        case .away_message:
+            return strings().premiumBoardingBusinessAwayMessagesInfo
+        case .business_bots:
+            return strings().premiumBoardingBusinessChatBotsInfo
         case .folder_tags:
-            return "Add colorful labels to chats for faster access in chat list."
+            return strings().premiumBoardingTagFoldersInfo
         }
     }
 }
@@ -548,11 +551,7 @@ enum PremiumValue : String {
 
 private struct State : Equatable {
     var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags, .last_seen, .message_privacy]
-    #if DEBUG
-    var businessValues: [PremiumValue] = [.business_location, .business_hours, .business_greeting_messages, .business_away_messages, .business_quick_replies, .business_chatbots]
-    #else
     var businessValues: [PremiumValue] = []
-    #endif
     
     let source: PremiumLogEventsSource
     
@@ -1188,8 +1187,7 @@ final class PremiumBoardingController : ModalViewController {
     
     override var defaultBarTitle: String {
         if source == .business_standalone {
-            //TODOLANG
-            return "Telegram Business"
+            return strings().premiumBoardingBusinessTelegramBusiness
         }
         return super.defaultBarTitle
     }
@@ -1206,6 +1204,9 @@ final class PremiumBoardingController : ModalViewController {
         let source = self.source
         let openFeatures = self.openFeatures
         
+        actionsDisposable.add(context.engine.accountData.keepShortcutMessageListUpdated().startStrict())
+        actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().startStrict())
+        
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
         let close: ()->Void = { [weak self] in
@@ -1217,13 +1218,16 @@ final class PremiumBoardingController : ModalViewController {
         canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
         
-        var initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
         
-        #if DEBUG
+        
+        let business = context.premiumOrder.premiumValues.filter { $0.isBusiness }
+        let rest = context.premiumOrder.premiumValues.filter { !$0.isBusiness }
+
+        var initialState = State(values: rest, businessValues: business, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
+        
         if source != .business && source != .business_standalone {
             initialState.values.insert(.business, at: 1)
         }
-        #endif
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1259,13 +1263,13 @@ final class PremiumBoardingController : ModalViewController {
                     strongSelf.navigationController?.push(BusinessLocationController(context: context))
                 case .business_hours:
                     strongSelf.navigationController?.push(BusinessHoursController(context: context))
-                case .business_quick_replies:
+                case .quick_replies:
                     strongSelf.navigationController?.push(BusinessQuickReplyController(context: context))
-                case .business_greeting_messages:
-                    strongSelf.navigationController?.push(BusinessAwayMessageController(context: context))
-                case .business_away_messages:
-                    strongSelf.navigationController?.push(BusinessAwayMessageController(context: context))
-                case .business_chatbots:
+                case .greeting_message:
+                    strongSelf.navigationController?.push(BusinessMessageController(context: context, type: .greetings))
+                case .away_message:
+                    strongSelf.navigationController?.push(BusinessMessageController(context: context, type: .away))
+                case .business_bots:
                     strongSelf.navigationController?.push(BusinessChatbotController(context: context))
                 default:
                     fatalError("not possible")
