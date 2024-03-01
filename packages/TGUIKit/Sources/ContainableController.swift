@@ -150,7 +150,7 @@ public extension ContainedViewLayoutTransition {
             }
         }
     }
-    func updateFrame(layer: CALayer, frame: CGRect, completion: ((Bool) -> Void)? = nil, save: Bool = true) {
+    func updateFrame(layer: CALayer, frame: CGRect, completion: ((Bool) -> Void)? = nil, save: Bool = true, updatePosition: Bool = false) {
         switch self {
         case .immediate:
             layer.frame = frame
@@ -185,8 +185,12 @@ public extension ContainedViewLayoutTransition {
                 animateSize(layer)
             }
             if save {
-                layer.frame = frame.size.bounds
-                layer.position = frame.origin
+                if updatePosition {
+                    layer.frame = frame.size.bounds
+                    layer.position = frame.origin
+                } else {
+                    layer.frame = frame
+                }
             }
             
         }
