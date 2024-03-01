@@ -317,7 +317,7 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x3eb26d),
                                  NSColor(rgb: 0x3dbd4a),
                                  NSColor(rgb: 0x51c736)]
-        return [colors[index]]
+        return [colors[min(index, colors.count - 1)]]
     }
     
     func businessGradient(_ index: Int) -> [NSColor] {
@@ -1220,8 +1220,8 @@ final class PremiumBoardingController : ModalViewController {
         
         
         
-        let business = context.premiumOrder.premiumValues.filter { $0.isBusiness }
-        let rest = context.premiumOrder.premiumValues.filter { !$0.isBusiness }
+        let business = context.premiumOrder.premiumValues.filter { $0.isBusiness }.uniqueElements
+        let rest = context.premiumOrder.premiumValues.filter { !$0.isBusiness }.uniqueElements
 
         var initialState = State(values: rest, businessValues: business, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
         
