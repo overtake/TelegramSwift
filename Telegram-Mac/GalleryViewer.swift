@@ -604,21 +604,9 @@ class GalleryViewer: NSResponder {
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: message.id.peerId, threadId: nil))
                 case let .customChatContents(contents):
-                    signal = contents.messages |> map { messages in
-                        let entries: [MessageHistoryEntry] = messages.filter { message in
-                            if let tags = tags {
-                                if let msgTag = tagsForMessage(message) {
-                                    return .tag(msgTag) == tags
-                                } else {
-                                    return false
-                                }
-                            } else {
-                                return true
-                            }
-                        }.map {
-                            .init(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: .init(authorIsContact: false))
-                        }
-                        return (MessageHistoryView(tag: nil, namespaces: .all, entries: entries, holeEarlier: false, holeLater: false, isLoading: false), ViewUpdateType.Generic, nil)
+                    signal = contents.historyView |> map { view in
+                        
+                        return (MessageHistoryView(tag: nil, namespaces: .all, entries: view.0.entries, holeEarlier: false, holeLater: false, isLoading: false), ViewUpdateType.Generic, nil)
                     }
                 }
 

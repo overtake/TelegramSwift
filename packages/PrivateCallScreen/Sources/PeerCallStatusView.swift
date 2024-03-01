@@ -166,7 +166,7 @@ internal final class PeerCallStatusView : View, CallViewUpdater {
                     current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
                 }
             }
-        case .timer(let double, let int32):
+        case .timer:
             
             if let view = networkStatus {
                 performSubviewRemoval(view, animated: transition.isAnimated, scale: true)

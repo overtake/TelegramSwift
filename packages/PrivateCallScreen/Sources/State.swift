@@ -12,6 +12,31 @@ import Postbox
 import QuartzCore
 import CoreFoundation
 
+
+public extension PeerCallSessionTerminationReason {
+    var recall: Bool {
+        let recall:Bool
+        switch self {
+        case .ended(let reason):
+            switch reason {
+            case .busy:
+                recall = true
+            default:
+                recall = false
+            }
+        case .error(let reason):
+            switch reason {
+            case .disconnected:
+                recall = true
+            default:
+                recall = false
+            }
+        }
+        return recall
+    }
+}
+
+
 private extension EnginePeer {
     var compactDisplayTitle: String {
         switch self {
@@ -112,26 +137,28 @@ public struct ExternalPeerCallState: Equatable {
        case paused
    }
    
-   var state: State
-   var videoState: VideoState
-   var remoteVideoState: RemoteVideoState
-   var isMuted: Bool
-   var isOutgoingVideoPaused: Bool
-   var remoteAspectRatio: Float
-   var remoteAudioState: RemoteAudioState
-   var remoteBatteryLevel: RemoteBatteryLevel
-   var isScreenCapture: Bool
-   public init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool) {
-       self.state = state
-       self.videoState = videoState
-       self.remoteVideoState = remoteVideoState
-       self.isMuted = isMuted
-       self.isOutgoingVideoPaused = isOutgoingVideoPaused
-       self.remoteAspectRatio = remoteAspectRatio
-       self.remoteAudioState = remoteAudioState
-       self.remoteBatteryLevel = remoteBatteryLevel
-       self.isScreenCapture = isScreenCapture
-   }
+    public var state: State
+    public var videoState: VideoState
+    public var remoteVideoState: RemoteVideoState
+    public var isMuted: Bool
+    public var isOutgoingVideoPaused: Bool
+    public var remoteAspectRatio: Float
+    public var remoteAudioState: RemoteAudioState
+    public var remoteBatteryLevel: RemoteBatteryLevel
+    public var isScreenCapture: Bool
+    public var canBeRemoved: Bool
+    public init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool, canBeRemoved: Bool) {
+        self.state = state
+        self.videoState = videoState
+        self.remoteVideoState = remoteVideoState
+        self.isMuted = isMuted
+        self.isOutgoingVideoPaused = isOutgoingVideoPaused
+        self.remoteAspectRatio = remoteAspectRatio
+        self.remoteAudioState = remoteAudioState
+        self.remoteBatteryLevel = remoteBatteryLevel
+        self.isScreenCapture = isScreenCapture
+        self.canBeRemoved = canBeRemoved
+    }
 }
 
 
@@ -204,17 +231,25 @@ public struct PeerCallState : Equatable {
     
     public var secretKeyViewState: SecretKeyViewState = .concealed
     
+    var actions: [PeerCallAction] = []
+    
     var statusTooltip: String? = nil
     
-    public var externalState: ExternalPeerCallState = .init(state: .active(startTime: CFAbsoluteTimeGetCurrent(), reception: 1, emoji: "😁 🤷 😘 ❤️"), videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false)
+    public var externalState: ExternalPeerCallState = .init(state: .connecting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false, canBeRemoved: false)
     
     var status: PeerCallStatusValue {
+        if self.externalState.canBeRemoved {
+            return .text(L10n.callStatusEnded, nil)
+        }
         return self.externalState.state.statusText(accountPeer, externalState.videoState)
     }
     
     var isActive: Bool {
+        if externalState.canBeRemoved {
+            return false
+        }
         switch externalState.state {
-        case .active, .reconnecting:
+        case .active, .reconnecting, .connecting, .requesting:
             return true
         default:
             return false
@@ -245,6 +280,17 @@ public struct PeerCallState : Equatable {
         }
     }
     
+    var seconds: Int32 {
+        switch externalState.state {
+        case let .active(referenceTime, _, _):
+            return Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
+        case let .reconnecting(referenceTime, _, _):
+            return Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
+        default:
+            return 0
+        }
+    }
+    
     var secretKey: String? {
         switch self.externalState.state {
         case .active(_, _, let emoji):
@@ -265,9 +311,13 @@ public struct PeerCallState : Equatable {
         case .requesting:
             return 0
         case .connecting:
-            return 2
+            if seconds > 2 {
+                return 2
+            } else {
+                return 1
+            }
         case let .active(_, reception, _):
-            if let reception = reception, reception < 2 {
+            if let reception = reception, reception < 2, seconds > 2 {
                 return 2
             }
             return 1

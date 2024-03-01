@@ -53,15 +53,13 @@ public struct ChatListFoldersSettings: Codable {
     
     public let sidebar: Bool
     public let interacted: Bool
-    public let showTags: Bool
     public static var defaultValue: ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: false, interacted: false, showTags: false)
+        return ChatListFoldersSettings(sidebar: false, interacted: false)
     }
     
-    public init(sidebar: Bool, interacted: Bool, showTags: Bool) {
+    public init(sidebar: Bool, interacted: Bool) {
         self.sidebar = sidebar
         self.interacted = interacted
-        self.showTags = showTags
     }
     
     
@@ -70,7 +68,6 @@ public struct ChatListFoldersSettings: Codable {
 
         self.sidebar = try container.decode(Int32.self, forKey: "t") == 1
         self.interacted = try container.decodeIfPresent(Int32.self, forKey: "i") == 1
-        self.showTags = try container.decodeIfPresent(Int32.self, forKey: "st") == 1
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -78,18 +75,13 @@ public struct ChatListFoldersSettings: Codable {
 
         try container.encode(Int32(self.sidebar ? 1 : 0), forKey: "t")
         try container.encode(Int32(self.interacted ? 1 : 0), forKey: "i")
-        try container.encode(Int32(self.showTags ? 1 : 0), forKey: "st")
     }
-    
     
     public func withUpdatedSidebar(_ sidebar: Bool) -> ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: sidebar, interacted: self.interacted, showTags: self.showTags)
+        return ChatListFoldersSettings(sidebar: sidebar, interacted: self.interacted)
     }
     public func withUpdatedSidebarInteracted(_ interacted: Bool) -> ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: self.sidebar, interacted: interacted, showTags: self.showTags)
-    }
-    public func withUpdatedShowTags(_ showTags: Bool) -> ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: self.sidebar, interacted: self.interacted, showTags: showTags)
+        return ChatListFoldersSettings(sidebar: self.sidebar, interacted: interacted)
     }
 }
 
@@ -129,8 +121,10 @@ public struct ChatListFolders : Equatable {
 }
 
 public func chatListFilterPreferences(engine: TelegramEngine) -> Signal<ChatListFolders, NoError> {
-    return combineLatest(engine.peers.updatedChatListFilters(), chatListFolderSettings(engine.account.postbox)) |> map {
-        return ChatListFolders(list: $0, sidebar: $1.sidebar, showTags: $1.showTags)
+    let showTags = engine.data.subscribe(TelegramEngine.EngineData.Item.ChatList.FiltersDisplayTags())
+
+    return combineLatest(engine.peers.updatedChatListFilters(), chatListFolderSettings(engine.account.postbox), showTags) |> map {
+        return ChatListFolders(list: $0, sidebar: $1.sidebar, showTags: $2)
     }
 }
 

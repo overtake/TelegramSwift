@@ -9,14 +9,16 @@ import Foundation
 import TelegramCore
 import Postbox
 import AppKit
-
+import SwiftSignalKit
+import TelegramMedia
+import TelegramVoip
 
 internal final class Arguments {
-    let external: PeerCallArguments
     let toggleSecretKey:()->Void
-    init(external: PeerCallArguments, toggleSecretKey:@escaping()->Void) {
-        self.external = external
+    let makeAvatar:(NSView?, Peer?)->NSView?
+    init(toggleSecretKey:@escaping()->Void, makeAvatar:@escaping(NSView?, Peer?)->NSView?) {
         self.toggleSecretKey = toggleSecretKey
+        self.makeAvatar = makeAvatar
     }
 }
 
@@ -28,9 +30,11 @@ public final class PeerCallArguments {
     let toggleMute:()->Void
     let toggleCamera:()->Void
     let toggleScreencast:()->Void
-    let endcall:()->Void
+    let endcall:(ExternalPeerCallState)->Void
     let recall:()->Void
-    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping()->Void, toggleScreencast:@escaping()->Void, endcall:@escaping()->Void, recall:@escaping()->Void) {
+    let acceptcall:()->Void
+    let video:(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?
+    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping()->Void, toggleScreencast:@escaping()->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?) {
         self.engine = engine
         self.peerId = peerId
         self.makeAvatar = makeAvatar
@@ -39,5 +43,7 @@ public final class PeerCallArguments {
         self.toggleScreencast = toggleScreencast
         self.endcall = endcall
         self.recall = recall
+        self.acceptcall = acceptcall
+        self.video = video
     }
 }

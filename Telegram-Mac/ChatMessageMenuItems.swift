@@ -527,22 +527,19 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }
                         thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
                             if let textLayout = textLayout {
-                                let result = textLayout.interactions.copy?()
                                 let attr = textLayout.attributedString
-                                if let result = result, !result {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.declareTypes([.string], owner: textLayout)
-                                    var effectiveRange = textLayout.selectedRange.range
-                                    let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                                    let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                                    if !isCopied {
-                                        let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                        if let attribute = attribute as? inAppLink {
-                                            pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                        } else {
-                                            pb.setString(selectedText.string, forType: .string)
-                                        }
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.declareTypes([.string], owner: textLayout)
+                                var effectiveRange = textLayout.selectedRange.range
+                                let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                                let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
+                                if !isCopied {
+                                    let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                    if let attribute = attribute as? inAppLink {
+                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                    } else {
+                                        pb.setString(selectedText.string, forType: .string)
                                     }
                                 }
                             }

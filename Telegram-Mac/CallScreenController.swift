@@ -41,7 +41,7 @@ private func insertSpacesBetweenEmojis(in text: String) -> String {
 
 
 
-private func mapCallState(_ state: CallState) -> ExternalPeerCallState {
+private func mapCallState(_ state: CallState, canBeRemoved: Bool) -> ExternalPeerCallState {
     
     
     let externalState: ExternalPeerCallState.State
@@ -130,20 +130,16 @@ private func mapCallState(_ state: CallState) -> ExternalPeerCallState {
         remoteBatteryLevel = .low
     }
     
-    return .init(state: externalState, videoState: videoState, remoteVideoState: remoteVideoState, isMuted: state.isMuted, isOutgoingVideoPaused: state.isOutgoingVideoPaused, remoteAspectRatio: state.remoteAspectRatio, remoteAudioState: remoteAudioState, remoteBatteryLevel: remoteBatteryLevel, isScreenCapture: state.isScreenCapture)
+    return .init(state: externalState, videoState: videoState, remoteVideoState: remoteVideoState, isMuted: state.isMuted, isOutgoingVideoPaused: state.isOutgoingVideoPaused, remoteAspectRatio: state.remoteAspectRatio, remoteAudioState: remoteAudioState, remoteBatteryLevel: remoteBatteryLevel, isScreenCapture: state.isScreenCapture, canBeRemoved: canBeRemoved)
 }
-
-private var peerCall: PeerCallScreen?
 
 
 func callScreen(_ context: AccountContext, _ result:PCallResult) {
     
-    
-    
-    
     switch result {
     case let .samePeer(session), let .success(session):
-        let screen = peerCall ?? PeerCallScreen(external: PeerCallArguments(engine: context.engine, peerId: session.peerId, makeAvatar: { view, peer in
+        
+        let arguments: PeerCallArguments = PeerCallArguments(engine: context.engine, peerId: session.peerId, makeAvatar: { view, peer in
             let control = view as? AvatarControl ?? AvatarControl(font: .avatar(17))
             control.setFrameSize(NSMakeSize(120, 120))
             control.userInteractionEnabled = false
@@ -155,19 +151,56 @@ func callScreen(_ context: AccountContext, _ result:PCallResult) {
             
         }, toggleScreencast: {
             
-        }, endcall: {
+        }, endcall: { [weak session] state in
             
-        }, recall: {
+            switch state.state {
+            case let .terminated(reason):
+                if let reason = reason, reason.recall {
+                    session?.setToRemovableState()
+                }
+            default:
+                session?.setToRemovableState()
+                _ = session?.hangUpCurrentCall().start()
+            }
             
-        }))
-        screen.show()
-        
-        screen.setState(session.state |> map {
-            mapCallState($0)
+        }, recall: { [weak session] in
+            guard let session = session else {
+                return
+            }
+            let redial = phoneCall(context: session.accountContext, peerId: session.peerId, ignoreSame: true) |> deliverOnMainQueue
+            
+            _ = redial.startStandalone(next: { result in
+                callScreen(context, result)
+            })
+        }, acceptcall: { [weak session] in
+            session?.acceptCallSession()
+        }, video: { [weak session] isIncoming in
+            return session?.makeVideo(isIncoming: isIncoming)
         })
         
-        peerCall = screen
-
+        let screen: PeerCallScreen
+        if let shared = context.sharedContext.peerCall, shared.onCompletion != nil {
+            screen = shared
+        } else {
+            screen = PeerCallScreen(external: arguments)
+        }
+        
+        
+        
+        screen.update(arguments: arguments)
+        screen.show()
+        
+        screen.contextObject = session
+        
+        screen.setState(combineLatest(session.state, session.canBeRemoved) |> map { state, canBeRemoved in
+            return mapCallState(state, canBeRemoved: canBeRemoved)
+        })
+        
+        screen.onCompletion = {
+            context.sharedContext.peerCall = nil
+        }
+        context.sharedContext.peerCall = screen
+        
     default:
         break
     }

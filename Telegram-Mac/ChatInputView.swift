@@ -216,13 +216,6 @@ class ChatInputView: View, Notifable {
     
     private var textPlaceholder: String {
         
-        guard let peer = chatInteraction.presentation.peer else {
-            return strings().messagesPlaceholderSentMessage
-        }
-        
-        if let _ = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), chatInteraction.presentation.state == .normal {
-            return strings().channelPersmissionMessageBlock
-        }
         
        
         
@@ -234,11 +227,31 @@ class ChatInputView: View, Notifable {
                 return strings().messagesPlaceholderReply
             case .topic:
                 return strings().messagesPlaceholderSentMessage
-            case .savedMessages, .saved:
-                return ""
+            case .savedMessages, .saved: 
+                break
+            }
+        }
+        if case let .customChatContents(contents) = chatInteraction.mode {
+            switch contents.kind {
+            case .awayMessageInput:
+                return strings().chatInputBusinessAway
+            case .greetingMessageInput:
+                return strings().chatInputBusinessGreeting
+            case .quickReplyMessageInput:
+                return strings().chatInputBusinessQuickReply
             }
         }
         
+        guard let peer = chatInteraction.presentation.peer else {
+            return strings().messagesPlaceholderSentMessage
+        }
+        
+        if let _ = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), chatInteraction.presentation.state == .normal {
+            return strings().channelPersmissionMessageBlock
+        }
+        
+
+            
         if let cachedData = chatInteraction.presentation.cachedData as? CachedChannelData {
             let viewForumAsMessages = cachedData.viewForumAsMessages.knownValue
             if peer.isForum, viewForumAsMessages == true {

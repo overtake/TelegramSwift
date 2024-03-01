@@ -1963,10 +1963,15 @@ private final class StoryViewController: Control, Notifable {
                     }
                 } else if scrollDeltaY < -50 {
                     if let peerId = current.id, let story = current.story {
+                        let peer = self.storyContext?.stateValue?.slice?.peer._asPeer()
                         if peerId == arguments?.context.peerId {
                             arguments?.showViewers(story)
-                        } else if self.storyContext?.stateValue?.slice?.peer._asPeer() is TelegramChannel {
+                        } else if peer?.isChannel == true {
                             arguments?.showViewers(story)
+                        } else if current.hasInput {
+                            self.window?.makeFirstResponder(self.inputView)
+                            self.showReactions()
+                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                         }
                         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                     } else {

@@ -1176,7 +1176,6 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
 
 func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
     
-    
     if chatInteraction.mode.customChatContents != nil {
         return true
     }
@@ -3776,4 +3775,146 @@ extension SearchTheme {
     static func initialize(_ palette: ColorPalette) -> SearchTheme {
         return SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { strings().searchFieldSearch }, palette.text, palette.grayText)
     }
+}
+
+
+extension MessageTextEntity {
+    func intersectsOrAdjacent(with attribute: MessageTextEntity) -> Bool {
+        return self.range.upperBound >= attribute.range.lowerBound && self.range.lowerBound <= attribute.range.upperBound
+    }
+    
+    func isSameAttribute(_ rhs: MessageTextEntity) -> Bool {
+        switch self.type {
+        case .Unknown:
+            return self.weight == rhs.weight
+        case .Mention:
+            return self.weight == rhs.weight
+        case .Hashtag:
+            return self.weight == rhs.weight
+        case .BotCommand:
+            return self.weight == rhs.weight
+        case .Url:
+            return self.weight == rhs.weight
+        case .Email:
+            return self.weight == rhs.weight
+        case .Bold:
+            return self.weight == rhs.weight
+        case .Italic:
+            return self.weight == rhs.weight
+        case .Code:
+            return self.weight == rhs.weight
+        case .Pre(language: let language):
+            return self.weight == rhs.weight
+        case .PhoneNumber:
+            return self.weight == rhs.weight
+        case .Strikethrough:
+            return self.weight == rhs.weight
+        case .BlockQuote:
+            return self.weight == rhs.weight
+        case .Underline:
+            return self.weight == rhs.weight
+        case .BankCard:
+            return self.weight == rhs.weight
+        case .Spoiler:
+            return self.weight == rhs.weight
+        case .CustomEmoji(stickerPack: let stickerPack, fileId: let fileId):
+            return false
+        case .Custom(type: let type):
+            switch rhs.type {
+            case .Custom(type):
+                return true
+            default:
+                return false
+            }
+        case .TextUrl(url: let url):
+            switch rhs.type {
+            case .TextUrl(url):
+                return true
+            default:
+                return false
+            }
+        case .TextMention(peerId: let peerId):
+            switch rhs.type {
+            case .TextMention(peerId):
+                return true
+            default:
+                return false
+            }
+        }
+    }
+
+    mutating func merge(with attribute: MessageTextEntity) {
+        let newStart = min(self.range.lowerBound, attribute.range.lowerBound)
+        let newEnd = max(self.range.upperBound, attribute.range.upperBound)
+        self.range = newStart..<newEnd
+    }
+    
+    var weight: Int {
+        switch self.type {
+        case .Unknown:
+            return 0
+        case .Mention:
+            return 1
+        case .Hashtag:
+            return 2
+        case .BotCommand:
+            return 3
+        case .Url:
+            return 4
+        case .Email:
+            return 5
+        case .Bold:
+            return 6
+        case .Italic:
+            return 7
+        case .Code:
+            return 8
+        case .Pre:
+            return 9
+        case .TextUrl:
+            return 10
+        case .TextMention:
+            return 11
+        case .PhoneNumber:
+            return 12
+        case .Strikethrough:
+            return 13
+        case .BlockQuote:
+            return 14
+        case .Underline:
+            return 15
+        case .BankCard:
+            return 16
+        case .Spoiler:
+            return 17
+        case .CustomEmoji:
+            return 18
+        case .Custom:
+            return 19
+        }
+    }
+}
+
+
+
+func concatMessageAttributes(_ attributes: [MessageTextEntity]) -> [MessageTextEntity] {
+    guard !attributes.isEmpty else { return [] }
+
+    let sortedAttributes = attributes.sorted { $0.weight < $1.weight }
+    var mergedAttributes = [MessageTextEntity]()
+
+    var currentAttribute = sortedAttributes.first!
+
+    for attribute in sortedAttributes.dropFirst() {
+        if currentAttribute.isSameAttribute(attribute) && currentAttribute.intersectsOrAdjacent(with: attribute) {
+            currentAttribute.merge(with: attribute)
+        } else {
+            mergedAttributes.append(currentAttribute)
+            currentAttribute = attribute
+        }
+    }
+    // Append the last merged or unmerged attribute
+    mergedAttributes.append(currentAttribute)
+
+    return mergedAttributes
 }

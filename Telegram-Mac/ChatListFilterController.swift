@@ -635,8 +635,7 @@ private struct State: Equatable {
     var inviteLinks: [ExportedChatFolderLink]?
     var creatingLink: Bool
     var linkSaving: String?
-    var color: Int?
-    init(filter: ChatListFilter, isNew: Bool, showAllInclude: Bool, showAllExclude: Bool, changedName: Bool, inviteLinks: [ExportedChatFolderLink]?, creatingLink: Bool, linkSaving: String?, color: Int?) {
+    init(filter: ChatListFilter, isNew: Bool, showAllInclude: Bool, showAllExclude: Bool, changedName: Bool, inviteLinks: [ExportedChatFolderLink]?, creatingLink: Bool, linkSaving: String?) {
         self.filter = filter
         self.initialFilter = filter
         self.isNew = isNew
@@ -646,7 +645,6 @@ private struct State: Equatable {
         self.inviteLinks = inviteLinks
         self.creatingLink = creatingLink
         self.linkSaving = linkSaving
-        self.color = color
     }
     
     mutating func withUpdatedFilter(_ f:(ChatListFilter)->ChatListFilter) {
@@ -670,8 +668,8 @@ private final class ChatListPresetArguments {
     let shareFolder:(ExportedChatFolderLink?)->Void
     let copy:(String)->Void
     let deleteLink:(ExportedChatFolderLink)->Void
-    let toggleColor:(Int?)->Void
-    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void, toggleColor:@escaping(Int?)->Void) {
+    let toggleColor:(Int32?)->Void
+    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void, toggleColor:@escaping(Int32?)->Void) {
         self.context = context
         self.toggleOption = toggleOption
         self.toggleExcludeMuted = toggleExcludeMuted
@@ -714,7 +712,7 @@ private let _id_loading_links = InputDataIdentifier("_id_loading_links")
 private let _id_share_invite = InputDataIdentifier("_id_share_invite")
 
 private let _id_color = InputDataIdentifier("_id_color")
-
+private let _id_reset_color = InputDataIdentifier("_id_color")
 private func _id_invite_link(_ string: String) -> InputDataIdentifier {
     return InputDataIdentifier("_id_invite_link\(string)")
 }
@@ -950,39 +948,47 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        #if DEBUG
-        if "".isEmpty {
-            
-            let colors = [theme.colors.peerColors(0).top,
-                          theme.colors.peerColors(1).top,
-                          theme.colors.peerColors(2).top,
-                          theme.colors.peerColors(3).top,
-                          theme.colors.peerColors(4).top,
-                          theme.colors.peerColors(5).top,
-                          theme.colors.peerColors(6).top]
-            
-            let selected = colors[state.color ?? Int(state.filter.id) % 7]
+        let colors = [theme.colors.peerColors(0).bottom,
+                      theme.colors.peerColors(1).bottom,
+                      theme.colors.peerColors(2).bottom,
+                      theme.colors.peerColors(3).bottom,
+                      theme.colors.peerColors(4).bottom,
+                      theme.colors.peerColors(5).bottom,
+                      theme.colors.peerColors(6).bottom]
+        
+        let currentColor = state.filter.data?.color
+        let selected: NSColor? = currentColor != nil ? colors[Int(currentColor!.rawValue)] : nil
 
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FOLDER COLOR"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: state.filter.title, color: selected, font: .bold(11)), action: nil, update: nil, alignToText: true, wrap: selected.withAlphaComponent(0.5)))))
-            index += 1
-            
-          
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_color, equatable: InputDataEquatable(state.color), comparable: nil, item: { initialSize, stableId in
-                return FolderColorRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: selected, viewType: .singleItem, action: { color in
-                    arguments.toggleColor(colors.firstIndex(of: color))
-                    
-                })
-            }))
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("This color will be used for the folder's tag in the chat list."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-            index += 1
-
-            
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
+        let rightText: NSAttributedString?
+        if state.filter.data?.color != nil {
+            rightText = .initialize(string: state.filter.title, color: selected, font: .bold(11))
+        } else {
+            rightText = nil
         }
-        #endif
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: rightText, action: nil, update: nil, alignToText: true, wrap: selected?.withAlphaComponent(0.1)))))
+        index += 1
+        
+      
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_color, equatable: InputDataEquatable(state.filter.data), comparable: nil, item: { initialSize, stableId in
+            return FolderColorRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: selected, viewType: state.filter.data?.color == nil ? .singleItem : .firstItem, action: { color in
+                arguments.toggleColor(colors.firstIndex(of: color).flatMap { Int32($0) })
+            })
+        }))
+        
+        if state.filter.data?.color != nil {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_color, data: .init(name: strings().chatListFolderColorReset, color: theme.colors.redUI, viewType: .lastItem, action: {
+                arguments.toggleColor(nil)
+            })))
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
         
         if true {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterInviteLinkHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
@@ -1070,7 +1076,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     
     
-    let initialState = State(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew, inviteLinks: nil, creatingLink: false, linkSaving: nil, color: nil)
+    let initialState = State(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew, inviteLinks: nil, creatingLink: false, linkSaving: nil)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -1585,10 +1591,22 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             
         })
     }, toggleColor: { color in
-        updateState { current in
-            var current = current
-            current.color = color
-            return current
+        if let _ = color, !context.isPremium {
+            showModalText(for: context.window, text: strings().chatListFolderPremiumAlert, button: strings().alertLearnMore, callback: { _ in
+                showModal(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
+            })
+        } else {
+            updateState { current in
+                var current = current
+                switch current.filter {
+                case .allChats:
+                    current.filter = .allChats
+                case .filter(let id, let title, let emoticon, var data):
+                    data.color = color.flatMap { .init(rawValue: $0) }
+                    current.filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
+                }
+                return current
+            }
         }
     })
     

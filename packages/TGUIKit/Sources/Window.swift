@@ -542,6 +542,9 @@ open class Window: NSWindow {
             if let event = event, let code = KeyboardKey(rawValue: event.keyCode), observer.ignoreKeys.contains(code) {
                 continue
             }
+            if observer.object.value == nil {
+                continue
+            }
             if let responder = observer.handler() {
                 if self.firstResponder != responder {
                     let _ = self.resignFirstResponder()
@@ -556,8 +559,8 @@ open class Window: NSWindow {
                         responder.setCursorToEnd()
                     }
                 }
-                break
             }
+            break
         }
     }
 

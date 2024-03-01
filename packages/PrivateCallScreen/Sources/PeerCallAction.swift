@@ -10,7 +10,50 @@ import AppKit
 import TelegramMedia
 import TGUIKit
 
-struct PeerCallAction {
+private func addHeartbeatAnimation(to layer: CALayer) {
+    guard layer.animation(forKey: "heartbeatAnimation") == nil else {
+        return
+    }
+    // Create a keyframe animation for the 'transform.scale' key path
+    let animation = makeSpringAnimation("transform.scale")
+    
+    // Define the scale values for each keyframe (normal -> larger -> normal -> slightly larger -> normal)
+    animation.fromValue = NSNumber(value: 0.4)
+    animation.toValue = NSNumber(value: 1.35)
+    animation.duration = 1.3
+    
+    animation.fillMode = .forwards
+    
+    // Repeat the animation indefinitely
+    animation.repeatCount = Float.infinity
+    animation.autoreverses = true
+    
+    
+    // Add the animation to your layer
+    layer.add(animation, forKey: "heartbeatAnimation")
+}
+
+enum PeerCallActionType : Int32 {
+    case end = 100
+    case redial = 99
+    case accept = 98
+    case mute = 97
+    case screencast = 96
+    case video = 95
+}
+
+struct PeerCallAction : Comparable, Identifiable {
+    static func < (lhs: PeerCallAction, rhs: PeerCallAction) -> Bool {
+        return lhs.stableId.rawValue < rhs.stableId.rawValue
+    }
+    
+    static func == (lhs: PeerCallAction, rhs: PeerCallAction) -> Bool {
+        return lhs.stableId == rhs.stableId && lhs.enabled == rhs.enabled && lhs.active == rhs.active && lhs.interactive == rhs.interactive && lhs.loading == rhs.loading && lhs.attract == rhs.attract
+    }
+    
+    
+    let stableId: PeerCallActionType
+    
     var text: String?
     
     var normal: CGImage
@@ -27,7 +70,7 @@ struct PeerCallAction {
     var loading: Bool = false
     var enabled: Bool = true
     var interactive: Bool = true
-    
+    var attract: Bool = false
     var action:()->Void
 }
 
@@ -60,9 +103,9 @@ func makeActiveAction(_ image: NSImage) -> CGImage {
     })!
 }
 
-func makeAction(text: String, resource: ImageResource, active: Bool = false, enabled: Bool = true, loading: Bool = false, interactive: Bool = true, action: @escaping()->Void) -> PeerCallAction {
+func makeAction(type: PeerCallActionType, text: String, resource: ImageResource, active: Bool = false, enabled: Bool = true, loading: Bool = false, interactive: Bool = true, attract: Bool = false, action: @escaping()->Void) -> PeerCallAction {
     let image = NSImage(resource: resource)
-    return .init(text: text, normal: !interactive ? image._cgImage! : makeNormalAction(image), activeImage: !interactive ? nil : makeActiveAction(image), active: active, loading: loading, enabled: enabled, interactive: interactive, action: action)
+    return .init(stableId: type, text: text, normal: !interactive ? image._cgImage! : makeNormalAction(image), activeImage: !interactive ? nil : makeActiveAction(image), active: active, loading: loading, enabled: enabled, interactive: interactive, attract: attract, action: action)
 }
 
 
@@ -72,6 +115,8 @@ final class PeerCallActionView : Control {
     private var normalBackground: SimpleLayer?
     private let backgroundView = NSVisualEffectView(frame: actionSize.bounds)
     private var textView: TextView?
+    
+    private var attractAttention: SimpleLayer?
     
     private var progressView: InfiniteProgressView?
     
@@ -157,6 +202,26 @@ final class PeerCallActionView : Control {
         change(opacity: enabled ? 1 : 0.7, animated: animated)
     }
     
+    func updateAttraction(_ attract: Bool, animated: Bool) {
+        if attract {
+            let current: SimpleLayer
+            if let layer = self.attractAttention {
+                current = layer
+            } else {
+                current = SimpleLayer()
+                current.frame = imageLayer.frame.insetBy(dx: 3, dy: 3)
+                current.cornerRadius = current.frame.height / 2
+                self.layer?.insertSublayer(current, at: 0)
+                self.attractAttention = current
+            }
+            current.backgroundColor = NSColor.greenUI.withAlphaComponent(0.45).cgColor
+            addHeartbeatAnimation(to: current)
+        } else if let layer = self.attractAttention {
+            performSublayerRemoval(layer, animated: animated)
+            self.attractAttention = nil
+        }
+    }
+    
     var size: NSSize {
         return backgroundView.frame.size
     }
@@ -202,6 +267,7 @@ final class PeerCallActionView : Control {
             backgroundLayer.animateContents()
         }
                
+        updateAttraction(data.attract, animated: animated)
         updateLoading(data.loading, animated: animated)
         updateEnabled(data.enabled, animated: animated)
     }

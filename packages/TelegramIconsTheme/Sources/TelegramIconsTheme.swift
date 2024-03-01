@@ -6193,6 +6193,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_filter_new_chats: CGImage {
+      if let image = cached.with({ $0["chat_filter_new_chats"] }) {
+          return image
+      } else {
+          let image = _chat_filter_new_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_new_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_filter_existing_chats: CGImage {
+      if let image = cached.with({ $0["chat_filter_existing_chats"] }) {
+          return image
+      } else {
+          let image = _chat_filter_existing_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_existing_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var group_invite_via_link: CGImage {
       if let image = cached.with({ $0["group_invite_via_link"] }) {
           return image
@@ -10778,6 +10804,8 @@ public final class TelegramIconsTheme {
   private let _chat_filter_large_groups_avatar: ()->CGImage
   private let _chat_filter_non_contacts_avatar: ()->CGImage
   private let _chat_filter_archive_avatar: ()->CGImage
+  private let _chat_filter_new_chats: ()->CGImage
+  private let _chat_filter_existing_chats: ()->CGImage
   private let _group_invite_via_link: ()->CGImage
   private let _tab_contacts: ()->CGImage
   private let _tab_contacts_active: ()->CGImage
@@ -11572,6 +11600,8 @@ public final class TelegramIconsTheme {
       chat_filter_large_groups_avatar: @escaping()->CGImage,
       chat_filter_non_contacts_avatar: @escaping()->CGImage,
       chat_filter_archive_avatar: @escaping()->CGImage,
+      chat_filter_new_chats: @escaping()->CGImage,
+      chat_filter_existing_chats: @escaping()->CGImage,
       group_invite_via_link: @escaping()->CGImage,
       tab_contacts: @escaping()->CGImage,
       tab_contacts_active: @escaping()->CGImage,
@@ -12365,6 +12395,8 @@ public final class TelegramIconsTheme {
       self._chat_filter_large_groups_avatar = chat_filter_large_groups_avatar
       self._chat_filter_non_contacts_avatar = chat_filter_non_contacts_avatar
       self._chat_filter_archive_avatar = chat_filter_archive_avatar
+      self._chat_filter_new_chats = chat_filter_new_chats
+      self._chat_filter_existing_chats = chat_filter_existing_chats
       self._group_invite_via_link = group_invite_via_link
       self._tab_contacts = tab_contacts
       self._tab_contacts_active = tab_contacts_active

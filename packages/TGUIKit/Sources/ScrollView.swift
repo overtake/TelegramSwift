@@ -143,7 +143,7 @@ open class ScrollView: NSScrollView{
     }
     
     func resetScroll(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
-        self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), self.currentpos.direction, visibleRange)
+        self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), .none, visibleRange)
     }
     
     public var documentOffset:NSPoint {

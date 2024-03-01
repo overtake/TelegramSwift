@@ -19,7 +19,6 @@ private final class BoostText : GeneralRowItem {
     fileprivate let context: AccountContext
     init(_ initialSize: NSSize, stableId: AnyHashable, count: Int, context: AccountContext) {
         let attr = NSMutableAttributedString()
-        //TODOLANG
         
         let perSentGift = context.appConfiguration.getGeneralValue("boosts_per_sent_gift", orElse: 4)
         _ = attr.append(string: strings().premiumGiftReceiveBoost("\(clown)\(Int32(count) * perSentGift)"), color: theme.colors.text, font: .normal(.text))

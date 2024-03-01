@@ -13,18 +13,39 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
-#if DEBUG
 
-private final class QuickReplyRowItem : GeneralRowItem {
+final class QuickReplyRowItem : GeneralRowItem {
     
-    let reply: State.Reply
+    let reply: ShortcutMessageList.Item
     let context: AccountContext
-    let textLayout: TextViewLayout
     let editing: Bool
-    let open: (State.Reply)->Void
-    let editName: (State.Reply)->Void
-    let remove: (State.Reply)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, reply: State.Reply, context: AccountContext, editing: Bool, viewType: GeneralViewType, open: @escaping(State.Reply)->Void, editName: @escaping(State.Reply)->Void, remove: @escaping(State.Reply)->Void) {
+    let open: (ShortcutMessageList.Item)->Void
+    let editName: (ShortcutMessageList.Item)->Void
+    let remove: (ShortcutMessageList.Item)->Void
+    
+    let _badge: TextViewLayout?
+    let _textLayout: TextViewLayout
+    
+    let selected_badge: TextViewLayout?
+    let selected_textLayout: TextViewLayout
+
+    var badge: TextViewLayout? {
+        if isSelected {
+            return selected_badge
+        } else {
+            return _badge
+        }
+    }
+    
+    var textLayout: TextViewLayout {
+        if isSelected {
+            return selected_textLayout
+        } else {
+            return _textLayout
+        }
+    }
+
+    init(_ initialSize: NSSize, stableId: AnyHashable, reply: ShortcutMessageList.Item, context: AccountContext, editing: Bool, viewType: GeneralViewType, open: @escaping(ShortcutMessageList.Item)->Void, editName: @escaping(ShortcutMessageList.Item)->Void, remove: @escaping(ShortcutMessageList.Item)->Void, selected: String? = nil) {
         self.reply = reply
         self.context = context
         self.editing = editing
@@ -32,25 +53,52 @@ private final class QuickReplyRowItem : GeneralRowItem {
         self.open = open
         self.remove = remove
         let attr = NSMutableAttributedString()
-        attr.append(string: "/\(reply.name)", color: theme.colors.text, font: .normal(.text))
+        attr.append(string: "/\(reply.shortcut)", color: theme.colors.text, font: .normal(.text))
         attr.append(string: " ", color: theme.colors.text, font: .normal(.text))
         
-        let texts = reply.messages.map {
-            chatListText(account: context.account, for: $0).string
-        }.joined(separator: ", ")
+        if let selected = selected {
+            let range = attr.string.lowercased().nsstring.range(of: selected)
+            if range.location != NSNotFound {
+                attr.addAttribute(.foregroundColor, value: theme.colors.accent, range: range)
+            }
+        }
+        
+        let texts = chatListText(account: context.account, for: reply.topMessage._asMessage()).string
+        
+        if reply.totalCount > 1 {
+            _badge = .init(.initialize(string: strings().businessQuickReplyMore(reply.totalCount - 1), color: theme.colors.grayText, font: .medium(.small)), alignment: .center)
+            _badge?.measure(width: .greatestFiniteMagnitude)
+            
+            selected_badge = .init(.initialize(string: strings().businessQuickReplyMore(reply.totalCount - 1), color: theme.colors.accentSelect, font: .medium(.small)), alignment: .center)
+            selected_badge?.measure(width: .greatestFiniteMagnitude)
+
+        } else {
+            _badge = nil
+            selected_badge = nil
+        }
         
         attr.append(string: texts, color: theme.colors.grayText, font: .normal(.text))
         
-        self.textLayout = TextViewLayout(attr, maximumNumberOfLines: 4)
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        let selectedAttr = attr.mutableCopy() as! NSMutableAttributedString
+        selectedAttr.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedAttr.range)
+        
+        self.selected_textLayout = TextViewLayout(selectedAttr, maximumNumberOfLines: 1)
+        
+        self._textLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
+
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: viewType == .legacy ? .init() : .init(left: 20, right: 20))
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return .single([ContextMenuItem("Edit Name", handler: { [weak self] in
-            if let self {
-                self.editName(self.reply)
-            }
-        }, itemImage: MenuAnimation.menu_edit.value)])
+        if viewType != .legacy {
+            return .single([ContextMenuItem(strings().businessQuickReplyEditName, handler: { [weak self] in
+                if let self {
+                    self.editName(self.reply)
+                }
+            }, itemImage: MenuAnimation.menu_edit.value)])
+        } else {
+            return .single([])
+        }
     }
     
     private var textWidth: CGFloat {
@@ -66,6 +114,10 @@ private final class QuickReplyRowItem : GeneralRowItem {
             width -= 30 // sort control
         }
         
+        if let badge {
+            width -= (badge.layoutSize.width + 5)
+        }
+        
         return width
     }
     
@@ -74,7 +126,8 @@ private final class QuickReplyRowItem : GeneralRowItem {
         
         
         textLayout.measure(width: textWidth)
-        
+        selected_textLayout.measure(width: textWidth)
+
         return true
     }
     
@@ -86,8 +139,20 @@ private final class QuickReplyRowItem : GeneralRowItem {
         return max(44, 10 + textLayout.layoutSize.height)
     }
     
+    override var hasBorder: Bool {
+        if self.viewType == .legacy {
+            return self != self.table?.lastItem
+        } else {
+            return super.hasBorder
+        }
+    }
+    
     var leftInset: CGFloat {
-        return 20
+        if self.viewType == .legacy {
+            return 0
+        } else {
+            return 20
+        }
     }
 }
 
@@ -95,6 +160,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
     private let textView = TextView()
     private let imageView = AvatarControl(font: .avatar(10))
     private let container = View()
+    private var badgeView: TextView?
     
     private var remove: ImageButton?
     private var sort: ImageButton?
@@ -103,6 +169,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         addSubview(container)
         container.addSubview(imageView)
         container.addSubview(textView)
+        
         
         imageView.setFrameSize(NSMakeSize(30, 30))
         
@@ -116,10 +183,55 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
                 item.open(item.reply)
             }
         }, for: .Click)
+        
+        containerView.set(handler: { [weak self] control in
+            self?.updateColors()
+        }, for: .Highlight)
+        
+        containerView.set(handler: { [weak self] control in
+            self?.updateColors()
+        }, for: .Normal)
+        
+        containerView.set(handler: { [weak self] control in
+            self?.updateColors()
+        }, for: .Hover)
+    }
+    
+    override var backdorColor: NSColor {
+        if let item = item as? GeneralRowItem, item.viewType == .legacy {
+            if item.isHighlighted {
+                return theme.colors.grayBackground
+            }
+            if item.isSelected {
+                return theme.colors.accentSelect
+            }
+            return containerView.controlState != .Highlight ? super.backdorColor : theme.colors.grayBackground.withAlphaComponent(0.2)
+        }
+        return super.backdorColor
+    }
+    
+    override var borderColor: NSColor {
+        if let item = item as? GeneralRowItem {
+            if item.viewType == .legacy {
+                if item.isSelected {
+                    return .clear
+                } else {
+                    return super.borderColor
+                }
+            }
+        }
+        return super.borderColor
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var additionBorderInset: CGFloat {
+        guard let item = item as? GeneralRowItem else {
+            return 0
+        }
+        return 30 + 10 + (item.viewType == .legacy ? 16 : 0)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -129,9 +241,33 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
             return
         }
         
+        containerView.userInteractionEnabled = item.viewType != .legacy
+        
         imageView.setPeer(account: item.context.account, peer: item.context.myPeer)
         
         textView.update(item.textLayout)
+        
+        if let badge = item.badge {
+            let current: TextView
+            if let view = self.badgeView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.badgeView = current
+                container.addSubview(current)
+                
+                current.centerY(x: textView.frame.maxX + 5)
+            }
+            current.update(badge)
+            current.setFrameSize(NSMakeSize(badge.layoutSize.width + 6, badge.layoutSize.height + 4))
+            current.layer?.cornerRadius = 4
+            current.backgroundColor = item.isSelected ? theme.colors.underSelectedColor : theme.colors.grayText.withAlphaComponent(0.2)
+        } else if let badgeView {
+            performSubviewRemoval(badgeView, animated: animated)
+            self.badgeView = nil
+        }
         
         if item.editing {
             if "".isEmpty {
@@ -232,6 +368,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
             transition.updateFrame(view: remove, frame: remove.centerFrameY(x: item.leftInset))
         }
         
+        
         let contentInset = item.editing ? item.leftInset * 2 + 18 : 16
         
         let containerRect = NSMakeRect(contentInset, 0, containerView.frame.width - contentInset, containerView.frame.height)
@@ -245,18 +382,23 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         
         transition.updateFrame(view: imageView, frame: CGRect(origin: NSMakePoint(0, 7), size: imageView.frame.size))
         transition.updateFrame(view: textView, frame: textView.centerFrameY(x: imageView.frame.maxX + 10))
+        
+        if let badgeView {
+            transition.updateFrame(view: badgeView, frame: badgeView.centerFrameY(x: textView.frame.maxX + 5))
+        }
     }
+    
 }
 
 
 private final class Arguments {
     let context: AccountContext
     let add:()->Void
-    let edit:(State.Reply)->Void
-    let open:(State.Reply)->Void
-    let editName:(State.Reply)->Void
-    let remove:(State.Reply)->Void
-    init(context: AccountContext, add:@escaping()->Void, edit:@escaping(State.Reply)->Void, remove:@escaping(State.Reply)->Void, editName:@escaping(State.Reply)->Void, open:@escaping(State.Reply)->Void) {
+    let edit:(ShortcutMessageList.Item)->Void
+    let open:(ShortcutMessageList.Item)->Void
+    let editName:(ShortcutMessageList.Item)->Void
+    let remove:(ShortcutMessageList.Item)->Void
+    init(context: AccountContext, add:@escaping()->Void, edit:@escaping(ShortcutMessageList.Item)->Void, remove:@escaping(ShortcutMessageList.Item)->Void, editName:@escaping(ShortcutMessageList.Item)->Void, open:@escaping(ShortcutMessageList.Item)->Void) {
         self.context = context
         self.add = add
         self.edit = edit
@@ -267,24 +409,25 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    struct Reply : Equatable {
-        var name: String
-        var messages: [Message]
-        var id: Int64
-    }
-    
-    var replies: [Reply] = []
+    var replies: ShortcutMessageList?
     
     var editing: Bool = false
     
     var creatingName: String?
     var input_error: InputDataValueError?
+    
+    var isEmpty: Bool {
+        if let replies {
+            return replies.items.isEmpty
+        }
+        return true
+    }
 }
 
 
 private let _id_header = InputDataIdentifier("_id_header")
 private let _id_add = InputDataIdentifier("_id_add")
-private func _id_reply(_ id: Int64) -> InputDataIdentifier {
+private func _id_reply(_ id: Int32) -> InputDataIdentifier {
     return .init("_id_reply_\(id)")
 }
 
@@ -299,10 +442,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
         
     let headerAttr = NSMutableAttributedString()
-    _ = headerAttr.append(string: "Set up shortcuts with rich text and media to respond to messages faster.", color: theme.colors.listGrayText, font: .normal(.text))
+    _ = headerAttr.append(string: strings().businessQuickReplyHeader, color: theme.colors.listGrayText, font: .normal(.text))
     
     entries.append(.custom(sectionId: sectionId, index: 0, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.fly_dollar, text: headerAttr)
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.business_quick_reply, text: headerAttr)
     }))
   
     // entries
@@ -310,34 +453,45 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_add, data: .init(name: "Add Quick Reply", color: theme.colors.accent, icon: theme.icons.stickersAddFeatured, type: .none, viewType: state.replies.isEmpty ? .singleItem : .firstItem, action: {
-        arguments.add()
-    })))
+    let limit = arguments.context.appConfiguration.getGeneralValue("quick_replies_limit", orElse: 20) - 2
     
-    struct Tuple : Equatable {
-        var reply: State.Reply
-        var viewType: GeneralViewType
-        var editing: Bool
+    let count = state.replies?.items.count ?? 0
+    let isFull = limit <= count
+    
+    if !isFull {
+        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_add, data: .init(name: strings().businessQuickReplyAdd, color: theme.colors.accent, icon: theme.icons.stickersAddFeatured, type: .none, viewType: state.isEmpty ? .singleItem : .firstItem, action: {
+            arguments.add()
+        })))
     }
-    var tuples: [Tuple] = []
     
-    for (i, reply) in state.replies.enumerated() {
-        var viewType: GeneralViewType = bestGeneralViewType(state.replies, for: i)
-        if i == 0 {
-            if i < state.replies.count - 1 {
-                viewType = .innerItem
-            } else {
-                viewType = .lastItem
-            }
+    
+    if let replies = state.replies {
+        struct Tuple : Equatable {
+            var reply: ShortcutMessageList.Item
+            var viewType: GeneralViewType
+            var editing: Bool
         }
-        tuples.append(.init(reply: reply, viewType: viewType, editing: state.editing))
+        var tuples: [Tuple] = []
+        
+        for (i, reply) in replies.items.enumerated() {
+            var viewType: GeneralViewType = bestGeneralViewType(replies.items, for: i)
+            if i == 0, !isFull {
+                if i < replies.items.count - 1 {
+                    viewType = .innerItem
+                } else {
+                    viewType = .lastItem
+                }
+            }
+            tuples.append(.init(reply: reply, viewType: viewType, editing: state.editing))
+        }
+        
+        for tuple in tuples {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_reply(tuple.reply.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                return QuickReplyRowItem(initialSize, stableId: stableId, reply: tuple.reply, context: arguments.context, editing: tuple.editing, viewType: tuple.viewType, open: arguments.open, editName: arguments.editName, remove: arguments.remove)
+            }))
+        }
     }
     
-    for tuple in tuples {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_reply(tuple.reply.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-            return QuickReplyRowItem(initialSize, stableId: stableId, reply: tuple.reply, context: arguments.context, editing: tuple.editing, viewType: tuple.viewType, open: arguments.open, editName: arguments.editName, remove: arguments.remove)
-        }))
-    }
         
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -361,48 +515,36 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
     let nextTransactionNonAnimated = Atomic(value: false)
     
     
-
+    let shortcutList = context.engine.accountData.shortcutMessageList()
+    
+    actionsDisposable.add(shortcutList.start(next: { value in
+        updateState { current in
+            var current = current
+            current.replies = value
+            return current
+        }
+    }))
+    
+    actionsDisposable.add(context.engine.accountData.keepShortcutMessageListUpdated().startStrict())
 
     let arguments = Arguments(context: context, add: {
         showModal(with: BusinessAddQuickReply(context: context, actionsDisposable: actionsDisposable, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: nil), for: context.window)
     }, edit: { reply in
         
     }, remove: { reply in
-        updateState { current in
-            var current = current
-            current.replies.removeAll(where: { $0.id == reply.id })
-            return current
-        }
+        context.engine.accountData.deleteMessageShortcuts(ids: [reply.id])
     }, editName: { reply in
         showModal(with: BusinessAddQuickReply(context: context, actionsDisposable: actionsDisposable, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: reply), for: context.window)
     }, open: { reply in
-        var reply = reply
-        
-        let messages = GreetingMessageSetupChatContents(context: context, messages: reply.messages.map(EngineMessage.init), kind: .quickReplyMessageInput(shortcut: reply.name))
-        
+        let messages = AutomaticBusinessMessageSetupChatContents(context: context, kind: .quickReplyMessageInput(shortcut: reply.shortcut), shortcutId: reply.id)
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
-
-        actionsDisposable.add(messages.messages.start(next: { messages in
-            updateState { current in
-                var current = current
-                reply.messages = messages
-                if messages.isEmpty {
-                    current.replies.removeAll(where: { $0.id == reply.id })
-                } else if let index = current.replies.firstIndex(where: { $0.id == reply.id }) {
-                    current.replies[index] = reply
-                } else {
-                    current.replies.append(reply)
-                }
-                return current
-            }
-        }))
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments), animated: !nextTransactionNonAnimated.swap(false))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Quick Replies", removeAfterDisappear: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessQuickReplyTitle, removeAfterDisappear: false)
     
     controller.updateDoneValue = { data in
         return { f in
@@ -444,16 +586,19 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
             controller.tableView.resortController = .init(resortRange: range, start: { _ in
                 
             }, resort: { _ in }, complete: { from, to in
+                
+                
                 let fromValue = from - range.location
                 let toValue = to - range.location
-                var replies = stateValue.with { $0.replies }
+                var replies = stateValue.with { $0.replies?.items ?? [] }
                 replies.move(at: fromValue, to: toValue)
                 _ = nextTransactionNonAnimated.swap(true)
-                updateState { current in
-                    var current = current
-                    current.replies = replies
-                    return current
-                }
+                
+                context.engine.accountData.reorderMessageShortcuts(ids: replies.map { $0.id }, completion: {
+                    
+                })
+
+               
             })
         } else {
             controller.tableView.resortController = nil
@@ -472,7 +617,7 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
 
 private let _id_input = InputDataIdentifier("_id_input")
 
-private func newReplyEntries(_ state: State) -> [InputDataEntry] {
+private func newReplyEntries(_ state: State, reply: ShortcutMessageList.Item?) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -482,10 +627,10 @@ private func newReplyEntries(_ state: State) -> [InputDataEntry] {
     sectionId += 1
     
     //
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Add a shortcut for your quick reply."), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(reply == nil ? strings().businessQuickReplyAddInfo : strings().businessQuickReplyEditInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
 
-    entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.creatingName), error: state.input_error, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem, defaultText: ""), placeholder: nil, inputPlaceholder: "Enter name...", filter: { $0.trimmingCharacters(in: CharacterSet.alphanumerics.inverted) }, limit: 40))
+    entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.creatingName), error: state.input_error, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessQuickReplyAddPlaceholder, filter: { $0.trimmingCharacters(in: CharacterSet.alphanumerics.inverted) }, limit: 40))
 
   
     // entries
@@ -496,22 +641,22 @@ private func newReplyEntries(_ state: State) -> [InputDataEntry] {
     return entries
 }
 
-private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: DisposableSet, stateSignal: Signal<State, NoError>, stateValue: Atomic<State>, updateState: @escaping((State) -> State) -> Void, reply: State.Reply?) -> InputDataModalController {
+private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: DisposableSet, stateSignal: Signal<State, NoError>, stateValue: Atomic<State>, updateState: @escaping((State) -> State) -> Void, reply: ShortcutMessageList.Item?) -> InputDataModalController {
     
     var close:(()->Void)? = nil
 
     updateState { current in
         var current = current
-        current.creatingName = reply?.name
+        current.creatingName = reply?.shortcut
         return current
     }
     
     let signal = stateSignal |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: newReplyEntries(state))
+        return InputDataSignalValue(entries: newReplyEntries(state, reply: reply))
     }
     
     
-    let controller = InputDataController(dataSignal: signal, title: reply == nil ? "New Quick Reply" : "Edit Quick Reply")
+    let controller = InputDataController(dataSignal: signal, title: reply == nil ? strings().businessQuickReplyAddInfo : strings().businessQuickReplyEditInfo)
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
@@ -541,13 +686,13 @@ private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: D
             return .fail(.fields([_id_input : .shake]))
         }
         
-        let replies = stateValue.with { $0.replies }
-        let contains = replies.contains(where: { $0.name == value })
+        let replies = stateValue.with { $0.replies?.items ?? [] }
+        let contains = replies.contains(where: { $0.shortcut == value })
         
-        if contains, reply?.name != value {
+        if contains, reply?.shortcut != value {
             updateState { current in
                 var current = current
-                current.input_error = .init(description: "Shortcut with that name already exists.", target: .data)
+                current.input_error = .init(description: strings().businessQuickReplyAddError, target: .data)
                 return current
             }
             return .fail(.fields([_id_input : .shake]))
@@ -558,41 +703,16 @@ private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: D
         }
         
         if reply == nil {
-            
-            var reply: State.Reply = .init(name: value, messages: [], id: arc4random64())
-            
-            let messages = GreetingMessageSetupChatContents(context: context, messages: [], kind: .quickReplyMessageInput(shortcut: value))
-            
+            let messages = AutomaticBusinessMessageSetupChatContents(context: context, kind: .quickReplyMessageInput(shortcut: value), shortcutId: nil)
             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
-
-            actionsDisposable.add(messages.messages.start(next: { messages in
-                updateState { current in
-                    var current = current
-                    reply.messages = messages
-                    if messages.isEmpty {
-                        current.replies.removeAll(where: { $0.id == reply.id })
-                    } else if let index = current.replies.firstIndex(where: { $0.id == reply.id }) {
-                        current.replies[index] = reply
-                    } else {
-                        current.replies.append(reply)
-                    }
-                    return current
-                }
-            }))
-            
-        } else {
-            updateState { current in
-                var current = current
-                if let input = current.creatingName, !input.isEmpty {
-                    if let index = current.replies.firstIndex(where: { $0.id == reply?.id }) {
-                        current.replies[index].name = input
-                    }
-                }
-                return current
+        } else if let reply {
+            let name = stateValue.with { $0.creatingName ?? "" }
+            if !name.isEmpty {
+                context.engine.accountData.editMessageShortcut(id: reply.id, shortcut: name)
+            } else {
+                return .fail(.fields([_id_input : .shake]))
             }
         }
-        
-        
         close?()
         return .none
     }
@@ -606,8 +726,6 @@ private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: D
 
     
 }
-
-#endif
 
 /*
  */

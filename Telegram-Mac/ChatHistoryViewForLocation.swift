@@ -136,11 +136,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
     
     switch mode {
     case .customChatContents(let contents):
-        return contents.messages |> map { messages in
-            let entries: [MessageHistoryEntry] = messages.map {
-                .init(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: .init(authorIsContact: false))
-            }
-            return .HistoryView(view: .init(tag: nil, namespaces: .all, entries: entries, holeEarlier: false, holeLater: false, isLoading: false), type: .Generic(type: .Generic), scrollPosition: nil, initialData: .init())
+        return contents.historyView |> map { view in
+            return .HistoryView(view: view.0, type: .Generic(type: view.1), scrollPosition: nil, initialData: .init())
         }
     default:
         break
