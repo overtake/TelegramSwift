@@ -286,7 +286,6 @@ final class ChatChannelSuggestView : Control {
     
     func set(item: ChatServiceItem, data: ChannelSuggestData, animated: Bool) {
         
-        //TODO LANG
         let layout = TextViewLayout(.initialize(string: strings().peerMediaSimilarChannels, color: item.presentation.colors.text, font: .medium(.text)))
         layout.measure(width: .greatestFiniteMagnitude)
         

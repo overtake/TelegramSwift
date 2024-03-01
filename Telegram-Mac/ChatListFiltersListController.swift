@@ -111,7 +111,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
 
                 image = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
-                    ctx.setFillColor(colors[Int(color.rawValue) % 7].cgColor)
+                    ctx.setFillColor(colors[Int(color.rawValue)].cgColor)
                     ctx.fillEllipse(in: size.bounds)
                 })
                 

@@ -405,8 +405,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.openPremium(false)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .business(_, viewType):
-            //TODO LANG
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Telegram Business", icon: theme.icons.settingsBusiness, activeIcon: theme.icons.settingsBusiness, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsTelegramBusiness, icon: theme.icons.settingsBusiness, activeIcon: theme.icons.settingsBusinessActive, type: .next, viewType: viewType, action: {
                 arguments.openPremium(true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .giftPremium(_, viewType):
@@ -878,7 +877,9 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }, openPremium: { [weak self] business in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             if business, context.isPremium {
-                navigation.push(PremiumBoardingController(context: context, source: .business_standalone), true)
+                if !(navigation.controller is PremiumBoardingController) {
+                    navigation.push(PremiumBoardingController(context: context, source: .business_standalone), false)
+                }
             } else {
                 showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
             }
@@ -1042,6 +1043,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 }
             } else if navigation.controller is PassportController {
                 if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
+                    _ = tableView.select(item: item)
+                }
+            } else if let controller = navigation.controller as? PremiumBoardingController {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                     _ = tableView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {

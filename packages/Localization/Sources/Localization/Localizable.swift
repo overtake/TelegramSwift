@@ -141,6 +141,8 @@ public final class L10n {
   public static var accountSettingsStickers: String  { return L10n.tr("Localizable", "AccountSettings.Stickers") }
   /// Stickers and Emoji
   public static var accountSettingsStickersAndEmoji: String  { return L10n.tr("Localizable", "AccountSettings.StickersAndEmoji") }
+  /// Telegram Business
+  public static var accountSettingsTelegramBusiness: String  { return L10n.tr("Localizable", "AccountSettings.TelegramBusiness") }
   /// Appearance
   public static var accountSettingsTheme: String  { return L10n.tr("Localizable", "AccountSettings.Theme") }
   /// Update Status
@@ -903,7 +905,7 @@ public final class L10n {
   public static var businessHoursAddSet: String  { return L10n.tr("Localizable", "Business.Hours.AddSet") }
   /// BUSINESS HOURS
   public static var businessHoursBusinessHours: String  { return L10n.tr("Localizable", "Business.Hours.BusinessHours") }
-  /// 24 hours
+  /// Closed
   public static var businessHoursClosed: String  { return L10n.tr("Localizable", "Business.Hours.Closed") }
   /// Turn this on to show your opening hours schedule to your customers.
   public static var businessHoursHeader: String  { return L10n.tr("Localizable", "Business.Hours.Header") }
@@ -913,7 +915,7 @@ public final class L10n {
   public static var businessHoursTimezone: String  { return L10n.tr("Localizable", "Business.Hours.Timezone") }
   /// Business Hours
   public static var businessHoursTitle: String  { return L10n.tr("Localizable", "Business.Hours.Title") }
-  /// UTC
+  /// GMT
   public static var businessHoursUTC: String  { return L10n.tr("Localizable", "Business.Hours.UTC") }
   /// Specify your working hours during the day.
   public static var businessHoursAddSetInfo: String  { return L10n.tr("Localizable", "Business.Hours.AddSet.Info") }
