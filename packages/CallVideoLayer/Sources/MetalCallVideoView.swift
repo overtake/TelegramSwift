@@ -125,8 +125,8 @@ public class MetalCallVideoView : LayerBackedView {
                 
         let frame = NSMakeRect(size.width * 0.5, size.height * 0.5, size.width, size.height)
         
-        transition.updateFrame(layer: self.videoLayer, frame: frame)
-        transition.updateFrame(layer: self.videoLayer.blurredLayer, frame: frame)
+        transition.updateFrame(layer: self.videoLayer, frame: frame, updatePosition: true)
+        transition.updateFrame(layer: self.videoLayer.blurredLayer, frame: frame, updatePosition: true)
      
         self.videoLayer.blurredLayer.frame = size.bounds
         self.videoLayer.frame = size.bounds

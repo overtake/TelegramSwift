@@ -2731,7 +2731,8 @@ class ChatRowItem: TableRowItem {
     }
     
     var bubbleFrame: NSRect {
-         
+        
+
         let nameWidth:CGFloat
         if hasBubble {
             nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0) + (boostBadge?.layoutSize.width ?? 0)
