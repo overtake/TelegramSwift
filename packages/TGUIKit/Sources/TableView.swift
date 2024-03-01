@@ -1794,17 +1794,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                 CATransaction.begin()
                 
-                self.beginTableUpdates()
                 let view = controller.resortView
                 controller.clear()
                 if let view = view {
                     view.frame = self.tableView.convert(view.frame, from: view.superview)
                     self.tableView.addSubview(view)
                 }
+                
+                self.beginTableUpdates()
+                
                 self.moveItem(from: start, to: current, redraw: false, animation: .none)
                 self.tableView.removeRows(at: IndexSet(integer: start), withAnimation: .none)
                 self.tableView.insertRows(at: IndexSet(integer: current), withAnimation: .none)
                 self.endTableUpdates()
+                
                 CATransaction.commit()
                 
                 if controller.resortRange.location != NSNotFound {

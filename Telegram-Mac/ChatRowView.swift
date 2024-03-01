@@ -1286,7 +1286,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if !item.isBubbled, let _ = forwardLine {
             x += 10
         }
-        return NSMakeRect(x, 0, item.isBubbled ? item.bubbleFrame.width : max(item.contentSize.width - x, comments.size(false).width + 10), ChatRowItem.channelCommentsBubbleHeight)
+        return NSMakeRect(x, 0, item.isBubbled ? item.bubbleFrame.width : max(item.contentSize.width - x, comments.size(true).width + 10), ChatRowItem.channelCommentsBubbleHeight)
     }
     func channelCommentsOverlayFrame(_ item: ChatRowItem) -> CGRect {
         guard let commentsData = item.commentsBubbleDataOverlay else {

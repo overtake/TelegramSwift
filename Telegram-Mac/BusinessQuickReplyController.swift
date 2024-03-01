@@ -470,6 +470,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             var reply: ShortcutMessageList.Item
             var viewType: GeneralViewType
             var editing: Bool
+            var index: Int
         }
         var tuples: [Tuple] = []
         
@@ -482,7 +483,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     viewType = .lastItem
                 }
             }
-            tuples.append(.init(reply: reply, viewType: viewType, editing: state.editing))
+            tuples.append(.init(reply: reply, viewType: viewType, editing: state.editing, index: i))
         }
         
         for tuple in tuples {

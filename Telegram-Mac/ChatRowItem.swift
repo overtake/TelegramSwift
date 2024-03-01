@@ -2805,7 +2805,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let commentsBubbleData = commentsBubbleData {
-            rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width)
+            rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width + (isBubbled ? 0 : 10))
         }
         
         return rect
