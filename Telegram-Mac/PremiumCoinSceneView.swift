@@ -236,7 +236,7 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
         node.geometry?.materials.first?.emission.addAnimation(group, forKey: "shimmer")
         
         if #available(macOS 14.0, *), let material = node.geometry?.materials.first {
-            material.metalness.intensity = 0.2
+            material.metalness.intensity = 0.3
         }
     }
     

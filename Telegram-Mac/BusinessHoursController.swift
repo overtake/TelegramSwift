@@ -22,9 +22,9 @@ private extension TimeZoneList.Item {
             .replacingOccurrences(of: ".0", with: "")
 
         if hoursFromGMT >= 0 {
-            return "\(strings().businessHoursUTC)+\(gmtText), \(title)"
+            return "\(title), \(strings().businessHoursUTC)+\(gmtText)"
         } else {
-            return "\(strings().businessHoursUTC)\(gmtText), \(title)"
+            return "\(title), \(strings().businessHoursUTC)\(gmtText)"
         }
     }
 }
