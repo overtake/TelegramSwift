@@ -30,6 +30,7 @@ final class InteractiveTextView : Control {
     
     func set(text: TextViewLayout, context: AccountContext) {
         self.textView.update(text)
+        self.setFrameSize(text.layoutSize)
         self.isLite = context.isLite(.emoji)
         self.updateInlineStickers(context: context, textLayout: text, itemViews: &inlineStickerItemViews)
     }
