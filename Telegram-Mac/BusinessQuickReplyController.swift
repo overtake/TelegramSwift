@@ -63,7 +63,7 @@ final class QuickReplyRowItem : GeneralRowItem {
             }
         }
         
-        let texts = chatListText(account: context.account, for: reply.topMessage._asMessage()).string
+        let texts = chatListText(account: context.account, for: reply.topMessage._asMessage())
         
         if reply.totalCount > 1 {
             _badge = .init(.initialize(string: strings().businessQuickReplyMore(reply.totalCount - 1), color: theme.colors.grayText, font: .medium(.small)), alignment: .center)
@@ -77,8 +77,9 @@ final class QuickReplyRowItem : GeneralRowItem {
             selected_badge = nil
         }
         
-        attr.append(string: texts, color: theme.colors.grayText, font: .normal(.text))
-        
+        attr.append(texts)
+        attr.addAttribute(.foregroundColor, value: theme.colors.grayText, range: attr.range)
+
         let selectedAttr = attr.mutableCopy() as! NSMutableAttributedString
         selectedAttr.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedAttr.range)
         
@@ -157,7 +158,7 @@ final class QuickReplyRowItem : GeneralRowItem {
 }
 
 private final class QuickReplyRowItemView: GeneralContainableRowView {
-    private let textView = TextView()
+    private let textView = InteractiveTextView(frame: .zero)
     private let imageView = AvatarControl(font: .avatar(10))
     private let container = View()
     private var badgeView: TextView?
@@ -176,7 +177,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         imageView.layer?.cornerRadius = imageView.frame.height / 2
         
         textView.userInteractionEnabled = false
-        textView.isSelectable = false
+       // textView.isSelectable = false
         
         containerView.set(handler: { [weak self] _ in
             if let item = self?.item as? QuickReplyRowItem {
@@ -245,7 +246,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
         
         imageView.setPeer(account: item.context.account, peer: item.context.myPeer)
         
-        textView.update(item.textLayout)
+        textView.set(text: item.textLayout, context: item.context)
         
         if let badge = item.badge {
             let current: TextView

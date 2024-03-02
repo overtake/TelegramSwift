@@ -81,7 +81,7 @@ private final class MessageRowItem : GeneralRowItem {
 }
 
 private final class MessageRowItemView: GeneralContainableRowView {
-    private let textView = TextView()
+    private let textView = InteractiveTextView(frame: .zero)
     private let titleView = TextView()
     private let imageView = AvatarControl(font: .avatar(15))
     private let container = View()
@@ -104,7 +104,6 @@ private final class MessageRowItemView: GeneralContainableRowView {
         imageView.layer?.cornerRadius = imageView.frame.height / 2
         
         textView.userInteractionEnabled = false
-        textView.isSelectable = false
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
@@ -132,7 +131,7 @@ private final class MessageRowItemView: GeneralContainableRowView {
         
         imageView.setPeer(account: item.context.account, peer: item.myPeer._asPeer())
         
-        textView.update(item.textLayout)
+        textView.set(text: item.textLayout, context: item.context)
         titleView.update(item.titleLayout)
         countView.update(item.count)
         
