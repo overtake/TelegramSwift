@@ -632,7 +632,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_away_period, equatable: .init(state.awayPeriod), comparable: nil, item: { initialSize, stableId in
                 let values: [Int32] = [7, 14, 21, 28]
-                return SelectSizeRowItem(initialSize, stableId: stableId, current: Int32(state.awayPeriod), sizes: values, hasMarkers: false, titles: [strings().businessGreetingMessageNoActivityDays(7), strings().businessGreetingMessageNoActivityDays(14), strings().businessGreetingMessageNoActivityDays(21), strings().businessGreetingMessageNoActivityDays(28)], viewType: .singleItem, selectAction: { selected in
+                return SelectSizeRowItem(initialSize, stableId: stableId, current: Int32(state.awayPeriod), sizes: values, hasMarkers: false, titles: [strings().businessGreetingMessageNoActivityDaysCountable(7), strings().businessGreetingMessageNoActivityDaysCountable(14), strings().businessGreetingMessageNoActivityDaysCountable(21), strings().businessGreetingMessageNoActivityDaysCountable(28)], viewType: .singleItem, selectAction: { selected in
                     arguments.updateAwayPeriod(values[selected])
                 })
             }))

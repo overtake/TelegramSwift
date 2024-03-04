@@ -891,9 +891,33 @@ public final class L10n {
   public static var businessGreetingMessageHeader: String  { return L10n.tr("Localizable", "Business.GreetingMessage.Header") }
   /// Greeting Message
   public static var businessGreetingMessageTitle: String  { return L10n.tr("Localizable", "Business.GreetingMessage.Title") }
+  /// %d
+  public static func businessGreetingMessageNoActivityDaysCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_countable", p1)
+  }
   /// %d Days
-  public static func businessGreetingMessageNoActivityDays(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days", p1)
+  public static func businessGreetingMessageNoActivityDaysFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_few", p1)
+  }
+  /// %d Days
+  public static func businessGreetingMessageNoActivityDaysMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_many", p1)
+  }
+  /// %d Day
+  public static func businessGreetingMessageNoActivityDaysOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_one", p1)
+  }
+  /// %d Days
+  public static func businessGreetingMessageNoActivityDaysOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_other", p1)
+  }
+  /// %d Days
+  public static func businessGreetingMessageNoActivityDaysTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_two", p1)
+  }
+  /// %d Days
+  public static func businessGreetingMessageNoActivityDaysZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Days_zero", p1)
   }
   /// Choose how many days should pass after your last interaction with a recepient to send them the greeting in response to their message.
   public static var businessGreetingMessageNoActivityInfo: String  { return L10n.tr("Localizable", "Business.GreetingMessage.NoActivity.Info") }
