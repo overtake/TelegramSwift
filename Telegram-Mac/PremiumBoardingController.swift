@@ -1207,6 +1207,8 @@ final class PremiumBoardingController : ModalViewController {
         actionsDisposable.add(context.engine.accountData.keepShortcutMessageListUpdated().startStrict())
         actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().startStrict())
         
+        actionsDisposable.add(context.account.viewTracker.peerView(context.peerId, updateData: true).start())
+        
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
         let close: ()->Void = { [weak self] in

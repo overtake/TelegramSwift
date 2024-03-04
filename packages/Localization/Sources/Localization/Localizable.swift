@@ -977,9 +977,33 @@ public final class L10n {
   public static var businessQuickReplyEditName: String  { return L10n.tr("Localizable", "Business.QuickReply.EditName") }
   /// Set up shortcuts with rich text and media to respond to messages faster.
   public static var businessQuickReplyHeader: String  { return L10n.tr("Localizable", "Business.QuickReply.Header") }
+  /// %d
+  public static func businessQuickReplyMore1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_countable", p1)
+  }
   /// +%d MORE
-  public static func businessQuickReplyMore(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Business.QuickReply.More", p1)
+  public static func businessQuickReplyMore1Few(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_few", p1)
+  }
+  /// +%d MORE
+  public static func businessQuickReplyMore1Many(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_many", p1)
+  }
+  /// +%d MORE
+  public static func businessQuickReplyMore1One(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_one", p1)
+  }
+  /// +%d MORE
+  public static func businessQuickReplyMore1Other(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_other", p1)
+  }
+  /// +%d MORE
+  public static func businessQuickReplyMore1Two(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_two", p1)
+  }
+  /// +%d MORE
+  public static func businessQuickReplyMore1Zero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Business.QuickReply.More1_zero", p1)
   }
   /// Quick Replies
   public static var businessQuickReplyTitle: String  { return L10n.tr("Localizable", "Business.QuickReply.Title") }
@@ -17115,7 +17139,7 @@ public final class L10n {
   public static var weekdayThursday: String  { return L10n.tr("Localizable", "Weekday.Thursday") }
   /// Tuesday
   public static var weekdayTuesday: String  { return L10n.tr("Localizable", "Weekday.Tuesday") }
-  /// Weddnesday
+  /// Wednesday
   public static var weekdayWednesday: String  { return L10n.tr("Localizable", "Weekday.Wednesday") }
   /// More trending stickers are available in\nSettings ⟶ Stickers ⟶ [Trending Stickers](trending).
   public static var widgedStickersInfoText: String  { return L10n.tr("Localizable", "Widged.Stickers.InfoText") }

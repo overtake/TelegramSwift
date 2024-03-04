@@ -239,7 +239,21 @@ private struct State : Equatable {
             }
         }
         
-        return TelegramBusinessHours(timezoneId: timezone.id, weeklyTimeIntervals: mappedIntervals)
+        var mergedIntervals: [TelegramBusinessHours.WorkingTimeInterval] = []
+        for interval in mappedIntervals {
+            if mergedIntervals.isEmpty {
+                mergedIntervals.append(interval)
+            } else {
+                if mergedIntervals[mergedIntervals.count - 1].endMinute >= interval.startMinute {
+                    mergedIntervals[mergedIntervals.count - 1] = TelegramBusinessHours.WorkingTimeInterval(startMinute: mergedIntervals[mergedIntervals.count - 1].startMinute, endMinute: interval.endMinute)
+                } else {
+                    mergedIntervals.append(interval)
+                }
+            }
+        }
+
+        
+        return TelegramBusinessHours(timezoneId: timezone.id, weeklyTimeIntervals: mergedIntervals)
     }
 
     

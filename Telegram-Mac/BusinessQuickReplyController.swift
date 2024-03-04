@@ -66,10 +66,10 @@ final class QuickReplyRowItem : GeneralRowItem {
         let texts = chatListText(account: context.account, for: reply.topMessage._asMessage())
         
         if reply.totalCount > 1 {
-            _badge = .init(.initialize(string: strings().businessQuickReplyMore(reply.totalCount - 1), color: theme.colors.grayText, font: .medium(.small)), alignment: .center)
+            _badge = .init(.initialize(string: strings().businessQuickReplyMore1Countable(reply.totalCount - 1), color: theme.colors.grayText, font: .medium(.small)), alignment: .center)
             _badge?.measure(width: .greatestFiniteMagnitude)
             
-            selected_badge = .init(.initialize(string: strings().businessQuickReplyMore(reply.totalCount - 1), color: theme.colors.accentSelect, font: .medium(.small)), alignment: .center)
+            selected_badge = .init(.initialize(string: strings().businessQuickReplyMore1Countable(reply.totalCount - 1), color: theme.colors.accentSelect, font: .medium(.small)), alignment: .center)
             selected_badge?.measure(width: .greatestFiniteMagnitude)
 
         } else {
