@@ -473,6 +473,8 @@ class ChatMediaItem: ChatRowItem {
                 self?.parameters?.showMedia(message)
             }, openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble).mutableCopy() as! NSMutableAttributedString
             
+            caption.removeWhitespaceFromQuoteAttribute()
+            
             var spoilers:[TextViewLayout.Spoiler] = []
             for entity in entities {
                 switch entity.type {
