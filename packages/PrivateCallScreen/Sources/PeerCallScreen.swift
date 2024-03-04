@@ -316,15 +316,14 @@ public final class PeerCallScreen : ViewController {
     
     private func applyState(_ state: PeerCallState, arguments: Arguments, animated: Bool) {
         
-        let previousState = self.previousState
         
         var videoViewState: PeerCallVideoViewState = self.videoViewState
         switch state.externalState.remoteVideoState {
         case .active:
-            if videoViewState.outgoingView == nil {
+            if videoViewState.incomingView == nil {
                 if let video = external.video(true) {
                     let view = MetalVideoMakeView(videoStreamSignal: video)
-                    
+                    view.background = NSColor.black.withAlphaComponent(0.6)
                     view.videoMetricsDidUpdate = { [weak self] _ in
                         self?.applyState(state, arguments: arguments, animated: animated)
                     }
@@ -342,7 +341,7 @@ public final class PeerCallScreen : ViewController {
             if videoViewState.outgoingView == nil {
                 if let video = external.video(false) {
                     let view = MetalVideoMakeView(videoStreamSignal: video)
-                    
+                    view.background = NSColor.black.withAlphaComponent(0.6)
                     view.videoMetricsDidUpdate = { [weak self] _ in
                         self?.applyState(state, arguments: arguments, animated: animated)
                     }

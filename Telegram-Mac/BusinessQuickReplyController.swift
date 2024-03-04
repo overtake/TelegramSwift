@@ -518,7 +518,7 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
 
     let initialState = State()
     
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
