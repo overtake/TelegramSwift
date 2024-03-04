@@ -701,7 +701,7 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
     
     let initialState = State(type: type)
     
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))

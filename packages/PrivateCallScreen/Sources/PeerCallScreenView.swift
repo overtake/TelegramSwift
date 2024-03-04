@@ -122,6 +122,9 @@ final class PeerCallScreenView : Control {
     
     private var actionsViews: [PeerCallActionView] = []
     private var actionsList: [PeerCallAction] = []
+    
+    private weak var videoLink_incoming:NSView?
+    private weak var videoLink_outgoing:NSView?
 
 
     required init(frame frameRect: NSRect) {
@@ -177,11 +180,11 @@ final class PeerCallScreenView : Control {
         statusView.updateLayout(size: statusView.frame.size, transition: transition)
         
         if let videoViewState {
-            if let incomingVideoView = videoViewState.incomingView {
+            if let incomingVideoView = videoLink_incoming {
                 transition.updateFrame(view: incomingVideoView, frame: size.bounds)
             }
             
-            if let outgointVideoView = videoViewState.outgoingView {
+            if let outgointVideoView = videoLink_outgoing {
                 let videoSize = videoViewState.smallVideoSize
                 transition.updateFrame(view: outgointVideoView, frame: CGRect(origin: NSMakePoint(size.width - videoSize.width - 10, size.height - videoSize.height - 10), size: videoSize))
             }
@@ -237,22 +240,39 @@ final class PeerCallScreenView : Control {
         self.statusView.updateState(state, arguments: arguments, transition: transition)
         self.backgroundLayer.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
         
+        var videos: [NSView] = []
         
         if let incomingView = videoViewState.incomingView {
             if videoViewState.incomingInited {
-                addSubview(incomingView, positioned: .below, relativeTo: actions)
+                videos.append(incomingView)
             }
-        } else if let view = self.videoViewState?.incomingView {
+            videoLink_incoming = incomingView
+        } else if let view = self.videoLink_incoming {
             performSubviewRemoval(view, animated: transition.isAnimated)
+            self.videoLink_incoming = nil
         }
         
         if let outgoingView = videoViewState.outgoingView {
             if videoViewState.outgoingInited {
-                addSubview(outgoingView, positioned: .below, relativeTo: videoViewState.incomingView ?? actions)
+                videos.append(outgoingView)
+                outgoingView.layer?.cornerRadius = 10
             }
-        } else if let view = self.videoViewState?.outgoingView {
+            videoLink_outgoing = outgoingView
+        } else if let view = self.videoLink_outgoing {
             performSubviewRemoval(view, animated: transition.isAnimated)
+            self.videoLink_outgoing = nil
         }
+        
+        
+            CATransaction.begin()
+            for video in videos {
+                video.removeFromSuperview()
+            }
+            if let index = self.subviews.firstIndex(of: self.actions) {
+                self.subviews.insert(contentsOf: videos, at: index)
+            }
+            CATransaction.commit()
+
         
         if let tooltip = state.statusTooltip {
             if self.statusTooltip?.string != tooltip {
