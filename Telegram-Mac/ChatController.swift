@@ -3761,7 +3761,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendMessageShortcut = { item in
-            context.engine.accountData.sendMessageShortcut(peerId: peerId, id: item.id)
+            if let shortcutId = item.id {
+                context.engine.accountData.sendMessageShortcut(peerId: peerId, id: shortcutId)
+            }
         }
         
         chatInteraction.openProxySettings = { [weak self] in
@@ -5569,7 +5571,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let shortcuts: Signal<ShortcutMessageList?, NoError>
         if peerId.namespace == Namespaces.Peer.CloudUser {
-            shortcuts = context.engine.accountData.shortcutMessageList() |> map(Optional.init)
+            shortcuts = context.engine.accountData.shortcutMessageList(onlyRemote: true) |> map(Optional.init)
         } else {
             shortcuts = .single(nil)
         }

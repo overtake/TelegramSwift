@@ -544,6 +544,10 @@ final class PeerCallScreenView : Control {
                 current = view
                 isNew = false
             } else {
+                if let index = self.subviews.firstIndex(of: secretView) {
+                    self.subviews.remove(at: index)
+                    self.subviews.append(secretView)
+                }
                 current = PeerCallRevealedSecretKeyView(frame: NSMakeRect(0, 0, 300, 300))
                 self.addSubview(current, positioned: .below, relativeTo: secretView)
                 self.revealedKey = current

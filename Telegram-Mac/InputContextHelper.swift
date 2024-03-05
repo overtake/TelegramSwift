@@ -58,7 +58,7 @@ enum InputContextEntry : Comparable, Identifiable {
         case let .hashtag(hashtag, _):
             return Int64(hashtag.hashValue)
         case let .shortcut(shortcut, _, _):
-            return Int64(shortcut.id)
+            return Int64(shortcut.id ?? Int32(arc4random64()))
         case let .emoji(clue, _, _, _, _):
             return Int64(clue.joined().hashValue)
         case .inlineRestricted:

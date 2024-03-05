@@ -430,8 +430,8 @@ private struct State : Equatable {
 
 private let _id_header = InputDataIdentifier("_id_header")
 private let _id_add = InputDataIdentifier("_id_add")
-private func _id_reply(_ id: Int32) -> InputDataIdentifier {
-    return .init("_id_reply_\(id)")
+private func _id_reply(_ id: ShortcutMessageList.Item) -> InputDataIdentifier {
+    return .init("_id_reply__\(id.shortcut)")
 }
 
 
@@ -500,7 +500,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         for tuple in tuples {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_reply(tuple.reply.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_reply(tuple.reply), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
                 return QuickReplyRowItem(initialSize, stableId: stableId, reply: tuple.reply, context: arguments.context, editing: tuple.editing, viewType: tuple.viewType, open: arguments.open, editName: arguments.editName, remove: arguments.remove)
             }))
         }
@@ -529,7 +529,7 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
     let nextTransactionNonAnimated = Atomic(value: false)
     
     
-    let shortcutList = context.engine.accountData.shortcutMessageList()
+    let shortcutList = context.engine.accountData.shortcutMessageList(onlyRemote: false)
     
     actionsDisposable.add(shortcutList.start(next: { value in
         updateState { current in
@@ -546,9 +546,11 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
     }, edit: { reply in
         
     }, remove: { reply in
-        verifyAlert(for: context.window, information: strings().businessQuickReplyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
-            context.engine.accountData.deleteMessageShortcuts(ids: [reply.id])
-        })
+        if let shortcutId = reply.id {
+            verifyAlert(for: context.window, information: strings().businessQuickReplyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
+                context.engine.accountData.deleteMessageShortcuts(ids: [shortcutId])
+            })
+        }
     }, editName: { reply in
         showModal(with: BusinessAddQuickReply(context: context, actionsDisposable: actionsDisposable, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: reply), for: context.window)
     }, open: { reply in
@@ -610,7 +612,7 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
                 replies.move(at: fromValue, to: toValue)
                 _ = nextTransactionNonAnimated.swap(true)
                 
-                context.engine.accountData.reorderMessageShortcuts(ids: replies.map { $0.id }, completion: {
+                context.engine.accountData.reorderMessageShortcuts(ids: replies.compactMap { $0.id }, completion: {
                     
                 })
 
@@ -721,10 +723,10 @@ private func BusinessAddQuickReply(context: AccountContext, actionsDisposable: D
         if reply == nil {
             let messages = AutomaticBusinessMessageSetupChatContents(context: context, kind: .quickReplyMessageInput(shortcut: value), shortcutId: nil)
             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
-        } else if let reply {
+        } else if let reply, let shortcutId = reply.id {
             let name = stateValue.with { $0.creatingName ?? "" }
             if !name.isEmpty {
-                context.engine.accountData.editMessageShortcut(id: reply.id, shortcut: name)
+                context.engine.accountData.editMessageShortcut(id: shortcutId, shortcut: name)
             } else {
                 return .fail(.fields([_id_input : .shake]))
             }
