@@ -262,7 +262,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
 
                 if chatPresentationInterfaceState.accountPeer?.isPremium == true {
-                    signal = context.engine.accountData.shortcutMessageList() |> map { list in
+                    signal = context.engine.accountData.shortcutMessageList(onlyRemote: true) |> map { list in
                         let found = list.items.filter({ item in
                             let normalized = item.shortcut.lowercased()
                             return normalized.hasPrefix(normalizedQuery)

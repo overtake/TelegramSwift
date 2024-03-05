@@ -335,7 +335,7 @@ private struct State : Equatable {
     }
     
     var mappedGreeting: TelegramBusinessGreetingMessage? {
-        if enabled, let shortcut = shortcut {
+        if enabled, let shortcut = shortcut, let shortcutId = shortcut.id {
             let peerIds: Set<PeerId>
             switch recepient {
             case .all:
@@ -349,14 +349,14 @@ private struct State : Equatable {
             }
             
             let recepients: TelegramBusinessRecipients = .init(categories: mappedCategories, additionalPeers: peerIds, exclude: recepient == .all)
-            return .init(shortcutId: shortcut.id, recipients: recepients, inactivityDays: awayPeriod)
+            return .init(shortcutId: shortcutId, recipients: recepients, inactivityDays: awayPeriod)
         } else {
             return nil
         }
     }
     
     var mappedAway: TelegramBusinessAwayMessage? {
-        if enabled, let shortcut = shortcut {
+        if enabled, let shortcut = shortcut, let shortcutId = shortcut.id {
             let peerIds: Set<PeerId>
             switch recepient {
             case .all:
@@ -369,7 +369,7 @@ private struct State : Equatable {
                 })
             }
             let recepients: TelegramBusinessRecipients = .init(categories: mappedCategories, additionalPeers: peerIds, exclude: recepient == .all)
-            return .init(shortcutId: shortcut.id, recipients: recepients, schedule: scheduleAway, sendWhenOffline: onlyOffline)
+            return .init(shortcutId: shortcutId, recipients: recepients, schedule: scheduleAway, sendWhenOffline: onlyOffline)
         } else {
             return nil
         }
@@ -746,7 +746,7 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
     let awayMessage = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessAwayMessage(id: context.peerId))
     let greetingMessage = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessGreetingMessage(id: context.peerId))
     
-    let shortcuts = context.engine.accountData.shortcutMessageList()
+    let shortcuts = context.engine.accountData.shortcutMessageList(onlyRemote: false)
     
     
     actionsDisposable.add(combineLatest(awayMessage, greetingMessage, shortcuts).start(next: { awayMessage, greetingMessage, shortcuts in
@@ -888,8 +888,8 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
         let messages = AutomaticBusinessMessageSetupChatContents(context: context, kind: type == .away ? .awayMessageInput : .greetingMessageInput, shortcutId: stateValue.with { $0.shortcut?.id })
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
     }, remove: {
-        if let shortcut = stateValue.with({ $0.shortcut }) {
-            context.engine.accountData.deleteMessageShortcuts(ids: [shortcut.id])
+        if let shortcut = stateValue.with({ $0.shortcut }), let shortcutId = shortcut.id {
+            context.engine.accountData.deleteMessageShortcuts(ids: [shortcutId])
             updateState { current in
                 var current = current
                 current.shortcut = nil
