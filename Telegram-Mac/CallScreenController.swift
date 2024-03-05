@@ -139,6 +139,8 @@ func callScreen(_ context: AccountContext, _ result:PCallResult) {
     switch result {
     case let .samePeer(session), let .success(session):
         
+        var getScreen:(()->Window?)? = nil
+        
         let arguments: PeerCallArguments = PeerCallArguments(engine: context.engine, peerId: session.peerId, makeAvatar: { view, peer in
             let control = view as? AvatarControl ?? AvatarControl(font: .avatar(17))
             control.setFrameSize(NSMakeSize(120, 120))
@@ -147,10 +149,54 @@ func callScreen(_ context: AccountContext, _ result:PCallResult) {
             return control
         }, toggleMute: { [weak session] in
             session?.toggleMute()
-        }, toggleCamera: {
+        }, toggleCamera: { [weak session] callState in
             
-        }, toggleScreencast: {
+            guard let screen = getScreen?() else {
+                return
+            }
             
+            switch callState.videoState {
+            case let .active(available), let .paused(available), let .inactive(available):
+                if available {
+                    if callState.isOutgoingVideoPaused || callState.isScreenCapture || callState.videoState == .inactive(available) {
+                        session?.requestVideo()
+                    } else {
+                        session?.disableVideo()
+                    }
+                } else {
+                    verifyAlert_button(for: screen, information: strings().callCameraError, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            openSystemSettings(.camera)
+                        default:
+                            break
+                        }
+                    }, presentation: darkAppearance)
+                }
+            default:
+                break
+            }
+            
+        }, toggleScreencast: { [weak session] callState in
+            
+            guard let screen = getScreen?() else {
+                return
+            }
+            let result = session?.toggleScreenCapture()
+            
+            if let result = result {
+                switch result {
+                case .permission:
+                    verifyAlert_button(for: screen, information: strings().callScreenError, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            openSystemSettings(.sharing)
+                        default:
+                            break
+                        }
+                    }, presentation: darkAppearance)
+                }
+            }
         }, endcall: { [weak session] state in
             
             switch state.state {
@@ -200,6 +246,10 @@ func callScreen(_ context: AccountContext, _ result:PCallResult) {
             context.sharedContext.peerCall = nil
         }
         context.sharedContext.peerCall = screen
+        
+        getScreen = { [weak screen] in
+            return screen?.window
+        }
         
     default:
         break
