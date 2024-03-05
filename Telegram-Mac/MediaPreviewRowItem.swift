@@ -159,7 +159,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
         
     }
     
-    override func updateMouse() {
+    override func updateMouse(animated: Bool) {
         guard let window = window, let table = item?.table else {
             editControl.isHidden = true
             return
@@ -191,7 +191,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
             self.contentNode = node.init(frame:NSZeroRect)
             self.addSubview(self.contentNode!)
             addSubview(editControl)
-            updateMouse()
+            updateMouse(animated: animated)
         }
         
         

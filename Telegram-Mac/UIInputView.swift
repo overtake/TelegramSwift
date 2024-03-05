@@ -255,7 +255,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         case .url:
             let range = self.interactions.presentation.selectionRange
             let textRange = NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound)
-            guard textRange.min != textRange.max, let window = kitWindow else {
+            guard textRange.min != textRange.max, let window = _window else {
                 return
             }
             

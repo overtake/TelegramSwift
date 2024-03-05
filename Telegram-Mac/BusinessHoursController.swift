@@ -228,7 +228,7 @@ private struct State : Equatable {
             }
             
             let dayStartMinute = i * 24 * 60
-            guard var effectiveRanges = self.data[today]?.list else {
+            guard let effectiveRanges = self.data[today]?.list else {
                 continue
             }
         

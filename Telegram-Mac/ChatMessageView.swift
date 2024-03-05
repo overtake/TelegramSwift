@@ -174,8 +174,8 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         return views
     }
     
-    override func updateMouse() {
-        super.updateMouse()
+    override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         webpageContent?.updateMouse()
     }
     

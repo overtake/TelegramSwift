@@ -540,11 +540,12 @@ private final class PeerInfoHoursRowView: GeneralContainableRowView {
         }
         
         
-        transition.updateFrame(view: title, frame: NSMakeRect(item.viewType.innerInset.left, item.viewType.innerInset.top, title.frame.width, title.frame.height))
         
-        transition.updateFrame(view: status, frame: NSMakeRect(item.viewType.innerInset.left, title.frame.maxY + 6, status.frame.width, status.frame.height))
+        ContainedViewLayoutTransition.immediate.updateFrame(view: title, frame: NSMakeRect(item.viewType.innerInset.left, item.viewType.innerInset.top, title.frame.width, title.frame.height))
         
-        transition.updateFrame(view: today, frame: NSMakeRect(containerView.frame.width - today.frame.width - item.viewType.innerInset.right, status.frame.minY, today.frame.width, today.frame.height))
+        ContainedViewLayoutTransition.immediate.updateFrame(view: status, frame: NSMakeRect(item.viewType.innerInset.left, title.frame.maxY + 6, status.frame.width, status.frame.height))
+        
+        ContainedViewLayoutTransition.immediate.updateFrame(view: today, frame: NSMakeRect(containerView.frame.width - today.frame.width - item.viewType.innerInset.right, status.frame.minY, today.frame.width, today.frame.height))
 
         transition.updateFrame(view: daysContainer, frame: NSMakeRect(item.viewType.innerInset.left, item.basicHeight, containerView.frame.width - item.viewType.innerInset.left * 2, 0))
 

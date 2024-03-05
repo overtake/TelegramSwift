@@ -14,6 +14,63 @@ import TGUIKit
 import MetalEngine
 import AppKit
 
+
+
+private class ShadowView: View {
+    
+    
+    public override init() {
+        super.init(frame: .zero)
+        setup()
+    }
+    public required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var gradient: CAGradientLayer {
+        return self.layer as! CAGradientLayer
+    }
+    
+    private func setup() {
+        self.layer = CAGradientLayer()
+        update()
+    }
+    
+    
+    private func update() {
+        let baseGradientAlpha: CGFloat = 1.0
+        let numSteps = 8
+        let firstStep = 1
+        let firstLocation: CGFloat = 0
+        let color = NSColor.black.withAlphaComponent(0.6)
+        self.gradient.colors = (0 ..< numSteps).map { i in
+            if i < firstStep {
+                return color.cgColor
+            } else {
+                let step: CGFloat = CGFloat(i - firstStep) / CGFloat(numSteps - firstStep - 1)
+                let value: CGFloat = 1.0 - bezierPoint(0.42, 0.0, 0.58, 1.0, step)
+                return color.withAlphaComponent(baseGradientAlpha * value).cgColor
+            }
+        }
+
+        self.gradient.locations = (0 ..< numSteps).map { i -> NSNumber in
+            if i < firstStep {
+                return 0.0 as NSNumber
+            } else {
+                let step: CGFloat = CGFloat(i - firstStep) / CGFloat(numSteps - firstStep - 1)
+                return (firstLocation + (1.0 - firstLocation) * step) as NSNumber
+            }
+        }
+    }
+}
+
+
+
 private final class InfoHelpView : NSVisualEffectView {
     
     private var shimmer: ShimmerLayer?
@@ -89,16 +146,23 @@ struct PeerCallVideoViewState {
     
     var smallVideoSize: NSSize {
         if let outgoingView, let metrics = outgoingView.videoMetrics {
-            let targetSize = NSMakeSize(180, 180)
+            let targetSize = NSMakeSize(190, 190)
             return metrics.resolution.aspectFitted(targetSize)
         }
-        return NSMakeSize(180, 100)
+        return NSMakeSize(190, 100)
     }
+}
+
+private enum VideoMagnify {
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
 }
 
 final class PeerCallScreenView : Control {
     private let backgroundLayer: CallBackgroundLayer = .init()
-    private let photoView = PeerCallPhotoView(frame: NSMakeRect(0, 0, 120, 120))
+    private var photoView: PeerCallPhotoView?
     private let statusView = PeerCallStatusView(frame: NSMakeRect(0, 0, 300, 58))
     
     
@@ -123,8 +187,14 @@ final class PeerCallScreenView : Control {
     private var actionsViews: [PeerCallActionView] = []
     private var actionsList: [PeerCallAction] = []
     
-    private weak var videoLink_incoming:NSView?
-    private weak var videoLink_outgoing:NSView?
+    private weak var videoLink_incoming:MetalCallVideoView?
+    private weak var videoLink_outgoing:MetalCallVideoView?
+    
+    private var videoShadowView: ShadowView?
+    private var videoBackgroundView: NSVisualEffectView?
+    private var videoBackgroundView_color: View?
+    
+    private var videoMagnify: VideoMagnify = .bottomRight
 
 
     required init(frame frameRect: NSRect) {
@@ -132,10 +202,11 @@ final class PeerCallScreenView : Control {
         self.layer?.addSublayer(backgroundLayer)
         self.layer?.addSublayer(backgroundLayer.blurredLayer)
         
-        addSubview(photoView)
-        addSubview(statusView)
         
         addSubview(actions)
+
+        addSubview(statusView)
+        
         
         actions.layer?.masksToBounds = false
         
@@ -145,7 +216,72 @@ final class PeerCallScreenView : Control {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         self.backgroundLayer.isInHierarchy = window != nil
-        self.photoView.blobView.maskLayer = backgroundLayer.blurredLayer
+    }
+    
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if let window = newWindow as? Window {
+            var start: NSPoint? = nil
+
+            window.set(mouseHandler: { [weak self] event in
+                guard let self, let window = self.window, let control = self.videoLink_outgoing else {
+                    return .rejected
+                }
+                let startPoint = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                
+                if NSPointInRect(startPoint, control.frame) {
+                    start = startPoint
+                } else {
+                    start = nil
+                }
+                return .rejected
+            }, with: self, for: .leftMouseDown)
+
+            window.set(mouseHandler: { [weak self] event in
+                
+                guard let self, let startPoint = start, let control = self.videoLink_outgoing else {
+                    return .rejected
+                }
+                control.isMoving = true
+                                    
+                let current = self.convert(event.locationInWindow, from: nil)
+                let difference = current - startPoint
+                
+                control.setFrameOrigin(control.frame.origin + difference)
+                start = current
+                
+                return .rejected
+                
+            }, with: self, for: .leftMouseDragged)
+            
+            window.set(mouseHandler: { [ weak self] event in
+                guard let self, let control = self.videoLink_outgoing, let _ = start else {
+                    return .rejected
+                }
+                let current = self.convert(event.locationInWindow, from: nil)
+                start = nil
+                control.isMoving = false
+                
+                if current.x < frame.width / 2 {
+                    if current.y > frame.height / 2 {
+                        self.videoMagnify = .bottomLeft
+                    } else {
+                        self.videoMagnify = .topLeft
+                    }
+                } else {
+                    if current.y > frame.height / 2 {
+                        self.videoMagnify = .bottomRight
+                    } else {
+                        self.videoMagnify = .topRight
+                    }
+                }
+                self.updateLayout(size: self.frame.size, transition: .animated(duration: 0.35, curve: .spring))
+                
+                return .rejected
+            }, with: self, for: .leftMouseUp)
+            
+        } else {
+            _window?.removeAllHandlers(for: self)
+        }
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -172,32 +308,47 @@ final class PeerCallScreenView : Control {
         
         self.backgroundLayer.renderSpec = RenderLayerSpec(size: RenderSize(width: Int(size.width), height: Int(size.height)), edgeInset: 0)
                 
+        if let photoView {
+            transition.updateFrame(view: photoView, frame: photoView.centerFrameX(y: floorToScreenPixels(size.height / 3) - 50))
+            photoView.updateLayout(size: photoView.frame.size, transition: transition)
+        }
         
-        transition.updateFrame(view: photoView, frame: photoView.centerFrameX(y: floorToScreenPixels(size.height / 3) - 50))
-        photoView.updateLayout(size: photoView.frame.size, transition: transition)
+        if videoLink_incoming != nil {
+            transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: 10))
+            statusView.updateLayout(size: statusView.frame.size, transition: transition)
+        } else if let photoView {
+            transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: photoView.frame.maxY + 32))
+            statusView.updateLayout(size: statusView.frame.size, transition: transition)
+        }
         
-        transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: photoView.frame.maxY + 32))
-        statusView.updateLayout(size: statusView.frame.size, transition: transition)
         
         if let videoViewState {
             if let incomingVideoView = videoLink_incoming {
-                transition.updateFrame(view: incomingVideoView, frame: size.bounds)
+                transition.updateFrame(view: incomingVideoView, frame: incomingVideoFrame(view: incomingVideoView, size: size, state: videoViewState))
             }
             
-            if let outgointVideoView = videoLink_outgoing {
-                let videoSize = videoViewState.smallVideoSize
-                transition.updateFrame(view: outgointVideoView, frame: CGRect(origin: NSMakePoint(size.width - videoSize.width - 10, size.height - videoSize.height - 10), size: videoSize))
+            if let outgointVideoView = videoLink_outgoing, !outgointVideoView.isMoving {
+                transition.updateFrame(view: outgointVideoView, frame: outgoingVideoFrame(view: outgointVideoView, size: size, videoMagnify: self.videoMagnify, state: videoViewState))
             }
         }
         
         
+        if let videoShadowView {
+            transition.updateFrame(view: videoShadowView, frame: CGRect(origin: videoShadowView.frame.origin, size: NSMakeSize(size.width, videoShadowView.frame.height)))
+        }
+        if let videoBackgroundView {
+            transition.updateFrame(view: videoBackgroundView, frame: size.bounds)
+        }
+        if let videoBackgroundView_color {
+            transition.updateFrame(view: videoBackgroundView_color, frame: size.bounds)
+        }
         
         if let statusTooltip {
             transition.updateFrame(view: statusTooltip, frame: statusTooltipFrame(view: statusTooltip, state: state))
         }
         
         if let secretView {
-            transition.updateFrame(view: secretView, frame: secretKeyFrame(view: secretView, state: state))
+            transition.updateFrame(view: secretView, frame: secretKeyFrame(view: secretView, state: state, incomingVideo: videoLink_incoming != nil))
             secretView.updateLayout(size: secretView.frame.size, transition: transition)
         }
         
@@ -236,17 +387,26 @@ final class PeerCallScreenView : Control {
         self.arguments = arguments
         self.videoViewState = videoViewState
         
-        self.photoView.updateState(state, arguments: arguments, transition: transition)
         self.statusView.updateState(state, arguments: arguments, transition: transition)
         self.backgroundLayer.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
         
-        var videos: [NSView] = []
+        
+        
+        
         
         if let incomingView = videoViewState.incomingView {
             if videoViewState.incomingInited {
-                videos.append(incomingView)
+                addSubview(incomingView, positioned: .below, relativeTo: self.videoLink_outgoing ?? actions)
+                
+                if transition.isAnimated, videoLink_incoming == nil {
+                    ContainedViewLayoutTransition.immediate.updateFrame(view: incomingView, frame: incomingVideoFrame(view: incomingView, size: frame.size, state: videoViewState))
+                    incomingView.layer?.animateAlpha(from: 0, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+                }
+                videoLink_incoming = incomingView
+
+            } else {
+                videoLink_incoming = nil
             }
-            videoLink_incoming = incomingView
         } else if let view = self.videoLink_incoming {
             performSubviewRemoval(view, animated: transition.isAnimated)
             self.videoLink_incoming = nil
@@ -254,24 +414,98 @@ final class PeerCallScreenView : Control {
         
         if let outgoingView = videoViewState.outgoingView {
             if videoViewState.outgoingInited {
-                videos.append(outgoingView)
+                addSubview(outgoingView, positioned: .below, relativeTo: actions)
+
                 outgoingView.layer?.cornerRadius = 10
+                outgoingView.userInteractionEnabled = true
+                
+                
+                if transition.isAnimated, videoLink_outgoing == nil {
+                    ContainedViewLayoutTransition.immediate.updateFrame(view: outgoingView, frame: outgoingVideoFrame(view: outgoingView, size: frame.size, videoMagnify: self.videoMagnify, state: videoViewState))
+                    outgoingView.layer?.animateAlpha(from: 0, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+                }
+ 
+                videoLink_outgoing = outgoingView
+                
+            } else {
+                videoLink_outgoing = nil
             }
-            videoLink_outgoing = outgoingView
         } else if let view = self.videoLink_outgoing {
             performSubviewRemoval(view, animated: transition.isAnimated)
             self.videoLink_outgoing = nil
         }
         
         
-            CATransaction.begin()
-            for video in videos {
-                video.removeFromSuperview()
+        if videoLink_incoming != nil {
+            let current: ShadowView
+            if let view = self.videoShadowView {
+                current = view
+            } else {
+                current = ShadowView(frame: NSMakeRect(0, -50, frame.width, 160))
+                addSubview(current, positioned: .below, relativeTo: self.statusView)
+                self.videoShadowView = current
             }
-            if let index = self.subviews.firstIndex(of: self.actions) {
-                self.subviews.insert(contentsOf: videos, at: index)
+        } else if let videoShadowView {
+            performSubviewRemoval(videoShadowView, animated: transition.isAnimated)
+            self.videoShadowView = nil
+        }
+        
+        if let videoLink_incoming {
+            let current: View
+            if let view = self.videoBackgroundView_color {
+                current = view
+            } else {
+                current = View(frame: self.bounds)
+                addSubview(current, positioned: .below, relativeTo: videoLink_incoming)
+                self.videoBackgroundView_color = current
             }
-            CATransaction.commit()
+            current.backgroundColor = NSColor.black.withAlphaComponent(0.7)
+        } else if let videoBackgroundView_color {
+            performSubviewRemoval(videoBackgroundView_color, animated: transition.isAnimated)
+            self.videoBackgroundView_color = nil
+        }
+        
+        if let videoLink_incoming {
+            let current: NSVisualEffectView
+            if let view = self.videoBackgroundView {
+                current = view
+            } else {
+                current = NSVisualEffectView(frame: self.bounds)
+                current.material = .dark
+                current.state = .active
+                current.blendingMode = .withinWindow
+                current.wantsLayer = true
+                addSubview(current, positioned: .below, relativeTo: videoLink_incoming)
+                self.videoBackgroundView = current
+            }
+        } else if let videoBackgroundView {
+            performSubviewRemoval(videoBackgroundView, animated: transition.isAnimated)
+            self.videoBackgroundView = nil
+        }
+        
+         if videoLink_incoming == nil {
+             let current: PeerCallPhotoView
+             if let view = self.photoView {
+                 current = view
+             } else {
+                 current = PeerCallPhotoView(frame: NSMakeRect(0, 0, 120, 120))
+                 addSubview(current, positioned: .below, relativeTo: self.statusView)
+                 self.photoView = current
+                 
+                 ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: current.centerFrameX(y: floorToScreenPixels(frame.height / 3) - 50))
+                 
+                 if transition.isAnimated {
+                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
+                 }
+             }
+             current.blobView.maskLayer = backgroundLayer.blurredLayer
+             current.updateState(state, arguments: arguments, transition: transition)
+         } else if let photoView {
+             performSubviewRemoval(photoView, animated: transition.isAnimated, scale: true)
+             self.photoView = nil
+         }
+         
 
         
         if let tooltip = state.statusTooltip {
@@ -284,7 +518,7 @@ final class PeerCallScreenView : Control {
                 let current: InfoHelpView
                 let isNew = true
                 current = InfoHelpView(frame: .zero)
-                self.addSubview(current, positioned: .below, relativeTo: subviews.first)
+                self.addSubview(current)
                 self.statusTooltip = current
                 current.set(string: tooltip, hasShimm: true)
                 
@@ -369,7 +603,7 @@ final class PeerCallScreenView : Control {
             current.updateState(state, arguments: arguments, transition: isNew ? .immediate : transition)
             
             if isNew {
-                ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: secretKeyFrame(view: current, state: state))
+                ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: secretKeyFrame(view: current, state: state, incomingVideo: videoLink_incoming != nil))
                 if transition.isAnimated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
@@ -409,7 +643,7 @@ final class PeerCallScreenView : Control {
             for view in self.tooltipsViews {
                 view.removeFromSuperview()
             }
-            self.subviews.insert(contentsOf: self.tooltipsViews, at: 0)
+            self.subviews.append(contentsOf: self.tooltipsViews)
             CATransaction.commit()
             
             self.tooltips = tooltips
@@ -469,18 +703,41 @@ final class PeerCallScreenView : Control {
 
 //RECT
 
-extension PeerCallScreenView {
+private extension PeerCallScreenView {
     func statusTooltipFrame(view: NSView, state: PeerCallState) -> NSRect {
         return view.centerFrameX(y: statusView.frame.maxY + 12)
     }
-    func secretKeyFrame(view: NSView, state: PeerCallState) -> NSRect {
+    func outgoingVideoFrame(view: MetalCallVideoView, size: NSSize, videoMagnify: VideoMagnify, state: PeerCallVideoViewState) -> NSRect {
+        let videoSize = state.smallVideoSize
+        let point: NSPoint
+        switch videoMagnify {
+        case .topLeft:
+            point = NSMakePoint(10, 10)
+        case .topRight:
+            point = NSMakePoint(size.width - videoSize.width - 10, 10)
+        case .bottomLeft:
+            point = NSMakePoint(10, size.height - videoSize.height - 10)
+        case .bottomRight:
+            point = NSMakePoint(size.width - videoSize.width - 10, size.height - videoSize.height - 10)
+        }
+        return CGRect(origin: point, size: videoSize)
+    }
+    func incomingVideoFrame(view: MetalCallVideoView, size: NSSize, state: PeerCallVideoViewState) -> NSRect {
+        return size.bounds
+    }
+    func secretKeyFrame(view: NSView, state: PeerCallState, incomingVideo: Bool) -> NSRect {
         if state.secretKeyViewState == .revealed {
             var rect = focus(NSMakeSize(200, 50))
             rect.origin.y -= 30
             return rect
         } else {
             var rect = focus(NSMakeSize(100, 25))
-            rect.origin.y = 16
+            if incomingVideo {
+                rect.origin.y = 16
+                rect.origin.x = frame.width - rect.width - 25
+            } else {
+                rect.origin.y = 16
+            }
             return rect
         }
     }

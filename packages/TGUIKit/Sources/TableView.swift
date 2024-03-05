@@ -1151,7 +1151,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let range = self.visibleRows()
             for i in range.location ..< range.location + range.length {
                 if let view = self.viewNecessary(at: i) {
-                    view.updateMouse()
+                    view.updateMouse(animated: false)
                 }
             }
         }
@@ -1997,17 +1997,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 
                 return
+            } else {
+                if let item = self.optionalItem(at: row) {
+                    let animated = visibleRows().contains(row) && item.view != nil && animated
+                    NSAnimationContext.current.duration = animated ? duration : 0.0
+                    NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    self.tableView.beginUpdates()
+                    self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
+                    self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
+                    self.tableView.endUpdates()
+                }
             }
         }
-        if let item = self.optionalItem(at: row) {
-            let animated = visibleRows().contains(row) && item.view != nil && animated
-            NSAnimationContext.current.duration = animated ? duration : 0.0
-            NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.tableView.beginUpdates()
-            self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
-            self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
-            self.tableView.endUpdates()
-        }
+       
 
     }
     
@@ -2817,9 +2819,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         continue
                     }
                     
-                    self.tableView.beginUpdates()
-                    self.tableView.reloadData()
-                    self.tableView.endUpdates()
+
                     
                     nrect = rectOf(item: item)
                     
@@ -3190,7 +3190,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        self.tile()
         self.updateStickAfterScroll(animated)
     }
     

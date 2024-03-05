@@ -77,8 +77,10 @@ final class QuickReplyRowItem : GeneralRowItem {
             selected_badge = nil
         }
         
+        
+        let prevRange = attr.range
         attr.append(texts)
-        attr.addAttribute(.foregroundColor, value: theme.colors.grayText, range: attr.range)
+       // attr.addAttribute(.foregroundColor, value: theme.colors.grayText, range: NSMakeRange(prevRange.location, texts.length))
 
         let selectedAttr = attr.mutableCopy() as! NSMutableAttributedString
         selectedAttr.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedAttr.range)
@@ -242,7 +244,7 @@ private final class QuickReplyRowItemView: GeneralContainableRowView {
             return
         }
         
-        containerView.userInteractionEnabled = item.viewType != .legacy
+        containerView.userInteractionEnabled = item.viewType != .legacy && !item.editing
         
         imageView.setPeer(account: item.context.account, peer: item.context.myPeer)
         
@@ -544,7 +546,9 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
     }, edit: { reply in
         
     }, remove: { reply in
-        context.engine.accountData.deleteMessageShortcuts(ids: [reply.id])
+        verifyAlert(for: context.window, information: strings().businessQuickReplyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
+            context.engine.accountData.deleteMessageShortcuts(ids: [reply.id])
+        })
     }, editName: { reply in
         showModal(with: BusinessAddQuickReply(context: context, actionsDisposable: actionsDisposable, stateSignal: statePromise.get(), stateValue: stateValue, updateState: updateState, reply: reply), for: context.window)
     }, open: { reply in

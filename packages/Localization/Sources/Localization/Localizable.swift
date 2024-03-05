@@ -997,6 +997,8 @@ public final class L10n {
   public static var businessMessageSelectPeersChatTypes: String  { return L10n.tr("Localizable", "Business.Message.SelectPeers.ChatTypes") }
   /// Add Quick Reply
   public static var businessQuickReplyAdd: String  { return L10n.tr("Localizable", "Business.QuickReply.Add") }
+  /// Are you sure you want to delete quick reply?
+  public static var businessQuickReplyConfirmDelete: String  { return L10n.tr("Localizable", "Business.QuickReply.ConfirmDelete") }
   /// Edit Name
   public static var businessQuickReplyEditName: String  { return L10n.tr("Localizable", "Business.QuickReply.EditName") }
   /// Set up shortcuts with rich text and media to respond to messages faster.

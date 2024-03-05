@@ -197,7 +197,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         let selectingMode = selectingMode && item?.chatInteraction.mode.threadId != item?.message?.id
         if let item = item {
-            updateMouse()
             if selectingMode {
                 if selectingView == nil {
                     selectingView = SelectingControl(unselectedImage: item.presentation.chat_toggle_unselected, selectedImage: item.presentation.chat_toggle_selected, selected: item.isSelectedMessage)
@@ -383,7 +382,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         renderLayoutType(item, animated: true)
 
         updateColors()
-        updateMouse()
+        updateMouse(animated: false)
         item.chatInteraction.focusInputField()
         super.onCloseContextMenu()
     }
@@ -392,17 +391,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {return}
         renderLayoutType(item, animated: true)
         updateColors()
-        updateMouse()
+        updateMouse(animated: false)
         super.onCloseContextMenu()
     }
     
+    func mouseInsideRow() -> Bool {
+        guard let window else {
+            return false
+        }
+        let rect = rowView.convert(rowView.bounds, to: nil)
+        return NSPointInRect(window.mouseLocationOutsideOfEventStream, rect)
+    }
     
-    override func updateMouse() {
+    override func updateMouse(animated: Bool) {
         if let shareView = self.shareView, let item = item as? ChatRowItem {
-            shareView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() && contextMenu == nil ? 1.0 : 0.0, animated: true)
+            let active = item.chatInteraction.presentation.state != .selecting && mouseInsideRow() && contextMenu == nil ? 1.0 : 0.0
+            shareView.change(opacity: active, animated: false)
         }
         if let commentsView = self.channelCommentsBubbleSmallControl, let item = item as? ChatRowItem {
-            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() && contextMenu == nil  ? 1.0 : 0.0, animated: true)
+            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInsideRow() && contextMenu == nil  ? 1.0 : 0.0, animated: false)
         }
     }
     
@@ -1367,9 +1374,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 shareView = ImageButton(frame: CGRect(origin: shareViewPoint(item), size: NSMakeSize(26, 26)))
                 shareView?.disableActions()
                 shareView?.scaleOnClick = true
-                shareView?.change(opacity: 0, animated: false)
                 rowView.addSubview(shareView!)
             }
+            
+            updateMouse(animated: false)
             
             guard let control = shareView else {return}
             control.autohighlight = false
@@ -1738,12 +1746,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {
             return
         }
-        
-        //if previousItem == nil {
-          //  bubbleView.frame = bubbleFrame(item)
-          //  rowView.frame = CGRect(origin: rowPoint(item), size: frame.size)
-       // }
-
         
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
             self.animatedView?.removeFromSuperview()

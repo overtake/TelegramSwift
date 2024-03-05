@@ -722,6 +722,7 @@ class LocationModalController: ModalViewController {
         }, error: { [weak self] error in
             self?.delegate.cancelRequestLocation()
         }))
+
     }
     
     deinit {

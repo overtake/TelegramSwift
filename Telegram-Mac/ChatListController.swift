@@ -322,7 +322,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
         
       
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, grouping: !animated || scrollState != nil, animateVisibleOnly: false, groupInOne: !animated || scrollState != nil)
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, grouping: !animated || scrollState != nil, animateVisibleOnly: false, groupInOne: false)
         subscriber.putNext(transition)
         subscriber.putCompletion()
         return ActionDisposable {

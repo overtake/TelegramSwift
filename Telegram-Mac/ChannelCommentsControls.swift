@@ -435,8 +435,8 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         let previousLastTextPosition = lastTextPosition
         
         super.update(data: data, size: size, animated: animated)
-        
-        
+                
+        CATransaction.begin()
         
         let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.peers, rightList: data.peers)
         
@@ -494,6 +494,8 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         
         
         self.peers = data.peers
+        
+        CATransaction.commit()
 
         enum NumericAnimation {
             case forward

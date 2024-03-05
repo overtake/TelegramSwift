@@ -153,7 +153,7 @@ open class Popover: NSObject {
             controller.loadViewIfNeeded()
             controller.viewWillAppear(animates)
             
-            self.window = control.kitWindow
+            self.window = control._window
             
             NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: window)
 

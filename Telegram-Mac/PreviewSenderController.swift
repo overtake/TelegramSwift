@@ -120,7 +120,7 @@ fileprivate class PreviewSenderView : Control {
 
             
             DispatchQueue.main.async {
-                if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self.kitWindow {
+                if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self._window {
                     removeAllTooltips(window)
                 }
                 self.fileButton.controlState = .Normal
@@ -1589,7 +1589,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             guard let `self` = self else {return .rejected}
             
             self.genericView.tableView.enumerateViews(with: { view -> Bool in
-                view.updateMouse()
+                view.updateMouse(animated: true)
                 return true
             })
             

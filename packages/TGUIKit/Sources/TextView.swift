@@ -2701,7 +2701,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         
                         menu.addItem(copy)
                         
-                        if resolved == nil, let window = self?.kitWindow {
+                        if resolved == nil, let window = self?._window {
                             if let text = self?.effectiveText, let translate = layout.interactions.translate?(text, window) {
                                 menu.addItem(translate)
                             }
@@ -3000,7 +3000,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         
         self.locationInWindow = nil
         
-        if let layout = textLayout, userInteractionEnabled, let window = kitWindow {
+        if let layout = textLayout, userInteractionEnabled, let window = _window {
             let point = self.convert(event.locationInWindow, from: nil)
             if let _ = layout.spoiler(at: point) {
                 layout.revealSpoiler()

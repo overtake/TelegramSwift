@@ -33,9 +33,9 @@ protocol PictureInPictureControl {
 
 
 private class PictureInpictureView : Control {
-    private let _window: Window
+    private let __window: Window
     init(frame: NSRect, window: Window) {
-        _window = window
+        __window = window
         super.init(frame: frame)
         autoresizesSubviews = true
     }
@@ -61,14 +61,14 @@ private class PictureInpictureView : Control {
 
         }
         get {
-            return _window
+            return __window
         }
     }
 }
 
 fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     private let saver: WindowSaver
-    fileprivate let _window: Window
+    fileprivate let __window: Window
     fileprivate let control: PictureInPictureControl
     private let rect:NSRect
     private let restoreRect: NSRect
@@ -94,17 +94,17 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.rect = newRect
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.item = item
-        _window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
-        _window.name = "pip"
-        self.saver = .find(for: _window)
-        _window.setFrame(NSMakeRect(3000, 3000, saver.rect.width, saver.rect.height), display: true)
+        __window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
+        __window.name = "pip"
+        self.saver = .find(for: __window)
+        __window.setFrame(NSMakeRect(3000, 3000, saver.rect.width, saver.rect.height), display: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
 
         
         
-        let view = PictureInpictureView(frame: bounds, window: _window)
+        let view = PictureInpictureView(frame: bounds, window: __window)
         self.contentView = view
         
         view.forceMouseDownCanMoveWindow = true
@@ -119,22 +119,22 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         contentView?.addSubview(control.view)
         
         
-        _window.set(mouseHandler: { event -> KeyHandlerResult in
+        __window.set(mouseHandler: { event -> KeyHandlerResult in
             NSCursor.arrow.set()
             return .invoked
         }, with: self, for: .mouseMoved, priority: .low)
         
-        _window.set(mouseHandler: { event -> KeyHandlerResult in
+        __window.set(mouseHandler: { event -> KeyHandlerResult in
             NSCursor.arrow.set()
             return .invoked
         }, with: self, for: .mouseEntered, priority: .low)
         
-        _window.set(mouseHandler: { event -> KeyHandlerResult in
+        __window.set(mouseHandler: { event -> KeyHandlerResult in
             return .invoked
         }, with: self, for: .mouseExited, priority: .low)
         
         
-        _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+        __window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             if event.clickCount == 2, let strongSelf = self {
                 let inner = strongSelf.control.view.convert(event.locationInWindow, from: nil)                
                 if NSWindow.windowNumber(at: NSEvent.mouseLocation, belowWindowWithWindowNumber: 0) == strongSelf.windowNumber, strongSelf.control.view.hitTest(inner) is MediaPlayerView {
@@ -145,7 +145,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         }, with: self, for: .leftMouseDown, priority: .low)
         
         
-        _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+        __window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             self?.findAndMoveToCorner()
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .low)
@@ -160,13 +160,13 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
             guard let `self` = self else {return event}
-            self._window.sendEvent(event)
+            self.__window.sendEvent(event)
             return event
         })
         
         eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
                 guard let `self` = self else {return}
-                self._window.sendEvent(event)
+                self.__window.sendEvent(event)
             })
 
 
@@ -194,7 +194,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         orderOut(nil)
         window = nil
-        _window.removeAllHandlers(for: self)
+        __window.removeAllHandlers(for: self)
         if let monitor = eventLocalMonitor {
             NSEvent.removeMonitor(monitor)
         }

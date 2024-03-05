@@ -1219,7 +1219,7 @@ final class AddReactionManager : NSObject, Notifable {
             if isRemoving {
                 self.nextResponder?.scrollWheel(with: event)
             }
-            if let window = kitWindow, window.inLiveSwiping {
+            if let window = _window, window.inLiveSwiping {
                 return
             }
             if let superview = superview as? ChatControllerView {

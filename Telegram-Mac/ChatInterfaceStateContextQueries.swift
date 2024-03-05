@@ -251,7 +251,12 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
         }
     case let .command(query):
         let normalizedQuery = query.lowercased()
-        
+        switch chatPresentationInterfaceState.chatMode {
+        case .history:
+            break
+        default:
+            return (nil, .single({ _ in return nil }))
+        }
         if let peer = chatPresentationInterfaceState.peer {
             if peer.isUser, !peer.isBot {
                 var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()

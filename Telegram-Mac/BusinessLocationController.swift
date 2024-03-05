@@ -123,8 +123,8 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
     
     override func layout() {
         super.layout()
-        mapView.frame = bounds
-        overlay.frame = bounds
+        mapView.frame = containerView.bounds
+        overlay.frame = containerView.bounds
     }
 
     
@@ -142,7 +142,7 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
         location.longitude = userLocation.longitude
         region.span = span
         region.center = location
-        mapView.setRegion(region, animated: true)
+        mapView.setRegion(region, animated: false)
     }
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -182,6 +182,7 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
         let previousItem = self.item
         super.set(item: item, animated: animated)
         
+        layout()
         
         guard let item = item as? MapRowItem else {
             return
@@ -189,13 +190,11 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
 
         mapView.appearance = theme.appearance
         
-        focusVenue()
         
-        if let previousItem = previousItem as? MapRowItem {
-            mapView.removeAnnotation(previousItem.location)
-        }
-        
+    
         mapView.addAnnotation(item.location)
+
+        focusVenue()
 
     }
 }
@@ -265,7 +264,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.address), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().businessLocationEnterAddress, filter: { $0 }, limit: 256))
+    entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.address), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().businessLocationEnterAddress, filter: { $0 }, limit: 96))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -358,6 +357,7 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
         updateState { current in
             var current = current
             current.location = nil
+            current.address = nil
             return current
         }
     })

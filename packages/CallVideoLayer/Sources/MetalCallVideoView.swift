@@ -16,7 +16,7 @@ private func resolveVideoRotationAngle(angle: Float, followsDeviceOrientation: B
 }
 
 
-public class MetalCallVideoView : LayerBackedView {
+public class MetalCallVideoView : Control {
     
     public struct VideoMetrics: Equatable {
            public var resolution: CGSize
@@ -44,6 +44,10 @@ public class MetalCallVideoView : LayerBackedView {
         videoLayer.isDoubleSided = false
         videoLayer.contentsGravity = .resizeAspect
         videoLayer.blurredLayer.contentsGravity = .resizeAspectFill
+        self.userInteractionEnabled = false
+        if #available(macOS 10.15, *) {
+            layer?.cornerCurve = .continuous
+        } 
         
     }
     

@@ -99,8 +99,8 @@ private final class ChatThemeRowView: HorizontalRowView {
         }, for: .Normal)
     }
     
-    override func updateMouse() {
-        super.updateMouse()
+    override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         overlay.updateState()
     }
 

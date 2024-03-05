@@ -606,7 +606,11 @@ class PCallSession {
             case .notAvailable:
                 mappedVideoState = .notAvailable
             case .active:
-                mappedVideoState = .active(self.isVideoAvailable)
+                if videoIsForceDisabled {
+                    mappedVideoState = .inactive(self.isVideoAvailable)
+                } else {
+                    mappedVideoState = .active(self.isVideoAvailable)
+                }
             case .inactive:
                 mappedVideoState = .inactive(self.isVideoAvailable)
             case .paused:

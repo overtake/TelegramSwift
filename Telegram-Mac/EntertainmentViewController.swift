@@ -275,8 +275,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             change(state: .None, true)
         }
         
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
+        self._window?.removeAllHandlers(for: self)
+        self._window?.removeObserver(for: self)
     }
     
     open func didBecomeResponder() {
@@ -286,7 +286,7 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
         
         change(state: .Focus, true)
         
-        self.kitWindow?.set(escape: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(escape: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.changeResponder() ? .invoked : .rejected
             }
@@ -294,21 +294,21 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             
         }, with: self, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
         }, with: self, for: .RightArrow, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
         }, with: self, for: .LeftArrow, priority: .modal)
         
-        self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
+        self._window?.set(responder: {[weak self] () -> NSResponder? in
             return self?.input
         }, with: self, priority: .modal)
     }
@@ -356,8 +356,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             
             if state == .None {
                 
-                self.kitWindow?.removeAllHandlers(for: self)
-                self.kitWindow?.removeObserver(for: self)
+                self._window?.removeAllHandlers(for: self)
+                self._window?.removeObserver(for: self)
                 
                 self.input.isHidden = true
                 self.input.string = ""
@@ -388,8 +388,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             if isEmpty {
                 change(state: .None, false)
             }
-            self.kitWindow?.removeAllHandlers(for: self)
-            self.kitWindow?.removeObserver(for: self)
+            self._window?.removeAllHandlers(for: self)
+            self._window?.removeObserver(for: self)
         }
     }
     
@@ -446,8 +446,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
     }
     
     deinit {
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
+        self._window?.removeAllHandlers(for: self)
+        self._window?.removeObserver(for: self)
     }
     
     public var query:String {
