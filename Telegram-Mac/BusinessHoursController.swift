@@ -125,14 +125,14 @@ private struct State : Equatable {
     }
 
     
-    enum Day : Int32 {
-        case monday
-        case tuesday
-        case wednesday
-        case thrusday
-        case friday
-        case saturday
-        case sunday
+    enum Day : Int {
+        case monday = 0
+        case tuesday = 1
+        case wednesday = 2
+        case thursday = 3
+        case friday = 4
+        case saturday = 5
+        case sunday = 6
         
         var title: String {
             switch self {
@@ -142,7 +142,7 @@ private struct State : Equatable {
                 return strings().weekdayTuesday
             case .wednesday:
                 return strings().weekdayWednesday
-            case .thrusday:
+            case .thursday:
                 return strings().weekdayThursday
             case .friday:
                 return strings().weekdayFriday
@@ -154,7 +154,7 @@ private struct State : Equatable {
         }
         
         static var all: [Day] {
-            return [.monday, .tuesday, .wednesday, .thrusday, .friday, .saturday, .sunday]
+            return [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
         }
     }
     struct Hours: Equatable {
@@ -208,7 +208,9 @@ private struct State : Equatable {
         
         var filledMinutes = IndexSet()
         for i in 0 ..< 7 {
-            let today: State.Day = .init(rawValue: Int32(i))!
+            guard let today: State.Day = .init(rawValue: i) else {
+                return nil
+            }
             
             let dayStartMinute = i * 24 * 60
             guard var effectiveRanges = self.data[today]?.list else {
@@ -244,8 +246,9 @@ private struct State : Equatable {
             if mergedIntervals.isEmpty {
                 mergedIntervals.append(interval)
             } else {
-                if mergedIntervals[mergedIntervals.count - 1].endMinute >= interval.startMinute {
-                    mergedIntervals[mergedIntervals.count - 1] = TelegramBusinessHours.WorkingTimeInterval(startMinute: mergedIntervals[mergedIntervals.count - 1].startMinute, endMinute: interval.endMinute)
+                let index = mergedIntervals.count - 1
+                if mergedIntervals[index].endMinute >= interval.startMinute {
+                    mergedIntervals[index] = TelegramBusinessHours.WorkingTimeInterval(startMinute: mergedIntervals[index].startMinute, endMinute: interval.endMinute)
                 } else {
                     mergedIntervals.append(interval)
                 }
@@ -522,14 +525,15 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
             if let hours = hours {
                 let weekDays = hours.splitIntoWeekDays()
                 for (i, day) in weekDays.enumerated() {
-                    let today = State.Day(rawValue: Int32(i))!
-                    switch day {
-                    case let .intervals(intervals):
-                        current.data[today] = .init(list: intervals.map { .init(from: $0.startMinute, to: $0.endMinute, uniqueId: arc4random64()) })
-                    case .closed:
-                        current.data.removeValue(forKey: today)
-                    case .open:
-                        current.data[today] = .init()
+                    if let today = State.Day(rawValue: i) {
+                        switch day {
+                        case let .intervals(intervals):
+                            current.data[today] = .init(list: intervals.map { .init(from: $0.startMinute, to: $0.endMinute, uniqueId: arc4random64()) })
+                        case .closed:
+                            current.data.removeValue(forKey: today)
+                        case .open:
+                            current.data[today] = .init()
+                        }
                     }
                 }
             } else {
