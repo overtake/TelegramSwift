@@ -406,10 +406,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func updateMouse(animated: Bool) {
         if let shareView = self.shareView, let item = item as? ChatRowItem {
             let active = item.chatInteraction.presentation.state != .selecting && mouseInsideRow() && contextMenu == nil ? 1.0 : 0.0
-            shareView.change(opacity: active, animated: false)
+            shareView.change(opacity: active, animated: animated)
         }
         if let commentsView = self.channelCommentsBubbleSmallControl, let item = item as? ChatRowItem {
-            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInsideRow() && contextMenu == nil  ? 1.0 : 0.0, animated: false)
+            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInsideRow() && contextMenu == nil  ? 1.0 : 0.0, animated: animated)
         }
     }
     
@@ -1377,7 +1377,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rowView.addSubview(shareView!)
             }
             
-            updateMouse(animated: false)
+            updateMouse(animated: animated)
             
             guard let control = shareView else {return}
             control.autohighlight = false
