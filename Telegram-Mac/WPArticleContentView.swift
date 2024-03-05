@@ -38,7 +38,7 @@ class WPArticleContentView: WPContentView {
     }
     
     override func previewMediaIfPossible() -> Bool {
-        guard  let window = self.kitWindow, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let imageView = imageView, imageView._mouseInside(), playIcon == nil, !content.hasInstantPage else {return false}
+        guard  let window = self._window, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let imageView = imageView, imageView._mouseInside(), playIcon == nil, !content.hasInstantPage else {return false}
         startModalPreviewHandle(table, window: window, context: content.context)
         return true
     }
@@ -81,7 +81,7 @@ class WPArticleContentView: WPContentView {
     }
     
     func open() {
-        if let content = content?.content, let layout = self.content, let window = kitWindow {
+        if let content = content?.content, let layout = self.content, let window = _window {
             
             if layout.hasInstantPage {
                 showInstantPage(InstantPageViewController(layout.context, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))

@@ -323,7 +323,6 @@ public final class PeerCallScreen : ViewController {
             if videoViewState.incomingView == nil {
                 if let video = external.video(true) {
                     let view = MetalVideoMakeView(videoStreamSignal: video)
-                    view.background = NSColor.black.withAlphaComponent(0.9)
                     view.videoMetricsDidUpdate = { [weak self] _ in
                         guard let self else {
                             return
@@ -344,7 +343,6 @@ public final class PeerCallScreen : ViewController {
             if videoViewState.outgoingView == nil {
                 if let video = external.video(false) {
                     let view = MetalVideoMakeView(videoStreamSignal: video)
-                    view.background = NSColor.black.withAlphaComponent(0.9)
                     view.videoMetricsDidUpdate = { [weak self] _ in
                         guard let self else {
                             return

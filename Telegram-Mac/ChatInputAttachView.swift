@@ -110,7 +110,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, itemImage: MenuAnimation.menu_shared_media.value))
                     }
                     
-                    if let shortcuts = chatInteraction.presentation.shortcuts, let peer = chatInteraction.peer {
+                    if let shortcuts = chatInteraction.presentation.shortcuts, let peer = chatInteraction.peer, chatInteraction.presentation.chatMode == .history {
                         if peer.isUser && !peer.isBot {
                             if !shortcuts.items.isEmpty, context.isPremium {
                                 items.append(ContextMenuItem(strings().chatInputAttachQuickReply, handler: { [weak self] in

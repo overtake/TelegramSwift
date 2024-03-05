@@ -6756,7 +6756,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         chatInteraction.update(animated: !wasEmpty, { current in
-            var current = current.updatedHistoryCount(genericView.tableView.count - 1).updatedKeyboardButtonsMessage(initialData.buttonKeyboardMessage)
+            let messagesCount = processedView.originalView?.entries.count ?? 0
+            var current = current.updatedHistoryCount(messagesCount).updatedKeyboardButtonsMessage(initialData.buttonKeyboardMessage)
             
             if let message = initialData.buttonKeyboardMessage {
                 if message.requestsSetupReply {

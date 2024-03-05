@@ -1676,7 +1676,7 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] control in
-            if let window = control.kitWindow, let state = self?._state {
+            if let window = control._window, let state = self?._state {
                 switch state.main {
                 case let .requestChat(_, text):
                     alert(for: window, info: text)

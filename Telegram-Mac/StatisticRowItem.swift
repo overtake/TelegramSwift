@@ -138,8 +138,8 @@ class StatisticRowView: TableRowView {
         
     }
     
-    override func updateMouse() {
-        super.updateMouse()
+    override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         chartView.updateMouse()
     }
     

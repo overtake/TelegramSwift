@@ -499,11 +499,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let fromString = stringForMediumDate(timestamp: Int32(from.timeIntervalSince1970))
             let toString = stringForMediumDate(timestamp: Int32(to.timeIntervalSince1970))
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_start_time, data: .init(name: strings().businessMessageScheduleCustomStartTime, color: theme.colors.text, type: .nextContext(fromString), viewType: .firstItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_start_time, data: .init(name: strings().businessMessageScheduleCustomStartTime, color: theme.colors.text, type: .nextContext(fromString), viewType: .firstItem, justUpdate: arc4random64(), action: {
                 arguments.selectScheduleStart(from, to)
             })))
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_end_time, data: .init(name: strings().businessMessageScheduleCustomEndTime, color: theme.colors.text, type: .nextContext(toString), viewType: .lastItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_end_time, data: .init(name: strings().businessMessageScheduleCustomEndTime, color: theme.colors.text, type: .nextContext(toString), viewType: .lastItem, justUpdate: arc4random64(), action: {
                 arguments.selectScheduleEnd(from, to)
             })))
         default:
@@ -893,6 +893,7 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
             updateState { current in
                 var current = current
                 current.shortcut = nil
+                current.enabled = false
                 return current
             }
         }
@@ -912,7 +913,11 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
         showModal(with: DateSelectorModalController(context: context, defaultDate: from, mode: .date(title: strings().businessScheduleStart, doneTitle: strings().modalDone), selectedAt: { updated in
             updateState { current in
                 var current = current
-                current.schedule = .custom(from: updated, to: to)
+                if updated.timeIntervalSince1970 > to.timeIntervalSince1970 {
+                    current.schedule = .custom(from: updated, to: Date(timeIntervalSince1970: updated.timeIntervalSince1970 + 1 * 24 * 60 * 60))
+                } else {
+                    current.schedule = .custom(from: updated, to: to)
+                }
                 return current
             }
         }), for: context.window)
@@ -920,7 +925,11 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
         showModal(with: DateSelectorModalController(context: context, defaultDate: to, mode: .date(title: strings().businessScheduleEnd, doneTitle: strings().modalDone), selectedAt: { updated in
             updateState { current in
                 var current = current
-                current.schedule = .custom(from: from, to: updated)
+                if from.timeIntervalSince1970 > updated.timeIntervalSince1970 {
+                    current.schedule = .custom(from: Date(timeIntervalSince1970: max(Date().timeIntervalSince1970, updated.timeIntervalSince1970 - 1 * 24 * 60 * 60)), to: updated)
+                } else {
+                    current.schedule = .custom(from: from, to: updated)
+                }
                 return current
             }
         }), for: context.window)

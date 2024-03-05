@@ -507,7 +507,7 @@ final class StoryInputView : Control, StoryInput {
 
     
     func processPaste(_ pasteboard: NSPasteboard) -> Bool {
-        if let window = kitWindow, let arguments = self.arguments {
+        if let window = _window, let arguments = self.arguments {
             
             let context = arguments.context
             let chatInteraction = arguments.chatInteraction

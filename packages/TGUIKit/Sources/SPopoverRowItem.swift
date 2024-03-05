@@ -116,7 +116,7 @@ private class SPopoverRowView: TableRowView {
     }
     
     
-    override func updateMouse() {
+    override func updateMouse(animated: Bool) {
         overlay.updateState()
     }
     

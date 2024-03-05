@@ -184,7 +184,7 @@ final class AvatarContentLayer: SimpleLayer {
         let frameSize = self.frame.size
 
         
-        let signal: Signal<(CGImage, CGImage)?, NoError> = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: synchronousLoad) |> deliverOn(prepareQueue) |> map { image in
+        let signal: Signal<(CGImage, CGImage)?, NoError> = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: synchronousLoad) |> map { image in
             if let image = image.0 {
                 let clipImage = generateImage(frameSize, rotatedContext: { size, context in
                     context.clear(CGRect(origin: CGPoint(), size: size))

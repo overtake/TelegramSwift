@@ -346,8 +346,8 @@ private final class StorageUsageMediaCellsView : GeneralContainableRowView {
     
     private weak var currentMouseCell: MediaCell?
     
-    @objc override func updateMouse() {
-        super.updateMouse()
+    @objc func _updateMouse() {
+        super.updateMouse(animated: true)
         guard let window = self.window else {
             return
         }
@@ -367,15 +367,15 @@ private final class StorageUsageMediaCellsView : GeneralContainableRowView {
     
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
-        updateMouse()
+        _updateMouse()
     }
     override func mouseExited(with event: NSEvent) {
         super.mouseExited(with: event)
-        updateMouse()
+        _updateMouse()
     }
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
-        updateMouse()
+        _updateMouse()
     }
     
     
@@ -483,8 +483,8 @@ private final class StorageUsageMediaCellsView : GeneralContainableRowView {
              NotificationCenter.default.removeObserver(self)
          } else {
              NotificationCenter.default.addObserver(self, selector: #selector(updateVisibleItems), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            NotificationCenter.default.addObserver(self, selector: #selector(updateMouse), name: NSWindow.didBecomeKeyNotification, object: nil)
-            NotificationCenter.default.addObserver(self, selector: #selector(updateMouse), name: NSWindow.didResignKeyNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(_updateMouse), name: NSWindow.didBecomeKeyNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(_updateMouse), name: NSWindow.didResignKeyNotification, object: nil)
          }
          updateVisibleItems()
      }

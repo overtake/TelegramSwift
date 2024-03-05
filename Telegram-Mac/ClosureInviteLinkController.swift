@@ -38,6 +38,7 @@ struct ClosureInviteLinkState: Equatable {
     fileprivate var tempDate: Int32?
     fileprivate(set) var requestApproval: Bool
     fileprivate(set) var title: String?
+    fileprivate(set) var isPublic: Bool = false
 }
 
 //
@@ -67,76 +68,77 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationTitleDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
 
+    if !state.isPublic {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: strings().editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
+            arguments.toggleRequestApproval(state.requestApproval)
+        })))
+        index += 1
+        
+        let requestApprovalText: String
+        if state.requestApproval {
+            requestApprovalText = strings().editInvitationRequestApprovalChannelOn
+        } else {
+            requestApprovalText = strings().editInvitationRequestApprovalChannelOff
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+    }
     
     
     entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: strings().editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
-        arguments.toggleRequestApproval(state.requestApproval)
-    })))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    let requestApprovalText: String
-    if state.requestApproval {
-        requestApprovalText = strings().editInvitationRequestApprovalChannelOn
-    } else {
-        requestApprovalText = strings().editInvitationRequestApprovalChannelOff
-    }
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
-    
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        let hour: Int32 = 60 * 60
+        let day: Int32 = hour * 24 * 1
+        var sizes:[Int32] = [hour, day, day * 7, Int32.max]
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-        index += 1
+        if let temp = state.tempDate {
+            var bestIndex: Int = 0
+            for (i, size) in sizes.enumerated() {
+                if size < temp {
+                    bestIndex = i
+                }
+            }
+            sizes[bestIndex] = temp
+        }
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            let hour: Int32 = 60 * 60
-            let day: Int32 = hour * 24 * 1
-            var sizes:[Int32] = [hour, day, day * 7, Int32.max]
-            
-            if let temp = state.tempDate {
-                var bestIndex: Int = 0
-                for (i, size) in sizes.enumerated() {
-                    if size < temp {
-                        bestIndex = i
-                    }
-                }
-                sizes[bestIndex] = temp
-            }
-            
-            let current = state.date
-            if sizes.firstIndex(where: { $0 == current }) == nil {
-                var bestIndex: Int = 0
-                for (i, size) in sizes.enumerated() {
-                    if size < current {
-                        bestIndex = i
-                    }
-                }
-                sizes[bestIndex] = current
-            }
-            let titles: [String] = sizes.map { value in
-                if value == Int32.max {
-                    return "∞"
-                } else {
-                    return autoremoveLocalized(Int(value))
+        let current = state.date
+        if sizes.firstIndex(where: { $0 == current }) == nil {
+            var bestIndex: Int = 0
+            for (i, size) in sizes.enumerated() {
+                if size < current {
+                    bestIndex = i
                 }
             }
-            let viewType: GeneralViewType
-            if state.requestApproval {
-                viewType = .singleItem
+            sizes[bestIndex] = current
+        }
+        let titles: [String] = sizes.map { value in
+            if value == Int32.max {
+                return "∞"
             } else {
-                viewType = .firstItem
+                return autoremoveLocalized(Int(value))
             }
+        }
+        let viewType: GeneralViewType
+        if state.requestApproval {
+            viewType = .singleItem
+        } else {
+            viewType = .firstItem
+        }
 
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: viewType, selectAction: { index in
-                arguments.limitDate(sizes[index])
-            })
-        }))
-        index += 1
+        return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: viewType, selectAction: { index in
+            arguments.limitDate(sizes[index])
+        })
+    }))
+    index += 1
         
     if !state.requestApproval {
         let dateFormatter = makeNewDateFormatter()
@@ -286,9 +288,24 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     let state: ValuePromise<ClosureInviteLinkState> = ValuePromise(initialState)
     let stateValue: Atomic<ClosureInviteLinkState> = Atomic(value: initialState)
     
+    let actionsDisposable = DisposableSet()
+    
+   
+    
     let updateState:((ClosureInviteLinkState)->ClosureInviteLinkState) -> Void = { f in
         state.set(stateValue.modify(f))
     }
+    
+    actionsDisposable.add(getPeerView(peerId: peerId, postbox: context.account.postbox).start(next: { peer in
+        updateState { current in
+            var current = current
+            current.isPublic = peer?.addressName != nil && !peer!.addressName!.isEmpty
+            if current.isPublic {
+                current.requestApproval = false
+            }
+            return current
+        }
+    }))
     
     let arguments = InviteLinkArguments(context: context, usageLimit: { value in
         updateState { current in
@@ -336,6 +353,10 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         getModalController?()?.close()
     })
+    
+    controller.onDeinit = {
+        actionsDisposable.dispose()
+    }
     
     controller.updateDatas = { data in
         updateState { current in

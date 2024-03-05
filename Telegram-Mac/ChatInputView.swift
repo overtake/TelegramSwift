@@ -940,7 +940,7 @@ class ChatInputView: View, Notifable {
             }
         }
         
-        if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
+        if let window = _window, self.chatState == .normal || self.chatState == .editing {
             
             if let string = pasteboard.string(forType: .string) {
                 interaction.update { current in

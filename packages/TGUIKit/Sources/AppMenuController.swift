@@ -689,7 +689,7 @@ final class AppMenuController : NSObject  {
                 
                 for (_, window) in windows {
                     window.view.tableView.enumerateViews(with: { view in
-                        view.updateMouse()
+                        view.updateMouse(animated: true)
                         return true
                     })
                 }
@@ -768,7 +768,7 @@ final class AppMenuController : NSObject  {
         }
         
         if let active = self.activeMenu, active.submenuId != nil {
-            if active.parentView == parentView, let window = active.kitWindow {
+            if active.parentView == parentView, let window = active._window {
                 self.cancelSubmenuNow(window)
                 parentView.view.childView = nil
             }
