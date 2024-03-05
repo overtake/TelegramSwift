@@ -57,6 +57,7 @@ public final class PeerCallScreen : ViewController {
             self.screen.backgroundColor = .black
             self.screen.titlebarAppearsTransparent = true
             self.screen.isMovableByWindowBackground = true
+            self.screen.isReleasedWhenClosed = false
         } else {
             fatalError("screen not found")
         }
@@ -384,7 +385,6 @@ public final class PeerCallScreen : ViewController {
     
     public func show() {
         
-        screen.contentView = view
         
         if !screen.isOnActiveSpace {
             self.screen.alphaValue = 0
@@ -398,6 +398,9 @@ public final class PeerCallScreen : ViewController {
             self.screen.makeKeyAndOrderFront(self)
             self.screen.orderFrontRegardless()
         }
+        
+        screen.contentView = view
+
         
         self.genericView.updateLayout(size: screen.frame.size, transition: .immediate)
     }

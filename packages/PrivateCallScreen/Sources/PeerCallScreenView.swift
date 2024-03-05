@@ -535,6 +535,87 @@ final class PeerCallScreenView : Control {
             self.statusTooltip = nil
         }
         
+
+        do {
+            var tooltips:[PeerCallTooltipStatusView.TooltipType] = []
+            
+            if state.externalState.isMuted, state.isActive {
+                tooltips.append(.yourMicroOff)
+            }
+            if state.externalState.remoteAudioState == .muted, state.isActive {
+                tooltips.append(.microOff(state.compactTitle))
+            }
+            
+            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.tooltips, rightList: tooltips)
+            
+            for deleteIndex in deleteIndices.reversed() {
+                let view = self.tooltipsViews.remove(at: deleteIndex)
+                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
+            }
+            for indicesAndItem in indicesAndItems {
+                let view = PeerCallTooltipStatusView(frame: .zero)
+                view.set(type: indicesAndItem.1)
+                tooltipsViews.insert(view, at: indicesAndItem.0)
+            }
+            for updateIndex in updateIndices {
+                let view = self.tooltipsViews[updateIndex.0]
+                view.set(type: updateIndex.1)
+            }
+            CATransaction.begin()
+            for view in self.tooltipsViews {
+                view.removeFromSuperview()
+            }
+            self.subviews.append(contentsOf: self.tooltipsViews)
+            CATransaction.commit()
+            
+            self.tooltips = tooltips
+        }
+        
+        do {
+
+            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.actionsList, rightList: state.actions)
+            
+            var deletedViews: [Int: PeerCallActionView] = [:]
+            
+            for deleteIndex in deleteIndices.reversed() {
+                let view = self.actionsViews.remove(at: deleteIndex)
+                deletedViews[deleteIndex] = view
+            }
+            for indicesAndItem in indicesAndItems {
+                let previous: PeerCallActionView?
+                if let previousIndex = indicesAndItem.2 {
+                    previous = deletedViews[previousIndex]
+                    deletedViews.removeValue(forKey: previousIndex)
+                } else {
+                    previous = nil
+                }
+                let view = previous ?? PeerCallActionView()
+                view.setFrameOrigin(actions.focus(view.frame.size).origin)
+                view.update(indicesAndItem.1, animated: false)
+                actionsViews.insert(view, at: indicesAndItem.0)
+                if transition.isAnimated, indicesAndItem.2 == nil {
+                    view.layer?.animateAlpha(from: 0, to: indicesAndItem.1.enabled ? 1.0 : 0.7, duration: 0.2)
+                    view.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
+                }
+            }
+            for updateIndex in updateIndices {
+                let view = self.actionsViews[updateIndex.0]
+                view.update(updateIndex.1, animated: transition.isAnimated)
+            }
+            
+            for (_, view) in deletedViews {
+                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
+            }
+            
+            CATransaction.begin()
+            for view in self.actionsViews {
+                view.removeFromSuperview()
+            }
+            self.actions.subviews.insert(contentsOf: self.actionsViews, at: 0)
+            CATransaction.commit()
+            
+            self.actionsList = state.actions
+        }
         
         
         if state.secretKeyViewState == .revealed, let secretView {
@@ -618,86 +699,6 @@ final class PeerCallScreenView : Control {
             self.secretView = nil
         }
         
-        do {
-            var tooltips:[PeerCallTooltipStatusView.TooltipType] = []
-            
-            if state.externalState.isMuted, state.isActive {
-                tooltips.append(.yourMicroOff)
-            }
-            if state.externalState.remoteAudioState == .muted, state.isActive {
-                tooltips.append(.microOff(state.compactTitle))
-            }
-            
-            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.tooltips, rightList: tooltips)
-            
-            for deleteIndex in deleteIndices.reversed() {
-                let view = self.tooltipsViews.remove(at: deleteIndex)
-                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
-            }
-            for indicesAndItem in indicesAndItems {
-                let view = PeerCallTooltipStatusView(frame: .zero)
-                view.set(type: indicesAndItem.1)
-                tooltipsViews.insert(view, at: indicesAndItem.0)
-            }
-            for updateIndex in updateIndices {
-                let view = self.tooltipsViews[updateIndex.0]
-                view.set(type: updateIndex.1)
-            }
-            CATransaction.begin()
-            for view in self.tooltipsViews {
-                view.removeFromSuperview()
-            }
-            self.subviews.append(contentsOf: self.tooltipsViews)
-            CATransaction.commit()
-            
-            self.tooltips = tooltips
-        }
-        
-        do {
-
-            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.actionsList, rightList: state.actions)
-            
-            var deletedViews: [Int: PeerCallActionView] = [:]
-            
-            for deleteIndex in deleteIndices.reversed() {
-                let view = self.actionsViews.remove(at: deleteIndex)
-                deletedViews[deleteIndex] = view
-            }
-            for indicesAndItem in indicesAndItems {
-                let previous: PeerCallActionView?
-                if let previousIndex = indicesAndItem.2 {
-                    previous = deletedViews[previousIndex]
-                    deletedViews.removeValue(forKey: previousIndex)
-                } else {
-                    previous = nil
-                }
-                let view = previous ?? PeerCallActionView()
-                view.setFrameOrigin(actions.focus(view.frame.size).origin)
-                view.update(indicesAndItem.1, animated: false)
-                actionsViews.insert(view, at: indicesAndItem.0)
-                if transition.isAnimated, indicesAndItem.2 == nil {
-                    view.layer?.animateAlpha(from: 0, to: indicesAndItem.1.enabled ? 1.0 : 0.7, duration: 0.2)
-                    view.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
-                }
-            }
-            for updateIndex in updateIndices {
-                let view = self.actionsViews[updateIndex.0]
-                view.update(updateIndex.1, animated: transition.isAnimated)
-            }
-            
-            for (_, view) in deletedViews {
-                performSubviewRemoval(view, animated: transition.isAnimated, scale: true)
-            }
-            
-            CATransaction.begin()
-            for view in self.actionsViews {
-                view.removeFromSuperview()
-            }
-            self.actions.subviews.insert(contentsOf: self.actionsViews, at: 0)
-            CATransaction.commit()
-            
-            self.actionsList = state.actions
-        }
     }
 }
 
