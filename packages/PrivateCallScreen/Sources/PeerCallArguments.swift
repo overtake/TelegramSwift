@@ -28,13 +28,13 @@ public final class PeerCallArguments {
     let engine: TelegramEngine
     let makeAvatar:(NSView?, Peer?)->NSView
     let toggleMute:()->Void
-    let toggleCamera:()->Void
-    let toggleScreencast:()->Void
+    let toggleCamera:(ExternalPeerCallState)->Void
+    let toggleScreencast:(ExternalPeerCallState)->Void
     let endcall:(ExternalPeerCallState)->Void
     let recall:()->Void
     let acceptcall:()->Void
     let video:(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?
-    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping()->Void, toggleScreencast:@escaping()->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?) {
+    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping(ExternalPeerCallState)->Void, toggleScreencast:@escaping(ExternalPeerCallState)->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?) {
         self.engine = engine
         self.peerId = peerId
         self.makeAvatar = makeAvatar

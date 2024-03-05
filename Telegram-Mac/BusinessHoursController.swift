@@ -13,6 +13,21 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+private func wrappedMinuteRange(range: Range<Int>, dayIndexOffset: Int = 0) -> IndexSet {
+    let mappedRange = (range.lowerBound + dayIndexOffset * 24 * 60) ..< (range.upperBound + dayIndexOffset * 24 * 60)
+    
+    var result = IndexSet()
+    if mappedRange.upperBound > 7 * 24 * 60 {
+        if mappedRange.lowerBound < 7 * 24 * 60 {
+            result.insert(integersIn: mappedRange.lowerBound ..< 7 * 24 * 60)
+        }
+        result.insert(integersIn: 0 ..< (mappedRange.upperBound - 7 * 24 * 60))
+    } else {
+        result.insert(integersIn: mappedRange)
+    }
+    return result
+}
+
 
 private extension TimeZoneList.Item {
     var text: String {
@@ -221,13 +236,7 @@ private struct State : Equatable {
             for range in effectiveRanges {
                 let minuteRange: Range<Int> = (dayStartMinute + range.from) ..< (dayStartMinute + range.to)
                 
-                var wrappedMinutes = IndexSet()
-                if minuteRange.upperBound > 7 * 24 * 60 {
-                    wrappedMinutes.insert(integersIn: minuteRange.lowerBound ..< 7 * 24 * 60)
-                    wrappedMinutes.insert(integersIn: 0 ..< (7 * 24 * 60 - minuteRange.upperBound))
-                } else {
-                    wrappedMinutes.insert(integersIn: minuteRange)
-                }
+                let wrappedMinutes = wrappedMinuteRange(range: minuteRange)
                 
                 if !filledMinutes.intersection(wrappedMinutes).isEmpty {
                     throw ValidationError.intersectingRanges

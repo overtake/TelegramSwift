@@ -117,11 +117,11 @@ public final class PeerCallScreen : ViewController {
                     break
                 default:
                     if !redial {
-                        actions.append(makeAction(type: .video, text: "Video", resource: .icVideo, active: external.videoState == .active(true), enabled: videoEnabled, action: { [weak self] in
-                            self?.external.toggleCamera()
+                        actions.append(makeAction(type: .video, text: "Video", resource: .icVideo, active: external.videoState == .active(true) && !external.isScreenCapture, enabled: videoEnabled, action: { [weak self] in
+                            self?.external.toggleCamera(external)
                         }))
                         actions.append(makeAction(type: .video, text: "Screen", resource: .icScreen, active: external.videoState == .active(true) && external.isScreenCapture, enabled: videoEnabled, action: {
-                            self?.external.toggleScreencast()
+                            self?.external.toggleScreencast(external)
                         }))
                     }
                 }
@@ -323,9 +323,12 @@ public final class PeerCallScreen : ViewController {
             if videoViewState.incomingView == nil {
                 if let video = external.video(true) {
                     let view = MetalVideoMakeView(videoStreamSignal: video)
-                    view.background = NSColor.black.withAlphaComponent(0.7)
+                    view.background = NSColor.black.withAlphaComponent(0.9)
                     view.videoMetricsDidUpdate = { [weak self] _ in
-                        self?.applyState(state, arguments: arguments, animated: animated)
+                        guard let self else {
+                            return
+                        }
+                        self.applyState(self.stateValue.with { $0 }, arguments: arguments, animated: animated)
                     }
                     videoViewState.incomingView = view
                 } else {
@@ -341,9 +344,12 @@ public final class PeerCallScreen : ViewController {
             if videoViewState.outgoingView == nil {
                 if let video = external.video(false) {
                     let view = MetalVideoMakeView(videoStreamSignal: video)
-                    view.background = NSColor.black.withAlphaComponent(0.7)
+                    view.background = NSColor.black.withAlphaComponent(0.9)
                     view.videoMetricsDidUpdate = { [weak self] _ in
-                        self?.applyState(state, arguments: arguments, animated: animated)
+                        guard let self else {
+                            return
+                        }
+                        self.applyState(self.stateValue.with { $0 }, arguments: arguments, animated: animated)
                     }
                     videoViewState.outgoingView = view
                 } else {
