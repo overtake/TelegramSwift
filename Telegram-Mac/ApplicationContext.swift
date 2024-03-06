@@ -526,7 +526,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
        // var peerCall: PeerCallScreen?
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
+//            showModal(with: TimeRangeSelectorController(context: context, from: .init(hours: 1, minutes: 30), to: .init(hours: 22, minutes: 30), title: "Monday", ok: "Save", fromString: "Opening Time", toString: "Closing Time"), for: context.window)
 //            peerCall = PeerCallScreen(external: PeerCallArguments(engine: context.engine, peerId: context.peerId, makeAvatar: { view, peer in
 //                let control = view as? AvatarControl ?? AvatarControl(font: .avatar(17))
 //                control.setFrameSize(NSMakeSize(120, 120))

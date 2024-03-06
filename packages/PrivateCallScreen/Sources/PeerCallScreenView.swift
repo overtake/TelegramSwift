@@ -489,7 +489,7 @@ final class PeerCallScreenView : Control {
                  current = view
              } else {
                  current = PeerCallPhotoView(frame: NSMakeRect(0, 0, 120, 120))
-                 addSubview(current, positioned: .below, relativeTo: self.statusView)
+                 addSubview(current, positioned: .below, relativeTo: self.subviews.first)
                  self.photoView = current
                  
                  ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: current.centerFrameX(y: floorToScreenPixels(frame.height / 3) - 50))

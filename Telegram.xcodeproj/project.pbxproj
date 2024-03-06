@@ -95,6 +95,8 @@
 		27303AC12AC1D13600433CED /* GiveawayModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303AC02AC1D13600433CED /* GiveawayModalController.swift */; };
 		27303ACB2AC2B20C00433CED /* GiftLinkModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */; };
 		27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */; };
+		273060AA2B984AE700F3317D /* TimeRangeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273060A92B984AE700F3317D /* TimeRangeSelectorController.swift */; };
+		273060AC2B98765D00F3317D /* BusinessTimezonesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */; };
 		27307E982ADDA40B00D970EE /* menu_quote.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27307E972ADDA40A00D970EE /* menu_quote.tgs */; };
 		27307E9A2ADE6E0C00D970EE /* SelectCountryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */; };
 		27307E9C2ADEB45800D970EE /* SelectColorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27307E9B2ADEB45800D970EE /* SelectColorController.swift */; };
@@ -1608,6 +1610,8 @@
 		27303AC02AC1D13600433CED /* GiveawayModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiveawayModalController.swift; sourceTree = "<group>"; };
 		27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftLinkModalController.swift; sourceTree = "<group>"; };
 		27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataTableBasedItem.swift; sourceTree = "<group>"; };
+		273060A92B984AE700F3317D /* TimeRangeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeRangeSelectorController.swift; sourceTree = "<group>"; };
+		273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessTimezonesController.swift; sourceTree = "<group>"; };
 		27307E972ADDA40A00D970EE /* menu_quote.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_quote.tgs; sourceTree = "<group>"; };
 		27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountryModalController.swift; sourceTree = "<group>"; };
 		27307E9B2ADEB45800D970EE /* SelectColorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectColorController.swift; sourceTree = "<group>"; };
@@ -3542,6 +3546,7 @@
 				27E1F2432B7B007B00DCF241 /* BusinessLocationController.swift */,
 				27E1F2452B7B876800DCF241 /* BusinessChatbotController.swift */,
 				279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */,
+				273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */,
 			);
 			name = business;
 			sourceTree = "<group>";
@@ -4585,6 +4590,7 @@
 				2751017C29D2BA02004CEFF3 /* TextInputController.swift */,
 				27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */,
 				27C50AE82AC7492A00FED2E4 /* InputDataCloseItem.swift */,
+				273060A92B984AE700F3317D /* TimeRangeSelectorController.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -7250,6 +7256,7 @@
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
+				273060AC2B98765D00F3317D /* BusinessTimezonesController.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
@@ -7620,6 +7627,7 @@
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				270202C6261B3D7C00CFCE6D /* UITextField.swift in Sources */,
 				27FFCEC72694BC95006CA024 /* WidgetController.swift in Sources */,
+				273060AA2B984AE700F3317D /* TimeRangeSelectorController.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */,
 				277D281C2AD0322E00CC6420 /* ExperimentalTextView.swift in Sources */,

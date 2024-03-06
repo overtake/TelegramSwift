@@ -29,7 +29,7 @@ private func wrappedMinuteRange(range: Range<Int>, dayIndexOffset: Int = 0) -> I
 }
 
 
-private extension TimeZoneList.Item {
+extension TimeZoneList.Item {
     var text: String {
         let hoursFromGMT = TimeInterval(self.utcOffset) / 60.0 / 60.0
         let gmtText = "\(hoursFromGMT)"
@@ -121,7 +121,9 @@ private final class Arguments {
     let editSpefic:(State.Day, State.Hours.MinutesInDay)->Void
     let removeSpefic:(State.Day, State.Hours.MinutesInDay)->Void
     let selectTimezone:(TimeZoneList.Item)->Void
-    init(context: AccountContext, toggleEnabled:@escaping()->Void, toggleDay:@escaping(State.Day)->Void, enableDay:@escaping(State.Day)->Void, addSpecific:@escaping(State.Day)->Void, removeSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, editSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, selectTimezone:@escaping(TimeZoneList.Item)->Void) {
+    let selectSpecific:(State.Day, State.Hours.MinutesInDay, Bool)->Void
+    let openTimezones:()->Void
+    init(context: AccountContext, toggleEnabled:@escaping()->Void, toggleDay:@escaping(State.Day)->Void, enableDay:@escaping(State.Day)->Void, addSpecific:@escaping(State.Day)->Void, removeSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, editSpefic:@escaping(State.Day, State.Hours.MinutesInDay)->Void, selectTimezone:@escaping(TimeZoneList.Item)->Void, selectSpecific:@escaping(State.Day, State.Hours.MinutesInDay, Bool)->Void, openTimezones:@escaping()->Void) {
         self.context = context
         self.toggleEnabled = toggleEnabled
         self.toggleDay = toggleDay
@@ -130,6 +132,8 @@ private final class Arguments {
         self.removeSpefic = removeSpefic
         self.editSpefic = editSpefic
         self.selectTimezone = selectTimezone
+        self.selectSpecific = selectSpecific
+        self.openTimezones = openTimezones
     }
 }
 
@@ -340,7 +344,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }, state: nil)
             }
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timezone, data: .init(name: strings().businessHoursTimezone, color: theme.colors.text, type: .contextSelector(timezone.text, zones), viewType: .singleItem)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timezone, data: .init(name: strings().businessHoursTimezone, color: theme.colors.text, type: .nextContext(timezone.text), viewType: .singleItem, action: arguments.openTimezones)))
         }
         
 
@@ -380,80 +384,85 @@ private func dayEntries(_ state: State, day: State.Day, arguments: Arguments) ->
 
         
         
-        let getHoursMenu:(State.Hours.MinutesInDay, Bool)->[ContextMenuItem] = { hour, from in
-            var items:[ContextMenuItem] = []
-            
-            var start: Int = 0
-            var end: Int = 24 * 60
-            
-            if from {
-                start = 0
-                end = hour.to
-            } else {
-                start = hour.from
-                end = 24 * 60
-            }
-            
-         
-            
-            let s = Int(Float(start) / 60.0)
-            let e = Int(Float(end) / 60.0)
-
-            let from_hours = Int(Float(hour.from) / 60)
-            let to_hours = Int(Float(hour.to) / 60)
-            
-           
-
-            for i in s ... e {
-                let minuteRange = i * 60
-
-                var intersected = false
-                let hourRange = NSMakeRange(minuteRange, minuteRange + 60)
-                if let startMinute, let endMinute {
-                    let range = NSMakeRange(startMinute, endMinute - startMinute)
-                    intersected = range.intersection(hourRange) == hourRange
-                }
-                
-                if !intersected {
-                    let state: NSControl.StateValue? = i == (from ? from_hours : to_hours) ? .on : nil
-                    let item = ContextMenuItem(formatHourToLocaleTime(hour: minuteRange), handler: {
-                        arguments.editSpefic(day, .init(from: from ? minuteRange : hour.from, to: !from ? minuteRange : hour.to, uniqueId: hour.uniqueId))
-                    }, state: state)
-                    
-                    let minutes = ContextMenu()
-                    var minuteItems:[ContextMenuItem] = []
-                    for j in 0 ..< 60 {
-                        let hourRange = NSMakeRange(minuteRange, minuteRange + i)
-                        if let startMinute, let endMinute {
-                            let range = NSMakeRange(startMinute, endMinute - startMinute)
-                            intersected = range.intersection(hourRange) == hourRange
-                        }
-                        if !intersected {
-                            let item = ContextMenuItem(formattedMinutes[j]!, handler: {
-                                arguments.editSpefic(day, .init(from: from ? minuteRange + j : hour.from, to: !from ? minuteRange + j : hour.to, uniqueId: hour.uniqueId))
-                            }, state: state == .on && j == (from ? hour.from % 60 : hour.to % 60) ? .on : nil)
-                            
-                            minuteItems.append(item)
-                        }
-                    }
-                    minutes.items = minuteItems
-                    
-                    item.submenu = minutes
-                    items.append(item)
-                }
-             
-            }
-            return items
-        }
+//        let getHoursMenu:(State.Hours.MinutesInDay, Bool)->[ContextMenuItem] = { hour, from in
+//            var items:[ContextMenuItem] = []
+//            
+//            var start: Int = 0
+//            var end: Int = 24 * 60
+//            
+//            if from {
+//                start = 0
+//                end = hour.to
+//            } else {
+//                start = hour.from
+//                end = 24 * 60
+//            }
+//            
+//         
+//            
+//            let s = Int(Float(start) / 60.0)
+//            let e = Int(Float(end) / 60.0)
+//
+//            let from_hours = Int(Float(hour.from) / 60)
+//            let to_hours = Int(Float(hour.to) / 60)
+//            
+//           
+//
+//            for i in s ... e {
+//                let minuteRange = i * 60
+//
+//                var intersected = false
+//                let hourRange = NSMakeRange(minuteRange, minuteRange + 60)
+//                if let startMinute, let endMinute {
+//                    let range = NSMakeRange(startMinute, endMinute - startMinute)
+//                    intersected = range.intersection(hourRange) == hourRange
+//                }
+//                
+//                if !intersected {
+//                    let state: NSControl.StateValue? = i == (from ? from_hours : to_hours) ? .on : nil
+//                    let item = ContextMenuItem(formatHourToLocaleTime(hour: minuteRange), handler: {
+//                        arguments.editSpefic(day, .init(from: from ? minuteRange : hour.from, to: !from ? minuteRange : hour.to, uniqueId: hour.uniqueId))
+//                    }, state: state)
+//                    
+//                    let minutes = ContextMenu()
+//                    var minuteItems:[ContextMenuItem] = []
+//                    for j in 0 ..< 60 {
+//                        let hourRange = NSMakeRange(minuteRange, minuteRange + i)
+//                        if let startMinute, let endMinute {
+//                            let range = NSMakeRange(startMinute, endMinute - startMinute)
+//                            intersected = range.intersection(hourRange) == hourRange
+//                        }
+//                        if !intersected {
+//                            let item = ContextMenuItem(formattedMinutes[j]!, handler: {
+//                                arguments.editSpefic(day, .init(from: from ? minuteRange + j : hour.from, to: !from ? minuteRange + j : hour.to, uniqueId: hour.uniqueId))
+//                            }, state: state == .on && j == (from ? hour.from % 60 : hour.to % 60) ? .on : nil)
+//                            
+//                            minuteItems.append(item)
+//                        }
+//                    }
+//                    minutes.items = minuteItems
+//                    
+//                    item.submenu = minutes
+//                    items.append(item)
+//                }
+//             
+//            }
+//            return items
+//        }
                 
         for hour in hours.list {
             
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
 
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_opening_time(hour), data: .init(name: strings().businessHoursSetOpeningTime, color: theme.colors.text, type: .contextSelector(formatHourToLocaleTime(hour: hour.from), getHoursMenu(hour, true)), viewType: .firstItem)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_opening_time(hour), data: .init(name: strings().businessHoursSetOpeningTime, color: theme.colors.text, type: .nextContext(formatHourToLocaleTime(hour: hour.from)), viewType: .firstItem, action: {
+                arguments.selectSpecific(day, hour, true)
+            })))
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_closing_time(hour), data: .init(name: strings().businessHoursSetClosingTime, color: theme.colors.text, type: .contextSelector(formatHourToLocaleTime(hour: hour.to), getHoursMenu(hour, false)), viewType: .innerItem)))
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_closing_time(hour), data: .init(name: strings().businessHoursSetClosingTime, color: theme.colors.text, type: .nextContext(formatHourToLocaleTime(hour: hour.to)), viewType: .innerItem, action: {
+                arguments.selectSpecific(day, hour, false)
+            })))
             
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_remove_opening(hour), data: .init(name: strings().businessHoursSetRemove, color: theme.colors.redUI, type: .none, viewType: .lastItem, action: {
                 arguments.removeSpefic(day, hour)
@@ -618,6 +627,35 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
             var current = current
             current.timezone = timezone
             return current
+        }
+    }, selectSpecific: { day, hour, isFrom in
+        let from: TimePickerOption = TimePickerOption(hours: Int32(Float(hour.from) / 60), minutes: Int32(hour.from % 60))
+        let to: TimePickerOption = TimePickerOption(hours: Int32(Float(hour.to) / 60), minutes: Int32(hour.to % 60))
+
+        showModal(with: TimeRangeSelectorController(context: context, from: from, to: to, title: day.title, ok: strings().modalSave, fromString: strings().businessHoursSetOpeningTime, toString: strings().businessHoursSetClosingTime, endIsResponder: !isFrom, updatedValue: { updatedFrom, updatedTo in
+            
+            let updated = State.Hours.MinutesInDay(from: Int(updatedFrom.hours * 60 + updatedFrom.minutes), to: Int(updatedTo.hours * 60 + updatedTo.minutes), uniqueId: hour.uniqueId)
+            updateState { current in
+                var current = current
+                var hours = current.data[day] ?? .init()
+                if let hourIndex = hours.list.firstIndex(where: { $0.uniqueId == updated.uniqueId }) {
+                    hours.list[hourIndex] = updated
+                }
+                current.data[day] = hours
+                return current
+            }
+            
+        }), for: context.window)
+    }, openTimezones: {
+        let state = stateValue.with { $0 }
+        if let list = state.timeZones?.items, let timezone = state.timezone {
+            showModal(with: BusinessTimezonesController(context: context, timezones: list, selected: timezone, complete: { updated in
+                updateState { current in
+                    var current = current
+                    current.timezone = updated
+                    return current
+                }
+            }), for: context.window)
         }
     })
     
