@@ -421,6 +421,8 @@
 		279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */; };
 		279BD40E29BB283700A8B640 /* menu_atsign.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279BD40D29BB283700A8B640 /* menu_atsign.tgs */; };
 		279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */; };
+		279DF45B2B999D7D00E644A7 /* FragmentUsernameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */; };
+		279DF45D2B99A29200E644A7 /* fragment_username.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279DF45C2B99A29200E644A7 /* fragment_username.tgs */; };
 		279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECA274259EE000E1BD5 /* TGVideoCameraMovie */; };
 		279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECD27425CBD000E1BD5 /* InAppVideoServices */; };
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
@@ -1941,6 +1943,8 @@
 		279BD40B29B71FA200A8B640 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		279BD40D29BB283700A8B640 /* menu_atsign.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_atsign.tgs; sourceTree = "<group>"; };
 		279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePrivacyLimitedController.swift; sourceTree = "<group>"; };
+		279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentUsernameController.swift; sourceTree = "<group>"; };
+		279DF45C2B99A29200E644A7 /* fragment_username.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = fragment_username.tgs; sourceTree = "<group>"; };
 		279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGVideoCameraMovie; path = packages/TGVideoCameraMovie; sourceTree = "<group>"; };
 		279E8ECC27425BAE000E1BD5 /* InAppVideoServices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppVideoServices; path = packages/InAppVideoServices; sourceTree = "<group>"; };
 		279FD29C273C106C004F08A1 /* minizip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = minizip; path = submodules/minizip; sourceTree = "<group>"; };
@@ -5455,6 +5459,7 @@
 				2751018029D6C0AD004CEFF3 /* EditBotUsernameController.swift */,
 				276790902AF3D11E00E9975C /* ChannelReactionsController.swift */,
 				2765535F2B68BB7B0007F2FB /* GroupEmojiPackController.swift */,
+				279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -5844,6 +5849,7 @@
 				2750B8C72B887EB00035C37F /* business_location.tgs */,
 				2750B8BF2B887E9A0035C37F /* business_greeting_message.tgs */,
 				2750B8BE2B887E990035C37F /* business_hours.tgs */,
+				279DF45C2B99A29200E644A7 /* fragment_username.tgs */,
 				2750B8C12B887E9C0035C37F /* business_quick_reply.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */,
@@ -6534,6 +6540,7 @@
 				27CB17522763284500DD25E0 /* menu_unblock.tgs in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014.txt in Resources */,
 				27336735276241820027441E /* menu_plus.tgs in Resources */,
+				279DF45D2B99A29200E644A7 /* fragment_username.tgs in Resources */,
 				27CB17582763738E00DD25E0 /* menu_share.tgs in Resources */,
 				27803BF227A3E944007B0FA9 /* menu_folder_sport.tgs in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
@@ -6925,6 +6932,7 @@
 				27A69765273D092C00B33415 /* CallWindowController.swift in Sources */,
 				27F7EEC0293F53E600B6E324 /* UserInfoResetPhotoItem.swift in Sources */,
 				27F2BBC727BE76D000A37463 /* Auth_Email.swift in Sources */,
+				279DF45B2B999D7D00E644A7 /* FragmentUsernameController.swift in Sources */,
 				27A69764273D090F00B33415 /* SoundEffectPlayQueue.swift in Sources */,
 				27A69763273D08E900B33415 /* OngoingCallContext.swift in Sources */,
 				27A69762273D08B600B33415 /* PCallSession.swift in Sources */,

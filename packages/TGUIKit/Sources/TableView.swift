@@ -1997,19 +1997,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 
                 return
-            } else {
-                if let item = self.optionalItem(at: row) {
-                    let animated = visibleRows().contains(row) && item.view != nil && animated
-                    NSAnimationContext.current.duration = animated ? duration : 0.0
-                    NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                    self.tableView.beginUpdates()
-                    self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
-                    self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
-                    self.tableView.endUpdates()
-                }
             }
         }
-       
+        if let item = self.optionalItem(at: row) {
+            let animated = visibleRows().contains(row) && item.view != nil && animated
+            NSAnimationContext.current.duration = animated ? duration : 0.0
+            NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            self.tableView.beginUpdates()
+            self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
+            self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: animated ? options : [.none])
+            self.tableView.endUpdates()
+        }
 
     }
     

@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 
 final class InteractiveTextView : Control {
-    private let textView = TextView()
+    let textView = TextView()
     
     var isLite: Bool = false
     

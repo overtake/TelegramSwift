@@ -328,6 +328,8 @@ enum LocalAnimatedSticker : String {
     case business_location
     case business_quick_reply
     
+    case fragment_username
+    
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
@@ -450,6 +452,8 @@ enum LocalAnimatedSticker : String {
         case .business_away_message:
             playPolicy = .onceEnd
         case .business_greeting_message:
+            playPolicy = .onceEnd
+        case .fragment_username:
             playPolicy = .onceEnd
         default:
             playPolicy = .loop
