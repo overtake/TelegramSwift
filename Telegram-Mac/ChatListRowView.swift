@@ -1045,7 +1045,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activity = theme.activity(key: 15, foregroundColor: theme.colors.grayIcon, backgroundColor: theme.colors.background)
                 }
                 if oldValue != item.activities || activity != activitiesModel?.theme {
-                    activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
+                    activitiesModel?.update(with: inputActivities, for: item.inputActivityWidth, theme:  activity, layout: { [weak self] show in
                         self?.hiddenMessage = show
                         self?.needsLayout = true
                     })

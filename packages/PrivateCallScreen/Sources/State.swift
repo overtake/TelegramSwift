@@ -209,6 +209,10 @@ extension ExternalPeerCallState.State {
     }
 }
 
+enum SmallVideoSource : Equatable {
+    case incoming
+    case outgoing
+}
 
 public struct PeerCallState : Equatable {
     
@@ -232,6 +236,8 @@ public struct PeerCallState : Equatable {
     public var secretKeyViewState: SecretKeyViewState = .concealed
     
     var actions: [PeerCallAction] = []
+    
+    var smallVideo: SmallVideoSource = .outgoing
     
     var statusTooltip: String? = nil
     

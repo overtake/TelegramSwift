@@ -1165,6 +1165,8 @@ public final class L10n {
   public static var callStatusRinging: String  { return L10n.tr("Localizable", "Call.StatusRinging") }
   /// Undefined error, please try later.
   public static var callUndefinedError: String  { return L10n.tr("Localizable", "Call.UndefinedError") }
+  /// Video
+  public static var callVideo: String  { return L10n.tr("Localizable", "Call.Video") }
   /// %@'s paused video
   public static func callVideoPaused(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.VideoPaused", p1)
@@ -1221,6 +1223,8 @@ public final class L10n {
   public static func callToastMicroOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.MicroOff", p1)
   }
+  /// Weak network signal
+  public static var callToastWeakNetwork: String  { return L10n.tr("Localizable", "Call.Toast.WeakNetwork") }
   /// Your microphone is off
   public static var callToastMicroOffYour: String  { return L10n.tr("Localizable", "Call.Toast.MicroOff.Your") }
   /// Add an optional comment

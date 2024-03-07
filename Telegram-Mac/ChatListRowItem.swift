@@ -1239,6 +1239,25 @@ class ChatListRowItem: TableRowItem {
         return (max(200, size.width) - margin * 3) - w - (chatNameLayout != nil ? textLeftCutout : 0)
     }
     
+    var inputActivityWidth: CGFloat {
+        var w: CGFloat = 0
+        if let badgeNode = badgeNode {
+            w += badgeNode.size.width + 5
+        }
+        if let _ = mentionsCount {
+            w += 24
+        }
+        if let _ = reactionsCount {
+            w += 24
+        }
+        if isPinned && badgeNode == nil {
+            w += 20
+        }
+        w += (leftInset - 20)
+        
+        return (max(200, size.width) - margin * 3) - w - (chatNameLayout != nil ? textLeftCutout : 0)
+    }
+    
     var leftInset:CGFloat {
         switch mode {
         case .chat, .savedMessages:

@@ -12,7 +12,7 @@ import AppKit
 
 
 public class CallBlobView : LayerBackedView {
-    private let blob = CallBlobsLayer()
+    public let blob = CallBlobsLayer()
     private let backgroundLayer = CALayer()
     public var maskLayer = CALayer() {
         didSet {

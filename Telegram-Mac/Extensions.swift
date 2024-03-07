@@ -1805,7 +1805,11 @@ extension String {
             let char = string.character(at: range.location + i)
             rep += "\(chars[Int(char) % chars.count])"
         }
-        return string.replacingCharacters(in: range, with: rep)
+        if let intersection = NSMakeRange(0, string.length).intersection(range) {
+            return string.replacingCharacters(in: range, with: rep)
+        } else {
+            return string as String
+        }
 
 //        if string.length <= range.upperBound {
 //            return string.replacingCharacters(in: range, with: rep)
