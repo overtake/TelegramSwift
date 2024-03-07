@@ -2649,7 +2649,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         resetScrollNotifies()
 
         if transition.isEmpty {
-            return
+            switch transition.state {
+            case .none, .saveVisible:
+                return
+            default:
+                break
+            }
         }
         
         let previousList = self.list

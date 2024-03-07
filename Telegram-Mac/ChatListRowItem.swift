@@ -754,7 +754,7 @@ class ChatListRowItem: TableRowItem {
             var filtered: [ChatListFilter] = []
             for tab in folders.tabs {
                 if tab != filter {
-                    if tab.contains(peer, groupId: groupId._asGroup(), isRemovedFromTotalUnreadCount: false, isUnread: readState?.count != 0, isContact: isContact) {
+                    if tab.contains(peer, groupId: groupId._asGroup(), isRemovedFromTotalUnreadCount: isMuted, isUnread: readState?.count != 0, isContact: isContact) {
                         filtered.append(tab)
                     }
                 }
