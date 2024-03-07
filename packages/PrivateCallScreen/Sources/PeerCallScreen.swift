@@ -16,6 +16,7 @@ import MetalEngine
 import AppKit
 import KeyboardKey
 import TelegramMedia
+import Localization
 
 protocol CallViewUpdater {
     func updateState(_ state: PeerCallState, arguments: Arguments, transition: ContainedViewLayoutTransition)
@@ -27,6 +28,7 @@ public final class PeerCallScreen : ViewController {
     private let screen: Window
     
     private let actionsDisposable = DisposableSet()
+    private let audioLevelDisposable = MetaDisposable()
     
     public var onCompletion: (()->Void)? = nil
     
@@ -44,6 +46,7 @@ public final class PeerCallScreen : ViewController {
     
     public func update(arguments: PeerCallArguments) {
         self.external = arguments
+        self.updateAudioLevel()
     }
     
     
@@ -61,9 +64,15 @@ public final class PeerCallScreen : ViewController {
         } else {
             fatalError("screen not found")
         }
-
         super.init()
-
+        actionsDisposable.add(audioLevelDisposable)
+        self.updateAudioLevel()
+    }
+    
+    private func updateAudioLevel() {
+        audioLevelDisposable.set((external.audioLevel() |> deliverOnMainQueue).start(next: { [weak self] level in
+            self?.genericView.updateAudioLevel(level)
+        }))
     }
     
     public func setState(_ signal: Signal<ExternalPeerCallState, NoError>) {
@@ -118,22 +127,22 @@ public final class PeerCallScreen : ViewController {
                     break
                 default:
                     if !redial {
-                        actions.append(makeAction(type: .video, text: "Video", resource: .icVideo, active: external.videoState == .active(true) && !external.isScreenCapture, enabled: videoEnabled, action: { [weak self] in
+                        actions.append(makeAction(type: .video, text: L10n.callVideo, resource: .icVideo, active: external.videoState == .active(true) && !external.isScreenCapture, enabled: videoEnabled, action: { [weak self] in
                             self?.external.toggleCamera(external)
                         }))
-                        actions.append(makeAction(type: .video, text: "Screen", resource: .icScreen, active: external.videoState == .active(true) && external.isScreenCapture, enabled: videoEnabled, action: {
+                        actions.append(makeAction(type: .video, text: L10n.callScreen, resource: .icScreen, active: external.videoState == .active(true) && external.isScreenCapture, enabled: videoEnabled, action: {
                             self?.external.toggleScreencast(external)
                         }))
                     }
                 }
             }
   
-            actions.append(makeAction(type: .mute, text: "Mute", resource: .icMute, active: external.isMuted && isActive, enabled: muteEnabled, action: {
+            actions.append(makeAction(type: .mute, text: L10n.callMute, resource: .icMute, active: external.isMuted && isActive, enabled: muteEnabled, action: {
                 self?.external.toggleMute()
             }))
             switch external.state {
             case .ringing:
-                actions.append(makeAction(type: .accept, text: "Accept", resource: .icAccept, interactive: true, attract: true, action: {
+                actions.append(makeAction(type: .accept, text: L10n.callAccept, resource: .icAccept, interactive: true, attract: true, action: {
                     self?.external.acceptcall()
                 }))
             default:
@@ -141,12 +150,12 @@ public final class PeerCallScreen : ViewController {
             }
             
             if redial {
-                actions.append(makeAction(type: .redial, text: "Redial", resource: .icRedial, interactive: true, attract: false, action: {
+                actions.append(makeAction(type: .redial, text: L10n.callRecall, resource: .icRedial, interactive: true, attract: false, action: {
                     self?.external.recall()
                 }))
             }
             
-            actions.append(makeAction(type: .mute, text: "End", resource: .icDecline, enabled: endEnabled, interactive: true, action: {
+            actions.append(makeAction(type: .mute, text: L10n.callEnd, resource: .icDecline, enabled: endEnabled, interactive: true, action: {
                 self?.external.endcall(external)
             }))
             
@@ -195,6 +204,11 @@ public final class PeerCallScreen : ViewController {
             }
         }, makeAvatar: { [weak self] view, peerId in
             return self?.external.makeAvatar(view, peerId)
+        }, openSettings: { [weak self] in
+            guard let self else {
+                return
+            }
+            self.external.openSettings(self.screen)
         })
         
         
@@ -216,10 +230,10 @@ public final class PeerCallScreen : ViewController {
             func take(_ index: Int, state: PeerCallState) -> String {
                 
                 if index == 0 {
-                    return "Weak network signal"
+                    return L10n.callToastWeakNetwork
                 }
                 if index == 1 {
-                    return "\(state.compactTitle)'s battery is low"
+                    return L10n.callToastLowBattery(state.compactTitle) 
                 }
                 return ""
             }
@@ -330,6 +344,13 @@ public final class PeerCallScreen : ViewController {
                         }
                         self.applyState(self.stateValue.with { $0 }, arguments: arguments, animated: animated)
                     }
+                    view.set(handler: { [weak self] control in
+                        self?.updateState { current in
+                            var current = current
+                            current.smallVideo = .outgoing
+                            return current
+                        }
+                    }, for: .Up)
                     videoViewState.incomingView = view
                 } else {
                     videoViewState.incomingView = nil
@@ -350,6 +371,13 @@ public final class PeerCallScreen : ViewController {
                         }
                         self.applyState(self.stateValue.with { $0 }, arguments: arguments, animated: animated)
                     }
+                    view.set(handler: { [weak self] _ in
+                        self?.updateState { current in
+                            var current = current
+                            current.smallVideo = .incoming
+                            return current
+                        }
+                    }, for: .Up)
                     videoViewState.outgoingView = view
                 } else {
                     videoViewState.outgoingView = nil

@@ -77,7 +77,7 @@ class GeneralContainableRowView : TableRowView {
         guard let item = item as? GeneralRowItem else {
             return
         }
-        let blockWidth = min(maxBlockWidth, size.width - item.inset.left - item.inset.right)
+        let blockWidth = min(item.viewType == .legacy ? size.width : maxBlockWidth, size.width - item.inset.left - item.inset.right)
         
         let rect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (size.width - blockWidth) / 2), item.inset.top, blockWidth, size.height - item.inset.bottom - item.inset.top)
         transition.updateFrame(view: self.containerView, frame: rect)

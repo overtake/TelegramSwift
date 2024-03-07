@@ -222,6 +222,10 @@ func callScreen(_ context: AccountContext, _ result:PCallResult) {
             session?.acceptCallSession()
         }, video: { [weak session] isIncoming in
             return session?.makeVideo(isIncoming: isIncoming)
+        }, audioLevel: { [weak session] in
+            return session?.audioLevel ?? .single(0)
+        }, openSettings: { window in
+            showModal(with: CallSettingsModalController(context.sharedContext, presentation: darkAppearance), for: window)
         })
         
         let screen: PeerCallScreen

@@ -12,13 +12,16 @@ import AppKit
 import SwiftSignalKit
 import TelegramMedia
 import TelegramVoip
+import TGUIKit
 
 internal final class Arguments {
     let toggleSecretKey:()->Void
     let makeAvatar:(NSView?, Peer?)->NSView?
-    init(toggleSecretKey:@escaping()->Void, makeAvatar:@escaping(NSView?, Peer?)->NSView?) {
+    let openSettings:()->Void
+    init(toggleSecretKey:@escaping()->Void, makeAvatar:@escaping(NSView?, Peer?)->NSView?, openSettings:@escaping()->Void) {
         self.toggleSecretKey = toggleSecretKey
         self.makeAvatar = makeAvatar
+        self.openSettings = openSettings
     }
 }
 
@@ -34,7 +37,9 @@ public final class PeerCallArguments {
     let recall:()->Void
     let acceptcall:()->Void
     let video:(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?
-    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping(ExternalPeerCallState)->Void, toggleScreencast:@escaping(ExternalPeerCallState)->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?) {
+    let audioLevel:()->Signal<Float, NoError>
+    let openSettings:(Window)->Void
+    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping(ExternalPeerCallState)->Void, toggleScreencast:@escaping(ExternalPeerCallState)->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?, audioLevel:@escaping()->Signal<Float, NoError>, openSettings:@escaping(Window)->Void) {
         self.engine = engine
         self.peerId = peerId
         self.makeAvatar = makeAvatar
@@ -45,5 +50,7 @@ public final class PeerCallArguments {
         self.recall = recall
         self.acceptcall = acceptcall
         self.video = video
+        self.audioLevel = audioLevel
+        self.openSettings = openSettings
     }
 }
