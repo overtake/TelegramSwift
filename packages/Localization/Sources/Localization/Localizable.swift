@@ -6743,6 +6743,8 @@ public final class L10n {
   public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
   /// This link will only work for members of this chat
   public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
+  /// Search
+  public static var contextMenuSearch: String  { return L10n.tr("Localizable", "Context.Menu.Search") }
   /// %d
   public static func conversationFreeTranscriptionCooldownTooltipCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Conversation.FreeTranscriptionCooldownTooltip_countable", p1)
@@ -12699,12 +12701,16 @@ public final class L10n {
   }
   /// Members Requests
   public static var requestJoinListTitle: String  { return L10n.tr("Localizable", "RequestJoin.List.Title") }
+  /// Approve All
+  public static var requestJoinListApproveAll: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.All") }
   /// Add to Channel
   public static var requestJoinListApproveChannel: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Channel") }
   /// Dismiss
   public static var requestJoinListApproveDismiss: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Dismiss") }
   /// Add to Group
   public static var requestJoinListApproveGroup: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Group") }
+  /// Dismiss All
+  public static var requestJoinListDismissAll: String  { return L10n.tr("Localizable", "RequestJoin.List.Dismiss.All") }
   /// You have no pending requests to join the channel
   public static var requestJoinListEmpty2Channel: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty2.Channel") }
   /// You have no pending requests to join the group

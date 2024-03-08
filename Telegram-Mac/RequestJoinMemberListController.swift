@@ -166,9 +166,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                    
 
                     if state.searchResult == nil {
+                        
                         entries.append(.sectionId(sectionId, type: .normal))
                         sectionId += 1
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().requestJoinListListHeaderCountable(Int(importerState.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
                         index += 1
                     }
                     for (i, importer) in importers.enumerated() {
@@ -389,24 +390,42 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     var updateBarIsHidden:((Bool)->Void)? = nil
 
     
-    let controller = InputDataController(dataSignal: signal, title: strings().requestJoinListTitle, removeAfterDisappear: false, customRightButton: { controller in
-        let bar = ImageBarView(controller: controller, theme.icons.chatSearch)
-        bar.button.set(handler: { _ in
-            updateSearchValue { current in
-                switch current {
-                case .none:
-                    return .visible(searchData)
-                case .visible:
-                    return .none({ searchState in
-                        updateState { current in
-                            var current = current
-                            current.searchState = searchState
-                            return current
-                        }
-                    })
+    let controller = InputDataController(dataSignal: signal, title: strings().requestJoinListTitle, removeAfterDisappear: false, customRightButton: { [weak manager] controller in
+        let bar = ImageBarView(controller: controller, theme.icons.chatActions)
+        bar.button.contextMenu = {
+            
+            let state = stateValue.with { $0 }
+            
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().contextMenuSearch, handler: {
+                updateSearchValue { current in
+                    switch current {
+                    case .none:
+                        return .visible(searchData)
+                    case .visible:
+                        return .none({ searchState in
+                            updateState { current in
+                                var current = current
+                                current.searchState = nil
+                                return current
+                            }
+                        })
+                    }
                 }
+            }, itemImage: MenuAnimation.menu_search.value))
+            
+            if state.state?.importers.count != 0 {
+                menu.addItem(ContextMenuItem(strings().requestJoinListApproveAll, handler: {
+                    manager?.updateAll(action: .approve)
+                }, itemImage: MenuAnimation.menu_add.value))
+                
+                menu.addItem(ContextMenuItem(strings().requestJoinListDismissAll, handler: {
+                    manager?.updateAll(action: .deny)
+                }, itemImage: MenuAnimation.menu_clear_history.value))
             }
-        }, for: .Click)
+            
+            return menu
+        }
         bar.button.autohighlight = false
         bar.button.scaleOnClick = true
         updateBarIsHidden = { [weak bar] isHidden in
@@ -431,7 +450,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
                 return .none({ searchState in
                     updateState { current in
                         var current = current
-                        current.searchState = searchState
+                        current.searchState = nil
                         return current
                     }
                 })

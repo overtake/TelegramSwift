@@ -204,9 +204,9 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
         let initialShortcut: String
         switch kind {
         case .awayMessageInput:
-            initialShortcut = "_away"
+            initialShortcut = "away"
         case .greetingMessageInput:
-            initialShortcut = "_greeting"
+            initialShortcut = "hello"
         case let .quickReplyMessageInput(shortcut):
             initialShortcut = shortcut
         }
