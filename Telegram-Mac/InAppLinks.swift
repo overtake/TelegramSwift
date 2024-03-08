@@ -742,7 +742,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                         $0 is ChatController
                                     } as? ChatController
                                     
-                                    chat?.chatInteraction.invokeInitialAction(action: action)
+                                    if chat == nil {
+                                        switch action {
+                                        case let .openWebview(botPeer, botApp, url):
+                                            showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer), for: context.window)
+                                        default:
+                                            break
+                                        }
+                                    } else {
+                                        chat?.chatInteraction.invokeInitialAction(action: action)
+                                    }
                                 }
                                 
                                 

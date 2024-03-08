@@ -44,16 +44,15 @@ private final class RowItem : GeneralRowItem {
             }))
         }))
         
-        let infoText = "The @lean username was acquired on\nFragment on 1 Mar 2024 for \(clown) 6000 ($15200).\n\n[Copy Link]()"
+        let infoText = "The **@lean** username was acquired on\nFragment on 1 Mar 2024 for \(clown)** 6000** (~$15200).\n\n[Copy Link]()"
         let infoAttr = parseMarkdownIntoAttributedString(infoText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
                 
             }))
         })).mutableCopy() as! NSMutableAttributedString
-        let range = infoText.nsstring.range(of: clown)
-        
-        infoAttr.replaceCharacters(in: range, with: "")
-        infoAttr.insert(.embedded(name: "Icon_Reply_Group", color: theme.colors.text, resize: false), at: range.location)
+                
+        infoAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.brilliant_static.file), for: clown)
+        infoAttr.detectBoldColorInString(with: .medium(.text))
         
         self.headerLayout = .init(attr, alignment: .center)
         self.headerLayout.measure(width: initialSize.width - 40)
@@ -105,7 +104,7 @@ private final class RowView: GeneralContainableRowView {
             let layout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: presentation.colors.text, font: .medium(.text)))
             layout.measure(width: maxWidth - 40)
             textView.update(layout)
-            self.backgroundColor = presentation.colors.background
+            self.backgroundColor = presentation.colors.listBackground
             
             self.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + avatar.frame.width + 10, 30))
             
@@ -180,7 +179,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, stableId: stableId, peer: state.peer, context: arguments.context, price: state.price, username: state.username)}))
+        return RowItem(initialSize, stableId: stableId, peer: state.peer, context: arguments.context, price: state.price, username: state.username)
+    }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
@@ -216,7 +216,9 @@ func FragmentUsernameController(context: AccountContext, peer: EnginePeer, usern
 
     let modalInteractions = ModalInteractions(acceptTitle: "Learn More", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, singleButton: true)
+    }, singleButton: true, customTheme: {
+        .init(background: theme.colors.background, grayForeground: theme.colors.background, activeBackground: theme.colors.background, listBackground: theme.colors.background)
+    })
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     
@@ -226,6 +228,10 @@ func FragmentUsernameController(context: AccountContext, peer: EnginePeer, usern
     
     close = { [weak modalController] in
         modalController?.modal?.close()
+    }
+    
+    controller.getBackgroundColor = {
+        theme.colors.background
     }
     
     return modalController

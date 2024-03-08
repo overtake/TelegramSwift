@@ -41,7 +41,7 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
         } else {
             self.aboutLayout = nil
         }
-        self.dateLayout = TextViewLayout(.initialize(string: DateUtils.string(forMessageListDate: Int32(data.timeInterval)), color: theme.colors.grayText, font: .normal(.text)))
+        self.dateLayout = TextViewLayout(.initialize(string: DateUtils.string(forMessageListDate: Int32(data.timeInterval)), color: theme.colors.grayText, font: .normal(.small)))
         
         if data.added || data.dismissed {
             let text: String
@@ -60,10 +60,20 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
     
     override var height: CGFloat {
         let inset = viewType.innerInset
-        var height: CGFloat =  max(inset.top + nameLayout.layoutSize.height + 30 + inset.bottom * 2, 40 + inset.top + inset.bottom)
+        let topDivided = inset.top / 2
+        var height: CGFloat = 0
+        height += inset.top
+        height += max(16, nameLayout.layoutSize.height)
+        height += topDivided
+        
         if let about = self.aboutLayout {
-            height += inset.top / 2 + about.layoutSize.height
+            height += topDivided
+            height += about.layoutSize.height
         }
+        
+        height += 30
+        height += inset.bottom
+        
         return height
     }
     
@@ -88,7 +98,7 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
     private let avatar = AvatarControl(font: .avatar(14))
     private let timeView = TextView()
     private let nameView = TextView()
-    private let aboutView = TextView()
+    private var aboutView: TextView?
     private let addButton = TextButton()
     private let dismissButton = TextButton()
     
@@ -99,7 +109,6 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         avatar.setFrameSize(NSMakeSize(40, 40))
         addSubview(avatar)
         addSubview(timeView)
-        addSubview(aboutView)
         addSubview(nameView)
         addSubview(addButton)
         addSubview(dismissButton)
@@ -140,6 +149,10 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var additionBorderInset: CGFloat {
+        return avatar.frame.width + 16
+    }
+    
     override func layout() {
         super.layout()
         
@@ -147,12 +160,20 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
             return
         }
         let inset = item.viewType.innerInset
+        let topDivided = inset.top / 2
         avatar.setFrameOrigin(NSMakePoint(inset.left, inset.top))
-        nameView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + inset.left, inset.top))
+        nameView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + inset.left, inset.top - 2))
         timeView.setFrameOrigin(NSMakePoint(containerView.frame.width - timeView.frame.width - inset.right, inset.top))
-        aboutView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + inset.top / 2))
-        addButton.setFrameOrigin(NSMakePoint(nameView.frame.minX, aboutView.frame.maxY + inset.top))
-        dismissButton.setFrameOrigin(NSMakePoint(addButton.frame.maxX + 20, addButton.frame.minY))
+        
+        var buttonY: CGFloat = nameView.frame.maxY + topDivided + 2
+        
+        if let aboutView {
+            aboutView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + topDivided))
+            buttonY = aboutView.frame.maxY + topDivided + 2
+        }
+        
+        addButton.setFrameOrigin(NSMakePoint(nameView.frame.minX, buttonY))
+        dismissButton.setFrameOrigin(NSMakePoint(addButton.frame.maxX + 10, addButton.frame.minY))
         
         statusView?.setFrameOrigin(NSMakePoint(nameView.frame.minX, dismissButton.frame.minY + 5))
         progressIndicator?.setFrameOrigin(NSMakePoint(nameView.frame.minX, dismissButton.frame.minY))
@@ -166,8 +187,23 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         }
         
         self.timeView.update(item.dateLayout)
-        self.aboutView.update(item.aboutLayout)
         self.nameView.update(item.nameLayout)
+        
+        
+        if let aboutLayout = item.aboutLayout {
+            let current: TextView
+            if let view = self.aboutView {
+                current = view
+            } else {
+                current = TextView()
+                addSubview(current)
+                self.aboutView = current
+            }
+            current.update(aboutLayout)
+        } else if let view = self.aboutView {
+            performSubviewRemoval(view, animated: animated)
+            self.aboutView = nil
+        }
         
         avatar.setPeer(account: item.context.account, peer: item.data.peer.peer)
         

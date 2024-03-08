@@ -3692,6 +3692,16 @@ func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     }
 }
 
+extension NSMutableAttributedString {
+    func insertEmbedded(_ embedded: NSAttributedString, for symbol:String) {
+        let range = self.string.nsstring.range(of: symbol)
+        self.beginEditing()
+        self.replaceCharacters(in: range, with: "")
+        self.insert(embedded, at: range.location)
+        self.endEditing()
+
+    }
+}
 
 extension NSAttributedString {
     static func makeAnimated(_ file: TelegramMediaFile, text: String, info: ItemCollectionId? = nil) -> NSAttributedString {
@@ -3708,6 +3718,7 @@ extension NSAttributedString {
         return attach
     }
     
+    
     static func embedded(name: String, color: NSColor, resize: Bool) -> NSAttributedString {
         
         let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
@@ -3720,6 +3731,15 @@ extension NSAttributedString {
         
         return attr
 
+    }
+    
+    static func embeddedAnimated(_ file: TelegramMediaFile) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji))), range: NSMakeRange(0, emoji.length))
+        return attr
     }
 }
 

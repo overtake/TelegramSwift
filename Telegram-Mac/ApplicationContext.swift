@@ -524,23 +524,21 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
-       // var peerCall: PeerCallScreen?
-        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showModal(with: FragmentUsernameController(context: context, peer: .init(context.myPeer!), username: "pro"), for: context.window)
-//            showModal(with: TimeRangeSelectorController(context: context, from: .init(hours: 1, minutes: 30), to: .init(hours: 22, minutes: 30), title: "Monday", ok: "Save", fromString: "Opening Time", toString: "Closing Time"), for: context.window)
-//            peerCall = PeerCallScreen(external: PeerCallArguments(engine: context.engine, peerId: context.peerId, makeAvatar: { view, peer in
-//                let control = view as? AvatarControl ?? AvatarControl(font: .avatar(17))
-//                control.setFrameSize(NSMakeSize(120, 120))
-//                control.userInteractionEnabled = false
-//                control.setPeer(account: context.account, peer: peer)
-//                return control
-//            }))
-//            peerCall?.show()
-//            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
-            //setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            showModal(with: FragmentMonetizationPromoController(context: context, peerId: context.peerId), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            showModal(with: FragmentUsernameController(context: context, peer: .init(context.myPeer!), username: "news"), for: context.window)
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+        
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            context.bindings.rootNavigation().push(FragmentMonetizationController(context: context, peerId: context.peerId))
+            return .invoked
+        }, with: self, for: .R, priority: .supreme, modifierFlags: [.command])
+
         #endif
         
         

@@ -218,22 +218,22 @@ enum GeneralViewType : Equatable {
     }
     
     static var firstItem: GeneralViewType {
-        return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .first, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var innerItem: GeneralViewType {
-        return .modern(position: .inner, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .inner, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var lastItem: GeneralViewType {
-        return .modern(position: .last, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .last, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var singleItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var textTopItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 5, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 14, 3, 0))
     }
     static var textBottomItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 16, 0, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(3, 14, 0, 0))
     }
     static var separator: GeneralViewType {
         return .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))

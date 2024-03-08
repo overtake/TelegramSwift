@@ -1526,6 +1526,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     override var hasNextResponder: Bool {
         return false
     }
+    
+    override var hasBorder: Bool {
+        return false
+    }
 
 }
 

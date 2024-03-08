@@ -2648,14 +2648,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         resetScrollNotifies()
 
-        if transition.isEmpty {
-            switch transition.state {
-            case .none, .saveVisible:
-                return
-            default:
-                break
-            }
-        }
         
         let previousList = self.list
         
@@ -2948,6 +2940,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     updateState(state)
                 })
                 updateState(nil)
+                currentSearchState = nil
                 firstSearchAppear = true
             case let .visible(data):
                 searchView.change(pos: NSZeroPoint, animated: true)
