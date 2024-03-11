@@ -30,6 +30,18 @@ private func wrappedMinuteRange(range: Range<Int>, dayIndexOffset: Int = 0) -> I
 
 
 extension TimeZoneList.Item {
+    
+    var gmtText: String {
+        let hoursFromGMT = TimeInterval(self.utcOffset) / 60.0 / 60.0
+        let gmtText = "\(hoursFromGMT)"
+            .replacingOccurrences(of: ".5", with: ":30")
+            .replacingOccurrences(of: ".0", with: "")
+        if hoursFromGMT >= 0 {
+            return "\(strings().businessHoursUTC)+\(gmtText)"
+        } else {
+            return "\(strings().businessHoursUTC)\(gmtText)"
+        }
+    }
     var text: String {
         let hoursFromGMT = TimeInterval(self.utcOffset) / 60.0 / 60.0
         let gmtText = "\(hoursFromGMT)"

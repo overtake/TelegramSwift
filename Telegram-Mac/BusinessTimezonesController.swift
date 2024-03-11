@@ -61,7 +61,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
     } else {
         for (i, timezone) in list.enumerated() {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timezone(timezone), data: .init(name: timezone.text, color: theme.colors.text, type: timezone == state.selected ? .image(theme.icons.poll_selected) : .none, viewType: .legacy, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timezone(timezone), data: .init(name: timezone.title, color: theme.colors.text, type: timezone == state.selected ? .image(theme.icons.poll_selected) : .none, viewType: .legacy, description: timezone.gmtText, descTextColor: theme.colors.grayText, action: {
                 arguments.toggle(timezone)
             })))
         }
