@@ -282,12 +282,12 @@ enum PremiumValue : String {
     case greeting_message
     case away_message
     case business_bots
-    
+    case business_intro
     case folder_tags
     
     var isBusiness: Bool {
         switch self {
-        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots:
+        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots, .business_intro:
             return true
         default:
             return false
@@ -424,6 +424,8 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessAway).precomposed(presentation.colors.accent)
         case .business_bots:
             return NSImage(resource: .iconPremiumBusinessBot).precomposed(presentation.colors.accent)
+        case .business_intro:
+            return NSImage(resource: .iconPremiumBusinessIntro).precomposed(presentation.colors.accent)
         case .folder_tags:
             return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
         }
@@ -483,6 +485,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessAwayMessages
         case .business_bots:
             return strings().premiumBoardingBusinessChatBots
+        case .business_intro:
+            return strings().premiumBoardingBusinessIntro
         case .folder_tags:
             return strings().premiumBoardingTagFolders
         }
@@ -541,8 +545,11 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessAwayMessagesInfo
         case .business_bots:
             return strings().premiumBoardingBusinessChatBotsInfo
+        case .business_intro:
+            return strings().premiumBoardingBusinessIntroInfo
         case .folder_tags:
             return strings().premiumBoardingTagFoldersInfo
+            
         }
     }
 }
@@ -1273,6 +1280,8 @@ final class PremiumBoardingController : ModalViewController {
                     strongSelf.navigationController?.push(BusinessMessageController(context: context, type: .away))
                 case .business_bots:
                     strongSelf.navigationController?.push(BusinessChatbotController(context: context))
+                case .business_intro:
+                    strongSelf.navigationController?.push(BusinessIntroController(context: context))
                 default:
                     fatalError("not possible")
                 }

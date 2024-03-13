@@ -23,13 +23,17 @@ private func insertSymbolIntoMiddle(of string: String, with symbol: Character) -
 }
 
 
-private extension String {
-    var pretty: String {
+extension String {
+    var prettyCurrencyNumber: String {
         let range = self.nsstring.range(of: ".")
+        var string = self
         if range.location != NSNotFound {
-            return self.nsstring.substring(to: min(range.location + 3, self.length))
+            string = self.nsstring.substring(to: min(range.location + 3, self.length))
+            if string.hasSuffix(".00") {
+                string = string.prefix(string.length - 3)
+            }
         }
-        return self
+        return string
     }
 }
 
@@ -83,7 +87,7 @@ private final class TransactionRowItem : GeneralRowItem {
         self.date = .init(.initialize(string: stringForFullDate(timestamp: transaction.date), color: theme.colors.grayText, font: .normal(.text)))
         
         let amountAttr = NSMutableAttributedString()
-        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: "TON").pretty, color: theme.colors.text, font: .medium(.header)).smallDecemial
+        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(.header)).smallDecemial
         amountAttr.append(justAmount)
         amountAttr.append(string: " TON", color: theme.colors.text, font: .medium(.header))
         switch transaction.source {
@@ -231,11 +235,11 @@ private final class OverviewRowItem : GeneralRowItem {
         
                 
         let amountAttr = NSMutableAttributedString()
-        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(overview.tonAmount, currency: "TON").pretty, color: theme.colors.text, font: .medium(.header)).smallDecemial
+        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(overview.tonAmount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(.header)).smallDecemial
         amountAttr.append(justAmount)
         amountAttr.append(string: " ~", color: theme.colors.grayText, font: .normal(.text))
         
-        let justAmount2 = NSAttributedString.initialize(string: formatCurrencyAmount(overview.usdAmount, currency: "USD").pretty, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
+        let justAmount2 = NSAttributedString.initialize(string: formatCurrencyAmount(overview.usdAmount, currency: "USD").prettyCurrencyNumber, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
         amountAttr.append(justAmount2)
 
         self.amount = .init(amountAttr)
@@ -333,8 +337,8 @@ private final class BalanceRowItem : GeneralRowItem {
         self.interactions = interactions
         self.updateState = updateState
         
-        let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.ton, currency: "TON").pretty, color: theme.colors.text, font: .medium(40)).smallDecemial
-        let usdBalance = NSAttributedString.initialize(string: "~" + formatCurrencyAmount(balance.usd, currency: "USD").pretty, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
+        let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.ton, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
+        let usdBalance = NSAttributedString.initialize(string: "~" + formatCurrencyAmount(balance.usd, currency: "USD").prettyCurrencyNumber, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
 
         self.tonBalance = .init(tonBalance)
         self.usdBalance = .init(usdBalance)
@@ -343,7 +347,7 @@ private final class BalanceRowItem : GeneralRowItem {
     }
     
     var withdrawText: String {
-        return "Transfer \(formatCurrencyAmount(balance.ton, currency: "TON").pretty) TON"
+        return "Transfer \(formatCurrencyAmount(balance.ton, currency: "TON").prettyCurrencyNumber) TON"
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {

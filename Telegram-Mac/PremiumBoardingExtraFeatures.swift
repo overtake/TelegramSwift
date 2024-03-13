@@ -124,7 +124,7 @@ enum PremiumBoardingExtraFeatureItem {
     case business_greeting_messages
     case business_away_messages
     case business_chatbots
-    
+    case business_intro
     
     static var stories: [PremiumBoardingExtraFeatureItem] {
         return [.priority,
@@ -142,7 +142,8 @@ enum PremiumBoardingExtraFeatureItem {
                 .business_hours,
                 .business_quick_replies,
                 .business_greeting_messages,
-                .business_away_messages]
+                .business_away_messages,
+                .business_intro]
     }
     
     
@@ -177,6 +178,8 @@ enum PremiumBoardingExtraFeatureItem {
             return strings().premiumBoardingBusinessAwayMessages
         case .business_chatbots:
             return strings().premiumBoardingBusinessChatBots
+        case .business_intro:
+            return strings().premiumBoardingBusinessIntro
         }
     }
     var info: String {
@@ -209,6 +212,8 @@ enum PremiumBoardingExtraFeatureItem {
             return strings().premiumBoardingBusinessAwayMessagesInfo
         case .business_chatbots:
             return strings().premiumBoardingBusinessChatBotsInfo
+        case .business_intro:
+            return strings().premiumBoardingBusinessIntroInfo
         }
     }
     
@@ -245,6 +250,8 @@ enum PremiumBoardingExtraFeatureItem {
             return NSImage(resource: .iconPremiumBusinessFeatureAway).precomposed()
         case .business_chatbots:
             return NSImage(resource: .iconPremiumBusinessFeatureBot).precomposed()
+        case .business_intro:
+            return NSImage(resource: .iconPremiumBusinessFeatureIntro).precomposed(NSColor(red: 0.404, green: 0.42, blue: 1, alpha: 1))
         }
     }
 }

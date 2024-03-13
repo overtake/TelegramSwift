@@ -10340,6 +10340,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var bot_manager_settings: CGImage {
+      if let image = cached.with({ $0["bot_manager_settings"] }) {
+          return image
+      } else {
+          let image = _bot_manager_settings()
+          _ = cached.modify { current in 
+              var current = current
+              current["bot_manager_settings"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -11136,6 +11149,7 @@ public final class TelegramIconsTheme {
   private let _chat_my_notes: ()->CGImage
   private let _premium_required_forward: ()->CGImage
   private let _create_new_message_general: ()->CGImage
+  private let _bot_manager_settings: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11932,7 +11946,8 @@ public final class TelegramIconsTheme {
       chat_hidden_author: @escaping()->CGImage,
       chat_my_notes: @escaping()->CGImage,
       premium_required_forward: @escaping()->CGImage,
-      create_new_message_general: @escaping()->CGImage
+      create_new_message_general: @escaping()->CGImage,
+      bot_manager_settings: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12729,5 +12744,6 @@ public final class TelegramIconsTheme {
       self._chat_my_notes = chat_my_notes
       self._premium_required_forward = premium_required_forward
       self._create_new_message_general = create_new_message_general
+      self._bot_manager_settings = bot_manager_settings
   }
 }

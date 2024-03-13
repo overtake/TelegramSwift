@@ -535,6 +535,24 @@ class UserInfoArguments : PeerInfoArguments {
 
     }
     
+    func openFragment(_ subject: FragmentItemInfoScreenSubject) {
+        let context = self.context
+        
+        _ = showModalProgress(signal: FragmentItemInitialData(context: context, peerId: peerId, subject: subject), for: context.window).startStandalone(next: { [weak self] data in
+            if let data {
+                showModal(with: FragmentUsernameController(context: context, data: data), for: context.window)
+            } else {
+                switch subject {
+                case .phoneNumber(let string):
+                    self?.copy(formatPhoneNumber(string))
+                case .username(let string):
+                    self?.copy("@\(string)")
+                }
+            }
+            
+        })
+    }
+    
     func encryptionKey() {
         pushViewController(SecretChatKeyViewController(context, peerId: peerId))
     }
@@ -947,7 +965,10 @@ class UserInfoArguments : PeerInfoArguments {
     
 }
 
-
+struct UserInfoAddress : Equatable {
+    let username: String
+    let collectable: Bool
+}
 
 enum UserInfoEntry: PeerInfoEntry {
     case info(sectionId:Int, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, stories: PeerExpiringStoryListContext.State?, viewType: GeneralViewType)
@@ -962,7 +983,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case bio(sectionId:Int, text: String, PeerEquatable, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
-    case userName(sectionId:Int, value: [String], viewType: GeneralViewType)
+    case userName(sectionId:Int, value: [UserInfoAddress], viewType: GeneralViewType)
     case businessLocation(sectionId:Int, peer: EnginePeer, businessLocation: TelegramBusinessLocation, viewType: GeneralViewType)
     case businessHours(sectionId:Int, peer: EnginePeer, businessHours: TelegramBusinessHours, revealed: Bool, displayMyZone: Bool, viewType: GeneralViewType)
     case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
@@ -1614,23 +1635,33 @@ enum UserInfoEntry: PeerInfoEntry {
                 }, itemImage: MenuAnimation.menu_show_info.value, removeTail: false, overrideWidth: 200))
             }
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
-                arguments.copy("+\(value.number)")
+                
+                if value.number.hasPrefix("888") {
+                    arguments.openFragment(.phoneNumber(value.number))
+                } else {
+                    arguments.copy("+\(value.number)")
+                }
             }, contextItems: items)
         case let .userName(_, value, viewType):
             
-            let link = "@\(value[0])"
+            let link = "@\(value[0].username)"
             
             let text: String
             if value.count > 1 {
-                text = strings().peerInfoUsernamesList("@\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+                text = strings().peerInfoUsernamesList("@\(value[0].username)", value.suffix(value.count - 1).map { "@\($0.username)" }.joined(separator: ", "))
             } else {
-                text = "@\(value[0])"
+                text = "@\(value[0].username)"
             }
             
             let interactions = TextViewInteractions()
-            interactions.processURL = { value in
-                if let value = value as? inAppLink {
-                    arguments.copy(value.link)
+            interactions.processURL = { link in
+                if let link = link as? inAppLink {
+                    let found = value.first(where: {  $0.username == link.link.replacingOccurrences(of: "@", with: "") })
+                    if let found {
+                        arguments.openFragment(.username(found.username))
+                    } else {
+                        arguments.copy(link.link)
+                    }
                 }
             }
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
@@ -1817,11 +1848,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
                 
-                var usernames = user.usernames.filter { $0.isActive }.map {
-                    $0.username
+                var usernames:[UserInfoAddress] = user.usernames.filter { $0.isActive }.map {
+                    .init(username: $0.username, collectable: $0.flags.contains(.isEditable))
                 }
                 if usernames.isEmpty, let address = user.addressName {
-                    usernames.append(address)
+                    usernames.append(.init(username: address, collectable: false))
                 }
                 if !usernames.isEmpty {
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))

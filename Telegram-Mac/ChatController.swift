@@ -887,6 +887,8 @@ class ChatControllerView : View, ChatInputDelegate {
             } else {
                 value = .none
             }
+        } else if let connectedBot = interfaceState.connectedBot {
+            value = .botManager(connectedBot)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
             value = .none
         } else {
@@ -5576,7 +5578,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             shortcuts = .single(nil)
         }
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics()), shortcuts).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts in
+        let savedChatsAsTopics = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics())
+        let connectedBot: Signal<ChatBotManagerData?, NoError> = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessConnectedBot(id: context.peerId)) |> mapToSignal { value in
+            if let value {
+                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: value.id)) |> map { peer in
+                    return peer.flatMap {
+                        .init(bot: value, peer: $0)
+                    }
+                }
+            } else {
+                return .single(.init(bot: .init(id: context.peerId, recipients: .init(categories: .contacts, additionalPeers: Set(), exclude: false), canReply: true), peer: .init(context.myPeer!)))
+            }
+        }
+
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot in
             
                         
             guard let `self` = self else {return}
@@ -5659,7 +5674,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedPinnedMessageId(pinnedMsg)
                         present = present.withUpdatedAttachItems(attachItems)
                         present = present.withUpdatedShortcuts(shortcuts)
-                        
+                        present = present.withUpdatedConnectedBot(connectedBot)
+
                         var contactStatus: ChatPeerStatus?
                         if let cachedData = peerView.cachedData as? CachedUserData {
                             contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
@@ -8273,7 +8289,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             
-            if value.searchMode != oldValue.searchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags {
+            if value.searchMode != oldValue.searchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags || value.connectedBot != oldValue.connectedBot {
                 genericView.updateHeader(value, animated, value.hidePinnedMessage != oldValue.hidePinnedMessage)
                 (centerBarView as? ChatTitleBarView)?.updateStatus(true, presentation: value)
             }

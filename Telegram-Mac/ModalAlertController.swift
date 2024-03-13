@@ -642,9 +642,6 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         actionsDisposable.dispose()
     }
     
-    //!TODO CALC WIDTH SIZE
-    
-    
     
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size:  minimumSize(data), presentation: presentation)
