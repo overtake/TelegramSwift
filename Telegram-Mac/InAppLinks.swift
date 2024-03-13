@@ -1787,6 +1787,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
                             action = .attachBot(value, nil, attach ?? choose)
                             break loop
+                        case keyURLText:
+                            if let text = vars[keyURLText], !text.isEmpty {
+                                action = .inputText(text: text, behavior: .automatic)
+                            }
                         default:
                             break
                         }
@@ -1795,9 +1799,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         action = .joinVoiceChat(nil)
                     }
                 }
-                 if action == nil, let messageId = messageId {
-                     action = .source(messageId)
-                 }
+                 
+            
+                 
+                if action == nil, let messageId = messageId {
+                    action = .source(messageId)
+                }
+                 
                  
                 if let openInfo = openInfo {
                     if username == "iv" || username.isEmpty {
@@ -1835,6 +1843,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if username.hasPrefix("$") {
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
+                        
                         if components.count == 2, components[1] == "boost" {
                             return .boost(link: urlString, username: username, context: context)
                         } else if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
@@ -1996,6 +2005,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop
                             case keyURLAppname:
                                 action = .makeWebview(appname: value, command: vars[keyURLStartapp])
+                                break loop
+                            case keyURLText:
+                                if let text = vars[keyURLText], !text.isEmpty {
+                                    action = .inputText(text: text, behavior: .automatic)
+                                }
                                 break loop
                             default:
                                 break

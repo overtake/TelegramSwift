@@ -220,7 +220,7 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
         let beforeModal:Signal<Void,Void> = .single(Void()) |> delay(0.25, queue: Queue.mainQueue())
         
         
-        beforeDisposable.add(beforeModal.start(completed: {
+        beforeDisposable.add(beforeModal.startStandalone(completed: {
             showModal(with: modal, for: window, animationType: .scaleCenter)
         }))
         

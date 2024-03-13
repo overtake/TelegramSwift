@@ -63,7 +63,8 @@ private final class EditInfoControllerArguments {
     let changeNumber:()->Void
     let addAccount: ()->Void
     let userNameColor: ()->Void
-    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void, userNameColor: @escaping()->Void) {
+    let birthday:()->Void
+    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void, userNameColor: @escaping()->Void, birthday:@escaping()->Void) {
         self.context = context
         self.logout = logout
         self.username = username
@@ -71,6 +72,7 @@ private final class EditInfoControllerArguments {
         self.uploadNewPhoto = uploadNewPhoto
         self.addAccount = addAccount
         self.userNameColor = userNameColor
+        self.birthday = birthday
     }
 }
 struct EditInfoState : Equatable {
@@ -168,6 +170,7 @@ private let _id_phone = InputDataIdentifier("_id_phone")
 private let _id_logout = InputDataIdentifier("_id_logout")
 private let _id_add_account = InputDataIdentifier("_id_add_account")
 private let _id_name_color = InputDataIdentifier("_id_name_color")
+private let _id_birthday = InputDataIdentifier("_id_birthday")
 
 private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, activeAccounts: [AccountWithInfo], updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -206,6 +209,16 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_birthday, data: InputDataGeneralData(name: "Date of Birth", color: theme.colors.text, icon: nil, type: .context("Add"), viewType: .singleItem, action: arguments.birthday)))
+    index += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Date of birth is only visible to your contacts."), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -268,6 +281,8 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     let updateState:((EditInfoState)->EditInfoState)->Void = { f in
         state.set(.single(stateValue.modify(f)))
     }
+    
+    var getController:(()->InputDataController?)? = nil
     
     var peerView:PeerView? = nil
     
@@ -478,6 +493,20 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     }, userNameColor: {
         context.bindings.rootNavigation().push(SelectColorController(context: context, peer: stateValue.with { $0.peer! }))
+    }, birthday: {
+        
+        guard let controller = getController?() else {
+            return
+        }
+        
+        let view = controller.tableView.item(stableId: InputDataEntryId.general(_id_birthday))?.view as? GeneralInteractedRowView
+        
+        if let control = view?.textView {
+            let controller = CalendarController(NSMakeRect(0, 0, 300, 300), context.window, current: Date(), lowYear: 1900, selectHandler: { date in
+                
+            })
+            showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-84, -40))
+        }
     })
     
     let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in
@@ -556,6 +585,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         if !context.isPremium {
             showPremiumLimit(context: context, type: .about(context.premiumLimits.about_length_limit_default + limit))
         }
+    }
+    
+    getController = { [weak controller] in
+        return controller
     }
     
     close = { [weak controller] in

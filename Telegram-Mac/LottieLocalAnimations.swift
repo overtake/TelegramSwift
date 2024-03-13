@@ -330,6 +330,7 @@ enum LocalAnimatedSticker : String {
     case business_quick_reply
     
     case fragment_username
+    case fragment
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
@@ -456,6 +457,9 @@ enum LocalAnimatedSticker : String {
             playPolicy = .onceEnd
         case .fragment_username:
             playPolicy = .onceEnd
+        case .fragment:
+            playPolicy = .onceEnd
+
         default:
             playPolicy = .loop
             hidePlayer = false

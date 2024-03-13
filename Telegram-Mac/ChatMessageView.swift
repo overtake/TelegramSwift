@@ -342,7 +342,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     override func clickInContent(point: NSPoint) -> Bool {
         guard let item = item as? ChatMessageItem else {return true}
         
-        if let text = self.text {
+        if let text = self.text, !item.textLayout.lines.isEmpty {
             let point = text.convert(point, from: self)
             let layout = item.textLayout
             

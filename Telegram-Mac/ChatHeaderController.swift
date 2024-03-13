@@ -42,6 +42,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         case promo(EngineChatList.AdditionalItem.PromoInfo.Content)
         case pendingRequests(Int, [PeerInvitationImportersState.Importer])
         case restartTopic
+        case botManager(ChatBotManagerData)
         
         static func ==(lhs:Value, rhs: Value) -> Bool {
             switch lhs {
@@ -59,6 +60,12 @@ struct ChatHeaderState : Identifiable, Equatable {
                 }
             case let .search(_, _, _, tags, selected):
                 if case .search(_, _, _, tags, selected) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .botManager(connectedBot):
+                if case .botManager(connectedBot) = rhs {
                     return true
                 } else {
                     return false
@@ -89,6 +96,8 @@ struct ChatHeaderState : Identifiable, Equatable {
                 return 8
             case .restartTopic:
                 return 9
+            case .botManager:
+                return 10
             }
         }
         
@@ -122,6 +131,8 @@ struct ChatHeaderState : Identifiable, Equatable {
             return ChatRequestChat.self
         case .restartTopic:
             return ChatRestartTopic.self
+        case .botManager:
+            return ChatBotManager.self
         case .none:
             return nil
         }
@@ -165,6 +176,8 @@ struct ChatHeaderState : Identifiable, Equatable {
         case .requestChat:
             height += 44
         case .restartTopic:
+            height += 44
+        case .botManager:
             height += 44
         }
         return height
@@ -367,6 +380,8 @@ class ChatHeaderController {
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .restartTopic:
                 primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
+            case let .botManager(manager):
+                primary = ChatBotManager(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -2218,3 +2233,118 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     }
 }
 
+
+
+
+private final class ChatBotManager : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let setup:ImageButton = ImageButton()
+    private let avatar = AvatarControl(font: .avatar(.title))
+    private let textView = TextView()
+    private let infoView = TextView()
+    
+    private let stop = TextButton()
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        avatar.setFrameSize(NSMakeSize(30, 30))
+
+        setup.disableActions()
+        setup.autohighlight = false
+        setup.scaleOnClick = true
+        
+        
+        self.set(handler: { [weak self] control in
+            
+        }, for: .Click)
+        
+        setup.set(handler: { [weak self] _ in
+           
+        }, for: .SingleClick)
+
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        infoView.userInteractionEnabled = false
+        infoView.isSelectable = false
+        
+        addSubview(avatar)
+        addSubview(setup)
+        addSubview(textView)
+        addSubview(infoView)
+        addSubview(stop)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        switch state.main {
+        case let .botManager(data):
+            textView.update(TextViewLayout(.initialize(string: data.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1))
+            //TODOLANG
+            infoView.update(TextViewLayout(.initialize(string: "bot manages this chat", color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+
+            self.avatar.setPeer(account: chatInteraction.context.account, peer: data.peer._asPeer())
+        default:
+            break
+        }
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+        self.setup.set(image: theme.icons.bot_manager_settings, for: .Normal)
+        self.setup.sizeToFit()
+        
+        self.stop.set(font: .medium(.text), for: .Normal)
+        self.stop.set(background: theme.colors.accent, for: .Normal)
+        self.stop.set(color: theme.colors.underSelectedColor, for: .Normal)
+        //TODOLANG
+        self.stop.set(text: "STOP", for: .Normal)
+        self.stop.sizeToFit(NSMakeSize(8, 4))
+        self.stop.layer?.cornerRadius = self.stop.frame.height / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        avatar.centerY(x: 25)
+        setup.centerY(x: frame.width - 23 - setup.frame.width)
+        
+        stop.centerY(x: setup.frame.minX - 10 - stop.frame.width)
+
+        let text_w = frame.width - avatar.frame.maxX - 20 - setup.frame.width - 10 - stop.frame.width - 10
+        textView.resize(text_w)
+        infoView.resize(text_w)
+
+        textView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, 6))
+        infoView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, frame.height - infoView.frame.height - 6))
+
+        
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}

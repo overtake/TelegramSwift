@@ -63,7 +63,7 @@ enum UIChatListEntryId : Hashable {
     case sharedFolderUpdated
     case space
     case suspicious
-
+    case birthdays
 }
 
 
@@ -109,6 +109,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case systemDeprecated(ChatListFilter)
     case sharedFolderUpdated(ChatFolderUpdates)
     case suspicious(NewSessionReview)
+    case birthdays([EnginePeer])
     case space
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
@@ -139,6 +140,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case let .systemDeprecated(filter):
             if case .systemDeprecated(filter) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .birthdays(filter):
+            if case .birthdays(filter) = rhs {
                 return true
             } else {
                 return false
@@ -217,6 +224,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .sharedFolderUpdated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
+        case let .birthdays(birthdays):
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .loading:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         }
@@ -248,6 +257,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .loading
         case .suspicious:
             return .suspicious
+        case .birthdays:
+            return .birthdays
         case .space:
             return .space
         }
@@ -284,8 +295,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     }
                 }
                 
-                
-                
                 return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact, displayAsTopics: item.displayAsTopicList, folders: filterData)
 
             case let .group(_, item, animated, hideStatus, appearMode, hideContent, storyState):
@@ -306,10 +315,16 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }, hide: arguments.hideSharedFolderUpdates)
             case let .suspicious(session):
                 return SuspiciousAuthRowItem(initialSize, stableId: entry.stableId, context: arguments.context, session: session, accept: arguments.acceptSession, revoke: arguments.revokeSession)
+            case let .birthdays(birthdays):
+                if birthdays.isEmpty {
+                    return ChatListAddBirthdayItem(initialSize, stableId: entry.stableId, context: arguments.context)
+                } else {
+                    return ChatListBirthdayItem(initialSize, stableId: entry.stableId, birthdays: birthdays, context: arguments.context)
+                }
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
-                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) //StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, state: state, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) 
             }
         }
         
@@ -748,9 +763,10 @@ class ChatListController : PeersListController {
                 mapped.append(.suspicious(suspiciousSession))
             }
             
-//            if !filterData.isEmpty && !filterData.sidebar, state.appear == .normal {
-//                mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
-//            }
+            if let myPeer = context.myPeer, state.mode == .plain, !update.list.hasLater {
+                mapped.append(.birthdays([.init(myPeer)]))
+            }
+            
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
                 mapped.append(.systemDeprecated(filterData.filter))
             }

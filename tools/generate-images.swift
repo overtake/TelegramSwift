@@ -932,6 +932,8 @@ func initialize() -> [String] {
     array.append("premium_required_forward")
     
     array.append("create_new_message_general")
+    
+    array.append("bot_manager_settings")
 
     return array
 }

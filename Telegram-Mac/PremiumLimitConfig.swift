@@ -27,6 +27,10 @@ final class PremiumPromoOrder {
             }
             if let order = data["business_promo_order"] as? [String] {
                 premiumValues.append(contentsOf: order.compactMap { PremiumValue(rawValue: $0) })
+                
+                #if DEBUG
+                premiumValues.append(.business_intro)
+                #endif
             }
         }
     }

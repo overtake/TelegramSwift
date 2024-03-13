@@ -46,8 +46,6 @@ private final class ReactionsRowItem : GeneralRowItem {
     override var height: CGFloat {
         let attr = NSMutableAttributedString()
         attr.append(self.state.inputText)
-        let str: NSMutableAttributedString = .init()
-        let ph_width = placeholder.attributedString.sizeFittingWidth(.greatestFiniteMagnitude).width
         attr.addAttribute(.font, value: NSFont.normal(18), range: attr.range)
         let size = attr.sizeFittingWidth(blockWidth)
         return size.height + 10 + (viewType.innerInset.top + viewType.innerInset.bottom - 10)

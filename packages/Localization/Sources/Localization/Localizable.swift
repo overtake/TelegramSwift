@@ -11873,6 +11873,8 @@ public final class L10n {
   public static var premiumBoardingBusinessChatBots: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.ChatBots") }
   /// Greeting Messages
   public static var premiumBoardingBusinessGreetingMessages: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.GreetingMessages") }
+  /// Intro
+  public static var premiumBoardingBusinessIntro: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Intro") }
   /// Location
   public static var premiumBoardingBusinessLocation: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Location") }
   /// Opening Hours
@@ -11887,6 +11889,8 @@ public final class L10n {
   public static var premiumBoardingBusinessChatBotsInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.ChatBots.Info") }
   /// Create greetings that will be automatically sent to new customers.
   public static var premiumBoardingBusinessGreetingMessagesInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.GreetingMessages.Info") }
+  /// Customize the message people see before they start a chat with you.
+  public static var premiumBoardingBusinessIntroInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Intro.Info") }
   /// Display the location of your business on your account.
   public static var premiumBoardingBusinessLocationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Location.Info") }
   /// Show to your customers when you are open for business.
@@ -17075,6 +17079,8 @@ public final class L10n {
   public static func webAppAccessAudioVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.Access.AudioVideo", p1)
   }
+  /// Deny
+  public static var webAppAccessDeny: String  { return L10n.tr("Localizable", "WebApp.Access.Deny") }
   /// Are you sure you want to grant access to %@ to your camera?
   public static func webAppAccessVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.Access.Video", p1)

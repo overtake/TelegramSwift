@@ -350,7 +350,13 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(business_bots)
         
-        
+        let business_intro = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_intro.setup(context: context, type: .business_intro, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_intro.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_intro)
         
         switch value {
         case .stories:
@@ -407,6 +413,8 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 25, animated: false)
         case .business_bots:
             slideView.displaySlide(at: 26, animated: false)
+        case .business_intro:
+            slideView.displaySlide(at: 27, animated: false)
         }
         
         needsLayout = true

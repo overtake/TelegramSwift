@@ -79,12 +79,12 @@ private final class RowItem : GeneralRowItem {
         
         var options:[Option] = []
         
-        options.append(.init(image: theme.icons.channel_feature_link_icon, header: .init(.initialize(string: "Telegram Ads", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Telegram can display ads in your channel.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentAds).precomposed(theme.colors.accent), header: .init(.initialize(string: "Telegram Ads", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Telegram can display ads in your channel.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
-        options.append(.init(image: theme.icons.channel_feature_link_icon, header: .init(.initialize(string: "50:50 revenue split", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You receive 50% of the ad revenue in TON.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentSplitRevenue).precomposed(theme.colors.accent), header: .init(.initialize(string: "50:50 revenue split", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You receive 50% of the ad revenue in TON.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
-        options.append(.init(image: theme.icons.channel_feature_link_icon, header: .init(.initialize(string: "Flexible withdrawals", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You can withdraw your TON any time.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentTonPayment).precomposed(theme.colors.accent), header: .init(.initialize(string: "Flexible withdrawals", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You can withdraw your TON any time.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
         self.options = options
@@ -93,7 +93,7 @@ private final class RowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        var height: CGFloat = 70
+        var height: CGFloat = 80
         height += 20
         height += headerLayout.layoutSize.height
         height += 20
@@ -152,8 +152,9 @@ private final class RowView: GeneralContainableRowView {
         }
     }
     
-    private let iconView = View(frame: NSMakeRect(0, 0, 70, 70))
-    private let stickerView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 60, 60))
+    private let iconView = View(frame: NSMakeRect(0, 0, 80, 80))
+    private let gradient = SimpleGradientLayer()
+    private let stickerView = ImageView()
     private let headerView = TextView()
     
     private let infoBlock = View()
@@ -165,6 +166,8 @@ private final class RowView: GeneralContainableRowView {
         super.init(frame: frameRect)
         addSubview(headerView)
         addSubview(iconView)
+        gradient.frame = iconView.bounds
+        iconView.layer?.addSublayer(gradient)
         infoBlock.addSubview(infoHeaderView)
         infoBlock.addSubview(infoView)
         addSubview(infoBlock)
@@ -219,7 +222,13 @@ private final class RowView: GeneralContainableRowView {
         headerView.update(item.headerLayout)
         iconView.backgroundColor = theme.colors.accent
         
-        stickerView.update(with: LocalAnimatedSticker.fragment_username.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment_username.parameters, animated: animated)
+        self.gradient.colors = [NSColor(rgb: 0x4DBF40), NSColor(rgb: 0x99D25F)].map { $0.cgColor }
+        self.gradient.startPoint = CGPoint(x: 0.5, y: 0)
+        self.gradient.endPoint = CGPoint(x: 0.5, y: 1.0)
+        self.gradient.type = .radial
+
+        stickerView.image = NSImage(resource: .iconFragmentMonetization).precomposed(.white)
+        stickerView.sizeToFit()
         
         infoBlock.setFrameSize(NSMakeSize(frame.width - 40, 10 + infoHeaderView.frame.height + 10 + infoView.frame.height + 10))
         

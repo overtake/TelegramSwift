@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import LocalAuthentication
 import SwiftSignalKit
 import Postbox
 import WebKit
@@ -474,7 +474,7 @@ private final class WebpageView : View {
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate {
     
-    struct Data {
+    struct BotData {
         let queryId: Int64
         let bot: Peer
         let peerId: PeerId
@@ -554,7 +554,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var url:String
     private let context:AccountContext
     private var effectiveSize: NSSize?
-    private var data: Data?
+    private var data: BotData?
     private var requestData: RequestData?
     private var locked: Bool = false
     private var counter: Int = 0
@@ -569,6 +569,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var installedBots:[PeerId] = []
     private var chatInteraction: ChatInteraction?
+    
+    private let laContext = LAContext()
+
     
     private var needCloseConfirmation = false
     
@@ -1198,6 +1201,122 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 }
                 self.invokeCustomMethod(requestId: requestId, method: method, params: paramsString ?? "{}")
             }
+        case "web_app_biometry_get_info":
+            self.sendBiometricInfo()
+        case "web_app_biometry_request_access":
+            //TODOLANG
+            guard let botPeer = requestData?.bot else {
+                return
+            }
+            let string: String
+            if laContext.biometricTypeString == "finger" {
+                string = "Do you want to allow \(botPeer.displayTitle) to use Touch ID?"
+            } else {
+                string = "Do you want to allow \(botPeer.displayTitle) to use Face ID?"
+            }
+            
+            let accountId = context.peerId
+            
+            if FastSettings.botAccessToBiometric(peerId: botPeer.id, accountId: accountId) {
+                self.sendBiometricInfo()
+                return
+            }
+            
+            verifyAlert(for: context.window, information: string, ok: strings().webAppAccessAllow, cancel: strings().webAppAccessDeny, successHandler: { [weak self] _ in
+                FastSettings.allowBotAccessToBiometric(peerId: botPeer.id, accountId: accountId)
+                self?.sendBiometricInfo()
+            }, cancelHandler: { [weak self] in
+                FastSettings.disallowBotAccessToBiometric(peerId: botPeer.id, accountId: accountId)
+                self?.sendBiometricInfo()
+            })
+        case "web_app_biometry_update_token":
+            
+            guard let botPeer = requestData?.bot else {
+                return
+            }
+            
+            let accountId = context.peerId
+            
+            if let json = json, let token = json["token"] as? String {
+                
+                let sacObject =
+                        SecAccessControlCreateWithFlags(kCFAllocatorDefault,
+                                            kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+                                            .userPresence,
+                                            nil);
+
+                var secQuery: NSMutableDictionary = [
+                    kSecClass: kSecClassGenericPassword,
+                    kSecAttrAccessControl: sacObject!,
+                    kSecAttrService: "TelegramMiniApp",
+                    kSecAttrAccount: "bot_id_\(botPeer.id.toInt64())"
+                ];
+                
+                FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: !token.isEmpty)
+
+                if token.isEmpty {
+                    let resultCode = SecItemDelete(secQuery)
+                    let status = resultCode == errSecSuccess ? "removed" : "failed"
+                    sendEvent(name: "biometry_token_updated", data: "{status: \"\(status)\"}")
+                    FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: false)
+                } else {
+                    let tokenData = token.data(using: .utf8)!
+                    secQuery[kSecValueData] = tokenData
+                    let resultCode = SecItemAdd(secQuery as CFDictionary, nil);
+                    let status = resultCode == errSecSuccess || resultCode == errSecDuplicateItem ? "updated" : "failed"
+                    sendEvent(name: "biometry_token_updated", data: "{status: \"\(status)\"}")
+                    FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: status == "updated" ? true : false)
+                }
+                self.sendBiometricInfo()
+            }
+        case "web_app_biometry_request_auth":
+            
+            guard let botPeer = requestData?.bot else {
+                return
+            }
+            
+            let sacObject =
+                    SecAccessControlCreateWithFlags(kCFAllocatorDefault,
+                                        kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+                                        .userPresence,
+                                        nil);
+
+            let secQuery: NSMutableDictionary = [
+                kSecClass: kSecClassGenericPassword,
+                kSecAttrAccessControl: sacObject!,
+                kSecReturnData: true,
+                kSecMatchLimit: kSecMatchLimitOne,
+                kSecAttrService: "TelegramMiniApp",
+                kSecAttrAccount: "bot_id_\(botPeer.id.toInt64())"
+            ];
+            
+            weak var controller = self
+            
+            let accountId = context.peerId
+            
+            DispatchQueue.global().async {
+                var itemCopy: CFTypeRef?
+                let resultCode = SecItemCopyMatching(secQuery, &itemCopy)
+                
+                let data = (itemCopy as? Data).flatMap { String(data: $0, encoding: .utf8) }
+                
+                let status = resultCode == errSecSuccess && data != nil ? "authorized" : "failed"
+                
+    
+                DispatchQueue.main.async {
+                    if resultCode == errSecItemNotFound {
+                        FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: false)
+                    }
+                    if status == "failed" {
+                        controller?.sendEvent(name: "biometry_auth_requested", data: "{status: \"\(status)\"}")
+                    } else {
+                        controller?.sendEvent(name: "biometry_auth_requested", data: "{status: \"\(status)\", token:\"\(data!)\"}")
+                    }
+                    controller?.sendBiometricInfo()
+                }
+                
+                
+            }
 
         default:
             break
@@ -1291,6 +1410,26 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         })
         
        
+    }
+    
+    fileprivate func sendBiometricInfo() {
+        
+        guard let botPeer = self.requestData?.bot else {
+            return
+        }
+        let type: String = laContext.biometricTypeString
+        var error: NSErrorPointer = .none
+        
+        
+        let available = laContext.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: error)
+        
+        let access_requested = FastSettings.botAccessToBiometricRequested(peerId: botPeer.id, accountId: context.peerId)
+        let access_granted = FastSettings.botAccessToBiometric(peerId: botPeer.id, accountId: context.peerId)
+        let token_saved = FastSettings.botBiometricRequestedTokenSaved(peerId: botPeer.id, accountId: context.peerId)
+        
+        let paramsString: String = "{available: \"\(available)\", type:\"\(type)\", access_requested:\(access_requested), access_granted:\(access_granted), token_saved:\(token_saved)}"
+        self.sendEvent(name: "biometry_info_received", data: paramsString)
+
     }
     
     fileprivate func invokeCustomMethod(requestId: String, method: String, params: String) {

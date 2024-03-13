@@ -245,7 +245,7 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     
     if let linkInvation = linkInvation {
@@ -271,6 +271,17 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                 
                 entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
                 index += 1
+            }
+        }
+        
+        if !defaultSelected.isEmpty {
+            let found = peers.filter({ defaultSelected.contains($0.id) })
+            for peer in found {
+                if isset[peer.id] == nil {
+                    isset[peer.id] = peer.id
+                    entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
+                    index += 1
+                }
             }
         }
         
@@ -905,7 +916,12 @@ class SelectContactsBehavior : SelectPeersBehavior {
     fileprivate let index: PeerNameIndex = .lastNameFirst
     private var previousGlobal:Atomic<[SelectPeerValue]> = Atomic(value: [])
    
-    var defaultSelected: Set<PeerId> = Set()
+    var defaultSelected: [PeerId] = []
+    
+    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
+        self.defaultSelected = defaultSelected
+        super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
+    }
     
     deinit {
         var bp:Int = 0
@@ -918,10 +934,11 @@ class SelectContactsBehavior : SelectPeersBehavior {
         let previousSearch = Atomic<String?>(value: nil)
         let account = context.account
         let theme = self.customTheme()
+        let settings = self.settings
+        let excludePeerIds = self.excludePeerIds
+        let defaultSelected = self.defaultSelected
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
-            let settings = self?.settings ?? SelectPeerSettings()
-            let excludePeerIds = (self?.excludePeerIds ?? [])
             
             if search.request.isEmpty {
                 let inSearch:[PeerId] = self?.inSearchSelected.modify({$0}) ?? []
@@ -930,12 +947,11 @@ class SelectContactsBehavior : SelectPeersBehavior {
                     TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
                 )
                 
-                
                 return combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true)), account.postbox.multiplePeersView(inSearch), accountPeer, context.engine.peers.recentPeers())
                     |> deliverOn(prepareQueue)
                     |> map { view, searchView, accountPeer, recentPeers -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, linkInvation: linkInvation, theme: theme), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme), updatedSearch)
                 }
                 
             } else  {

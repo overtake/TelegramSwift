@@ -10,6 +10,7 @@ import Foundation
 import TelegramCore
 import TGUIKit
 import SwiftSignalKit
+import CurrencyFormat
 
 private final class Arguments {
     let context: AccountContext
@@ -19,36 +20,51 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var price: Int
-    var username: String
-    var peer: EnginePeer
+    var data: FragmentItemInfoScreenInitialData
 }
 
 private final class RowItem : GeneralRowItem {
-    let peer: EnginePeer
     let context: AccountContext
-    let price: Int
-    let username: String
+    let peer: EnginePeer
     let headerLayout: TextViewLayout
     let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, context: AccountContext, price: Int, username: String) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, context: AccountContext, info: TelegramCollectibleItemInfo) {
         self.peer = peer
         self.context = context
-        self.price = price
-        self.username = username
+        let headerText: String
+        switch info.subject {
+        case let .phoneNumber(phoneNumber):
+            headerText = "[\(formatPhoneNumber(phoneNumber))]() is a collectible\nphone number that belongs to"
+        case let .username(username):
+            headerText = "[@\(username)]() is a collectible\nusername that belongs to"
+        }
         
-        let headerText = "[@\(username)]() is a collectible\nusername that belongs to"
+        let copySubject:(String)->Void = { _ in
+            switch info.subject {
+            case let .phoneNumber(phoneNumber):
+                copyToClipboard(formatPhoneNumber(phoneNumber))
+            case let .username(username):
+                copyToClipboard("@\(username)")
+            }
+            showModalText(for: context.window, text: strings().shareLinkCopied)
+        }
+         
         let attr = parseMarkdownIntoAttributedString(headerText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                
-            }))
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", copySubject))
         }))
         
-        let infoText = "The **@lean** username was acquired on\nFragment on 1 Mar 2024 for \(clown)** 6000** (~$15200).\n\n[Copy Link]()"
+        let cryptoFormatted = formatCurrencyAmount(info.cryptoCurrencyAmount, currency: info.cryptoCurrency).prettyCurrencyNumber
+        let currencyFormatted = formatCurrencyAmount(info.currencyAmount, currency: info.currency).prettyCurrencyNumber
+        let date = stringForMediumDate(timestamp: info.purchaseDate)
+        let infoText: String
+        switch info.subject {
+        case .username(let string):
+            infoText = "The **@\(string)** username was acquired on\nFragment on \(date) for \(clown)** \(cryptoFormatted)** (~\(currencyFormatted)).\n\n[Copy Link]()"
+        case .phoneNumber(let string):
+            infoText = "The **\(formatPhoneNumber(string))** phone number was acquired on\nFragment on \(date) for \(clown)** \(cryptoFormatted)** (~\(currencyFormatted)).\n\n[Copy Link]()"
+        }
         let infoAttr = parseMarkdownIntoAttributedString(infoText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                
-            }))
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", copySubject))
         })).mutableCopy() as! NSMutableAttributedString
                 
         infoAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.brilliant_static.file), for: clown)
@@ -61,6 +77,9 @@ private final class RowItem : GeneralRowItem {
         self.infoLayout = .init(infoAttr, alignment: .center)
         self.infoLayout.measure(width: initialSize.width - 40)
 
+        self.headerLayout.interactions = globalLinkExecutor
+        self.infoLayout.interactions = globalLinkExecutor
+        
         super.init(initialSize, stableId: stableId, viewType: .legacy)
     }
     
@@ -163,7 +182,7 @@ private final class RowView: GeneralContainableRowView {
         peerView.update(item.peer, context: item.context, presentation: theme, maxWidth: item.blockWidth)
         iconView.backgroundColor = theme.colors.accent
         
-        stickerView.update(with: LocalAnimatedSticker.fragment_username.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment_username.parameters, animated: animated)
+        stickerView.update(with: LocalAnimatedSticker.fragment.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment.parameters, animated: animated)
     }
 }
 
@@ -177,22 +196,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-  
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, stableId: stableId, peer: state.peer, context: arguments.context, price: state.price, username: state.username)
-    }))
     
+    if let peer = state.data.peer {
+        
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return RowItem(initialSize, stableId: stableId, peer: peer, context: arguments.context, info: state.data.collectibleItemInfo)
+        }))
+        
+    }
+  
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
+
     
     return entries
 }
 
-func FragmentUsernameController(context: AccountContext, peer: EnginePeer, username: String) -> InputDataModalController {
+func FragmentUsernameController(context: AccountContext, data: FragmentItemInfoScreenInitialData) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(price: 6000, username: "lean", peer: peer)
+    let initialState = State(data: data)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -213,6 +238,20 @@ func FragmentUsernameController(context: AccountContext, peer: EnginePeer, usern
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    controller.validateData = { _ in
+    
+        switch data.collectibleItemInfo.subject {
+        case .username(let username):
+            execute(inapp: .external(link: "https://fragment.com/username/\(username)", false))
+        case .phoneNumber(let phoneNumber):
+            execute(inapp: .external(link: "https://fragment.com/number/\(phoneNumber)", false))
+        }
+        
+        return .success(.custom({
+            close?()
+        }))
+    }
 
     let modalInteractions = ModalInteractions(acceptTitle: "Learn More", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
@@ -222,10 +261,7 @@ func FragmentUsernameController(context: AccountContext, peer: EnginePeer, usern
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
-        modalController?.close()
-    })
-    
+
     close = { [weak modalController] in
         modalController?.modal?.close()
     }
@@ -238,8 +274,94 @@ func FragmentUsernameController(context: AccountContext, peer: EnginePeer, usern
 }
 
 
-/*
+enum FragmentItemInfoScreenSubject {
+    case phoneNumber(String)
+    case username(String)
+}
 
- */
 
 
+struct FragmentItemInfoScreenInitialData : Equatable {
+    
+    fileprivate enum ResolvedSubject : Equatable {
+        struct Username : Equatable {
+            var username: String
+            var info: TelegramCollectibleItemInfo
+            
+            init(username: String, info: TelegramCollectibleItemInfo) {
+                self.username = username
+                self.info = info
+            }
+        }
+        
+        struct PhoneNumber : Equatable {
+            var phoneNumber: String
+            var info: TelegramCollectibleItemInfo
+            
+            init(phoneNumber: String, info: TelegramCollectibleItemInfo) {
+                self.phoneNumber = phoneNumber
+                self.info = info
+            }
+        }
+        
+        case username(Username)
+        case phoneNumber(PhoneNumber)
+    }
+       
+
+    
+    fileprivate let peer: EnginePeer?
+    fileprivate let subject: ResolvedSubject
+
+    fileprivate init(peer: EnginePeer?, subject: ResolvedSubject) {
+        self.peer = peer
+        self.subject = subject
+    }
+    
+    public var collectibleItemInfo: TelegramCollectibleItemInfo {
+        switch self.subject {
+        case let .username(username):
+            return username.info
+        case let .phoneNumber(phoneNumber):
+            return phoneNumber.info
+        }
+    }
+}
+
+
+func FragmentItemInitialData(context: AccountContext, peerId: EnginePeer.Id, subject: FragmentItemInfoScreenSubject) -> Signal<FragmentItemInfoScreenInitialData?, NoError> {
+    switch subject {
+    case let .username(username):
+        return combineLatest(
+            context.engine.data.get(
+                TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+            ),
+            context.engine.peers.getCollectibleUsernameInfo(username: username)
+        )
+        |> map { peer, result -> FragmentItemInfoScreenInitialData? in
+            guard let result else {
+                return nil
+            }
+            return FragmentItemInfoScreenInitialData(peer: peer, subject: .username(FragmentItemInfoScreenInitialData.ResolvedSubject.Username(
+                username: username,
+                info: result
+            )))
+        }
+    case let .phoneNumber(phoneNumber):
+        return combineLatest(
+            context.engine.data.get(
+                TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+            ),
+            context.engine.peers.getCollectiblePhoneNumberInfo(phoneNumber: phoneNumber)
+        )
+        |> map { peer, result -> FragmentItemInfoScreenInitialData? in
+            guard let result else {
+                return nil
+            }
+            return FragmentItemInfoScreenInitialData(peer: peer, subject: .phoneNumber(FragmentItemInfoScreenInitialData.ResolvedSubject.PhoneNumber(
+                phoneNumber: phoneNumber,
+                info: result
+            )))
+        }
+    }
+}

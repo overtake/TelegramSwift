@@ -530,7 +530,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: FragmentUsernameController(context: context, peer: .init(context.myPeer!), username: "news"), for: context.window)
             return .invoked
         }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         

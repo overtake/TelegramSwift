@@ -222,6 +222,53 @@ class FastSettings {
             return false
         }
     }
+    
+    static func allowBotAccessToBiometric(peerId: PeerId, accountId: PeerId) {
+        FastSettings.setBotAccessToBiometricRequested(peerId: peerId, accountId: accountId)
+        UserDefaults.standard.setValue(true, forKey: "_biometric_bot_\(peerId.toInt64())_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func disallowBotAccessToBiometric(peerId: PeerId, accountId: PeerId) {
+        FastSettings.setBotAccessToBiometricRequested(peerId: peerId, accountId: accountId)
+        UserDefaults.standard.setValue(false, forKey: "_biometric_bot_\(peerId.toInt64())_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func botAccessToBiometric(peerId: PeerId, accountId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "_biometric_bot_\(peerId.toInt64())_\(accountId.toInt64())") as? Bool
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    
+    static func setBotAccessToBiometricRequested(peerId: PeerId, accountId: PeerId) {
+        UserDefaults.standard.setValue(true, forKey: "_biometric_bot_\(peerId.toInt64())_requested_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func botAccessToBiometricRequested(peerId: PeerId, accountId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "_biometric_bot_\(peerId.toInt64())_requested_\(accountId.toInt64())") as? Bool
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    static func botBiometricTokenIsSaved(peerId: PeerId, accountId: PeerId, value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: "_biometric_bot_\(peerId.toInt64())_token_saved_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func botBiometricRequestedTokenSaved(peerId: PeerId, accountId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "_biometric_bot_\(peerId.toInt64())_token_saved_\(accountId.toInt64())") as? Bool
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    
+    
+    
     @available(macOS 12.0, *)
     static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
         UserDefaults.standard.setValue(true, forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())")

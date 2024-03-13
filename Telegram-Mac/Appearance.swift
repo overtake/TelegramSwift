@@ -2903,7 +2903,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) },
                               chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) },
                               premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() },
-                              create_new_message_general: { NSImage(resource: .iconNewMessage).precomposed(palette.accent, flipVertical: true) }
+                              create_new_message_general: { NSImage(resource: .iconNewMessage).precomposed(palette.accent, flipVertical: true) },
+                              bot_manager_settings: { NSImage(resource: .iconBotManagerSettings).precomposed(palette.grayIcon) }
 
     )
 }
