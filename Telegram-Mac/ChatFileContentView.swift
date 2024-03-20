@@ -35,7 +35,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func previewMediaIfPossible() -> Bool {
-        guard let context = self.context, let window = self.kitWindow, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
+        guard let context = self.context, let window = self._window, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
         startModalPreviewHandle(table, window: window, context: context)
         return true
     }

@@ -2361,6 +2361,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFiltersActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsProfile: { generateSettingsIcon(NSImage(named: "Icon_SettingsProfile")!.precomposed(flipVertical: true)) },
+                                               settingsBusiness: { generateSettingsIcon(NSImage(resource: .iconSettingsBusiness).precomposed(flipVertical: true)) },
+                                               settingsBusinessActive: { generateSettingsActiveIcon(NSImage(resource: .iconSettingsBusiness).precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.accentIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.accentIcon) },
                                                settingsLogout: { #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI) },
@@ -2582,6 +2584,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_filter_large_groups_avatar: { NSImage(named: "Icon_FilterLargeGroups")!.precomposed(.white) },
                                                chat_filter_non_contacts_avatar: { NSImage(named: "Icon_FilterNonContacts")!.precomposed(.white) },
                                                chat_filter_archive_avatar: { NSImage(named: "Icon_FilterArchive")!.precomposed(.white) },
+                                               chat_filter_new_chats: { NSImage(resource: .iconFilterNewChats).precomposed(.white) },
+                                               chat_filter_existing_chats: { NSImage(resource: .iconFilterExistingChats).precomposed(.white) },
                                                group_invite_via_link: { NSImage(named: "Icon_InviteViaLink")!.precomposed(palette.accentIcon) },
                                                tab_contacts: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.grayIcon) },
                                                tab_contacts_active: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.accentIcon) },
@@ -2610,6 +2614,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_translate: { generateProfileIcon(NSImage(named: "Icon_Profile_Translate")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_join_channel: { generateProfileIcon(NSImage(named: "Icon_Profile_JoinChannel")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               profile_boost: { generateProfileIcon(NSImage(named: "Icon_Profile_Boost")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               profile_archive: { generateProfileIcon(NSImage(resource: .iconProfileArchive).precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               stats_boost_boost: { generateProfileIcon(NSImage(named: "Icon_Boost_Boost")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               stats_boost_giveaway: { generateProfileIcon(NSImage(named: "Icon_Boost_Gift")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               stats_boost_info: { generateProfileIcon(NSImage(named: "Icon_Boost_Info")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
@@ -2888,9 +2898,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_feature_reaction: { NSImage(named: "Icon_ChannelFeature_Reaction")!.precomposed(palette.accent) },
                               channel_feature_status: { NSImage(named: "Icon_ChannelFeature_Status")!.precomposed(palette.accent) },
                               channel_feature_stories: { NSImage(named: "Icon_ChannelFeature_Stories")!.precomposed(palette.accent) },
+                              channel_feature_emoji_pack: { NSImage(named: "Icon_ChannelFeature_EmojiPack")!.precomposed(palette.accent) },
+                              channel_feature_voice_to_text: { NSImage(named: "Icon_ChannelFeature_VoiceToText")!.precomposed(palette.accent) },
                               chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) },
                               chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) },
-                              premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() }
+                              premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() },
+                              create_new_message_general: { NSImage(resource: .iconNewMessage).precomposed(palette.accent, flipVertical: true) }
 
     )
 }

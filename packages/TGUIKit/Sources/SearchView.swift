@@ -475,8 +475,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             change(state: .None, true)
         }
         
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
+        self._window?.removeAllHandlers(for: self)
+        self._window?.removeObserver(for: self)
     }
     
     open func didBecomeResponder() {
@@ -486,7 +486,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         change(state: .Focus, true)
 
-        self.kitWindow?.set(escape: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(escape: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 strongSelf.setString("")
                 return strongSelf.changeResponder() ? .invoked : .rejected
@@ -495,21 +495,21 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             
         }, with: self, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
         }, with: self, for: .RightArrow, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
             }, with: self, for: .LeftArrow, priority: .modal)
         
-        self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
+        self._window?.set(responder: {[weak self] () -> NSResponder? in
             return self?.input
         }, with: self, priority: .modal)
     }
@@ -555,8 +555,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             if state == .None {
                 updateTags([], presentation.search.searchImage)
                 
-                self.kitWindow?.removeAllHandlers(for: self)
-                self.kitWindow?.removeObserver(for: self)
+                self._window?.removeAllHandlers(for: self)
+                self._window?.removeObserver(for: self)
                
                 self.input.isHidden = true
                 inputContainer.isHidden = true
@@ -584,8 +584,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             if isEmpty {
                 change(state: .None, false)
             }
-            self.kitWindow?.removeAllHandlers(for: self)
-            self.kitWindow?.removeObserver(for: self)
+            self._window?.removeAllHandlers(for: self)
+            self._window?.removeObserver(for: self)
         }
     }
     
@@ -726,8 +726,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     deinit {
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
+        self._window?.removeAllHandlers(for: self)
+        self._window?.removeObserver(for: self)
     }
     
     public var query:String {

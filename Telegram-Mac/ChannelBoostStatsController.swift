@@ -13,6 +13,46 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+private func actionItems(state: State, width: CGFloat, arguments: Arguments, theme: TelegramPresentationTheme) -> [ActionItem] {
+    var items: [ActionItem] = []
+    
+    var rowItemsCount: Int = 1
+    
+    while width - (ActionItem.actionItemWidth + ActionItem.actionItemInsetWidth) > ((ActionItem.actionItemWidth * CGFloat(rowItemsCount)) + (CGFloat(rowItemsCount - 1) * ActionItem.actionItemInsetWidth)) {
+        rowItemsCount += 1
+    }
+    rowItemsCount = min(rowItemsCount, 4)
+    
+    
+    
+    if state.isGroup {
+        items.append(.init(text: strings().statsBoostsActionBoost, color: theme.colors.accent, image: theme.icons.stats_boost_boost, animation: .menu_boost_plus, action: {
+            arguments.boost(false)
+        }))
+        
+        items.append(.init(text: strings().statsBoostsActionGiveaway, color: theme.colors.accent, image: theme.icons.stats_boost_giveaway, animation: .menu_gift, action: {
+            arguments.giveaway(nil)
+        }))
+        
+        items.append(.init(text: strings().statsBoostsActionInfo, color: theme.colors.accent, image: theme.icons.stats_boost_info, animation: .menu_show_info, action: {
+            arguments.boost(true)
+        }))
+    }
+   
+    if items.count > rowItemsCount {
+        var subItems:[SubActionItem] = []
+        while items.count > rowItemsCount - 1 {
+            let item = items.removeLast()
+            subItems.insert(SubActionItem(text: item.text, animation: item.animation, destruct: item.destruct, action: item.action), at: 0)
+        }
+        if !subItems.isEmpty {
+            items.append(ActionItem(text: strings().peerInfoActionMore, color: theme.colors.accent, image: theme.icons.profile_more, animation: .menu_plus, action: { }, subItems: subItems))
+        }
+    }
+    
+    return items
+}
+
 private func generateBoostReason(_ text: String, color: NSColor = theme.colors.accent) -> CGImage {
     let attr = NSMutableAttributedString()
     
@@ -106,8 +146,8 @@ private final class BoosterRowItem : GeneralRowItem {
             expiresString = "\(durationString) • \(stringForFullDate(timestamp: boost.expires))"
         }
        
-        self.name = .init(.initialize(string: nameString, color: theme.colors.text, font: .medium(.text)))
-        self.status = .init(.initialize(string: expiresString, color: theme.colors.grayText, font: .normal(.text)))
+        self.name = .init(.initialize(string: nameString, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.status = .init(.initialize(string: expiresString, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         
         var label: String?
         if boost.flags.contains(.isGiveaway) {
@@ -220,11 +260,33 @@ private final class BoostRowItem : TableRowItem {
     fileprivate let context: AccountContext
     private let _stableId: AnyHashable
     fileprivate let state: State
-    init(_ initialSize: NSSize, stableId: AnyHashable, state: State, context: AccountContext) {
+    fileprivate var items: [ActionItem] = []
+    fileprivate let textLayout: TextViewLayout?
+    fileprivate let arguments: Arguments
+    init(_ initialSize: NSSize, stableId: AnyHashable, state: State, context: AccountContext, arguments: Arguments) {
         self.context = context
         self.state = state
         self._stableId = stableId
+        self.arguments = arguments
+        
+        if state.isGroup {
+            let attr: NSAttributedString = .initialize(string: strings().statsBoostsGroupInfo, color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text))
+            self.textLayout = .init(attr, alignment: .center)
+        } else {
+            self.textLayout = nil
+        }
+        
         super.init(initialSize)
+        
+        _ = makeSize(initialSize.width)
+    }
+    
+    override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        self.items = actionItems(state: state, width: width, arguments: arguments, theme: theme)
+        
+        textLayout?.measure(width: blockWidth)
+        return true
     }
     
     var blockWidth: CGFloat {
@@ -237,7 +299,15 @@ private final class BoostRowItem : TableRowItem {
     
     
     override var height: CGFloat {
-        return 100
+        var height: CGFloat = 100
+        if !items.isEmpty {
+            let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
+            height += maxActionSize.height
+        }
+        if let textLayout {
+            height += textLayout.layoutSize.height + 20
+        }
+        return height
     }
     
     override func viewClass() -> AnyClass {
@@ -248,7 +318,9 @@ private final class BoostRowItem : TableRowItem {
 private final class BoostRowItemView : TableRowView {
     private let lineView = LineView(frame: .zero)
     private let top = TypeView(frame: .zero)
-
+    private let actionsView = View()
+    
+    private var textView: TextView?
     
     private class LineView: View {
         
@@ -432,12 +504,54 @@ private final class BoostRowItemView : TableRowView {
     }
 
 
-
+    private func _actionItemWidth(_ items: [ActionItem]) -> CGFloat {
+        guard let item = item as? BoostRowItem else {
+            return 0
+        }
+        let width = (item.blockWidth - (ActionItem.actionItemInsetWidth * CGFloat(items.count - 1)))
+        
+        return max(ActionItem.actionItemWidth, min(150, width / CGFloat(items.count)))
+    }
+    
+    private func layoutActionItems(_ items: [ActionItem], animated: Bool) {
+        
+        if !items.isEmpty {
+            let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
+            
+            
+            while actionsView.subviews.count > items.count {
+                actionsView.subviews.removeLast()
+            }
+            while actionsView.subviews.count < items.count {
+                actionsView.addSubview(ActionButton(frame: .zero))
+            }
+            
+            let inset: CGFloat = 0
+            
+            let actionItemWidth = _actionItemWidth(items)
+            
+            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * ActionItem.actionItemInsetWidth, maxActionSize.height), animated: animated)
+            
+            var x: CGFloat = inset
+            
+            for (i, item) in items.enumerated() {
+                let view = actionsView.subviews[i] as! ActionButton
+                view.updateAndLayout(item: item, bgColor: theme.colors.background)
+                view.setFrameSize(NSMakeSize(actionItemWidth, maxActionSize.height))
+                view.change(pos: NSMakePoint(x, 0), animated: false)
+                x += actionItemWidth + ActionItem.actionItemInsetWidth
+            }
+            
+        } else {
+            actionsView.removeAllSubviews()
+        }
+    }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.addSubview(top)
         self.addSubview(lineView)
+        self.addSubview(actionsView)
     }
     
     override var backdorColor: NSColor {
@@ -461,7 +575,24 @@ private final class BoostRowItemView : TableRowView {
         
         let size = top.update(state: item.state, context: item.context, transition: .immediate)
         top.setFrameSize(size)
-
+        
+        if let textLayout = item.textLayout {
+            let current: TextView
+            if let view = self.textView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.textView = current
+                addSubview(current)
+            }
+            current.update(textLayout)
+        } else if let view = self.textView {
+            performSubviewRemoval(view, animated: animated)
+            self.textView = nil
+        }
+        
         needsLayout = true
     }
     
@@ -472,13 +603,22 @@ private final class BoostRowItemView : TableRowView {
         guard let item = self.item as? BoostRowItem else {
             return
         }
+        
+        layoutActionItems(item.items, animated: transition.isAnimated)
     
-        transition.updateFrame(view: lineView, frame: lineView.centerFrameX(y: frame.height - lineView.frame.height))
+        transition.updateFrame(view: lineView, frame: lineView.centerFrameX(y: top.frame.height + 10))
         
 
         let topPoint = NSMakePoint(max(min(lineView.frame.minX + lineView.frame.width * item.state.percentToNext - top.frame.width / 2, size.width - 20 - top.frame.width), lineView.frame.minX), lineView.frame.minY - top.frame.height - 10)
+        
         transition.updateFrame(view: top, frame: CGRect(origin: topPoint, size: top.frame.size))
 
+        if let textView = textView {
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: lineView.frame.maxY + 10))
+        }
+        
+        transition.updateFrame(view: actionsView, frame: actionsView.centerFrameX(y: size.height - actionsView.frame.height))
+    
     }
 }
 
@@ -491,7 +631,8 @@ private final class Arguments {
     let showMore:()->Void
     let giveaway:(PrepaidGiveaway?)->Void
     let openSlug:(String)->Void
-    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(PrepaidGiveaway?)->Void, openSlug:@escaping(String)->Void) {
+    let boost:(Bool)->Void
+    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(PrepaidGiveaway?)->Void, openSlug:@escaping(String)->Void, boost:@escaping(Bool)->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
@@ -499,15 +640,19 @@ private final class Arguments {
         self.showMore = showMore
         self.giveaway = giveaway
         self.openSlug = openSlug
+        self.boost = boost
     }
 }
+
+
 
 private struct State : Equatable {
     var peer: PeerEquatable?
     var boostStatus: ChannelBoostStatus?
     var booster: ChannelBoostersContext.State?
-    
+    var myStatus: MyBoostStatus?
     var revealed: Bool = false
+    var isGroup: Bool
     
     var link: String {
         if let peer = peer {
@@ -573,7 +718,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("level"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return BoostRowItem(initialSize, stableId: stableId, state: state, context: arguments.context)
+            return BoostRowItem(initialSize, stableId: stableId, state: state, context: arguments.context, arguments: arguments)
         }))
       
         entries.append(.sectionId(sectionId, type: .normal))
@@ -683,11 +828,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }))
                 }
                 
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().statsBoostsBoostersInfoGroup : strings().statsBoostsBoostersInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
                 index += 1
             } else {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_boosters, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().statsBoostsNoBoostersYet, font: .normal(.text), color: theme.colors.grayText)
+                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.isGroup ? strings().statsBoostsNoBoostersYetGroup : strings().statsBoostsNoBoostersYet, font: .normal(.text), color: theme.colors.grayText)
                 }))
             }
 
@@ -712,7 +857,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }, share: arguments.shareLink, copyLink: arguments.copyLink)
         }))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsLinkInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().statsBoostsLinkInfoGroup : strings().statsBoostsLinkInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
                 
         // entries
@@ -728,7 +873,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 arguments.giveaway(nil)
             })))
 
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsGetBoostsViaGiftsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().channelBoostsStatsGetBoostsViaGiftsInfoGroup : strings().channelBoostsStatsGetBoostsViaGiftsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
         }
        
@@ -746,12 +891,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func ChannelBoostStatsController(context: AccountContext, peerId: PeerId, isGroup: Bool = false) -> InputDataController {
     
     let actionsDisposable = DisposableSet()
     var getController:(()->InputDataController?)? = nil
     
-    let initialState = State()
+    let initialState = State(isGroup: isGroup)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -763,13 +908,14 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     let boostersContext = ChannelBoostersContext(account: context.account, peerId: peerId, gift: false)
     
     
-    actionsDisposable.add(combineLatest(context.account.postbox.loadedPeerWithId(peerId), boostData, boostersContext.state).start(next: { peer, boostData, boosters in
+    actionsDisposable.add(combineLatest(context.account.postbox.loadedPeerWithId(peerId), boostData, boostersContext.state, context.engine.peers.getMyBoostStatus()).start(next: { peer, boostData, boosters, myStatus in
         
         updateState { current in
             var current = current
             current.peer = .init(peer)
             current.boostStatus = boostData
             current.booster = boosters
+            current.myStatus = myStatus
             return current
         }
     }))
@@ -784,16 +930,23 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     }, showMore: { [weak boostersContext] in
         boostersContext?.loadMore()
     }, giveaway: { prepaid in
-        showModal(with: GiveawayModalController(context: context, peerId: peerId, prepaid: prepaid), for: context.window)
+        showModal(with: GiveawayModalController(context: context, peerId: peerId, prepaid: prepaid, isGroup: isGroup), for: context.window)
     }, openSlug: { slug in
         execute(inapp: .gift(link: "", slug: slug, context: context))
+    }, boost: { features in
+        let status = stateValue.with { $0.boostStatus }
+        let myStatus = stateValue.with { $0.myStatus }
+        let peer = stateValue.with { $0.peer?.peer }
+        if let status = status, let peer = peer {
+            showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: status, myStatus: myStatus, onlyFeatures: features), for: context.window)
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: " ")
+    let controller = InputDataController(dataSignal: signal, title: strings().statsBoosts, removeAfterDisappear: false, hasDone: false)
     
     controller.contextObject = boostersContext
     

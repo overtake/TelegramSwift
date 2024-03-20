@@ -195,6 +195,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
     public let inactiveLineWidth: CGFloat
     public let counters: Counters?
     public let activeColors: ActiveColors
+    public let isRoundedRect: Bool
     public init(
         hasUnseen: Bool,
         hasUnseenCloseFriendsItems: Bool,
@@ -202,7 +203,8 @@ public final class AvatarStoryIndicatorComponent : Equatable {
         activeLineWidth: CGFloat,
         inactiveLineWidth: CGFloat,
         counters: Counters?,
-        activeColors: ActiveColors = .default
+        activeColors: ActiveColors = .default,
+        isRoundedRect: Bool = false
     ) {
         self.hasUnseen = hasUnseen
         self.hasUnseenCloseFriendsItems = hasUnseenCloseFriendsItems
@@ -211,19 +213,20 @@ public final class AvatarStoryIndicatorComponent : Equatable {
         self.inactiveLineWidth = inactiveLineWidth
         self.counters = counters
         self.activeColors = activeColors
+        self.isRoundedRect = isRoundedRect
     }
-    public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme, active: Bool = false) {
+    public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme, active: Bool = false, isRoundedRect: Bool? = nil) {
         let hasUnseen = story.hasUnseen || story.hasUnseenCloseFriends
-        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount), isRoundedRect: isRoundedRect ?? story.peer._asPeer().isForum)
     }
     
-    public convenience init(stats: EngineChatList.StoryStats, presentation: PresentationTheme, activeColors: ActiveColors = .default) {
+    public convenience init(stats: EngineChatList.StoryStats, presentation: PresentationTheme, activeColors: ActiveColors = .default, isRoundedRect: Bool = false) {
         let hasUnseen = stats.unseenCount > 0
-        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: stats.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount), activeColors: activeColors)
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: stats.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount), activeColors: activeColors, isRoundedRect: isRoundedRect)
     }
     
-    public convenience init(state storyState: PeerExpiringStoryListContext.State, presentation: PresentationTheme, activeColors: ActiveColors = .default) {
-        self.init(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount), activeColors: activeColors)
+    public convenience init(state storyState: PeerExpiringStoryListContext.State, presentation: PresentationTheme, activeColors: ActiveColors = .default, isRoundedRect: Bool = false) {
+        self.init(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount), activeColors: activeColors, isRoundedRect: isRoundedRect)
     }
 
     
@@ -323,7 +326,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                     context.setLineCap(.round)
                     let spacing: CGFloat = 3.0 * progress
                     
-                    if let counters = component.counters, counters.totalCount > 1, spacing >= 2, counters.totalCount < 50 {
+                    if let counters = component.counters, counters.totalCount > 1, spacing >= 2, counters.totalCount < 50, !component.isRoundedRect {
                         
                         let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
                         let radius = (diameter - lineWidth) * 0.5
@@ -380,8 +383,13 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                             return
                         }
                     }
-                    let ellipse = CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5)
-                    context.addEllipse(in: ellipse)
+                    
+                    if component.isRoundedRect {
+                        context.addPath(CGPath(roundedRect: CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5), cornerWidth: floor(diameter * 0.33), cornerHeight: floor(diameter * 0.33), transform: nil))
+                    } else {
+                        let ellipse = CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5)
+                        context.addEllipse(in: ellipse)
+                    }
                     
                     context.replacePathWithStrokedPath()
                     context.clip()

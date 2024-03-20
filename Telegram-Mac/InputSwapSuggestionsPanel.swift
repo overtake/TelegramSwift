@@ -19,7 +19,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     
     private let inputView: NSTextView
     private let textContent: NSClipView
-    private let _window: Window
+    private let __window: Window
     private let context: AccountContext
     private let tableView = HorizontalTableView(frame: .zero)
     private let containerView = View()
@@ -34,7 +34,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         self.inputView = inputView
         self.context = context
         self.relativeView = relativeView
-        self._window = window
+        self.__window = window
         self.chatInteraction = chatInteraction
         self.presentation = presentation
         super.init(frame: .zero)

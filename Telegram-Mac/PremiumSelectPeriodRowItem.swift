@@ -39,7 +39,14 @@ struct PremiumPeriod : Equatable {
         }
     }
     var priceString: String {
-        return strings().premiumPeriodPrice(amountString)
+        switch period {
+        case .month:
+            return strings().premiumPeriodPrice(amountString)
+        case .sixMonth:
+            return strings().premiumPeriodPrice(amountString)
+        case .year:
+            return strings().premiumPeriodPriceYear(fullAmount)
+        }
     }
     var buyString: String {
         switch period {

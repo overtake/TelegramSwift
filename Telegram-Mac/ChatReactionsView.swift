@@ -245,7 +245,7 @@ final class ChatReactionsLayout {
             lhs.rect == rhs.rect &&
             lhs.message.id == rhs.message.id &&
             lhs.canViewList == rhs.canViewList &&
-            lhs.message.effectiveReactions(isTags: lhs.context.peerId == lhs.message.id.peerId && tagsGloballyEnabled) == rhs.message.effectiveReactions(isTags: rhs.context.peerId == rhs.message.id.peerId && tagsGloballyEnabled)
+            lhs.message.effectiveReactions(isTags: lhs.context.peerId == lhs.message.id.peerId) == rhs.message.effectiveReactions(isTags: rhs.context.peerId == rhs.message.id.peerId)
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -347,7 +347,7 @@ final class ChatReactionsLayout {
             let context = self.context
             let tag = self.value.value
             let label = self.text?.attributedString.string
-            if message.id.peerId == context.peerId, tagsGloballyEnabled {
+            if message.id.peerId == context.peerId {
                 if let menu = menu {
                     return menu
                 } else {
@@ -491,7 +491,7 @@ final class ChatReactionsLayout {
     init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, savedMessageTags: SavedMessageTags?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, currentTag: MessageReaction.Reaction?, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void) {
         
         var mode: Mode = .full
-        if message.id.peerId == context.peerId, tagsGloballyEnabled {
+        if message.id.peerId == context.peerId {
             mode = .tag
         }
         self.message = message
@@ -510,7 +510,7 @@ final class ChatReactionsLayout {
             return index
         }
         
-        let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == message.id.peerId && tagsGloballyEnabled)!
+        let reactions = message.effectiveReactions(context.peerId, isTags: context.peerId == message.id.peerId)!
         
         var indexes:[MessageReaction.Reaction: Int] = [:]
         if let available = available {
@@ -580,7 +580,7 @@ final class ChatReactionsLayout {
                     if message.id.peerId == context.peerId, !isFilterTag, mode == .tag {
                        tagAction(value)
                     } else {
-                        engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId && tagsGloballyEnabled))
+                        engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
                     }
                 }, openInfo: openInfo, runEffect: runEffect)
             } else {
@@ -1501,7 +1501,7 @@ final class ChatReactionsView : View {
         guard let currentLayout = currentLayout else {
             return
         }
-        let layout = currentLayout.message.effectiveReactions(currentLayout.context.peerId, isTags: currentLayout.context.peerId == currentLayout.message.id.peerId && tagsGloballyEnabled)
+        let layout = currentLayout.message.effectiveReactions(currentLayout.context.peerId, isTags: currentLayout.context.peerId == currentLayout.message.id.peerId)
         let peer = layout?.recentPeers.first(where: { $0.isUnseen || !checkUnseen })
         if let peer = peer, let reaction = reactions.first(where: { $0.value.value == peer.value }) {
             reaction.runEffect(reaction.value.value)

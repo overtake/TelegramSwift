@@ -21,13 +21,15 @@ private final class ChatListPresetArguments {
     let addFeatured: (ChatListFeaturedFilter)->Void
     let toggleSidebar: (Bool)->Void
     let limitExceeded:()->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void, limitExceeded:@escaping()->Void) {
+    let toggleTags:(Bool)->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void, limitExceeded:@escaping()->Void, toggleTags:@escaping(Bool)->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
         self.addFeatured = addFeatured
         self.toggleSidebar = toggleSidebar
         self.limitExceeded = limitExceeded
+        self.toggleTags = toggleTags
     }
 }
 private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
@@ -42,7 +44,9 @@ private let _id_badge_tabs = InputDataIdentifier("_id_badge_tabs")
 
 private let _id_header = InputDataIdentifier("_id_header")
 
-private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], sidebar: Bool, suggested: ChatListFiltersFeaturedState?, arguments: ChatListPresetArguments) -> [InputDataEntry] {
+private let _id_show_tags = InputDataIdentifier("_id_show_tags")
+
+private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], sidebar: Bool, showTags: Bool, suggested: ChatListFiltersFeaturedState?, arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -77,7 +81,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }
     }
     
-    let sharedImage = NSImage(named: "Icon_SharedFolder")!.precomposed(theme.colors.grayText.withAlphaComponent(0.8))
+    let sharedImage = NSImage(resource: .iconSharedFolder).precomposed(theme.colors.grayText.withAlphaComponent(0.8))
 
     for (filter, count) in filtersWithCounts {
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
@@ -88,13 +92,49 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             viewType = .innerItem
         }
         
-        
         switch filter {
         case .allChats:
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(emoticon: .allChats).icon(for: .preview), type: .none, viewType: viewType)))
             index += 1
         case let .filter(_, title, _, data):
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: data.isShared ? .nextImage(sharedImage) :  .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+            
+            var image: CGImage?
+            if let color = data.color, showTags {
+                
+                let colors = [theme.colors.peerColors(0).bottom,
+                              theme.colors.peerColors(1).bottom,
+                              theme.colors.peerColors(2).bottom,
+                              theme.colors.peerColors(3).bottom,
+                              theme.colors.peerColors(4).bottom,
+                              theme.colors.peerColors(5).bottom,
+                              theme.colors.peerColors(6).bottom]
+
+                image = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(colors[Int(color.rawValue)].cgColor)
+                    ctx.fillEllipse(in: size.bounds)
+                })
+                
+                if data.isShared {
+                    image = generateImage(NSMakeSize(20 + 3 + sharedImage.backingSize.width, 20), contextGenerator: { size, ctx in
+                        ctx.clear(size.bounds)
+                        var rect = size.bounds.focus(sharedImage.backingSize)
+                        rect.origin.x = 0
+                        ctx.draw(sharedImage, in: rect)
+                        
+                        var rect2 = size.bounds.focus(image!.backingSize)
+                        rect2.origin.x = rect.maxX + 3
+                        ctx.draw(image!, in: rect2)
+                    })
+                }
+                
+            } else if data.isShared {
+                image = sharedImage
+            } else {
+                image = nil
+            }
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
                 arguments.openPreset(filter, false)
             }, menuItems: {
                 return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
@@ -144,9 +184,20 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
                 index += 1
             }
         }
-        
-        
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_tags, data: .init(name: strings().chatListFolderTags, color: theme.colors.text, type: .switchable(showTags), viewType: .singleItem, action: {
+        arguments.toggleTags(!showTags)
+    }, autoswitch: false)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderTagsInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    index += 1
+
+   
+
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -204,6 +255,15 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         }).start()
     }, limitExceeded: {
         showModal(with: PremiumLimitController(context: context, type: .folders), for: context.window)
+    }, toggleTags: { value in
+        if !context.isPremium {
+            showModalText(for: context.window, text: strings().chatListFolderPremiumAlert, button: strings().alertLearnMore, callback: { _ in
+                showModal(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
+            })
+        } else {
+            context.engine.peers.updateChatListFiltersDisplayTags(isEnabled: value)
+        }
+        
     })
     
     
@@ -248,9 +308,10 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         return view.values[PreferencesKeys.chatListFiltersFeaturedState]?.get(ChatListFiltersFeaturedState.self)
     }
 
+    let showTags = context.engine.data.subscribe(TelegramEngine.EngineData.Item.ChatList.FiltersDisplayTags())
     
-    let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, filtersWithCounts, suggested) |> map { _, filtersWithCounts, suggested in
-        return chatListPresetEntries(filtersWithCounts: filtersWithCounts.0, sidebar: filtersWithCounts.1, suggested: suggested, arguments: arguments)
+    let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, filtersWithCounts, suggested, showTags) |> map { _, filtersWithCounts, suggested, showTags in
+        return chatListPresetEntries(filtersWithCounts: filtersWithCounts.0, sidebar: filtersWithCounts.1, showTags: showTags, suggested: suggested, arguments: arguments)
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }

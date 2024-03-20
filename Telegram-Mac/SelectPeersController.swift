@@ -871,7 +871,7 @@ class SelectChatsBehavior: SelectPeersBehavior {
         return search |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             if search.request.isEmpty {
-                return account.viewTracker.tailChatListView(groupId: .root, count: 1000) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<([SelectPeerEntry], Bool), NoError> in
+                return account.viewTracker.tailChatListView(groupId: .root, count: 100) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<([SelectPeerEntry], Bool), NoError> in
                     var entries:[Peer] = []
                     
                     for entry in value.0.entries.reversed() {

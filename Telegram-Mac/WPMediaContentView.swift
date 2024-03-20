@@ -49,7 +49,7 @@ class WPMediaContentView: WPContentView {
     }
     
     override func previewMediaIfPossible() -> Bool {
-        guard  let window = self.kitWindow, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let contentNode = contentNode, contentNode.mouseInside() else {return false}
+        guard  let window = self._window, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let contentNode = contentNode, contentNode.mouseInside() else {return false}
         startModalPreviewHandle(table, window: window, context: content.context)
         return true
     }

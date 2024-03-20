@@ -264,14 +264,14 @@ class ChatSelectText : NSObject {
         
         table.addScroll(listener: TableScrollListener (dispatchWhenVisibleRangeUpdated: false, { [weak table] _ in
             table?.enumerateVisibleViews(with: { view in
-                view.updateMouse()
+                view.updateMouse(animated: true)
             })
         }))
         
         window.set(mouseHandler: { [weak table] event -> KeyHandlerResult in
             
             table?.enumerateVisibleViews(with: { view in
-                view.updateMouse()
+                view.updateMouse(animated: true)
             })
             
             return .rejected

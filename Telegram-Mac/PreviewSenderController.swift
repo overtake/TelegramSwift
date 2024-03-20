@@ -120,7 +120,7 @@ fileprivate class PreviewSenderView : Control {
 
             
             DispatchQueue.main.async {
-                if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self.kitWindow {
+                if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self._window {
                     removeAllTooltips(window)
                 }
                 self.fileButton.controlState = .Normal
@@ -989,7 +989,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                     self?.sendCurrentMedia?(silent, date, asSpoiler)
                 }), for: context.window)
             }
-        case .history, .thread:
+        case .history, .thread, .customChatContents:
             sendCurrentMedia?(silent, atDate, asSpoiler)
         case .pinned:
             break
@@ -1369,7 +1369,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                         input = ChatTextInputState()
                     }
                 }
-                if additionalMessage != nil, let text = permissionText(from: peer, for: .banSendText) {
+                if additionalMessage != nil, let text = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData) {
                     permissions.insert((text, -1), at: 0)
                 }
                 
@@ -1380,9 +1380,19 @@ class PreviewSenderController: ModalViewController, Notifable {
                         self.genericView.textView.shake(beep: true)
                     }
                 }
+                
                 if let first = permissions.first {
-                    showModalText(for: context.window, text: first.0)
-                    return
+                    if let totalBoostNeed = chatInteraction.presentation.totalBoostNeed {
+                        if totalBoostNeed > 0 {
+                            verifyAlert(for: context.window, information: strings().boostGroupChatInputSendMedia, ok: strings().boostGroupChatInputBoost, successHandler: { [weak self] _ in
+                                self?.chatInteraction.boostToUnrestrict(.unblockText(totalBoostNeed))
+                            })
+                            return
+                        }
+                    } else {
+                        showModalText(for: context.window, text: first.0)
+                        return
+                    }
                 }
                 
                 self.sent = true
@@ -1579,7 +1589,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             guard let `self` = self else {return .rejected}
             
             self.genericView.tableView.enumerateViews(with: { view -> Bool in
-                view.updateMouse()
+                view.updateMouse(animated: true)
                 return true
             })
             

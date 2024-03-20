@@ -156,7 +156,8 @@ final class StoryInteraction : InterfaceObserver {
         var closed: Bool = false
         
         var wideInput: Bool {
-            return (inputInFocus || hasPopover) && self.entryId?.namespace == Namespaces.Peer.CloudUser
+            let accept = self.entryId?.namespace == Namespaces.Peer.CloudUser || self.entryId?.namespace == Namespaces.Peer.CloudChannel
+            return (inputInFocus || hasPopover) && accept
         }
         
         var isAreaActivated: Bool = false
@@ -168,6 +169,7 @@ final class StoryInteraction : InterfaceObserver {
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
+        var slowMode: SlowMode?
         var canViewStats: Bool = false
         var reactions: AvailableReactions?
         var isPaused: Bool {
@@ -1961,10 +1963,15 @@ private final class StoryViewController: Control, Notifable {
                     }
                 } else if scrollDeltaY < -50 {
                     if let peerId = current.id, let story = current.story {
+                        let peer = self.storyContext?.stateValue?.slice?.peer._asPeer()
                         if peerId == arguments?.context.peerId {
                             arguments?.showViewers(story)
-                        } else if let peer = self.storyContext?.stateValue?.slice?.peer._asPeer() as? TelegramChannel {
+                        } else if peer?.isChannel == true {
                             arguments?.showViewers(story)
+                        } else if current.hasInput {
+                            self.window?.makeFirstResponder(self.inputView)
+                            self.showReactions()
+                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                         }
                         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                     } else {
@@ -2041,6 +2048,7 @@ final class StoryModalController : ModalViewController, Notifable {
     private let actionsDisposable = DisposableSet()
     private let updatesDisposable = MetaDisposable()
     private let inputSwapDisposable = MetaDisposable()
+    private let slowModeDisposable = MetaDisposable()
     private var overlayTimer: SwiftSignalKit.Timer?
     
     private var arguments: StoryArguments?
@@ -2124,6 +2132,40 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                 }
             }
+            
+            if let until = value.slowMode?.validUntil, until > self.context.timestamp {
+                let signal = Signal<Void, NoError>.single(Void()) |> then(.single(Void()) |> delay(0.2, queue: .mainQueue()) |> restart)
+                slowModeDisposable.set(signal.start(next: { [weak self] in
+                    if let `self` = self {
+                        if until < self.context.timestamp {
+                            self.arguments?.interaction.update { current in
+                                var current = current
+                                current.slowMode = value.slowMode?.withUpdatedTimeout(nil)
+                                return current
+                            }
+                        } else {
+                            self.arguments?.interaction.update { current in
+                                var current = current
+                                current.slowMode = value.slowMode?.withUpdatedTimeout(until - self.context.timestamp)
+                                return current
+                            }
+                        }
+                    }
+                }))
+                
+            } else {
+                self.slowModeDisposable.set(nil)
+                if let slowMode = value.slowMode, slowMode.timeout != nil {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.arguments?.interaction.update { current in
+                            var current = current
+                            current.slowMode = value.slowMode?.withUpdatedTimeout(nil)
+                            return current
+                        }
+                    }
+                }
+            }
+            
         }
         if let value = value as? StoryInteraction.State, let oldValue = oldValue as? StoryInteraction.State {
             self.chatInteraction.update({
@@ -2391,9 +2433,26 @@ final class StoryModalController : ModalViewController, Notifable {
             })
         }
         
+        let canAvoidGroupRestrictions:()->Bool = { [weak self] in
+            return self?.genericView.storyContext?.stateValue?.slice?.additionalPeerData.canAvoidRestrictions == true
+        }
+        
         
         
         let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self] input, peerId, id, source in
+            
+            if let timeout = self?.arguments?.interaction.presentation.slowMode?.timeout {
+                self?.genericView.showTooltip(.tooltip(slowModeTooltipText(timeout), MenuAnimation.menu_clear_history))
+                return
+            }
+            
+            let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendText)
+            
+            if let restrictionText, !canAvoidGroupRestrictions() {
+                self?.genericView.showTooltip(.tooltip(restrictionText, MenuAnimation.menu_clear_history))
+                return
+            }
+            
             beforeCompletion()
             _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
                 afterCompletion()
@@ -2836,6 +2895,8 @@ final class StoryModalController : ModalViewController, Notifable {
             StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: nil)
         })
         
+
+        
         self.arguments = arguments
         
         genericView.setArguments(arguments)
@@ -2847,6 +2908,19 @@ final class StoryModalController : ModalViewController, Notifable {
             guard let interactions = self?.interactions else {
                 return
             }
+            
+            if let timeout = self?.arguments?.interaction.presentation.slowMode?.timeout {
+                self?.genericView.showTooltip(.tooltip(slowModeTooltipText(timeout), MenuAnimation.menu_clear_history))
+                return
+            }
+            
+            let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendFiles)
+            
+            if let restrictionText, !canAvoidGroupRestrictions() {
+                self?.genericView.showTooltip(.tooltip(restrictionText, MenuAnimation.menu_clear_history))
+                return
+            }
+            
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
                 _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
@@ -2891,6 +2965,19 @@ final class StoryModalController : ModalViewController, Notifable {
             guard let interactions = self?.interactions else {
                 return
             }
+            
+            if let timeout = self?.arguments?.interaction.presentation.slowMode?.timeout {
+                self?.genericView.showTooltip(.tooltip(slowModeTooltipText(timeout), MenuAnimation.menu_clear_history))
+                return
+            }
+            
+            let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendMedia)
+            
+            if let restrictionText, !canAvoidGroupRestrictions() {
+                self?.genericView.showTooltip(.tooltip(restrictionText, MenuAnimation.menu_clear_history))
+                return
+            }
+            
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
                 _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
@@ -2901,6 +2988,19 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         chatInteraction.sendMedia = { [weak self] container in
+            
+            if let timeout = self?.arguments?.interaction.presentation.slowMode?.timeout {
+                self?.genericView.showTooltip(.tooltip(slowModeTooltipText(timeout), MenuAnimation.menu_clear_history))
+                return
+            }
+            
+            let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendMedia)
+            
+            if let restrictionText, !canAvoidGroupRestrictions() {
+                self?.genericView.showTooltip(.tooltip(restrictionText, MenuAnimation.menu_clear_history))
+                return
+            }
+            
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
                 _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
@@ -2989,6 +3089,9 @@ final class StoryModalController : ModalViewController, Notifable {
             })
         }))
         
+        
+        
+        
         actionsDisposable.add(context.reactions.stateValue.start(next: { [weak self] reactions in
             self?.interactions.update({ current in
                 var current = current
@@ -3006,6 +3109,36 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.genericView.update(context: context, storyContext: stories, initial: initialId)
                 if ready {
                     self?.readyOnce()
+                }
+                if let chatInteraction = self?.chatInteraction {
+                    chatInteraction.update({ current in
+                        var current = current
+                        current = current.updatedPeer { _ in
+                            return state.slice?.peer._asPeer()
+                        }
+                        
+                        if let slowmode = state.slice?.additionalPeerData.slowModeTimeout, state.slice?.additionalPeerData.canAvoidRestrictions == false {
+                            let slowmodeValidUntilTimeout = state.slice?.additionalPeerData.slowModeValidUntilTimestamp
+                            current = current.updateSlowMode({ value in
+                                var value = value ?? SlowMode()
+                                value = value.withUpdatedValidUntil(slowmodeValidUntilTimeout)
+                                if let timeout = slowmodeValidUntilTimeout {
+                                    if timeout > context.timestamp {
+                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                    } else {
+                                        value = value.withUpdatedTimeout(nil)
+                                    }
+                                }
+                                return value
+                            })
+                        } else {
+                            current = current.updateSlowMode({ _ in
+                                nil
+                            })
+                        }
+                        return current
+                    })
+                    self?.entertainment.update(with: chatInteraction)
                 }
             }
         }))
@@ -3316,6 +3449,7 @@ final class StoryModalController : ModalViewController, Notifable {
         updatesDisposable.dispose()
         inputSwapDisposable.dispose()
         actionsDisposable.dispose()
+        slowModeDisposable.dispose()
     }
     
     override var containerBackground: NSColor {

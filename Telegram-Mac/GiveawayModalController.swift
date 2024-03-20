@@ -348,6 +348,8 @@ private struct State : Equatable {
     
     var countries: [Country] = []
     
+    var isGroup: Bool
+    
     var prizeDescriptionValue: String? {
         if let prizeDescription = prizeDescription, additionalPrizes {
             return prizeDescription
@@ -396,7 +398,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayHeaderTitle), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 18, centerViewAlignment: true, alignment: .center)))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayHeaderText), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().giveawayHeaderTextGroup : strings().giveawayHeaderText), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -467,7 +469,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayChannelsHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().giveawayChannelsHeaderGroup : strings().giveawayChannelsHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
         var channels: [PeerEquatable] = state.channels
@@ -504,7 +506,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         for item in channelItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: item.peer.peer.id == state.channels[0].peer.id ? strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity * perSentGift)) : nil, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
+                let status: String?
+                if item.peer.peer.id == state.channels[0].peer.id {
+                    if state.isGroup {
+                        status = strings().giveawayChannelsBoostReceiveGroupCountable(Int(item.quantity * perSentGift))
+                    } else {
+                        status = strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity * perSentGift))
+                    }
+                } else {
+                    status = nil
+                }
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: status, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
                     var items: [ContextMenuItem] = []
                     if item.deletable {
                         items.append(ContextMenuItem(strings().giveawayChannelsContextRemove, handler: {
@@ -516,10 +528,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
         }
         if !maximumReached {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_channel, data: .init(name: strings().giveawayChannelsAdd, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, viewType: .lastItem, action: arguments.addChannel)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_channel, data: .init(name: state.isGroup ? strings().giveawayChannelsAddGroup : strings().giveawayChannelsAdd, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, viewType: .lastItem, action: arguments.addChannel)))
         }
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().givewayChannelsInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().givewayChannelsInfoGroup : strings().givewayChannelsInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -553,7 +565,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_select_date, data: .init(name: strings().giveawayDateEnds, color: theme.colors.text, type: .nextContext(stringForFullDate(timestamp: Int32(state.date.timeIntervalSince1970))), viewType: .singleItem, action: arguments.selectDate)))
         
         if state.quantity > 0 {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.isGroup ? strings().giveawayDateInfoGroup : strings().giveawayDateInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
             index += 1
         }
     case .specific:
@@ -694,7 +706,7 @@ enum GiveawaySubject {
     case prepaid(count: Int32, month: Int32)
 }
 
-func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: PrepaidGiveaway?) -> InputDataModalController {
+func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: PrepaidGiveaway?, isGroup: Bool) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -719,7 +731,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     } else {
         type = .random
     }
-    let initialState = State(type: type, channels: [], canMakePayment: canMakePayment)
+    let initialState = State(type: type, channels: [], canMakePayment: canMakePayment, isGroup: isGroup)
     
     var close: (()->Void)? = nil
     
@@ -820,11 +832,22 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             return current
         }
     }, addChannel: {
-        _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayChannelsAddSelectChannel, behavior: SelectChatsBehavior(settings: [.channels], excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
+        
+        var settings: SelectPeerSettings = [.channels]
+        if isGroup {
+            settings = [.channels, .groups]
+        }
+        
+        _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayChannelsAddSelectChannel, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
             if let peerId = peerIds.first {
                 return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer in
+                    
+                    let isGroup = peer.isGroup || peer.isSupergroup
                     if peer.addressName == nil {
-                        return verifyAlertSignal(for: context.window, header: strings().giveawayChannelsAddPrivateHeader, information: strings().giveawayChannelsAddPrivateText, ok: strings().giveawayChannelsAddPrivateOk) |> map { $0 == .basic }
+                        let header: String = isGroup ? strings().giveawayChannelsAddPrivateHeaderGroup : strings().giveawayChannelsAddPrivateHeader
+                        let info = isGroup ? strings().giveawayChannelsAddPrivateTextGroup : strings().giveawayChannelsAddPrivateText
+                        let ok = isGroup ? strings().giveawayChannelsAddPrivateOkGroup : strings().giveawayChannelsAddPrivateOk
+                        return verifyAlertSignal(for: context.window, header: header, information: info, ok: ok) |> map { $0 == .basic }
                     } else {
                         return .single(true)
                     }

@@ -269,7 +269,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func openNameColor(peer: Peer) {
-        pushViewController(SelectColorController(context: context, source: .group(peer)))
+        pushViewController(SelectColorController(context: context, peer: peer))
     }
     
     func enableTranslate() {
@@ -423,7 +423,35 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(GroupStatsViewController(context, peerId: peerId))
+        if self.peer?.isSupergroup == true {
+            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: false))
+        } else {
+            self.pushViewController(GroupStatsViewController(context, peerId: peerId))
+        }
+    }
+    
+    func archiveStories() {
+        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true), standalone: true, isArchived: true))
+    }
+    func boosts(_ access: GroupAccess) {
+        let context = self.context
+        
+        if access.isCreator || self.peer?.isAdmin == true {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId, isGroup: true))
+        } else {
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        }
     }
     
     func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {
@@ -2099,9 +2127,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
-                    #if DEBUG
                     actionBlock.append(.color(section: GroupInfoSection.type.rawValue, peer: PeerEquatable(peer: channel), viewType: .singleItem))
-                    #endif
 
                     actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                 }

@@ -10,8 +10,14 @@ import Cocoa
 import TGUIKit
 
 class EmptyGroupstickerSearchRowItem: GeneralRowItem {
-
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, viewType: GeneralViewType = .legacy) {
+    
+    enum PackType {
+        case stickers
+        case emojies
+    }
+    let packType: PackType
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, viewType: GeneralViewType = .legacy, type: PackType = .stickers) {
+        self.packType = type
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
     }
     
@@ -77,8 +83,8 @@ private class EmptyGroupstickerSearchRowView : TableRowView {
             case let .modern(_, insets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
                 
-                let headerLayout = TextViewLayout(.initialize(string: strings().groupStickersEmptyHeader, color: theme.colors.redUI, font: .medium(.text)), maximumNumberOfLines: 1)
-                let descLayout = TextViewLayout(.initialize(string: strings().groupStickersEmptyDesc, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+                let headerLayout = TextViewLayout(.initialize(string: item.packType == .stickers ? strings().groupStickersEmptyHeader : strings().groupStickersEmptyHeaderEmoji, color: theme.colors.redUI, font: .medium(.text)), maximumNumberOfLines: 1)
+                let descLayout = TextViewLayout(.initialize(string: item.packType == .stickers ? strings().groupStickersEmptyDesc : strings().groupStickersEmptyDescEmoji, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
                 headerLayout.measure(width: item.blockWidth - insets.left - insets.right - 40)
                 descLayout.measure(width: item.blockWidth - insets.left - insets.right - 40)
                 descView.update(descLayout)

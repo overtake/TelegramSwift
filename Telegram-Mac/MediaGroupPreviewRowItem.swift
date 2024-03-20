@@ -166,7 +166,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
         
         needsLayout = true
         
-        updateMouse()
+        updateMouse(animated: animated)
     }
     
     override func forceClick(in location: NSPoint) {
@@ -180,7 +180,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
         }
     }
     
-    override func updateMouse() {
+    override func updateMouse(animated: Bool) {
         guard let window = window, let table = item?.table else {
             for node in self.contents {
                 if let control = node.subviews.last as? MediaPreviewEditControl {

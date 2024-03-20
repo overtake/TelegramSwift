@@ -249,7 +249,7 @@ private struct State : Equatable {
         var items:[StickerPackItem]
         var dict:[MediaId: StickerPackItem]
         var installed: Bool
-        
+        var groupEmojiPack: Bool = false
         static func ==(lhs: Section, rhs: Section) -> Bool {
             if lhs.info != rhs.info {
                 return false
@@ -261,6 +261,9 @@ private struct State : Equatable {
                 return false
             }
             if lhs.dict.count != rhs.dict.count {
+                return false
+            }
+            if lhs.groupEmojiPack != rhs.groupEmojiPack {
                 return false
             }
             return true
@@ -831,7 +834,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         var tuples:[Tuple] = []
-        //NSLog("name: \(section.info.title), count: \(section.items.count), \(section.items.map { $0.file.customEmojiText })")
 
         let chunks = section.items.chunks(24)
         var string: String = "a"
@@ -842,7 +844,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         for tuple in tuples {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, groupEmojiPack: tuple.section.groupEmojiPack, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
                     arguments.viewSet(info)
                 }, showAllItems: {
                     arguments.showAllItems(section.info.id.id)
@@ -905,7 +907,9 @@ final class BackCategoryControl : Control {
             return [.init(keyPath: "", color: theme.colors.grayIcon.withMultipliedAlpha(0.8))]
         }, ignorePreview: true)
         super.init(frame: frameRect)
+        
         self.sticker.isPlayable = true
+        self.sticker.superview = self
         self.layer?.addSublayer(self.sticker)
         
         self.scaleOnClick = true
@@ -924,6 +928,7 @@ final class BackCategoryControl : Control {
         }, ignorePreview: true)
 
         self.sticker.isPlayable = true
+        self.sticker.superview = self
         self.layer?.addSublayer(self.sticker)
         
         needsLayout = true
@@ -980,12 +985,13 @@ final class AnimatedEmojiesCategories : Control {
             self.context = context
            
             super.init(frame: frameRect)
+                        
             self.toolTip = category.title
 
             scaleOnClick = true
             
             let lite = self.isLite
-            if lite, let image = category.icon {
+            if let image = category.icon {
                 let imageView = ImageView()
                 imageView.image = image
                 imageView.sizeToFit()
@@ -1013,6 +1019,7 @@ final class AnimatedEmojiesCategories : Control {
                     return [.init(keyPath: "", color: color)]
                 }, ignorePreview: true)
                 self.player = inline
+                inline.superview = self
                 inline.frame = focus(NSMakeSize(23, 23))
                 inline.isPlayable = visibleRect != .zero
                 self.layer?.addSublayer(inline)
@@ -1458,7 +1465,7 @@ final class AnimatedEmojiesView : Control {
 
     func updateSearchState(_ searchState: SearchState, animated: Bool) {
         
-        if let window = kitWindow, self.mode == .reactions {
+        if let window = _window, self.mode == .reactions || self.mode == .defaultTags {
             switch searchState.state {
             case .Focus:
                 window._canBecomeKey = true
@@ -1607,6 +1614,7 @@ final class AnimatedEmojiesView : Control {
                 currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context, presentation: presentation ?? theme)
                 self.closeCategories = currentClose
                 searchInside.addSubview(currentClose)
+                
                 
                 currentClose.set(handler: { [weak self] _ in
                     self?.arguments?.selectEmojiCategory(nil)
@@ -1797,6 +1805,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
+    
+    private var groupEmojiPack: Signal<(StickerPackCollectionInfo, [StickerPackItem])?, NoError> = .single(nil)
+
     
     private var updateState: (((State) -> State) -> Void)? = nil
     private var scrollOnAppear:(()->Void)? = nil
@@ -2269,7 +2280,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
 //            }
 //        }
         
-        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories, availableReactions in
+        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -2368,11 +2379,34 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 var current = current
                 var sections: [State.Section] = []
                 var itemsDict: [MediaId: StickerPackItem] = [:]
+                
+                if let groupEmojiPack = groupEmojiPack {
+                    var files: [StickerPackItem] = []
+                    var dict: [MediaId: StickerPackItem] = [:]
+                    for item in groupEmojiPack.1 {
+                        var updated = item
+                        var attrs = item.file.attributes
+                        loop: for (i, attr) in attrs.enumerated() {
+                            switch attr {
+                            case let .CustomEmoji(isPremium, isSingleColor, alt, packReference):
+                                attrs[i] = .CustomEmoji(isPremium: false, isSingleColor: isSingleColor, alt: alt, packReference: packReference)
+                                break loop;
+                            default:
+                                break
+                            }
+                        }
+                        updated = StickerPackItem(index: updated.index, file: item.file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
+                        files.append(updated)
+                        dict[item.file.fileId] = updated
+                        itemsDict[item.file.fileId] = updated
+                    }
+                    sections.append(.init(info: groupEmojiPack.0, items: files, dict: dict, installed: true, groupEmojiPack: true))
+                }
                 for (_, info, _) in view.collectionInfos {
                     var files: [StickerPackItem] = []
                     var dict: [MediaId: StickerPackItem] = [:]
                     
-                    if let info = info as? StickerPackCollectionInfo {
+                    if let info = info as? StickerPackCollectionInfo, !sections.contains(where: { $0.info.id == info.id }) {
                         let items = view.entries
                         for (i, entry) in items.enumerated() {
                             if entry.index.collectionId == info.id {
@@ -2465,6 +2499,34 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        let context = chatInteraction.context
+        
+        if mode == .emoji || mode == .stories {
+            if let peer = chatInteraction.peer, peer.isSupergroup {
+                let emojiPack = getCachedDataView(peerId: peer.id, postbox: context.account.postbox) |> map { $0 as? CachedChannelData } |> map { $0?.emojiPack }
+                groupEmojiPack = emojiPack |> mapToSignal { info in
+                    if let info = info {
+                        return context.engine.stickers.loadedStickerPack(reference: .id(id: info.id.id, accessHash: info.accessHash), forceActualized: false)
+                        |> map { result in
+                            switch result {
+                            case let .result(info, items, _):
+                                return (info, items)
+                            default:
+                                return nil
+                            }
+                        }
+                        |> take(1)
+                    } else {
+                        return .single(nil)
+                    }
+                    
+                }
+            } else {
+                groupEmojiPack = .single(nil)
+            }
+        } else {
+            groupEmojiPack = .single(nil)
+        }
     }
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {

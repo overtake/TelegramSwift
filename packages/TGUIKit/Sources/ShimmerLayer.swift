@@ -30,6 +30,8 @@ private final class ShimmerEffectForegroundLayer: SimpleLayer {
     private var absoluteLocation: (CGRect, CGSize)?
     private var shouldBeAnimating = false
     
+    fileprivate var isStatic: Bool = false
+    
     override init() {
         self.imageViewContainer = SimpleLayer()
         self.imageView = SimpleLayer()
@@ -128,12 +130,28 @@ private final class ShimmerEffectForegroundLayer: SimpleLayer {
         guard let containerSize = self.absoluteLocation?.1 else {
             return
         }
+        let duration: Double = isStatic ? 0.7 : 1.5 * 1.0
+        
         let gradientHeight: CGFloat = 320.0
         self.imageView.frame = CGRect(origin: CGPoint(x: -gradientHeight, y: 0.0), size: CGSize(width: gradientHeight, height: containerSize.height))
-        let animation = self.imageView.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.width + gradientHeight) as NSNumber, keyPath: "position.x", timingFunction: .easeOut, duration: 1.3 * 1.0, delay: 0.0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
-        animation.repeatCount = Float.infinity
-        animation.beginTime = 1.0
+        let animation = self.imageView.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.width + gradientHeight) as NSNumber, keyPath: "position.x", timingFunction: .easeOut, duration: duration, delay: 0.0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
+        
+        if !isStatic {
+            animation.repeatCount = Float.infinity
+            animation.beginTime = 1.0
+        }
+        
+        if isStatic {
+            animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
+                if completed {
+                    delay(2 - duration, closure: {
+                        self?.addImageAnimation()
+                    })
+                }
+            })
+        }
         self.imageView.add(animation, forKey: "shimmer")
+
     }
 }
 
@@ -168,6 +186,12 @@ public class ShimmerLayer: SimpleLayer {
     private var currentForegroundColor: NSColor?
     private var currentShimmeringColor: NSColor?
     private var currentSize = CGSize()
+    
+    public var isStatic: Bool = false {
+        didSet {
+            effectView.isStatic = isStatic
+        }
+    }
     
     public override init() {
         self.backgroundView = SimpleLayer()

@@ -15,6 +15,7 @@ import SwiftSignalKit
 import TgVoipWebrtc
 import TelegramVoip
 import ColorPalette
+import PrivateCallScreen
 
 private let defaultWindowSize = NSMakeSize(720, 560)
 extension CallState {
@@ -1133,7 +1134,7 @@ class PhoneCallWindowController {
             } else {
                 self?.session.setToRemovableState()
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         self.window.contentView = view
@@ -1230,7 +1231,7 @@ class PhoneCallWindowController {
     @objc open func windowDidResignKey() {
         keyStateDisposable.set((session.state |> deliverOnMainQueue).start(next: { [weak self] state in
             if let strongSelf = self {
-                if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.window.isKeyWindow {
+                if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.session.isScreenCapture, !strongSelf.window.isKeyWindow {
                     switch state.videoState {
                     case .active, .paused:
                         break
@@ -1398,6 +1399,12 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 }
 
 func showCallWindow(_ session:PCallSession) {
+    
+    #if arch(arm64) && (BETA || DEBUG)
+    callScreen(session.accountContext, .success(session))
+    return
+    #endif
+    
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
             _ = controller?.session.hangUpCurrentCall().start()
@@ -1455,7 +1462,19 @@ func closeCall(minimisize: Bool = false) {
 }
 
 
+
+
+
+private var peerCall: PeerCallScreen?
 func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
+    
+    #if arch(arm64) && (BETA || DEBUG)
+
+    callScreen(context, result)
+    
+    return
+    #endif
+    
     assertOnMainThread()
     switch result {
     case let .success(session):

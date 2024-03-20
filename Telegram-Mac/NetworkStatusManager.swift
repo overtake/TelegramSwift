@@ -94,7 +94,7 @@ private enum Status : Equatable {
 
 private final class ConnectingStatusView: View {
     private let textView: TextView = TextView()
-    private let visualEffect: NSVisualEffectView
+//    private let visualEffect: NSVisualEffectView
     private let container = View()
     private var progressView: InfiniteProgressView?
     private let imageView: ImageView
@@ -104,18 +104,18 @@ private final class ConnectingStatusView: View {
     
         
     required init(frame frameRect: NSRect) {
-        self.visualEffect = NSVisualEffectView(frame: frameRect.size.bounds)
+       // self.visualEffect = NSVisualEffectView(frame: frameRect.size.bounds)
         self.imageView = ImageView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         autoresizingMask = [.width, .height]
         addSubview(imageView)
-        addSubview(self.visualEffect)
+//        addSubview(self.visualEffect)
         addSubview(container)
         container.addSubview(textView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
-        visualEffect.state = .active
-        visualEffect.blendingMode = .withinWindow
+//        visualEffect.state = .active
+//        visualEffect.blendingMode = .withinWindow
     
     }
     
@@ -133,9 +133,9 @@ private final class ConnectingStatusView: View {
         }
         self.container.center()
         self.imageView.center()
-        self.visualEffect.frame = bounds
+//        self.visualEffect.frame = bounds
         self.backgroundView?.frame = bounds
-        updateAnimation()
+      //  updateAnimation()
     }
     
     
@@ -201,7 +201,7 @@ private final class ConnectingStatusView: View {
         }
         if animated && self.backgroundView != nil {
             let current = self.backgroundView
-            backgroundView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 1.2, completion: { [weak current] _ in
+            backgroundView.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 1.2, completion: { [weak current] _ in
                 current?.removeFromSuperview()
             })
         } else {
@@ -218,11 +218,11 @@ private final class ConnectingStatusView: View {
         })
         imageView.sizeToFit()
         
-        updateAnimation()
+//        updateAnimation()
         
 //        self.visualEffect.bgColor = .clear
         
-        visualEffect.material = theme.colors.isDark ? .dark : .light
+      //  visualEffect.material = theme.colors.isDark ? .dark : .light
 
         
         if status.shouldAddProgress {

@@ -300,8 +300,8 @@ final class DesktopCapturePreviewView : HorizontalRowView {
         self.backgroundColor = backdorColor
     }
     
-    override func updateMouse() {
-        super.updateMouse()
+    override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         contentView.updateState()
     }
     

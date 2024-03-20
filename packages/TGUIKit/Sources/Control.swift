@@ -120,7 +120,7 @@ open class Control: View {
     private var mouseMovedInside: Bool = true
     private var longInvoked: Bool = false
     public var handleLongEvent: Bool = true
-    
+    public var isMoving: Bool = false
     public var scaleOnClick: Bool = false
     
     open override var backgroundColor: NSColor {
@@ -651,7 +651,7 @@ open class Control: View {
     }
     
     open override func becomeFirstResponder() -> Bool {
-        if let window = kitWindow {
+        if let window = _window {
             return window.makeFirstResponder(self)
         }
         return false

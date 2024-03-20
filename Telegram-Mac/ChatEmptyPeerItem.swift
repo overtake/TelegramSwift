@@ -19,6 +19,9 @@ class ChatEmptyPeerItem: TableRowItem {
     private(set) var image: TelegramMediaImage?
     private(set) var premiumRequired: Bool = false
     
+    private(set) var standImage: (CGImage, CGFloat)? = nil
+
+    
     override var stableId: AnyHashable {
         return 0
     }
@@ -121,6 +124,29 @@ class ChatEmptyPeerItem: TableRowItem {
         case .pinned:
             lineSpacing = nil
             _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
+        case let .customChatContents(contents):
+            switch contents.kind {
+            case .greetingMessageInput:
+                _ = attr.append(string: strings().chatEmptyBusinessGreetingMessage, color: theme.colors.text, font: .medium(.text))
+                _ = attr.append(string: "\n\n")
+                _ = attr.append(string: strings().chatEmptyBusinessGreetingMessageInfo, color: theme.colors.text, font: .normal(.text))
+                self.standImage = (NSImage(resource: .iconBusinessChatGreetings).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
+            case .awayMessageInput:
+                _ = attr.append(string: strings().chatEmptyBusinessAwayMessage, color: theme.colors.text, font: .medium(.text))
+                _ = attr.append(string: "\n\n")
+                _ = attr.append(string: strings().chatEmptyBusinessAwayMessageInfo, color: theme.colors.text, font: .normal(.text))
+                self.standImage = (NSImage(resource: .iconBusinessChatAway).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
+
+            case .quickReplyMessageInput(let shortcut):
+                _ = attr.append(string: strings().chatEmptyBusinessQuickReply, color: theme.colors.text, font: .medium(.text))
+                _ = attr.append(string: "\n\n")
+                _ = attr.append(string: strings().chatEmptyBusinessQuickReplyInfo1(shortcut), color: theme.colors.text, font: .normal(.text))
+                _ = attr.append(string: "\n")
+                _ = attr.append(string: strings().chatEmptyBusinessQuickReplyInfo2, color: theme.colors.text, font: .normal(.text))
+                self.standImage = (NSImage(resource: .iconBusinessChatQuickReply).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
+                attr.detectBoldColorInString(with: .medium(.text))
+            }
+            self._shouldBlurService = false
         }
         
         
@@ -171,6 +197,7 @@ class ChatEmptyPeerItem: TableRowItem {
                         self.textViewLayout = TextViewLayout(attr, alignment: .center)
                         self.textViewLayout.interactions = globalLinkExecutor
                         self.premiumRequired = true
+                        self.standImage = (NSImage(resource: .iconChatPremiumRequired).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 100)
                         self.view?.set(item: self)
                     }
                     
@@ -324,7 +351,7 @@ class ChatEmptyPeerView : TableRowView {
             }
             
             
-            if item.premiumRequired {
+            if let standImage = item.standImage {
                 let current: ImageView
                 if let view = self.premRequiredImageView {
                     current = view
@@ -334,7 +361,8 @@ class ChatEmptyPeerView : TableRowView {
                     bgView.addSubview(current)
                     self.premRequiredImageView = current
                 }
-                current.image = NSImage(named: "Icon_Chat_PremiumRequired")?.precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent)
+                current.setFrameSize(size.width, standImage.1)
+                current.image = standImage.0
                 current.contentGravity = .resizeAspect
             } else if let view = self.premRequiredImageView {
                 performSubviewRemoval(view, animated: false)
@@ -379,6 +407,9 @@ class ChatEmptyPeerView : TableRowView {
             if let _ = premRequiredButton {
                 h += 20
             }
+            if let premRequiredImageView {
+                h += 10
+            }
             
             bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, h + textView.frame.height + 20))
 
@@ -388,7 +419,7 @@ class ChatEmptyPeerView : TableRowView {
             bgView.center()
             
             if let view = premRequiredImageView {
-                view.centerX(y: 0)
+                view.centerX(y: 10)
                 textView.centerX(y: view.frame.maxY + 10)
             } else if let imageView = imageView {
                 imageView.centerX(y: 0)

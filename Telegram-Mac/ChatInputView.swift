@@ -216,13 +216,6 @@ class ChatInputView: View, Notifable {
     
     private var textPlaceholder: String {
         
-        guard let peer = chatInteraction.presentation.peer else {
-            return strings().messagesPlaceholderSentMessage
-        }
-        
-        if let _ = permissionText(from: peer, for: .banSendText), chatInteraction.presentation.state == .normal {
-            return strings().channelPersmissionMessageBlock
-        }
         
        
         
@@ -234,11 +227,31 @@ class ChatInputView: View, Notifable {
                 return strings().messagesPlaceholderReply
             case .topic:
                 return strings().messagesPlaceholderSentMessage
-            case .savedMessages, .saved:
-                return ""
+            case .savedMessages, .saved: 
+                break
+            }
+        }
+        if case let .customChatContents(contents) = chatInteraction.mode {
+            switch contents.kind {
+            case .awayMessageInput:
+                return strings().chatInputBusinessAway
+            case .greetingMessageInput:
+                return strings().chatInputBusinessGreeting
+            case .quickReplyMessageInput:
+                return strings().chatInputBusinessQuickReply
             }
         }
         
+        guard let peer = chatInteraction.presentation.peer else {
+            return strings().messagesPlaceholderSentMessage
+        }
+        
+        if let _ = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), chatInteraction.presentation.state == .normal {
+            return strings().channelPersmissionMessageBlock
+        }
+        
+
+            
         if let cachedData = chatInteraction.presentation.cachedData as? CachedChannelData {
             let viewForumAsMessages = cachedData.viewForumAsMessages.knownValue
             if peer.isForum, viewForumAsMessages == true {
@@ -464,8 +477,8 @@ class ChatInputView: View, Notifable {
                 layout.measure(width: frame.width - 40)
                 layout.interactions = globalLinkExecutor
                 textView.update(layout)
-                
                 current.addSubview(textView)
+                textView.center()
             } else if let view = blockText {
                 performSubviewRemoval(view, animated: animated)
                 blockText = nil
@@ -572,7 +585,7 @@ class ChatInputView: View, Notifable {
             self.accessory.change(opacity: 0.0, animated: animated)
         }
         
-        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText), state == .normal {
+        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), state == .normal {
             let context = chatInteraction.context
             let current: Control
             if let view = self.disallowText {
@@ -600,7 +613,7 @@ class ChatInputView: View, Notifable {
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
         
-        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText), state.state == .normal {
+        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText, cachedData: state.cachedData), state.state == .normal {
             textView.inputView.isEditable = false
             textView.isHidden = false
         } else {
@@ -927,7 +940,7 @@ class ChatInputView: View, Notifable {
             }
         }
         
-        if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
+        if let window = _window, self.chatState == .normal || self.chatState == .editing {
             
             if let string = pasteboard.string(forType: .string) {
                 interaction.update { current in

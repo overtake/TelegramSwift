@@ -14,6 +14,28 @@ import TelegramCore
 import TGModernGrowingTextView
 import InputView
 
+private func concatAttributes(_ attributes: [ChatTextInputAttribute]) -> [ChatTextInputAttribute] {
+    guard !attributes.isEmpty else { return [] }
+
+    let sortedAttributes = attributes.sorted { $0.weight < $1.weight }
+    var mergedAttributes = [ChatTextInputAttribute]()
+
+    var currentAttribute = sortedAttributes.first!
+
+    for attribute in sortedAttributes.dropFirst() {
+        if currentAttribute.isSameAttribute(attribute) && currentAttribute.intersectsOrAdjacent(with: attribute) {
+            currentAttribute.merge(with: attribute)
+        } else {
+            mergedAttributes.append(currentAttribute)
+            currentAttribute = attribute
+        }
+    }
+    // Append the last merged or unmerged attribute
+    mergedAttributes.append(currentAttribute)
+
+    return mergedAttributes
+}
+
 private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__|~~|\\|\\|)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)"
 
 
@@ -166,7 +188,60 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
 
 extension ChatTextInputAttribute {
 
+    
+    func isSameAttribute(_ rhs: ChatTextInputAttribute) -> Bool {
+        switch self {
+        case .bold:
+            return rhs.weight == rhs.weight
+        case .strikethrough:
+            return rhs.weight == rhs.weight
+        case .spoiler:
+            return rhs.weight == rhs.weight
+        case .underline:
+            return rhs.weight == rhs.weight
+        case .italic:
+            return rhs.weight == rhs.weight
+        case .pre:
+            return rhs.weight == rhs.weight
+        case .code:
+            return rhs.weight == rhs.weight
+        case .quote:
+            return rhs.weight == rhs.weight
+        case let .uid(_, id):
+            switch rhs {
+            case .uid(_, id):
+                return true
+            default:
+                return false
+            }
+        case let .url(_, string):
+            switch rhs {
+            case .url(_, string):
+                return true
+            default:
+                return false
+            }
+        case .animated(_, let string, let id, let file, let itemCollectionId):
+            switch rhs {
+            case .animated(_, string, id, file, itemCollectionId):
+                return true
+            default:
+                return false
+            }
+        }
+    }
 
+    func intersectsOrAdjacent(with attribute: ChatTextInputAttribute) -> Bool {
+        return self.range.upperBound >= attribute.range.lowerBound && self.range.lowerBound <= attribute.range.upperBound
+    }
+
+    // Merge two attributes into one with a combined range
+    mutating func merge(with attribute: ChatTextInputAttribute) {
+        let newStart = min(self.range.lowerBound, attribute.range.lowerBound)
+        let newEnd = max(self.range.upperBound, attribute.range.upperBound)
+        self = self.updateRange(newStart..<newEnd)
+    }
+    
     var range:Range<Int> {
         switch self {
         case let .bold(range), let .italic(range), let .pre(range, _), let .code(range), let .strikethrough(range), let .spoiler(range), let .underline(range):
@@ -575,7 +650,7 @@ final class ChatTextInputState: Codable, Equatable {
                             let test = lang.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                             if test.length == lang.length {
                                 language = lang
-                                offsetRanges.append(NSMakeRange(newLineRange.location, lang.length))
+                                offsetRanges.append(NSMakeRange(matchIndex + newLineRange.location, lang.length))
                                 text = String(text.nsstring.substring(with: NSMakeRange(newLineRange.location, text.length - newLineRange.location)))
                                 rawOffset -= newLineRange.location
                             }
@@ -718,6 +793,8 @@ final class ChatTextInputState: Codable, Equatable {
             }
         }
     
+        attributes = concatAttributes(attributes).sorted(by: { $0.range.lowerBound < $1.range.lowerBound })
+        
         return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)
 
     }

@@ -439,8 +439,8 @@ open class AppMenuRowView: AppMenuBasicItemView {
         NSCursor.arrow.set()
     }
     
-    open override func updateMouse() {
-        super.updateMouse()
+    open override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         updateColors()
         containerView.updateState()
     }

@@ -77,11 +77,12 @@ class GeneralContainableRowView : TableRowView {
         guard let item = item as? GeneralRowItem else {
             return
         }
-        let blockWidth = min(maxBlockWidth, frame.width - item.inset.left - item.inset.right)
+        let blockWidth = min(item.viewType == .legacy ? size.width : maxBlockWidth, size.width - item.inset.left - item.inset.right)
         
-        transition.updateFrame(view: self.containerView, frame:  NSMakeRect(floorToScreenPixels(backingScaleFactor, (maxWidth - blockWidth) / 2), item.inset.top, blockWidth, maxHeight - item.inset.bottom - item.inset.top))
+        let rect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (size.width - blockWidth) / 2), item.inset.top, blockWidth, size.height - item.inset.bottom - item.inset.top)
+        transition.updateFrame(view: self.containerView, frame: rect)
         
-        self.containerView.setCorners(item.viewType.corners)
+        self.containerView.setCorners(item.viewType.corners, animated: transition.isAnimated, frame: rect)
 
         transition.updateFrame(view: borderView, frame: NSMakeRect(item.viewType.innerInset.left + additionBorderInset, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - additionBorderInset, .borderSize))
     }

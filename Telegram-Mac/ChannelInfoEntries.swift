@@ -235,7 +235,32 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     func openNameColor(peer: Peer) {
-        pushViewController(SelectColorController(context: context, source: .channel(peer)))
+        pushViewController(SelectColorController(context: context, peer: peer))
+    }
+    
+    func archiveStories() {
+        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true), standalone: true, isArchived: true))
+    }
+    
+    func boosts(_ access: GroupAccess) {
+        let context = self.context
+        
+        if access.isCreator || self.peer?.isAdmin == true {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId, isGroup: true))
+        } else {
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        }
     }
     
     func openRequests() {
@@ -1267,8 +1292,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             }
             
             if channel.hasPermission(.changeInfo) {
-                entries.append(.signMessages(sectionId: .sign, sign: messagesShouldHaveSignatures, viewType: .singleItem))
-                entries.append(.signDesc(sectionId: .sign, viewType: .textBottomItem))
+//                entries.append(.signMessages(sectionId: .sign, sign: messagesShouldHaveSignatures, viewType: .singleItem))
+//                entries.append(.signDesc(sectionId: .sign, viewType: .textBottomItem))
             }
             if channel.flags.contains(.isCreator) {
                 entries.append(.leave(sectionId: .destruct, isCreator: channel.flags.contains(.isCreator), viewType: .singleItem))

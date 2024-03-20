@@ -102,13 +102,15 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let storyMedia = message.media.first as? TelegramMediaStory
     let isMediaStory = storyMedia?.storyId.peerId == context.peerId ? false : storyMedia != nil
     
+    
+    let incoming: Bool = message.isIncoming(context.account, false)
     let isRead: Bool
     if case let .MessageEntry(_, _, _isRead, _, _, _, _) = entry {
-        isRead = _isRead
+        isRead = _isRead || incoming
     } else if case let .groupedPhotos(entries, _) = entry, case let .MessageEntry(_, _, _isRead, _, _, _, _) = entries.first {
-        isRead = _isRead
+        isRead = _isRead || incoming
     } else {
-        isRead = false
+        isRead = incoming
     }
     
     var file: TelegramMediaFile? = nil
@@ -416,7 +418,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if data.chatMode.threadId == nil, let peer = peer, peer.isSupergroup {
-            if let attr = data.message.threadAttr, attr.count > 0 {
+            if let attr = data.message.threadAttr, attr.count > 0, mode != .scheduled {
                 var messageId: MessageId = message.id
                 var modeIsReplies = true
                 if let source = message.sourceReference {
@@ -447,7 +449,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
     //    if !data.message.isCopyProtected() {
-        if let textLayout = data.textLayout?.0 {
+        if let textLayout = data.textLayout?.0, mode.customChatContents == nil {
             
             if !textLayout.selectedRange.hasSelectText {
                 let text = message.text
@@ -525,22 +527,19 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }
                         thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
                             if let textLayout = textLayout {
-                                let result = textLayout.interactions.copy?()
                                 let attr = textLayout.attributedString
-                                if let result = result, !result {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.declareTypes([.string], owner: textLayout)
-                                    var effectiveRange = textLayout.selectedRange.range
-                                    let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                                    let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                                    if !isCopied {
-                                        let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                        if let attribute = attribute as? inAppLink {
-                                            pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                        } else {
-                                            pb.setString(selectedText.string, forType: .string)
-                                        }
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.declareTypes([.string], owner: textLayout)
+                                var effectiveRange = textLayout.selectedRange.range
+                                let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                                let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
+                                if !isCopied {
+                                    let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                    if let attribute = attribute as? inAppLink {
+                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                    } else {
+                                        pb.setString(selectedText.string, forType: .string)
                                     }
                                 }
                             }
@@ -601,7 +600,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
         }
         
-        if !data.message.isScheduledMessage, let peer = peer, !peer.isDeleted, isNotFailed, data.peerId == data.message.id.peerId, !isService {
+        if !data.message.isScheduledMessage, let peer = peer, !peer.isDeleted, isNotFailed, data.peerId == data.message.id.peerId, !isService, mode.customChatContents == nil {
             
             let needUnpin = data.pinnedMessage?.others.contains(data.message.id) == true
             let pinAndOld: Bool

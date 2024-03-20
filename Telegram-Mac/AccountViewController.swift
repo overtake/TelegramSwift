@@ -67,7 +67,7 @@ fileprivate final class AccountInfoArguments {
     let openFaq:()->Void
     let ask:()->Void
     let openUpdateApp:() -> Void
-    let openPremium:()->Void
+    let openPremium:(Bool)->Void
     let giftPremium:()->Void
     let addAccount:([AccountWithInfo])->Void
     let setStatus:(Control, TelegramUser)->Void
@@ -75,7 +75,7 @@ fileprivate final class AccountInfoArguments {
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
     let openStory:(StoryInitialIndex?)->Void
     let openWebBot:(AttachMenuBot)->Void
-    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, giftPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void) {
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping(Bool)->Void, giftPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void) {
         self.context = context
         self.storyList = storyList
         self.presentController = presentController
@@ -141,6 +141,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case update(index: Int, viewType: GeneralViewType, state: AnyUpdateStateEquatable)
     case filters(index: Int, viewType: GeneralViewType)
     case premium(index: Int, viewType: GeneralViewType)
+    case business(index: Int, viewType: GeneralViewType)
     case giftPremium(index: Int, viewType: GeneralViewType)
     case about(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
@@ -190,16 +191,18 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(17)
         case .premium:
             return .index(18)
-        case .giftPremium:
+        case .business:
             return .index(19)
-        case .faq:
+        case .giftPremium:
             return .index(20)
-        case .ask:
+        case .faq:
             return .index(21)
-        case .about:
+        case .ask:
             return .index(22)
+        case .about:
+            return .index(23)
         case let .attach(index, _, _):
-            return .index(23 + index)
+            return .index(24 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -248,6 +251,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .filters(index, _):
             return index
         case let .premium(index, _):
+            return index
+        case let .business(index, _):
             return index
         case let .giftPremium(index, _):
             return index
@@ -397,7 +402,11 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .premium(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPremium, icon: theme.icons.settingsPremium, activeIcon: theme.icons.settingsPremium, type: .next, viewType: viewType, action: {
-                arguments.openPremium()
+                arguments.openPremium(false)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .business(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsTelegramBusiness, icon: theme.icons.settingsBusiness, activeIcon: theme.icons.settingsBusinessActive, type: .next, viewType: viewType, action: {
+                arguments.openPremium(true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .giftPremium(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGiftPremium, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
@@ -606,6 +615,8 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     
     if !context.premiumIsBlocked {
         entries.append(.premium(index: index, viewType: .singleItem))
+        index += 1
+        entries.append(.business(index: index, viewType: .singleItem))
         index += 1
         
         entries.append(.giftPremium(index: index, viewType: .singleItem))
@@ -863,8 +874,15 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             #if !APP_STORE
             navigation.push(AppUpdateViewController(), false)
             #endif
-        }, openPremium: {
-            showModal(with: PremiumBoardingController(context: context), for: context.window)
+        }, openPremium: { [weak self] business in
+            guard let navigation = self?.navigation as? MajorNavigationController else {return}
+            if business, context.isPremium {
+                if !(navigation.controller is PremiumBoardingController) {
+                    navigation.push(PremiumBoardingController(context: context, source: .business_standalone), false)
+                }
+            } else {
+                showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
+            }
         }, giftPremium: {
             
             let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
@@ -1025,6 +1043,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 }
             } else if navigation.controller is PassportController {
                 if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
+                    _ = tableView.select(item: item)
+                }
+            } else if let controller = navigation.controller as? PremiumBoardingController {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                     _ = tableView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {

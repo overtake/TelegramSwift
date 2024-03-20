@@ -261,6 +261,8 @@ func initialize() -> [String] {
     array.append("settingsUpdateActive")
     array.append("settingsFiltersActive")
     array.append("settingsProfile")
+    array.append("settingsBusiness")
+    array.append("settingsBusinessActive")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")
@@ -494,6 +496,8 @@ func initialize() -> [String] {
     array.append("chat_filter_non_contacts_avatar")
     array.append("chat_filter_archive_avatar")
     
+    array.append("chat_filter_new_chats")
+    array.append("chat_filter_existing_chats")
 
     array.append("group_invite_via_link")
     
@@ -527,6 +531,13 @@ func initialize() -> [String] {
     array.append("profile_unblock")
     array.append("profile_translate")
     array.append("profile_join_channel")
+    array.append("profile_boost")
+    array.append("profile_archive")
+    
+    array.append("stats_boost_boost")
+    array.append("stats_boost_giveaway")
+    array.append("stats_boost_info")
+
 
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
@@ -912,11 +923,15 @@ func initialize() -> [String] {
     array.append("channel_feature_reaction")
     array.append("channel_feature_status")
     array.append("channel_feature_stories")
-    
+    array.append("channel_feature_emoji_pack")
+    array.append("channel_feature_voice_to_text")
+
     array.append("chat_hidden_author")
     array.append("chat_my_notes")
     
     array.append("premium_required_forward")
+    
+    array.append("create_new_message_general")
 
     return array
 }

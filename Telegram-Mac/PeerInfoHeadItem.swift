@@ -14,7 +14,7 @@ import TelegramCore
 import ColorPalette
 import TelegramMedia
 
-fileprivate final class ActionButton : Control {
+final class ActionButton : Control {
     fileprivate let imageView: ImageView = ImageView()
     fileprivate let textView: TextView = TextView()
     
@@ -87,7 +87,6 @@ fileprivate final class ActionButton : Control {
         super.layout()
         imageView.centerX(y: 5)
         textView.centerX(y: frame.height - textView.frame.height - 11)
-        
     }
 }
 
@@ -115,10 +114,8 @@ extension TelegramPeerPhoto : Equatable {
     }
 }
 
-fileprivate let actionItemWidth: CGFloat = 145
-fileprivate let actionItemInsetWidth: CGFloat = 20
 
-private struct SubActionItem {
+struct SubActionItem {
     let text: String
     let destruct: Bool
     let action:()->Void
@@ -131,7 +128,12 @@ private struct SubActionItem {
     }
 }
 
-private final class ActionItem {
+final class ActionItem {
+    
+    static let actionItemWidth: CGFloat = 145
+    static let actionItemInsetWidth: CGFloat = 20
+
+    
     let text: String
     let destruct: Bool
     let image: CGImage
@@ -151,9 +153,9 @@ private final class ActionItem {
         self.subItems = subItems
         self.destruct = destruct
         self.textLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), alignment: .center)
-        self.textLayout.measure(width: actionItemWidth)
+        self.textLayout.measure(width: ActionItem.actionItemWidth)
         
-        self.size = NSMakeSize(actionItemWidth, image.backingSize.height + textLayout.layoutSize.height + 10)
+        self.size = NSMakeSize(ActionItem.actionItemWidth, image.backingSize.height + textLayout.layoutSize.height + 10)
     }
     
 }
@@ -164,7 +166,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     var rowItemsCount: Int = 1
     
-    while width - (actionItemWidth + actionItemInsetWidth) > ((actionItemWidth * CGFloat(rowItemsCount)) + (CGFloat(rowItemsCount - 1) * actionItemInsetWidth)) {
+    while width - (ActionItem.actionItemWidth + ActionItem.actionItemInsetWidth) > ((ActionItem.actionItemWidth * CGFloat(rowItemsCount)) + (CGFloat(rowItemsCount - 1) * ActionItem.actionItemInsetWidth)) {
         rowItemsCount += 1
     }
     rowItemsCount = min(rowItemsCount, 4)
@@ -266,6 +268,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     } else if let peer = item.peer, peer.isSupergroup || peer.isGroup, let arguments = item.arguments as? GroupInfoArguments {
         let access = peer.groupAccess
         
+       
         if access.canAddMembers {
             items.append(ActionItem(text: strings().peerInfoActionAddMembers, color: item.accentColor, image: theme.icons.profile_add_member, animation: .menu_plus, action: {
                 arguments.addMember(access.canCreateInviteLink)
@@ -276,6 +279,17 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 arguments.toggleNotifications(value)
             }))
         }
+        if peer.isSupergroup {
+            items.append(ActionItem(text: strings().peerInfoActionBoostGroup, color: item.accentColor, image: theme.icons.profile_boost, animation: .menu_boost, action: {
+                arguments.boosts(peer.groupAccess)
+            }))
+            if peer.groupAccess.canEditGroupInfo {
+                items.append(ActionItem(text: strings().peerInfoActionAcrhivedStories, color: item.accentColor, image: theme.icons.profile_archive, animation: .menu_archive, action: {
+                    arguments.archiveStories()
+                }))
+            }
+        }
+       
         
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData, let peer = peer as? TelegramChannel {
@@ -372,6 +386,18 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
+        
+        items.append(ActionItem(text: strings().peerInfoActionBoostChannel, color: item.accentColor, image: theme.icons.profile_boost, animation: .menu_boost, action: {
+            arguments.boosts(peer.groupAccess)
+        }))
+        
+        if peer.groupAccess.canEditGroupInfo {
+            
+            items.append(ActionItem(text: strings().peerInfoActionAcrhivedStories, color: item.accentColor, image: theme.icons.profile_archive, animation: .menu_archive, action: {
+                arguments.archiveStories()
+            }))
+        }
+        
         if let address = peer.addressName, !address.isEmpty {
             items.append(ActionItem(text: strings().peerInfoActionShare, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_share, action: arguments.share))
         }
@@ -617,7 +643,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 colors = .default
             }
             
-            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme, activeColors: colors)
+            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme, activeColors: colors, isRoundedRect: peer?.isForum == true)
             self.avatarStoryComponent = compoment
         } else {
             self.avatarStoryComponent = nil
@@ -1371,9 +1397,9 @@ private final class PeerInfoHeadView : GeneralRowView {
             return 0
         }
         
-        let width = (item.blockWidth - (actionItemInsetWidth * CGFloat(items.count - 1)))
+        let width = (item.blockWidth - (ActionItem.actionItemInsetWidth * CGFloat(items.count - 1)))
         
-        return max(actionItemWidth, min(170, width / CGFloat(items.count)))
+        return max(ActionItem.actionItemWidth, min(170, width / CGFloat(items.count)))
     }
     
     private func layoutActionItems(_ items: [ActionItem], animated: Bool) {
@@ -1393,7 +1419,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             
             let actionItemWidth = _actionItemWidth(items)
             
-            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * actionItemInsetWidth, maxActionSize.height), animated: animated)
+            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * ActionItem.actionItemInsetWidth, maxActionSize.height), animated: animated)
             
             var x: CGFloat = inset
             
@@ -1402,7 +1428,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 view.updateAndLayout(item: item, bgColor: rowItem.actionColor)
                 view.setFrameSize(NSMakeSize(actionItemWidth, maxActionSize.height))
                 view.change(pos: NSMakePoint(x, 0), animated: false)
-                x += actionItemWidth + actionItemInsetWidth
+                x += actionItemWidth + ActionItem.actionItemInsetWidth
             }
             
         } else {

@@ -16,15 +16,12 @@ private let sceneVersion: Int = 2
 
 
 
-private func deg2rad(_ number: Float) -> Float {
-    return number * .pi / 180
+protocol PremiumSceneView {
+    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
+    func playAgain()
 }
 
-private func rad2deg(_ number: Float) -> Float {
-    return number * 180.0 / .pi
-}
-
-final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
+final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneView {
    
     private let sceneView: SCNView
     

@@ -10,6 +10,7 @@ import InAppSettings
 import IOKit
 import CodeSyntax
 import Dock
+import PrivateCallScreen
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -523,17 +524,21 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
-        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-//            context.bindings.rootNavigation().push(ChatListController(context, modal: false, mode: .savedMessagesChats))
-            //setCustomAppIcon(fromPath: "/Users/mikerenoir/Downloads/AppIcon.icns")
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            showModal(with: FragmentMonetizationPromoController(context: context, peerId: context.peerId), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-//        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-//            showModal(with: GiveawayModalController(context: context, peerId: context.peerId), for: context.window)
-//
-//            return .invoked
-//        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            showModal(with: FragmentUsernameController(context: context, peer: .init(context.myPeer!), username: "news"), for: context.window)
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+        
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            context.bindings.rootNavigation().push(FragmentMonetizationController(context: context, peerId: context.peerId))
+            return .invoked
+        }, with: self, for: .R, priority: .supreme, modifierFlags: [.command])
+
         #endif
         
         

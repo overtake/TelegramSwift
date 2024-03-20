@@ -584,10 +584,10 @@ private func minimumSize(_ data: ModalAlertData) -> NSSize {
     return size
 }
 
-private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
-
+private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, onDeinit:(()->Void)?, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
+    
     let actionsDisposable = DisposableSet()
-
+    
     let initialState = State(data: data)
     
     var close:(()->Void)? = nil
@@ -597,7 +597,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
-
+    
     let arguments = Arguments(presentation: presentation, action: {
         let state = stateValue.with { $0 }
         if state.actionEnabled {
@@ -643,7 +643,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     }
     
     //!TODO CALC WIDTH SIZE
-
+    
     
     
     
@@ -679,6 +679,10 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     controller.didLoad = { controller, _ in
         controller.tableView.verticalScrollElasticity = .none
     }
+    
+    controller.onDeinit = {
+        onDeinit?()
+    }
 
     close = { [weak modalController] in
         modalController?.modal?.close()
@@ -690,7 +694,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
 
 
 
-func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, presentation: TelegramPresentationTheme = theme) {
-    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, presentation: presentation), for: window, animationType: .scaleCenter)
+func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, onDeinit:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
+    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, onDeinit: onDeinit, presentation: presentation), for: window, animationType: .scaleCenter)
 }
 

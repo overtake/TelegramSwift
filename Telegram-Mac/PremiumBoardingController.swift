@@ -62,8 +62,11 @@ enum PremiumLogEventsSource : Equatable {
     case no_ads
     case recommended_channels
     case last_seen
-    case messages_privacy
+    case message_privacy
     case saved_tags
+    case business
+    case business_standalone
+    case folder_tags
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -108,10 +111,16 @@ enum PremiumLogEventsSource : Equatable {
             return "recommended_channels"
         case .last_seen:
             return "last_seen"
-        case .messages_privacy:
-            return "messages_privacy"
+        case .message_privacy:
+            return "message_privacy"
         case .saved_tags:
             return "saved_tags"
+        case .business:
+            return "business"
+        case .business_standalone:
+            return "business_standalone"
+        case .folder_tags:
+            return "folder_tags"
         }
     }
     
@@ -153,12 +162,18 @@ enum PremiumLogEventsSource : Equatable {
             return .no_ads
         case .recommended_channels:
             return nil
-        case .last_seen:
-            return nil
-        case .messages_privacy:
-            return nil
         case .saved_tags:
             return .saved_tags
+        case .last_seen:
+            return .last_seen
+        case .message_privacy:
+            return .message_privacy
+        case .business:
+            return nil
+        case .business_standalone:
+            return nil
+        case .folder_tags:
+            return .folder_tags
         }
     }
     
@@ -256,18 +271,45 @@ enum PremiumValue : String {
     case wallpapers
     case peer_colors
     case saved_tags
+    case last_seen
+    case message_privacy
+    
+    case business
+    
+    case business_location
+    case business_hours
+    case quick_replies
+    case greeting_message
+    case away_message
+    case business_bots
+    
+    case folder_tags
+    
+    var isBusiness: Bool {
+        switch self {
+        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots:
+            return true
+        default:
+            return false
+        }
+    }
+    
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xef6922),
+                                 NSColor(rgb: 0xD6593E),
                                  NSColor(rgb: 0xe95a2c),
                                  NSColor(rgb: 0xe74e33),
+                                 NSColor(rgb: 0xe54837),
                                  NSColor(rgb: 0xe3433c),
                                  NSColor(rgb: 0xdb374b),
                                  NSColor(rgb: 0xcb3e6d),
                                  NSColor(rgb: 0xbc4395),
                                  NSColor(rgb: 0xab4ac4),
                                  NSColor(rgb: 0x9b4fed),
+                                 NSColor(rgb: 0x7861ff),
                                  NSColor(rgb: 0x8958ff),
                                  NSColor(rgb: 0x676bff),
+                                 NSColor(rgb: 0x4e8aea),
                                  NSColor(rgb: 0x5b79ff),
                                  NSColor(rgb: 0x4492ff),
                                  NSColor(rgb: 0x429bd5),
@@ -275,20 +317,34 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x3eb26d),
                                  NSColor(rgb: 0x3dbd4a),
                                  NSColor(rgb: 0x51c736)]
+        return [colors[min(index, colors.count - 1)]]
+    }
+    
+    func businessGradient(_ index: Int) -> [NSColor] {
+        let colors = [
+            NSColor(red: 0, green: 0.478, blue: 1, alpha: 1),
+            NSColor(red: 0.675, green: 0.392, blue: 0.953, alpha: 1),
+            NSColor(red: 0.937, green: 0.412, blue: 0.133, alpha: 1),
+            NSColor(red: 0.914, green: 0.365, blue: 0.267, alpha: 1),
+            NSColor(red: 0.949, green: 0.51, blue: 0.165, alpha: 1),
+            NSColor(red: 0.906, green: 0.584, blue: 0.098, alpha: 1)
+        ]
         return [colors[index]]
     }
     
-    func icon(_ index: Int, presentation: TelegramPresentationTheme) -> CGImage {
+    func icon(_ index: Int, business: Bool, presentation: TelegramPresentationTheme) -> CGImage {
         let image = self.image(presentation)
         let size = image.backingSize
         let img = generateImage(size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
             ctx.clip(to: size.bounds, mask: image)
             
-            let colors = gradient(index).compactMap { $0.cgColor } as NSArray
+            let gradient: [NSColor] = business ? businessGradient(index) : gradient(index)
+            
+            let colors = gradient.compactMap { $0.cgColor } as NSArray
 
-            if gradient(index).count == 1 {
-                ctx.setFillColor(gradient(index)[0].cgColor)
+            if gradient.count == 1 {
+                ctx.setFillColor(gradient[0].cgColor)
                 ctx.fill(size.bounds)
             } else {
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -317,39 +373,59 @@ enum PremiumValue : String {
     func image(_ presentation: TelegramPresentationTheme) -> CGImage {
         switch self {
         case .double_limits:
-            return NSImage(named: "Icon_Premium_Boarding_X2")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingX2).precomposed(presentation.colors.accent)
         case .more_upload:
-            return NSImage(named: "Icon_Premium_Boarding_Files")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingFiles).precomposed(presentation.colors.accent)
         case .faster_download:
-            return NSImage(named: "Icon_Premium_Boarding_Speed")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingSpeed).precomposed(presentation.colors.accent)
         case .voice_to_text:
-            return NSImage(named: "Icon_Premium_Boarding_Voice")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingVoice).precomposed(presentation.colors.accent)
         case .no_ads:
-            return NSImage(named: "Icon_Premium_Boarding_Ads")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingAds).precomposed(presentation.colors.accent)
         case .infinite_reactions:
-            return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingReactions).precomposed(presentation.colors.accent)
         case .emoji_status:
-            return NSImage(named: "Premium_Boarding_Status")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingStatus).precomposed(presentation.colors.accent)
         case .premium_stickers:
-            return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingStickers).precomposed(presentation.colors.accent)
         case .animated_emoji:
-            return NSImage(named: "Icon_Premium_Boarding_Emoji")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingEmoji).precomposed(presentation.colors.accent)
         case .advanced_chat_management:
-            return NSImage(named: "Icon_Premium_Boarding_Chats")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingChats).precomposed(presentation.colors.accent)
         case .profile_badge:
-            return NSImage(named: "Icon_Premium_Boarding_Badge")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingBadge).precomposed(presentation.colors.accent)
         case .animated_userpics:
-            return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingProfile).precomposed(presentation.colors.accent)
         case .translations:
-            return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingTranslations).precomposed(presentation.colors.accent)
         case .stories:
-            return NSImage(named: "Icon_Premium_Stories")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumStories).precomposed(presentation.colors.accent)
         case .wallpapers:
-            return NSImage(named: "Icon_Premium_Wallpapers")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumWallpapers).precomposed(presentation.colors.accent)
         case .peer_colors:
-            return NSImage(named: "Icon_Premium_Peer_Colors")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumPeerColors).precomposed(presentation.colors.accent)
         case .saved_tags:
-            return NSImage(named: "Icon_Premium_Boarding_Tag")!.precomposed(presentation.colors.accent)
+            return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
+        case .last_seen:
+            return NSImage(resource: .iconPremiumBoardingLastSeen).precomposed(presentation.colors.accent)
+        case .message_privacy:
+            return NSImage(resource: .iconPremiumBoardingMessagePrivacy).precomposed(presentation.colors.accent)
+        case .business:
+            return NSImage(resource: .iconPremiumBoardingBusiness).precomposed(presentation.colors.accent)
+        case .business_location:
+            return NSImage(resource: .iconPremiumBusinessLocation).precomposed(presentation.colors.accent)
+        case .business_hours:
+            return NSImage(resource: .iconPremiumBusinessHours).precomposed(presentation.colors.accent)
+        case .quick_replies:
+            return NSImage(resource: .iconPremiumBusinessQuickReply).precomposed(presentation.colors.accent)
+        case .greeting_message:
+            return NSImage(resource: .iconPremiumBusinessGreeting).precomposed(presentation.colors.accent)
+        case .away_message:
+            return NSImage(resource: .iconPremiumBusinessAway).precomposed(presentation.colors.accent)
+        case .business_bots:
+            return NSImage(resource: .iconPremiumBusinessBot).precomposed(presentation.colors.accent)
+        case .folder_tags:
+            return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
         }
     }
     
@@ -389,6 +465,26 @@ enum PremiumValue : String {
             return strings().premiumBoardingColorsTitle
         case .saved_tags:
             return strings().premiumBoardingSavedTagsTitle
+        case .last_seen:
+            return strings().premiumBoardingLastSeenTitle
+        case .message_privacy:
+            return strings().premiumBoardingMessagePrivacyTitle
+        case .business:
+            return strings().premiumBoardingBusinessTelegramBusiness
+        case .business_location:
+            return strings().premiumBoardingBusinessLocation
+        case .business_hours:
+            return strings().premiumBoardingBusinessOpeningHours
+        case .quick_replies:
+            return strings().premiumBoardingBusinessQuickReplies
+        case .greeting_message:
+            return strings().premiumBoardingBusinessGreetingMessages
+        case .away_message:
+            return strings().premiumBoardingBusinessAwayMessages
+        case .business_bots:
+            return strings().premiumBoardingBusinessChatBots
+        case .folder_tags:
+            return strings().premiumBoardingTagFolders
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -427,6 +523,26 @@ enum PremiumValue : String {
             return strings().premiumBoardingColorsInfo
         case .saved_tags:
             return strings().premiumBoardingSavedTagsInfo
+        case .last_seen:
+            return strings().premiumBoardingLastSeenInfo
+        case .message_privacy:
+            return strings().premiumBoardingMessagePrivacyInfo
+        case .business:
+            return strings().premiumBoardingBusinessTelegramBusinessInfo
+        case .business_location:
+            return strings().premiumBoardingBusinessLocationInfo
+        case .business_hours:
+            return strings().premiumBoardingBusinessOpeningHoursInfo
+        case .quick_replies:
+            return strings().premiumBoardingBusinessQuickRepliesInfo
+        case .greeting_message:
+            return strings().premiumBoardingBusinessGreetingMessagesInfo
+        case .away_message:
+            return strings().premiumBoardingBusinessAwayMessagesInfo
+        case .business_bots:
+            return strings().premiumBoardingBusinessChatBotsInfo
+        case .folder_tags:
+            return strings().premiumBoardingTagFoldersInfo
         }
     }
 }
@@ -434,7 +550,9 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags]
+    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags, .last_seen, .message_privacy]
+    var businessValues: [PremiumValue] = []
+    
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
@@ -485,11 +603,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     
-
-    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy, sceneType: state.source == .business_standalone || state.source == .business ? .coin : .star)
     }))
     index += 1
     
@@ -523,55 +639,85 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         index += 1
 
-        entries.append(.sectionId(sectionId, type: .customModern(15)))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
-    
-    for (i, value) in state.values.enumerated() {
-        let viewType = bestGeneralViewType(state.values, for: i)
-        
-        struct Tuple : Equatable {
-            let value: PremiumValue
-            let isNew: Bool
-        }
-        let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in
-                arguments.openFeature(value, true)
-            })
-        }))
-        index += 1
-    }
-    
-    
-    if !state.isPremium {
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: arguments.presentation.colors.listGrayText, isDark: theme.colors.isDark, bubbled: theme.bubbled)
-
-        entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
-    } else {
-        
-        entries.append(.sectionId(sectionId, type: .customModern(15)))
-        sectionId += 1
-
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingAboutTitle.uppercased()), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textTopItem)))
-        index += 1
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_about"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text))
-        }))
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { _ in
+    if state.source == .business || state.source == .business_standalone, !state.businessValues.isEmpty {
+        for (i, value) in state.businessValues.enumerated() {
+            let viewType = bestGeneralViewType(state.businessValues, for: i)
             
-        }), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
+            struct Tuple : Equatable {
+                let value: PremiumValue
+                let isNew: Bool
+            }
+            let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in
+                    arguments.openFeature(value, true)
+                })
+            }))
+            index += 1
+        }
+        
+        if state.source == .business {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("+\(state.values.count) MORE TELEGRAM PREMIUM FEATURES"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+        }
+    }
+    
+    if state.source != .business_standalone {
+        for (i, value) in state.values.enumerated() {
+            let viewType = bestGeneralViewType(state.values, for: i)
+            
+            struct Tuple : Equatable {
+                let value: PremiumValue
+                let isNew: Bool
+            }
+            let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in
+                    arguments.openFeature(value, true)
+                })
+            }))
+            index += 1
+        }
+        
+        if !state.isPremium {
+            let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: arguments.presentation.colors.listGrayText, isDark: theme.colors.isDark, bubbled: theme.bubbled)
 
+            entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+        } else {
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingAboutTitle.uppercased()), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_about"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text))
+            }))
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { _ in
+                
+            }), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+
+        }
     }
     
     
-    entries.append(.sectionId(sectionId, type: .customModern(15)))
+    
+    
+    
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
    
@@ -708,7 +854,7 @@ private final class PremiumBoardingView : View {
     }
 
     
-    private let headerView: HeaderView
+    let headerView: HeaderView
     let tableView = TableView()
     private var bottomView: View?
     private let bottomBorder = View()
@@ -960,6 +1106,7 @@ final class PremiumBoardingController : ModalViewController {
         self.openFeatures = openFeatures
         self.presentation = presentation
         super.init(frame: NSMakeRect(0, 0, 380, 530))
+        bar = .init(height: 50, enableBorder: false)
     }
     
     override var hasBorder: Bool {
@@ -1024,6 +1171,27 @@ final class PremiumBoardingController : ModalViewController {
     
     private var arguments: Arguments?
     
+    override var enableBack: Bool {
+        return true
+    }
+    
+    
+    override func loadView() {
+        if self.source == .business_standalone {
+            self.leftBarView = getLeftBarViewOnce()
+            self.centerBarView = getCenterBarViewOnce()
+            self.rightBarView = getRightBarViewOnce()
+        }
+        super.loadView()
+    }
+    
+    override var defaultBarTitle: String {
+        if source == .business_standalone {
+            return strings().premiumBoardingBusinessTelegramBusiness
+        }
+        return super.defaultBarTitle
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -1036,6 +1204,11 @@ final class PremiumBoardingController : ModalViewController {
         let source = self.source
         let openFeatures = self.openFeatures
         
+        actionsDisposable.add(context.engine.accountData.keepShortcutMessageListUpdated().startStrict())
+        actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().startStrict())
+        
+        actionsDisposable.add(context.account.viewTracker.peerView(context.peerId, updateData: true).start())
+        
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
         let close: ()->Void = { [weak self] in
@@ -1047,7 +1220,16 @@ final class PremiumBoardingController : ModalViewController {
         canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
         
-        let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
+        
+        
+        let business = context.premiumOrder.premiumValues.filter { $0.isBusiness }.uniqueElements
+        let rest = context.premiumOrder.premiumValues.filter { !$0.isBusiness }.uniqueElements
+
+        var initialState = State(values: rest, businessValues: business, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment, newPerks: FastSettings.premiumPerks)
+        
+        if source != .business && source != .business_standalone {
+            initialState.values.insert(.business, at: 1)
+        }
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1072,7 +1254,28 @@ final class PremiumBoardingController : ModalViewController {
             
             close()
         }, openFeature: { [weak self] value, animated in
+            
             guard let strongSelf = self else {
+                return
+            }
+            
+            if strongSelf.source == .business_standalone {
+                switch value {
+                case .business_location:
+                    strongSelf.navigationController?.push(BusinessLocationController(context: context))
+                case .business_hours:
+                    strongSelf.navigationController?.push(BusinessHoursController(context: context))
+                case .quick_replies:
+                    strongSelf.navigationController?.push(BusinessQuickReplyController(context: context))
+                case .greeting_message:
+                    strongSelf.navigationController?.push(BusinessMessageController(context: context, type: .greetings))
+                case .away_message:
+                    strongSelf.navigationController?.push(BusinessMessageController(context: context, type: .away))
+                case .business_bots:
+                    strongSelf.navigationController?.push(BusinessChatbotController(context: context))
+                default:
+                    fatalError("not possible")
+                }
                 return
             }
             strongSelf.genericView.append(PremiumBoardingFeaturesController(context, presentation: strongSelf.presentation, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
@@ -1367,6 +1570,9 @@ final class PremiumBoardingController : ModalViewController {
                 close()
             }
         }
+        
+        genericView.headerView.isHidden = source == .business_standalone
+        
         genericView.accept = {
             
             

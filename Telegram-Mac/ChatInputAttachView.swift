@@ -110,7 +110,16 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, itemImage: MenuAnimation.menu_shared_media.value))
                     }
                     
-                    
+                    if let shortcuts = chatInteraction.presentation.shortcuts, let peer = chatInteraction.peer, chatInteraction.presentation.chatMode == .history {
+                        if peer.isUser && !peer.isBot {
+                            if !shortcuts.items.isEmpty, context.isPremium {
+                                items.append(ContextMenuItem(strings().chatInputAttachQuickReply, handler: { [weak self] in
+                                    self?.chatInteraction.clearInput()
+                                    self?.chatInteraction.appendText(.initialize(string: "/"))
+                                }, itemImage: MenuAnimation.menu_reply.value))
+                            }
+                        }
+                    }
                     
                     let chatMode = chatInteraction.presentation.chatMode
 
@@ -262,6 +271,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, itemImage: MenuAnimation.menu_poll.value))
                     }
                     
+                   
                     
                     if canAttachLocation {
                         items.append(ContextMenuItem(strings().inputAttachPopoverLocation, handler: { [weak self] in

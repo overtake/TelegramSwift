@@ -35,11 +35,15 @@ class CommentsBasicControl : Button, ChannelCommentRenderer {
     fileprivate var renderData: ChannelCommentsRenderData?
     fileprivate var size: NSSize = .zero
     fileprivate var progressView: ProgressIndicator?
+    
+    var bubbleMode: Bool {
+        return self.renderData?.bubbleMode ?? false
+    }
+    
     func update(data: ChannelCommentsRenderData, size: NSSize, animated: Bool) {
         let previousLastTextPosition = lastTextPosition
         self.size = size
         self.renderData = data
-        
         self.removeAllHandlers()
         
         self.set(handler: { [weak data] _ in
@@ -264,14 +268,16 @@ final class ChannelCommentsRenderData {
     let message: Message?
     let hasUnread: Bool
     let isLoading: Bool
+    let bubbleMode: Bool
     fileprivate var titleLayout:[(TextViewLayout, Text)] = []
     fileprivate let handler: ()->Void
     
-    init(context: AccountContext, message: Message?, hasUnread: Bool, title: [Text], peers: [Peer], drawBorder: Bool, isLoading: Bool, handler: @escaping()->Void = {}) {
+    init(context: AccountContext, message: Message?, hasUnread: Bool, title: [Text], peers: [Peer], drawBorder: Bool, isLoading: Bool, bubbleMode: Bool, handler: @escaping()->Void = {}) {
         self.context = context
         self.message = message
         self._title = title
         self.isLoading = isLoading
+        self.bubbleMode = bubbleMode
         var index: Int = 0
         self.peers = peers.map { peer in
             let avatar = Avatar(peer: peer, index: index)
@@ -342,6 +348,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
     private let avatarsContainer = SimpleLayer(frame: NSMakeRect(0, 0, 22 * 3, 22))
     private let arrowView = ImageView()
     private var dotView: View? = nil
+        
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.layer?.addSublayer(avatarsContainer)
@@ -362,7 +369,11 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         
         if render.peers.isEmpty {
             var f = focus(theme.icons.channel_comments_bubble.backingSize)
-            f.origin.x = 18 + 6
+            if bubbleMode {
+                f.origin.x = 18 + 6
+            } else {
+                f.origin.x = 5
+            }
             rect = f
         } else {
             if render.peers.count == 1 {
@@ -370,7 +381,11 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             } else {
                 rect = focus(NSMakeSize(22 + (17 * CGFloat(render.peers.count - 1)), 22))
             }
-            rect.origin.x = 18 + 6
+            if bubbleMode {
+                rect.origin.x = 18 + 6
+            } else {
+                rect.origin.x = 5
+            }
         }
         
         var f = focus(render.titleSize)
@@ -383,7 +398,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
     
     override var progressIndicatorPosition: NSPoint {
         var rect = focus(progressIndicatorSize)
-        rect.origin.x = size.width - 6 - arrowView.frame.width
+        rect.origin.x = size.width - arrowView.frame.width - (bubbleMode ? 6 : 0)
         return rect.origin
     }
     
@@ -402,7 +417,11 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             }
             if render.peers.isEmpty {
                 var f = focus(theme.icons.channel_comments_bubble.backingSize)
-                f.origin.x = 13 + 6
+                if bubbleMode {
+                    f.origin.x = 13 + 6
+                } else {
+                    f.origin.x = 0
+                }
                 ctx.draw(theme.icons.channel_comments_bubble, in: f)
             }
         }
@@ -416,6 +435,8 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         let previousLastTextPosition = lastTextPosition
         
         super.update(data: data, size: size, animated: animated)
+                
+        CATransaction.begin()
         
         let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.peers, rightList: data.peers)
         
@@ -473,13 +494,15 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         
         
         self.peers = data.peers
+        
+        CATransaction.commit()
 
         enum NumericAnimation {
             case forward
             case backward
         }
-        
-        arrowView.isHidden = data.isLoading
+                
+        arrowView.isHidden = data.isLoading || !data.bubbleMode
         
         if animated {
             var f = size.bounds.focus(arrowView.frame.size)
@@ -531,9 +554,13 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
     override func layout() {
         super.layout()
         var rect = focus(self.avatarsContainer.frame.size)
-        rect.origin.x = 13 + 6
+        if bubbleMode {
+            rect.origin.x = 13 + 6
+        } else {
+            rect.origin.x = 0
+        }
         self.avatarsContainer.frame = rect
-        self.arrowView.centerY(x: frame.width - 6 - arrowView.frame.width)
+        self.arrowView.centerY(x: frame.width - arrowView.frame.width - (bubbleMode ? 6 : 0))
         self.dotView?.centerY(x: lastTextPosition.x + 6, addition: 1)
     }
     

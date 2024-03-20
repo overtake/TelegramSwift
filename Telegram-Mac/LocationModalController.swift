@@ -143,14 +143,15 @@ private final class LocationMapView : View {
         headerTextView.center()
     }
     
-    fileprivate func updateExpandState(_ state: LocationViewState, loading: Bool, hasVenues: Bool, animated: Bool, toggleExpand:@escaping(LocationViewState)->Void) {
+    fileprivate func updateExpandState(_ state: LocationViewState, loading: Bool, hasVenues: Bool, animated: Bool, toggleExpand:@escaping(LocationViewState)->Void, destination: SelectLocationDestination) {
         loadingView.isHidden = !loading && hasVenues
         expandButton.isHidden = loading || !hasVenues
-        hasExpand = (loading || hasVenues)
+        hasExpand = (loading || hasVenues) && destination == .chat
         self.state = state
         
         let duration: Double = 0.3
         let timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.spring
+        
         
         CATransaction.begin()
         let mapY: CGFloat
@@ -252,11 +253,13 @@ private final class LocationMapView : View {
 
 private final class MapItemsArguments {
     let context: AccountContext
+    let destination: SelectLocationDestination
     let sendCurrent:()->Void
     let sendVenue:(TelegramMediaMap)->Void
     let searchVenues:(String)->Void
-    init(context: AccountContext, sendCurrent:@escaping()->Void, sendVenue:@escaping(TelegramMediaMap)->Void, searchVenues: @escaping(String)->Void) {
+    init(context: AccountContext, destination: SelectLocationDestination, sendCurrent:@escaping()->Void, sendVenue:@escaping(TelegramMediaMap)->Void, searchVenues: @escaping(String)->Void) {
         self.context = context
+        self.destination = destination
         self.sendCurrent = sendCurrent
         self.sendVenue = sendVenue
         self.searchVenues = searchVenues
@@ -269,9 +272,6 @@ private enum MapItemEntryId : Hashable {
     case nearby(Int32)
     case search
     case searchEmptyId
-    var hashValue: Int {
-        return 0
-    }
 }
 
 private enum MapItemEntry : TableItemListNodeEntry {
@@ -328,7 +328,7 @@ private enum MapItemEntry : TableItemListNodeEntry {
                 arguments.searchVenues(state.request)
             }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
         case let .currentLocation(_, state):
-            return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, action: {
+            return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, destination: arguments.destination, action: {
                 arguments.sendCurrent()
             })
         case let .searchEmpty(_, loading):
@@ -453,9 +453,36 @@ private class MapDelegate : NSObject, MKMapViewDelegate {
         mapView.setRegion(region, animated: animated)
         animated = true
     }
+    
+    func focusVenue(mapView: MKMapView, _ location: CLLocationCoordinate2D) {
+        let userLocation = location
+        var region = MKCoordinateRegion()
+        var span = MKCoordinateSpan()
+        span.latitudeDelta = CLLocationDegrees(0.005)
+        span.longitudeDelta = CLLocationDegrees(0.005)
+        var location = CLLocationCoordinate2D()
+        location.latitude = userLocation.latitude
+        location.longitude = userLocation.longitude
+        region.span = span
+        region.center = location
+        mapView.setRegion(region, animated: true)
+    }
+}
+
+enum SelectLocationDestination : Equatable {
+    case chat
+    case business(CLLocationCoordinate2D?)
+}
+
+extension CLLocationCoordinate2D : Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        return lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
 }
 
 class LocationModalController: ModalViewController {
+    
+    
 
     private let chatInteraction: ChatInteraction
     private let delegate: MapDelegate = MapDelegate()
@@ -463,8 +490,10 @@ class LocationModalController: ModalViewController {
     private let sendDisposable = MetaDisposable()
     private let requestDisposable = MetaDisposable()
     private let statePromise:Promise<LocationViewState> = Promise()
-    init(_ chatInteraction: ChatInteraction) {
+    private let destination: SelectLocationDestination
+    init(_ chatInteraction: ChatInteraction, destination: SelectLocationDestination = .chat) {
         self.chatInteraction = chatInteraction
+        self.destination = destination
         super.init(frame: NSMakeRect(0, 0, 360, 380))
     }
     
@@ -552,6 +581,16 @@ class LocationModalController: ModalViewController {
             delegate.focusUserLocation(genericView.mapView)
         }
         
+        switch destination {
+        case let .business(coordinate):
+            if let coordinate = coordinate {
+                delegate.focusVenue(mapView: genericView.mapView, coordinate)
+                self.delegate.isPinRaised = true
+            }
+        default:
+            break
+        }
+        
         var handleRegion: Bool = true
         
         delegate.willChangeRegion = { [weak self] in
@@ -619,7 +658,7 @@ class LocationModalController: ModalViewController {
         let previous: Atomic<[AppearanceWrapperEntry<MapItemEntry>]> = Atomic(value: [])
         
         let initialSize = self.atomicSize
-        let arguments = MapItemsArguments(context: context, sendCurrent: { [weak self] in
+        let arguments = MapItemsArguments(context: context, destination: self.destination, sendCurrent: { [weak self] in
             self?.sendLocation()
         }, sendVenue: { [weak self] venue in
             self?.sendLocation(venue)
@@ -673,7 +712,7 @@ class LocationModalController: ModalViewController {
                 self?.genericView.tableView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
                 search.set(.single(""))
                 state.set(viewState)
-            })
+            }, destination: self.destination)
             self.readyOnce()
         }))
 
@@ -683,6 +722,7 @@ class LocationModalController: ModalViewController {
         }, error: { [weak self] error in
             self?.delegate.cancelRequestLocation()
         }))
+
     }
     
     deinit {

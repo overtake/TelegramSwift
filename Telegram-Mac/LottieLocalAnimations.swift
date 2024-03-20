@@ -280,6 +280,9 @@ enum LocalAnimatedSticker : String {
     case menu_eye_slash
     case menu_lighting
     case menu_quote
+    case menu_boost
+    case menu_boost_plus
+    case menu_search
     
     case emoji_category_activities
     case emoji_category_angry
@@ -318,6 +321,15 @@ enum LocalAnimatedSticker : String {
     case forum_topic
     
     case custom_reaction
+    
+    case business_away_message
+    case business_greeting_message
+    case business_hours
+    case business_chatbot
+    case business_location
+    case business_quick_reply
+    
+    case fragment_username
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
@@ -429,6 +441,20 @@ enum LocalAnimatedSticker : String {
         case .show_status_read:
             playPolicy = .onceEnd
         case .show_status_profile:
+            playPolicy = .onceEnd
+        case .business_hours:
+            playPolicy = .onceEnd
+        case .business_location:
+            playPolicy = .onceEnd
+        case .business_quick_reply:
+            playPolicy = .onceEnd
+        case .business_chatbot:
+            playPolicy = .onceEnd
+        case .business_away_message:
+            playPolicy = .onceEnd
+        case .business_greeting_message:
+            playPolicy = .onceEnd
+        case .fragment_username:
             playPolicy = .onceEnd
         default:
             playPolicy = .loop

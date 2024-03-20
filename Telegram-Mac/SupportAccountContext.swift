@@ -32,9 +32,10 @@ final class SupportAccountContext {
     private let disposable: DisposableDict<AccountRecordId> = DisposableDict()
     
     func open(account: Account) {
-        
-        let data = combineLatest(TelegramEngine(account: account).peers.updatedChatListFilters(), chatListFolderSettings(account.postbox)) |> map {
-            return ChatListFolders(list: $0, sidebar: $1.sidebar)
+        let showTags = TelegramEngine(account: account).data.get(TelegramEngine.EngineData.Item.ChatList.FiltersDisplayTags())
+
+        let data = combineLatest(TelegramEngine(account: account).peers.updatedChatListFilters(), chatListFolderSettings(account.postbox), showTags) |> map {
+            return ChatListFolders(list: $0, sidebar: $1.sidebar, showTags: $2)
         }
         |> deliverOnMainQueue
         |> take(1)

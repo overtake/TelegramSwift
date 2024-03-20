@@ -573,7 +573,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     }
  
     
-    open var kitWindow: Window? {
+    open var _window: Window? {
         return super.window as? Window
     }
     

@@ -52,11 +52,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         containerView.addSubview(separator)
         
         container.set(handler: { [weak self] _ in
-            self?.updateMouse()
+            self?.updateMouse(animated: true)
         }, for: .Hover)
         
         container.set(handler: { [weak self] _ in
-            self?.updateMouse()
+            self?.updateMouse(animated: true)
         }, for: .Normal)
         
         container.userInteractionEnabled = false
@@ -251,8 +251,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         self.container.needsDisplay = true
     }
     
-    override func updateMouse() {
-        super.updateMouse()
+    override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         updateColors()
         container.needsDisplay = true
         guard let item = item as? ShortPeerRowItem else {

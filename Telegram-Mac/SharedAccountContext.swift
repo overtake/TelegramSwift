@@ -15,6 +15,9 @@ import TGUIKit
 import BuildConfig
 import ApiCredentials
 
+#if !SHARE
+import PrivateCallScreen
+#endif
 
 
 private struct AccountAttributes: Equatable {
@@ -65,6 +68,8 @@ class SharedAccountContext {
     let accountManager: AccountManager<TelegramAccountManagerTypes>
 
     #if !SHARE
+    var peerCall: PeerCallScreen?
+    
     let inputSource: InputSources = InputSources()
     let devicesContext: DevicesContext
     private let _baseSettings: Atomic<BaseApplicationSettings> = Atomic(value: BaseApplicationSettings.defaultSettings)

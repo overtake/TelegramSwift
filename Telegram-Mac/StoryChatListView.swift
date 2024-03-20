@@ -762,7 +762,7 @@ private final class StoryListEntryRowItem : TableRowItem {
         self.entry = entry
         self.context = context
         self.open = open
-        self.stateComponent = .init(story: entry.item, presentation: presentation)
+        self.stateComponent = .init(story: entry.item, presentation: presentation, isRoundedRect: false)
         super.init(initialSize)
     }
     
@@ -818,7 +818,7 @@ private final class StoryListEntryRowItem : TableRowItem {
                 if !isChannel {
                     items.append(.init(strings().storyListContextViewProfile, handler: {
                         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-                    }, itemImage: MenuAnimation.menu_open_profile.value))
+                    }, itemImage: self.entry.item.peer._asPeer().isSupergroup ? MenuAnimation.menu_create_group.value : MenuAnimation.menu_open_profile.value))
                 }
                 
                 
@@ -931,7 +931,7 @@ private final class ComponentView : Control {
         
         transition.updateFrame(view: stateView, frame: stateRect.insetBy(dx: -3, dy: -3))
         stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition, displayProgress: !self.loadingStatuses.isEmpty)
-
+        
     }
     
     
@@ -1063,8 +1063,8 @@ private final class ItemView : Control {
         self.progress = progress
         self.item = item
         
-        imageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: StoryListChatListRowItem.fullSize)
-        smallImageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: StoryListChatListRowItem.smallSize)
+        imageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: StoryListChatListRowItem.fullSize, disableForum: true)
+        smallImageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: StoryListChatListRowItem.smallSize, disableForum: true)
         
         imageView.isHidden = progress == 0
         smallImageView.isHidden = progress != 0

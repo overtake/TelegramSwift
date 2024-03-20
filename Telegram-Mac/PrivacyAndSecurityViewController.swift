@@ -392,7 +392,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 arguments.openTwoStepVerification(configuration)
             })
         case let .globalTimer(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsGlobalTimer, icon: theme.icons.privacy_settings_autodelete, type: .context(text), viewType: viewType, action: arguments.setupGlobalAutoremove)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsGlobalTimer, icon: theme.icons.privacy_settings_autodelete, type: .nextContext(text), viewType: viewType, action: arguments.setupGlobalAutoremove)
         case .globalTimerInfo:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsGlobalTimerInfo, viewType: .textBottomItem)
         case let .activeSessions(_, sessions, viewType):

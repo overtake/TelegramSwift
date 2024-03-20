@@ -136,7 +136,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         NSCursor.unhide()
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
-            let hide = !self.genericView.isInMenu
+            let hide = !self.genericView.isInMenu && !self.genericView.insideControls
             self.hideControls.set(hide)
             if !self.pictureInPicture, !self.isPaused, hide {
                 NSCursor.hide()

@@ -204,7 +204,7 @@ final class ReactionsWindowController : NSObject {
         self.onClose = onClose
         self.name = name
         
-        self.emojies = .init(context, mode: context.peerId == peerId && tagsGloballyEnabled ? .defaultTags : .reactions, selectedItems: selectedItems, presentation: presentation)
+        self.emojies = .init(context, mode: context.peerId == peerId ? .defaultTags : .reactions, selectedItems: selectedItems, presentation: presentation)
         self.emojies.loadViewIfNeeded()
         super.init()
         
