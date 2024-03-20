@@ -684,7 +684,10 @@ class FastSettings {
                      PremiumValue.last_seen.rawValue,
                      PremiumValue.message_privacy.rawValue,
                      PremiumValue.business.rawValue,
-                     PremiumValue.folder_tags.rawValue]
+                     PremiumValue.folder_tags.rawValue,
+                     PremiumValue.business_intro.rawValue,
+                     PremiumValue.business_bots.rawValue,
+                     PremiumValue.business_links.rawValue]
         let dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
         return perks.filter { !dismissedPerks.contains($0) }
     }
@@ -701,6 +704,17 @@ class FastSettings {
         } else {
             let uuid: UUID = UUID()
             UserDefaults.standard.setValue(uuid.uuidString, forKey: "_uuid_\(id)")
+            return uuid
+        }
+    }
+    
+    static func defaultUUID() -> UUID? {
+        let stored = UserDefaults.standard.string(forKey: "_uuid_default")
+        if let stored = stored {
+            return .init(uuidString: stored)
+        } else {
+            let uuid: UUID = UUID()
+            UserDefaults.standard.setValue(uuid.uuidString, forKey: "_uuid_default")
             return uuid
         }
     }

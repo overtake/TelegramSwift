@@ -1381,7 +1381,7 @@ class WallpaperPreviewController: ModalViewController {
                 
                 if !settings.colors.isEmpty {
                     let colors:[String] = settings.colors.map { value in
-                        let color = NSColor(argb: value).hexString.lowercased()
+                        let color = NSColor(argb: value).rgbHexString.lowercased()
                         return String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     }
                     let bg = "bg_color=\(colors.joined(separator: "~"))"
@@ -1404,19 +1404,19 @@ class WallpaperPreviewController: ModalViewController {
             
             showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(slug)\(optionsString)")), for: context.window)
         case let .color(color):
-            var color = NSColor(argb: color).hexString.lowercased()
+            var color = NSColor(argb: color).rgbHexString.lowercased()
             color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
             showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(color)")), for: context.window)
         case let .gradient(_, colors, r):
             
             let colors:[String] = colors.map { value in
-                let color = NSColor(argb: value).hexString.lowercased()
+                let color = NSColor(argb: value).rgbHexString.lowercased()
                 return String(color[color.index(after: color.startIndex) ..< color.endIndex])
             }
             
             var rotation: String = ""
             if let r = r {
-                rotation = "&rotation=\(r)"
+                rotation = "?rotation=\(r)"
             }
             
             let t = colors.joined(separator: "~")

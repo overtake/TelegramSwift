@@ -789,6 +789,11 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     }
     
     private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), (Bool, Bool))> = Promise()
+    
+    var privacySettings: Signal<AccountPrivacySettings?, NoError> {
+        return settings.get() |> map { $0.0 }
+    }
+    
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<(Bool, Bool)> = Promise((false, false))
     fileprivate let hasFilters: Promise<Bool> = Promise(false)

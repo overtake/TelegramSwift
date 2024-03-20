@@ -579,6 +579,8 @@ public final class L10n {
   public static var bioPlaceholder: String  { return L10n.tr("Localizable", "Bio.Placeholder") }
   /// Save
   public static var bioSave: String  { return L10n.tr("Localizable", "Bio.Save") }
+  /// Date of birth added
+  public static var birthdayAlertAdded: String  { return L10n.tr("Localizable", "Birthday.Alert.Added") }
   /// Do you want to block %@ from messaging and calling you on Telegram?
   public static func blockContactTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "BlockContact.Title", p1)
@@ -969,14 +971,22 @@ public final class L10n {
   public static var businessMessageRecepientsAll: String  { return L10n.tr("Localizable", "Business.Message.Recepients.All") }
   /// Exclude Chats...
   public static var businessMessageRecepientsExclude: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Exclude") }
+  /// Exclude Users...
+  public static var businessMessageRecepientsExcludeUsers: String  { return L10n.tr("Localizable", "Business.Message.Recepients.ExcludeUsers") }
   /// Select Chats...
   public static var businessMessageRecepientsInclude: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Include") }
   /// Only Selected Chats
   public static var businessMessageRecepientsSelected: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Selected") }
   /// RECIPIENTS
   public static var businessMessageRecepientsTitle: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Title") }
+  /// Select chats or entire chat categories which the bot **WILL NOT** have access to.
+  public static var businessMessageRecepientsExcludeInfo: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Exclude.Info") }
   /// EXCLUDE CHATS
   public static var businessMessageRecepientsExcludeTitle: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Exclude.Title") }
+  /// Select users which the bot **WILL NOT** have access to.
+  public static var businessMessageRecepientsExcludeUsersInfo: String  { return L10n.tr("Localizable", "Business.Message.Recepients.ExcludeUsers.Info") }
+  /// Select chats or entire chat categories which the bot **WILL** have access to.
+  public static var businessMessageRecepientsIncludeInfo: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Include.Info") }
   /// INCLUDE CHATS
   public static var businessMessageRecepientsIncludeTitle: String  { return L10n.tr("Localizable", "Business.Message.Recepients.Include.Title") }
   /// Always Send
@@ -3505,6 +3515,8 @@ public final class L10n {
   public static var chatContextBlockUserOK: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser.OK") }
   /// Report Spam
   public static var chatContextBlockUserThird: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser.Third") }
+  /// Edit Link Name
+  public static var chatContextBusinessLinkEditName: String  { return L10n.tr("Localizable", "Chat.Context.BusinessLink.EditName") }
   /// Scheduled Messages
   public static var chatContextClearScheduledConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Header") }
   /// Are you sure you want to delete all scheduled messages?
@@ -3603,6 +3615,36 @@ public final class L10n {
   public static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
   /// Sorry, this post has been removed from the discussion group.
   public static var chatDiscussionMessageDeleted: String  { return L10n.tr("Localizable", "Chat.Discussion.MessageDeleted") }
+  /// %d
+  public static func chatDownloadLimitTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_countable", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase download speeds %d times.
+  public static func chatDownloadLimitTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_few", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase download speeds %d times.
+  public static func chatDownloadLimitTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_many", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase download speeds %d time.
+  public static func chatDownloadLimitTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_one", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase download speeds %d times.
+  public static func chatDownloadLimitTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_other", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase download speeds %d times.
+  public static func chatDownloadLimitTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_two", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase download speeds %d times.
+  public static func chatDownloadLimitTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.DownloadLimit.Text_zero", p1)
+  }
+  /// Download speed limited
+  public static var chatDownloadLimitTitle: String  { return L10n.tr("Localizable", "Chat.DownloadLimit.Title") }
   /// as archive
   public static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
@@ -3651,6 +3693,8 @@ public final class L10n {
   public static var chatEmptyBusinessQuickReplyInfo2: String  { return L10n.tr("Localizable", "Chat.Empty.Business.QuickReply.Info2") }
   /// Add Premium
   public static var chatEmptyPremiumRequiredAction: String  { return L10n.tr("Localizable", "Chat.Empty.PremiumRequired.Action") }
+  /// Send a message or click on the greeting below
+  public static var chatEmptyChatInfo: String  { return L10n.tr("Localizable", "Chat.EmptyChat.Info") }
   /// Previewing this file can potentially expose your IP address to its sender.
   public static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
   /// Only admins can send messages in this group.
@@ -5479,6 +5523,36 @@ public final class L10n {
   public static var chatUndoManagerUndo: String  { return L10n.tr("Localizable", "Chat.UndoManager.Undo") }
   /// UPDATE
   public static var chatUnsupportedUpdatedApp: String  { return L10n.tr("Localizable", "Chat.Unsupported.UpdatedApp") }
+  /// %d
+  public static func chatUploadLimitTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_countable", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase upload speeds %d times.
+  public static func chatUploadLimitTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_few", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase upload speeds %d times.
+  public static func chatUploadLimitTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_many", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase upload speeds %d time.
+  public static func chatUploadLimitTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_one", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase upload speeds %d times.
+  public static func chatUploadLimitTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_other", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase upload speeds %d times.
+  public static func chatUploadLimitTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_two", p1)
+  }
+  /// Subscribe to [Telegram Premium]() and increase upload speeds %d times.
+  public static func chatUploadLimitTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UploadLimit.Text_zero", p1)
+  }
+  /// Upload speed limited
+  public static var chatUploadLimitTitle: String  { return L10n.tr("Localizable", "Chat.UploadLimit.Title") }
   /// processing...
   public static var chatVideoProcessing: String  { return L10n.tr("Localizable", "Chat.Video.Processing") }
   /// Incoming Video Call
@@ -5601,6 +5675,8 @@ public final class L10n {
   public static var chatInputBusinessAway: String  { return L10n.tr("Localizable", "ChatInput.Business.Away") }
   /// Greeting Message...
   public static var chatInputBusinessGreeting: String  { return L10n.tr("Localizable", "ChatInput.Business.Greeting") }
+  /// Add a present message...
+  public static var chatInputBusinessLink: String  { return L10n.tr("Localizable", "ChatInput.Business.Link") }
   /// Quick Reply Message...
   public static var chatInputBusinessQuickReply: String  { return L10n.tr("Localizable", "ChatInput.Business.QuickReply") }
   /// Above the Message
@@ -7169,6 +7245,16 @@ public final class L10n {
   public static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   public static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
+  /// Add
+  public static var editAccountBirthdayAdd: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Add") }
+  /// Date of Birthday
+  public static var editAccountBirthdayDate: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Date") }
+  /// Remove
+  public static var editAccountBirthdayRemove: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Remove") }
+  /// Everyone will see your birthday. [Change >]()
+  public static var editAccountBirthdayInfoEveryone: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Info.Everyone") }
+  /// Only your contacts will see your birthday. [Change >]()
+  public static var editAccountBirthdayInfoOnlyContacts: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Info.OnlyContacts") }
   /// Sticker or Emoji
   public static var editAvatarCustomize: String  { return L10n.tr("Localizable", "EditAvatar.Customize") }
   /// Photo or Video
@@ -10607,6 +10693,8 @@ public final class L10n {
   public static var peerInfoAnonymousPhone: String  { return L10n.tr("Localizable", "PeerInfo.AnonymousPhone") }
   /// bio
   public static var peerInfoBio: String  { return L10n.tr("Localizable", "PeerInfo.bio") }
+  /// birthday
+  public static var peerInfoBirthday: String  { return L10n.tr("Localizable", "PeerInfo.birthday") }
   /// Removed Users
   public static var peerInfoBlackList: String  { return L10n.tr("Localizable", "PeerInfo.BlackList") }
   /// Block User
@@ -11863,6 +11951,34 @@ public final class L10n {
   }
   /// Activate For Free
   public static var premiumBoardingActivateForFree: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree") }
+  /// %d
+  public static func premiumBoardingMoreBusinessHeaderCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_countable", p1)
+  }
+  /// +%d MORE TELEGRAM PREMIUM FEATURES
+  public static func premiumBoardingMoreBusinessHeaderFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_few", p1)
+  }
+  /// +%d MORE TELEGRAM PREMIUM FEATURES
+  public static func premiumBoardingMoreBusinessHeaderMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_many", p1)
+  }
+  /// +%d MORE TELEGRAM PREMIUM FEATURE
+  public static func premiumBoardingMoreBusinessHeaderOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_one", p1)
+  }
+  /// +%d MORE TELEGRAM PREMIUM FEATURES
+  public static func premiumBoardingMoreBusinessHeaderOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_other", p1)
+  }
+  /// +%d MORE TELEGRAM PREMIUM FEATURES
+  public static func premiumBoardingMoreBusinessHeaderTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_two", p1)
+  }
+  /// +%d MORE TELEGRAM PREMIUM FEATURES
+  public static func premiumBoardingMoreBusinessHeaderZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PremiumBoarding.MoreBusinessHeader_zero", p1)
+  }
   /// Tag Your Chats
   public static var premiumBoardingTagFolders: String  { return L10n.tr("Localizable", "PremiumBoarding.TagFolders") }
   /// You are already Telegram Premium subscriber.
@@ -11875,6 +11991,8 @@ public final class L10n {
   public static var premiumBoardingBusinessGreetingMessages: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.GreetingMessages") }
   /// Intro
   public static var premiumBoardingBusinessIntro: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Intro") }
+  /// Links to Chat
+  public static var premiumBoardingBusinessLinks: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Links") }
   /// Location
   public static var premiumBoardingBusinessLocation: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Location") }
   /// Opening Hours
@@ -11891,6 +12009,8 @@ public final class L10n {
   public static var premiumBoardingBusinessGreetingMessagesInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.GreetingMessages.Info") }
   /// Customize the message people see before they start a chat with you.
   public static var premiumBoardingBusinessIntroInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Intro.Info") }
+  /// Create links that start a chat with you, suggesting the first message.
+  public static var premiumBoardingBusinessLinksInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Links.Info") }
   /// Display the location of your business on your account.
   public static var premiumBoardingBusinessLocationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Business.Location.Info") }
   /// Show to your customers when you are open for business.
@@ -12195,6 +12315,8 @@ public final class L10n {
   public static var privacySettingsActiveSessions: String  { return L10n.tr("Localizable", "PrivacySettings.ActiveSessions") }
   /// Bio
   public static var privacySettingsBio: String  { return L10n.tr("Localizable", "PrivacySettings.Bio") }
+  /// Birthday
+  public static var privacySettingsBirthday: String  { return L10n.tr("Localizable", "PrivacySettings.Birthday") }
   /// Blocked Users
   public static var privacySettingsBlockedUsers: String  { return L10n.tr("Localizable", "PrivacySettings.BlockedUsers") }
   /// If Away For
@@ -12269,6 +12391,8 @@ public final class L10n {
   public static var privacySettingsPhoneNumber: String  { return L10n.tr("Localizable", "PrivacySettings.PhoneNumber") }
   /// Subscribe to Telegram Premium
   public static var privacySettingsPremium: String  { return L10n.tr("Localizable", "PrivacySettings.Premium") }
+  /// Premium
+  public static var privacySettingsPremiumUsers: String  { return L10n.tr("Localizable", "PrivacySettings.PremiumUsers") }
   /// PRIVACY
   public static var privacySettingsPrivacyHeader: String  { return L10n.tr("Localizable", "PrivacySettings.PrivacyHeader") }
   /// Profile Photo
@@ -12399,6 +12523,16 @@ public final class L10n {
   public static var privacySettingsControllerBioAlwaysShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.AlwaysShareWith.Title") }
   /// Never Share With
   public static var privacySettingsControllerBioNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.NeverShareWith.Title") }
+  /// You haven't entered your date of birth yet.\n[Add my birthday >]()
+  public static var privacySettingsControllerBirthdayAddHeader: String  { return L10n.tr("Localizable", "PrivacySettingsController.Birthday.AddHeader") }
+  /// You can restrict who can see your birth with granular precision.
+  public static var privacySettingsControllerBirthdayCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Birthday.CustomHelp") }
+  /// WHO CAN SEE MY DATE OF BIRTH
+  public static var privacySettingsControllerBirthdayWhoCanSee: String  { return L10n.tr("Localizable", "PrivacySettingsController.Birthday.WhoCanSee") }
+  /// Always Share With
+  public static var privacySettingsControllerBirthdayAlwaysShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Birthday.AlwaysShareWith.Title") }
+  /// Never Share With
+  public static var privacySettingsControllerBirthdayNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Birthday.NeverShareWith.Title") }
   /// When forwarded to other chats, messages you send will not link back to your account.
   public static var privacySettingsControllerForwardsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.CustomHelp") }
   /// WHO CAN FORWARD MY MESSAGES

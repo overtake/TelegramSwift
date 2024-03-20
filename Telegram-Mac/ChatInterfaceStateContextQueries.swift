@@ -31,8 +31,7 @@ func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentation
     let inputQuery = chatPresentationInterfaceState.inputContext
     switch chatPresentationInterfaceState.state {
     case .normal, .editing:
-        if inputQuery != .none {
-            
+        if inputQuery != .none, chatPresentationInterfaceState.chatMode.customChatLink == nil {
             if inputQuery == currentQuery, chatPresentationInterfaceState.inputContext == chatPresentationInterfaceState.effectiveInputContext {
                 return nil
             } else {

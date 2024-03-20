@@ -525,7 +525,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: FragmentMonetizationPromoController(context: context, peerId: context.peerId), for: context.window)
+            let speedIncreaseFactor = context.appConfiguration.getGeneralValue("upload_premium_speedup_download", orElse: 10)
+            let title = "Download speed limited"
+            let text = "Subscribe to [Telegram Premium]() and increase download speeds \(speedIncreaseFactor) times."
+
+            showModalText(for: context.window, text: text, title: title, callback: { _ in
+                showModal(with: PremiumBoardingController(context: context, source: .upload_limit, openFeatures: true), for: context.window)
+            })
+            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

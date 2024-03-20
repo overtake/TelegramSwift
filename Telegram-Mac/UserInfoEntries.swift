@@ -421,6 +421,33 @@ class UserInfoArguments : PeerInfoArguments {
     func botShare(_ botName: String) {
         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(botName)")), for: context.window)
     }
+    
+    func giftBirthday() {
+        let context = self.context
+        
+        let birthdays: Signal<[UIChatListBirthday], NoError> = context.account.stateManager.contactBirthdays |> map {
+            return $0.filter {
+                $0.value.isToday
+            }
+        } |> take(1) |> mapToSignal { values in
+            return context.account.postbox.transaction { transaction in
+                var birthdays:[UIChatListBirthday] = []
+                for (key, value) in values {
+                    if let peer = transaction.getPeer(key) {
+                        birthdays.append(.init(birthday: value, peer: .init(peer)))
+                    }
+                }
+                return birthdays
+            }
+        }
+        
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, defaultSelected: [peerId])
+        
+        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
+            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+        })
+    }
+    
     func botSettings() {
         _ = Sender.enqueue(input: ChatTextInputState(inputText: "/settings"), context: context, peerId: peerId, replyId: nil, threadId: nil).start()
         pullNavigation()?.back()
@@ -981,6 +1008,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case botEditSettings(sectionId:Int, viewType: GeneralViewType)
     case botEditInfo(sectionId:Int, viewType: GeneralViewType)
     case bio(sectionId:Int, text: String, PeerEquatable, viewType: GeneralViewType)
+    case birthday(sectionId:Int, text: String, Bool, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
     case userName(sectionId:Int, value: [UserInfoAddress], viewType: GeneralViewType)
@@ -1023,6 +1051,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botEditInfo(sectionId, _): return .botEditInfo(sectionId: sectionId, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
+        case let .birthday(sectionId, text, peer, _): return .birthday(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
@@ -1178,6 +1207,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .bio(sectionId, text, peer, viewType):
             switch entry {
             case .bio(sectionId, text, peer, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .birthday(sectionId, text, peer, viewType):
+            switch entry {
+            case .birthday(sectionId, text, peer, viewType):
                 return true
             default:
                 return false
@@ -1419,58 +1455,60 @@ enum UserInfoEntry: PeerInfoEntry {
             return 110
         case .phoneNumber:
             return 111
-        case .userName:
+        case .birthday:
             return 112
-        case .businessHours:
+        case .userName:
             return 113
-        case .businessLocation:
+        case .businessHours:
             return 114
-        case .sendMessage:
+        case .businessLocation:
             return 115
-        case .botAddToGroup:
+        case .sendMessage:
             return 116
-        case .botAddToGroupInfo:
+        case .botAddToGroup:
             return 117
-        case .botShare:
+        case .botAddToGroupInfo:
             return 118
-        case .botSettings:
+        case .botShare:
             return 119
-        case .botHelp:
+        case .botSettings:
             return 120
-        case .botPrivacy:
+        case .botHelp:
             return 121
-        case .shareContact:
+        case .botPrivacy:
             return 122
-        case .shareMyInfo:
+        case .shareContact:
             return 123
-        case .addContact:
+        case .shareMyInfo:
             return 124
-        case .startSecretChat:
+        case .addContact:
             return 125
-        case .sharedMedia:
+        case .startSecretChat:
             return 126
-        case .notifications:
+        case .sharedMedia:
             return 127
-        case .encryptionKey:
+        case .notifications:
             return 128
-        case .groupInCommon:
+        case .encryptionKey:
             return 129
+        case .groupInCommon:
+            return 130
         case let .setPhoto(_, _, type, _, _):
-            return 130 + type.rawValue
+            return 131 + type.rawValue
         case .resetPhoto:
-            return 134
-        case .setPhotoInfo:
             return 135
-        case .block:
+        case .setPhotoInfo:
             return 136
-        case .reportReaction:
+        case .block:
             return 137
-        case .deleteChat:
+        case .reportReaction:
             return 138
-        case .deleteContact:
+        case .deleteChat:
             return 139
-        case .media:
+        case .deleteContact:
             return 140
+        case .media:
+            return 141
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1497,6 +1535,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .about(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .bio(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .birthday(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1624,6 +1664,8 @@ enum UserInfoEntry: PeerInfoEntry {
                     arguments.peerInfo(peerId)
                 }
             })
+        case let .birthday(_, text, canBirth, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)
         case let .phoneNumber(_, _, value, canCopy, viewType):
             var items:[ContextMenuItem] = []
             if value.number.hasPrefix("888") {
@@ -1858,6 +1900,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
+                if let cachedUserData = view.cachedData as? CachedUserData {
+                    if let birthday = cachedUserData.birthday {
+                        infoBlock.append(.birthday(sectionId: sectionId, text: birthday.formatted, birthday.isEligble, viewType: .singleItem))
+                    }
+                }
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let hours = cachedUserData.businessHours {
                         infoBlock.append(.businessHours(sectionId: sectionId, peer: .init(peer), businessHours: hours, revealed: state.businessHoursRevealed, displayMyZone: state.businessHoursDisplayMyTimezone, viewType: .singleItem))

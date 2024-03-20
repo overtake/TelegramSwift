@@ -86,8 +86,8 @@ private struct AutologinToken : Equatable {
         self.domains = domains
     }
 
-    static func with(appConfiguration: AppConfiguration) -> AutologinToken? {
-        if let data = appConfiguration.data, let value = data["autologin_token"] as? String {
+    static func with(appConfiguration: AppConfiguration, autologinToken: String?) -> AutologinToken? {
+        if let data = appConfiguration.data, let value = autologinToken {
             let dict:[String] = data["autologin_domains"] as? [String] ?? []
             return AutologinToken(token: value, domains: dict)
         } else {
@@ -1300,8 +1300,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func tryApplyAutologinToken(_ url: String) -> String? {
-        if let config = contextValue?.context.appConfiguration {
-            if let value = AutologinToken.with(appConfiguration: config) {
+        if let context = contextValue?.context {
+            let config = context.appConfiguration
+            if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
                 return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
             }
         }

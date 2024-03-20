@@ -67,6 +67,7 @@ enum PremiumLogEventsSource : Equatable {
     case business
     case business_standalone
     case folder_tags
+    case upload_limit
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -121,6 +122,8 @@ enum PremiumLogEventsSource : Equatable {
             return "business_standalone"
         case .folder_tags:
             return "folder_tags"
+        case .upload_limit:
+            return "upload_limit"
         }
     }
     
@@ -174,6 +177,8 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .folder_tags:
             return .folder_tags
+        case .upload_limit:
+            return nil
         }
     }
     
@@ -283,11 +288,12 @@ enum PremiumValue : String {
     case away_message
     case business_bots
     case business_intro
+    case business_links
     case folder_tags
     
     var isBusiness: Bool {
         switch self {
-        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots, .business_intro:
+        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots, .business_intro, .business_links:
             return true
         default:
             return false
@@ -316,6 +322,7 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x41a6a5),
                                  NSColor(rgb: 0x3eb26d),
                                  NSColor(rgb: 0x3dbd4a),
+                                 NSColor(rgb: 0x51c736),
                                  NSColor(rgb: 0x51c736)]
         return [colors[min(index, colors.count - 1)]]
     }
@@ -327,7 +334,9 @@ enum PremiumValue : String {
             NSColor(red: 0.937, green: 0.412, blue: 0.133, alpha: 1),
             NSColor(red: 0.914, green: 0.365, blue: 0.267, alpha: 1),
             NSColor(red: 0.949, green: 0.51, blue: 0.165, alpha: 1),
-            NSColor(red: 0.906, green: 0.584, blue: 0.098, alpha: 1)
+            NSColor(red: 0.906, green: 0.584, blue: 0.098, alpha: 1),
+            NSColor(red: 0.404, green: 0.42, blue: 1, alpha: 1),
+            NSColor(red: 0.404, green: 0.42, blue: 1, alpha: 1)
         ]
         return [colors[index]]
     }
@@ -426,6 +435,8 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessBot).precomposed(presentation.colors.accent)
         case .business_intro:
             return NSImage(resource: .iconPremiumBusinessIntro).precomposed(presentation.colors.accent)
+        case .business_links:
+            return NSImage(resource: .iconPremiumBusinessLinks).precomposed(presentation.colors.accent)
         case .folder_tags:
             return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
         }
@@ -487,6 +498,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessChatBots
         case .business_intro:
             return strings().premiumBoardingBusinessIntro
+        case .business_links:
+            return strings().premiumBoardingBusinessLinks
         case .folder_tags:
             return strings().premiumBoardingTagFolders
         }
@@ -547,6 +560,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessChatBotsInfo
         case .business_intro:
             return strings().premiumBoardingBusinessIntroInfo
+        case .business_links:
+            return strings().premiumBoardingBusinessLinksInfo
         case .folder_tags:
             return strings().premiumBoardingTagFoldersInfo
             
@@ -671,7 +686,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("+\(state.values.count) MORE TELEGRAM PREMIUM FEATURES"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingMoreBusinessHeaderCountable(state.values.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
         }
     }
@@ -1266,6 +1281,8 @@ final class PremiumBoardingController : ModalViewController {
                 return
             }
             
+            FastSettings.dismissPremiumPerk(value.rawValue)
+            
             if strongSelf.source == .business_standalone {
                 switch value {
                 case .business_location:
@@ -1282,6 +1299,8 @@ final class PremiumBoardingController : ModalViewController {
                     strongSelf.navigationController?.push(BusinessChatbotController(context: context))
                 case .business_intro:
                     strongSelf.navigationController?.push(BusinessIntroController(context: context))
+                case .business_links:
+                    strongSelf.navigationController?.push(BusinessLinksController(context: context))
                 default:
                     fatalError("not possible")
                 }
@@ -1293,7 +1312,6 @@ final class PremiumBoardingController : ModalViewController {
                 return strongSelf?.genericView.makeAcceptView()
             }), animated: animated)
             
-            FastSettings.dismissPremiumPerk(value.rawValue)
             updateState { current in
                 var current = current
                 current.newPerks.removeAll(where: { $0 == value.rawValue })

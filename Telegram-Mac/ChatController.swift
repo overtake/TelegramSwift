@@ -84,7 +84,25 @@ public protocol ChatCustomContentsProtocol: AnyObject {
     func editMessage(id: EngineMessage.Id, text: String, media: RequestEditMessageMedia, entities: TextEntitiesMessageAttribute?, webpagePreviewAttribute: WebpagePreviewMessageAttribute?, disableUrlPreview: Bool)
 }
 
+class ChatCustomLinkContent  {
+    var link: String
+    var text: ChatTextInputState?
+    var name: String
+    
+    var title: String {
+        return name ?? link
+    }
+    
+    var editName: (()->Void)? = nil
+    var interfaceUpdate:(()->Void)? = nil
+    var saveText:((ChatTextInputState)->Void)? = nil
 
+    init(link: String, name: String, text: ChatTextInputState? = nil) {
+        self.link = link
+        self.name = name
+        self.text = text
+    }
+}
 
 enum ChatMode : Equatable {
     static func == (lhs: ChatMode, rhs: ChatMode) -> Bool {
@@ -119,6 +137,12 @@ enum ChatMode : Equatable {
             } else {
                 return false
             }
+        case .customLink:
+            if case .customLink = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -127,11 +151,21 @@ enum ChatMode : Equatable {
     case pinned
     case thread(data: ChatReplyThreadMessage, mode: ReplyThreadMode)
     case customChatContents(contents: ChatCustomContentsProtocol)
-
+    case customLink(contents: ChatCustomLinkContent)
+    
     
     var customChatContents: ChatCustomContentsProtocol? {
         switch self {
         case let .customChatContents(contents):
+            return contents
+        default:
+            return nil
+        }
+    }
+    
+    var customChatLink: ChatCustomLinkContent? {
+        switch self {
+        case let .customLink(contents):
             return contents
         default:
             return nil
@@ -887,8 +921,6 @@ class ChatControllerView : View, ChatInputDelegate {
             } else {
                 value = .none
             }
-        } else if let connectedBot = interfaceState.connectedBot {
-            value = .botManager(connectedBot)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
             value = .none
         } else {
@@ -904,7 +936,9 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             translate = nil
         }
-        let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate)
+        
+        
+        let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.connectedBot)
 
         header.updateState(state, animated: animated, for: self)
         
@@ -1668,6 +1702,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
+    private let titleUpdateDisposable:MetaDisposable = MetaDisposable()
+
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
     private let sentMessageEventsDisposable = MetaDisposable()
     private let messageActionCallbackDisposable:MetaDisposable = MetaDisposable()
@@ -1717,6 +1753,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     private var keepSavedMessagesSyncrhonizedDisposable: Disposable?
+    private var networkSpeedEventsDisposable: Disposable?
 
 
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
@@ -2193,6 +2230,37 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
 
+
+
+        var lastEventTimestamp: Double = 0.0
+        self.networkSpeedEventsDisposable = (self.context.account.network.networkSpeedLimitedEvents
+        |> deliverOnMainQueue).start(next: { event in
+
+            let timestamp = CFAbsoluteTimeGetCurrent()
+            if lastEventTimestamp + 10.0 < timestamp {
+                lastEventTimestamp = timestamp
+            } else {
+                return
+            }
+            
+            let title: String
+            let text: String
+            switch event {
+            case .download:
+                let speedIncreaseFactor = context.appConfiguration.getGeneralValue("upload_premium_speedup_download", orElse: 10)
+                title = strings().chatDownloadLimitTitle
+                text = strings().chatDownloadLimitTextCountable(Int(speedIncreaseFactor))
+            case .upload:
+                let speedIncreaseFactor = context.appConfiguration.getGeneralValue("upload_premium_speedup_upload", orElse: 10)
+                title = strings().chatUploadLimitTitle
+                text = strings().chatUploadLimitTextCountable(Int(speedIncreaseFactor))
+            }
+            
+            showModalText(for: context.window, text: text, title: title, callback: { _ in
+                showModal(with: PremiumBoardingController(context: context, source: .upload_limit, openFeatures: true), for: context.window)
+            })
+            
+        })
 
 
         
@@ -3111,6 +3179,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 case .customChatContents:
                     break
+                case .customLink:
+                    break
                 }
                 
                 
@@ -3295,6 +3365,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         })
                         apply(strongSelf, atDate: atDate)
+                    case let .customLink(contents):
+                        contents.saveText?(presentation.effectiveInput)
                     }
                     
                 } else {
@@ -3390,7 +3462,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         flags.remove(.autoArchived)
                         flags.remove(.canBlock)
                         flags.remove(.canReport)
-                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance))
+                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance, managingBot: nil))
                     }
                     if let cachedData = cachedData as? CachedChannelData {
                         let current = cachedData.peerStatusSettings
@@ -3398,7 +3470,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         flags.remove(.autoArchived)
                         flags.remove(.canBlock)
                         flags.remove(.canReport)
-                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance))
+                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance, managingBot: nil))
                     }
                     if let cachedData = cachedData as? CachedGroupData {
                         let current = cachedData.peerStatusSettings
@@ -3406,7 +3478,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         flags.remove(.autoArchived)
                         flags.remove(.canBlock)
                         flags.remove(.canReport)
-                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance))
+                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance, managingBot: nil))
                     }
                     return cachedData
                 })
@@ -3838,6 +3910,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 case .pinned:
                     break
+                case .customLink:
+                    break
                 }
                 
             }
@@ -4047,6 +4121,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 case .pinned:
                     break
+                case .customLink:
+                    break
                 }
                 
             }
@@ -4239,6 +4315,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     (strongSelf.navigationController?.controller as? ChatController)?.chatInteraction.focusMessageId(fromId, focusTarget, state)
                 case .pinned:
                     break
+                case .customLink:
+                    break
                 }
             }
             
@@ -4400,6 +4478,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64, sendAsPeerId: currentSendAsPeerId, customChatContents: customChatContents) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: afterSentTransition)
                 case .pinned:
+                    break
+                case .customLink:
                     break
                 }
             }
@@ -4574,6 +4654,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     case .pinned:
                         break
+                    case .customLink:
+                        break
                     }
                 }
             }
@@ -4624,6 +4706,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .history, .thread, .customChatContents:
                     apply(strongSelf, atDate: nil)
                 case .pinned:
+                    break
+                case .customLink:
                     break
                 }
             }
@@ -5456,7 +5540,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }
                     }
-                    present = present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)                        .withUpdatedCachedData(combinedInitialData.cachedData)
+                    present = present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration).withUpdatedCachedData(combinedInitialData.cachedData)
                 case .scheduled:
                     if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                         present = present.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
@@ -5465,6 +5549,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .pinned:
                     break
                 case .customChatContents:
+                    break
+                case .customLink:
                     break
                 }
                 return present
@@ -5578,18 +5664,35 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             shortcuts = .single(nil)
         }
         
+        
+        
         let savedChatsAsTopics = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics())
-        let connectedBot: Signal<ChatBotManagerData?, NoError> = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessConnectedBot(id: context.peerId)) |> mapToSignal { value in
-            if let value {
-                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: value.id)) |> map { peer in
-                    return peer.flatMap {
-                        .init(bot: value, peer: $0)
-                    }
-                }
-            } else {
-                return .single(.init(bot: .init(id: context.peerId, recipients: .init(categories: .contacts, additionalPeers: Set(), exclude: false), canReply: true), peer: .init(context.myPeer!)))
-            }
+       
+        let managingBot = peerView.get() |> map { (($0 as? PeerView)?.cachedData as? CachedUserData)?.peerStatusSettings?.managingBot }
+        
+        let connectedBot: Signal<ChatBotManagerData?, NoError>
+        switch mode {
+        case .history:
+            connectedBot = combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.BusinessConnectedBot(id: context.peerId)), managingBot) |> mapToSignal { value, managingBot in
+               if let value, let managingBot {
+                   return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: value.id)) |> map { peer in
+                       return peer.flatMap {
+                           .init(bot: value, peer: $0, settings: managingBot)
+                       }
+                   }
+               } else {
+                   return .single(nil)
+               }
+           }
+        default:
+            connectedBot = .single(nil)
         }
+        
+        titleUpdateDisposable.set((peerView.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] postboxView in
+            let title = (self?.centerBarView as? ChatTitleBarView)
+            title?.update(postboxView as? PeerView, story: nil, counters: .init(), animated: false)
+        }))
+        
 
         peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot in
             
@@ -5600,7 +5703,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
-            case .history, .thread, .customChatContents:
+            case .history, .thread, .customChatContents, .customLink:
                 
                 var wasGroupChannel: Bool?
                 if let peer = self.chatInteraction.presentation.mainPeer as? TelegramChannel  {
@@ -7192,14 +7295,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             items.append(ContextSeparatorItem())
                         }
-                        items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
-                            _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
-                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        if threadId != 1 {
+                            items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
+                                _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
+                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        }
                     }
                 }
             case .customChatContents:
                 items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
                    self?.changeState()
+                }, itemImage: MenuAnimation.menu_edit.value))
+            case let .customLink(contents):
+                items.append(ContextMenuItem(strings().chatContextBusinessLinkEditName, handler: {
+                    contents.editName?()
                 }, itemImage: MenuAnimation.menu_edit.value))
             }
             for item in items {
@@ -7447,6 +7556,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         storiesDisposable.dispose()
         keepSavedMessagesSyncrhonizedDisposable?.dispose()
         keepShortcutDisposable.dispose()
+        networkSpeedEventsDisposable?.dispose()
+        titleUpdateDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -7880,7 +7991,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
            }
        }))
 
-        let suggestions = getPeerSpecificServerProvidedSuggestions(postbox: context.account.postbox, peerId: self.chatLocation.peerId) |> deliverOnMainQueue
+        
+        let suggestions = context.engine.notices.getPeerSpecificServerProvidedSuggestions(peerId: self.chatLocation.peerId) |> deliverOnMainQueue
 
         suggestionsDisposable.set(suggestions.start(next: { suggestions in
             for suggestion in suggestions {
@@ -7891,7 +8003,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }, cancelHandler: {
                         showModalText(for: context.window, text: strings().broadcastGroupsLimitAlertSettingsTip)
                     })
-                    _ = dismissPeerSpecificServerProvidedSuggestion(account: context.account, peerId: peerId, suggestion: suggestion).start()
+                    _ = context.engine.notices.dismissPeerSpecificServerProvidedSuggestion(peerId: peerId, suggestion: suggestion).startStandalone()
                 }
             }
         }))

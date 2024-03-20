@@ -30,6 +30,9 @@ final class PremiumPromoOrder {
                 
                 #if DEBUG
                 premiumValues.append(.business_intro)
+                premiumValues.append(.business_bots)
+                premiumValues.append(.business_links)
+
                 #endif
             }
         }

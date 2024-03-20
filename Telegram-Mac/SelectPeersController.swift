@@ -872,12 +872,52 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
 
 class SelectChatsBehavior: SelectPeersBehavior {
     
+
+    
+    var premiumBlock: Bool
+    
+    init(settings: SelectPeerSettings = [.contacts, .remote], excludePeerIds: [PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping () -> GeneralRowItem.Theme = { GeneralRowItem.Theme() }, premiumBlock: Bool = false) {
+        self.premiumBlock = premiumBlock
+        super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
+    }
+    
+    func makeChatEntries(_ peers: [Peer], _ presence: [PeerId: PeerPresence], isSearch: Bool) -> [SelectPeerEntry] {
+        var entries: [SelectPeerEntry] = []
+       
+        var index:Int32 = 0
+
+        if premiumBlock {
+            //TODOLANG
+            entries.append(.separator(index, customTheme(), "USER TYPES"))
+            index += 1
+
+            entries.append(.peer(SelectPeerValue(peer: TelegramFilterCategory(category: .premiumUsers), presence: nil, subscribers: nil, ignoreStatus: true), index, true))
+            index += 1
+            
+            entries.append(.separator(index, customTheme(), "CHATS"))
+            index += 1
+
+        }
+        
+        for value in peers {
+            if filterPeer(value) {
+                entries.append(.peer(SelectPeerValue(peer: value, presence: presence[value.id], subscribers: nil, ignoreStatus: true), index, true))
+                index += 1
+            }
+        }
+        
+        if entries.isEmpty {
+            entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
+        }
+        return entries
+    }
     
     override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
         let previousSearch = Atomic<String?>(value: nil)
         let account = context.account
-        let makeEntries = self.makeEntries
+        let makeEntries = self.makeChatEntries
+        
         
         return search |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
@@ -1506,6 +1546,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
             for peerId in selectedPeerIds {
                 if let peer = transaction.getPeer(peerId) {
                     peers.append(peer)
+                } else if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace {
+                    peers.append(TelegramFilterCategory(category: .init(rawValue: Int32(peerId.id._internalGetInt64Value()))))
                 }
             }
             return peers
@@ -1586,7 +1628,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     func confirmSelected(_ peerIds:[PeerId], _ peers:[Peer]) {
         let signal = context.account.postbox.transaction { transaction -> Void in
-            updatePeersCustom(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
+            updatePeersCustom(transaction: transaction, peers: peers.filter { $0.id.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace }, update: { (_, updated) -> Peer? in
                 return updated
             })
         } |> deliverOnMainQueue |> mapToSignal { [weak self] () -> Signal<[PeerId], NoError> in

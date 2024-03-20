@@ -1168,6 +1168,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 }
             case .pinned:
                 return false
+            case .customLink:
+                return false
             }
         }
     }

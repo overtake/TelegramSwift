@@ -50,7 +50,7 @@ private final class ForumNameRowItemView: InputDataRowView {
         guard let item = item as? InputDataRowItem else {
             return
         }
-        control.frame = NSMakeRect(item.viewType.innerInset.left - 2, 6, 30, 30)
+        control.frame = NSMakeRect(item.viewType.innerInset.left - 2, 4, 30, 30)
     }
     
     override func set(item: TableRowItem, animated: Bool) {

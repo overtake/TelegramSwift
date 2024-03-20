@@ -21,12 +21,12 @@ private final class PreviewRowItem : GeneralRowItem {
         if let title = state.title, !title.isEmpty {
             self.title = .init(.initialize(string: title, color: theme.colors.text, font: .medium(.text)), alignment: .center)
         } else {
-            self.title = nil
+            self.title = .init(.initialize(string: "No Messages here yet...", color: theme.colors.text, font: .medium(.text)), alignment: .center)
         }
         if let message = state.message, !message.isEmpty {
             self.message = .init(.initialize(string: message, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         } else {
-            self.message = nil
+            self.message = .init(.initialize(string: "Send a message or click on the greeting below", color: theme.colors.text, font: .normal(.text)), alignment: .center)
         }
         self.context = context
         self.sticker = state.sticker
@@ -132,6 +132,7 @@ private final class PreviewRowView : GeneralContainableRowView {
             }
             y += current.frame.height + 10
             current.update(title)
+            current.centerX()
         } else if let view = self.titleView {
             performSubviewRemoval(view, animated: animated)
             self.titleView = nil
@@ -150,6 +151,7 @@ private final class PreviewRowView : GeneralContainableRowView {
                 current.centerX(y: y)
             }
             current.update(message)
+            current.centerX()
         } else if let view = self.messageView {
             performSubviewRemoval(view, animated: animated)
             self.messageView = nil
@@ -168,9 +170,11 @@ private final class PreviewRowView : GeneralContainableRowView {
 private final class Arguments {
     let context: AccountContext
     let openStickers:()->Void
-    init(context: AccountContext, openStickers:@escaping()->Void) {
+    let resetSticker:()->Void
+    init(context: AccountContext, openStickers:@escaping()->Void, resetSticker:@escaping()->Void) {
         self.context = context
         self.openStickers = openStickers
+        self.resetSticker = resetSticker
     }
     
     deinit {
@@ -183,12 +187,22 @@ private struct State : Equatable {
     var title: String?
     var message: String?
     var sticker: TelegramMediaFile?
+    var random: TelegramMediaFile?
+    
+    var icon_sticker: CGImage?
+    
+    var initialIntro: TelegramBusinessIntro?
+    
+    var mappedIntro: TelegramBusinessIntro? {
+        return .init(title: title ?? "", text: message ?? "", stickerFile: sticker?.fileId == random?.fileId ? nil : sticker)
+    }
 }
 
 private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_title = InputDataIdentifier("_id_title")
 private let _id_message = InputDataIdentifier("_id_message")
 private let _id_sticker = InputDataIdentifier("_id_sticker")
+private let _id_sticker_reset = InputDataIdentifier("_id_sticker_reset")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -203,12 +217,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return PreviewRowItem(initialSize, stableId: stableId, state: state, context: arguments.context, viewType: .firstItem)
     }))
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: "Enter Title", filter: { $0 }, limit: 90))
+    let intro_title_length_limit = arguments.context.appConfiguration.getGeneralValue("intro_title_length_limit", orElse: 32)
+    let intro_description_length_limit = arguments.context.appConfiguration.getGeneralValue("intro_description_length_limit", orElse: 70)
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.message), error: nil, identifier: _id_message, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: "Enter Message", filter: { $0 }, limit: 200))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: "Enter Title", filter: { $0 }, limit: intro_title_length_limit))
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.message), error: nil, identifier: _id_message, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: "Enter Message", filter: { $0 }, limit: intro_description_length_limit))
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker, data: .init(name: "Custom Sticker", color: theme.colors.text, type: .context("Random"), viewType: .lastItem, action: arguments.openStickers)))
+    let type: GeneralInteractedType
+    if state.sticker != state.random, let image = state.icon_sticker {
+        type = .imageContext(image, "")
+    } else {
+        type = .context("Random")
+    }
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker, data: .init(name: "Custom Sticker", color: theme.colors.text, type: type, viewType: state.sticker != state.random ? .innerItem : .lastItem, action: arguments.openStickers)))
     // entries
+    if state.sticker != state.random {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker_reset, data: .init(name: "Reset Sticker", color: theme.colors.redUI, type: .none, viewType: .lastItem, action: arguments.resetSticker)))
+    }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can customize the message people see before they start a chat with you."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -217,9 +247,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 }
 
 func BusinessIntroController(context: AccountContext) -> InputDataController {
-
+    
     let actionsDisposable = DisposableSet()
-
+    
     let initialState = State()
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -230,15 +260,59 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
     
     var getController:(()->InputDataController?)? = nil
     
-    actionsDisposable.add(context.engine.stickers.randomGreetingSticker().start(next: { item in
+    let randomSticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(context.engine.stickers.randomGreetingSticker())
+    
+    actionsDisposable.add(combineLatest(randomSticker, context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessIntro(id: context.peerId))).start(next: { item, intro in
         updateState { current in
             var current = current
-            current.sticker = item?.file
+            switch intro {
+            case let .known(intro):
+                current.sticker = intro?.stickerFile ?? item?.file
+                current.random = item?.file
+                current.title = intro?.title
+                current.message = intro?.text
+            case .unknown:
+                current.sticker = item?.file
+                current.random = item?.file
+            }
             return current
         }
     }))
     
+    var sticker: TelegramMediaFile?
+    var sticker_layer: InlineStickerItemLayer?
+    actionsDisposable.add(statePromise.get().start(next: { state in
+        if state.sticker != sticker, let current = state.sticker {
+            DispatchQueue.main.async {
+                sticker_layer = InlineStickerItemLayer(account: context.account, file: current, size: NSMakeSize(25, 25))
+                sticker_layer?.isPlayable = true
+                
+                sticker_layer?.contentDidUpdate = { image in
+                    updateState { current in
+                        var current = current
+                        current.icon_sticker = image
+                        return current
+                    }
+                }
+            }
+        }
+        sticker = state.sticker
+    }))
+    
+    
     let stickers = NStickersViewController(context)
+    
+    let interactions = EntertainmentInteractions(.stickers, peerId: context.peerId)
+    
+    interactions.sendSticker = { [weak stickers] sticker, _, _, fromRect in
+        updateState { current in
+            var current = current
+            current.sticker = sticker
+            return current
+        }
+        stickers?.closePopover()
+    }
+    stickers.update(with: interactions, chatInteraction: .init(chatLocation: .peer(context.peerId), context: context))
     
     let arguments = Arguments(context: context, openStickers: { [weak stickers] in
         guard let controller = getController?(), let stickers = stickers else {
@@ -248,6 +322,12 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
         
         if let control = view?.textView {
             showPopover(for: control, with: stickers, edge: .maxY)
+        }
+    }, resetSticker: {
+        updateState { current in
+            var current = current
+            current.sticker = current.random
+            return current
         }
     })
     
@@ -267,6 +347,24 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
         return .none
     }
     
+    controller.validateData = { _ in
+        let state = stateValue.with { $0}
+        _ = context.engine.accountData.updateBusinessIntro(intro: state.mappedIntro).startStandalone()
+        showModalText(for: context.window, text: strings().businessUpdated)
+        return .success(.navigationBack)
+        
+    }
+    
+    controller.updateDoneValue = { data in
+        return { f in
+            if stateValue.with({ $0.mappedIntro != $0.initialIntro }) {
+                f(.enabled(strings().navigationDone))
+            } else {
+                f(.disabled(strings().navigationDone))
+            }
+        }
+    }
+        
     controller.contextObject = stickers
     
     getController = { [weak controller] in

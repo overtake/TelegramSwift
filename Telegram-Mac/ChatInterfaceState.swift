@@ -192,21 +192,21 @@ extension ChatTextInputAttribute {
     func isSameAttribute(_ rhs: ChatTextInputAttribute) -> Bool {
         switch self {
         case .bold:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .strikethrough:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .spoiler:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .underline:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .italic:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .pre:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .code:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case .quote:
-            return rhs.weight == rhs.weight
+            return self.weight == rhs.weight
         case let .uid(_, id):
             switch rhs {
             case .uid(_, id):
