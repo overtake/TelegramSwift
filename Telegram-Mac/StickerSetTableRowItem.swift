@@ -211,7 +211,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
-        self.updateMouse()
+        self.updateMouse(animated: animated)
         self.contentView.userInteractionEnabled = false
         if let item = item as? StickerSetTableRowItem {
             

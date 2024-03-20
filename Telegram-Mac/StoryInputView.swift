@@ -411,7 +411,10 @@ final class StoryInputView : Control, StoryInput {
             return
         }
         let text: String
-        if let cooldown = arguments.interaction.presentation.stealthMode.activeUntilTimestamp {
+        if let slowmode = arguments.interaction.presentation.slowMode, let timeout = slowmode.timeout {
+            let timer = smartTimeleftText(Int(timeout))
+            text = strings().storySlowModePlaceholder(timer)
+        } else if let cooldown = arguments.interaction.presentation.stealthMode.activeUntilTimestamp {
             stealthDisposable.set(delaySignal(0.3).start(completed: { [weak self] in
                 self?.updatePlaceholder()
             }))
@@ -420,7 +423,11 @@ final class StoryInputView : Control, StoryInput {
             text = strings().storyStealthModePlaceholder(timer)
         } else {
             stealthDisposable.set(nil)
-            text = strings().storyInputPlaceholder
+            if arguments.interaction.presentation.entryId?.namespace == Namespaces.Peer.CloudChannel {
+                text = strings().storyInputGroupPlaceholder
+            } else {
+                text = strings().storyInputPlaceholder
+            }
         }
         textView.placeholder = text
     }
@@ -500,7 +507,7 @@ final class StoryInputView : Control, StoryInput {
 
     
     func processPaste(_ pasteboard: NSPasteboard) -> Bool {
-        if let window = kitWindow, let arguments = self.arguments {
+        if let window = _window, let arguments = self.arguments {
             
             let context = arguments.context
             let chatInteraction = arguments.chatInteraction

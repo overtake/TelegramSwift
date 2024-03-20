@@ -251,30 +251,56 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
         }
     case let .command(query):
         let normalizedQuery = query.lowercased()
-        
+
         if let peer = chatPresentationInterfaceState.peer {
-            var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
-            if let currentQuery = currentQuery {
-                switch currentQuery {
-                case .command:
+            if peer.isUser, !peer.isBot {
+                
+                switch chatPresentationInterfaceState.chatMode {
+                case .history:
                     break
                 default:
-                    signal = .single({ _ in return nil })
+                    return (nil, .single({ _ in return nil }))
                 }
-            }
-            let participants = context.engine.peers.peerCommands(id: peer.id)
-                |> map { commands -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    let filteredCommands = commands.commands.filter { command in
-                        if command.command.text.hasPrefix(normalizedQuery) {
-                            return true
-                        }
-                        return false
+                
+                var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
+
+                if chatPresentationInterfaceState.accountPeer?.isPremium == true {
+                    signal = context.engine.accountData.shortcutMessageList(onlyRemote: true) |> map { list in
+                        let found = list.items.filter({ item in
+                            let normalized = item.shortcut.lowercased()
+                            return normalized.hasPrefix(normalizedQuery)
+                        })
+                        return { _ in return .shortcut(found, "/\(normalizedQuery)") }
                     }
-                    let sortedCommands = filteredCommands
-                    return { _ in return .commands(sortedCommands) }
+                    return (inputQuery, signal |> then(signal))
+                } else {
+                    return (nil, .single({ _ in return nil }))
+                }
+            } else {
+                var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
+                if let currentQuery = currentQuery {
+                    switch currentQuery {
+                    case .command:
+                        break
+                    default:
+                        signal = .single({ _ in return nil })
+                    }
+                }
+                let participants = context.engine.peers.peerCommands(id: peer.id)
+                    |> map { commands -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                        let filteredCommands = commands.commands.filter { command in
+                            if command.command.text.hasPrefix(normalizedQuery) {
+                                return true
+                            }
+                            return false
+                        }
+                        let sortedCommands = filteredCommands
+                        return { _ in return .commands(sortedCommands) }
+                }
+                
+                return (inputQuery, signal |> then(participants))
             }
             
-            return (inputQuery, signal |> then(participants))
         } else {
             return (nil, .single({ _ in return nil }))
         }

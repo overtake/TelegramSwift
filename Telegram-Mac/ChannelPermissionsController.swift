@@ -29,7 +29,8 @@ private final class Arguments {
     let updateSlowMode:(Int32)->Void
     let convert:()->Void
     let toggleReveal:(TelegramChatBannedRightsFlags)->Void
-    init(context: AccountContext, updatePermission: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, setPeerIdWithRevealedOptions: @escaping (PeerId?, PeerId?) -> Void, addPeer: @escaping  () -> Void, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping (ChannelParticipant) -> Void, openPeerInfo: @escaping (Peer) -> Void, openKicked: @escaping () -> Void, presentRestrictedPublicGroupPermissionsAlert: @escaping() -> Void, updateSlowMode:@escaping(Int32)->Void, convert: @escaping()->Void, toggleReveal:@escaping(TelegramChatBannedRightsFlags)->Void) {
+    let updateBoostNeed:(Int32?)->Void
+    init(context: AccountContext, updatePermission: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, setPeerIdWithRevealedOptions: @escaping (PeerId?, PeerId?) -> Void, addPeer: @escaping  () -> Void, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping (ChannelParticipant) -> Void, openPeerInfo: @escaping (Peer) -> Void, openKicked: @escaping () -> Void, presentRestrictedPublicGroupPermissionsAlert: @escaping() -> Void, updateSlowMode:@escaping(Int32)->Void, convert: @escaping()->Void, toggleReveal:@escaping(TelegramChatBannedRightsFlags)->Void, updateBoostNeed:@escaping(Int32?)->Void) {
         self.context = context
         self.updatePermission = updatePermission
         self.addPeer = addPeer
@@ -42,6 +43,7 @@ private final class Arguments {
         self.updateSlowMode = updateSlowMode
         self.convert = convert
         self.toggleReveal = toggleReveal
+        self.updateBoostNeed = updateBoostNeed
     }
 }
 
@@ -54,6 +56,14 @@ private struct State: Equatable {
     var revealed: [TelegramChatBannedRightsFlags: Bool] = [:]
     var peer: PeerEquatable?
     var cachedData: CachedDataEquatable?
+    var restrictBoosters: Int32? = nil
+    
+    var slowmodeTimeout: Int32? {
+        if let cachedDatra = cachedData?.data as? CachedChannelData {
+            return cachedDatra.slowModeTimeout
+        }
+        return nil
+    }
 }
 
 func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
@@ -184,6 +194,9 @@ private let _id_convert_to_giga = InputDataIdentifier("_id_convert_to_giga")
 private let _id_slow_mode = InputDataIdentifier("_id_slow_mode")
 private let _id_kicked = InputDataIdentifier("_id_kicked")
 private let _id_add_peer = InputDataIdentifier("_id_add_peer")
+private let _id_do_not_boosters = InputDataIdentifier("_id_do_not_boosters")
+private let _id_boost_count = InputDataIdentifier("_id_boost_count")
+
 private func _id_peer(_ peerId: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(peerId.toInt64())")
 }
@@ -288,6 +301,48 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         return index
     }
+    
+    let insertBoost:(TelegramChatBannedRightsFlags)->Void = { rigths in
+        if rigths.contains(.banSendMedia) || rigths.contains(.banSendText) || (state.slowmodeTimeout != nil && state.slowmodeTimeout! > 0) {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_do_not_boosters, data: .init(name: strings().channelPermissionRestrictBoosters, color: theme.colors.text, type: .switchable(state.restrictBoosters != nil), viewType: state.restrictBoosters != nil ? .firstItem : .singleItem, action: {
+                if state.restrictBoosters != nil {
+                    arguments.updateBoostNeed(nil)
+                } else {
+                    arguments.updateBoostNeed(1)
+                }
+            })))
+            
+            let infoText: String
+            if let boost = state.restrictBoosters {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_boost_count, equatable: .init(boost), comparable: nil, item: { initialSize, stableId in
+                    let list:[Int32] = [1, 2, 3, 4, 5]
+                    let titles: [String] = ["1",
+                                            "2",
+                                            "3",
+                                            "4",
+                                            "5"]
+                    let images:[CGImage] = [NSImage(named: "Icon_Boost_Indicator_Single")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true),
+                                            NSImage(named: "Icon_Boost_Indicator_Multiple")!.precomposed(theme.colors.grayText, flipVertical: true)]
+                    return SelectSizeRowItem(initialSize, stableId: stableId, current: boost, sizes: list, hasMarkers: false, titles: titles, titlesImages: images, viewType: .lastItem, selectAction: { index in
+                       arguments.updateBoostNeed(list[index])
+                    })
+                }))
+                infoText = strings().channelPermissionRestrictBoostersActive
+            } else {
+                infoText = strings().channelPermissionRestrictBoostersNonActive
+            }
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(infoText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
+    
+    }
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -346,7 +401,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
                 
                 entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_convert_to_giga, data: .init(name: strings().groupInfoPermissionsBroadcastConvert, color: theme.colors.text, type: .next, viewType: .singleItem, action: arguments.convert)))
-                index += 1
 
                 entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().groupInfoPermissionsBroadcastConvertInfo(Formatter.withSeparator.string(from: .init(value: arguments.context.limitConfiguration.maxSupergroupMemberCount))!)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
                 index += 1
@@ -356,6 +410,7 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
 
             }
         }
+        
 
         if !channel.flags.contains(.isGigagroup) {
             insertSlowMode(cachedData.slowModeTimeout)
@@ -363,9 +418,11 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
+        
+        insertBoost(effectiveRightsFlags)
+
 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_kicked, data: .init(name: strings().groupInfoPermissionsRemoved, color: theme.colors.text, type: .nextContext(cachedData.participantsSummary.kickedCount.flatMap({ "\($0 > 0 ? "\($0)" : "")" }) ?? ""), viewType: .singleItem, action: arguments.openKicked)))
-        index += 1
 
 
         if !channel.flags.contains(.isGigagroup) {
@@ -379,7 +436,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_peer, equatable: .init(viewType), comparable: nil, item: { initialSize, stableId in
                 return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().groupInfoPermissionsAddException, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
             }))
-            index += 1
 
 
 
@@ -437,7 +493,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                         }
                     })
                 }))
-                index += 1
             }
         }
 
@@ -479,11 +534,14 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             items.append(.init(string: string, flags: rights.0, selected: isSelected, enabled: enabled, viewType: bestGeneralViewType(list, for: i), reveable: rights.0 == .banSendMedia, subItems: subItems))
         }
+        
         index = insertPermissions(items)
 
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
+        insertBoost(effectiveRightsFlags)
+        
         insertSlowMode(nil)
 
         entries.append(.sectionId(sectionId, type: .normal))
@@ -496,7 +554,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_peer, equatable: .init(viewType), comparable: nil, item: { initialSize, stableId in
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().groupInfoPermissionsAddException, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
         }))
-        index += 1
 
     }
 
@@ -529,7 +586,7 @@ final class ChannelPermissionsController : TableViewController {
         let peerId = self.peerId
         let context = self.context
         
-        let statePromise = ValuePromise(State(), ignoreRepeated: true)
+        let statePromise = ValuePromise<State>(State(), ignoreRepeated: true)
         let stateValue = Atomic(value: State())
         let updateState: ((State) -> State) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
@@ -615,13 +672,18 @@ final class ChannelPermissionsController : TableViewController {
         let updateDefaultRightsDisposable = MetaDisposable()
         actionsDisposable.add(updateDefaultRightsDisposable)
         
+        var first: Bool = true
         actionsDisposable.add(context.account.viewTracker.peerView(peerId).start(next: { peerView in
             updateState { current in
                 var current = current
                 current.peer = PeerEquatable(peerView.peers[peerId])
                 current.cachedData = CachedDataEquatable(peerView.cachedData)
+                if first {
+                    current.restrictBoosters = (peerView.cachedData as? CachedChannelData)?.boostsToUnrestrict
+                }
                 return current
             }
+            first = false
         }))
         
         
@@ -708,7 +770,31 @@ final class ChannelPermissionsController : TableViewController {
                     } else {
                         effectiveRightsFlags = TelegramChatBannedRightsFlags()
                     }
-                    if value {
+                    
+                    if rights == .banSendMedia {
+                        if value {
+                            effectiveRightsFlags.remove(rights)
+                            for item in banSendMediaSubList() {
+                                effectiveRightsFlags.remove(item.0)
+                            }
+                        } else {
+                            effectiveRightsFlags.insert(rights)
+                            for (right, _) in allGroupPermissionList(peer: group) {
+                                if groupPermissionDependencies(right).contains(rights) {
+                                    effectiveRightsFlags.insert(right)
+                                }
+                            }
+                            
+                            for item in banSendMediaSubList() {
+                                effectiveRightsFlags.insert(item.0)
+                                for (right, _) in allGroupPermissionList(peer: group) {
+                                    if groupPermissionDependencies(right).contains(item.0) {
+                                        effectiveRightsFlags.insert(right)
+                                    }
+                                }
+                            }
+                        }
+                    } else if value {
                         effectiveRightsFlags.remove(rights)
                         effectiveRightsFlags = effectiveRightsFlags.subtracting(groupPermissionDependencies(rights))
                     } else {
@@ -849,6 +935,13 @@ final class ChannelPermissionsController : TableViewController {
                 }
                 return current
             }
+        }, updateBoostNeed: { value in
+            updateState { current in
+                var current = current
+                current.restrictBoosters = value
+                return current
+            }
+            _ = context.engine.peers.updateChannelBoostsToUnlockRestrictions(peerId: peerId, boosts: value == nil ? 0 : value!).start()
         })
         
         let previous = Atomic<[AppearanceWrapperEntry<InputDataEntry>]>(value: [])
@@ -879,7 +972,7 @@ final class ChannelPermissionsController : TableViewController {
         actionsDisposable.add(peersPromise.get().start(next: { participants in
             updateState { current in
                 var current = current
-                current.participants = participants
+                current.participants = participants ?? []
                 return current
             }
         }))

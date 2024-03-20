@@ -345,7 +345,7 @@ class GalleryViewer: NSResponder {
         }
         interactions.canShare = {
             if let chatMode = chatMode {
-                return !chatMode.isSavedMode
+                return !chatMode.isSavedMode && chatMode.customChatContents == nil
             } else {
                 return true
             }
@@ -603,6 +603,11 @@ class GalleryViewer: NSResponder {
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tag: .tag(.pinned), orderStatistics: [.combinedLocation], additionalData: [])
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: message.id.peerId, threadId: nil))
+                case let .customChatContents(contents):
+                    signal = contents.historyView |> map { view in
+                        
+                        return (MessageHistoryView(tag: nil, namespaces: .all, entries: view.0.entries, holeEarlier: false, holeLater: false, isLoading: false), ViewUpdateType.Generic, nil)
+                    }
                 }
 
             
@@ -832,14 +837,14 @@ class GalleryViewer: NSResponder {
                 if savedGifs.contains(where: { $0.media.fileId == file.fileId }) {
                     items.append(ContextMenuItem(strings().galleryRemoveGif, handler: { [weak control] in
                         _ = removeSavedGif(postbox: context.account.postbox, mediaId: file.fileId).start()
-                        if let window = control?.kitWindow {
+                        if let window = control?._window {
                             showModalText(for: window, text: strings().chatContextGifRemoved)
                         }
                     }, itemImage: MenuAnimation.menu_remove_gif.value))
                 } else {
                     items.append(ContextMenuItem(strings().gallerySaveGif, handler: { [weak control, weak self] in
                         
-                        guard let window = control?.kitWindow else {
+                        guard let window = control?._window else {
                             return
                         }
                         
@@ -852,7 +857,7 @@ class GalleryViewer: NSResponder {
                             return
                         }
                         let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
-                        if let window = control?.kitWindow {
+                        if let window = control?._window {
                             showModalText(for: window, text: strings().chatContextGifAdded)
                         }
                     }, itemImage: MenuAnimation.menu_add_gif.value))
@@ -866,8 +871,16 @@ class GalleryViewer: NSResponder {
             }, itemImage: MenuAnimation.menu_copy.value))
         }
         
+        let acceptInteractions: Bool
+        switch chatMode {
+        case .customChatContents(let contents):
+            acceptInteractions = false
+        default:
+            acceptInteractions = true
+        }
         
-        if let contentInteractions = self.contentInteractions {
+        
+        if let contentInteractions = self.contentInteractions, acceptInteractions {
             if let message = pager.selectedItem?.entry.message, let pageItem = pager.selectedItem {
                 if self.type == .history {
                     items.append(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in

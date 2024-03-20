@@ -206,9 +206,13 @@ final class ChatInteraction : InterfaceObserver  {
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
     
+    var boostToUnrestrict:(BoostChannelSource)->Void = { _ in }
+    
     var toggleUnderMouseMessage:()->Void = { }
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
+    
+    var sendMessageShortcut:(ShortcutMessageList.Item)->Void = { _ in }
     
     var replyToAnother:(EngineMessageReplySubject, Bool)->Void = { _, _ in }
     
@@ -732,7 +736,6 @@ final class ChatInteraction : InterfaceObserver  {
             }
             if FastSettings.shouldConfirmWebApp(botId) {
                 verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
-                    
                     FastSettings.markWebAppAsConfirmed(botId)
                     invoke()
                 })
@@ -741,6 +744,10 @@ final class ChatInteraction : InterfaceObserver  {
             }
         })
         
+    }
+    
+    func openEditReplies() {
+        context.bindings.rootNavigation().push(BusinessQuickReplyController(context: context))
     }
     
     func openWebview(bot:Peer, title: String?, buttonText: String, url: String, simple: Bool, inline: Bool) {
@@ -890,6 +897,10 @@ final class ChatInteraction : InterfaceObserver  {
     
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil, sync: Bool = false) {
         
+        if mode.customChatContents != nil {
+            return
+        }
+        
         let peerId = self.peerId
         let context = self.context
         let timestamp = Int32(Date().timeIntervalSince1970)
@@ -897,7 +908,7 @@ final class ChatInteraction : InterfaceObserver  {
         
         let updatedOpaqueData = try? EngineEncoder.encode(interfaceState)
 
-        var s:Signal<Never, NoError> = context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: mode.threadId64, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, synchronizeableInputState: interfaceState.synchronizeableInputState))
+        var s:Signal<Never, NoError> = context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: mode.threadId64, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, mediaDraftState: nil, synchronizeableInputState: interfaceState.synchronizeableInputState))
 
         if !force && !interfaceState.inputState.inputText.isEmpty {
             s = s |> delay(10, queue: Queue.mainQueue())

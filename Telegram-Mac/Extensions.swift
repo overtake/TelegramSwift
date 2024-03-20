@@ -1805,7 +1805,11 @@ extension String {
             let char = string.character(at: range.location + i)
             rep += "\(chars[Int(char) % chars.count])"
         }
-        return string.replacingCharacters(in: range, with: rep)
+        if let intersection = NSMakeRange(0, string.length).intersection(range) {
+            return string.replacingCharacters(in: range, with: rep)
+        } else {
+            return string as String
+        }
 
 //        if string.length <= range.upperBound {
 //            return string.replacingCharacters(in: range, with: rep)
@@ -1842,34 +1846,13 @@ func copyToClipboard(_ input: ChatTextInputState) -> Void {
 
 extension LAPolicy {
     static var applicationPolicy: LAPolicy {
-        if #available(OSX 10.12.2, *) {
-            #if DEBUG
-                return .deviceOwnerAuthentication
-            #endif
-            return .deviceOwnerAuthenticationWithBiometrics
-        } else {
-            return .deviceOwnerAuthentication
-        }
+        return .deviceOwnerAuthentication
     }
 }
 
 extension LAContext {
     var canUseBiometric: Bool {
-        if #available(OSX 10.12.2, *) {
-            #if DEBUG
-                return true
-            #endif
-            if canEvaluatePolicy( .deviceOwnerAuthenticationWithBiometrics, error: nil) {
-                return true
-            } else {
-                return false
-            }
-        } else {
-            #if DEBUG
-                return true
-            #endif
-            return false
-        }
+        return true
     }
 }
 

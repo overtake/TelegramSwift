@@ -28,12 +28,13 @@ public struct FontCacheKey : Hashable {
         case code
         case menlo
         case blockchain
+        case roundTimer
     }
     let type: Font
     let size: CGFloat
     
     public static func initializeCache() {
-        let all:[Font] = [.normal, .medium, .bold, .italic, .light, .ultralight, .bolditalic, .avatar, .semibold, .digitalRound, .code, .menlo, .blockchain, .italicmonospace, .semiboldItalicMonospace, .semiboldMonospace]
+        let all:[Font] = [.normal, .medium, .bold, .italic, .light, .ultralight, .bolditalic, .avatar, .semibold, .digitalRound, .code, .menlo, .blockchain, .italicmonospace, .semiboldItalicMonospace, .semiboldMonospace, .roundTimer]
         for i in 10 ..< 20 {
             let fontSize = CGFloat(i)
             for type in all {
@@ -70,7 +71,8 @@ public struct FontCacheKey : Hashable {
                     caches[.init(type: type, size: fontSize)] = .semiboldItalicMonospace(fontSize)
                 case .semiboldMonospace:
                     caches[.init(type: type, size: fontSize)] = .semiboldMonospace(fontSize)
-
+                case .roundTimer:
+                    caches[.init(type: type, size: fontSize)] = .roundTimer(fontSize)
                 }
             }
         }
@@ -181,6 +183,25 @@ public extension NSFont {
                 return font
             } else {
                 return .systemFont(ofSize: size, weight: .heavy)
+            }
+        }
+    }
+    
+    static func roundTimer(_ size: FontSize) -> NSFont {
+        if let font = caches[.init(type: .roundTimer, size: size)] {
+            return font
+        }
+        if #available(OSX 10.15, *) {
+            if let descriptor = NSFont.systemFont(ofSize: size).fontDescriptor.withDesign(.rounded), let font = NSFont(descriptor: descriptor, size: size) {
+                return font
+            } else {
+                return .systemFont(ofSize: size, weight: .medium)
+            }
+        } else {
+           if let font = NSFont(name: ".SFCompactRounded-Semibold", size: size) {
+                return font
+            } else {
+                return .systemFont(ofSize: size, weight: .medium)
             }
         }
     }

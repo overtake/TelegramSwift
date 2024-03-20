@@ -36,7 +36,7 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
             var amplitudes: [Float]
             var lengths: [Float]
             var speed: Float = 0.5
-            init(speed: Float = 0.5) {
+            init(speed: Float = 0.3) {
                 self.speed = speed
                 self.amplitudes = generateAmplitudes()
                 self.lengths = generateWavelengths()
@@ -142,8 +142,8 @@ public final class CallBlobsLayer: MetalEngineSubjectLayer, MetalEngineSubject {
         }
         
         self.isOpaque = false
-        self.blobs = (0 ..< 3).map { _ in
-            Blob(count: 16)
+        self.blobs = (0 ..< 2).map { _ in
+            Blob(count: 12)
         }
     }
     

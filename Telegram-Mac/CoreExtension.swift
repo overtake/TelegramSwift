@@ -808,6 +808,15 @@ public extension Message {
         return nil
     }
     
+    var boostAttribute: BoostCountMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? BoostCountMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var authInfoAttribute: AuthSessionInfoAttribute? {
         for attr in attributes {
             if let attr = attr as? AuthSessionInfoAttribute {
@@ -957,6 +966,9 @@ fileprivate let edit_limit_time:Int32 = 48*60*60
 
 func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
     
+    if mode.customChatContents != nil {
+        return true
+    }
     if mode.threadId == message.id {
         return false
     }
@@ -966,6 +978,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if mode.isSavedMode {
         return false
     }
+    
     
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
@@ -997,6 +1010,10 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
 func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
         
     if message.peers[message.id.peerId] is TelegramSecretChat {
+        return false
+    }
+    
+    if chatInteraction.mode.customChatContents != nil {
         return false
     }
     
@@ -1119,10 +1136,13 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
         if message.isScheduledMessage {
             return false
         }
+        if mode.customChatContents != nil, message.id.namespace == Namespaces.Message.Local {
+            return false
+        }
         if peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && (message.id.namespace != Namespaces.Message.Local || message.id.peerId.namespace == Namespaces.Peer.SecretChat) {
             
             switch mode {
-            case .history:
+            case .history, .customChatContents:
                 if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
                     return true
                 } else {
@@ -1155,6 +1175,11 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
 }
 
 func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
+    
+    if chatInteraction.mode.customChatContents != nil {
+        return true
+    }
+    
     if message.forwardInfo != nil {
         return false
     }
@@ -1453,148 +1478,6 @@ extension TelegramGroup {
         return !hasBannedRights(.banPinMessages)
     }
 }
-
-extension Peer {
-    var isUser:Bool {
-        return self is TelegramUser
-    }
-    var isSecretChat:Bool {
-        return self is TelegramSecretChat
-    }
-    var isGroup:Bool {
-        return self is TelegramGroup
-    }
-    var canManageDestructTimer: Bool {
-        if self is TelegramSecretChat {
-            return true
-        }
-        if self.isUser && !self.isBot {
-            return true
-        }
-        if let peer = self as? TelegramChannel {
-            if let adminRights = peer.adminRights, adminRights.rights.contains(.canDeleteMessages) {
-                return true
-            } else if peer.groupAccess.isCreator {
-                return true
-            }
-            return false
-        }
-        if let peer = self as? TelegramGroup {
-            switch peer.role {
-            case .admin, .creator:
-                return true
-            default:
-                break
-            }
-        }
-        return false
-    }
-    
-    var storyArchived: Bool {
-        if let user = self as? TelegramUser {
-            return user.storiesHidden ?? false
-        }
-        if let user = self as? TelegramChannel {
-            return user.storiesHidden ?? false
-        }
-        return false
-    }
-
-    var canClearHistory: Bool {
-        if self.isGroup || self.isUser || (self.isSupergroup && self.addressName == nil) {
-            if let peer = self as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
-                return true
-            }
-        }
-        if self is TelegramSecretChat {
-            return true
-        }
-        return false
-    }
-    
-    func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
-        if let peer = self as? TelegramChannel {
-            if let restrictionInfo = peer.restrictionInfo {
-                for rule in restrictionInfo.rules {
-                    #if APP_STORE
-                    if rule.platform == "ios" || rule.platform == "all" {
-                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason)
-                    }
-                    #endif
-                }
-            }
-        }
-        return false
-    }
-    
-    var restrictionText:String? {
-        if let peer = self as? TelegramChannel {
-            if let restrictionInfo = peer.restrictionInfo {
-                for rule in restrictionInfo.rules {
-                    if rule.platform == "ios" || rule.platform == "all" {
-                        return rule.text
-                    }
-                }
-            }
-        }
-        return nil
-    }
-    
-    var botInfo: BotUserInfo? {
-        if let peer = self as? TelegramUser {
-            return peer.botInfo
-        }
-        return nil
-    }
-    
-    var isSupergroup:Bool {
-        if let peer = self as? TelegramChannel {
-            switch peer.info {
-            case .group:
-                return true
-            default:
-                return false
-            }
-        }
-        return false
-    }
-    var isBot:Bool {
-        if let user = self as? TelegramUser {
-            return user.botInfo != nil
-        }
-        return false
-    }
-
-    var canCall:Bool {
-        return isUser && !isBot && ((self as! TelegramUser).phone != "42777") && ((self as! TelegramUser).phone != "42470") && ((self as! TelegramUser).phone != "4240004")
-    }
-    var isChannel:Bool {
-        if let peer = self as? TelegramChannel {
-            switch peer.info {
-            case .broadcast:
-                return true
-            default:
-                return false
-            }
-        }
-        return false
-    }
-    
-    var isAdmin: Bool {
-        if let peer = self as? TelegramChannel {
-            return peer.adminRights != nil || peer.flags.contains(.isCreator)
-        }
-        return false
-    }
-    
-    var isGigagroup:Bool {
-        if let peer = self as? TelegramChannel {
-            return peer.flags.contains(.isGigagroup)
-        }
-        return false
-    }
-}
-
 
 
 public enum AddressNameAvailabilityState : Equatable {
@@ -3373,6 +3256,13 @@ func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) ->
 
 struct PeerEquatable: Equatable {
     let peer: Peer
+    
+    var peerId: PeerId {
+        return peer.id
+    }
+    var id: PeerId {
+        return peer.id
+    }
     init(peer: Peer) {
         self.peer = peer
     }
@@ -3401,6 +3291,12 @@ struct CachedDataEquatable: Equatable {
         }
     }
     init?(_ data: CachedPeerData?) {
+        self.init(data: data)
+    }
+    init(data: CachedPeerData) {
+        self.data = data
+    }
+    init(_ data: CachedPeerData) {
         self.init(data: data)
     }
     static func ==(lhs: CachedDataEquatable, rhs: CachedDataEquatable) -> Bool {
@@ -3740,6 +3636,13 @@ extension ChatListFilter {
         }
         return theme.icons.chat_filter_custom
     }
+    
+    func contains(_ peer: Peer, groupId: PeerGroupId, isRemovedFromTotalUnreadCount: Bool, isUnread: Bool, isContact: Bool) -> Bool {
+        if let predicate = chatListFilterPredicate(for: self) {
+            return predicate.includes(peer: peer, groupId: groupId, isRemovedFromTotalUnreadCount: isRemovedFromTotalUnreadCount, isUnread: isUnread, isContact: isContact, messageTagSummaryResult: nil)
+        }
+        return false
+    }
 }
 
 
@@ -3789,6 +3692,16 @@ func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     }
 }
 
+extension NSMutableAttributedString {
+    func insertEmbedded(_ embedded: NSAttributedString, for symbol:String) {
+        let range = self.string.nsstring.range(of: symbol)
+        self.beginEditing()
+        self.replaceCharacters(in: range, with: "")
+        self.insert(embedded, at: range.location)
+        self.endEditing()
+
+    }
+}
 
 extension NSAttributedString {
     static func makeAnimated(_ file: TelegramMediaFile, text: String, info: ItemCollectionId? = nil) -> NSAttributedString {
@@ -3805,6 +3718,7 @@ extension NSAttributedString {
         return attach
     }
     
+    
     static func embedded(name: String, color: NSColor, resize: Bool) -> NSAttributedString {
         
         let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
@@ -3817,6 +3731,15 @@ extension NSAttributedString {
         
         return attr
 
+    }
+    
+    static func embeddedAnimated(_ file: TelegramMediaFile) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji))), range: NSMakeRange(0, emoji.length))
+        return attr
     }
 }
 
@@ -3872,4 +3795,146 @@ extension SearchTheme {
     static func initialize(_ palette: ColorPalette) -> SearchTheme {
         return SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { strings().searchFieldSearch }, palette.text, palette.grayText)
     }
+}
+
+
+extension MessageTextEntity {
+    func intersectsOrAdjacent(with attribute: MessageTextEntity) -> Bool {
+        return self.range.upperBound >= attribute.range.lowerBound && self.range.lowerBound <= attribute.range.upperBound
+    }
+    
+    func isSameAttribute(_ rhs: MessageTextEntity) -> Bool {
+        switch self.type {
+        case .Unknown:
+            return self.weight == rhs.weight
+        case .Mention:
+            return self.weight == rhs.weight
+        case .Hashtag:
+            return self.weight == rhs.weight
+        case .BotCommand:
+            return self.weight == rhs.weight
+        case .Url:
+            return self.weight == rhs.weight
+        case .Email:
+            return self.weight == rhs.weight
+        case .Bold:
+            return self.weight == rhs.weight
+        case .Italic:
+            return self.weight == rhs.weight
+        case .Code:
+            return self.weight == rhs.weight
+        case .Pre(language: let language):
+            return self.weight == rhs.weight
+        case .PhoneNumber:
+            return self.weight == rhs.weight
+        case .Strikethrough:
+            return self.weight == rhs.weight
+        case .BlockQuote:
+            return self.weight == rhs.weight
+        case .Underline:
+            return self.weight == rhs.weight
+        case .BankCard:
+            return self.weight == rhs.weight
+        case .Spoiler:
+            return self.weight == rhs.weight
+        case .CustomEmoji(stickerPack: let stickerPack, fileId: let fileId):
+            return false
+        case .Custom(type: let type):
+            switch rhs.type {
+            case .Custom(type):
+                return true
+            default:
+                return false
+            }
+        case .TextUrl(url: let url):
+            switch rhs.type {
+            case .TextUrl(url):
+                return true
+            default:
+                return false
+            }
+        case .TextMention(peerId: let peerId):
+            switch rhs.type {
+            case .TextMention(peerId):
+                return true
+            default:
+                return false
+            }
+        }
+    }
+
+    mutating func merge(with attribute: MessageTextEntity) {
+        let newStart = min(self.range.lowerBound, attribute.range.lowerBound)
+        let newEnd = max(self.range.upperBound, attribute.range.upperBound)
+        self.range = newStart..<newEnd
+    }
+    
+    var weight: Int {
+        switch self.type {
+        case .Unknown:
+            return 0
+        case .Mention:
+            return 1
+        case .Hashtag:
+            return 2
+        case .BotCommand:
+            return 3
+        case .Url:
+            return 4
+        case .Email:
+            return 5
+        case .Bold:
+            return 6
+        case .Italic:
+            return 7
+        case .Code:
+            return 8
+        case .Pre:
+            return 9
+        case .TextUrl:
+            return 10
+        case .TextMention:
+            return 11
+        case .PhoneNumber:
+            return 12
+        case .Strikethrough:
+            return 13
+        case .BlockQuote:
+            return 14
+        case .Underline:
+            return 15
+        case .BankCard:
+            return 16
+        case .Spoiler:
+            return 17
+        case .CustomEmoji:
+            return 18
+        case .Custom:
+            return 19
+        }
+    }
+}
+
+
+
+func concatMessageAttributes(_ attributes: [MessageTextEntity]) -> [MessageTextEntity] {
+    guard !attributes.isEmpty else { return [] }
+
+    let sortedAttributes = attributes.sorted { $0.weight < $1.weight }
+    var mergedAttributes = [MessageTextEntity]()
+
+    var currentAttribute = sortedAttributes.first!
+
+    for attribute in sortedAttributes.dropFirst() {
+        if currentAttribute.isSameAttribute(attribute) && currentAttribute.intersectsOrAdjacent(with: attribute) {
+            currentAttribute.merge(with: attribute)
+        } else {
+            mergedAttributes.append(currentAttribute)
+            currentAttribute = attribute
+        }
+    }
+    // Append the last merged or unmerged attribute
+    mergedAttributes.append(currentAttribute)
+
+    return mergedAttributes
 }

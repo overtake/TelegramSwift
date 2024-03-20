@@ -68,7 +68,7 @@ private func entries(_ state:LocationPreviewState, arguments: LocationPreviewArg
     return entries
 }
 @available(macOS 10.13, *)
-func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMediaMap, peer: Peer?, messageId: MessageId) -> InputDataModalController {
+func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMediaMap, peer: Peer?, messageId: MessageId?) -> InputDataModalController {
     
     let initialState = LocationPreviewState(map: mapValue, peer: peer)
     
@@ -80,8 +80,13 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     
     let arguments = LocationPreviewArguments(context: context)
     
-    let messageView = context.account.postbox.messageView(messageId) |> map {
-        $0.message
+    let messageView: Signal<Message?, NoError>
+    if let messageId {
+        messageView = context.account.postbox.messageView(messageId) |> map {
+            $0.message
+        }
+    } else {
+        messageView = .complete()
     }
     
     let disposable = messageView.start(next: { message in

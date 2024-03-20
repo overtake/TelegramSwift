@@ -67,7 +67,7 @@ private final class ChatListSystemDeprecatedItemView : TableRowView {
         control.border = [.Bottom]
         
         control.set(handler: { [weak self] control in
-            if let window = control.kitWindow {
+            if let window = control._window {
                 verifyAlert_button(for: window, header: strings().deprecatedAlertTitle, information: strings().deprecatedAlertText, cancel: "", option: strings().deprecatedAlertThird, successHandler: { result in
                     if result == .thrid {
                         if let item = self?.item as? ChatListSystemDeprecatedItem {

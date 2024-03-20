@@ -12,7 +12,6 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 
-
 private final class Arguments {
     let context: AccountContext
     let toggle: (Country)->Void

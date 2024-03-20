@@ -14,99 +14,119 @@ import TGModernGrowingTextView
 import TelegramCore
 
 final class PremiumBoardingHeaderItem : GeneralRowItem {
+    
+    enum SceneType {
+        case coin
+        case star
+    }
+    
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
     let peer: Peer?
     let context: AccountContext
     let status: PremiumEmojiStatusInfo?
     let presentation: TelegramPresentationTheme
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, presentation: TelegramPresentationTheme, isPremium: Bool, peer: Peer?, emojiStatus: PremiumEmojiStatusInfo?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
+    let sceneType: SceneType
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, presentation: TelegramPresentationTheme, isPremium: Bool, peer: Peer?, emojiStatus: PremiumEmojiStatusInfo?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType, sceneType: SceneType) {
         
         self.context = context
         self.peer = peer
         self.status = emojiStatus
         self.presentation = presentation
+        self.sceneType = sceneType
         
         let title: NSAttributedString
-        if let peer = peer {
-            if case let .gift(from, _, months, _, _) = source {
-                let text: String
-                if from == context.peerId {
-                    text = strings().premiumBoardingPeerGiftYouTitle(peer.displayTitle, "\(months)")
-                } else {
-                    text = strings().premiumBoardingPeerGiftTitle(peer.displayTitle, "\(months)")
-                }
-                title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, contents)
-                }))
-            } else if let status = emojiStatus {
-                
-                if let info = status.info {
-                    let packName: String = info.title
-                    let packFile: TelegramMediaFile = status.items.first?.file ?? status.file
-                    
-                    let attr = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusCustomTitle(peer.displayTitle, packName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
-                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(.name(info.shortName))]), for: context.window)
-                        }))
-                    })) as! NSMutableAttributedString
-                    
-                    let range = attr.string.nsstring.range(of: "🤡")
-                    if range.location != NSNotFound {
-                        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: packFile.fileId.id, file: packFile, emoji: ""))), range: range)
-                    }
-                    
-                    title = attr
-                } else {
-                    title = .initialize(string: strings().premiumBoardingPeerStatusDefaultTitle(peer.displayTitle), color: presentation.colors.text, font: .medium(.header))
-                }
-            } else {
-                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, contents)
-                }))
-            }
-            
-        } else {
+        var info = NSMutableAttributedString()
+        
+        switch sceneType {
+        case .coin:
+            title = .initialize(string: strings().premiumBoardingBusinessTelegramBusiness, color: presentation.colors.text, font: .medium(.header))
             if isPremium {
-                title = .initialize(string: strings().premiumBoardingGotTitle, color: presentation.colors.text, font: .medium(.header))
+                _ = info.append(string: strings().premiumBoardingBusinessTelegramBusinessHeaderInfo1, color: presentation.colors.text, font: .normal(.text))
             } else {
-                title = .initialize(string: strings().premiumBoardingTitle, color: presentation.colors.text, font: .medium(.header))
+                _ = info.append(string: strings().premiumBoardingBusinessTelegramBusinessHeaderInfo2, color: presentation.colors.text, font: .normal(.text))
             }
+        case .star:
+            if let peer = peer {
+                if case let .gift(from, _, months, _, _) = source {
+                    let text: String
+                    if from == context.peerId {
+                        text = strings().premiumBoardingPeerGiftYouTitle(peer.displayTitle, "\(months)")
+                    } else {
+                        text = strings().premiumBoardingPeerGiftTitle(peer.displayTitle, "\(months)")
+                    }
+                    title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, contents)
+                    }))
+                } else if let status = emojiStatus {
+                    
+                    if let info = status.info {
+                        let packName: String = info.title
+                        let packFile: TelegramMediaFile = status.items.first?.file ?? status.file
+                        
+                        let attr = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusCustomTitle(peer.displayTitle, packName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                                showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(.name(info.shortName))]), for: context.window)
+                            }))
+                        })) as! NSMutableAttributedString
+                        
+                        let range = attr.string.nsstring.range(of: "🤡")
+                        if range.location != NSNotFound {
+                            attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: packFile.fileId.id, file: packFile, emoji: ""))), range: range)
+                        }
+                        
+                        title = attr
+                    } else {
+                        title = .initialize(string: strings().premiumBoardingPeerStatusDefaultTitle(peer.displayTitle), color: presentation.colors.text, font: .medium(.header))
+                    }
+                } else {
+                    title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, contents)
+                    }))
+                }
+                
+            } else {
+                if isPremium {
+                    title = .initialize(string: strings().premiumBoardingGotTitle, color: presentation.colors.text, font: .medium(.header))
+                } else {
+                    title = .initialize(string: strings().premiumBoardingTitle, color: presentation.colors.text, font: .medium(.header))
+                }
+            }
+            if let _ = peer {
+                if case let .gift(from, _, _, slug, _) = source {
+                    let text: String
+                    if from == context.peerId {
+                        text = strings().premiumBoardingPeerGiftYouInfo
+                    } else {
+                        if let _ = slug {
+                            text = strings().premiumBoardingPeerGiftLinkInfo
+                        } else {
+                            text = strings().premiumBoardingPeerGiftInfo
+                        }
+                    }
+                    _ = info.append(string: text, color: presentation.colors.text, font: .normal(.text))
+                } else if let _ = peer?.emojiStatus {
+                    _ = info.append(string: strings().premiumBoardingPeerStatusInfo, color: presentation.colors.text, font: .normal(.text))
+                } else {
+                    _ = info.append(string: strings().premiumBoardingPeerInfo, color: presentation.colors.text, font: .normal(.text))
+                }
+                info.detectBoldColorInString(with: .medium(.text))
+                
+            } else {
+                if isPremium, let premiumText = premiumText {
+                    info = premiumText.mutableCopy() as! NSMutableAttributedString
+                } else {
+                    _ = info.append(string: strings().premiumBoardingInfo, color: presentation.colors.text, font: .normal(.text))
+                    info.detectBoldColorInString(with: .medium(.text))
+                }
+            }
+
         }
+        
         self.titleLayout = .init(title, alignment: .center)
 
         self.titleLayout.interactions = globalLinkExecutor
         
-        var info = NSMutableAttributedString()
-        if let _ = peer {
-            
-            if case let .gift(from, _, _, slug, _) = source {
-                let text: String
-                if from == context.peerId {
-                    text = strings().premiumBoardingPeerGiftYouInfo
-                } else {
-                    if let _ = slug {
-                        text = strings().premiumBoardingPeerGiftLinkInfo
-                    } else {
-                        text = strings().premiumBoardingPeerGiftInfo
-                    }
-                }
-                _ = info.append(string: text, color: presentation.colors.text, font: .normal(.text))
-            } else if let _ = peer?.emojiStatus {
-                _ = info.append(string: strings().premiumBoardingPeerStatusInfo, color: presentation.colors.text, font: .normal(.text))
-            } else {
-                _ = info.append(string: strings().premiumBoardingPeerInfo, color: presentation.colors.text, font: .normal(.text))
-            }
-            info.detectBoldColorInString(with: .medium(.text))
-            
-        } else {
-            if isPremium, let premiumText = premiumText {
-                info = premiumText.mutableCopy() as! NSMutableAttributedString
-            } else {
-                _ = info.append(string: strings().premiumBoardingInfo, color: presentation.colors.text, font: .normal(.text))
-                info.detectBoldColorInString(with: .medium(.text))
-            }
-        }
         self.infoLayout = .init(info, alignment: .center)
         self.infoLayout.interactions = globalLinkExecutor
         super.init(initialSize, stableId: stableId)
@@ -138,7 +158,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
 
 
 private final class PremiumBoardingHeaderView : TableRowView {
-    private var premiumView: PremiumStarSceneView?
+    private var premiumView: (PremiumSceneView & NSView)?
     private var statusView: InlineStickerView?
     private let titleView = TextView()
     private let infoView = TextView()
@@ -228,11 +248,16 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.statusView = nil
             }
-            let current: PremiumStarSceneView
+            let current: (PremiumSceneView & NSView)
             if let view = self.premiumView {
                 current = view
             } else {
-                current = PremiumStarSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+                switch item.sceneType {
+                case .coin:
+                    current = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+                case .star:
+                    current = PremiumStarSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+                }
                 addSubview(current)
                 self.premiumView = current
             }

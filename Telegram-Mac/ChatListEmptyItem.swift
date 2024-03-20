@@ -22,7 +22,9 @@ final class ChatListSpaceItem : GeneralRowItem {
         super.init(initialSize, stableId: stableId)
     }
     
-    
+    override var canBeAnchor: Bool {
+        return false
+    }
     
     override var height: CGFloat {
         guard let table = self.table else {

@@ -20,13 +20,15 @@ fileprivate final class ChannelAdminsControllerArguments {
     let removeAdmin: (PeerId) -> Void
     let eventLogs:() -> Void
     let toggleAntispam: (Bool)->Void
-    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void, toggleAntispam:@escaping(Bool)->Void) {
+    let toggleSignatures:(Bool)->Void
+    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void, toggleAntispam:@escaping(Bool)->Void, toggleSignatures:@escaping(Bool)->Void) {
         self.context = context
         self.addAdmin = addAdmin
         self.openAdmin = openAdmin
         self.removeAdmin = removeAdmin
         self.eventLogs = eventLogs
         self.toggleAntispam = toggleAntispam
+        self.toggleSignatures = toggleSignatures
     }
 }
 
@@ -54,6 +56,8 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
     case adminPeerItem(sectionId:Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, GeneralViewType)
     case addAdmin(sectionId:Int32, GeneralViewType)
     case adminsInfo(sectionId:Int32, String, GeneralViewType)
+    case signMessages(sectionId: Int32, sign:Bool, viewType: GeneralViewType)
+    case signMessagesInfo(sectionId: Int32, viewType: GeneralViewType)
     case section(Int32)
     case loading
     var stableId: ChannelAdminsEntryStableId {
@@ -72,6 +76,10 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
             return .index(5)
         case .adminsInfo:
             return .index(6)
+        case .signMessages:
+            return .index(7)
+        case .signMessagesInfo:
+            return .index(8)
         case let .section(sectionId):
             return .index((sectionId + 1) * 1000 - sectionId)
         case let .adminPeerItem(_, _, participant, _, _):
@@ -95,6 +103,10 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
         case let .addAdmin(sectionId, _):
             return (sectionId * 1000) + stableId.index
         case let .adminsInfo(sectionId, _, _):
+            return (sectionId * 1000) + stableId.index
+        case let .signMessages(sectionId, _, _):
+            return (sectionId * 1000) + stableId.index
+        case let .signMessagesInfo(sectionId, _):
             return (sectionId * 1000) + stableId.index
         case let .adminPeerItem(sectionId, index, _, _, _):
             return (sectionId * 1000) + index + stableId.index
@@ -231,8 +243,29 @@ private func channelAdminsControllerEntries(context: AccountContext, accountPeer
         if index > 0 {
             entries.append(.section(sectionId))
             sectionId += 1
+        }
+        
+        if !isGroup {
+            
+            let messagesShouldHaveSignatures:Bool
+            switch peer.info {
+            case let .broadcast(info):
+                messagesShouldHaveSignatures = info.flags.contains(.messagesShouldHaveSignatures)
+            default:
+                messagesShouldHaveSignatures = false
+            }
+            
+            if peer.hasPermission(.changeInfo) {                
+                entries.append(.signMessages(sectionId: sectionId, sign:messagesShouldHaveSignatures, viewType: .singleItem))
+                entries.append(.signMessagesInfo(sectionId: sectionId, viewType: .textBottomItem))
+                
+                entries.append(.section(sectionId))
+                sectionId += 1
+
+            }
 
         }
+        
     } else  if let peer = view.peers[view.peerId] as? TelegramGroup {
         
         entries.append(.adminsHeader(sectionId: sectionId, strings().adminsGroupAdmins, .textTopItem))
@@ -355,6 +388,13 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
         return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: text, viewType: viewType)
         case let .adminsInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: text, viewType: viewType)
+        case let .signMessages(_, sign, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().peerInfoSignMessages, type: .switchable(sign), viewType: viewType, action: { [weak arguments] in
+                arguments?.toggleSignatures(!sign)
+            })
+        case let .signMessagesInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: strings().peerInfoSignMessagesDesc, viewType: viewType)
+
         }
     }
     
@@ -473,6 +513,8 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             self?.navigationController?.push(ChannelEventLogController(context, peerId: peerId))
         }, toggleAntispam: { value in
             _ = showModalProgress(signal: context.engine.peers.toggleAntiSpamProtection(peerId: peerId, enabled: value), for: context.window).start()
+        }, toggleSignatures: { enabled in
+            _ = context.engine.peers.toggleShouldChannelMessagesSignatures(peerId: peerId, enabled: enabled).startStandalone()
         })
         
         let peerView = Promise<PeerView>()

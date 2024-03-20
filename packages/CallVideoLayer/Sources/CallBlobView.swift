@@ -12,9 +12,16 @@ import AppKit
 
 
 public class CallBlobView : LayerBackedView {
-    private let blob = CallBlobsLayer()
+    public let blob = CallBlobsLayer()
     private let backgroundLayer = CALayer()
-    private let maskLayer = CALayer()
+    public var maskLayer = CALayer() {
+        didSet {
+            oldValue.removeFromSuperlayer()
+            self.layer?.addSublayer(maskLayer)
+            maskLayer.mask = backgroundLayer
+            maskLayer.frame = frame.size.bounds
+        }
+    }
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         blob.frame = frameRect.size.bounds
@@ -28,6 +35,8 @@ public class CallBlobView : LayerBackedView {
         blob.isInHierarchy = true
         self.layer?.masksToBounds = false
     }
+    
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

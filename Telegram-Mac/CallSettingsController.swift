@@ -35,7 +35,7 @@ private let _id_input_audio = InputDataIdentifier("_id_input_audio")
 private let _id_output_audio = InputDataIdentifier("_id_output_audio")
 private let _id_micro = InputDataIdentifier("_id_micro")
 
-private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices, arguments: CallSettingsArguments) -> [InputDataEntry] {
+private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices, arguments: CallSettingsArguments, theme: TelegramPresentationTheme) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -62,6 +62,8 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
         activeCameraDevice = cameraDevice
     }
     
+    let customTheme = GeneralRowItem.Theme.initialize(theme)
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsCameraTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
@@ -70,7 +72,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
         return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleInputVideoDevice(value.uniqueID)
         })
-        }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem)))
+    }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem, theme: customTheme)))
     index += 1
     
     if let activeCameraDevice = activeCameraDevice {
@@ -107,12 +109,12 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
         return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleInputAudioDevice(value.uniqueID)
         })
-        }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem)))
+        }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem, theme: customTheme)))
     index += 1
     
     if let activeMicroDevice = activeMicroDevice {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(activeMicroDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem)
+            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem, customTheme: customTheme)
         }))
         index += 1
     }
@@ -127,7 +129,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
 
 
 
-func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataController {
+func CallSettingsController(sharedContext: SharedAccountContext, presentation: TelegramPresentationTheme = theme) -> InputDataController {
     
     let devicesContext = sharedContext.devicesContext
     
@@ -148,7 +150,7 @@ func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataCon
     })
     
     let signal = combineLatest(voiceCallSettings(sharedContext.accountManager), devicesContext.signal) |> map { settings, devices in
-        return InputDataSignalValue(entries: callSettingsEntries(settings: settings, devices: devices, arguments: arguments))
+        return InputDataSignalValue(entries: callSettingsEntries(settings: settings, devices: devices, arguments: arguments, theme: presentation))
     }
     
     let controller = InputDataController(dataSignal: signal, title: strings().callSettingsTitle, hasDone: false)

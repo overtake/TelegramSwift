@@ -122,7 +122,7 @@ extension TimePickerOption {
     var interval: TimeInterval {
         let hours = Double(self.hours) * 60.0 * 60
         let minutes = Double(self.minutes) * 60.0
-        let seconds = Double(self.seconds)
+        let seconds = Double(self.seconds ?? 0)
         return hours + minutes + seconds
     }
 }

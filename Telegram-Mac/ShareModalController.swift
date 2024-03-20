@@ -1065,6 +1065,9 @@ final class ReplyForwardMessageObject : ShareObject {
     
     override func possibilityPerformTo(_ peer: Peer) -> Bool {
         let canSend = peer.canSendMessage(media: message.media.first)
+        if peer.id.namespace == Namespaces.Peer.SecretChat {
+            return false
+        }
         return !excludePeerIds.contains(peer.id) && canSend
     }
     
@@ -1829,6 +1832,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             !$0.list.isLoading
         } |> take(1)
         genericView.basicSearchView.setString("")
+        genericView.tokenizedView.setString("")
         filter = showModalProgress(signal: filter, for: context.window)
         let signal: Signal<[EngineChatList.Item], NoError> = combineLatest(filter, self.search.get()) |> map { update, query in
             let items = update.list.items.reversed().filter {

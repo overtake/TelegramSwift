@@ -16,13 +16,13 @@ private func resolveVideoRotationAngle(angle: Float, followsDeviceOrientation: B
 }
 
 
-public class MetalCallVideoView : LayerBackedView {
+public class MetalCallVideoView : Control {
     
-    struct VideoMetrics: Equatable {
-           var resolution: CGSize
-           var rotationAngle: Float
-           var followsDeviceOrientation: Bool
-           var sourceId: Int
+    public struct VideoMetrics: Equatable {
+           public var resolution: CGSize
+           public var rotationAngle: Float
+           public var followsDeviceOrientation: Bool
+           public var sourceId: Int
            
            init(resolution: CGSize, rotationAngle: Float, followsDeviceOrientation: Bool, sourceId: Int) {
                self.resolution = resolution
@@ -44,6 +44,10 @@ public class MetalCallVideoView : LayerBackedView {
         videoLayer.isDoubleSided = false
         videoLayer.contentsGravity = .resizeAspect
         videoLayer.blurredLayer.contentsGravity = .resizeAspectFill
+        self.userInteractionEnabled = false
+        if #available(macOS 10.15, *) {
+            layer?.cornerCurve = .continuous
+        } 
         
     }
     
@@ -51,10 +55,14 @@ public class MetalCallVideoView : LayerBackedView {
         fatalError("init(coder:) has not been implemented")
     }
     private var videoOnUpdatedListener: Disposable?
-    private var videoMetrics: VideoMetrics? {
+    
+    public var videoMetricsDidUpdate:((VideoMetrics?)->Void)?
+    
+    public private(set) var videoMetrics: VideoMetrics? {
         didSet {
             if oldValue != videoMetrics {
                 updateLayout(size: self.frame.size, transition: .immediate)
+                videoMetricsDidUpdate?(videoMetrics)
             }
         }
     }
@@ -121,8 +129,8 @@ public class MetalCallVideoView : LayerBackedView {
                 
         let frame = NSMakeRect(size.width * 0.5, size.height * 0.5, size.width, size.height)
         
-        transition.updateFrame(layer: self.videoLayer, frame: frame)
-        transition.updateFrame(layer: self.videoLayer.blurredLayer, frame: frame)
+        transition.updateFrame(layer: self.videoLayer, frame: frame, updatePosition: true)
+        transition.updateFrame(layer: self.videoLayer.blurredLayer, frame: frame, updatePosition: true)
      
         self.videoLayer.blurredLayer.frame = size.bounds
         self.videoLayer.frame = size.bounds

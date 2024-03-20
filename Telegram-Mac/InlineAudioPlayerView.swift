@@ -305,7 +305,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     private func showAudioPlayerList() {
-        guard let window = kitWindow, let context = self.context else {return}
+        guard let window = _window, let context = self.context else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         if NSPointInRect(point, textViewContainer.frame) {
             if let controller = controller as? APChatMusicController, let song = controller.currentSong {

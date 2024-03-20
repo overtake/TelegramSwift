@@ -1676,7 +1676,7 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] control in
-            if let window = control.kitWindow, let state = self?._state {
+            if let window = control._window, let state = self?._state {
                 switch state.main {
                 case let .requestChat(_, text):
                     alert(for: window, info: text)
@@ -1837,7 +1837,7 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
             let timingFunction: CAMediaTimingFunctionName = .spring
 
             
-            let peers:[Avatar] = peers.reduce([], { current, value in
+            let peers:[Avatar] = peers.prefix(3).reduce([], { current, value in
                 var current = current
                 if let peer = value.peer.peer {
                     current.append(.init(peer: peer, index: current.count))
@@ -1866,7 +1866,7 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
                 control.updateLayout(size: NSMakeSize(30, 30), isClipped: inserted.0 != 0, animated: animated)
                 control.userInteractionEnabled = false
                 control.setFrameSize(NSMakeSize(30, 30))
-                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 29, 0))
+                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 27, 0))
                 avatars.insert(control, at: inserted.0)
                 avatarsContainer.subviews.insert(control, at: inserted.0)
                 if animated {

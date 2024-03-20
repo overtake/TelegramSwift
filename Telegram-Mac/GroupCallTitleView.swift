@@ -164,7 +164,7 @@ final class GroupCallTitleView : Control {
     
     func updateMode(_ mode: Mode, animated: Bool) {
         self.mode = mode
-        backgroundView.backgroundColor = mode == .transparent ? .clear : GroupCallTheme.windowBackground
+        backgroundView.backgroundColor = .clear//mode == .transparent ? .clear : GroupCallTheme.windowBackground
         if animated {
             backgroundView.layer?.animateBackground()
         }

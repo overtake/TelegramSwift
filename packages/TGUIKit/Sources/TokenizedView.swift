@@ -490,6 +490,12 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         return input
     }
     
+    public func setString(_ string: String) {
+        input.string = string
+        self._textUpdater.set(string)
+        textDidChange(Notification(name: NSTextView.didChangeNotification))
+    }
+    
     public func updateLocalizationAndTheme(theme: PresentationTheme) {
         background = customTheme().background
         contentView.background = customTheme().background

@@ -166,7 +166,6 @@ private final class AnnotationView : MKAnnotationView {
     }
     
 }
-@available(macOS 10.13, *)
 private class MapRowItem: GeneralRowItem {
     let context: AccountContext
     let presentation: TelegramPresentationTheme

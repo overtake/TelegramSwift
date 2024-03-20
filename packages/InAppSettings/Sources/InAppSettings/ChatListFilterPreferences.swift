@@ -42,7 +42,7 @@ public extension ChatListFilter {
                 id = tempId
             }
         }
-        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(isShared: false, hasSharedLinks: false, categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
+        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(isShared: false, hasSharedLinks: false, categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: [], color: nil))
     }
 }
 
@@ -77,12 +77,11 @@ public struct ChatListFoldersSettings: Codable {
         try container.encode(Int32(self.interacted ? 1 : 0), forKey: "i")
     }
     
-    
     public func withUpdatedSidebar(_ sidebar: Bool) -> ChatListFoldersSettings {
         return ChatListFoldersSettings(sidebar: sidebar, interacted: self.interacted)
     }
     public func withUpdatedSidebarInteracted(_ interacted: Bool) -> ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: sidebar, interacted: interacted)
+        return ChatListFoldersSettings(sidebar: self.sidebar, interacted: interacted)
     }
 }
 
@@ -109,9 +108,11 @@ public func updateChatListFolderSettings(_ postbox: Postbox, _ f: @escaping(Chat
 public struct ChatListFolders : Equatable {
     public let list: [ChatListFilter]
     public let sidebar: Bool
-    public init(list: [ChatListFilter], sidebar: Bool) {
+    public let showTags: Bool
+    public init(list: [ChatListFilter], sidebar: Bool, showTags: Bool) {
         self.list = list
         self.sidebar = sidebar
+        self.showTags = showTags
     }
     
     public var isEmpty: Bool {
@@ -120,8 +121,10 @@ public struct ChatListFolders : Equatable {
 }
 
 public func chatListFilterPreferences(engine: TelegramEngine) -> Signal<ChatListFolders, NoError> {
-    return combineLatest(engine.peers.updatedChatListFilters(), chatListFolderSettings(engine.account.postbox)) |> map {
-        return ChatListFolders(list: $0, sidebar: $1.sidebar)
+    let showTags = engine.data.subscribe(TelegramEngine.EngineData.Item.ChatList.FiltersDisplayTags())
+
+    return combineLatest(engine.peers.updatedChatListFilters(), chatListFolderSettings(engine.account.postbox), showTags) |> map {
+        return ChatListFolders(list: $0, sidebar: $1.sidebar, showTags: $2)
     }
 }
 

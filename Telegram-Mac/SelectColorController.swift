@@ -89,7 +89,7 @@ private class ProfilePreviewRowItem : GeneralRowItem {
     fileprivate let nameLayout: TextViewLayout
     fileprivate let statusLayout: TextViewLayout
     fileprivate let getColor:(PeerNameColor)->PeerNameColors.Colors
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, subscribers: Int?, nameColor: PeerNameColor?, backgroundEmojiId: Int64?, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType, getColor:@escaping(PeerNameColor)->PeerNameColors.Colors) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, subscribers: Int?, isGroup: Bool, nameColor: PeerNameColor?, backgroundEmojiId: Int64?, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType, getColor:@escaping(PeerNameColor)->PeerNameColors.Colors) {
         self.theme = theme
         self.peer = peer
         self.getColor = getColor
@@ -109,7 +109,11 @@ private class ProfilePreviewRowItem : GeneralRowItem {
         
         let status: String
         if let subscribers = subscribers {
-            status = strings().peerStatusSubscribersCountable(subscribers)
+            if isGroup {
+                status = strings().peerStatusMemberCountable(subscribers)
+            } else {
+                status = strings().peerStatusSubscribersCountable(subscribers)
+            }
         } else {
             status = strings().peerStatusRecently
         }
@@ -417,7 +421,7 @@ private final class PreviewRowView : GeneralContainableRowView {
 
 
 
-private func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
+func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
     return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
@@ -428,7 +432,7 @@ private func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
     })!
 }
 
-private func generateFillImage(nameColor: PeerNameColors.Colors) -> CGImage {
+func generateFillImage(nameColor: PeerNameColors.Colors) -> CGImage {
     return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
@@ -799,6 +803,12 @@ private struct State : Equatable {
     
     var wallpaper: TelegramWallpaper?
     var actualWallpaper: TelegramWallpaper?
+    
+    var emojiPack: StickerPackCollectionInfo?
+    var actualEmojiPack: StickerPackCollectionInfo?
+    
+    
+    var icon_emojiPack: CGImage?
 
     func isSame(to peer: Peer) -> Bool {
         if peer.profileColor != selected_profile {
@@ -817,6 +827,9 @@ private struct State : Equatable {
             return false
         }
         if wallpaper != actualWallpaper {
+            return false
+        }
+        if emojiPack != actualEmojiPack {
             return false
         }
         return true
@@ -858,8 +871,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var afterNameImage_NameIcon: CGImage? = nil
     var afterNameImage_ProfileIcon: CGImage? = nil
     var afterNameImage_WallpaperIcon: CGImage? = nil
+    var afterNameImage_EmojiPack: CGImage? = nil
 
-    if state.peer._asPeer().isChannel {
+    switch arguments.source {
+    case .channel:
         if state.boostLevel < arguments.premiumConfiguration.minChannelEmojiStatusLevel {
             afterNameImage_emojiStatus = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minChannelEmojiStatusLevel)))
         }
@@ -872,6 +887,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if state.boostLevel < arguments.premiumConfiguration.minChannelWallpaperLevel {
             afterNameImage_WallpaperIcon = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minChannelWallpaperLevel)))
         }
+    case .group:
+        if state.boostLevel < arguments.premiumConfiguration.minGroupEmojiStatusLevel {
+            afterNameImage_emojiStatus = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minGroupEmojiStatusLevel)))
+        }
+        if state.boostLevel < arguments.premiumConfiguration.minGroupProfileIconLevel {
+            afterNameImage_ProfileIcon = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minGroupProfileIconLevel)))
+        }
+        if state.boostLevel < arguments.premiumConfiguration.minGroupWallpaperLevel {
+            afterNameImage_WallpaperIcon = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minGroupWallpaperLevel)))
+        }
+        if state.boostLevel < arguments.premiumConfiguration.minGroupEmojiPackLevel {
+            afterNameImage_EmojiPack = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(arguments.premiumConfiguration.minGroupEmojiPackLevel)))
+        }
+    default:
+        break
     }
     
     switch arguments.source {
@@ -978,16 +1008,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         index += 1
         
         let previewViewType: GeneralViewType
+        let isGroup: Bool
         switch arguments.source {
         case .group:
             previewViewType = .singleItem
+            isGroup = true
         default:
             previewViewType = .firstItem
+            isGroup = false
         }
+        
 
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview_profile, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return ProfilePreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, subscribers: state.subscribers, nameColor: state.selected_profile, backgroundEmojiId: state.backgroundEmojiId_profile, context: arguments.context, theme: theme, viewType: previewViewType, getColor: {
+            return ProfilePreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, subscribers: state.subscribers, isGroup: isGroup, nameColor: state.selected_profile, backgroundEmojiId: state.backgroundEmojiId_profile, context: arguments.context, theme: theme, viewType: previewViewType, getColor: {
                 arguments.getColor($0, .profile)
             })
         }))
@@ -1107,7 +1141,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let emojiPackInfo: String = strings().selectColorEmojiPackInfoGroup
         
         let statusType: GeneralInteractedType
-        if let icon = state.icon_emojiStatus {
+        if let icon = state.icon_emojiPack {
             statusType = .imageContext(icon, "")
         } else {
             statusType = .nextContext("")
@@ -1115,7 +1149,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_emoji_pack, data: .init(name: title, color: theme.colors.text, icon: nil, type: statusType, viewType: .singleItem, enabled: true, action: {
             arguments.showEmojiPack()
-        }, afterNameImage: afterNameImage_emojiStatus)))
+        }, afterNameImage: afterNameImage_EmojiPack)))
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(emojiPackInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
     default:
@@ -1224,8 +1258,17 @@ final class SelectColorCallback {
     }
 }
 
-func SelectColorController(context: AccountContext, source: SelectColorSource, callback: SelectColorCallback? = nil) -> InputDataController {
+func SelectColorController(context: AccountContext, peer: Peer, callback: SelectColorCallback? = nil) -> InputDataController {
 
+    let source: SelectColorSource
+    if peer.isGroup || peer.isSupergroup {
+        source = .group(peer)
+    } else if peer.isChannel {
+        source = .channel(peer)
+    } else {
+        source = .account(peer)
+    }
+    
     let actionsDisposable = DisposableSet()
 
     let initialState = State(peer: .init(source.peer), selected: source.nameColor(.name), selected_profile: source.nameColor(.profile), backgroundEmojiId: source.backgroundIcon(.name), backgroundEmojiId_profile: source.backgroundIcon(.profile), emojiStatus: source.peer.emojiStatus, theme: theme.withUpdatedEmoticonThemes(context.emoticonThemes))
@@ -1234,6 +1277,14 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
+    }
+    
+    let isGroup: Bool
+    switch source {
+    case .group:
+        isGroup = true
+    default:
+        isGroup = false
     }
     
     callback?.getState = {
@@ -1260,13 +1311,16 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
         }
     }
     
-    let wallpaper = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+    let cachedData = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
     |> map { $0 as? CachedChannelData }
-    |> map { $0?.wallpaper }
+    |> map { $0 }
     |> take(1)
     
     
-    actionsDisposable.add(wallpaper.start(next: { wallpaper in
+    actionsDisposable.add(cachedData.start(next: { cachedData in
+        let wallpaper = cachedData?.wallpaper
+        let emojiPack = cachedData?.emojiPack
+
         updateState { current in
             var current = current
             if let wallpaper = wallpaper {
@@ -1276,6 +1330,8 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
             }
             current.wallpaper = wallpaper
             current.actualWallpaper = wallpaper
+            current.emojiPack = emojiPack
+            current.actualEmojiPack = emojiPack
             return current
         }
     }))
@@ -1389,6 +1445,52 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
         emojiStatus = state.emojiStatus
     }))
     
+    
+    var emojiPack_Layer: InlineStickerItemLayer?
+    
+    let emojiPack: Signal<(StickerPackCollectionInfo, StickerPackItem)?, NoError> = statePromise.get() |> map { $0.emojiPack } |> distinctUntilChanged |> mapToSignal { info in
+        if let info = info {
+            return context.engine.stickers.loadedStickerPack(reference: StickerPackReference.id(id: info.id.id, accessHash: info.accessHash), forceActualized: false) |> mapToSignal { result in
+                switch result {
+                case let .result(info, items, _):
+                    if let item = items.first {
+                        return .single((info, item))
+                    } else {
+                        return .single(nil)
+                    }
+                default:
+                    return .complete()
+                }
+            }
+        } else {
+            return .single(nil)
+        }
+    }
+    
+    actionsDisposable.add(emojiPack.start(next: { info in
+        DispatchQueue.main.async {
+            if let item = info?.1 {
+                emojiPack_Layer = InlineStickerItemLayer(account: context.account, file: item.file, size: NSMakeSize(25, 25), playPolicy: .framesCount(1), textColor: theme.colors.accent)
+                emojiPack_Layer?.isPlayable = true
+                
+                emojiPack_Layer?.contentDidUpdate = { image in
+                    updateState { current in
+                        var current = current
+                        current.icon_emojiPack = image
+                        return current
+                    }
+                }
+            } else {
+                emojiPack_Layer = nil
+                updateState { current in
+                    var current = current
+                    current.icon_emojiPack = nil
+                    return current
+                }
+            }
+        }
+    }))
+    
     let subscribers = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.ParticipantCount(id: source.peerId))
     
     actionsDisposable.add(subscribers.start(next: { value in
@@ -1475,7 +1577,13 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
             showPopover(for: emojiControl, with: emojis)
         }
     }, showEmojiPack: {
-        context.bindings.rootNavigation().push(GroupEmojiPackController(context: context))
+        context.bindings.rootNavigation().push(GroupEmojiPackController(context: context, peerId: peerId, selected: stateValue.with { $0.emojiPack }, updated: { info in
+            updateState { current in
+                var current = current
+                current.emojiPack = info
+                return current
+            }
+        }))
     }, removeIcon: { type in
         updateState { current in
             var current = current
@@ -1564,7 +1672,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
         let status = stateValue.with { $0.status }
         let myBoost = stateValue.with { $0.myStatus }
         if let status = status {
-            showModal(with: BoostChannelModalController(context: context, peer: source.peer, boosts: status, myStatus: myBoost), for: context.window)
+            showModal(with: BoostChannelModalController(context: context, peer: source.peer, boosts: status, myStatus: myBoost, infoOnly: true), for: context.window)
         }
     })
     
@@ -1573,13 +1681,15 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
     }
     
 
-    let controller = InputDataController(dataSignal: signal, title: strings().telegramAppearanceViewController, hasDone: true, doneString: {
+    let controller = InputDataController(dataSignal: signal, title: strings().telegramAppearanceViewController, removeAfterDisappear: false, hasDone: true, doneString: {
         return strings().selectColorApply
     })
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    
     
     
     let invoke:()->Void = {
@@ -1596,6 +1706,9 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
         let wallpaper = state.wallpaper
         let actualWallpaper = state.actualWallpaper
         
+        let emojiPack = state.emojiPack
+        let actualEmojiPack = state.actualEmojiPack
+
         
         let request:(@escaping()->Void)->Void = { f in
             
@@ -1613,6 +1726,10 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
                 
             case .channel, .group:
                 signals.append(context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: profileColor, profileBackgroundEmojiId: profileBackgroundEmojiId) |> ignoreValues |> `catch` { _ in return Signal<Never, NoError>.complete() })
+                
+                if emojiPack != actualEmojiPack {
+                    signals.append(context.engine.peers.updateGroupSpecificEmojiset(peerId: peerId, info: emojiPack) |> ignoreValues |> `catch` { _ in return Signal<Never, NoError>.complete() })
+                }
             }
             
             if emojiStatus?.fileId != state.peer.emojiStatus?.fileId {
@@ -1646,16 +1763,49 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
             let stats = stateValue.with { $0.status }
             let myStatus = stateValue.with { $0.myStatus }
             
-            let nameColorLevel = arguments.premiumConfiguration.minChannelNameColorLevel
-            let nameIconLevel = arguments.premiumConfiguration.minChannelNameIconLevel
+            let nameColorLevel: Int32
+            let nameIconLevel: Int32
 
-            let profileColorLevel = arguments.premiumConfiguration.minChannelProfileColorLevel
-            let profileIconLevel = arguments.premiumConfiguration.minChannelProfileIconLevel
+            let profileColorLevel: Int32
+            let profileIconLevel: Int32
 
-            let emojiStatusLevel = arguments.premiumConfiguration.minChannelEmojiStatusLevel
+            let emojiStatusLevel: Int32
+            let emojiPackLevel: Int32
 
-            let wallpaperLevel = arguments.premiumConfiguration.minChannelWallpaperLevel
-            let customWallpaperLevel = arguments.premiumConfiguration.minChannelCustomWallpaperLevel
+            let wallpaperLevel: Int32
+            let customWallpaperLevel: Int32
+
+            
+            switch source {
+            case .channel:
+                
+                emojiPackLevel = 0
+
+                
+                nameColorLevel = arguments.premiumConfiguration.minChannelNameColorLevel
+                nameIconLevel = arguments.premiumConfiguration.minChannelNameIconLevel
+
+                profileColorLevel = arguments.context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[stateValue.with { $0.selected_profile?.rawValue ?? 0 }] ?? 0
+                profileIconLevel = arguments.premiumConfiguration.minChannelProfileIconLevel
+
+                emojiStatusLevel = arguments.premiumConfiguration.minChannelEmojiStatusLevel
+                wallpaperLevel = arguments.premiumConfiguration.minChannelWallpaperLevel
+                customWallpaperLevel = arguments.premiumConfiguration.minChannelCustomWallpaperLevel
+            case .group:
+                nameColorLevel = 0
+                nameIconLevel = 0
+
+                profileColorLevel = arguments.context.peerNameColors.nameColorsGroupMinRequiredBoostLevel[stateValue.with { $0.selected_profile?.rawValue ?? 0 }] ?? 0
+                profileIconLevel = arguments.premiumConfiguration.minGroupProfileIconLevel
+
+                emojiStatusLevel = arguments.premiumConfiguration.minGroupEmojiStatusLevel
+                emojiPackLevel = arguments.premiumConfiguration.minGroupEmojiPackLevel
+
+                wallpaperLevel = arguments.premiumConfiguration.minGroupWallpaperLevel
+                customWallpaperLevel = arguments.premiumConfiguration.minGroupCustomWallpaperLevel
+            default:
+                fatalError()
+            }
 
             if let stats = stats {
                 if wallpaper != actualWallpaper {
@@ -1685,16 +1835,24 @@ func SelectColorController(context: AccountContext, source: SelectColorSource, c
                     showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .profileIcon(profileIconLevel)), for: context.window)
                 } else if stats.level < emojiStatusLevel, emojiStatus?.fileId != peer.emojiStatus?.fileId {
                     showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .emojiStatus(emojiStatusLevel)), for: context.window)
+                } else if stats.level < emojiPackLevel, emojiPack != actualEmojiPack {
+                    showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .emojiPack(emojiStatusLevel)), for: context.window)
                 } else {
                     request({
-                        showModalText(for: context.window, text: strings().selectColorSuccessChannel)
+                        let text: String
+                        if isGroup {
+                            text = strings().selectColorSuccessAppearanceGroup
+                        } else {
+                            text = strings().selectColorSuccessAppearanceChannel
+                        }
+                        showModalText(for: context.window, text: text)
                     })
                 }
             }
         case .account:
             if context.isPremium {
                 request({
-                    showModalText(for: context.window, text: strings().selectColorSuccessUser)
+                    showModalText(for: context.window, text: strings().selectColorSuccessAppearanceUser)
 
                 })
             } else {

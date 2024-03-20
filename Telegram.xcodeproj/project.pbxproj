@@ -23,6 +23,8 @@
 		27034078282CF7BE00D0156C /* PremiumStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
+		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
+		270595EC2B6CD7B600E05493 /* menu_boost_plus.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CB929F66649009C994C /* StoryModalController.swift */; };
 		270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBD29F7BCCA009C994C /* StoryListView.swift */; };
@@ -41,7 +43,6 @@
 		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
 		271891F82B08A7DB0008B238 /* LokiRng in Frameworks */ = {isa = PBXBuildFile; productRef = 271891F72B08A7DB0008B238 /* LokiRng */; };
 		271892082B0B2E5C0008B238 /* SimilarChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */; };
-		2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892092B0B93E00008B238 /* CustomizeAccountController.swift */; };
 		2718920E2B0DD1550008B238 /* grammars.dat in Resources */ = {isa = PBXBuildFile; fileRef = 2718920D2B0DD1550008B238 /* grammars.dat */; };
 		271892122B0E44190008B238 /* StoryPrivacyModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892112B0E44190008B238 /* StoryPrivacyModalController.swift */; };
 		271892142B0E57390008B238 /* StoryPosterState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271892132B0E57390008B238 /* StoryPosterState.swift */; };
@@ -85,6 +86,7 @@
 		272934142778E03E00F10D3C /* menu_voice.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934132778E03E00F10D3C /* menu_voice.tgs */; };
 		272934162778E05000F10D3C /* menu_music.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934152778E05000F10D3C /* menu_music.tgs */; };
 		2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */; };
+		27296B392B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27296B382B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift */; };
 		272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272C182F267D00350030B5FB /* CoreMediaIO.framework */; };
 		272C7DB62A94BF9300F89190 /* ArchiveSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */; };
 		272C7DF02AA07EDD00F89190 /* StoryLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */; };
@@ -93,6 +95,8 @@
 		27303AC12AC1D13600433CED /* GiveawayModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303AC02AC1D13600433CED /* GiveawayModalController.swift */; };
 		27303ACB2AC2B20C00433CED /* GiftLinkModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */; };
 		27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */; };
+		273060AA2B984AE700F3317D /* TimeRangeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273060A92B984AE700F3317D /* TimeRangeSelectorController.swift */; };
+		273060AC2B98765D00F3317D /* BusinessTimezonesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */; };
 		27307E982ADDA40B00D970EE /* menu_quote.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27307E972ADDA40A00D970EE /* menu_quote.tgs */; };
 		27307E9A2ADE6E0C00D970EE /* SelectCountryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */; };
 		27307E9C2ADEB45800D970EE /* SelectColorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27307E9B2ADEB45800D970EE /* SelectColorController.swift */; };
@@ -190,6 +194,12 @@
 		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
 		274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274E585F2A825A6600EEBDBF /* PeersStatusView.swift */; };
+		2750B8C22B887E9C0035C37F /* business_chatbot.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BD2B887E980035C37F /* business_chatbot.tgs */; };
+		2750B8C32B887E9C0035C37F /* business_hours.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BE2B887E990035C37F /* business_hours.tgs */; };
+		2750B8C42B887E9C0035C37F /* business_greeting_message.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BF2B887E9A0035C37F /* business_greeting_message.tgs */; };
+		2750B8C52B887E9C0035C37F /* business_away_message.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8C02B887E9B0035C37F /* business_away_message.tgs */; };
+		2750B8C62B887E9C0035C37F /* business_quick_reply.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8C12B887E9C0035C37F /* business_quick_reply.tgs */; };
+		2750B8C82B887EB00035C37F /* business_location.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8C72B887EB00035C37F /* business_location.tgs */; };
 		2751015129C86A15004CEFF3 /* menu_speed.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751015029C86A15004CEFF3 /* menu_speed.tgs */; };
 		2751015329C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751015229C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift */; };
 		2751017D29D2BA02004CEFF3 /* TextInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751017C29D2BA02004CEFF3 /* TextInputController.swift */; };
@@ -278,6 +288,7 @@
 		276E767B2B3BEA9B00440A4F /* ChannelWallpapersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */; };
 		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
 		276F9B8A2935FD7800E35997 /* pirate_flag.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B892935FD7800E35997 /* pirate_flag.tgs */; };
+		27716D2C2B7E95CD00244412 /* CallScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27716D2B2B7E95CD00244412 /* CallScreenController.swift */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
 		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
@@ -386,6 +397,7 @@
 		27916F2D287D77660046DB44 /* objects.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27916F25287D77640046DB44 /* objects.tgs */; };
 		27916F2E287D77660046DB44 /* activity.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27916F26287D77650046DB44 /* activity.tgs */; };
 		27916F2F287D77660046DB44 /* animals.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27916F27287D77660046DB44 /* animals.tgs */; };
+		279338872B7E2B070096A292 /* BusinessQuickReplyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */; };
 		2795578E2AB86A65007EC996 /* libsharpyuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2795578D2AB86A5C007EC996 /* libsharpyuv.a */; };
 		2796FEEF273E503200DA653C /* ChatInputSendAsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */; };
 		2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FEF127423A8600DA653C /* EmojiSuggestions */; };
@@ -409,11 +421,16 @@
 		279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */; };
 		279BD40E29BB283700A8B640 /* menu_atsign.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279BD40D29BB283700A8B640 /* menu_atsign.tgs */; };
 		279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */; };
+		279DF45B2B999D7D00E644A7 /* FragmentUsernameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */; };
+		279DF45D2B99A29200E644A7 /* fragment_username.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279DF45C2B99A29200E644A7 /* fragment_username.tgs */; };
+		279DF45F2B99FF5F00E644A7 /* FragmentMonetizationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279DF45E2B99FF5F00E644A7 /* FragmentMonetizationController.swift */; };
+		279DF4612B9A010C00E644A7 /* FragmentMonetizationPromoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279DF4602B9A010C00E644A7 /* FragmentMonetizationPromoController.swift */; };
 		279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECA274259EE000E1BD5 /* TGVideoCameraMovie */; };
 		279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECD27425CBD000E1BD5 /* InAppVideoServices */; };
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
 		279FD2A7273C1251004F08A1 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A6273C1251004F08A1 /* Zip */; };
 		279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2AC273C1291004F08A1 /* TgVoipWebrtc */; };
+		27A01AD32B9AF40800C59661 /* menu_search.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27A01AD22B9AF40800C59661 /* menu_search.tgs */; };
 		27A08A2027E4BD7300284048 /* ChannelBotAdminController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */; };
 		27A08A2227E8B73D00284048 /* change_sim.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27A08A2127E8B73D00284048 /* change_sim.tgs */; };
 		27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD19256A7D350068644D /* GroupCallWindow.swift */; };
@@ -461,6 +478,7 @@
 		27A697AE273D3FE900B33415 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A697AD273D3FE900B33415 /* Spotlight.swift */; };
 		27A710B728B8C8F100E65838 /* custom_reaction.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27A710B628B8C8F100E65838 /* custom_reaction.tgs */; };
 		27A710B928B9009500E65838 /* QuickReactionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A710B828B9009500E65838 /* QuickReactionRowItem.swift */; };
+		27A734492B7A7BB600AB4FD5 /* BusinessHoursController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */; };
 		27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */; };
 		27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
@@ -521,6 +539,10 @@
 		27BCE40F2A409FDD0015E5EE /* StoryContactHiddenItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */; };
 		27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */; };
 		27BCE41D2A49D0F10015E5EE /* ChatListEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */; };
+		27C1FF452B71F35A00B086E3 /* InteractiveTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */; };
+		27C1FF472B7275EE00B086E3 /* PeerInfoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */; };
+		27C1FF4D2B749D6D00B086E3 /* ShelfPack in Frameworks */ = {isa = PBXBuildFile; productRef = 27C1FF4C2B749D6D00B086E3 /* ShelfPack */; };
+		27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */ = {isa = PBXBuildFile; productRef = 27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */; };
 		27C2B1A627C3CF13004BC87B /* FetchManager in Frameworks */ = {isa = PBXBuildFile; productRef = 27C2B1A527C3CF13004BC87B /* FetchManager */; };
 		27C2B1A827C3D54F004BC87B /* StoreDownloadedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C2B1A727C3D54F004BC87B /* StoreDownloadedMedia.swift */; };
 		27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */; };
@@ -555,6 +577,16 @@
 		27CB177027638F4000DD25E0 /* menu_replace.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB176F27638F4000DD25E0 /* menu_replace.tgs */; };
 		27CB1772276392EB00DD25E0 /* menu_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB1771276392EB00DD25E0 /* menu_folder.tgs */; };
 		27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB177327648DAF00DD25E0 /* menu_calendar.tgs */; };
+		27CCE82C2B839AB800F7C687 /* PremiumCoinSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */; };
+		27CCE8312B839B7100F7C687 /* coin.scn in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE82D2B839B6E00F7C687 /* coin.scn */; };
+		27CCE8322B839B7100F7C687 /* coin.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE82E2B839B6F00F7C687 /* coin.png */; };
+		27CCE8332B839B7100F7C687 /* coin_anim.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE82F2B839B7000F7C687 /* coin_anim.png */; };
+		27CCE8342B839B7100F7C687 /* coin_edge.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8302B839B7100F7C687 /* coin_edge.png */; };
+		27CCE8372B839C0000F7C687 /* diagonal_shine.png in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8352B839BFF00F7C687 /* diagonal_shine.png */; };
+		27CCE8382B839C0000F7C687 /* darkerTexture.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8362B839C0000F7C687 /* darkerTexture.jpg */; };
+		27CCE83A2B839C1200F7C687 /* lighterTexture.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27CCE8392B839C1200F7C687 /* lighterTexture.jpg */; };
+		27CCE83C2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CCE83B2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift */; };
+		27CCE83E2B84ABE700F7C687 /* PeerInfoBusinessItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CCE83D2B84ABE700F7C687 /* PeerInfoBusinessItems.swift */; };
 		27CE153D29780578001F8CE8 /* LanguageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE153C29780578001F8CE8 /* LanguageController.swift */; };
 		27CE1558297966D8001F8CE8 /* emoji_category_party.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE153F297966B4001F8CE8 /* emoji_category_party.tgs */; };
 		27CE1559297966D8001F8CE8 /* emoji_category_food.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1540297966B5001F8CE8 /* emoji_category_food.tgs */; };
@@ -683,6 +715,9 @@
 		27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F1278D9A970026BFA1 /* menu_camera.tgs */; };
 		27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F3278D9C0A0026BFA1 /* menu_location.tgs */; };
 		27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F5278D9C120026BFA1 /* menu_poll.tgs */; };
+		27E1F2422B7AD47F00DCF241 /* BusinessMessageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1F2412B7AD47F00DCF241 /* BusinessMessageController.swift */; };
+		27E1F2442B7B007B00DCF241 /* BusinessLocationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1F2432B7B007B00DCF241 /* BusinessLocationController.swift */; };
+		27E1F2462B7B876800DCF241 /* BusinessChatbotController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1F2452B7B876800DCF241 /* BusinessChatbotController.swift */; };
 		27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */ = {isa = PBXBuildFile; productRef = 27E5C3BC2739761300C52BA0 /* MurMurHash32 */; };
 		27E60C1129ED35E200E10E39 /* menu_online.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E60C1029ED35E200E10E39 /* menu_online.tgs */; };
 		27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB092689C71E003D6164 /* MetalFunctions.metal */; };
@@ -1503,6 +1538,8 @@
 		27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStarSceneView.swift; sourceTree = "<group>"; };
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270595D72B6941C400E05493 /* ChatSearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchHeader.swift; sourceTree = "<group>"; };
+		270595E32B6BDCF500E05493 /* menu_boost.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost.tgs; sourceTree = "<group>"; };
+		270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost_plus.tgs; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270B7CB929F66649009C994C /* StoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModalController.swift; sourceTree = "<group>"; };
 		270B7CBD29F7BCCA009C994C /* StoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListView.swift; sourceTree = "<group>"; };
@@ -1522,7 +1559,6 @@
 		271824502A08C60400AFBD4C /* StoryChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatListView.swift; sourceTree = "<group>"; };
 		271891F62B08A7B70008B238 /* LokiRng */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = LokiRng; path = "submodules/telegram-ios/submodules/Utils/LokiRng"; sourceTree = "<group>"; };
 		271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimilarChannelsController.swift; sourceTree = "<group>"; };
-		271892092B0B93E00008B238 /* CustomizeAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizeAccountController.swift; sourceTree = "<group>"; };
 		2718920D2B0DD1550008B238 /* grammars.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = grammars.dat; path = submodules/libprisma/libprisma/grammars.dat; sourceTree = SOURCE_ROOT; };
 		271892112B0E44190008B238 /* StoryPrivacyModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPrivacyModalController.swift; sourceTree = "<group>"; };
 		271892132B0E57390008B238 /* StoryPosterState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPosterState.swift; sourceTree = "<group>"; };
@@ -1569,6 +1605,7 @@
 		272934132778E03E00F10D3C /* menu_voice.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_voice.tgs; sourceTree = "<group>"; };
 		272934152778E05000F10D3C /* menu_music.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_music.tgs; sourceTree = "<group>"; };
 		2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_select_multiple.tgs; sourceTree = "<group>"; };
+		27296B382B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextInlineSetupQuickReplyRowItem.swift; sourceTree = "<group>"; };
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
 		272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSettingsController.swift; sourceTree = "<group>"; };
@@ -1578,6 +1615,8 @@
 		27303AC02AC1D13600433CED /* GiveawayModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiveawayModalController.swift; sourceTree = "<group>"; };
 		27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftLinkModalController.swift; sourceTree = "<group>"; };
 		27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataTableBasedItem.swift; sourceTree = "<group>"; };
+		273060A92B984AE700F3317D /* TimeRangeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeRangeSelectorController.swift; sourceTree = "<group>"; };
+		273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessTimezonesController.swift; sourceTree = "<group>"; };
 		27307E972ADDA40A00D970EE /* menu_quote.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_quote.tgs; sourceTree = "<group>"; };
 		27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountryModalController.swift; sourceTree = "<group>"; };
 		27307E9B2ADEB45800D970EE /* SelectColorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectColorController.swift; sourceTree = "<group>"; };
@@ -1668,6 +1707,12 @@
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
 		274E585F2A825A6600EEBDBF /* PeersStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeersStatusView.swift; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
+		2750B8BD2B887E980035C37F /* business_chatbot.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_chatbot.tgs; sourceTree = "<group>"; };
+		2750B8BE2B887E990035C37F /* business_hours.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_hours.tgs; sourceTree = "<group>"; };
+		2750B8BF2B887E9A0035C37F /* business_greeting_message.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_greeting_message.tgs; sourceTree = "<group>"; };
+		2750B8C02B887E9B0035C37F /* business_away_message.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_away_message.tgs; sourceTree = "<group>"; };
+		2750B8C12B887E9C0035C37F /* business_quick_reply.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_quick_reply.tgs; sourceTree = "<group>"; };
+		2750B8C72B887EB00035C37F /* business_location.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_location.tgs; sourceTree = "<group>"; };
 		2751015029C86A15004CEFF3 /* menu_speed.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_speed.tgs; sourceTree = "<group>"; };
 		2751015229C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListSystemDeprecatedItem.swift; sourceTree = "<group>"; };
 		2751017C29D2BA02004CEFF3 /* TextInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInputController.swift; sourceTree = "<group>"; };
@@ -1766,6 +1811,7 @@
 		276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelWallpapersController.swift; sourceTree = "<group>"; };
 		276F9B872931155D00E35997 /* menu_bio.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_bio.tgs; sourceTree = "<group>"; };
 		276F9B892935FD7800E35997 /* pirate_flag.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = pirate_flag.tgs; sourceTree = "<group>"; };
+		27716D2B2B7E95CD00244412 /* CallScreenController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallScreenController.swift; sourceTree = "<group>"; };
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
 		2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = text; path = voice_chat_raise_hand_1.tgs; sourceTree = "<group>"; };
 		2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertController.swift; sourceTree = "<group>"; };
@@ -1876,6 +1922,7 @@
 		27916F25287D77640046DB44 /* objects.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = objects.tgs; sourceTree = "<group>"; };
 		27916F26287D77650046DB44 /* activity.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = activity.tgs; sourceTree = "<group>"; };
 		27916F27287D77660046DB44 /* animals.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = animals.tgs; sourceTree = "<group>"; };
+		279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessQuickReplyController.swift; sourceTree = "<group>"; };
 		2795578D2AB86A5C007EC996 /* libsharpyuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsharpyuv.a; path = "core-xprojects/libwebp/build/libwebp/lib/libsharpyuv.a"; sourceTree = "<group>"; };
 		2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputSendAsView.swift; sourceTree = "<group>"; };
 		2796FEF02742390000DA653C /* EmojiSuggestions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = EmojiSuggestions; path = packages/EmojiSuggestions; sourceTree = "<group>"; };
@@ -1899,12 +1946,17 @@
 		279BD40B29B71FA200A8B640 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		279BD40D29BB283700A8B640 /* menu_atsign.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_atsign.tgs; sourceTree = "<group>"; };
 		279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePrivacyLimitedController.swift; sourceTree = "<group>"; };
+		279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentUsernameController.swift; sourceTree = "<group>"; };
+		279DF45C2B99A29200E644A7 /* fragment_username.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = fragment_username.tgs; sourceTree = "<group>"; };
+		279DF45E2B99FF5F00E644A7 /* FragmentMonetizationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentMonetizationController.swift; sourceTree = "<group>"; };
+		279DF4602B9A010C00E644A7 /* FragmentMonetizationPromoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentMonetizationPromoController.swift; sourceTree = "<group>"; };
 		279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGVideoCameraMovie; path = packages/TGVideoCameraMovie; sourceTree = "<group>"; };
 		279E8ECC27425BAE000E1BD5 /* InAppVideoServices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppVideoServices; path = packages/InAppVideoServices; sourceTree = "<group>"; };
 		279FD29C273C106C004F08A1 /* minizip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = minizip; path = submodules/minizip; sourceTree = "<group>"; };
 		279FD29E273C10AD004F08A1 /* BuildConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BuildConfig; path = submodules/BuildConfig; sourceTree = "<group>"; };
 		279FD2A5273C124B004F08A1 /* Zip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Zip; path = submodules/Zip; sourceTree = "<group>"; };
 		279FD2AB273C1287004F08A1 /* tgcalls */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tgcalls; path = submodules/tgcalls; sourceTree = "<group>"; };
+		27A01AD22B9AF40800C59661 /* menu_search.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_search.tgs; sourceTree = "<group>"; };
 		27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBotAdminController.swift; sourceTree = "<group>"; };
 		27A08A2127E8B73D00284048 /* change_sim.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = change_sim.tgs; sourceTree = "<group>"; };
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
@@ -1920,6 +1972,7 @@
 		27A697AD273D3FE900B33415 /* Spotlight.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		27A710B628B8C8F100E65838 /* custom_reaction.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = custom_reaction.tgs; sourceTree = "<group>"; };
 		27A710B828B9009500E65838 /* QuickReactionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReactionRowItem.swift; sourceTree = "<group>"; };
+		27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessHoursController.swift; sourceTree = "<group>"; };
 		27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_unmuted.mp3; sourceTree = "<group>"; };
 		27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_recording_started.mp3; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
@@ -1975,6 +2028,8 @@
 		27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryContactHiddenItem.swift; sourceTree = "<group>"; };
 		27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_save_to_profile.tgs; sourceTree = "<group>"; };
 		27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListEmptyItem.swift; sourceTree = "<group>"; };
+		27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveTextView.swift; sourceTree = "<group>"; };
+		27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = PrivateCallScreen; path = packages/PrivateCallScreen; sourceTree = "<group>"; };
 		27C2B1A727C3D54F004BC87B /* StoreDownloadedMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDownloadedMedia.swift; sourceTree = "<group>"; };
 		27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralLoadingRowItem.swift; sourceTree = "<group>"; };
 		27C4089025B068C300372302 /* InviteLinkRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinkRowItem.swift; sourceTree = "<group>"; };
@@ -2008,6 +2063,16 @@
 		27CB176F27638F4000DD25E0 /* menu_replace.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_replace.tgs; sourceTree = "<group>"; };
 		27CB1771276392EB00DD25E0 /* menu_folder.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder.tgs; sourceTree = "<group>"; };
 		27CB177327648DAF00DD25E0 /* menu_calendar.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_calendar.tgs; sourceTree = "<group>"; };
+		27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumCoinSceneView.swift; sourceTree = "<group>"; };
+		27CCE82D2B839B6E00F7C687 /* coin.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = coin.scn; sourceTree = "<group>"; };
+		27CCE82E2B839B6F00F7C687 /* coin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = coin.png; sourceTree = "<group>"; };
+		27CCE82F2B839B7000F7C687 /* coin_anim.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = coin_anim.png; sourceTree = "<group>"; };
+		27CCE8302B839B7100F7C687 /* coin_edge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = coin_edge.png; sourceTree = "<group>"; };
+		27CCE8352B839BFF00F7C687 /* diagonal_shine.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = diagonal_shine.png; sourceTree = "<group>"; };
+		27CCE8362B839C0000F7C687 /* darkerTexture.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = darkerTexture.jpg; sourceTree = "<group>"; };
+		27CCE8392B839C1200F7C687 /* lighterTexture.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = lighterTexture.jpg; sourceTree = "<group>"; };
+		27CCE83B2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticBusinessMessageSetupChatContents.swift; sourceTree = "<group>"; };
+		27CCE83D2B84ABE700F7C687 /* PeerInfoBusinessItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoBusinessItems.swift; sourceTree = "<group>"; };
 		27CE153C29780578001F8CE8 /* LanguageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageController.swift; sourceTree = "<group>"; };
 		27CE153F297966B4001F8CE8 /* emoji_category_party.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_party.tgs; sourceTree = "<group>"; };
 		27CE1540297966B5001F8CE8 /* emoji_category_food.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_food.tgs; sourceTree = "<group>"; };
@@ -2125,6 +2190,9 @@
 		27E070F1278D9A970026BFA1 /* menu_camera.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_camera.tgs; sourceTree = "<group>"; };
 		27E070F3278D9C0A0026BFA1 /* menu_location.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_location.tgs; sourceTree = "<group>"; };
 		27E070F5278D9C120026BFA1 /* menu_poll.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_poll.tgs; sourceTree = "<group>"; };
+		27E1F2412B7AD47F00DCF241 /* BusinessMessageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessMessageController.swift; sourceTree = "<group>"; };
+		27E1F2432B7B007B00DCF241 /* BusinessLocationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessLocationController.swift; sourceTree = "<group>"; };
+		27E1F2452B7B876800DCF241 /* BusinessChatbotController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessChatbotController.swift; sourceTree = "<group>"; };
 		27E59979261B3F5800228411 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
@@ -2929,6 +2997,7 @@
 				277C209527A2F5940070B3BF /* ManagedFile in Frameworks */,
 				2745FED1274F950100546B05 /* Svg in Frameworks */,
 				278926C927550C8C00923087 /* Colors in Frameworks */,
+				27C1FF4D2B749D6D00B086E3 /* ShelfPack in Frameworks */,
 				2745FED3274F951100546B05 /* FastBlur in Frameworks */,
 				27F3B75E2739320F00B81F10 /* TGUIKit in Frameworks */,
 				27F3B75C2739320000B81F10 /* SwiftSignalKit in Frameworks */,
@@ -2941,6 +3010,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */,
 				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
 				27034076282CF79E00D0156C /* SceneKit.framework in Frameworks */,
 				27D43DA1279176E0006968A6 /* libavutil.a in Frameworks */,
@@ -3079,6 +3149,13 @@
 				27D9131A283BC0E7007CF40F /* flecks.jpg */,
 				27D9131D283BC0EA007CF40F /* particles.png */,
 				27D9131C283BC0E9007CF40F /* shine.png */,
+				27CCE82F2B839B7000F7C687 /* coin_anim.png */,
+				27CCE8302B839B7100F7C687 /* coin_edge.png */,
+				27CCE82E2B839B6F00F7C687 /* coin.png */,
+				27CCE8362B839C0000F7C687 /* darkerTexture.jpg */,
+				27CCE8352B839BFF00F7C687 /* diagonal_shine.png */,
+				27CCE8392B839C1200F7C687 /* lighterTexture.jpg */,
+				27CCE82D2B839B6E00F7C687 /* coin.scn */,
 				27D9131E283BC0EB007CF40F /* star */,
 				27D9131B283BC0E8007CF40F /* texture.jpg */,
 			);
@@ -3227,6 +3304,7 @@
 				2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */,
 				275E85532B284AF0007A72CA /* PremiumGiftingController.swift */,
 				27F3BB8D2B4C399400BC37C2 /* PremiumShowStatusController.swift */,
+				27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -3460,6 +3538,16 @@
 			path = emojies;
 			sourceTree = "<group>";
 		};
+		27A01AD42B9AF75200C59661 /* fragment */ = {
+			isa = PBXGroup;
+			children = (
+				279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */,
+				279DF45E2B99FF5F00E644A7 /* FragmentMonetizationController.swift */,
+				279DF4602B9A010C00E644A7 /* FragmentMonetizationPromoController.swift */,
+			);
+			name = fragment;
+			sourceTree = "<group>";
+		};
 		27A0A4E525F7762F00B789AF /* profile */ = {
 			isa = PBXGroup;
 			children = (
@@ -3468,6 +3556,19 @@
 				27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */,
 			);
 			name = profile;
+			sourceTree = "<group>";
+		};
+		27A734472B7A7B9800AB4FD5 /* business */ = {
+			isa = PBXGroup;
+			children = (
+				27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */,
+				27E1F2412B7AD47F00DCF241 /* BusinessMessageController.swift */,
+				27E1F2432B7B007B00DCF241 /* BusinessLocationController.swift */,
+				27E1F2452B7B876800DCF241 /* BusinessChatbotController.swift */,
+				279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */,
+				273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */,
+			);
+			name = business;
 			sourceTree = "<group>";
 		};
 		27AAE00F28E2DADE004DA38D /* forum */ = {
@@ -3597,7 +3698,10 @@
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
+				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
 				27B836472B6396E500E82683 /* menu_hd_lock.tgs */,
+				270595E32B6BDCF500E05493 /* menu_boost.tgs */,
+				27A01AD22B9AF40800C59661 /* menu_search.tgs */,
 				27B836482B6396E600E82683 /* menu_hd.tgs */,
 				27B836492B6396E600E82683 /* menu_sd.tgs */,
 				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
@@ -3822,6 +3926,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
 				27B8361A2B5FCCF800E82683 /* Dock */,
 				27B6AFB22B555C03001D0983 /* CallVideoLayer */,
 				27F3BB752B48373A00BC37C2 /* TelegramMedia */,
@@ -4286,7 +4391,6 @@
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
 				D02BD7BF232D0FB800D1814A /* AppAppearanceViewController.swift */,
-				271892092B0B93E00008B238 /* CustomizeAccountController.swift */,
 				276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */,
 			);
 			name = appearance;
@@ -4339,6 +4443,7 @@
 				270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */,
 				276885022770D7BE0021C891 /* AddReactionManager.swift */,
 				2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */,
+				27CCE83B2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -4506,6 +4611,7 @@
 				2751017C29D2BA02004CEFF3 /* TextInputController.swift */,
 				27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */,
 				27C50AE82AC7492A00FED2E4 /* InputDataCloseItem.swift */,
+				273060A92B984AE700F3317D /* TimeRangeSelectorController.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -4517,6 +4623,7 @@
 				27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */,
 				27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */,
 				276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */,
+				27CCE83D2B84ABE700F7C687 /* PeerInfoBusinessItems.swift */,
 			);
 			name = table;
 			sourceTree = "<group>";
@@ -4524,6 +4631,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				27A734472B7A7B9800AB4FD5 /* business */,
 				277E228B28EEC4B000001689 /* username */,
 				27D29AA327F306A300D4BC64 /* notifications */,
 				2728991A26CBCD8F00F4D288 /* items */,
@@ -5271,6 +5379,7 @@
 				9F0AE6862191D29D00A8B53A /* ContextSearchMessageItem.swift */,
 				A7F2831A239A496400742C20 /* ContextShowPeersHolder.swift */,
 				279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */,
+				27296B382B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift */,
 			);
 			name = context;
 			sourceTree = "<group>";
@@ -5334,6 +5443,7 @@
 			isa = PBXGroup;
 			children = (
 				C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */,
+				27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */,
 			);
 			name = controls;
 			sourceTree = "<group>";
@@ -5341,6 +5451,7 @@
 		C2AF3B801E5CD77800DFDD81 /* controllers */ = {
 			isa = PBXGroup;
 			children = (
+				27A01AD42B9AF75200C59661 /* fragment */,
 				27AAE00F28E2DADE004DA38D /* forum */,
 				27D006DD25AF3AD100EE3EB1 /* invitelinks */,
 				A7831B1A2403CFD00056AEAC /* stats */,
@@ -5682,6 +5793,7 @@
 				D0530D3D24E69132003273BC /* CallControl.swift */,
 				D0530D3F24E693A5003273BC /* CameraViews.swift */,
 				D0530D4124E69459003273BC /* CallTooltipView.swift */,
+				27716D2B2B7E95CD00244412 /* CallScreenController.swift */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -5749,6 +5861,13 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				271892152B18D9CD0008B238 /* transcription_locked.tgs */,
 				274952812AA1E79E00499498 /* hand_animation.tgs */,
+				2750B8C02B887E9B0035C37F /* business_away_message.tgs */,
+				2750B8BD2B887E980035C37F /* business_chatbot.tgs */,
+				2750B8C72B887EB00035C37F /* business_location.tgs */,
+				2750B8BF2B887E9A0035C37F /* business_greeting_message.tgs */,
+				2750B8BE2B887E990035C37F /* business_hours.tgs */,
+				279DF45C2B99A29200E644A7 /* fragment_username.tgs */,
+				2750B8C12B887E9C0035C37F /* business_quick_reply.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */,
 				27CFB0222B3FFD0A00221DE7 /* single_voice_fire.tgs */,
@@ -6084,6 +6203,7 @@
 				27EE444B297FD91B0077AA0F /* DateUtils */,
 				27EE444D297FD9950077AA0F /* CalendarUtils */,
 				27AAAD5B29A4A2E600F70A9A /* System */,
+				27C1FF4C2B749D6D00B086E3 /* ShelfPack */,
 			);
 			productName = TelegramShare;
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
@@ -6180,6 +6300,7 @@
 				27F3BB762B48375800BC37C2 /* TelegramMedia */,
 				27B6AFB32B557BEE001D0983 /* CallVideoLayer */,
 				27B8361B2B5FCD0300E82683 /* Dock */,
+				27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -6294,6 +6415,7 @@
 				27672EAF26F8D62800297DB4 /* 1.m4a in Resources */,
 				2733673F276247220027441E /* menu_violence.tgs in Resources */,
 				27916F2C287D77660046DB44 /* smiles.tgs in Resources */,
+				2750B8C42B887E9C0035C37F /* business_greeting_message.tgs in Resources */,
 				279BD40E29BB283700A8B640 /* menu_atsign.tgs in Resources */,
 				27672EB026F8D62A00297DB4 /* 2.m4a in Resources */,
 				2733671527620B650027441E /* menu_edit.tgs in Resources */,
@@ -6370,14 +6492,17 @@
 				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
 				27D91315283646CA007CF40F /* voice_to_text.tgs in Resources */,
 				27803BEF27A3E944007B0FA9 /* menu_folder_like.tgs in Resources */,
+				27CCE8322B839B7100F7C687 /* coin.png in Resources */,
 				27916F2E287D77660046DB44 /* activity.tgs in Resources */,
 				27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */,
+				2750B8C52B887E9C0035C37F /* business_away_message.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				277DFE682784842C00F78396 /* menu_sun.tgs in Resources */,
 				27336738276241EE0027441E /* menu_remove_gif.tgs in Resources */,
 				2733671927620B7B0027441E /* menu_leave.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
+				27A01AD32B9AF40800C59661 /* menu_search.tgs in Resources */,
 				27A710B728B8C8F100E65838 /* custom_reaction.tgs in Resources */,
 				2786367C27C7C5D600690B10 /* group_call_share.tgs in Resources */,
 				2747968E28F5983E00A891F3 /* menu_pause.tgs in Resources */,
@@ -6407,6 +6532,7 @@
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
 				27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */,
 				27916F2B287D77660046DB44 /* food.tgs in Resources */,
+				27CCE8382B839C0000F7C687 /* darkerTexture.jpg in Resources */,
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
 				27F3BB922B4C3D6600BC37C2 /* show_status_read.tgs in Resources */,
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
@@ -6432,6 +6558,7 @@
 				27CB17522763284500DD25E0 /* menu_unblock.tgs in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014.txt in Resources */,
 				27336735276241820027441E /* menu_plus.tgs in Resources */,
+				279DF45D2B99A29200E644A7 /* fragment_username.tgs in Resources */,
 				27CB17582763738E00DD25E0 /* menu_share.tgs in Resources */,
 				27803BF227A3E944007B0FA9 /* menu_folder_sport.tgs in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
@@ -6445,10 +6572,13 @@
 				27803BF927A3E944007B0FA9 /* menu_folder_read.tgs in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				27CE155B297966D8001F8CE8 /* emoji_category_away.tgs in Resources */,
+				27CCE83A2B839C1200F7C687 /* lighterTexture.jpg in Resources */,
 				27ABFD252858C221006C3301 /* chars.png in Resources */,
+				2750B8C22B887E9C0035C37F /* business_chatbot.tgs in Resources */,
 				27C50ADE2AC6F87000FED2E4 /* premium_gift_6.tgs in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
 				27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */,
+				2750B8C62B887E9C0035C37F /* business_quick_reply.tgs in Resources */,
 				275549142747C24F0098A3CD /* device_edge.tgs in Resources */,
 				27336733276240A60027441E /* menu_view_replies.tgs in Resources */,
 				27994EDA2A5EF7C30084D982 /* stories_archive.tgs in Resources */,
@@ -6463,6 +6593,7 @@
 				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
 				27D91323283BC0EB007CF40F /* star in Resources */,
 				27916F29287D77660046DB44 /* symbols.tgs in Resources */,
+				270595EC2B6CD7B600E05493 /* menu_boost_plus.tgs in Resources */,
 				2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */,
 				279B03592A4F1CB3007D2AB9 /* menu_stories.tgs in Resources */,
 				27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */,
@@ -6475,6 +6606,7 @@
 				27CB17682763886200DD25E0 /* menu_channel.tgs in Resources */,
 				27CE156E297966D8001F8CE8 /* emoji_category_what.tgs in Resources */,
 				27803BF527A3E944007B0FA9 /* menu_folder_paint.tgs in Resources */,
+				2750B8C82B887EB00035C37F /* business_location.tgs in Resources */,
 				2763A162261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs in Resources */,
 				275549112747C24F0098A3CD /* device_firefox.tgs in Resources */,
 				275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */,
@@ -6559,10 +6691,12 @@
 				277C208D27A2C4C50070B3BF /* menu_sharescreen_slash.tgs in Resources */,
 				27336739276241EE0027441E /* menu_add_gif.tgs in Resources */,
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
+				2750B8C32B887E9C0035C37F /* business_hours.tgs in Resources */,
 				27ABFD2A2858C6F5006C3301 /* lightstreak.png in Resources */,
 				277DFE6C2784846200F78396 /* menu_moon.tgs in Resources */,
 				27D91321283BC0EB007CF40F /* shine.png in Resources */,
 				27916F2A287D77660046DB44 /* flags.tgs in Resources */,
+				27CCE8332B839B7100F7C687 /* coin_anim.png in Resources */,
 				2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */,
 				2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */,
 				D07450F32340E89100769D7F /* sad_man.tgs in Resources */,
@@ -6580,6 +6714,7 @@
 				27CE37702760B11B007E6F1B /* menu_unarchive.tgs in Resources */,
 				274BB56D264013AD00620D03 /* cameraon.tgs in Resources */,
 				D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */,
+				27CCE8312B839B7100F7C687 /* coin.scn in Resources */,
 				D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */,
 				27916F28287D77660046DB44 /* places.tgs in Resources */,
 				27ABFD1E2858BAE9006C3301 /* swirl.scn in Resources */,
@@ -6619,7 +6754,10 @@
 				9F03681522771A9700456348 /* anim_hide.json in Resources */,
 				27ABFD2B2858C6F5006C3301 /* lightspeed.scn in Resources */,
 				2733671727620B720027441E /* menu_forward.tgs in Resources */,
+				27CCE8342B839B7100F7C687 /* coin_edge.png in Resources */,
+				27CCE8372B839C0000F7C687 /* diagonal_shine.png in Resources */,
 				2733672327620BAC0027441E /* menu_reply.tgs in Resources */,
+				270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */,
 				27F2BBC927BE79ED00A37463 /* email_recovery.tgs in Resources */,
 				27803BFC27A3E944007B0FA9 /* menu_folder_flash.tgs in Resources */,
 				27803BF327A3E944007B0FA9 /* menu_folder_group.tgs in Resources */,
@@ -6729,6 +6867,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27C1FF472B7275EE00B086E3 /* PeerInfoUtils.swift in Sources */,
 				275C14182A67F1CB000DDACF /* AvatarStoryControl.swift in Sources */,
 				27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */,
 				2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */,
@@ -6811,17 +6950,20 @@
 				27A69765273D092C00B33415 /* CallWindowController.swift in Sources */,
 				27F7EEC0293F53E600B6E324 /* UserInfoResetPhotoItem.swift in Sources */,
 				27F2BBC727BE76D000A37463 /* Auth_Email.swift in Sources */,
+				279DF45B2B999D7D00E644A7 /* FragmentUsernameController.swift in Sources */,
 				27A69764273D090F00B33415 /* SoundEffectPlayQueue.swift in Sources */,
 				27A69763273D08E900B33415 /* OngoingCallContext.swift in Sources */,
 				27A69762273D08B600B33415 /* PCallSession.swift in Sources */,
 				27A69761273D08A000B33415 /* GroupCallUIState.swift in Sources */,
 				27A69760273D088B00B33415 /* GroupCallDisplayAsController.swift in Sources */,
+				27CCE83C2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift in Sources */,
 				27A6975F273D087300B33415 /* GroupCallInvitation.swift in Sources */,
 				A7ADC47A2587B3750069737A /* VoiceChatActionButton.swift in Sources */,
 				2700B21E273AD71E003E4018 /* GroupCallNavigationHeaderView.swift in Sources */,
 				D032AFA42578172400E67215 /* PushToTalk.swift in Sources */,
 				27A6975E273D086400B33415 /* PushToTalkRowItem.swift in Sources */,
 				27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */,
+				27E1F2462B7B876800DCF241 /* BusinessChatbotController.swift in Sources */,
 				27A6975D273D085F00B33415 /* GroupCallSettingsController.swift in Sources */,
 				272C7DF02AA07EDD00F89190 /* StoryLayoutView.swift in Sources */,
 				27A6975C273D085A00B33415 /* GroupCallController.swift in Sources */,
@@ -6839,6 +6981,7 @@
 				2703406E282A657300D0156C /* PremiumBoardingController.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */,
+				27716D2C2B7E95CD00244412 /* CallScreenController.swift in Sources */,
 				9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */,
 				277E228A28EC93AD00001689 /* UsernameController.swift in Sources */,
 				2751018129D6C0AD004CEFF3 /* EditBotUsernameController.swift in Sources */,
@@ -6934,6 +7077,7 @@
 				27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				27F67417297682880014DCB9 /* ChatLiveTranslateContext.swift in Sources */,
+				279338872B7E2B070096A292 /* BusinessQuickReplyController.swift in Sources */,
 				27F3BB8E2B4C399400BC37C2 /* PremiumShowStatusController.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				9F0367F0227208E000456348 /* QRCode.swift in Sources */,
@@ -6977,6 +7121,7 @@
 				C218FF9C1F4204C400DD7D35 /* InstantPageChannelView.swift in Sources */,
 				27EFF4BF27BBF2D600006834 /* Auth_NextView.swift in Sources */,
 				277C209027A2DA060070B3BF /* SliderContextMenuItem.swift in Sources */,
+				27E1F2442B7B007B00DCF241 /* BusinessLocationController.swift in Sources */,
 				277E228028E4C27600001689 /* ForwardChatListController.swift in Sources */,
 				D07C6D7D234698C600468B1A /* DynamicHeightRowItem.swift in Sources */,
 				A73884352580E501002E8424 /* CGChatListIndicator.swift in Sources */,
@@ -7023,6 +7168,7 @@
 				9F3D5F8622085B2000CB0CAA /* UpdaterNotifySettings.swift in Sources */,
 				A7E83214255E992D0095A167 /* WaveView.swift in Sources */,
 				D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */,
+				279DF4612B9A010C00E644A7 /* FragmentMonetizationPromoController.swift in Sources */,
 				C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */,
 				2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
@@ -7137,6 +7283,7 @@
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
+				273060AC2B98765D00F3317D /* BusinessTimezonesController.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
@@ -7264,6 +7411,7 @@
 				A7D2822F236C549B0000A9BF /* SyncCoreExtension.swift in Sources */,
 				C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */,
 				2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */,
+				27CCE83E2B84ABE700F7C687 /* PeerInfoBusinessItems.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
 				C2DE5D401F3CB0380081EC1E /* InstantPageTileView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
@@ -7281,7 +7429,6 @@
 				2726BDD52869DCB00044D260 /* InlineStickersContext.swift in Sources */,
 				271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
-				2718920A2B0B93E00008B238 /* CustomizeAccountController.swift in Sources */,
 				27D48B4D2A72F87000721995 /* PremiumBoardingStoriesController.swift in Sources */,
 				27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
@@ -7332,6 +7479,8 @@
 				C224675D1FA884E300F03E27 /* ChatGroupedItem.swift in Sources */,
 				27D6044B295732BC00588C21 /* StorageUsageClearedItem.swift in Sources */,
 				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
+				27E1F2422B7AD47F00DCF241 /* BusinessMessageController.swift in Sources */,
+				279DF45F2B99FF5F00E644A7 /* FragmentMonetizationController.swift in Sources */,
 				2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */,
 				A7F2830823954EF800742C20 /* CachedInstantPages.swift in Sources */,
 				277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */,
@@ -7399,6 +7548,7 @@
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
 				C29C3E5B1E421F1700193A7E /* ChatAccessoryModel.swift in Sources */,
 				274B9E4227300C79009993C7 /* ChatCalendarMonthRowItem.swift in Sources */,
+				27C1FF452B71F35A00B086E3 /* InteractiveTextView.swift in Sources */,
 				9FC4DA9A21DD0BE6003E2A62 /* CachedChannelAdmins.swift in Sources */,
 				9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */,
 				C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */,
@@ -7408,6 +7558,7 @@
 				279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */,
 				270340602823D45300D0156C /* PremiumLimitController.swift in Sources */,
 				276553602B68BB7B0007F2FB /* GroupEmojiPackController.swift in Sources */,
+				27A734492B7A7BB600AB4FD5 /* BusinessHoursController.swift in Sources */,
 				271FB884289014CE001C25DC /* CustomEmojiController.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				D0530D4224E69459003273BC /* CallTooltipView.swift in Sources */,
@@ -7433,6 +7584,7 @@
 				27C50AE92AC7492A00FED2E4 /* InputDataCloseItem.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
 				C224675B1FA8546200F03E27 /* GroupedLayout.swift in Sources */,
+				27CCE82C2B839AB800F7C687 /* PremiumCoinSceneView.swift in Sources */,
 				C230BEBA1EE9AEB80029586C /* ChannelEventLogItem.swift in Sources */,
 				277E228D28EEC4BD00001689 /* ExternalUsernameRowItem.swift in Sources */,
 				C26A37EE1E5DE48F006977AC /* ChannelBlocklistViewController.swift in Sources */,
@@ -7468,6 +7620,7 @@
 				D00EECD7252CD2EF001EB99F /* MicrophonePreviewRowItem.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */,
+				27296B392B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift in Sources */,
 				27F4F18E284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift in Sources */,
 				270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
@@ -7502,6 +7655,7 @@
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				270202C6261B3D7C00CFCE6D /* UITextField.swift in Sources */,
 				27FFCEC72694BC95006CA024 /* WidgetController.swift in Sources */,
+				273060AA2B984AE700F3317D /* TimeRangeSelectorController.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */,
 				277D281C2AD0322E00CC6420 /* ExperimentalTextView.swift in Sources */,
@@ -7779,7 +7933,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.7.1;
+				MARKETING_VERSION = 10.9.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -7831,7 +7985,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.7.1;
+				MARKETING_VERSION = 10.9.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -7878,7 +8032,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.7.1;
+				MARKETING_VERSION = 10.9.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -7995,7 +8149,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.7.1;
+				MARKETING_VERSION = 10.9.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8322,6 +8476,14 @@
 		27B8E7C527425279001B8DF7 /* TGModernGrowingTextView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGModernGrowingTextView;
+		};
+		27C1FF4C2B749D6D00B086E3 /* ShelfPack */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ShelfPack;
+		};
+		27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PrivateCallScreen;
 		};
 		27C2B1A527C3CF13004BC87B /* FetchManager */ = {
 			isa = XCSwiftPackageProductDependency;

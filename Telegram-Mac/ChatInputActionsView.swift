@@ -51,6 +51,7 @@ class ChatInputActionsView: View {
         voice.isHidden = true
         muteChannelMessages.isHidden = true
         slowModeTimeout.isHidden = true
+        slowModeTimeout.scaleOnClick = true
         voice.autohighlight = false
         muteChannelMessages.autohighlight = false
         send.autohighlight = false
@@ -138,10 +139,6 @@ class ChatInputActionsView: View {
         scheduled?.set(image: theme.icons.chatInputScheduled, for: .Normal)
 
         
-        slowModeTimeout.set(font: .normal(.text), for: .Normal)
-        slowModeTimeout.set(color: theme.colors.grayIcon, for: .Normal)
-        _ = self.slowModeTimeout.sizeToFit(NSZeroSize, NSMakeSize(38, 30), thatFit: true)
-
     }
     
     private func updateEntertainmentIcon() {
@@ -250,7 +247,7 @@ class ChatInputActionsView: View {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts {
 
                 if chatInteraction.hasSetDestructiveTimer {
                     if secretTimer == nil {
@@ -328,8 +325,8 @@ class ChatInputActionsView: View {
                     }
                 }
                 
-                let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil && !newInlineLoading && !newInlineRequest
-                let oldSlowModeCounter: Bool = oldValue.slowMode?.timeout != nil && oldValue.interfaceState.editState == nil && !oldInlineLoading && !oldInlineRequest
+                let newSlowModeCounter: Bool = ((value.slowMode?.timeout != nil && !value.restrictedByBoosts) || value.boostNeed > 0) && value.interfaceState.editState == nil && !newInlineLoading && !newInlineRequest
+                let oldSlowModeCounter: Bool = ((oldValue.slowMode?.timeout != nil && !oldValue.restrictedByBoosts ) || oldValue.boostNeed > 0) && oldValue.interfaceState.editState == nil && !oldInlineLoading && !oldInlineRequest
                 
                 
                 if let query = oldValue.inputQueryResult, case .contextRequestResult = query, oldInlineRequest || first {
@@ -423,6 +420,19 @@ class ChatInputActionsView: View {
                     self.slowModeTimeout.set(text: string, for: .Normal)
                 }
                 
+                self.slowModeTimeout.set(font: .normal(.text), for: .Normal)
+                self.slowModeTimeout.autoSizeToFit = false
+                self.slowModeTimeout.sizeToFit(NSZeroSize, NSMakeSize(44, 25), thatFit: true)
+                self.slowModeTimeout.layer?.cornerRadius = self.slowModeTimeout.frame.height / 2
+                
+                if value.boostNeed > 0 {
+                    self.slowModeTimeout.set(background: premiumGradient[1], for: .Normal)
+                    self.slowModeTimeout.set(color: .white, for: .Normal)
+                } else {
+                    slowModeTimeout.set(color: theme.colors.grayIcon, for: .Normal)
+                    self.slowModeTimeout.set(background: .clear, for: .Normal)
+                }
+                
                 if value.hasScheduled && value.effectiveInput.inputText.isEmpty && value.interfaceState.editState == nil {
                     if scheduled == nil {
                         scheduled = ImageButton()
@@ -482,7 +492,7 @@ class ChatInputActionsView: View {
         }
         transition.updateFrame(view: voice, frame: voice.centerFrameY(x: size.width - voice.frame.width - iconsInset))
         transition.updateFrame(view: send, frame: send.centerFrameY(x: size.width - send.frame.width - iconsInset))
-        transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset))
+        transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset + 5))
         transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: voice.frame.minX - entertaiments.frame.width - 0))
         transition.updateFrame(view: keyboard, frame: keyboard.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
         transition.updateFrame(view: muteChannelMessages, frame: muteChannelMessages.centerFrameY(x: entertaiments.frame.minX - muteChannelMessages.frame.width))
@@ -585,9 +595,16 @@ class ChatInputActionsView: View {
         }, for: .Click)
         
         slowModeTimeout.set(handler: { [weak chatInteraction] control in
-            if let slowMode = chatInteraction?.presentation.slowMode {
-                showSlowModeTimeoutTooltip(slowMode, for: control)
+            if let chatInteraction = chatInteraction {
+                if let totalBoostNeed = chatInteraction.presentation.totalBoostNeed {
+                    chatInteraction.boostToUnrestrict(.unblockSlowmode(totalBoostNeed))
+                } else {
+                    if let slowMode = chatInteraction.presentation.slowMode {
+                        showSlowModeTimeoutTooltip(slowMode, for: control)
+                    }
+                }
             }
+            
         }, for: .Click)
                 
 

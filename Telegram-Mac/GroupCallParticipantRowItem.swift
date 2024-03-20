@@ -710,8 +710,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                         for item in items {
                             menu.addItem(item)
                         }
-                        NSMenu.popUpContextMenu(menu, with: event, for: button)
-                    //    AppMenu.show(menu: menu, event: event, for: button)
+                        AppMenu.show(menu: menu, event: event, for: button)
                     }
                 })
             } 

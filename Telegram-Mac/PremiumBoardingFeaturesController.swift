@@ -89,30 +89,49 @@ final class PremiumBoardingFeaturesView: View {
         let bounds = slideView.bounds
 
         
+        let navigationGray: CGImage = NSImage(resource: .iconChatNavigationBack).precomposed(presentation.colors.grayIcon)
+        let navigationWhite: CGImage = NSImage(resource: .iconChatNavigationBack).precomposed(.white)
+        
         let stories = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         stories.setup(context: context, type: .stories, decoration: .none, getView: { _ in
-            let view = PremiumBoardingStoriesView(frame: bounds, presentation: presentation)
-            view.initialize(context: context, initialSize: bounds.size)
+            let view = PremiumBoardingExtraFeaturesView(frame: bounds, presentation: presentation)
+            view.initialize(context: context, initialSize: bounds.size, list: PremiumBoardingExtraFeatureItem.stories, title: PremiumValue.stories.title(context.premiumLimits))
             return view
         })
         
         stories.appear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
+            self?.dismiss.set(image: navigationGray, for: .Normal)
         }
         stories.disappear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
+            self?.dismiss.set(image: navigationWhite, for: .Normal)
         }
         
         slideView.addSlide(stories)
+        
+        let business = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business.setup(context: context, type: .business, decoration: .none, getView: { _ in
+            let view = PremiumBoardingExtraFeaturesView(frame: bounds, presentation: presentation)
+            view.initialize(context: context, initialSize: bounds.size, list: PremiumBoardingExtraFeatureItem.business, title: PremiumValue.business.title(context.premiumLimits))
+            return view
+        })
+        
+        business.appear = { [weak self] in
+            self?.dismiss.set(image: navigationGray, for: .Normal)
+        }
+        business.disappear = { [weak self] in
+            self?.dismiss.set(image: navigationWhite, for: .Normal)
+        }
+        
+        slideView.addSlide(business)
  
         
         let double_limits = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         
         double_limits.appear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
+            self?.dismiss.set(image: navigationGray, for: .Normal)
         }
         double_limits.disappear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
+            self?.dismiss.set(image: navigationWhite, for: .Normal)
         }
         
         double_limits.setup(context: context, type: .double_limits, decoration: .none, getView: { _ in
@@ -256,41 +275,138 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(savedTags)
         
+        let lastSeen = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        lastSeen.setup(context: context, type: .last_seen, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.last_seen.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(lastSeen)
+        
+        let messagesPrivacy = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        messagesPrivacy.setup(context: context, type: .message_privacy, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.message_privacy.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(messagesPrivacy)
+        
+        let folderTags = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        folderTags.setup(context: context, type: .folder_tags, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.folder_tags.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(folderTags)
+        
+        
+        
+        let business_hours = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_hours.setup(context: context, type: .business_hours, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_hours.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_hours)
+        
+        let business_location = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_location.setup(context: context, type: .business_location, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_location.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_location)
+        
+        let quick_replies = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        quick_replies.setup(context: context, type: .quick_replies, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.quick_replies.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(quick_replies)
+        
+        let greeting_message = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        greeting_message.setup(context: context, type: .greeting_message, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.greeting_message.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(greeting_message)
+        
+        
+        let away_message = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        away_message.setup(context: context, type: .away_message, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.away_message.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(away_message)
+        
+        let business_bots = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_bots.setup(context: context, type: .business_bots, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_bots.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_bots)
+        
+        
+        
         switch value {
-        case .double_limits:
-            slideView.displaySlide(at: 1, animated: false)
         case .stories:
             slideView.displaySlide(at: 0, animated: false)
-        case .more_upload:
+        case .business:
+            slideView.displaySlide(at: 1, animated: false)
+        case .double_limits:
             slideView.displaySlide(at: 2, animated: false)
-        case .faster_download:
+        case .more_upload:
             slideView.displaySlide(at: 3, animated: false)
-        case .voice_to_text:
+        case .faster_download:
             slideView.displaySlide(at: 4, animated: false)
-        case .no_ads:
+        case .voice_to_text:
             slideView.displaySlide(at: 5, animated: false)
-        case .infinite_reactions:
+        case .no_ads:
             slideView.displaySlide(at: 6, animated: false)
-        case .emoji_status:
+        case .infinite_reactions:
             slideView.displaySlide(at: 7, animated: false)
-        case .premium_stickers:
+        case .emoji_status:
             slideView.displaySlide(at: 8, animated: false)
-        case .animated_emoji:
+        case .premium_stickers:
             slideView.displaySlide(at: 9, animated: false)
-        case .advanced_chat_management:
+        case .animated_emoji:
             slideView.displaySlide(at: 10, animated: false)
-        case .profile_badge:
+        case .advanced_chat_management:
             slideView.displaySlide(at: 11, animated: false)
-        case .animated_userpics:
+        case .profile_badge:
             slideView.displaySlide(at: 12, animated: false)
-        case .translations:
+        case .animated_userpics:
             slideView.displaySlide(at: 13, animated: false)
-        case .peer_colors:
+        case .translations:
             slideView.displaySlide(at: 14, animated: false)
-        case .wallpapers:
+        case .peer_colors:
             slideView.displaySlide(at: 15, animated: false)
-        case .saved_tags:
+        case .wallpapers:
             slideView.displaySlide(at: 16, animated: false)
+        case .saved_tags:
+            slideView.displaySlide(at: 17, animated: false)
+        case .last_seen:
+            slideView.displaySlide(at: 18, animated: false)
+        case .message_privacy:
+            slideView.displaySlide(at: 19, animated: false)
+        case .folder_tags:
+            slideView.displaySlide(at: 20, animated: false)
+        case .business_location:
+            slideView.displaySlide(at: 21, animated: false)
+        case .business_hours:
+            slideView.displaySlide(at: 22, animated: false)
+        case .quick_replies:
+            slideView.displaySlide(at: 23, animated: false)
+        case .greeting_message:
+            slideView.displaySlide(at: 24, animated: false)
+        case .away_message:
+            slideView.displaySlide(at: 25, animated: false)
+        case .business_bots:
+            slideView.displaySlide(at: 26, animated: false)
         }
         
         needsLayout = true

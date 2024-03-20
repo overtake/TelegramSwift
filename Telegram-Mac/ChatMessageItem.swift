@@ -639,8 +639,10 @@ class ChatMessageItem: ChatRowItem {
         
         
         
-        let textBlockWidth: CGFloat = isBubbled ? min(webpageLayout?.size.width ?? width, width) : width
-        
+        var textBlockWidth: CGFloat = isBubbled ? min(webpageLayout?.size.width ?? width, width) : width
+        if textLayout.hasBlockQuotes {
+            textBlockWidth -= 40
+        }
         textLayout.measure(width: textBlockWidth, isBigEmoji: containsBigEmoji)
         if isTranslateLoading {
             self.block = textLayout.generateBlock(backgroundColor: .blackTransparent)
@@ -729,7 +731,7 @@ class ChatMessageItem: ChatRowItem {
         var nsString: NSString?
         entities = entities + (new ?? [])
         
-        
+        entities = concatMessageAttributes(entities)
         
         for entity in entities {
             let r = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
@@ -821,28 +823,6 @@ class ChatMessageItem: ChatRowItem {
                 
                 let header: (TextNodeLayout, TextNode)?
                 header = TextNode.layoutText(.initialize(string: lg.prefixWithDots(15), color: color, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-
-                let tetriary: NSColor
-                let dark: Bool
-//                if bubbled {
-//
-//                    if isIncoming {
-//                        tetriary = blockColor.main
-//                        dark = isDark
-//                    } else {
-//                        if isDark {
-//                            tetriary = NSColor.black
-//                            dark = isDark
-//                        } else {
-//                            tetriary = blockColor.main
-//                            dark = false
-//                        }
-//                    }
-//                } else {
-//                    tetriary = blockColor.main
-//                    dark = isDark
-//                }
-                
                 
                 string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: .init(main: color, secondary: nil, tertiary: color), isCode: true, space: 4, header: header), range: range)
                 fontAttributes.append((range, .monospace))

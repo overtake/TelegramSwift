@@ -49,7 +49,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     
-    open private(set) weak var item:TableRowItem?
+    open private(set) var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
     // var selected:Bool?
     
@@ -183,15 +183,15 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     open override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     open override func mouseExited(with event: NSEvent) {
         super.mouseMoved(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     
     open override func mouseDown(with event: NSEvent) {
@@ -322,7 +322,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    open func updateMouse() {
+    open func updateMouse(animated: Bool) {
         
     }
     

@@ -1617,7 +1617,11 @@ final class StoryListView : Control, Notifable {
                 let aspect = StoryLayoutView.size.aspectFitted(maxSize)
                 
                 if entry.peer._asPeer() is TelegramChannel {
-                    self.inputView = StoryChannelInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+                    if entry.peer._asPeer().isSupergroup {
+                        self.inputView = StoryInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+                    } else {
+                        self.inputView = StoryChannelInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+                    }
                 } else if entry.peer.isService {
                     self.inputView = StoryNoReplyInput(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else if entry.additionalPeerData.premiumRequired && !arguments.context.isPremium {

@@ -307,7 +307,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
                 }
             })
             if !cancelled.with({ $0 }) {
-                subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
+                subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), grouping: true, animateVisibleOnly: !animateEverything, searchState: searchState))
                 subscriber.putCompletion()
             }
         }

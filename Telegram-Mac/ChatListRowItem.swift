@@ -14,6 +14,41 @@ import DateUtils
 import SwiftSignalKit
 import InAppSettings
 
+
+class ChatListTags {
+    
+    struct Extender {
+        var tag: ChatListTag
+        var index: Int
+    }
+    var tags: [ChatListTag]
+    var extender: Extender?
+    
+    var effective: [ChatListTag] {
+        if let extender {
+            return tags.prefix(upTo: extender.index) + [extender.tag]
+        } else {
+            return tags
+        }
+    }
+    
+    init(tags: [ChatListTag], extender: Extender? = nil) {
+        self.tags = tags
+        self.extender = extender
+    }
+}
+
+struct ChatListTag {
+    let text: TextViewLayout
+    let selected: TextViewLayout
+    let color: NSColor
+    let selectedColor: NSColor
+    
+    var size: NSSize {
+        return NSMakeSize(text.layoutSize.width + 4, text.layoutSize.height + 4)
+    }
+}
+
 enum ChatListPinnedType {
     case some
     case last
@@ -452,7 +487,8 @@ class ChatListRowItem: TableRowItem {
         self.filter = filter
         self.hasFailed = hasFailed
         self.isArchiveItem = true
-        
+        self.folders = nil
+        self.tags = nil
         if let storyState = storyState, storyState.items.count > 0 {
             let unseenCount: Int = storyState.items.reduce(0, {
                 $0 + ($1.unseenCount > 0 ? 1 : 0)
@@ -637,8 +673,12 @@ class ChatListRowItem: TableRowItem {
     }
     
     let displayAsTopics: Bool
+    let folders: FilterData?
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false) {
+    
+    let tags: ChatListTags?
+    
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil) {
         
         
         
@@ -707,6 +747,45 @@ class ChatListRowItem: TableRowItem {
         self.highlightText = highlightText
         self._stableId = stableId
         self.isContact = isContact
+        self.folders = folders
+        
+        if let folders, folders.showTags, let peer, splitState != .minimisize, mode.threadData == nil {
+            var tags: [ChatListTag] = []
+            var filtered: [ChatListFilter] = []
+            for tab in folders.tabs {
+                if tab != filter {
+                    if tab.contains(peer, groupId: groupId._asGroup(), isRemovedFromTotalUnreadCount: isMuted, isUnread: readState?.count != 0, isContact: isContact) {
+                        filtered.append(tab)
+                    }
+                }
+            }
+            for tab in filtered {
+                let color: NSColor?
+                if let dataColor = tab.data?.color {
+                    let index = Int(dataColor.rawValue)
+                    color = theme.colors.peerColors(index % 7).bottom
+                } else {
+                    color = nil
+                }
+                if let color = color {
+                    let text = TextViewLayout(.initialize(string: tab.title.uppercased(), color: color, font: .bold(10)))
+                    text.measure(width: .greatestFiniteMagnitude)
+                    
+                    let textSelected = TextViewLayout(.initialize(string: tab.title.uppercased(), color: theme.colors.accentSelect, font: .bold(10)))
+                    textSelected.measure(width: .greatestFiniteMagnitude)
+
+                    tags.append(.init(text: text, selected: textSelected, color: color.withAlphaComponent(0.1), selectedColor: theme.colors.underSelectedColor))
+                }
+            }
+            if !tags.isEmpty {
+                self.tags = .init(tags: tags, extender: nil)
+            } else {
+                self.tags = nil
+            }
+        } else {
+            self.tags = nil
+        }
+        
         if let peer = peer {
             self.isVerified = peer.isVerified
             self.isPremium = peer.isPremium && peer.id != context.peerId
@@ -724,7 +803,7 @@ class ChatListRowItem: TableRowItem {
         self.readState = readState
         
         if let story = story, peer?.id != context.peerId {
-            self.avatarStoryIndicator = .init(stats: story, presentation: theme)
+            self.avatarStoryIndicator = .init(stats: story, presentation: theme, isRoundedRect: peer?.isForum == true)
         } else {
             self.avatarStoryIndicator = nil
         }
@@ -758,7 +837,7 @@ class ChatListRowItem: TableRowItem {
             self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: isTopic ? 2 : 1)
         }
                 
-        if !forumTopicItems.isEmpty, let message = messages.first {
+        if !forumTopicItems.isEmpty, let message = messages.first, tags == nil {
             self.topicsLayout = .init(context, message: message, items: forumTopicItems, draft: draft)
         }
     
@@ -803,7 +882,7 @@ class ChatListRowItem: TableRowItem {
                 self.dateSelectedLayout?.measure(width: .greatestFiniteMagnitude)
             }
                       
-            if forumTopicItems.isEmpty {
+            if forumTopicItems.isEmpty || tags != nil {
                 var author: Peer?
                 if message.isImported, let info = message.forwardInfo {
                     if let peer = info.author {
@@ -961,7 +1040,7 @@ class ChatListRowItem: TableRowItem {
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }
         
-        if forumTopicItems.isEmpty {
+        if forumTopicItems.isEmpty || tags != nil {
             var messageText: NSAttributedString?
             var textCutout: TextViewCutout?
             if case let .ad(promo) = pinnedType, message == nil {
@@ -983,13 +1062,13 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             if let messageText = messageText, !messageText.string.isEmpty {
-                self.messageLayout = .init(messageText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
+                self.messageLayout = .init(messageText, maximumNumberOfLines: chatNameLayout != nil || tags != nil ? 1 : 2, cutout: textCutout)
                 
                 let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
                 if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                     selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
                 }
-                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
+                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatNameLayout != nil || tags != nil ? 1 : 2, cutout: textCutout)
             }
         }
         
@@ -1147,6 +1226,35 @@ class ChatListRowItem: TableRowItem {
         }
         w += (leftInset - 20)
         
+        if let chatNameLayout = chatNameLayout, let _ = tags {
+            w += chatNameLayout.layoutSize.width + 5
+        }
+        if let topicsLayout = forumTopicNameLayout, let _ = tags {
+            w += topicsLayout.layoutSize.width + 5
+        }
+        if let _ = tags, !contentImageSpecs.isEmpty {
+            w += CGFloat(contentImageSpecs.count) * 16
+        }
+        
+        return (max(200, size.width) - margin * 3) - w - (chatNameLayout != nil ? textLeftCutout : 0)
+    }
+    
+    var inputActivityWidth: CGFloat {
+        var w: CGFloat = 0
+        if let badgeNode = badgeNode {
+            w += badgeNode.size.width + 5
+        }
+        if let _ = mentionsCount {
+            w += 24
+        }
+        if let _ = reactionsCount {
+            w += 24
+        }
+        if isPinned && badgeNode == nil {
+            w += 20
+        }
+        w += (leftInset - 20)
+        
         return (max(200, size.width) - margin * 3) - w - (chatNameLayout != nil ? textLeftCutout : 0)
     }
     
@@ -1198,6 +1306,32 @@ class ChatListRowItem: TableRowItem {
 
         self.topicsLayout?.measure(messageWidth)
    
+        
+        if let tags = self.tags {
+            var maxX: CGFloat = 0
+            let prevExtender = tags.extender
+            tags.extender = nil
+            for i in 0 ..< tags.tags.count {
+                maxX += tags.tags[i].size.width + 3
+                if maxX + 20 > chatNameWidth - 20 {
+                    if prevExtender?.index != i  {
+                        let color = theme.colors.grayIcon
+                        let text = TextViewLayout(.initialize(string: "+\(tags.tags.count - i)", color: color, font: .bold(10)))
+                        let selectedText = TextViewLayout(.initialize(string: "+\(tags.tags.count - i)", color: theme.colors.accentSelect, font: .bold(10)))
+                        
+                        text.measure(width: .greatestFiniteMagnitude)
+                        selectedText.measure(width: .greatestFiniteMagnitude)
+                        let tag = ChatListTag(text: text, selected: selectedText, color: color.withAlphaComponent(0.1), selectedColor: theme.colors.underSelectedColor)
+                        tags.extender = .init(tag: tag, index: i)
+                    } else {
+                        tags.extender = prevExtender
+                    }
+                    
+                    break
+                }
+            }
+        }
+        
         return result
     }
     
@@ -1854,6 +1988,9 @@ class ChatListRowItem: TableRowItem {
     
     var isReplyToStory: Bool {
         if self.messages.first(where: { $0.storyAttribute != nil }) != nil {
+            if isForum && !isTopic {
+                return false
+            }
             return true
         }
         return false

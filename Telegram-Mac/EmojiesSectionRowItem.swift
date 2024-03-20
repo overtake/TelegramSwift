@@ -93,6 +93,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let viewSet: ((StickerPackCollectionInfo)->Void)?
     
     let nameLayout: TextViewLayout?
+    private(set) var sectionLayout: TextViewLayout?
+
     let isPremium: Bool
     let revealed: Bool
     let showAllItems:(()->Void)?
@@ -117,7 +119,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     }
     let mode: Mode
     let color: NSColor?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
@@ -131,14 +133,17 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.showAllItems = showAllItems
         self.openPremium = openPremium
         self.installPack = installPack
-        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions //&& mode != .defaultTags
+        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions && !groupEmojiPack //&& mode != .defaultTags
        
         
         self.context = context
         self.callback = callback
         
         if stableId != AnyHashable(0), let info = info {
-            let text = info.title.uppercased()
+            var text = info.title.uppercased()
+            if groupEmojiPack {
+                sectionLayout = .init(.initialize(string: strings().emojiSectionGroupEmoji, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
+            }
             let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
             self.nameLayout = layout
         } else {
@@ -232,8 +237,13 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         self.items = mapped
         
-        nameLayout?.measure(width: unlockText != nil ? 200 : 300)
+        sectionLayout?.measure(width: unlockText != nil ? 200 : 300)
 
+        var name_w: CGFloat = (unlockText != nil ? 200 : 300)
+        if let sectionLayout {
+            name_w -= (sectionLayout.layoutSize.width + 10)
+        }
+        nameLayout?.measure(width: name_w)
         return true
     }
     
@@ -250,7 +260,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / perline))
         
         if let _ = nameLayout {
-            height += 5
+            height += 7
         }
 
         
@@ -505,7 +515,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     fileprivate let contentView = Control()
     
     private var nameView: TextView?
-    
+    private var sectionTextView: TextView?
+
     private var lockView: ImageView?
     private let container = View()
     
@@ -517,6 +528,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         super.init(frame: frameRect)
         addSubview(container)
         addSubview(contentView)
+        
+        container.layer?.masksToBounds = false
         
         contentView.set(handler: { [weak self] _ in
             self?.updateDown()
@@ -605,10 +618,13 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 transition.updateFrame(view: nameView, frame: nameView.centerFrame())
             }
         }
+        if let sectionTextView = sectionTextView {
+            transition.updateFrame(view: sectionTextView, frame: sectionTextView.centerFrameY(x: (nameView?.frame.maxX ?? 0) + 4))
+        }
         
         var contentRect = bounds
         if let nameView = nameView {
-            contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + (unlock != nil ? 15 : 5))
+            contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + (unlock != nil ? 15 : 7))
         }
         transition.updateFrame(view: contentView, frame: contentRect)
         
@@ -731,6 +747,26 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         } else if let view = self.nameView {
             performSubviewRemoval(view, animated: animated)
             self.nameView = nil
+        }
+        
+        if let layout = item.sectionLayout {
+            let current: TextView
+            if let view = self.sectionTextView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.sectionTextView = current
+                container.addSubview(current)
+            }
+            current.update(layout)
+            current.backgroundColor = theme.colors.grayIcon.withAlphaComponent(0.2)
+            current.setFrameSize(NSMakeSize(layout.layoutSize.width + 12, layout.layoutSize.height + 2))
+            current.layer?.cornerRadius = current.frame.height * 0.5
+        } else if let view = self.sectionTextView {
+            performSubviewRemoval(view, animated: animated)
+            self.sectionTextView = nil
         }
         
         

@@ -85,6 +85,56 @@ private final class RepostView : View {
     }
 }
 
+private final class AuthorView : View {
+    private let avatarView: AvatarControl = AvatarControl(font: .avatar(4))
+    private let nameView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        avatarView.setFrameSize(NSMakeSize(12, 12))
+        addSubview(avatarView)
+        addSubview(nameView)
+        
+        avatarView.userInteractionEnabled = false
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(peer: EnginePeer, context: AccountContext, animated: Bool) {
+        avatarView.setPeer(account: context.account, peer: peer._asPeer())
+
+        
+        let layout = TextViewLayout(.initialize(string: peer._asPeer().compactDisplayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.small)))
+        layout.measure(width: 100)
+        
+        self.nameView.update(layout)
+        
+        let size = NSMakeSize(avatarView.frame.width + 3 + self.nameView.frame.width, 16)
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.setFrameSize(size)
+        self.updateLayout(size: size, transition: transition)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: avatarView, frame: avatarView.centerFrameY(x: 0))
+        transition.updateFrame(view: nameView, frame: self.nameView.centerFrameY(x: avatarView.frame.maxX + 3))
+    }
+}
+
 final class StoryControlsView : Control {
     private let avatar = AvatarControl(font: .avatar(13))
     private let textView = TextView()
@@ -104,6 +154,7 @@ final class StoryControlsView : Control {
     private let shadowView = ShadowView()
     
     private var repostView: RepostView?
+    private var authorView: AuthorView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(shadowView)
@@ -116,6 +167,8 @@ final class StoryControlsView : Control {
         userContainer.addSubview(more)
         userContainer.addSubview(privacy)
         userContainer.addSubview(muted)
+        
+        avatarAndText.layer?.masksToBounds = false
         
 
         addSubview(userContainer)
@@ -249,6 +302,7 @@ final class StoryControlsView : Control {
                 current.centerY(x: 0)
             }
             if let peerId = peerId {
+                dateContainer.removeAllHandlers()
                 dateContainer.set(handler: { [weak arguments] _ in
                     arguments?.openChat(peerId, nil, nil)
                 }, for: .Click)
@@ -259,6 +313,35 @@ final class StoryControlsView : Control {
             performSubviewRemoval(view, animated: animated)
             self.repostView = nil
         }
+        
+        if let author = story.storyItem.author {
+            
+            date.append(string: "\(strings().bullet) ", color: color, font: .medium(.small))
+            
+            let current: AuthorView
+            var isNew = false
+            if let view = self.authorView {
+                current = view
+            } else {
+                current = AuthorView(frame: .zero)
+                self.authorView = current
+                dateContainer.addSubview(current)
+                isNew = true
+            }
+            current.set(peer: author, context: context, animated: animated)
+            if isNew {
+                current.centerY(x: 0)
+            }
+            dateContainer.removeAllHandlers()
+            dateContainer.set(handler: { [weak arguments] _ in
+                arguments?.openChat(author.id, nil, nil)
+            }, for: .Click)
+            
+        } else if let view = authorView {
+            performSubviewRemoval(view, animated: animated)
+            self.authorView = nil
+        }
+        
         if story.storyItem.expirationTimestamp < context.timestamp {
             date.append(string: stringForFullDate(timestamp: story.storyItem.timestamp), color: color, font: .medium(.small))
         } else {
@@ -278,14 +361,14 @@ final class StoryControlsView : Control {
         more.isHidden = context.peerId == groupId
 
         
-        let textWidth = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (privacy.isHidden ? 0 : 20) - (repostView != nil ? repostView!.frame.width + 3 : 0)
+        let textWidth = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (privacy.isHidden ? 0 : 20) - (repostView != nil ? repostView!.frame.width + 3 : 0) - (authorView != nil ? authorView!.frame.width + 3 : 0)
 
 
         let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
         dateLayout.measure(width: textWidth)
 
                
-        dateContainer.userInteractionEnabled = self.repostView != nil
+        dateContainer.userInteractionEnabled = self.repostView != nil || self.authorView != nil
         dateContainer.scaleOnClick = true
         dateView.userInteractionEnabled = false
         
@@ -339,10 +422,18 @@ final class StoryControlsView : Control {
             repostView.updateLayout(size: repostView.frame.size, transition: transition)
         }
         
+        if let authorView = self.authorView {
+            dateContainerSize.width += authorView.frame.width + 3
+            transition.updateFrame(view: authorView, frame: authorView.centerFrameY(x: 0))
+            authorView.updateLayout(size: authorView.frame.size, transition: transition)
+        }
+        
         transition.updateFrame(view: dateContainer, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.maxY - dateView.frame.height), size: dateContainerSize))
         
         
         if let view = repostView {
+            transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: view.frame.maxX + 3))
+        } else if let view = authorView {
             transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: view.frame.maxX + 3))
         } else {
             transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: 0))

@@ -35,6 +35,13 @@ open class ContextMenuItem : NSMenuItem {
         }
         return _id!
     }
+    
+    open override func isEqual(_ object: Any?) -> Bool {
+        if let object = object as? ContextMenuItem {
+            return object.title == self.title && object.state == self.state
+        }
+        return false
+    }
 
     public enum KeyEquiavalent: String {
         case none = ""

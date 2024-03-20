@@ -311,7 +311,7 @@ open class Window: NSWindow {
     private var swipeHandlers:[SwipeIdentifier: SwipeHandler] = [:]
     private var swipeState:[SwipeIdentifier: SwipeDirection] = [:]
     public var keyUpHandler:((NSEvent)->Void)?
-    private var responsders:[ResponderObserver] = []
+    private var responders:[ResponderObserver] = []
     private var mouseHandlers:[UInt:[MouseObserver]] = [:]
     private var swipePoints:[NSPoint] = []
     private var saver:WindowSaver?
@@ -363,17 +363,17 @@ open class Window: NSWindow {
     }
     
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
-        responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow, .Space]))
+        responders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow, .Space]))
     }
     
     public func removeObserver(for object:NSObject) {
         var copy:[ResponderObserver] = []
-        for observer in responsders {
+        for observer in responders {
             copy.append(observer)
         }
         for i in stride(from: copy.count - 1, to: -1, by: -1) {
             if copy[i].object.value == object || copy[i].object.value == nil  {
-                responsders.remove(at: i)
+                responders.remove(at: i)
             }
         }
     }
@@ -440,7 +440,7 @@ open class Window: NSWindow {
         self.swipeHandlers = self.swipeHandlers.filter { key, value in
             return value.object.value !== object && value.object.value != nil
         }
-        self.responsders = responsders.filter {
+        self.responders = responders.filter {
             $0.object.value !== object
         }
     }
@@ -532,7 +532,7 @@ open class Window: NSWindow {
     
     
     public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
-        let sorted = responsders.sorted(by: >)
+        let sorted = responders.sorted(by: >)
         
         if let event = event, event.modifierFlags.contains(.option) || event.modifierFlags.contains(.command)
          || event.modifierFlags.contains(.control) {
@@ -540,6 +540,9 @@ open class Window: NSWindow {
         }
         for observer in sorted {
             if let event = event, let code = KeyboardKey(rawValue: event.keyCode), observer.ignoreKeys.contains(code) {
+                continue
+            }
+            if observer.object.value == nil {
                 continue
             }
             if let responder = observer.handler() {
@@ -556,8 +559,8 @@ open class Window: NSWindow {
                         responder.setCursorToEnd()
                     }
                 }
-                break
             }
+            break
         }
     }
 

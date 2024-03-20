@@ -89,6 +89,8 @@ open class TableRowItem: NSObject {
 
     
     var _index:Int? = nil
+    var _yPosition:CGFloat? = nil
+
     
     public init(_ initialSize:NSSize) {
         self.initialSize = initialSize

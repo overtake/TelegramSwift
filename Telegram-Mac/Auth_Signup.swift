@@ -47,7 +47,7 @@ final class Auth_SignupHeader : View {
             let menu = ContextMenu()
             
             menu.addItem(ContextMenuItem(strings().loginNewRegisterSelect, handler: { [weak self] in
-                guard let window = self?.kitWindow else {
+                guard let window = self?._window else {
                     return
                 }
                 filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: window, completion: { paths in

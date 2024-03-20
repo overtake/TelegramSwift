@@ -175,11 +175,15 @@ public class Dock {
             return nil
         }
         
+        
         guard let path = path else {
             clearCustomAppIcon(silence: silence)
+            NSApplication.shared.applicationIconImage = nil
             return nil
         }
 
+        NSApplication.shared.applicationIconImage = NSImage(contentsOfFile: path)
+        
         defer {
             try? FileManager.default.removeItem(atPath: temp)
         }

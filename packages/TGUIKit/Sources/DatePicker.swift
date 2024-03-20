@@ -128,8 +128,8 @@ public class DatePicker<T>: Control where T: Equatable {
 public struct TimePickerOption : Equatable {
     public let hours: Int32
     public let minutes: Int32
-    public let seconds: Int32
-    public init(hours: Int32, minutes: Int32, seconds: Int32) {
+    public let seconds: Int32?
+    public init(hours: Int32, minutes: Int32, seconds: Int32? = nil) {
         self.hours = hours
         self.minutes = minutes
         self.seconds = seconds
@@ -257,7 +257,7 @@ public class TimePicker: Control {
     
     private let hoursView:TimeOptionView
     private let minutesView:TimeOptionView
-    private let secondsView:TimeOptionView
+    private var secondsView:TimeOptionView?
     private let separatorView1: TextView = TextView()
     private let separatorView2: TextView = TextView()
     private let borderView = View()
@@ -267,7 +267,7 @@ public class TimePicker: Control {
             if oldValue != selected {
                 self.hoursView.value = selected.hours
                 self.minutesView.value = selected.minutes
-                self.secondsView.value = selected.seconds
+                self.secondsView?.value = selected.seconds ?? 0
                 needsLayout = true
                 self.updateSelected(animated: true)
             }
@@ -280,7 +280,12 @@ public class TimePicker: Control {
         self.selected = selected
         self.hoursView = TimeOptionView(value: selected.hours)
         self.minutesView = TimeOptionView(value: selected.minutes)
-        self.secondsView = TimeOptionView(value: selected.seconds)
+        
+        if let seconds = selected.seconds {
+            self.secondsView = TimeOptionView(value: seconds)
+        } else {
+            self.secondsView = nil
+        }
         super.init(frame: NSZeroRect)
         
         
@@ -297,7 +302,12 @@ public class TimePicker: Control {
         self.addSubview(self.borderView)
         self.addSubview(self.hoursView)
         self.addSubview(self.minutesView)
-        self.addSubview(self.secondsView)
+        if let secondsView {
+            self.addSubview(secondsView)
+        }
+        
+        self.separatorView2.isHidden = secondsView == nil
+        
         self.updateLocalizationAndTheme(theme: presentation)
         
         hoursView.keyDown = { [weak self] value, isFirst in
@@ -342,7 +352,7 @@ public class TimePicker: Control {
                 self?.shake()
             }
         }
-        secondsView.keyDown = { [weak self] value, isFirst in
+        secondsView?.keyDown = { [weak self] value, isFirst in
             guard let selected = self?.selected else {
                 return
             }
@@ -350,8 +360,8 @@ public class TimePicker: Control {
             if isFirst {
                 updatedValue = value
             } else {
-                if selected.seconds > 0, selected.seconds < 10 {
-                    updatedValue = min(Int32("\(selected.seconds)\(updatedValue)")!, 59)
+                if let seconds = selected.seconds, seconds > 0, seconds < 10 {
+                    updatedValue = min(Int32("\(seconds)\(updatedValue)")!, 59)
                     self?.switchToRight()
                 }
             }
@@ -377,7 +387,7 @@ public class TimePicker: Control {
                 self?.switchToRight()
             }
         }
-        secondsView.next = { [weak self] toRight in
+        secondsView?.next = { [weak self] toRight in
             if !toRight {
                 self?.switchToLeft()
             } else {
@@ -390,7 +400,7 @@ public class TimePicker: Control {
         if self.window?.firstResponder == self.hoursView {
             self.window?.makeFirstResponder(self.minutesView)
         } else if self.window?.firstResponder == self.minutesView {
-            self.window?.makeFirstResponder(self.secondsView)
+            self.window?.makeFirstResponder(self.secondsView ?? self.hoursView)
         } else {
             self.window?.makeFirstResponder(self.hoursView)
         }
@@ -401,7 +411,7 @@ public class TimePicker: Control {
         } else if self.window?.firstResponder == self.minutesView {
             self.window?.makeFirstResponder(self.hoursView)
         } else {
-            self.window?.makeFirstResponder(self.secondsView)
+            self.window?.makeFirstResponder(self.secondsView ?? self.hoursView)
         }
     }
     
@@ -418,11 +428,15 @@ public class TimePicker: Control {
     public override func layout() {
         super.layout()
         
-        minutesView.center()
+        if secondsView == nil {
+            minutesView.centerY(x: frame.width - minutesView.frame.width - 30)
+        } else {
+            minutesView.center()
+        }
         separatorView1.centerY(x: minutesView.frame.minX - separatorView1.frame.width - 2)
         hoursView.centerY(x: minutesView.frame.minX - hoursView.frame.width - separatorView1.frame.width - 5)
         separatorView2.centerY(x: minutesView.frame.maxX + 3)
-        secondsView.centerY(x: minutesView.frame.maxX + separatorView1.frame.width + 5)
+        secondsView?.centerY(x: minutesView.frame.maxX + separatorView1.frame.width + 5)
         self.borderView.frame = bounds
     }
     

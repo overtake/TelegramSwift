@@ -164,7 +164,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil, customChatContents: ChatCustomContentsProtocol? = nil) -> Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         let dynamicEmojiOrder = context.stickerSettings.dynamicPackOrder
@@ -236,24 +236,30 @@ class Sender: NSObject {
             }
         }
         
-        if !mapped.isEmpty {
-            let inlineMedia = input.inlineMedia.map { $0.key }
-            return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
-                if !emojis.isEmpty {
-                    let es = saveUsedEmoji(emojis, postbox: context.account.postbox)
-                    let aes = saveAnimatedUsedEmoji(inlineMedia, postbox: context.account.postbox)
-                    return combineLatest(es, aes) |> map { _ in
-                        return value
-                    }
-                }
-                return .single(value)
-            } |> deliverOnMainQueue
+        if let customChatContents = customChatContents {
+            return customChatContents.enqueueMessages(messages: mapped)
         } else {
-            DispatchQueue.main.async {
-                emptyHandler?()
+            
+            if !mapped.isEmpty {
+                let inlineMedia = input.inlineMedia.map { $0.key }
+                return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
+                    if !emojis.isEmpty {
+                        let es = saveUsedEmoji(emojis, postbox: context.account.postbox)
+                        let aes = saveAnimatedUsedEmoji(inlineMedia, postbox: context.account.postbox)
+                        return combineLatest(es, aes) |> map { _ in
+                            return value
+                        }
+                    }
+                    return .single(value)
+                } |> deliverOnMainQueue
+            } else {
+                DispatchQueue.main.async {
+                    emptyHandler?()
+                }
+                return .complete()
             }
-            return .complete()
         }
+        
     }
     
     public static func enqueue(message:EnqueueMessage, context: AccountContext, peerId:PeerId) ->Signal<[MessageId?],NoError> {
@@ -511,7 +517,7 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
@@ -542,7 +548,12 @@ class Sender: NSObject {
             }
             
             senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
-                return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
+                let message = EnqueueMessage.message(text: caption, attributes:attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
+                if let customChatContents  {
+                    return customChatContents.enqueueMessages(messages: [message])
+                } else {
+                    return enqueueMessages(account: context.account, peerId: peerId, messages: [message])
+                }
             })
         }
         
@@ -557,11 +568,11 @@ class Sender: NSObject {
         }  |> take(1) 
     }
     
-    public static func enqueue(media:Media, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate: Date? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil) ->Signal<[MessageId?],NoError> {
-        return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, threadId: threadId, replyStoryId: replyStoryId, silent: silent, atDate: atDate, query: query, collectionId: collectionId)
+    public static func enqueue(media:Media, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate: Date? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, customChatContents: ChatCustomContentsProtocol? = nil) ->Signal<[MessageId?],NoError> {
+        return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, threadId: threadId, replyStoryId: replyStoryId, silent: silent, atDate: atDate, query: query, collectionId: collectionId, customChatContents: customChatContents)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil) ->Signal<[MessageId?],NoError> {
         
         let dynamicEmojiOrder: Bool = context.stickerSettings.dynamicPackOrder
         
@@ -639,7 +650,11 @@ class Sender: NSObject {
             }
             messages.insert(contentsOf: mapped, at: 0)
         }
-        return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> take(1)
+        if let customChatContents {
+            return customChatContents.enqueueMessages(messages: messages) |> deliverOnMainQueue |> take(1)
+        } else {
+            return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> take(1)
+        }
     }
     
     

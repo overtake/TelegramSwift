@@ -237,4 +237,12 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
             self?.genericView.toggleTips(FastSettings.emptyTips, animated: true, view: cards)
         }, for: .Click)
     }
+    
+//    override func firstResponder() -> NSResponder? {
+//        return context.bindings.mainController().chatList.firstResponder()
+//    }
+    
+    override var window: Window? {
+        return context.window
+    }
 }

@@ -3372,6 +3372,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsBusiness: CGImage {
+      if let image = cached.with({ $0["settingsBusiness"] }) {
+          return image
+      } else {
+          let image = _settingsBusiness()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsBusiness"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var settingsBusinessActive: CGImage {
+      if let image = cached.with({ $0["settingsBusinessActive"] }) {
+          return image
+      } else {
+          let image = _settingsBusinessActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsBusinessActive"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var generalCheck: CGImage {
       if let image = cached.with({ $0["generalCheck"] }) {
           return image
@@ -6180,6 +6206,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_filter_new_chats: CGImage {
+      if let image = cached.with({ $0["chat_filter_new_chats"] }) {
+          return image
+      } else {
+          let image = _chat_filter_new_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_new_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_filter_existing_chats: CGImage {
+      if let image = cached.with({ $0["chat_filter_existing_chats"] }) {
+          return image
+      } else {
+          let image = _chat_filter_existing_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_existing_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var group_invite_via_link: CGImage {
       if let image = cached.with({ $0["group_invite_via_link"] }) {
           return image
@@ -6539,6 +6591,71 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["profile_join_channel"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_boost: CGImage {
+      if let image = cached.with({ $0["profile_boost"] }) {
+          return image
+      } else {
+          let image = _profile_boost()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_boost"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_archive: CGImage {
+      if let image = cached.with({ $0["profile_archive"] }) {
+          return image
+      } else {
+          let image = _profile_archive()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_archive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_boost: CGImage {
+      if let image = cached.with({ $0["stats_boost_boost"] }) {
+          return image
+      } else {
+          let image = _stats_boost_boost()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_boost"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_giveaway: CGImage {
+      if let image = cached.with({ $0["stats_boost_giveaway"] }) {
+          return image
+      } else {
+          let image = _stats_boost_giveaway()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_giveaway"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_info: CGImage {
+      if let image = cached.with({ $0["stats_boost_info"] }) {
+          return image
+      } else {
+          let image = _stats_boost_info()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_info"] = image
               return current
           }
           return image
@@ -10145,6 +10262,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_feature_emoji_pack: CGImage {
+      if let image = cached.with({ $0["channel_feature_emoji_pack"] }) {
+          return image
+      } else {
+          let image = _channel_feature_emoji_pack()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_emoji_pack"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_voice_to_text: CGImage {
+      if let image = cached.with({ $0["channel_feature_voice_to_text"] }) {
+          return image
+      } else {
+          let image = _channel_feature_voice_to_text()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_voice_to_text"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_hidden_author: CGImage {
       if let image = cached.with({ $0["chat_hidden_author"] }) {
           return image
@@ -10179,6 +10322,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["premium_required_forward"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var create_new_message_general: CGImage {
+      if let image = cached.with({ $0["create_new_message_general"] }) {
+          return image
+      } else {
+          let image = _create_new_message_general()
+          _ = cached.modify { current in 
+              var current = current
+              current["create_new_message_general"] = image
               return current
           }
           return image
@@ -10444,6 +10600,8 @@ public final class TelegramIconsTheme {
   private let _settingsUpdateActive: ()->CGImage
   private let _settingsFiltersActive: ()->CGImage
   private let _settingsProfile: ()->CGImage
+  private let _settingsBusiness: ()->CGImage
+  private let _settingsBusinessActive: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
   private let _settingsLogout: ()->CGImage
@@ -10660,6 +10818,8 @@ public final class TelegramIconsTheme {
   private let _chat_filter_large_groups_avatar: ()->CGImage
   private let _chat_filter_non_contacts_avatar: ()->CGImage
   private let _chat_filter_archive_avatar: ()->CGImage
+  private let _chat_filter_new_chats: ()->CGImage
+  private let _chat_filter_existing_chats: ()->CGImage
   private let _group_invite_via_link: ()->CGImage
   private let _tab_contacts: ()->CGImage
   private let _tab_contacts_active: ()->CGImage
@@ -10688,6 +10848,11 @@ public final class TelegramIconsTheme {
   private let _profile_unblock: ()->CGImage
   private let _profile_translate: ()->CGImage
   private let _profile_join_channel: ()->CGImage
+  private let _profile_boost: ()->CGImage
+  private let _profile_archive: ()->CGImage
+  private let _stats_boost_boost: ()->CGImage
+  private let _stats_boost_giveaway: ()->CGImage
+  private let _stats_boost_info: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
@@ -10965,9 +11130,12 @@ public final class TelegramIconsTheme {
   private let _channel_feature_reaction: ()->CGImage
   private let _channel_feature_status: ()->CGImage
   private let _channel_feature_stories: ()->CGImage
+  private let _channel_feature_emoji_pack: ()->CGImage
+  private let _channel_feature_voice_to_text: ()->CGImage
   private let _chat_hidden_author: ()->CGImage
   private let _chat_my_notes: ()->CGImage
   private let _premium_required_forward: ()->CGImage
+  private let _create_new_message_general: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11229,6 +11397,8 @@ public final class TelegramIconsTheme {
       settingsUpdateActive: @escaping()->CGImage,
       settingsFiltersActive: @escaping()->CGImage,
       settingsProfile: @escaping()->CGImage,
+      settingsBusiness: @escaping()->CGImage,
+      settingsBusinessActive: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
       settingsLogout: @escaping()->CGImage,
@@ -11445,6 +11615,8 @@ public final class TelegramIconsTheme {
       chat_filter_large_groups_avatar: @escaping()->CGImage,
       chat_filter_non_contacts_avatar: @escaping()->CGImage,
       chat_filter_archive_avatar: @escaping()->CGImage,
+      chat_filter_new_chats: @escaping()->CGImage,
+      chat_filter_existing_chats: @escaping()->CGImage,
       group_invite_via_link: @escaping()->CGImage,
       tab_contacts: @escaping()->CGImage,
       tab_contacts_active: @escaping()->CGImage,
@@ -11473,6 +11645,11 @@ public final class TelegramIconsTheme {
       profile_unblock: @escaping()->CGImage,
       profile_translate: @escaping()->CGImage,
       profile_join_channel: @escaping()->CGImage,
+      profile_boost: @escaping()->CGImage,
+      profile_archive: @escaping()->CGImage,
+      stats_boost_boost: @escaping()->CGImage,
+      stats_boost_giveaway: @escaping()->CGImage,
+      stats_boost_info: @escaping()->CGImage,
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
@@ -11750,9 +11927,12 @@ public final class TelegramIconsTheme {
       channel_feature_reaction: @escaping()->CGImage,
       channel_feature_status: @escaping()->CGImage,
       channel_feature_stories: @escaping()->CGImage,
+      channel_feature_emoji_pack: @escaping()->CGImage,
+      channel_feature_voice_to_text: @escaping()->CGImage,
       chat_hidden_author: @escaping()->CGImage,
       chat_my_notes: @escaping()->CGImage,
-      premium_required_forward: @escaping()->CGImage
+      premium_required_forward: @escaping()->CGImage,
+      create_new_message_general: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12013,6 +12193,8 @@ public final class TelegramIconsTheme {
       self._settingsUpdateActive = settingsUpdateActive
       self._settingsFiltersActive = settingsFiltersActive
       self._settingsProfile = settingsProfile
+      self._settingsBusiness = settingsBusiness
+      self._settingsBusinessActive = settingsBusinessActive
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
       self._settingsLogout = settingsLogout
@@ -12229,6 +12411,8 @@ public final class TelegramIconsTheme {
       self._chat_filter_large_groups_avatar = chat_filter_large_groups_avatar
       self._chat_filter_non_contacts_avatar = chat_filter_non_contacts_avatar
       self._chat_filter_archive_avatar = chat_filter_archive_avatar
+      self._chat_filter_new_chats = chat_filter_new_chats
+      self._chat_filter_existing_chats = chat_filter_existing_chats
       self._group_invite_via_link = group_invite_via_link
       self._tab_contacts = tab_contacts
       self._tab_contacts_active = tab_contacts_active
@@ -12257,6 +12441,11 @@ public final class TelegramIconsTheme {
       self._profile_unblock = profile_unblock
       self._profile_translate = profile_translate
       self._profile_join_channel = profile_join_channel
+      self._profile_boost = profile_boost
+      self._profile_archive = profile_archive
+      self._stats_boost_boost = stats_boost_boost
+      self._stats_boost_giveaway = stats_boost_giveaway
+      self._stats_boost_info = stats_boost_info
       self._chat_quiz_explanation = chat_quiz_explanation
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
@@ -12534,8 +12723,11 @@ public final class TelegramIconsTheme {
       self._channel_feature_reaction = channel_feature_reaction
       self._channel_feature_status = channel_feature_status
       self._channel_feature_stories = channel_feature_stories
+      self._channel_feature_emoji_pack = channel_feature_emoji_pack
+      self._channel_feature_voice_to_text = channel_feature_voice_to_text
       self._chat_hidden_author = chat_hidden_author
       self._chat_my_notes = chat_my_notes
       self._premium_required_forward = premium_required_forward
+      self._create_new_message_general = create_new_message_general
   }
 }

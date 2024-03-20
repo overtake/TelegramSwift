@@ -188,7 +188,7 @@ class StickerMediaContentView: ChatMediaContentView {
             } else if let sticker = media.stickerText, !sticker.isEmpty {
                 let signal = context.diceCache.animationEffect(for: sticker.emojiUnmodified) |> deliverOnMainQueue
                 _ = signal.start(next: { [weak self] files in
-                    if files.isEmpty {
+                    if files.isEmpty || media.customEmojiText != nil {
                         if let reference = media.emojiReference {
                             showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.emoji(reference)]), for: context.window)
                         }

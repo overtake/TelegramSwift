@@ -102,8 +102,8 @@ private final class EmojiesPackView : HorizontalRowView {
     }
     
     
-    override func updateMouse() {
-        super.updateMouse()
+    override func updateMouse(animated: Bool) {
+        super.updateMouse(animated: animated)
         self.contentNode?.updateMouse()
     }
     

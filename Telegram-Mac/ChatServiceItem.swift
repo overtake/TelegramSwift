@@ -936,6 +936,31 @@ class ChatServiceItem: ChatRowItem {
                             chatInteraction?.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
                         }), for: attributedString.range, color: grayTextColor)
                     }
+                case let .boostsApplied(boosts):
+                    let text: String
+                    if authorId == context.peerId {
+                        if boosts == 1 {
+                            text = strings().notificationBoostSingleYou
+                        } else {
+                            let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
+                            text = strings().notificationBoostMultipleYou(boostsString)
+                        }
+                    } else {
+                        let peerName = message.author?.compactDisplayTitle ?? ""
+                        if boosts == 1 {
+                            text = strings().notificationBoostSingle(peerName)
+                        } else {
+                            let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
+                            text = strings().notificationBoostMultiple(peerName, boostsString)
+                        }
+                    }
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
                 default:
                     break
                 }

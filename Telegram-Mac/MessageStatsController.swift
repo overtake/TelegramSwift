@@ -307,6 +307,7 @@ func MessageStatsController(_ context: AccountContext, subject: MessageStatsSubj
         forwardsContext = StoryStatsPublicForwardsContext(account: context.account, subject: .story(peerId: peer.id, id: storyItem.id))
     }
 
+    forwardsPromise.set(forwardsContext.state |> map(Optional.init))
     
     let arguments = Arguments.init(context: context, loadDetailedGraph: { graph, x -> Signal<StatsGraph?, NoError> in
         return loadDetailedGraphImpl?(graph, x) ?? .single(nil)

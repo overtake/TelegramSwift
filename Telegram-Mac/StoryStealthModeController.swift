@@ -296,6 +296,10 @@ final class StoryStealthModeController: ModalViewController {
             }
         }, for: .Click)
     }
+    
+    override var hasBorder: Bool {
+        return false
+    }
 }
 
 

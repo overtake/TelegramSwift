@@ -1945,7 +1945,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
             switch state.state {
             case .Focus:
-                assert(self?.searchController == nil)
+                //assert(self?.searchController == nil)
                 self?.showSearchController(animated: animated)
                 
             case .None:
@@ -2531,6 +2531,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             if case .forum(peerId, _, _) = current?.mode {
                 navigationController?.back()
             } else {
+                if current?.mode.isForum == true {
+                    navigationController?.back()
+                }
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
         case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:
@@ -3102,7 +3105,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
 
-    
         
 }
 

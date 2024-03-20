@@ -103,6 +103,10 @@ final class GroupCallView : View {
     
     private var noStreamView: NoStreamView?
     
+    private let visualBackgroundView = NSVisualEffectView()
+    private let backgroundContainerView = View()
+
+    
     var arguments: GroupCallUIArguments? {
         didSet {
             controlsContainer.arguments = arguments
@@ -123,7 +127,7 @@ final class GroupCallView : View {
         }
         
         override func draw(_ layer: CALayer, in ctx: CGContext) {
-            ctx.setFillColor(GroupCallTheme.windowBackground.cgColor)
+            ctx.setFillColor(.clear)
             ctx.fill(bounds)
             var rect: CGRect = .zero
             if let state = self.state {
@@ -155,6 +159,18 @@ final class GroupCallView : View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
+        self.addSubview(visualBackgroundView)
+        self.addSubview(backgroundContainerView)
+        
+        backgroundContainerView.backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(0.7)
+
+
+        visualBackgroundView.wantsLayer = true
+        visualBackgroundView.material = .ultraDark
+        visualBackgroundView.blendingMode = .behindWindow
+        visualBackgroundView.state = .active
+        
         addSubview(scrollView)
         
         addSubview(peersTableContainer)
@@ -313,7 +329,7 @@ final class GroupCallView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         peersTableContainer.backgroundColor = GroupCallTheme.membersColor
-        backgroundColor = GroupCallTheme.windowBackground
+//        backgroundColor = GroupCallTheme.windowBackground
         titleView.backgroundColor = .clear
     }
     
@@ -398,6 +414,9 @@ final class GroupCallView : View {
         
         let isVideo = state?.mode == .video
         
+        transition.updateFrame(view: backgroundContainerView, frame: size.bounds)
+        transition.updateFrame(view: visualBackgroundView, frame: size.bounds)
+
         
         peersTableContainer.setFrameSize(NSMakeSize(substrateRect().width, peersTableContainer.frame.height))
         peersTable.setFrameSize(NSMakeSize(tableRect.width, peersTable.frame.height))

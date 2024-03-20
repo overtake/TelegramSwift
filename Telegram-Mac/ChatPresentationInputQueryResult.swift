@@ -15,6 +15,7 @@ enum ChatPresentationInputQueryResult: Equatable {
     case hashtags([String])
     case mentions([Peer])
     case commands([PeerCommand])
+    case shortcut([ShortcutMessageList.Item], String)
     case stickers([FoundStickerItem])
     case emoji([String], [TelegramMediaFile], Bool)
     case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), [Peer], String)
@@ -25,6 +26,12 @@ enum ChatPresentationInputQueryResult: Equatable {
         case let .hashtags(lhsResults):
             if case let .hashtags(rhsResults) = rhs {
                 return lhsResults == rhsResults
+            } else {
+                return false
+            }
+        case let .shortcut(results, query):
+            if case .shortcut(results, query) = rhs {
+                return true
             } else {
                 return false
             }

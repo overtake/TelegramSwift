@@ -118,6 +118,8 @@ private final class PopularPeerItemView : HorizontalRowView {
             item.actionHandler(item.type)
         }, for: .Click)
         
+        self.container.layer?.masksToBounds = false
+        self.layer?.masksToBounds = false
         
     }
 //    
@@ -187,8 +189,9 @@ private final class PopularPeerItemView : HorizontalRowView {
             }
         }
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .normal(11)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 15)
+        layout.measure(width: frame.width - 2)
         textView.update(layout)
+        
         
         self.needsLayout = true
     }
@@ -261,6 +264,8 @@ private final class PopularPeersRowView : TableRowView {
         tableView.beginTableUpdates()
         tableView.removeAll(animation: .effectFade)
         
+        _ = tableView.addItem(item: GeneralRowItem(.zero, height: 5, stableId: arc4random64()))
+        
         guard let item = item as? PopularPeersRowItem else {return}
         _ = tableView.addItem(item: PopularPeerItem(type: .savedMessages(item.selfPeer), context: item.context, action: item.actionHandler))
         if item.articlesEnabled {
@@ -270,7 +275,7 @@ private final class PopularPeersRowView : TableRowView {
         for peer in item.peers {
             _ = tableView.addItem(item: PopularPeerItem(type: .peer(peer, item.unread[peer.id], item.online[peer.id] ?? false), context: item.context, action: item.actionHandler))
         }
-        
+                
         tableView.endTableUpdates()
         separator.backgroundColor = theme.colors.border
     }

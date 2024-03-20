@@ -146,6 +146,47 @@ class ChatRowItem: TableRowItem {
     private(set) var originalFullDate:String?
     private(set) var forwardHid: String?
     private(set) var nameHide: String?
+    
+    var nameColor: NSColor {
+        if let peer = self.peer, let message = message {
+            var nameColor:NSColor = presentation.chat.linkColor(isIncoming, entry.renderType == .bubble)
+            
+            if let _nameColor = peer.nameColor {
+                nameColor = context.peerNameColors.get(_nameColor).main
+            }
+  
+            if message.forwardInfo?.psaType != nil, entry.renderType == .list {
+                nameColor = presentation.colors.greenUI
+            }
+            
+            if message.adAttribute != nil, let author = message.author {
+                nameColor = context.peerNameColors.get(author.nameColor ?? .blue).main
+            }
+            return nameColor
+        }
+        return presentation.chat.linkColor(isIncoming, entry.renderType == .bubble)
+    }
+    
+    var forwardNameColor: NSColor {
+        if let peer = self.peer, let message = message {
+            var nameColor:NSColor = presentation.chat.linkColor(isIncoming, entry.renderType == .bubble)
+            
+            if let _nameColor = peer.nameColor {
+                nameColor = context.peerNameColors.get(_nameColor).main
+            }
+  
+            if message.forwardInfo?.psaType != nil, entry.renderType == .list {
+                nameColor = presentation.colors.greenUI
+            }
+            
+            if message.adAttribute != nil, let author = message.author {
+                nameColor = context.peerNameColors.get(author.nameColor ?? .blue).main
+            }
+            return nameColor
+        }
+        return presentation.chat.linkColor(isIncoming, entry.renderType == .bubble)
+    }
+
 
 	var forwardType:ForwardItemType? {
         didSet {
@@ -162,13 +203,15 @@ class ChatRowItem: TableRowItem {
     }
 
     private var forwardHeaderNode:TextNode?
-    private(set) var forwardHeader:(TextNodeLayout, TextNode)?
-    private(set) var forwardNameLayout:TextViewLayout?
+    private(set) var forwardHeader: TextViewLayout?
+    
+    private(set) var forwardNameLayout: TextViewLayout?
     var captionLayouts:[RowCaption] = []
     private(set) var authorText:TextViewLayout?
     private(set) var adminBadge:TextViewLayout?
     
-    
+    private(set) var boostBadge:TextViewLayout?
+
     
 
     var replyModel:ChatAccessoryModel?
@@ -275,6 +318,9 @@ class ChatRowItem: TableRowItem {
         if let _ = message?.adAttribute {
             return .zero
         }
+//        if let _ = chatInteraction.mode.customChatContents {
+//            return .zero
+//        }
         if let frames = rightFrames {
             return NSMakeSize(frames.width, rightHeight)
         } else {
@@ -332,10 +378,9 @@ class ChatRowItem: TableRowItem {
             if replyModel?.isSideAccessory == true {
                 height = max(48, height)
             }
-            
-            if let _ = commentsBubbleData, hasBubble {
-                height += ChatRowItem.channelCommentsBubbleHeight
-            }
+        }
+        if let _ = commentsBubbleData {
+            height += ChatRowItem.channelCommentsBubbleHeight
         }
         
         if let reactions = self.reactionsLayout {
@@ -378,17 +423,6 @@ class ChatRowItem: TableRowItem {
             return id
         }
         var id: String = super.identifier
-        id += "_message"
-        if self.topicLinkLayout != nil {
-            id += "_topicLinkLayout"
-        }
-        if self.forwardNameLayout != nil {
-            id += "_forwardNameLayout"
-        }
-        if self.replyMarkupModel != nil {
-            id += "_replyMarkupModel"
-        }
-
         _id = id
         return id
     }
@@ -414,8 +448,8 @@ class ChatRowItem: TableRowItem {
         if let author = forwardNameLayout {
             top += author.layoutSize.height + defaultContentInnerInset - 2
             
-            if !isBubbled, let header = forwardHeader?.0 {
-                top += header.size.height
+            if !isBubbled, let header = forwardHeader {
+                top += header.layoutSize.height
             }
         }
         
@@ -515,7 +549,9 @@ class ChatRowItem: TableRowItem {
     
     var forwardHeaderInset:NSPoint {
         
-        var top:CGFloat = defaultContentTopOffset
+        var top:CGFloat = defaultContentTopOffset + 1
+        
+        
         
         if !isBubbled, forwardHeader == nil {
            // top -= topInset
@@ -535,7 +571,7 @@ class ChatRowItem: TableRowItem {
         var top:CGFloat = forwardHeaderInset.y
         
         if let header = forwardHeader, !isBubbled {
-            top += header.0.size.height + defaultContentInnerInset
+            top += (header.layoutSize.height + defaultContentInnerInset)
         }
         
         return NSMakePoint(self.contentOffset.x, top)
@@ -660,7 +696,7 @@ class ChatRowItem: TableRowItem {
         if let forwardType = forwardType, !isBubbled {
             if forwardType == .FullHeader || forwardType == .ShortHeader {
                 if let forwardHeader = forwardHeader {
-                    top += forwardHeader.0.size.height + defaultContentInnerInset
+                    top += forwardHeader.layoutSize.height + defaultContentInnerInset
                 } else {
                     top += bubbleDefaultInnerInset
                 }
@@ -1341,7 +1377,7 @@ class ChatRowItem: TableRowItem {
                         texts.append(ChannelCommentsRenderData.Text.init(text: .initialize(string: title, color: textColor, font: .normal(.short)), animation: .numeric, index: 0))
                     }
                     
-                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: true, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
+                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: true, isLoading: entry.additionalData.isThreadLoading, bubbleMode: renderType == .bubble, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
                     })
                 }
@@ -1359,7 +1395,7 @@ class ChatRowItem: TableRowItem {
         if chatInteraction.isLogInteraction {
             return nil
         }
-        if !isBubbled || !channelHasCommentButton {
+        if !channelHasCommentButton {
             return nil
         }
         if isStateOverlayLayout, let media = effectiveCommentMessage?.anyMedia, !media.isInteractiveMedia {
@@ -1426,7 +1462,7 @@ class ChatRowItem: TableRowItem {
                         return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accentIcon, font: .normal(.title)), animation: $0.1, index: $0.2)
                     }
                     
-                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || !captionLayouts.isEmpty, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
+                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || !captionLayouts.isEmpty, isLoading: entry.additionalData.isThreadLoading, bubbleMode: renderType == .bubble, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
                     })
                 }
@@ -1437,66 +1473,6 @@ class ChatRowItem: TableRowItem {
         return _commentsBubbleData
     }
     
-    private var _commentsData: ChannelCommentsRenderData?
-    var commentsData: ChannelCommentsRenderData? {
-        if let commentsData = _commentsData {
-            return commentsData
-        }
-        if chatInteraction.isLogInteraction {
-            return nil
-        }
-        if isBubbled || !channelHasCommentButton {
-            return nil
-        }
-        if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
-            switch peer.info {
-            case let .broadcast(info):
-                if info.flags.contains(.hasDiscussionGroup) {
-                    var count: Int32 = 0
-                    var hasUnread: Bool = false
-                    for attr in message.attributes {
-                        if let attribute = attr as? ReplyThreadMessageAttribute {
-                            count = attribute.count
-                            if let maxMessageId = attribute.maxMessageId, let maxReadMessageId = attribute.maxReadMessageId {
-                                hasUnread = maxReadMessageId < maxMessageId
-                            }
-                            break
-                        }
-                    }
-                    var title: [(String, ChannelCommentsRenderData.Text.Animation, Int)] = []
-                    if count == 0 {
-                        title = [(strings().channelCommentsShortLeaveComment, .crossFade, 0)]
-                    } else {
-                        var text = strings().channelCommentsShortCountCountable(Int(count))
-                        let pretty = "\(Int(count).prettyRounded)"
-                        text = text.replacingOccurrences(of: "\(count)", with: pretty)
-                        
-                        let range = text.nsstring.range(of: pretty)
-                        if range.location != NSNotFound {
-                            title.append((text.nsstring.substring(to: range.location), .crossFade, 0))
-                            title.append((text.nsstring.substring(with: range), .numeric, 1))
-                            title.append((text.nsstring.substring(from: range.upperBound), .crossFade, 2))
-                        } else {
-                            title.append((text, .crossFade, 0))
-                        }
-                    }
-                    
-                    title = title.filter { !$0.0.isEmpty }
-                    
-                    let texts:[ChannelCommentsRenderData.Text] = title.map {
-                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accent, font: .normal(.short)), animation: $0.1, index: $0.2)
-                    }
-                    
-                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: false, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
-                    })
-                }
-            default:
-                break
-            }
-        }
-        return _commentsData
-    }
     
     private var _topicLinkLayout: TopicReplyItemLayout?
     var topicLinkLayout: TopicReplyItemLayout? {
@@ -1873,10 +1849,11 @@ class ChatRowItem: TableRowItem {
                             let appLink = inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: !(author is TelegramUser), postId: info.sourceMessageId?.id, callback: chatInteraction.openInfo)
                             attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
                         } else {
-                            let range = attr.append(string: info.authorTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
+                            let color = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
+                            let range = attr.append(string: info.authorTitle, color: color, font: .normal(.text))
                             attr.add(link: inAppLink.callback("hid", { _ in
                                 hiddenFwdTooltip?()
-                            }), for: range)
+                            }), for: range, color: color)
                         }
                     } else {
                         
@@ -1908,11 +1885,11 @@ class ChatRowItem: TableRowItem {
                                 }
                             }
                             if linkAbility, let author = info.author {
-                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: author.isChannel, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
+                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: author.isChannel, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range, color: color)
                             } else if info.author == nil {
                                 attr.add(link: inAppLink.callback("hid", { _ in
                                     hiddenFwdTooltip?()
-                                }), for: range)
+                                }), for: range, color: color)
                                 
                             }
                         }
@@ -1973,7 +1950,7 @@ class ChatRowItem: TableRowItem {
                             if range.location != NSNotFound {
                                 attr.addAttribute(.link, value: link, range: range)
                                 if message.forwardInfo?.author != nil || message.forwardInfo == nil {
-                                    attr.addAttribute(.font, value: NSFont.bold(.short), range: range)
+                                    attr.addAttribute(.font, value: NSFont.medium(.short), range: range)
                                 }
                             }
                         } else {
@@ -2112,6 +2089,18 @@ class ChatRowItem: TableRowItem {
                             adminBadge?.mayItems = false
                             adminBadge?.measure(width: .greatestFiniteMagnitude)
                         }
+                        
+                        var boostBadge: NSMutableAttributedString? = nil
+                        if let boostAttribute = message.boostAttribute {
+                            boostBadge = NSMutableAttributedString()
+                            boostBadge?.append(string: " \(boostAttribute.count)", color: nameColor, font: .normal(.short))
+                            boostBadge?.insert(.embedded(name: boostAttribute.count > 1 ? "Icon_Boost_Indicator_Multiple" : "Icon_Boost_Indicator_Single", color: nameColor, resize: false), at: 1)
+                        }
+                        if let boostBadge = boostBadge {
+                            self.boostBadge = TextViewLayout(boostBadge, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
+                            self.boostBadge?.mayItems = false
+                            self.boostBadge?.measure(width: .greatestFiniteMagnitude)
+                        }
                     }
                     
                     if attr.length > 0 {
@@ -2122,7 +2111,7 @@ class ChatRowItem: TableRowItem {
                 }
                 
             }
-            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil {
+            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil, chatInteraction.mode.customChatContents == nil {
                 var time:TimeInterval = TimeInterval(message.timestamp)
                 time -= context.timeDifference
                 
@@ -2164,7 +2153,7 @@ class ChatRowItem: TableRowItem {
             //
             var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
-            let threadId: MessageId? = chatInteraction.chatLocation.threadMsgId
+            let threadId: Int64? = chatInteraction.chatLocation.threadId
             
             if let message = effectiveCommentMessage {
                 for attribute in message.attributes {
@@ -2212,7 +2201,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if attribute.messageId == attribute.threadMessageId || attribute.messageId == threadId, chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode {
+                    if attribute.messageId == attribute.threadMessageId || Int64(attribute.messageId.id) == threadId, chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode {
                         ignore = true
                     }
                     
@@ -2288,7 +2277,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
 
-            if message.adAttribute == nil {
+            if message.adAttribute == nil, chatInteraction.mode.customChatContents == nil {
                 self.fullDate = fullDate
                 self.originalFullDate = fullDate
             }
@@ -2464,9 +2453,8 @@ class ChatRowItem: TableRowItem {
                 
         commentsBubbleData?.makeSize()
         commentsBubbleDataOverlay?.makeSize()
-        commentsData?.makeSize()
         
-        _commentsBubbleData?.drawBorder =  !isBubbleFullFilled || !captionLayouts.isEmpty
+        _commentsBubbleData?.drawBorder = !isBubbleFullFilled || !captionLayouts.isEmpty
         
        
         
@@ -2540,7 +2528,7 @@ class ChatRowItem: TableRowItem {
             forwardNameLayout.measure(width: min(w, 250))
         }
         
-        if (forwardType == .FullHeader || forwardType == .ShortHeader) && (entry.renderType == .bubble || message?.forwardInfo?.psaType == nil) {
+        if (forwardType == .FullHeader || forwardType == .ShortHeader) && (entry.renderType == .bubble || message?.forwardInfo?.psaType == nil), renderType == .list {
             
             let color: NSColor
             let text: String
@@ -2552,7 +2540,8 @@ class ChatRowItem: TableRowItem {
                 text = strings().messagesForwardHeader
             }
             
-            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: text, color: color, font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
+            forwardHeader = .init(.initialize(string: text, color: color, font: .normal(.text)), maximumNumberOfLines: 1)
+            forwardHeader?.measure(width: .greatestFiniteMagnitude)
         } else {
             forwardHeader = nil
         }
@@ -2583,9 +2572,11 @@ class ChatRowItem: TableRowItem {
         if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, replyModel.isSideAccessory {
             var adminWidth: CGFloat = 0
             if let adminBadge = adminBadge {
-                adminWidth = adminBadge.layoutSize.width
+                adminWidth += adminBadge.layoutSize.width
             }
-            
+            if let boostBadge = boostBadge {
+                adminWidth += boostBadge.layoutSize.width
+            }
             authorText.measure(width: replyModel.size.width - 10 - adminWidth)
             
             replyModel.topOffset = authorText.layoutSize.height + 6
@@ -2593,9 +2584,11 @@ class ChatRowItem: TableRowItem {
         } else {
             var adminWidth: CGFloat = 0
             if let adminBadge = adminBadge {
-                adminWidth = adminBadge.layoutSize.width
+                adminWidth += adminBadge.layoutSize.width
             }
-            
+            if let boostBadge = boostBadge {
+                adminWidth += boostBadge.layoutSize.width
+            }
             var supplyOffset: CGFloat = 0
             if !isBubbled {
                 supplyOffset += rightSize.width
@@ -2690,7 +2683,7 @@ class ChatRowItem: TableRowItem {
     var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0) + (boostBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
@@ -2738,10 +2731,11 @@ class ChatRowItem: TableRowItem {
     }
     
     var bubbleFrame: NSRect {
-         
+        
+
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0) + (boostBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
@@ -2811,7 +2805,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let commentsBubbleData = commentsBubbleData {
-            rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width)
+            rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width + (isBubbled ? 0 : 10))
         }
         
         return rect
@@ -2980,6 +2974,25 @@ class ChatRowItem: TableRowItem {
         return ChatRowView.self
     }
     
+    func boost() {
+        if let peerId = self.message?.id.peerId {
+            let context = self.context
+            
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        }
+    }
+    
     func replyAction() -> Bool {
         if chatInteraction.presentation.canReplyInRestrictedMode, chatInteraction.mode.threadId != effectiveCommentMessage?.id, let message = message {
             chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil))
@@ -3082,7 +3095,7 @@ class ChatRowItem: TableRowItem {
             }
             |> take(1)
             
-            let isTags = context.peerId == peerId && tagsGloballyEnabled
+            let isTags = context.peerId == peerId
 
             
             

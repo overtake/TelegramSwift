@@ -798,7 +798,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
-        alert(for: context.window, header: requestData?.bot.displayTitle ?? appName, info: message, completion: completionHandler)
+        alert(for: context.window, header: requestData?.bot.displayTitle ?? appName, info: message, onDeinit: completionHandler)
     }
 
 
@@ -1123,7 +1123,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_open_tg_link":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let path_full = json["path_full"] as? String {
-                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                    
+                    var openInfo = chatInteraction?.openInfo
+                    
+                    if openInfo == nil {
+                        openInfo = { peerId, toChat, messageId, initialAction in
+                            if toChat || initialAction != nil {
+                                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+                            } else {
+                                PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                            }
+                        }
+                    }
+                    
+                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                    
                     execute(inapp: link)
                     self.close()
@@ -1511,6 +1524,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     override var hasNextResponder: Bool {
+        return false
+    }
+    
+    override var hasBorder: Bool {
         return false
     }
 

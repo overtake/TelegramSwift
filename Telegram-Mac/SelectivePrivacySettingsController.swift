@@ -929,7 +929,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 return current
             }
         }, openPremium: {
-            showModal(with: PremiumBoardingController(context: context, source: .last_seen), for: context.window)
+            showModal(with: PremiumBoardingController(context: context, source: .last_seen, openFeatures: true), for: context.window)
         })
 
 

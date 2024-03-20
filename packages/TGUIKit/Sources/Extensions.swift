@@ -582,7 +582,7 @@ public extension CALayer {
     }
     
     func animatePath(duration: Double = 0.2) {
-        let animation = CABasicAnimation(keyPath: "path")
+        let animation = makeSpringAnimation("path")
         animation.duration = duration
         self.add(animation, forKey: "path")
     }
@@ -2320,7 +2320,7 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
             }
         })
         if scale {
-            view.layer?.animateScaleCenter(from: 1, to: 0.1, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+            view.layer?.animateScaleCenter(from: 1, to: 0.01, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
         } else if let scaleTo = scaleTo {
             view.layer?.animateScaleCenter(from: 1, to: scaleTo, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
         }
@@ -2342,7 +2342,7 @@ public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Do
             }
         })
         if scale {
-            view.animateScale(from: 1, to: 0.1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+            view.animateScale(from: 1, to: 0.01, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         } else if let scaleTo = scaleTo {
             view.animateScale(from: 1, to: scaleTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         }
@@ -2879,4 +2879,12 @@ public final class TransformImageResult {
     deinit {
         
     }
+}
+
+public func deg2rad(_ number: Float) -> Float {
+    return number * .pi / 180
+}
+
+public func rad2deg(_ number: Float) -> Float {
+    return number * 180.0 / .pi
 }

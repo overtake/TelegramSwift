@@ -14,6 +14,268 @@ import InAppSettings
 import TGUIKit
 
 
+
+private enum FolderColorEntryId: Hashable {
+    case color(String)
+}
+
+private enum  FolderColorEntry: Comparable, Identifiable {
+    case color(Int, NSColor, Bool)
+    
+    var stableId:  FolderColorEntryId {
+        switch self {
+            case let .color(_, color, _):
+            return .color(color.hexString)
+        }
+    }
+    
+    static func ==(lhs:  FolderColorEntry, rhs: FolderColorEntry) -> Bool {
+        switch lhs {
+            case let .color(index, color, selected):
+                if case .color(index, color, selected) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+        }
+    }
+    
+    static func <(lhs: FolderColorEntry, rhs: FolderColorEntry) -> Bool {
+        switch lhs {
+            case let .color(lhsIndex, _, _):
+                switch rhs {
+                    case let .color(rhsIndex, _, _):
+                        return lhsIndex < rhsIndex
+            }
+        }
+    }
+    
+    func item(initialSize: NSSize, context: AccountContext, action: @escaping (NSColor) -> Void) -> FolderColorIconItem {
+        switch self {
+            case let .color(_, color, selected):
+            return FolderColorIconItem(initialSize: initialSize, stableId: self.stableId, context: context, color: color, selected: selected, action: action)
+        }
+    }
+}
+
+
+
+private class FolderColorIconItem: TableRowItem {
+    let color: NSColor
+    let selected: Bool
+    let action: (NSColor) -> Void
+    let context: AccountContext
+    public init(initialSize: NSSize, stableId: AnyHashable, context: AccountContext, color: NSColor, selected: Bool, action: @escaping (NSColor) -> Void) {
+        self.color = color
+        self.selected = selected
+        self.action = action
+        self.context = context
+        super.init(initialSize, stableId: stableId)
+    }
+    
+    override var height: CGFloat {
+        return 55
+    }
+    override var width: CGFloat {
+        return 55
+    }
+    
+    override func viewClass() -> AnyClass {
+        return FolderColorIconView.self
+    }
+}
+
+private final class FolderColorIconView : View {
+    
+    private let fillView: SimpleLayer = SimpleLayer()
+    private let ringView: SimpleLayer = SimpleLayer()
+    private let control = Control()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layer?.addSublayer(ringView)
+        self.layer?.addSublayer(fillView)
+        addSubview(control)
+        let bounds = focus(CGSize(width: 35, height: 35))
+        
+        fillView.frame = bounds
+        ringView.frame = bounds
+
+        
+        control.frame = bounds
+        
+        
+        control.set(handler: { [weak self] _ in
+            guard let item = self?.item as? FolderColorIconItem else {
+                return
+            }
+            item.action(item.color)
+        }, for: .Click)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var wasSelected: Bool = false
+    
+    private var item: TableRowItem?
+    
+    func set(item: TableRowItem, animated: Bool) {
+        
+        self.item = item
+        
+        guard let item = item as? FolderColorIconItem else {
+            return
+        }
+                
+        self.fillView.contents = generateFillImage(nameColor: .init(main: item.color))
+        self.ringView.contents = generateRingImage(nameColor: .init(main: item.color))
+
+        if wasSelected != item.selected {
+            if item.selected {
+                self.fillView.transform = CATransform3DScale(CATransform3DIdentity, 0.8, 0.8, 1.0)
+                if animated {
+                    self.fillView.animateScale(from: 1, to: 0.8, duration: animated ? 0.2 : 0, removeOnCompletion: true)
+                }
+            } else {
+                self.fillView.transform = CATransform3DScale(CATransform3DIdentity, 1.0, 1.0, 1.0)
+                if animated {
+                    self.fillView.animateScale(from: 0.8, to: 1, duration: animated ? 0.2 : 0, removeOnCompletion: true)
+                }
+            }
+        }
+        
+        self.wasSelected = item.selected
+
+    }
+}
+
+
+
+private final class FolderColorRowItem : GeneralRowItem {
+    fileprivate let colors: [NSColor]
+    fileprivate let selected: NSColor?
+    fileprivate let selectAction:(NSColor)->Void
+    fileprivate let context: AccountContext
+
+    let itemSize: NSSize = NSMakeSize(45, 45)
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, colors: [NSColor], selected: NSColor?, viewType: GeneralViewType, action: @escaping(NSColor)->Void) {
+        self.colors = colors
+        self.context = context
+        self.selected = selected
+        self.selectAction = action
+        super.init(initialSize, stableId: stableId, viewType: viewType)
+    }
+    
+    var frames:[CGRect] = []
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+
+        frames.removeAll()
+        
+        let perRow = Int(floor((blockWidth - 10) / itemSize.width))
+
+        var point: CGPoint = NSMakePoint(5, 5)
+        for i in 1 ... colors.count {
+            frames.append(CGRect(origin: point, size: itemSize))
+            if i % perRow == 0 {
+                point.x = 5
+                point.y += itemSize.height
+            } else {
+                point.x += itemSize.width
+            }
+        }
+        
+        return true
+    }
+    
+    override var instantlyResize: Bool {
+        return true
+    }
+    
+    override var height: CGFloat {
+        let perRow = floor((blockWidth - 10) / itemSize.width)
+        
+        return frames[frames.count - 1].maxY + 5
+    }
+    
+    override func viewClass() -> AnyClass {
+        return PeerNamesRowView.self
+    }
+}
+
+private final class PeerNamesRowView : GeneralContainableRowView {
+    let tableView: View
+    required init(frame frameRect: NSRect) {
+        tableView = View(frame: frameRect)
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    override func layout() {
+        super.layout()
+        tableView.frame = containerView.bounds
+        guard let item = item as? FolderColorRowItem else {
+            return
+        }
+        
+        for (i, subview) in tableView.subviews.enumerated() {
+            subview.frame = item.frames[i]
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var previous: [FolderColorEntry] = []
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? FolderColorRowItem else {
+            return
+        }
+        
+        var entries: [FolderColorEntry] = []
+        
+        var index: Int = 0
+        for color in item.colors {
+            entries.append(.color(index, color, color == item.selected))
+            index += 1
+        }
+
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: previous, rightList: entries)
+        
+        
+        for rdx in deleteIndices.reversed() {
+            tableView.subviews[rdx].removeFromSuperview()
+        }
+        
+        
+        for (idx, entry, _) in indicesAndItems {
+            let view = FolderColorIconView(frame: item.itemSize.bounds)
+            let item = entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction)
+            view.set(item: item, animated: animated)
+            tableView.subviews.insert(view, at: idx)
+        }
+        for (idx, entry, _) in updateIndices {
+            let item = item
+            let updatedItem = entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction)
+            (tableView.subviews[idx] as? FolderColorIconView)?.set(item: updatedItem, animated: animated)
+        }
+
+        self.previous = entries
+        
+        needsLayout = true
+        
+    }
+    
+}
+
+
+
 func shareFolderPremiumLimits(context: AccountContext, current: ChatListFilter, links: [ExportedChatFolderLink]?) -> Signal<(limitFilters: Bool, limitInvites: Bool), NoError> {
     return chatListFilterPreferences(engine: context.engine) |> take(1) |> map { data in
         var shared = data.list.filter { $0.data?.isShared == true }
@@ -313,10 +575,10 @@ private extension ChatListFilter {
 class SelectCallbackObject : ShareObject {
     private let callback:([PeerId])->Signal<Never, NoError>
     private let limitReachedText: String
-    init(_ context: AccountContext, defaultSelectedIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>) {
+    init(_ context: AccountContext, defaultSelectedIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>, excludePeerIds: Set<PeerId> = Set()) {
         self.callback = callback
         self.limitReachedText = limitReachedText
-        super.init(context, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
+        super.init(context, excludePeerIds: excludePeerIds, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
     }
     
     override var selectTopics: Bool {
@@ -385,8 +647,6 @@ private struct State: Equatable {
         self.linkSaving = linkSaving
     }
     
-    
-    
     mutating func withUpdatedFilter(_ f:(ChatListFilter)->ChatListFilter) {
         self.filter = f(self.filter)
     }
@@ -408,7 +668,8 @@ private final class ChatListPresetArguments {
     let shareFolder:(ExportedChatFolderLink?)->Void
     let copy:(String)->Void
     let deleteLink:(ExportedChatFolderLink)->Void
-    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void) {
+    let toggleColor:(Int32?)->Void
+    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void, toggleColor:@escaping(Int32?)->Void) {
         self.context = context
         self.toggleOption = toggleOption
         self.toggleExcludeMuted = toggleExcludeMuted
@@ -424,6 +685,7 @@ private final class ChatListPresetArguments {
         self.shareFolder = shareFolder
         self.copy = copy
         self.deleteLink = deleteLink
+        self.toggleColor = toggleColor
     }
 }
 
@@ -448,6 +710,9 @@ private let _id_show_all_exclude = InputDataIdentifier("_id_show_all_exclude")
 private let _id_header = InputDataIdentifier("_id_header")
 private let _id_loading_links = InputDataIdentifier("_id_loading_links")
 private let _id_share_invite = InputDataIdentifier("_id_share_invite")
+
+private let _id_color = InputDataIdentifier("_id_color")
+private let _id_reset_color = InputDataIdentifier("_id_color")
 private func _id_invite_link(_ string: String) -> InputDataIdentifier {
     return InputDataIdentifier("_id_invite_link\(string)")
 }
@@ -683,6 +948,47 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
+        let colors = [theme.colors.peerColors(0).bottom,
+                      theme.colors.peerColors(1).bottom,
+                      theme.colors.peerColors(2).bottom,
+                      theme.colors.peerColors(3).bottom,
+                      theme.colors.peerColors(4).bottom,
+                      theme.colors.peerColors(5).bottom,
+                      theme.colors.peerColors(6).bottom]
+        
+        let currentColor = state.filter.data?.color
+        let selected: NSColor? = currentColor != nil ? colors[Int(currentColor!.rawValue)] : nil
+
+        let rightText: NSAttributedString?
+        if state.filter.data?.color != nil {
+            rightText = .initialize(string: state.filter.title, color: selected, font: .bold(11))
+        } else {
+            rightText = nil
+        }
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: rightText, action: nil, update: nil, alignToText: true, wrap: selected?.withAlphaComponent(0.1)))))
+        index += 1
+        
+      
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_color, equatable: InputDataEquatable(state.filter.data), comparable: nil, item: { initialSize, stableId in
+            return FolderColorRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: selected, viewType: state.filter.data?.color == nil ? .singleItem : .firstItem, action: { color in
+                arguments.toggleColor(colors.firstIndex(of: color).flatMap { Int32($0) })
+            })
+        }))
+        
+        if state.filter.data?.color != nil {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_color, data: .init(name: strings().chatListFolderColorReset, color: theme.colors.redUI, viewType: .lastItem, action: {
+                arguments.toggleColor(nil)
+            })))
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
         
         if true {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterInviteLinkHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
@@ -1145,7 +1451,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                                 peers.append(peer)
                             }
                         }
-                        return !peers.filter { peerCanBeSharedInFolder($0) }.isEmpty
+                        return !peers.filter( { peerCanBeSharedInFolder($0) }).isEmpty
                     } |> deliverOnMainQueue
                     
                     _ = combineLatest(folderLimits, canCreateLink).start(next: { limits, canCreateLink in
@@ -1284,6 +1590,24 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             }))
             
         })
+    }, toggleColor: { color in
+        if let _ = color, !context.isPremium {
+            showModalText(for: context.window, text: strings().chatListFolderPremiumAlert, button: strings().alertLearnMore, callback: { _ in
+                showModal(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
+            })
+        } else {
+            updateState { current in
+                var current = current
+                switch current.filter {
+                case .allChats:
+                    current.filter = .allChats
+                case .filter(let id, let title, let emoticon, var data):
+                    data.color = color.flatMap { .init(rawValue: $0) }
+                    current.filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
+                }
+                return current
+            }
+        }
     })
     
     

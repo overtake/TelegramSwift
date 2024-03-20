@@ -165,7 +165,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
         if standalone {
             var index = MessageIndex.absoluteUpperBound()
             
-            if arguments.isArchive {
+            if arguments.isArchive, arguments.isMy {
                 entries.insert(.section(index: index), at: 0)
                 index = index.globalPredecessor()
                 entries.insert(.headerText(index: index, stableId: index, text: strings().storyMediaArchiveText, viewType: .singleItem), at: 0)

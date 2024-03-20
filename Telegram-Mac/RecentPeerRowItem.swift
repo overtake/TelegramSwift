@@ -95,20 +95,20 @@ class RecentPeerRowView : ShortPeerRowView {
     
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     
     override func mouseExited(with event: NSEvent) {
         super.mouseExited(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     
-    override func updateMouse() {
+    override func updateMouse(animated: Bool) {
         if mouseInside(), control.superview != nil {
             control.isHidden = false
             badgeView?.isHidden = true
@@ -150,7 +150,7 @@ class RecentPeerRowView : ShortPeerRowView {
                 badgeView = nil
             }
         }
-        updateMouse()
+        updateMouse(animated: true)
         needsLayout = true
     }
     
