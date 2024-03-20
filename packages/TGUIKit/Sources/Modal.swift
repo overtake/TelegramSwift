@@ -138,7 +138,6 @@ private class ModalInteractionsContainer : View {
             acceptView.layer?.cornerRadius = 0
         }
         acceptView.set(font: .medium(.text), for: .Normal)
-        acceptView.set(text: interactions.acceptTitle, for: .Normal)
         updateDone()
         updateCancel()
     }
@@ -227,6 +226,9 @@ private class ModalInteractionsContainer : View {
             }
             self?.updateCancel()
         }
+        
+        acceptView.set(text: interactions.acceptTitle, for: .Normal)
+        
         updateLocalizationAndTheme(theme: presentation)
     }
     

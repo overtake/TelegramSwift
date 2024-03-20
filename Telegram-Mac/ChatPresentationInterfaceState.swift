@@ -465,6 +465,7 @@ struct SavedMessageTagsValue : Equatable {
 struct ChatBotManagerData : Equatable {
     let bot: TelegramAccountConnectedBot
     let peer: EnginePeer
+    let settings: PeerStatusSettings.ManagingBot
 }
 
 class ChatPresentationInterfaceState: Equatable {

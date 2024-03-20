@@ -993,6 +993,8 @@ class PreviewSenderController: ModalViewController, Notifable {
             sendCurrentMedia?(silent, atDate, asSpoiler)
         case .pinned:
             break
+        case .customLink:
+            break
         }
     }
     

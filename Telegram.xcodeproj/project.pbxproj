@@ -307,6 +307,7 @@
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		277619E3280EAA4B0090663C /* menu_monogram.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277619E2280EAA4B0090663C /* menu_monogram.tgs */; };
 		277619E5280EAC420090663C /* Avatar_MonogramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277619E4280EAC420090663C /* Avatar_MonogramView.swift */; };
+		277840972BAABDDC0026CC3A /* BusinessLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277840962BAABDDC0026CC3A /* BusinessLinksController.swift */; };
 		277C208627A284FA0070B3BF /* GroupCallAvatarMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C208527A284FA0070B3BF /* GroupCallAvatarMenuItem.swift */; };
 		277C208927A2858D0070B3BF /* menu_speaker.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277C208727A2858D0070B3BF /* menu_speaker.tgs */; };
 		277C208A27A2858D0070B3BF /* menu_speaker_muted.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */; };
@@ -1834,6 +1835,7 @@
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		277619E2280EAA4B0090663C /* menu_monogram.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_monogram.tgs; sourceTree = "<group>"; };
 		277619E4280EAC420090663C /* Avatar_MonogramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_MonogramView.swift; sourceTree = "<group>"; };
+		277840962BAABDDC0026CC3A /* BusinessLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessLinksController.swift; sourceTree = "<group>"; };
 		277C208527A284FA0070B3BF /* GroupCallAvatarMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarMenuItem.swift; sourceTree = "<group>"; };
 		277C208727A2858D0070B3BF /* menu_speaker.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_speaker.tgs; sourceTree = "<group>"; };
 		277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_speaker_muted.tgs; sourceTree = "<group>"; };
@@ -3574,6 +3576,7 @@
 				279338862B7E2B070096A292 /* BusinessQuickReplyController.swift */,
 				273060AB2B98765D00F3317D /* BusinessTimezonesController.swift */,
 				27A01AEB2BA1A73900C59661 /* BusinessIntroController.swift */,
+				277840962BAABDDC0026CC3A /* BusinessLinksController.swift */,
 			);
 			name = business;
 			sourceTree = "<group>";
@@ -7758,6 +7761,7 @@
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
 				A7E831F0255040B70095A167 /* ChatPresentationInputQueryResult.swift in Sources */,
 				9F6314E121CAA0AB009FD379 /* NewPollController.swift in Sources */,
+				277840972BAABDDC0026CC3A /* BusinessLinksController.swift in Sources */,
 				27CEA34927AD513300472CB1 /* GroupCallStatusBar.swift in Sources */,
 				C2DE5D2A1F3CA69D0081EC1E /* InstantPageMedia.swift in Sources */,
 				C2DE5D2E1F3CA72E0081EC1E /* InstantPageView.swift in Sources */,

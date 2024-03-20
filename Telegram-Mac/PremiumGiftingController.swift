@@ -735,7 +735,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
             return
         }
         
-        let source =  BotPaymentInvoiceSource.giftCode(users: state.peers.map { $0.id }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
+        let source =  BotPaymentInvoiceSource.giftCode(users: state.peers.map { $0.id }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: Int32(state.peers.count), months: selectedMonths, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount))
                         
         let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
 

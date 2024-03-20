@@ -17,10 +17,11 @@ class ChatEmptyPeerItem: TableRowItem {
 
     private(set) var textViewLayout:TextViewLayout
     private(set) var image: TelegramMediaImage?
+    private(set) var sticker: TelegramMediaFile?
     private(set) var premiumRequired: Bool = false
     
     private(set) var standImage: (CGImage, CGFloat)? = nil
-
+    
     
     override var stableId: AnyHashable {
         return 0
@@ -147,6 +148,12 @@ class ChatEmptyPeerItem: TableRowItem {
                 attr.detectBoldColorInString(with: .medium(.text))
             }
             self._shouldBlurService = false
+        case let .customLink(contents):
+            //TODOLANG
+            _ = attr.append(string: "Link to Chat", color: theme.colors.text, font: .medium(.text))
+            _ = attr.append(string: "\n\n")
+            _ = attr.append(string: "Add a message that will be\nentered in the message input\nfield for anyone who starts a\nchat with you using the link:", color: theme.colors.text, font: .normal(.text))
+
         }
         
         
@@ -157,14 +164,17 @@ class ChatEmptyPeerItem: TableRowItem {
         super.init(initialSize)
         
         
-        if chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
+        if chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser, chatInteraction.mode.customChatContents == nil, chatInteraction.mode.customChatLink == nil {
             
             let cachedData: Signal<CachedPeerData?, NoError> = .single(chatInteraction.presentation.cachedData) |> then(getCachedDataView(peerId: chatInteraction.peerId, postbox: chatInteraction.context.account.postbox)) |> deliverOnMainQueue
             
             let peer: Signal<Peer?, NoError> = .single(chatInteraction.presentation.mainPeer) |> then(getPeerView(peerId: chatInteraction.peerId, postbox: chatInteraction.context.account.postbox)) |> deliverOnMainQueue
 
             
-            peerViewDisposable.set(combineLatest(cachedData, peer).start(next: { [weak self] cachedData, peer in
+            let sticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(chatInteraction.context.engine.stickers.randomGreetingSticker() |> deliverOnMainQueue)
+
+            
+            peerViewDisposable.set(combineLatest(cachedData, peer, sticker).start(next: { [weak self] cachedData, peer, sticker in
                 if let cachedData = cachedData as? CachedUserData, let user = peer, let self {
                     if let botInfo = cachedData.botInfo {
                         var about = botInfo.description
@@ -187,7 +197,6 @@ class ChatEmptyPeerItem: TableRowItem {
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
                         self.textViewLayout.interactions = globalLinkExecutor
                         self.image = botInfo.photo
-                        self.view?.set(item: self)
                     } else if cachedData.flags.contains(.premiumRequired), !chatInteraction.context.isPremium {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
@@ -198,13 +207,27 @@ class ChatEmptyPeerItem: TableRowItem {
                         self.textViewLayout.interactions = globalLinkExecutor
                         self.premiumRequired = true
                         self.standImage = (NSImage(resource: .iconChatPremiumRequired).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 100)
-                        self.view?.set(item: self)
+                    } else if case let .known(intro) = cachedData.businessIntro, let intro = intro {
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: intro.title.isEmpty ? strings().chatEmptyChat : intro.title, color: theme.colors.text, font: .medium(.text))
+                        _ = attr.append(string: "\n\n", color: theme.colors.text, font: .medium(.text))
+                        _ = attr.append(string: intro.text.isEmpty ? strings().chatEmptyChatInfo : intro.text, color: theme.colors.text, font: .normal(.text))
+                        self._shouldBlurService = false
+                        self.textViewLayout = TextViewLayout(attr, alignment: .center)
+                        self.textViewLayout.interactions = globalLinkExecutor
+                        self.sticker = intro.stickerFile ?? sticker?.file
                     }
-                    
+                    self.view?.set(item: self)
                 }
             }))
         }
         
+    }
+    
+    func sendSticker() {
+        if let sticker = self.sticker {
+            self.chatInteraction.sendAppFile(sticker, false, nil, false, nil)
+        }
     }
     
     deinit {
@@ -223,6 +246,7 @@ class ChatEmptyPeerItem: TableRowItem {
 class ChatEmptyPeerView : TableRowView {
     let textView:TextView = TextView()
     private var imageView: TransformImageView? = nil
+    private var stickerView: StickerMediaContentView? = nil
     private var visualEffect: VisualEffect?
     private var bgView: View?
     
@@ -307,7 +331,7 @@ class ChatEmptyPeerView : TableRowView {
         if let item = item as? ChatEmptyPeerItem, let bgView = bgView {
             
             
-            item.textViewLayout.measure(width: min(frame.width - 80, 400))
+            item.textViewLayout.measure(width: min(frame.width - 80, 250))
             
             if item.textViewLayout.lineSpacing != nil {
                 for (i, line) in item.textViewLayout.lines.enumerated() {
@@ -348,6 +372,33 @@ class ChatEmptyPeerView : TableRowView {
             } else if let view = self.imageView {
                 performSubviewRemoval(view, animated: false)
                 self.imageView = nil
+            }
+            
+            if let sticker = item.sticker {
+                let stickerSize = NSMakeSize(150, 150)
+                let size = sticker.dimensions?.size.aspectFitted(stickerSize) ?? stickerSize
+                let current: StickerMediaContentView
+                if let view = self.stickerView {
+                    current = view
+                } else {
+                    current = StickerMediaContentView(frame: size.bounds)
+                    bgView.addSubview(current)
+                    self.stickerView = current
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let item = self?.item as? ChatEmptyPeerItem {
+                            item.sendSticker()
+                        }
+                    }, for: .Click)
+                    current.scaleOnClick = true
+                    
+                    current.userInteractionEnabled = true
+                }
+                current.update(with: sticker, size: size, context: item.chatInteraction.context, parent: nil, table: item.table)
+                
+            } else if let view = self.stickerView {
+                performSubviewRemoval(view, animated: false)
+                self.stickerView = nil
             }
             
             
@@ -402,7 +453,7 @@ class ChatEmptyPeerView : TableRowView {
             
             let singleLine = item.textViewLayout.lines.count == 1
             
-            var h: CGFloat = [self.imageView, premRequiredButton, premRequiredImageView].compactMap { $0 }.reduce(0, { $0 + $1.frame.height })
+            var h: CGFloat = [self.imageView, premRequiredButton, premRequiredImageView, stickerView].compactMap { $0 }.reduce(0, { $0 + $1.frame.height })
             
             if let _ = premRequiredButton {
                 h += 20
@@ -410,6 +461,7 @@ class ChatEmptyPeerView : TableRowView {
             if let premRequiredImageView {
                 h += 10
             }
+            
             
             bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, h + textView.frame.height + 20))
 
@@ -424,6 +476,9 @@ class ChatEmptyPeerView : TableRowView {
             } else if let imageView = imageView {
                 imageView.centerX(y: 0)
                 textView.centerX(y: imageView.frame.maxY + 10)
+            } else if let stickerView = stickerView {
+                textView.centerX(y: 10)
+                stickerView.centerX(y: textView.frame.maxY + 10)
             } else {
                 textView.center()
             }

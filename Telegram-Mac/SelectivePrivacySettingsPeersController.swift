@@ -194,10 +194,12 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
     private let updated:([PeerId: SelectivePrivacyPeer])->Void
     private let statePromise = ValuePromise(SelectivePrivacyPeersControllerState(), ignoreRepeated: true)
     private let stateValue = Atomic(value: SelectivePrivacyPeersControllerState())
-    init(_ context: AccountContext, title: String, initialPeers: [PeerId: SelectivePrivacyPeer], updated: @escaping ([PeerId: SelectivePrivacyPeer]) -> Void) {
+    private let premiumUsers: Bool?
+    init(_ context: AccountContext, title: String, initialPeers: [PeerId: SelectivePrivacyPeer], premiumUsers: Bool?, updated: @escaping ([PeerId: SelectivePrivacyPeer]) -> Void) {
         self.title = title
         self.initialPeers = initialPeers
         self.updated = updated
+        self.premiumUsers = premiumUsers
         super.init(context)
     }
     
@@ -215,12 +217,20 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         let context = self.context
         let title = self.title
         self.setCenterTitle(title)
-        let initialPeers = self.initialPeers
+        var initialPeers = Array(self.initialPeers.values)
+        
+        if let premiumUsers, premiumUsers {
+            let premium = TelegramFilterCategory(category: .premiumUsers)
+            initialPeers.insert(.init(peer: premium, participantCount: nil), at: 0)
+        }
+        
         let updated = self.updated
         let initialSize = self.atomicSize
 
         let statePromise = self.statePromise
         let stateValue = self.stateValue
+        
+        let premiumUsers = self.premiumUsers
 
         let actionsDisposable = DisposableSet()
 
@@ -231,9 +241,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         actionsDisposable.add(removePeerDisposable)
 
         let peersPromise = Promise<[SelectivePrivacyPeer]>()
-        peersPromise.set(context.account.postbox.transaction { transaction -> [SelectivePrivacyPeer] in
-            return Array(initialPeers.values)
-        })
+        peersPromise.set(.single(initialPeers))
 
 
         var currentPeerIds:[PeerId] = []
@@ -264,8 +272,9 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
             removePeerDisposable.set(applyPeers.start())
 
         }, addPeer: {
+            
 
-            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote, .bots]), confirmation: {_ in return .single(true) }).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote, .bots], premiumBlock: premiumUsers != nil), confirmation: {_ in return .single(true) }, selectedPeerIds: Set(currentPeerIds)).start(next: { peerIds in
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[SelectivePrivacyPeer], NoError> in
@@ -283,6 +292,8 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                                     }
 
                                     updatedPeers.append(SelectivePrivacyPeer(peer: peer, participantCount: participantCount))
+                                } else if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace {
+                                    updatedPeers.insert(SelectivePrivacyPeer(peer: TelegramFilterCategory(category: .init(rawValue: Int32(peerId.id._internalGetInt64Value()))), participantCount: nil), at: 0)
                                 }
                             }
                             return updatedPeers
@@ -297,7 +308,6 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                             updatedPeerDict[peer.peer.id] = peer
                         }
                         updated(updatedPeerDict)
-
                         return .complete()
                 }
 

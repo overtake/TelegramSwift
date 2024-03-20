@@ -193,9 +193,12 @@ private struct State : Equatable {
     
     var includeIds: [PeerId] = []
     var excludeIds: [PeerId] = []
+    var disableIds: [PeerId] = []
 
     var includePeers: [EnginePeer] = []
     var excludePeers: [EnginePeer] = []
+    
+    var disabledPeers: [EnginePeer] = []
 
     var contacts: Set<PeerId> = Set()
     
@@ -237,7 +240,7 @@ private struct State : Equatable {
                     categories.insert(.existingChats)
                 }
             }
-            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, exclude: self.access == .all), canReply: self.replyAccess)
+            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, excludePeers: Set(disabledPeers.map { $0.id }), exclude: self.access == .all), canReply: self.replyAccess)
         } else {
             return nil
         }
@@ -254,6 +257,9 @@ private let _id_access_selected = InputDataIdentifier("_id_access_selected")
 
 private let _id_include_chats = InputDataIdentifier("_id_include_chats")
 private let _id_exclude_chats = InputDataIdentifier("_id_exclude_chats")
+
+private let _id_exclude_users = InputDataIdentifier("_id_exclude_users")
+
 
 private let _id_reply_to_message = InputDataIdentifier("_id_reply_to_message")
 
@@ -371,6 +377,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_exclude_chats, data: .init(name: strings().businessMessageRecepientsExclude, color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.excludeIds.isEmpty ? .singleItem : .firstItem, action: {
             arguments.selectChats(.exclude)
         })))
+
         
     case .selected:
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessMessageRecepientsIncludeTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -379,7 +386,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_include_chats, data: .init(name: strings().businessMessageRecepientsExclude, color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.includeIds.isEmpty ? .singleItem : .firstItem, action: {
             arguments.selectChats(.include)
         })))
+        
     }
+
+
+    
     
     
     struct Tuple : Equatable {
@@ -452,6 +463,29 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
             }, highlightVerified: true, menuOnAction: true)
         }))
+    }
+    
+    switch state.access {
+    case .all:
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessMessageRecepientsExcludeInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        
+    case .selected:
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessMessageRecepientsIncludeInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        
+        
+//        if !state.disableIds.isEmpty {
+//            entries.append(.sectionId(sectionId, type: .normal))
+//            sectionId += 1
+//            
+//            entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_exclude_users, data: .init(name: strings().businessMessageRecepientsExcludeUsers, color: theme.colors.accent, icon: theme.icons.chat_filter_add, type: .none, viewType: state.disableIds.isEmpty ? .singleItem : .firstItem, action: {
+//                arguments.selectChats(.exclude)
+//            })))
+//            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessMessageRecepientsExcludeUsersInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+//            index += 1
+//        }
+
     }
 
     
@@ -532,6 +566,24 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         }
     }))
     
+    let disablePeers: Signal<[EnginePeer], NoError> = statePromise.get() |> map { $0.disableIds } |> distinctUntilChanged |> mapToSignal { peerIds in
+        return context.account.postbox.transaction { transaction -> [EnginePeer] in
+            return peerIds.compactMap {
+                transaction.getPeer($0)
+            }.map {
+                .init($0)
+            }
+        }
+    } |> deliverOnMainQueue
+    
+    actionsDisposable.add(disablePeers.start(next: { peers in
+        updateState { current in
+            var current = current
+            current.disabledPeers = peers
+            return current
+        }
+    }))
+    
     let contacts = context.engine.data.get(TelegramEngine.EngineData.Item.Contacts.List(includePresences: false))
     actionsDisposable.add(contacts.start(next: { contacts in
         updateState { current in
@@ -574,6 +626,7 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
                     current.includeIds.insert(contentsOf: categories, at: 0)
                 }
                 current.replyAccess = connectedBot.canReply
+                current.disableIds = Array(connectedBot.recipients.excludePeers)
             }
             return current
         }
@@ -598,7 +651,7 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         items.append(.init(peer: TelegramFilterCategory(category: .contacts), status: ""))
         items.append(.init(peer: TelegramFilterCategory(category: .nonContacts), status: ""))
         
-        let additionTopItems = ShareAdditionItems(items: items, topSeparator: strings().businessMessageSelectPeersChatTypes, bottomSeparator: strings().businessSelectPeersLimit)
+        let additionTopItems = ShareAdditionItems(items: items, topSeparator: strings().businessMessageSelectPeersChatTypes, bottomSeparator: strings().businessMessageSelectPeersChats)
 
         let selected: Set<PeerId>
         switch type {

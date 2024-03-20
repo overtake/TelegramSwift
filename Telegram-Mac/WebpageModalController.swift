@@ -597,6 +597,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var botPeer: Peer? = nil
     
+    private var biometryState: TelegramBotBiometricsState? {
+        didSet {
+            if let biometryState, let bot = requestData?.bot {
+                context.engine.peers.updateBotBiometricsState(peerId: bot.id, update: { _ in
+                    return biometryState
+                })
+            }
+        }
+    }
+    private var biometryDisposable: Disposable?
+    
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil) {
         self.url = url
         self.requestData = requestData
@@ -702,19 +713,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     override func viewDidLoad() {
         super.viewDidLoad()
         
-                
+        
         
         genericView._holder.uiDelegate = self
         genericView._holder.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: [], context: nil)
         genericView._holder.navigationDelegate = self
-//
+        //
         genericView.update(inProgress: true, preload: self.preloadData, animated: false)
         
         updateLocalizationAndTheme(theme: theme)
         
         readyOnce()
         let context = self.context
-
+        
         
         if let requestData = requestData {
             
@@ -722,7 +733,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch requestData {
             case let .simple(url, bot, _, source, _):
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, source: source, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
-                                
+                
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
                     self?.url = url
                     self?.genericView.load(url: url, preload: self?.preloadData, animated: true)
@@ -734,23 +745,23 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }))
             case .normal(let url, let peerId, let threadId, let bot, let replyTo, let buttonText, let payload, let fromMenu, _, let complete):
-  
-
+                
+                
                 
                 
                 let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), fromMenu: fromMenu, replyToMessageId: replyTo, threadId: threadId) |> deliverOnMainQueue
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
-                
+                    
                     
                     self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
                     self?.genericView.load(url: result.url, preload: self?.preloadData, animated: true)
                     self?.keepAliveDisposable = (result.keepAliveSignal
-                                                |> deliverOnMainQueue).start(error: { [weak self] _ in
-                                                    self?.close()
-                                                }, completed: { [weak self] in
-                                                    self?.close()
-                                                    complete?()
-                                                })
+                                                 |> deliverOnMainQueue).start(error: { [weak self] _ in
+                        self?.close()
+                    }, completed: { [weak self] in
+                        self?.close()
+                        complete?()
+                    })
                     self?.url = result.url
                 }, error: { [weak self] error in
                     switch error {
@@ -762,6 +773,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
             
             
+           
             
         } else {
             self.genericView.load(url: url, preload: self.preloadData, animated: true)
@@ -773,7 +785,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self?.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
         
-        
+        guard let botPeer = requestData?.bot else {
+            return
+        }
+        let biometrySignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.BotBiometricsState(id: botPeer.id)) |> deliverOnMainQueue
+        biometryDisposable = biometrySignal.start(next: { [weak self] result in
+            self?.biometryState = result
+        })
 
     }
     
@@ -937,6 +955,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         installedBotsDisposable.dispose()
         requestWebDisposable.dispose()
         iconDisposable?.dispose()
+        biometryDisposable?.dispose()
         self.genericView._holder.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
 
     }
@@ -1202,36 +1221,46 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 self.invokeCustomMethod(requestId: requestId, method: method, params: paramsString ?? "{}")
             }
         case "web_app_biometry_get_info":
-            self.sendBiometricInfo()
-        case "web_app_biometry_request_access":
-            //TODOLANG
-            guard let botPeer = requestData?.bot else {
+            guard let biometryState else {
                 return
             }
-            let string: String
+            self.sendBiometricInfo(biometryState: biometryState)
+        case "web_app_biometry_request_access":
+            //TODOLANG
+            guard let botPeer = requestData?.bot, var biometryState = self.biometryState else {
+                return
+            }
+            var string: String
             if laContext.biometricTypeString == "finger" {
                 string = "Do you want to allow \(botPeer.displayTitle) to use Touch ID?"
             } else {
                 string = "Do you want to allow \(botPeer.displayTitle) to use Face ID?"
             }
             
+            if let json = json, let reason = json["reason"] as? String {
+                string += "\n\n" + reason
+            }
+            
             let accountId = context.peerId
             
-            if FastSettings.botAccessToBiometric(peerId: botPeer.id, accountId: accountId) {
-                self.sendBiometricInfo()
+            if biometryState.accessGranted {
+                self.sendBiometricInfo(biometryState: biometryState)
                 return
             }
             
             verifyAlert(for: context.window, information: string, ok: strings().webAppAccessAllow, cancel: strings().webAppAccessDeny, successHandler: { [weak self] _ in
                 FastSettings.allowBotAccessToBiometric(peerId: botPeer.id, accountId: accountId)
-                self?.sendBiometricInfo()
+                biometryState.accessGranted = true
+                biometryState.accessRequested = true
+                self?.sendBiometricInfo(biometryState: biometryState)
             }, cancelHandler: { [weak self] in
-                FastSettings.disallowBotAccessToBiometric(peerId: botPeer.id, accountId: accountId)
-                self?.sendBiometricInfo()
+                biometryState.accessGranted = false
+                biometryState.accessRequested = true
+                self?.sendBiometricInfo(biometryState: biometryState)
             })
         case "web_app_biometry_update_token":
             
-            guard let botPeer = requestData?.bot else {
+            guard let botPeer = requestData?.bot, var biometryState = self.biometryState else {
                 return
             }
             
@@ -1252,26 +1281,26 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     kSecAttrAccount: "bot_id_\(botPeer.id.toInt64())"
                 ];
                 
-                FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: !token.isEmpty)
+                
 
                 if token.isEmpty {
                     let resultCode = SecItemDelete(secQuery)
                     let status = resultCode == errSecSuccess ? "removed" : "failed"
                     sendEvent(name: "biometry_token_updated", data: "{status: \"\(status)\"}")
-                    FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: false)
+                    biometryState.opaqueToken = nil
                 } else {
                     let tokenData = token.data(using: .utf8)!
                     secQuery[kSecValueData] = tokenData
                     let resultCode = SecItemAdd(secQuery as CFDictionary, nil);
                     let status = resultCode == errSecSuccess || resultCode == errSecDuplicateItem ? "updated" : "failed"
+                    biometryState.opaqueToken = .init(publicKey: Data(), data: Data())
                     sendEvent(name: "biometry_token_updated", data: "{status: \"\(status)\"}")
-                    FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: status == "updated" ? true : false)
                 }
-                self.sendBiometricInfo()
+                self.sendBiometricInfo(biometryState: biometryState)
             }
         case "web_app_biometry_request_auth":
             
-            guard let botPeer = requestData?.bot else {
+            guard let botPeer = requestData?.bot, var biometryState = self.biometryState else {
                 return
             }
             
@@ -1292,7 +1321,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             weak var controller = self
             
-            let accountId = context.peerId
             
             DispatchQueue.global().async {
                 var itemCopy: CFTypeRef?
@@ -1305,14 +1333,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
                 DispatchQueue.main.async {
                     if resultCode == errSecItemNotFound {
-                        FastSettings.botBiometricTokenIsSaved(peerId: botPeer.id, accountId: accountId, value: false)
+                        biometryState.opaqueToken = nil
                     }
                     if status == "failed" {
                         controller?.sendEvent(name: "biometry_auth_requested", data: "{status: \"\(status)\"}")
                     } else {
                         controller?.sendEvent(name: "biometry_auth_requested", data: "{status: \"\(status)\", token:\"\(data!)\"}")
                     }
-                    controller?.sendBiometricInfo()
+                    controller?.sendBiometricInfo(biometryState: biometryState)
                 }
                 
                 
@@ -1412,7 +1440,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
        
     }
     
-    fileprivate func sendBiometricInfo() {
+    fileprivate func sendBiometricInfo(biometryState: TelegramBotBiometricsState) {
         
         guard let botPeer = self.requestData?.bot else {
             return
@@ -1423,13 +1451,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         let available = laContext.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: error)
         
-        let access_requested = FastSettings.botAccessToBiometricRequested(peerId: botPeer.id, accountId: context.peerId)
-        let access_granted = FastSettings.botAccessToBiometric(peerId: botPeer.id, accountId: context.peerId)
-        let token_saved = FastSettings.botBiometricRequestedTokenSaved(peerId: botPeer.id, accountId: context.peerId)
+        let access_requested = biometryState.accessRequested
+        let access_granted = biometryState.accessGranted
+        let token_saved = biometryState.opaqueToken != nil
         
-        let paramsString: String = "{available: \"\(available)\", type:\"\(type)\", access_requested:\(access_requested), access_granted:\(access_granted), token_saved:\(token_saved)}"
-        self.sendEvent(name: "biometry_info_received", data: paramsString)
-
+        self.biometryState = biometryState
+        
+        if let uuid = FastSettings.defaultUUID()?.uuidString {
+            let paramsString: String = "{available: \"\(available)\", type:\"\(type)\", access_requested:\(access_requested), access_granted:\(access_granted), token_saved:\(token_saved), device_id:\"\(uuid)\"}"
+            self.sendEvent(name: "biometry_info_received", data: paramsString)
+        }
+        
     }
     
     fileprivate func invokeCustomMethod(requestId: String, method: String, params: String) {

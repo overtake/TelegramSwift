@@ -343,7 +343,10 @@ final class PeerCallScreenView : Control {
             return
         }
         
+        let hideOutside = (videoLink_large != nil) ? (!state.mouseInside && state.isActive) : false
+        
         transition.updateFrame(view: settingsView, frame: CGRect.init(origin: CGPoint(x: size.width - settingsView.frame.width - 5, y: 5), size: settingsView.frame.size))
+        transition.updateAlpha(view: settingsView, alpha: hideOutside ? 0 : 1)
         
         backgroundLayer.frame = size.bounds
         backgroundLayer.blurredLayer.frame = size.bounds
@@ -362,6 +365,7 @@ final class PeerCallScreenView : Control {
             transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: photoView.frame.maxY + 32))
             statusView.updateLayout(size: statusView.frame.size, transition: transition)
         }
+        transition.updateAlpha(view: statusView, alpha: hideOutside ? 0 : 1)
         
         
         if let videoViewState {
@@ -382,6 +386,7 @@ final class PeerCallScreenView : Control {
         
         if let videoShadowView {
             transition.updateFrame(view: videoShadowView, frame: CGRect(origin: videoShadowView.frame.origin, size: NSMakeSize(size.width, videoShadowView.frame.height)))
+            transition.updateAlpha(view: videoShadowView, alpha: hideOutside ? 0 : 1)
         }
         if let videoBackgroundView {
             transition.updateFrame(view: videoBackgroundView, frame: size.bounds)
@@ -392,10 +397,12 @@ final class PeerCallScreenView : Control {
         
         if let statusTooltip {
             transition.updateFrame(view: statusTooltip, frame: statusTooltipFrame(view: statusTooltip, state: state))
+            transition.updateAlpha(view: statusTooltip, alpha: hideOutside ? 0 : 1)
         }
         
         if let secretView {
             transition.updateFrame(view: secretView, frame: secretKeyFrame(view: secretView, state: state, largeVideo: videoLink_large != nil))
+            transition.updateAlpha(view: secretView, alpha: hideOutside ? 0 : 1)
             secretView.updateLayout(size: secretView.frame.size, transition: transition)
         }
         
@@ -408,6 +415,7 @@ final class PeerCallScreenView : Control {
         }
         
         transition.updateFrame(view: actions, frame: NSMakeRect(0, size.height - 70 - 40, size.width, 70))
+
         
 
         
@@ -418,6 +426,7 @@ final class PeerCallScreenView : Control {
         var x = floorToScreenPixels((size.width - width) / 2)
         for action in actions {
             transition.updateFrame(view: action, frame: CGRect(origin: CGPoint(x: x, y: 0), size: action.frame.size))
+            transition.updateAlpha(view: action, alpha: hideOutside ? 0 : 1)
             x += action.frame.width + 36
         }
         
@@ -425,13 +434,14 @@ final class PeerCallScreenView : Control {
         for tooltip in tooltipsViews {
             y -= (tooltip.frame.height + 10)
             transition.updateFrame(view: tooltip, frame: tooltip.centerFrameX(y: y))
+            transition.updateAlpha(view: tooltip, alpha: hideOutside ? 0 : 1)
             tooltip.reveal(animated: transition.isAnimated)
         }
     }
     
     func updateAudioLevel(_ value: Float) {
         if self.canAnimateAudioLevel {
-            self.targetAudioLevel = value
+            self.targetAudioLevel = min(1, value)
         } else {
             self.targetAudioLevel = 0.0
         }

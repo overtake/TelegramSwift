@@ -56,6 +56,12 @@ class ChatInputActionsView: View {
         muteChannelMessages.autohighlight = false
         send.autohighlight = false
         
+        send.scaleOnClick = true
+        muteChannelMessages.scaleOnClick = true
+        slowModeTimeout.scaleOnClick = true
+        inlineCancel.scaleOnClick = true
+        
+        
         voice.set(handler: { [weak self] _ in
             guard let `self` = self else { return }
             
@@ -147,7 +153,7 @@ class ChatInputActionsView: View {
     }
     
     var entertaimentsPopover: ViewController {
-        if chatInteraction.presentation.state == .editing {
+        if chatInteraction.presentation.state == .editing || chatInteraction.mode.customChatLink != nil {
             let emoji = EmojiesController(chatInteraction.context)
             if let interactions = chatInteraction.context.bindings.entertainment().interactions {
                 emoji.update(with: interactions, chatInteraction: chatInteraction)
@@ -336,8 +342,14 @@ class ChatInputActionsView: View {
                 }
                 
                 
-                let sNew = !value.effectiveInput.inputText.isEmpty || !value.interfaceState.forwardMessageIds.isEmpty || value.state == .editing
-                let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing
+                let sNew = !value.effectiveInput.inputText.isEmpty || !value.interfaceState.forwardMessageIds.isEmpty || value.state == .editing || value.chatMode.customChatLink != nil
+                let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing || value.chatMode.customChatLink != nil
+                
+                if value.chatMode.customChatLink != nil {
+                    send.isEnabled = !value.effectiveInput.inputText.isEmpty
+                } else {
+                    send.isEnabled = true
+                }
                 
                 if sNew != sOld || first || newInlineRequest != oldInlineRequest || oldInlineLoading != newInlineLoading || newSlowModeCounter != oldSlowModeCounter {
                     first = false

@@ -58,7 +58,7 @@ final class ChatInteraction : InterfaceObserver  {
     private let enableProxyDisposable = MetaDisposable()
     
     
-   
+    
     
     init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false, isGlobalSearchMessage: Bool = false, isPeerSavedMessages: Bool = false) {
         self.chatLocation = chatLocation
@@ -102,7 +102,7 @@ final class ChatInteraction : InterfaceObserver  {
     var reportMessages:(ReportReasonValue, [MessageId]) -> Void = { _, _ in }
     var sendMessage: (Bool, Date?) -> Void = { _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
-
+    
     //
     var focusMessageId: (MessageId?, ChatFocusTarget, TableScrollState) -> Void = { _, _, _  in} // from, to, animated, position
     var focusPinnedMessageId: (MessageId) -> Void = { _ in} // from, to, animated, position
@@ -170,7 +170,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var push:(ViewController)->Void = { _ in }
     var back:()->Void = { }
-
+    
     var openPinnedMessages: (MessageId)->Void = { _ in }
     var unpinAllMessages: ()->Void = {}
     var setLocation: (ChatHistoryLocation)->Void = { _ in }
@@ -180,11 +180,11 @@ final class ChatInteraction : InterfaceObserver  {
     var transcribeAudio:(Message)->Void = { _ in }
     
     var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
-
+    
     var runEmojiScreenEffect:(String, Message, Bool, Bool)->Void = { _, _, _, _ in }
     var runPremiumScreenEffect:(Message, Bool, Bool)->Void = { _, _, _ in }
     var runReactionEffect:(MessageReaction.Reaction, MessageId)->Void = { _, _ in }
-
+    
     var toggleSendAs: (PeerId)->Void = { _ in }
     
     var showDeleterSetup:(Control)->Void = { _ in }
@@ -227,7 +227,7 @@ final class ChatInteraction : InterfaceObserver  {
     var updateFrame:(NSRect, ContainedViewLayoutTransition) -> Void = { _, _ in }
     
     var unarchive: ()->Void = { }
-
+    
     var closeAfterPeek:(Int32)->Void = { _ in }
     
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
@@ -257,7 +257,7 @@ final class ChatInteraction : InterfaceObserver  {
                 return false
             }
         }
-
+        
         return false
     }
     
@@ -285,40 +285,40 @@ final class ChatInteraction : InterfaceObserver  {
         
         return ChatInteraction.maxInput
     }
-
+    
     /*
      var hasSetDestructiveTimer: Bool {
-         if self.peerId.namespace == Namespaces.Peer.SecretChat {
-             return true
-         }
-         if let peer = presentation.peer {
-             if let peer = peer as? TelegramChannel, peer.isSupergroup {
-                 return peer.groupAccess.canEditGroupInfo
-             }
-             if let value = self.presentation.messageSecretTimeout {
-                 switch value {
-                 case let .known(value):
-                     if value != nil {
-                         return true
-                     }
-                 default:
-                     return false
-                 }
-             }
-             if let peer = peer as? TelegramGroup {
-                 switch peer.role {
-                 case .admin, .creator:
-                     return true
-                 default:
-                     break
-                 }
-             }
-         }
-
-         return false
+     if self.peerId.namespace == Namespaces.Peer.SecretChat {
+     return true
      }
-
-
+     if let peer = presentation.peer {
+     if let peer = peer as? TelegramChannel, peer.isSupergroup {
+     return peer.groupAccess.canEditGroupInfo
+     }
+     if let value = self.presentation.messageSecretTimeout {
+     switch value {
+     case let .known(value):
+     if value != nil {
+     return true
+     }
+     default:
+     return false
+     }
+     }
+     if let peer = peer as? TelegramGroup {
+     switch peer.role {
+     case .admin, .creator:
+     return true
+     default:
+     break
+     }
+     }
+     }
+     
+     return false
+     }
+     
+     
      */
     
     
@@ -389,7 +389,7 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     @discardableResult func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
-
+        
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
         let inputText = presentation.effectiveInput.attributedString().mutableCopy() as! NSMutableAttributedString
         
@@ -398,12 +398,12 @@ final class ChatInteraction : InterfaceObserver  {
         }
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
-           // let minUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: selectedRange.lowerBound)
-           // let maxUtfIndex = inputText.utf16.index(minUtfIndex, offsetBy: selectedRange.upperBound - selectedRange.lowerBound)
+            // let minUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: selectedRange.lowerBound)
+            // let maxUtfIndex = inputText.utf16.index(minUtfIndex, offsetBy: selectedRange.upperBound - selectedRange.lowerBound)
             
             
             
-           // inputText.removeSubrange(minUtfIndex.samePosition(in: inputText)! ..< maxUtfIndex.samePosition(in: inputText)!)
+            // inputText.removeSubrange(minUtfIndex.samePosition(in: inputText)! ..< maxUtfIndex.samePosition(in: inputText)!)
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: text)
             selectedRange = selectedRange.lowerBound ..< selectedRange.lowerBound
         } else {
@@ -417,7 +417,7 @@ final class ChatInteraction : InterfaceObserver  {
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
     }
     
-        
+    
     func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
         return self.appendText(NSAttributedString(string: text, font: .normal(theme.fontSize)), selectedRange: selectedRange)
     }
@@ -517,7 +517,7 @@ final class ChatInteraction : InterfaceObserver  {
             case .source:
                 break
             case let .closeAfter(peek):
-               break
+                break
             case let .openMedia(timemark):
                 self.openFocusedMedia(timemark)
                 update({
@@ -573,7 +573,7 @@ final class ChatInteraction : InterfaceObserver  {
                                     description = .init(string: strings().webBotAccountDesclaimerDesc(attach.shortName), onlyWhenEnabled: false)
                                 }
                                 
-                
+                                
                                 let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
                                 showModalAlert(for: context.window, data: data, completion: { result in
                                     _ = context.engine.messages.acceptAttachMenuBotDisclaimer(botId: peer.id).start()
@@ -683,10 +683,10 @@ final class ChatInteraction : InterfaceObserver  {
                     }
                 })
             }
-           
+            
         }
     }
-
+    
     
     func openWebviewFromMenu(buttonText: String, url: String) {
         if let bot = peer {
@@ -708,7 +708,7 @@ final class ChatInteraction : InterfaceObserver  {
                         thumbFile = MenuAnimation.menu_folder_bot.file
                     }
                     showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.flags.contains(.hasSettings), complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
-
+                    
                 }, error: { [weak strongSelf] _ in
                     showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
                 })
@@ -771,7 +771,7 @@ final class ChatInteraction : InterfaceObserver  {
                     thumbFile = MenuAnimation.menu_folder_bot.file
                 }
                 showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
-
+                
             }, error: { [weak self] _ in
                 showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             })
@@ -849,7 +849,7 @@ final class ChatInteraction : InterfaceObserver  {
                                 }
                                 
                                 let data = ModalAlertData(title: strings().botInlineAuthHeader, info: strings().botInlineAuthTitle(requestURL), ok: strings().botInlineAuthOpen, options: options)
-                                                
+                                
                                 showModalAlert(for: context.window, data: data, completion: { result in
                                     if result.selected.isEmpty {
                                         execute(inapp: .external(link: url, false))
@@ -897,7 +897,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil, sync: Bool = false) {
         
-        if mode.customChatContents != nil {
+        if mode.customChatContents != nil || mode.customChatLink != nil {
             return
         }
         

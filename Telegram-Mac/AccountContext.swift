@@ -440,6 +440,8 @@ final class AccountContext {
         })
     }
     
+    private(set) var autologinToken: String?
+    
     let hasPassportSettings: Promise<Bool> = Promise(false)
 
     private var _recentlyPeerUsed:[PeerId] = []
@@ -915,8 +917,11 @@ final class AccountContext {
         self.globalLocationDisposable.set(globalPeerHandler.get().start(next: { [weak self] value in
             _ = self?._globalLocationId.swap(value)
         }))
+        let autologinToken = engine.data.subscribe(TelegramEngine.EngineData.Item.Configuration.Links()) |> deliverOnMainQueue
         
-        
+        actionsDisposable.add(autologinToken.start(next: { [weak self] token in
+            self?.autologinToken = token.autologinToken
+        }))
     }
     
     @objc private func updateKeyWindow() {

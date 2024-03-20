@@ -324,6 +324,30 @@ public final class PeerCallScreen : ViewController {
         screen.set(handler: invokeEsc, with: self, for: .Escape)
         screen.set(handler: invokeEsc, with: self, for: .Space)
         screen.set(handler: invokeEsc, with: self, for: .Return)
+        
+        
+        let updateMouse:(NSEvent)->KeyHandlerResult = { [weak self] event in
+            guard let self else {
+                return .rejected
+            }
+            let mouseInside = self.stateValue.with { $0.mouseInside }
+            let screenLocation = self.screen.convertToScreen(CGRect(origin: event.locationInWindow, size: self.screen.frame.size))
+            let updatedMouseInside = NSWindow.windowNumber(at: screenLocation.origin, belowWindowWithWindowNumber: 0) == self.screen.windowNumber
+            
+            if mouseInside != updatedMouseInside {
+                self.updateState({ current in
+                    var current = current
+                    current.mouseInside = updatedMouseInside
+                    return current
+                })
+            }
+            
+            return .rejected
+        }
+        
+        screen.set(mouseHandler: updateMouse, with: self, for: .mouseMoved)
+        screen.set(mouseHandler: updateMouse, with: self, for: .mouseExited)
+        screen.set(mouseHandler: updateMouse, with: self, for: .mouseEntered)
 
     }
     

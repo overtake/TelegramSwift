@@ -32,6 +32,22 @@ final class ChatListAddBirthdayItem : GeneralRowItem {
         return true
     }
     
+    func invoke(_ date: Date) {
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: date)
+        let month = calendar.component(.month, from: date)
+        let year = calendar.component(.year, from: date)
+        
+        showModalText(for: context.window, text: strings().birthdayAlertAdded)
+        
+        _ = context.engine.accountData.updateBirthday(birthday: TelegramBirthday(day: Int32(day), month: Int32(month), year: Int32(year))).startStandalone()
+        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .setupBirthday).startStandalone()
+    }
+    
+    func dismiss() {
+        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .setupBirthday).startStandalone()
+    }
+    
     override func viewClass() -> AnyClass {
         return ChatListAddBirthdayView.self
     }
@@ -43,12 +59,12 @@ final class ChatListAddBirthdayItem : GeneralRowItem {
 
 final class ChatListBirthdayItem : GeneralRowItem {
     
-    let birthdays: [EnginePeer]
+    let birthdays: [UIChatListBirthday]
     let context: AccountContext
     let title: TextViewLayout
     let info: TextViewLayout
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, birthdays: [EnginePeer], context: AccountContext) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, birthdays: [UIChatListBirthday], context: AccountContext) {
         self.birthdays = birthdays
         self.context = context
         self.title = .init(.initialize(string: "\(birthdays.count) contact have birthdays today! 🎂", color: theme.colors.text, font: .medium(.text)))
@@ -60,19 +76,23 @@ final class ChatListBirthdayItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.title.measure(width: width - 20 - 24 - CGFloat(30 + (birthdays.count - 1) * 15))
-        self.info.measure(width: width - 20 - 24 - CGFloat(30 + (birthdays.count) - 1 * 15))
+        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 15))
+        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count) - 1 * 15))
         return true
     }
     
     func invoke() {
         let context = self.context
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, defaultSelected: self.birthdays.map { $0.id })
+        
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, defaultSelected: self.birthdays.map { $0.peer.id })
         
         _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
-            
             showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
         })
+    }
+    
+    func dismiss() {
+        
     }
     
     
@@ -145,6 +165,12 @@ private final class ChatListBirthdayView : TableRowView {
                 item.invoke()
             }
         }, for: .Click)
+        
+        dismiss.set(handler: { [weak self] control in
+            if let item = self?.item as? ChatListBirthdayItem {
+                item.dismiss()
+            }
+        }, for: .Click)
     }
     
     override func layout() {
@@ -193,7 +219,7 @@ private final class ChatListBirthdayView : TableRowView {
         
         let peers:[Avatar] = item.birthdays.prefix(3).reduce([], { current, value in
             var current = current
-            current.append(.init(peer: value._asPeer(), index: current.count))
+            current.append(.init(peer: value.peer._asPeer(), index: current.count))
             return current
         })
         
@@ -233,7 +259,7 @@ private final class ChatListBirthdayView : TableRowView {
         for updated in updated {
             let control = avatars[updated.0]
             control.updateLayout(size: NSMakeSize(30, 30), isClipped: updated.0 != 0, animated: animated)
-            let updatedPoint = NSMakePoint(CGFloat(updated.0) * 29, 0)
+            let updatedPoint = NSMakePoint(CGFloat(updated.0) * 27, 0)
             if animated {
                 control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
             }
@@ -278,9 +304,15 @@ private final class ChatListAddBirthdayView : TableRowView {
                 return
             }
             let controller = CalendarController(NSMakeRect(0, 0, 300, 300), item.context.window, current: Date(), lowYear: 1900, selectHandler: { date in
-                
+                item.invoke(date)
             })
             showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -40))
+        }, for: .Click)
+        
+        dismiss.set(handler: { [weak self] control in
+            if let item = self?.item as? ChatListBirthdayItem {
+                item.dismiss()
+            }
         }, for: .Click)
     }
     
