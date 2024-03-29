@@ -230,6 +230,10 @@ class StoryLayoutView : Control {
         return 7
     }
     
+    func seek(toProgress progress: Double) {
+        
+    }
+    
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: overlay, frame: size.bounds)
         if let magnifyView = magnifyView {
@@ -632,6 +636,11 @@ class StoryVideoView : StoryImageView {
         self.view.setVideoLayerGravity(.resizeAspectFill)
     }
     
+    
+    override func seek(toProgress progress: Double) {
+        let seek = self.duration * progress
+        self.mediaPlayer?.seek(timestamp: seek)
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

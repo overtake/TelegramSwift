@@ -1159,6 +1159,8 @@ final class StoryListView : Control, Notifable {
         content.layer?.masksToBounds = false
         interactiveMedias.layer?.masksToBounds = false
         
+        navigator.background = .random
+        
         container.addSubview(content)
         
         interactiveMedias.isEventLess = true
@@ -1167,6 +1169,10 @@ final class StoryListView : Control, Notifable {
         
         addSubview(container)
         controls.layer?.cornerRadius = 10
+        
+        navigator.seek = { [weak self] value in
+            self?.current?.seek(toProgress: Double(value))
+        }
         
         controls.set(handler: { [weak self] control in
             guard let arguments = self?.arguments, let story = self?.story, let peer = story.peer, let event = NSApp.currentEvent else {
@@ -1436,7 +1442,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 current = Control(frame: storyView.frame)
                 current.layer?.cornerRadius = 10
-                self.content.addSubview(current, positioned: .above, relativeTo: navigator)
+                self.content.addSubview(current, positioned: .below, relativeTo: navigator)
                 self.pauseOverlay = current
                 
                 current.set(handler: { [weak self] _ in
@@ -1500,7 +1506,7 @@ final class StoryListView : Control, Notifable {
             transition.updateFrame(view: controls, frame: rect.size.bounds)
             controls.updateLayout(size: rect.size, transition: transition)
                         
-            transition.updateFrame(view: navigator, frame: CGRect(origin: CGPoint(x: 0, y: 0 + 6), size: NSMakeSize(rect.width, 2)))
+            transition.updateFrame(view: navigator, frame: CGRect(origin: CGPoint(x: 0, y: 0 + 6), size: NSMakeSize(rect.width, 6)))
             navigator.updateLayout(size: rect.size, transition: transition)
             
             if let pauseOverlay = pauseOverlay {
