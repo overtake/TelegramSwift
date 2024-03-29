@@ -1043,7 +1043,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
                     _ = tableView.select(item: item)
                 }
-            } else if let controller = navigation.controller as? PremiumBoardingController {
+            } else if let _ = navigation.controller as? PremiumBoardingController {
                 if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                     _ = tableView.select(item: item)
                 }
@@ -1079,6 +1079,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     }
                 case controller.identifier == "app_appearance":
                     if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
+                        _ = tableView.select(item: item)
+                    }
+                case controller.identifier.hasPrefix("business"):
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                         _ = tableView.select(item: item)
                     }
                 default:

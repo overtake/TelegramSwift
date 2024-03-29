@@ -998,7 +998,7 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
         return InputDataSignalValue(entries: entries(state, arguments: arguments), grouping: false)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: type.title, removeAfterDisappear: false, hasDone: true)
+    let controller = InputDataController(dataSignal: signal, title: type.title, removeAfterDisappear: false, hasDone: true, identifier: "business_message")
     
     
     controller.validateData = { _ in

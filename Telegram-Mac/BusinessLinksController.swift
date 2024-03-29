@@ -402,7 +402,7 @@ func BusinessLinksController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().businessLinksTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessLinksTitle, removeAfterDisappear: false, hasDone: false, identifier: "business_links")
     
     controller.onDeinit = {
         actionsDisposable.dispose()

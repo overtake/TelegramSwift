@@ -680,7 +680,7 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments), grouping: false)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().businessHoursTitle, removeAfterDisappear: false, hasDone: true)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessHoursTitle, removeAfterDisappear: false, hasDone: true, identifier: "business_hours")
     
     controller.validateData = { _ in
         let state = stateValue.with { $0 }
@@ -706,7 +706,6 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
             }
         }
     }
-
     
     controller.onDeinit = {
         actionsDisposable.dispose()
