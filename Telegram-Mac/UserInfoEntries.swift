@@ -549,23 +549,6 @@ class UserInfoArguments : PeerInfoArguments {
 
     }
     
-    func openFragment(_ subject: FragmentItemInfoScreenSubject) {
-        let context = self.context
-        
-        _ = showModalProgress(signal: FragmentItemInitialData(context: context, peerId: peerId, subject: subject), for: context.window).startStandalone(next: { [weak self] data in
-            if let data, data.collectibleItemInfo.purchaseDate != 0 {
-                showModal(with: FragmentUsernameController(context: context, data: data), for: context.window)
-            } else {
-                switch subject {
-                case .phoneNumber(let string):
-                    self?.copy(formatPhoneNumber(string))
-                case .username(let string):
-                    self?.copy("@\(string)")
-                }
-            }
-            
-        })
-    }
     
     func encryptionKey() {
         pushViewController(SecretChatKeyViewController(context, peerId: peerId))

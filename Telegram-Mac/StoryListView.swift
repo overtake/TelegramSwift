@@ -1174,6 +1174,32 @@ final class StoryListView : Control, Notifable {
             }
         }
         
+        var seekPaused: Bool = false
+        
+        navigator.seekStart = { [weak self] in
+            self?.arguments?.interaction.update { current in
+                var current = current
+                current.isSeeking = true
+                return current
+            }
+            if case .playing = self?.current?.state  {
+                seekPaused = true
+                self?.current?.pause()
+            } else {
+                seekPaused = false
+            }
+        }
+        navigator.seekFinish = { [weak self] in
+            self?.arguments?.interaction.update { current in
+                var current = current
+                current.isSeeking = false
+                return current
+            }
+            if case .paused = self?.current?.state, seekPaused {
+                self?.current?.play()
+            }
+            seekPaused = false
+        }
         controls.set(handler: { [weak self] control in
             guard let arguments = self?.arguments, let story = self?.story, let peer = story.peer, let event = NSApp.currentEvent else {
                 return

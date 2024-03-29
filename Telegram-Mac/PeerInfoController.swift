@@ -90,6 +90,24 @@ class PeerInfoArguments {
         StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
     }
     
+    func openFragment(_ subject: FragmentItemInfoScreenSubject) {
+        let context = self.context
+        
+        _ = showModalProgress(signal: FragmentItemInitialData(context: context, peerId: peerId, subject: subject), for: context.window).startStandalone(next: { [weak self] data in
+            if let data {
+                showModal(with: FragmentUsernameController(context: context, data: data), for: context.window)
+            } else {
+                switch subject {
+                case .phoneNumber(let string):
+                    self?.copy(formatPhoneNumber(string))
+                case .username(let string):
+                    self?.copy("@\(string)")
+                }
+            }
+            
+        })
+    }
+    
     func toggleNotifications(_ currentlyMuted: Bool) {
         
         toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: effectivePeerId, threadId: nil).start())

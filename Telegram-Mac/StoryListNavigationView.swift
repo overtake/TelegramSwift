@@ -86,7 +86,9 @@ final class StoryListNavigationView : Control {
     private let listView: ListView
     
     var seek:((Float?)->Void)? = nil
-    
+    var seekStart:(()->Void)? = nil
+    var seekFinish:(()->Void)? = nil
+
     private var selected: Int? = nil
     required init(frame frameRect: NSRect) {
         self.listView = ListView(frame: NSMakeRect(0, 0, frameRect.width, 2))
@@ -111,7 +113,13 @@ final class StoryListNavigationView : Control {
         selector.onLiveScrobbling = { [weak self] value in
             self?.seek?(value)
         }
-
+        
+        selector.startScrobbling = { [weak self] in
+            self?.seekStart?()
+        }
+        selector.endScrobbling = { [weak self] in
+            self?.seekFinish?()
+        }
     }
     
     required init?(coder: NSCoder) {
