@@ -14,8 +14,10 @@ import SwiftSignalKit
 
 private final class Arguments {
     let context: AccountContext
-    init(context: AccountContext) {
+    let dismiss: ()->Void
+    init(context: AccountContext, dismiss: @escaping()->Void) {
         self.context = context
+        self.dismiss = dismiss
     }
 }
 
@@ -49,9 +51,10 @@ private final class RowItem : GeneralRowItem {
     let infoHeaderLayout: TextViewLayout
     
     let options: [Option]
-
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext) {
+    let dismiss:()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, dismiss:@escaping()->Void) {
         self.context = context
+        self.dismiss = dismiss
         
         let headerText = NSAttributedString.initialize(string: strings().fragmentAdsInfoTitle, color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
         
@@ -163,6 +166,7 @@ private final class RowView: GeneralContainableRowView {
     private let infoHeaderView = InteractiveTextView(frame: .zero)
     private let infoView = InteractiveTextView(frame: .zero)
     
+    
     private let optionsView = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -175,6 +179,9 @@ private final class RowView: GeneralContainableRowView {
         addSubview(infoBlock)
         iconView.addSubview(stickerView)
         
+        
+       
+        
         addSubview(optionsView)
         
         headerView.isSelectable = false
@@ -182,6 +189,8 @@ private final class RowView: GeneralContainableRowView {
         
         infoView.textView.userInteractionEnabled = true
         infoView.userInteractionEnabled = false
+        
+
     }
     
     required init?(coder: NSCoder) {
@@ -192,6 +201,8 @@ private final class RowView: GeneralContainableRowView {
         super.layout()
         iconView.centerX(y: 0)
         stickerView.center()
+        
+        
         headerView.centerX(y: stickerView.frame.maxY + 20)
         
         optionsView.centerX(y: headerView.frame.maxY + 20)
@@ -224,7 +235,7 @@ private final class RowView: GeneralContainableRowView {
         headerView.update(item.headerLayout)
         iconView.backgroundColor = theme.colors.accent
         
-        self.gradient.colors = premiumGradient.map { $0.cgColor }
+        self.gradient.colors = [theme.colors.accent].map { $0.cgColor }
         self.gradient.startPoint = CGPoint(x: 0.5, y: 0)
         self.gradient.endPoint = CGPoint(x: 0.5, y: 1.0)
         self.gradient.type = .radial
@@ -236,6 +247,8 @@ private final class RowView: GeneralContainableRowView {
         
         infoBlock.backgroundColor = theme.colors.listBackground
         infoBlock.layer?.cornerRadius = 10
+        
+     
         
         
         while optionsView.subviews.count > item.options.count {
@@ -276,7 +289,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, stableId: stableId, context: arguments.context)
+        return RowItem(initialSize, stableId: stableId, context: arguments.context, dismiss: arguments.dismiss)
     }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -295,8 +308,12 @@ func FragmentAdsInfoController(context: AccountContext) -> InputDataModalControl
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    var close:(()->Void)? = nil
 
-    let arguments = Arguments(context: context)
+    let arguments = Arguments(context: context, dismiss: {
+        close?()
+    })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
@@ -321,6 +338,10 @@ func FragmentAdsInfoController(context: AccountContext) -> InputDataModalControl
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    close = { [weak modalController] in
+        modalController?.close()
+    }
     
     controller.getBackgroundColor = {
         theme.colors.background

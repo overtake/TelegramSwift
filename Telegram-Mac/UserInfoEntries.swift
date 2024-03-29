@@ -553,7 +553,7 @@ class UserInfoArguments : PeerInfoArguments {
         let context = self.context
         
         _ = showModalProgress(signal: FragmentItemInitialData(context: context, peerId: peerId, subject: subject), for: context.window).startStandalone(next: { [weak self] data in
-            if let data {
+            if let data, data.collectibleItemInfo.purchaseDate != 0 {
                 showModal(with: FragmentUsernameController(context: context, data: data), for: context.window)
             } else {
                 switch subject {

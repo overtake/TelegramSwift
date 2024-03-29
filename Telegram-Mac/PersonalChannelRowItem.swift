@@ -108,14 +108,14 @@ private final class PersonalChannelRowView : GeneralContainableRowView {
     
     override func layout() {
         super.layout()
-        avatar.setFrameOrigin(NSMakePoint(10, 10))
+        avatar.setFrameOrigin(NSMakePoint(12, 10))
         titleView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, 10))
         
         statusControl?.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 2, titleView.frame.minY - 1))
         
         textView.setFrameOrigin(NSMakePoint(titleView.frame.minX, titleView.frame.maxY + 3))
         if let dateView {
-            dateView.setFrameOrigin(NSMakePoint(containerView.frame.width - dateView.frame.width - 10, 10))
+            dateView.setFrameOrigin(NSMakePoint(containerView.frame.width - dateView.frame.width - 14, 10))
         }
     }
     

@@ -14,8 +14,10 @@ import CurrencyFormat
 
 private final class Arguments {
     let context: AccountContext
-    init(context: AccountContext) {
+    let dismiss:()->Void
+    init(context: AccountContext, dismiss:@escaping()->Void) {
         self.context = context
+        self.dismiss = dismiss
     }
 }
 
@@ -28,15 +30,17 @@ private final class RowItem : GeneralRowItem {
     let peer: EnginePeer
     let headerLayout: TextViewLayout
     let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, context: AccountContext, info: TelegramCollectibleItemInfo) {
+    let dismiss:()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, context: AccountContext, info: TelegramCollectibleItemInfo, dismiss:@escaping()->Void) {
         self.peer = peer
         self.context = context
+        self.dismiss = dismiss
         let headerText: String
         switch info.subject {
         case let .phoneNumber(phoneNumber):
-            headerText = "[\(formatPhoneNumber(phoneNumber))]() is a collectible\nphone number that belongs to"
+            headerText = strings().collectibleItemInfoPhoneTitle(formatPhoneNumber(phoneNumber))
         case let .username(username):
-            headerText = "[@\(username)]() is a collectible\nusername that belongs to"
+            headerText = strings().collectibleItemInfoUsernameTitle("@\(username)")
         }
         
         let copySubject:(String)->Void = { _ in
@@ -59,9 +63,9 @@ private final class RowItem : GeneralRowItem {
         let infoText: String
         switch info.subject {
         case .username(let string):
-            infoText = "The **@\(string)** username was acquired on\nFragment on \(date) for \(clown)** \(cryptoFormatted)** (~\(currencyFormatted)).\n\n[Copy Link]()"
+            infoText = strings().collectibleItemInfoUsernameText(string, date, clown, cryptoFormatted, currencyFormatted)
         case .phoneNumber(let string):
-            infoText = "The **\(formatPhoneNumber(string))** phone number was acquired on\nFragment on \(date) for \(clown)** \(cryptoFormatted)** (~\(currencyFormatted)).\n\n[Copy Link]()"
+            infoText = strings().collectibleItemInfoPhoneText(formatPhoneNumber(string), date, clown, cryptoFormatted, currencyFormatted)
         }
         let infoAttr = parseMarkdownIntoAttributedString(infoText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", copySubject))
@@ -141,6 +145,10 @@ private final class RowView: GeneralContainableRowView {
     private let stickerView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 60, 60))
     private let headerView = TextView()
     private let infoView = InteractiveTextView(frame: .zero)
+    
+    private let dismiss = ImageButton()
+
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(peerView)
@@ -153,6 +161,16 @@ private final class RowView: GeneralContainableRowView {
         
         infoView.textView.userInteractionEnabled = true
         infoView.userInteractionEnabled = false
+        
+        dismiss.autohighlight = false
+        dismiss.scaleOnClick = true
+        containerView.superview?.addSubview(dismiss)
+        
+        dismiss.set(handler: { [weak self] _ in
+            if let item = self?.item as? RowItem {
+                item.dismiss()
+            }
+        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -161,6 +179,7 @@ private final class RowView: GeneralContainableRowView {
     
     override func layout() {
         super.layout()
+        dismiss.setFrameOrigin(NSMakePoint(0, 0))
         iconView.centerX(y: 0)
         stickerView.center()
         headerView.centerX(y: stickerView.frame.maxY + 20)
@@ -182,7 +201,13 @@ private final class RowView: GeneralContainableRowView {
         peerView.update(item.peer, context: item.context, presentation: theme, maxWidth: item.blockWidth)
         iconView.backgroundColor = theme.colors.accent
         
+        
+        dismiss.set(image: theme.icons.modalClose, for: .Normal)
+        dismiss.sizeToFit()
+        
         stickerView.update(with: LocalAnimatedSticker.fragment.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment.parameters, animated: animated)
+        
+        needsLayout = true
     }
 }
 
@@ -201,7 +226,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return RowItem(initialSize, stableId: stableId, peer: peer, context: arguments.context, info: state.data.collectibleItemInfo)
+            return RowItem(initialSize, stableId: stableId, peer: peer, context: arguments.context, info: state.data.collectibleItemInfo, dismiss: arguments.dismiss)
         }))
         
     }
@@ -227,7 +252,9 @@ func FragmentUsernameController(context: AccountContext, data: FragmentItemInfoS
 
     var close:(()->Void)? = nil
     
-    let arguments = Arguments(context: context)
+    let arguments = Arguments(context: context, dismiss: {
+        close?()
+    })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
@@ -241,19 +268,14 @@ func FragmentUsernameController(context: AccountContext, data: FragmentItemInfoS
     
     controller.validateData = { _ in
     
-        switch data.collectibleItemInfo.subject {
-        case .username(let username):
-            execute(inapp: .external(link: "https://fragment.com/username/\(username)", false))
-        case .phoneNumber(let phoneNumber):
-            execute(inapp: .external(link: "https://fragment.com/number/\(phoneNumber)", false))
-        }
+        execute(inapp: .external(link: data.collectibleItemInfo.url, false))
         
         return .success(.custom({
             close?()
         }))
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Learn More", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().collectibleItemInfoButtonOpenInfo, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true, customTheme: {
         .init(background: theme.colors.background, grayForeground: theme.colors.background, activeBackground: theme.colors.background, listBackground: theme.colors.background)

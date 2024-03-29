@@ -105,7 +105,12 @@ final class StoryListNavigationView : Control {
         selector.style = ControlStyle(foregroundColor: .white, backgroundColor: .clear, highlightColor: .clear)
         selector.set(progress: 0, animated: false, duration: 0)
         
-       
+        selector.onUserChanged = { [weak self] value in
+            self?.seek?(value)
+        }
+        selector.onLiveScrobbling = { [weak self] value in
+            self?.seek?(value)
+        }
 
     }
     
@@ -128,17 +133,7 @@ final class StoryListNavigationView : Control {
     func set(_ index: Int, state: StoryLayoutView.State, canSeek: Bool, duration: Double, animated: Bool) {
         self.selected = index
         
-        if canSeek {
-            selector.onUserChanged = { [weak self] value in
-                self?.seek?(value)
-            }
-            selector.onLiveScrobbling = { [weak self] value in
-                self?.seek?(value)
-            }
-        } else {
-            selector.onUserChanged = nil
-            selector.onLiveScrobbling = nil
-        }
+        selector.isEnabled = canSeek
                 
         CATransaction.begin()
         
