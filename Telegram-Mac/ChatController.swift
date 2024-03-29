@@ -86,18 +86,19 @@ public protocol ChatCustomContentsProtocol: AnyObject {
 
 class ChatCustomLinkContent  {
     var link: String
-    var text: ChatTextInputState?
-    var name: String
-    
-    var title: String {
-        return name ?? link
+    var text: ChatTextInputState
+    var name: String {
+        didSet {
+            interfaceUpdate?()
+        }
     }
+
     
     var editName: (()->Void)? = nil
     var interfaceUpdate:(()->Void)? = nil
     var saveText:((ChatTextInputState)->Void)? = nil
 
-    init(link: String, name: String, text: ChatTextInputState? = nil) {
+    init(link: String, name: String, text: ChatTextInputState) {
         self.link = link
         self.name = name
         self.text = text
@@ -1683,6 +1684,10 @@ private final class ChatAdData {
         self.context.markAction(opaqueId: opaqueId)
     }
     
+    func remove(opaqueId: Data) {
+        self.context.remove(opaqueId: opaqueId)
+    }
+    
     deinit {
         disposable.dispose()
         preloadAdPeerDisposable.dispose()
@@ -1750,6 +1755,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let storiesDisposable = MetaDisposable()
     private let answersAndOnlineDisposable = MetaDisposable()
     private let keepShortcutDisposable = MetaDisposable()
+    
+    private let preloadPersonalChannel = MetaDisposable()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     private var keepSavedMessagesSyncrhonizedDisposable: Disposable?
@@ -2999,6 +3006,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }
         
+        chatInteraction.removeAd = { [weak self] opaqueId in
+            self?.adMessages?.remove(opaqueId: opaqueId)
+        }
+        
         chatInteraction.startRecording = { [weak self] hold, view in
             guard let chatInteraction = self?.chatInteraction else {return}
             if hasModals(context.window) || hasPopover(context.window) {
@@ -3367,6 +3378,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         apply(strongSelf, atDate: atDate)
                     case let .customLink(contents):
                         contents.saveText?(presentation.effectiveInput)
+                        strongSelf.navigationController?.back()
                     }
                     
                 } else {
@@ -4908,7 +4920,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.returnGroup = { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: returnGroup(account: context.account, peerId: strongSelf.chatInteraction.peerId), for: window).start()
+              //  _ = showModalProgress(signal: returnGroup(account: context.account, peerId: strongSelf.chatInteraction.peerId), for: window).start()
             }
         }
         
@@ -5693,8 +5705,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             title?.update(postboxView as? PeerView, story: nil, counters: .init(), animated: false)
         }))
         
+        let updaterPromise: Promise<Any> = Promise(Void())
+        
+        switch mode {
+        case let .customLink(contents):
+            contents.interfaceUpdate = {
+                updaterPromise.set(.single(Void()))
+            }
+        default:
+            break
+        }
+        
 
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot in
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot, updaterPromise.get()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot, _ in
             
                         
             guard let `self` = self else {return}
@@ -6512,7 +6535,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         pollChannelDiscussionDisposable.set(discussion.start())
         
         
-       
+        let personalChannelSignal: Signal<Void, NoError>
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            personalChannelSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.PersonalChannel(id: peerId)) |> mapToSignal { value in
+                switch value {
+                case let .known(channel):
+                    if let channel = channel {
+                        return context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: channel.peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 10, fixedCombinedReadStates: nil) |> map { _ in }
+                    } else {
+                        return .single(Void())
+                    }
+                case .unknown:
+                    return .single(Void())
+                }
+            }
+        } else {
+            personalChannelSignal = .single(Void())
+        }
+        
+        preloadPersonalChannel.set(personalChannelSignal.start())
+        
         
         let count = 50
         let location:ChatHistoryLocation
@@ -7558,6 +7600,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         keepShortcutDisposable.dispose()
         networkSpeedEventsDisposable?.dispose()
         titleUpdateDisposable.dispose()
+        preloadPersonalChannel.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false

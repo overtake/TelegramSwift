@@ -206,6 +206,8 @@ final class ChatInteraction : InterfaceObserver  {
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
     
+    var removeAd:(Data)->Void = { _ in }
+    
     var boostToUnrestrict:(BoostChannelSource)->Void = { _ in }
     
     var toggleUnderMouseMessage:()->Void = { }
@@ -479,7 +481,7 @@ final class ChatInteraction : InterfaceObserver  {
                     }
                 }
                 if invoke {
-                    updateInput(with: text)
+                    self.update({$0.updatedInterfaceState({$0.withUpdatedInputState(text)})})
                     update({
                         $0.withoutInitialAction()
                     })
@@ -816,7 +818,7 @@ final class ChatInteraction : InterfaceObserver  {
                             
                             let object = ShareCallbackPeerTypesObject(context, peerTypes: peerTypes, callback: { peerIds in
                                 if let peerId = peerIds.first {
-                                    let controller = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: .inputText(text: text, behavior: .automatic))
+                                    let controller = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic))
                                     context.bindings.rootNavigation().push(controller)
                                 }
                                 return .complete()

@@ -70,15 +70,16 @@ class CalendarController: GenericViewController<CalendarControllerView> {
         self.navigation.viewWillAppear(animated)
     }
     
-    init(_ frameRect:NSRect, _ window: Window, current: Date = Date(), onlyFuture: Bool = false, limitedBy: Date? = nil, lowYear: Int = 2013, selectHandler:@escaping (Date)->Void) {
+    init(_ frameRect:NSRect, _ window: Window, current: Date = Date(), onlyFuture: Bool = false, limitedBy: Date? = nil, lowYear: Int = 2013, canBeNoYear: Bool = false, selectHandler:@escaping (Date)->Void) {
         self.onlyFuture = onlyFuture
         self.current = current
         self.limitedBy = limitedBy
         self.lowYear = lowYear
         super.init(frame: frameRect)
         bar = .init(height: 0)
-        self.interactions = CalendarMonthInteractions(lowYear: lowYear, selectAction: { [weak self] (selected) in
+        self.interactions = CalendarMonthInteractions(lowYear: lowYear, canBeNoYear: canBeNoYear, selectAction: { [weak self] (selected) in
             self?.popover?.hide()
+            self?.navigationController?.modal?.close()
             selectHandler(selected)
         }, backAction: { [weak self] date in
             if let strongSelf = self {

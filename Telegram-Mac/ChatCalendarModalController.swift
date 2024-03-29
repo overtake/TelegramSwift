@@ -199,7 +199,7 @@ func ChatCalendarModalController(context: AccountContext, sparseCalendar: Sparse
         close?()
     })
 
-    let calendarAguments = CalendarMonthInteractions(lowYear: 2013, selectAction: { selected in
+    let calendarAguments = CalendarMonthInteractions(lowYear: 2013, canBeNoYear: false, selectAction: { selected in
         
     }, backAction: { date in
        

@@ -49,6 +49,8 @@ func requiredBoostSubjectLevel(subject: BoostSubject, group: Bool, context: Acco
         return configuration.minGroupAudioTranscriptionLevel
     case .emojiPack:
         return configuration.minGroupEmojiPackLevel
+    case .noAds:
+        return configuration.minChannelRestrictAdsLevel
     }
 }
 
@@ -66,7 +68,7 @@ enum BoostSubject: Equatable {
     case customWallpaper
     case audioTranscription
     case emojiPack
-
+    case noAds
 
     func requiredLevel(context: AccountContext, group: Bool, configuration: PremiumConfiguration) -> Int32 {
         return requiredBoostSubjectLevel(subject: self, group: group, context: context, configuration: configuration)
@@ -370,7 +372,7 @@ private final class BoostRowItem : TableRowItem {
         var string: String
         
         if state.status.nextLevelBoosts != nil {
-            if state.isAdmin {
+            if state.infoOnly {
                 if let remaining = remaining {
                     let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     switch state.source {
@@ -400,6 +402,8 @@ private final class BoostRowItem : TableRowItem {
                         } else {
                             string = strings().channelBoostEnableReactionsText("\(level + 1)", "\(level)")
                         }
+                    case let .noAds(level):
+                        string = strings().channelBoostEnableNoAdsLevelText("\(level)")
                     default:
                         if level == 0 {
                             if state.isGroup {
@@ -1111,7 +1115,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let isGroup = arguments.isGroup
     
     if let nextLevels = nextLevels {
+        
+        var levels: [Int32] = []
         for level in nextLevels {
+            levels.append(level)
+        }
+        if !isGroup {
+            let noAdsLevel = requiredBoostSubjectLevel(subject: .noAds, group: false, context: arguments.context, configuration: premiumConfiguration)
+            if noAdsLevel <= nextLevels.upperBound {
+            } else {
+                levels.append(noAdsLevel)
+            }
+        }
+
+        for level in levels {
             var perks: [BoostChannelPerk] = []
             perks.append(.story(level))
                                 
@@ -1167,6 +1184,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if level >= premiumConfiguration.minChannelCustomWallpaperLevel {
                 perks.append(.customWallpaper)
             }
+            if !isGroup && level >= requiredBoostSubjectLevel(subject: .noAds, group: isGroup, context: arguments.context, configuration: premiumConfiguration) {
+                perks.append(.noAds)
+            }
 
             
             // header
@@ -1203,6 +1223,7 @@ enum BoostChannelSource : Equatable {
     case wallpaper(Int32)
     case unblockText(Int32)
     case unblockSlowmode(Int32)
+    case noAds(Int32)
 }
 
 func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, onlyFeatures: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {

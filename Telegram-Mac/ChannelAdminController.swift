@@ -1177,8 +1177,10 @@ class ChannelAdminController: TableModalViewController {
                                     }, error: { [weak self] error in
                                         
                                         switch error {
-                                        case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked, .restricted:
+                                        case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked:
                                             showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: [adminId])
+                                        case let .restricted(peer):
+                                            showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: [adminId], forbidden: peer != nil ? [peer!] : [])
                                         default:
                                             break
                                         }

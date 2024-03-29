@@ -982,24 +982,16 @@ class SelectivePrivacySettingsController: TableViewController {
             }
         }, openPremium: {
             showModal(with: PremiumBoardingController(context: context, source: .last_seen, openFeatures: true), for: context.window)
-        }, setupBirthday: { [weak self] in
-            guard let controller = self else {
-                return
-            }
+        }, setupBirthday: {
+            let controller = CalendarController(NSMakeRect(0, 0, 300, 300), context.window, current: Date(), lowYear: 1900, canBeNoYear: true, selectHandler: { date in
+                editAccountUpdateBirthday(date, context: context)
+            })
             
-            let view = controller.genericView.item(stableId: SelectivePrivacySettingsEntry.birthdayHeader(0, "", .legacy).stableId)?.view as? GeneralTextRowView
+            let nav = NavigationViewController(controller, context.window)
             
-            if let control = view?.textView {
-                let controller = CalendarController(NSMakeRect(0, 0, 300, 300), context.window, current: Date(), lowYear: 1900, selectHandler: { date in
-                    let calendar = Calendar.current
-                    let day = calendar.component(.day, from: date)
-                    let month = calendar.component(.month, from: date)
-                    let year = calendar.component(.year, from: date)
-                    showModalText(for: context.window, text: strings().birthdayAlertAdded)
-                    _ = context.engine.accountData.updateBirthday(birthday: TelegramBirthday(day: Int32(day), month: Int32(month), year: Int32(year))).startStandalone()
-                })
-                showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-84, -40))
-            }
+            nav._frameRect = NSMakeRect(0, 0, 300, 310)
+            
+            showModal(with: nav, for: context.window)
         })
 
 

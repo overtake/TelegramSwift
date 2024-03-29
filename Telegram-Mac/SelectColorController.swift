@@ -1503,14 +1503,14 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
 
     let boostStatus = combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus())
     
-    _ = boostStatus.start(next: { stats, myStatus in
+    actionsDisposable.add(boostStatus.startStandalone(next: { stats, myStatus in
         updateState { current in
             var current = current
             current.status = stats
             current.myStatus = myStatus
             return current
         }
-    })
+    }))
     
 
     var getControl:((SelectColorType?)->Control?)? = nil

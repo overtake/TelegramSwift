@@ -12,6 +12,13 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+private extension TelegramBusinessChatLinks.Link {
+    var stateLink: State.Link {
+        let attributes = chatTextAttributes(from: TextEntitiesMessageAttribute(entities: self.entities), associatedMedia: [:])
+        return State.Link(link: self.url, text: .init(inputText: self.message, selectionRange: self.message.length ..< self.message.length, attributes: attributes), name: self.title, clicks: self.viewCount)
+    }
+}
+
 private var linkIcon: CGImage {
     return generateImage(NSMakeSize(30, 30), contextGenerator: { size, ctx in
         ctx.clear(size.bounds)
@@ -31,16 +38,29 @@ private final class LinkRowItem : GeneralRowItem {
     let editName: (State.Link)->Void
     let remove: (State.Link)->Void
     let share: (State.Link)->Void
+    let copy: (State.Link)->Void
     let link: State.Link
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, link: State.Link, viewType: GeneralViewType, open: @escaping(State.Link)->Void, editName: @escaping(State.Link)->Void, remove: @escaping(State.Link)->Void, share: @escaping(State.Link)->Void) {
+    let context: AccountContext
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, link: State.Link, viewType: GeneralViewType, open: @escaping(State.Link)->Void, editName: @escaping(State.Link)->Void, remove: @escaping(State.Link)->Void, share: @escaping(State.Link)->Void, copy: @escaping(State.Link)->Void) {
         self.nameLayout = .init(.initialize(string: link.name ?? link.link, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.textLayout = .init(.initialize(string: link.text.inputText.isEmpty ? "no message" : link.text.inputText, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
-        self.clicksLayout = .init(.initialize(string: link.clicks == nil ? "no clicks" : "\(link.clicks!) clicks", color: theme.colors.grayText, font: .normal(.small)), maximumNumberOfLines: 1)
+        if link.text.inputText.isEmpty {
+            self.textLayout = .init(.initialize(string: strings().businessLinksItemNoText, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        } else {
+            let attr = link.text.attributedString().mutableCopy() as! NSMutableAttributedString
+            InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: link.text.messageTextEntities(), isPremium: true)
+
+            attr.addAttribute(.foregroundColor, value: theme.colors.grayText, range: attr.range)
+            attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
+            self.textLayout = .init(attr, maximumNumberOfLines: 1)
+        }
+        self.clicksLayout = .init(.initialize(string: strings().businessLinksItemClicksCountable(Int(link.clicks ?? 0)), color: theme.colors.grayText, font: .normal(.small)), maximumNumberOfLines: 1)
         self.link = link
         self.open = open
         self.editName = editName
         self.remove = remove
         self.share = share
+        self.copy = copy
+        self.context = context
         super.init(initialSize, height: 50, stableId: stableId, viewType: viewType)
     }
     
@@ -56,11 +76,13 @@ private final class LinkRowItem : GeneralRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         let link = self.link
-        return .single([ContextMenuItem("Edit Name", handler: { [weak self] in
-            self?.editName(link)
-        }, itemImage: MenuAnimation.menu_edit.value), ContextMenuItem("Share", handler: { [weak self] in
+        return .single([ContextMenuItem(strings().businessLinksItemCopy, handler: { [weak self] in
+            self?.copy(link)
+        }, itemImage: MenuAnimation.menu_copy.value), ContextMenuItem(strings().businessLinksItemShare, handler: { [weak self] in
             self?.share(link)
-        }, itemImage: MenuAnimation.menu_share.value), ContextSeparatorItem(), ContextMenuItem("Remove", handler: { [weak self] in
+        }, itemImage: MenuAnimation.menu_share.value), ContextMenuItem(strings().businessLinksItemEditName, handler: { [weak self] in
+            self?.editName(link)
+        }, itemImage: MenuAnimation.menu_edit.value), ContextSeparatorItem(), ContextMenuItem(strings().businessLinksItemDelete, handler: { [weak self] in
             self?.remove(link)
         }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value)])
     }
@@ -72,7 +94,7 @@ private final class LinkRowItem : GeneralRowItem {
 
 private final class LinkRowView: GeneralContainableRowView {
     private let nameView = TextView()
-    private let textView = TextView()
+    private let textView = InteractiveTextView(frame: .zero)
     private let icon = ImageView()
     private let clicksView = TextView()
     required init(frame frameRect: NSRect) {
@@ -86,7 +108,6 @@ private final class LinkRowView: GeneralContainableRowView {
         nameView.isSelectable = false
 
         textView.userInteractionEnabled = false
-        textView.isSelectable = false
 
         clicksView.userInteractionEnabled = false
         clicksView.isSelectable = false
@@ -146,7 +167,7 @@ private final class LinkRowView: GeneralContainableRowView {
         }
         
         nameView.update(item.nameLayout)
-        textView.update(item.textLayout)
+        textView.set(text: item.textLayout, context: item.context)
         clicksView.update(item.clicksLayout)
         
         icon.image = linkIcon
@@ -164,7 +185,8 @@ private final class Arguments {
     let editName: (State.Link)->Void
     let remove: (State.Link)->Void
     let share: (State.Link)->Void
-    init(context: AccountContext, shareMy:@escaping(String)->Void, add: @escaping()->Void, open: @escaping(State.Link)->Void, editName: @escaping(State.Link)->Void, remove: @escaping(State.Link)->Void, share: @escaping(State.Link)->Void) {
+    let copy: (State.Link)->Void
+    init(context: AccountContext, shareMy:@escaping(String)->Void, add: @escaping()->Void, open: @escaping(State.Link)->Void, editName: @escaping(State.Link)->Void, remove: @escaping(State.Link)->Void, share: @escaping(State.Link)->Void, copy: @escaping(State.Link)->Void) {
         self.context = context
         self.shareMy = shareMy
         self.add = add
@@ -172,6 +194,7 @@ private final class Arguments {
         self.editName = editName
         self.remove = remove
         self.share = share
+        self.copy = copy
     }
 }
 
@@ -205,10 +228,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     let headerAttr = NSMutableAttributedString()
-    _ = headerAttr.append(string: "Give your customers short links that start a chat with you - and suggest the first message from them to you.", color: theme.colors.listGrayText, font: .normal(.text))
+    _ = headerAttr.append(string: strings().businessLinksInfo, color: theme.colors.listGrayText, font: .normal(.text))
 
     entries.append(.custom(sectionId: sectionId, index: 0, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.business_quick_reply, text: headerAttr)
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.business_links, text: headerAttr)
     }))
 
     // entries
@@ -217,16 +240,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_add, data: .init(name: "Create Link to Chat", color: theme.colors.accent, icon: NSImage(resource: .iconBusinessLinksAdd).precomposed(theme.colors.accent, flipVertical: true), type: .none, viewType: .singleItem, action: arguments.add)))
+    entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_add, data: .init(name: strings().businessLinksCreate, color: theme.colors.accent, icon: NSImage(resource: .iconBusinessLinksAdd).precomposed(theme.colors.accent, flipVertical: true), type: .none, viewType: .singleItem, action: arguments.add)))
     
     if let peer = arguments.context.myPeer as? TelegramUser {
         let text: String
         let phone = "[t.me/+\(peer.phone!)](https://t.me/+\(peer.phone!))"
         if let address = peer.addressName, !address.isEmpty {
             let tme = "[t.me/\(address)](https://t.me/\(address))"
-            text = "You can also use a simple link for a chat with you — \(tme) or \(phone)."
+            text = strings().businessLinksCreateInfoFull(tme, phone)
         } else {
-            text = "You can also use a simple link for a chat with you — \(phone)."
+            text = strings().businessLinksCreateInfoPhone(phone)
         }
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: arguments.shareMy), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     }
@@ -245,11 +268,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         items.append(.init(link: link, viewType: bestGeneralViewType(state.links, for: i)))
     }
     
-    for item in items {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link(item.link), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-            return LinkRowItem(initialSize, stableId: stableId, context: arguments.context, link: item.link, viewType: item.viewType, open: arguments.open, editName: arguments.editName, remove: arguments.remove, share: arguments.share)
-        }))
+    if !items.isEmpty {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessLinksBlock), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        for item in items {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link(item.link), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
+                return LinkRowItem(initialSize, stableId: stableId, context: arguments.context, link: item.link, viewType: item.viewType, open: arguments.open, editName: arguments.editName, remove: arguments.remove, share: arguments.share, copy: arguments.copy)
+            }))
+        }
     }
+   
   
     // entries
     
@@ -271,7 +300,18 @@ func BusinessLinksController(context: AccountContext) -> InputDataController {
         statePromise.set(stateValue.modify (f))
     }
     
-    let editName:(State.Link)->Void = { link in
+    let links = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessChatLinks(id: context.peerId))
+    
+    actionsDisposable.add(links.start(next: { result in
+        updateState { current in
+            var current = current
+            current.links = result?.links.map { $0.stateLink } ?? []
+            return current
+        }
+        
+    }))
+    
+    let editName:(State.Link, ChatCustomLinkContent?)->Void = { link, contents in
         showModal(with: BusinessLinkRenameController(context: context, name: link.name, callback: { updated in
             updateState { current in
                 var current = current
@@ -280,24 +320,40 @@ func BusinessLinksController(context: AccountContext) -> InputDataController {
                 }
                 return current
             }
+            
+            guard let currentLink = stateValue.with ({ $0.links.first(where: { $0.link == link.link }) }) else {
+                return
+            }
+            contents?.name = currentLink.name ?? ""
+            _ = context.engine.accountData.editBusinessChatLink(url: currentLink.link, message: currentLink.text.inputText, entities: currentLink.text.messageTextEntities(), title: currentLink.name).startStandalone()
+
         }), for: context.window)}
     
     let open:(State.Link)->Void = { link in
-        var contents: ChatCustomLinkContent = ChatCustomLinkContent(link: link.link, name: link.name ?? "")
+        let contents: ChatCustomLinkContent = ChatCustomLinkContent(link: link.link, name: link.name ?? "", text: link.text)
 
-        contents.editName = {
-            editName(link)
+        contents.editName = { [weak contents] in
+            editName(stateValue.with { $0.links.first(where: { $0.link == link.link }) } ?? link, contents)
         }
         contents.saveText = { input in
-            updateState { current in
-                var current = current
-                if let index = current.links.firstIndex(where: { $0.link == link.link }) {
-                    current.links[index].text = input
+            let currentLink = stateValue.with { $0.links.first(where: { $0.link == link.link }) }
+            if let currentLink, currentLink.text != input {
+                updateState { current in
+                    var current = current
+                    if let index = current.links.firstIndex(where: { $0.link == link.link }) {
+                        current.links[index].text = .init(inputText: input.inputText, selectionRange: input.inputText.length ..< input.inputText.length, attributes: input.attributes)
+                    }
+                    return current
                 }
-                return current
+                guard let currentLink = stateValue.with ({ $0.links.first(where: { $0.link == link.link }) }) else {
+                    return
+                }
+                _ = context.engine.accountData.editBusinessChatLink(url: currentLink.link, message: currentLink.text.inputText, entities: currentLink.text.messageTextEntities(), title: currentLink.name).startStandalone()
+                showModalText(for: context.window, text: strings().businessLinksTooltipSaved)
             }
+            
         }
-        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId), mode: .customLink(contents: contents)))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId), mode: .customLink(contents: contents), initialAction: .inputText(text: contents.text, behavior: .automatic)))
     }
     
     let share:(State.Link)->Void = { link in
@@ -308,28 +364,45 @@ func BusinessLinksController(context: AccountContext) -> InputDataController {
     let arguments = Arguments(context: context, shareMy: { link in
         showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
     }, add: {
-        let link = State.Link(link: "t.me/m/ak2JlwVl", text: .init())
         
-        updateState { current in
-            var current = current
-            current.links.append(link)
-            return current
-        }
-        open(link)
+        let limit = context.appConfiguration.getGeneralValue("business_chat_links_limit", orElse: 5)
         
-    }, open: open, editName: editName, remove: { link in
-        updateState { current in
-            var current = current
-            current.links.removeAll(where: { $0.link == link.link })
-            return current
+        if stateValue.with({$0.links.count < limit}) {
+            _ = showModalProgress(signal: context.engine.accountData.createBusinessChatLink(message: "", entities: [], title: nil), for: context.window).startStandalone(next: { result in
+                let link = result.stateLink
+                updateState { current in
+                    var current = current
+                    current.links.append(link)
+                    return current
+                }
+                open(link)
+            })
+        } else {
+            showModalText(for: context.window, text: strings().premiumLimitReached)
         }
-    }, share: share)
+        
+    }, open: open, editName: { link in
+        editName(link, nil)
+    }, remove: { link in
+        verifyAlert(for: context.window, information: strings().businessLinksConfirmRemove, successHandler: { _ in
+            updateState { current in
+                var current = current
+                current.links.removeAll(where: { $0.link == link.link })
+                return current
+            }
+            _ = context.engine.accountData.deleteBusinessChatLink(url: link.link).startStandalone()
+
+        })
+    }, share: share, copy: { link in
+        copyToClipboard(link.link)
+        showModalText(for: context.window, text: strings().shareLinkCopied)
+    })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Links to Chat", removeAfterDisappear: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessLinksTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -363,8 +436,11 @@ private func entries(_ state: NameState, arguments: NameArguments) -> [InputData
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Name this link...", filter: { $0 }, limit: 32))
-  
+
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().businessLinksNamePlaceholder, filter: { $0 }, limit: 32))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessLinksNameInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
     
     // entries
     
@@ -394,7 +470,7 @@ func BusinessLinkRenameController(context: AccountContext, name: String?, callba
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Name Link to Chat")
+    let controller = InputDataController(dataSignal: signal, title: strings().businessLinksNameTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()

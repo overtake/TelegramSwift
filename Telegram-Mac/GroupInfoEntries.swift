@@ -20,8 +20,8 @@ extension AddGroupMemberError {
             return .generic
         case .groupFull:
             return .generic
-        case .privacy:
-            return .restricted
+        case let .privacy(result):
+            return .restricted(result?.forbiddenPeers.first)
         case .notMutualContact:
             return .notMutualContact
         case .tooManyChannels:
@@ -769,6 +769,18 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
                 return state.withUpdatedTemporaryParticipants([]).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
             }
+            var forbidden: [TelegramForbiddenInvitePeer] = []
+            
+            for (_, failed) in result.failed {
+                switch failed {
+                case let .restricted(peer):
+                    if let peer {
+                        forbidden.append(peer)
+                    }
+                default:
+                    break
+                }
+            }
             
             let failed = result.failed.filter {
                 switch $0.1 {
@@ -787,7 +799,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
             }
             if !failed.isEmpty {
-                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 })
+                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 }, forbidden: forbidden)
             } else if let first = botFailed.first {
                 if case let .bot(memberId) = first.1 {
                     let _ = (context.account.postbox.transaction { transaction in
@@ -1985,7 +1997,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         var infoBlock: [GroupInfoEntry] = []
         func applyBlock(_ block:[GroupInfoEntry]) {
-            var block = block
+            var block = block.sorted { (p1, p2) -> Bool in
+                return p1.isOrderedBefore(p2)
+            }
             for (i, item) in block.enumerated() {
                 block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
             }

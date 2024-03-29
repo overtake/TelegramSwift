@@ -140,8 +140,7 @@ final class TelegramFilterCategory : Peer {
             return strings().chatListFilterNewChats
         }
         if category == .premiumUsers {
-            //TODOLANG
-            return "Premium Users"
+            return strings().chatListFilterPremiumUsers
         }
         return nil
     }

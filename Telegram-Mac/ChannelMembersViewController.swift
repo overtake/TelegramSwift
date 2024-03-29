@@ -451,6 +451,19 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             
             actionsDisposable.add(signal.start(next: { result in
                 
+                var forbidden: [TelegramForbiddenInvitePeer] = []
+                
+                for (_, failed) in result.failed {
+                    switch failed {
+                    case let .restricted(peer):
+                        if let peer {
+                            forbidden.append(peer)
+                        }
+                    default:
+                        break
+                    }
+                }
+                
                 let failed = result.failed.filter {
                     switch $0.1 {
                     case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked, .restricted:
@@ -469,7 +482,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 }
                                 
                 if !failed.isEmpty {
-                    showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 })
+                    showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 }, forbidden: forbidden)
                 } else if let first = botFailed.first {
                     if case let .bot(memberId) = first.1 {
                         let _ = (context.account.postbox.transaction { transaction in

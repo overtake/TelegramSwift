@@ -22,6 +22,8 @@ final class InteractiveTextView : Control {
         
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        layer?.masksToBounds = false
     }
     
     required init?(coder: NSCoder) {

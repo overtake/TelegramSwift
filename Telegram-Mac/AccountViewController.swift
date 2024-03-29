@@ -16,6 +16,7 @@ import SwiftSignalKit
 let normalAccountsLimit: Int = 3
 
 
+
 struct SetupPasswordConfiguration {
     
     let setup2Fa: Bool
@@ -889,15 +890,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
             }
         }, giftPremium: {
-            
-            let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
-            
-            _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour).start(next: { peerIds in
-                
-                showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
-            })
-            
-            //showModal(with: ShareModalController(GiftPremiumShareObject(context)), for: context.window)
+            multigift(context: context)
         }, addAccount: { accounts in
             let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
             let hasPremium = accounts.contains(where: { $0.peer.isPremium })

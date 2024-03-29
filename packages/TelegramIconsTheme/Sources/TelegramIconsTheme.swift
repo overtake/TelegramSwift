@@ -10288,6 +10288,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_feature_no_ads: CGImage {
+      if let image = cached.with({ $0["channel_feature_no_ads"] }) {
+          return image
+      } else {
+          let image = _channel_feature_no_ads()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_no_ads"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_hidden_author: CGImage {
       if let image = cached.with({ $0["chat_hidden_author"] }) {
           return image
@@ -11145,6 +11158,7 @@ public final class TelegramIconsTheme {
   private let _channel_feature_stories: ()->CGImage
   private let _channel_feature_emoji_pack: ()->CGImage
   private let _channel_feature_voice_to_text: ()->CGImage
+  private let _channel_feature_no_ads: ()->CGImage
   private let _chat_hidden_author: ()->CGImage
   private let _chat_my_notes: ()->CGImage
   private let _premium_required_forward: ()->CGImage
@@ -11943,6 +11957,7 @@ public final class TelegramIconsTheme {
       channel_feature_stories: @escaping()->CGImage,
       channel_feature_emoji_pack: @escaping()->CGImage,
       channel_feature_voice_to_text: @escaping()->CGImage,
+      channel_feature_no_ads: @escaping()->CGImage,
       chat_hidden_author: @escaping()->CGImage,
       chat_my_notes: @escaping()->CGImage,
       premium_required_forward: @escaping()->CGImage,
@@ -12740,6 +12755,7 @@ public final class TelegramIconsTheme {
       self._channel_feature_stories = channel_feature_stories
       self._channel_feature_emoji_pack = channel_feature_emoji_pack
       self._channel_feature_voice_to_text = channel_feature_voice_to_text
+      self._channel_feature_no_ads = channel_feature_no_ads
       self._chat_hidden_author = chat_hidden_author
       self._chat_my_notes = chat_my_notes
       self._premium_required_forward = premium_required_forward

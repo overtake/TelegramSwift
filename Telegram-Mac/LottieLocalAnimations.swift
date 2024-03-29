@@ -328,6 +328,7 @@ enum LocalAnimatedSticker : String {
     case business_chatbot
     case business_location
     case business_quick_reply
+    case business_links
     
     case fragment_username
     case fragment
@@ -452,6 +453,8 @@ enum LocalAnimatedSticker : String {
         case .business_chatbot:
             playPolicy = .onceEnd
         case .business_away_message:
+            playPolicy = .onceEnd
+        case .business_links:
             playPolicy = .onceEnd
         case .business_greeting_message:
             playPolicy = .onceEnd
