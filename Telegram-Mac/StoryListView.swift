@@ -1159,7 +1159,7 @@ final class StoryListView : Control, Notifable {
         content.layer?.masksToBounds = false
         interactiveMedias.layer?.masksToBounds = false
         
-        navigator.background = .random
+       // navigator.background = .redUI
         
         container.addSubview(content)
         
@@ -1569,7 +1569,6 @@ final class StoryListView : Control, Notifable {
         
         self.addSubview(content)
         content.setFrameOrigin(point)
-      //  content.backgroundColor = .random
         let oldRect = content.frame
 
         
