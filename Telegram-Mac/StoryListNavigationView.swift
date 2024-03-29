@@ -77,7 +77,7 @@ private final class ListView : View {
     }
 }
 
-final class StoryListNavigationView : View {
+final class StoryListNavigationView : Control {
     
     
     private var parts:[View] = []
@@ -85,7 +85,7 @@ final class StoryListNavigationView : View {
     
     private let listView: ListView
     
-    var seek:((Float)->Void)? = nil
+    var seek:((Float?)->Void)? = nil
     
     private var selected: Int? = nil
     required init(frame frameRect: NSRect) {
@@ -101,17 +101,11 @@ final class StoryListNavigationView : View {
         selector.alignment = .center
         selector.liveScrobbling = false
         selector.containerBackground = .clear
+        selector.progressHeight = 2
         selector.style = ControlStyle(foregroundColor: .white, backgroundColor: .clear, highlightColor: .clear)
         selector.set(progress: 0, animated: false, duration: 0)
         
-        selector.onUserChanged = { [weak self] value in
-            self?.seek?(value)
-        }
-        selector.onLiveScrobbling = { [weak self] value in
-            if let value {
-                self?.seek?(value)
-            }
-        }
+       
 
     }
     
@@ -131,13 +125,27 @@ final class StoryListNavigationView : View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
-    func set(_ index: Int, state: StoryLayoutView.State, duration: Double, animated: Bool) {
+    func set(_ index: Int, state: StoryLayoutView.State, canSeek: Bool, duration: Double, animated: Bool) {
         self.selected = index
+        
+        if canSeek {
+            selector.onUserChanged = { [weak self] value in
+                self?.seek?(value)
+            }
+            selector.onLiveScrobbling = { [weak self] value in
+                self?.seek?(value)
+            }
+        } else {
+            selector.onUserChanged = nil
+            selector.onLiveScrobbling = nil
+        }
                 
         CATransaction.begin()
         
         self.listView.selected = index
-        selector.frame = listView.getRect(index)
+        var rect = listView.getRect(index)
+        rect.size.height = frame.height
+        selector.frame = rect
         switch state {
         case let .playing(status):
             selector.set(progress: status.timestamp == 0 ? 1 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
@@ -156,6 +164,6 @@ final class StoryListNavigationView : View {
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: listView, frame: NSMakeRect(0, 0, size.width, 2))
+        transition.updateFrame(view: listView, frame: NSMakeRect(0, 4, size.width, 2))
     }
 }

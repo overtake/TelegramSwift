@@ -639,6 +639,20 @@ class StoryVideoView : StoryImageView {
     
     override func seek(toProgress progress: Double) {
         let seek = self.duration * progress
+        let result = min(duration * Double(progress), duration)
+
+        guard let status = state.status else {
+            return
+        }
+        switch status.status {
+        case .playing:
+            self.updateState(.playing(status.withUpdatedTimestamp(result)))
+        case .paused:
+            self.updateState(.paused(status.withUpdatedTimestamp(result)))
+        case .buffering:
+            break
+        }
+        
         self.mediaPlayer?.seek(timestamp: seek)
     }
     
