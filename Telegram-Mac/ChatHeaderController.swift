@@ -2310,17 +2310,14 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
             
             let menu = ContextMenu()
             
-            //TODOLANG
 
-            
-            
-            menu.addItem(ContextMenuItem("Manage Bot", handler: {
+            menu.addItem(ContextMenuItem(strings().chatBotManagerContextManage, handler: {
                 context.bindings.rootNavigation().push(BusinessChatbotController(context: context))
             }, itemImage: MenuAnimation.menu_gear.value))
             
             menu.addItem(ContextSeparatorItem())
             
-            menu.addItem(ContextMenuItem("Revoke access", handler: {
+            menu.addItem(ContextMenuItem(strings().chatBotManagerContextRevoke, handler: {
                 context.engine.peers.removeChatManagingBot(chatId: peerId)
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
             
@@ -2354,23 +2351,19 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         _state = state
         if let data = state.botManager  {
             textView.update(TextViewLayout(.initialize(string: data.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1))
-            //TODOLANG
             let status: String
             if data.bot.canReply {
                 if data.settings.isPaused {
-                    status = "bot stopped"
+                    status = strings().chatBotManagerPaused
                 } else {
-                    status = "bot manages this chat"
+                    status = strings().chatBotManagerReadOnly
                 }
             } else {
-                status = "bot has access to this chat"
+                status = strings().chatBotManagerFullAccess
             }
             stop.isHidden = !data.bot.canReply
-            
-            self.stop.set(text: data.settings.isPaused ? "START" : "STOP", for: .Normal)
-            
+            self.stop.set(text: data.settings.isPaused ? strings().chatBotManagerStart : strings().chatBotManagerStop, for: .Normal)
             infoView.update(TextViewLayout(.initialize(string: status, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
-
             self.avatar.setPeer(account: chatInteraction.context.account, peer: data.peer._asPeer())
 
         }
@@ -2390,7 +2383,6 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         self.stop.set(font: .medium(.text), for: .Normal)
         self.stop.set(background: theme.colors.accent, for: .Normal)
         self.stop.set(color: theme.colors.underSelectedColor, for: .Normal)
-        //TODOLANG
         self.stop.sizeToFit(NSMakeSize(8, 4))
         self.stop.layer?.cornerRadius = self.stop.frame.height / 2
     }
@@ -2406,8 +2398,8 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         textView.resize(text_w)
         infoView.resize(text_w)
 
-        textView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, 6))
-        infoView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 10, frame.height - infoView.frame.height - 6))
+        textView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, 6))
+        infoView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, frame.height - infoView.frame.height - 6))
 
         
     }

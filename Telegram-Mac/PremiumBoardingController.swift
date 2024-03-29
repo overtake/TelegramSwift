@@ -65,6 +65,7 @@ enum PremiumLogEventsSource : Equatable {
     case message_privacy
     case saved_tags
     case business
+    case business_intro
     case business_standalone
     case folder_tags
     case upload_limit
@@ -124,6 +125,8 @@ enum PremiumLogEventsSource : Equatable {
             return "folder_tags"
         case .upload_limit:
             return "upload_limit"
+        case .business_intro:
+            return "business_intro"
         }
     }
     
@@ -173,6 +176,8 @@ enum PremiumLogEventsSource : Equatable {
             return .message_privacy
         case .business:
             return nil
+        case .business_intro:
+            return .business_intro
         case .business_standalone:
             return nil
         case .folder_tags:
@@ -323,7 +328,7 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x3eb26d),
                                  NSColor(rgb: 0x3dbd4a),
                                  NSColor(rgb: 0x51c736),
-                                 NSColor(rgb: 0x51c736)]
+                                 NSColor(rgb: 0x5ed429)]
         return [colors[min(index, colors.count - 1)]]
     }
     
@@ -336,7 +341,7 @@ enum PremiumValue : String {
             NSColor(red: 0.949, green: 0.51, blue: 0.165, alpha: 1),
             NSColor(red: 0.906, green: 0.584, blue: 0.098, alpha: 1),
             NSColor(red: 0.404, green: 0.42, blue: 1, alpha: 1),
-            NSColor(red: 0.404, green: 0.42, blue: 1, alpha: 1)
+            NSColor(rgb: 0x5a78ff)
         ]
         return [colors[index]]
     }
@@ -975,6 +980,7 @@ private final class PremiumBoardingView : View {
         return NSMakeSize(size.width, min(min(headerView.frame.height + tableView.listHeight + bottomHeight, 523), size.height))
     }
     
+    private var first = true
     func update(animated: Bool, arguments: Arguments, state: State) {
         let previousState = self.state
         self.state = state
@@ -983,10 +989,11 @@ private final class PremiumBoardingView : View {
         acceptView.setFrameSize(NSMakeSize(frame.width - 40, size.height))
         acceptView.layer?.cornerRadius = 10
         let transition: ContainedViewLayoutTransition
-        if animated {
+        if animated && !first {
             transition = .animated(duration: 0.2, curve: .easeOut)
         } else {
             transition = .immediate
+            first = false
         }
         
         

@@ -1033,7 +1033,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
                     if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
                         let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { [weak self] peerId, threadId in
-                            let action: ChatInitialAction = .inputText(text: inputQuery, behavior: .automatic)
+                            let action: ChatInitialAction = .inputText(text: .init(inputText: inputQuery), behavior: .automatic)
                             if let threadId = threadId {
                                 _ = ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
                             } else {
@@ -1226,15 +1226,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
             self.sendBiometricInfo(biometryState: biometryState)
         case "web_app_biometry_request_access":
-            //TODOLANG
             guard let botPeer = requestData?.bot, var biometryState = self.biometryState else {
                 return
             }
             var string: String
             if laContext.biometricTypeString == "finger" {
-                string = "Do you want to allow \(botPeer.displayTitle) to use Touch ID?"
+                string = strings().webAppBiometryConfirmTouchId(botPeer.displayTitle)
             } else {
-                string = "Do you want to allow \(botPeer.displayTitle) to use Face ID?"
+                string = strings().webAppBiometryConfirmFaceId(botPeer.displayTitle)
             }
             
             if let json = json, let reason = json["reason"] as? String {
@@ -1323,6 +1322,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
             DispatchQueue.global().async {
+                
                 var itemCopy: CFTypeRef?
                 let resultCode = SecItemCopyMatching(secQuery, &itemCopy)
                 

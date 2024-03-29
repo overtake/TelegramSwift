@@ -374,7 +374,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: strings().peerInfoActionStatistics, color: item.accentColor, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
-                    arguments.stats(cachedData.statsDatacenterId)
+                    arguments.stats(cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue))
                 }))
             }
         }

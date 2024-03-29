@@ -367,6 +367,10 @@ class UserInfoArguments : PeerInfoArguments {
             applyUIPCallResult(context, result)
         }))
     }
+    
+    func openPersonalChannel(_ item: UserInfoPersonalChannel) {
+        self.pullNavigation()?.push(ChatAdditionController(context: context, chatLocation: .peer(item.peer.id)))
+    }
         
     func botAddToGroup() {
         let context = self.context
@@ -425,27 +429,10 @@ class UserInfoArguments : PeerInfoArguments {
     func giftBirthday() {
         let context = self.context
         
-        let birthdays: Signal<[UIChatListBirthday], NoError> = context.account.stateManager.contactBirthdays |> map {
-            return $0.filter {
-                $0.value.isToday
-            }
-        } |> take(1) |> mapToSignal { values in
-            return context.account.postbox.transaction { transaction in
-                var birthdays:[UIChatListBirthday] = []
-                for (key, value) in values {
-                    if let peer = transaction.getPeer(key) {
-                        birthdays.append(.init(birthday: value, peer: .init(peer)))
-                    }
-                }
-                return birthdays
-            }
-        }
+        let peerId = self.peerId
         
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, defaultSelected: [peerId])
+        multigift(context: context, selected: [peerId])
         
-        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
-            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
-        })
     }
     
     func botSettings() {
@@ -999,6 +986,8 @@ struct UserInfoAddress : Equatable {
 
 enum UserInfoEntry: PeerInfoEntry {
     case info(sectionId:Int, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, stories: PeerExpiringStoryListContext.State?, viewType: GeneralViewType)
+    case personalChannelInfo(sectionId:Int, left: String, right: String, viewType: GeneralViewType)
+    case personalChannel(sectionId:Int, item: UserInfoPersonalChannel, viewType: GeneralViewType)
     case setFirstName(sectionId:Int, text: String, viewType: GeneralViewType)
     case setLastName(sectionId:Int, text: String, placeholder: String, viewType: GeneralViewType)
     case about(sectionId:Int, text: String, viewType: GeneralViewType)
@@ -1042,6 +1031,8 @@ enum UserInfoEntry: PeerInfoEntry {
     func withUpdatedViewType(_ viewType: GeneralViewType) -> UserInfoEntry {
         switch self {
         case let .info(sectionId, peerView, editable, updatingPhotoState, stories, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, stories: stories, viewType: viewType)
+        case let .personalChannelInfo(sectionId, left, right, _): return .personalChannelInfo(sectionId: sectionId, left: left, right: right, viewType: viewType)
+        case let .personalChannel(sectionId, item, _): return .personalChannel(sectionId: sectionId, item: item, viewType: viewType)
         case let .setFirstName(sectionId, text, _): return .setFirstName(sectionId: sectionId, text: text, viewType: viewType)
         case let .setLastName(sectionId, text, placeholder, _): return .setLastName(sectionId: sectionId, text: text, placeholder: placeholder, viewType: viewType)
         case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
@@ -1146,6 +1137,18 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
                 return true
             default:
+                return false
+            }
+        case let .personalChannelInfo(sectionId, left, right, viewType):
+            if case .personalChannelInfo(sectionId, left, right, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .personalChannel(sectionId, item, viewType):
+            if case .personalChannel(sectionId, item, viewType) = entry {
+                return true
+            } else {
                 return false
             }
         case let .setFirstName(sectionId, text, viewType):
@@ -1433,82 +1436,86 @@ enum UserInfoEntry: PeerInfoEntry {
         switch self {
         case .info:
             return 100
-        case .setFirstName:
+        case .personalChannelInfo:
             return 101
-        case .setLastName:
+        case .personalChannel:
             return 102
-        case .botEditUsername:
+        case .setFirstName:
             return 103
-        case .botEditIntro:
+        case .setLastName:
             return 104
-        case .botEditCommands:
+        case .botEditUsername:
             return 105
-        case .botEditSettings:
+        case .botEditIntro:
             return 106
-        case .botEditInfo:
+        case .botEditCommands:
             return 107
-        case .scam:
+        case .botEditSettings:
             return 108
-        case .about:
+        case .botEditInfo:
             return 109
-        case .bio:
+        case .scam:
             return 110
-        case .phoneNumber:
+        case .about:
             return 111
-        case .birthday:
+        case .bio:
             return 112
-        case .userName:
+        case .phoneNumber:
             return 113
-        case .businessHours:
+        case .birthday:
             return 114
-        case .businessLocation:
+        case .userName:
             return 115
-        case .sendMessage:
+        case .businessHours:
             return 116
-        case .botAddToGroup:
+        case .businessLocation:
             return 117
-        case .botAddToGroupInfo:
+        case .sendMessage:
             return 118
-        case .botShare:
+        case .botAddToGroup:
             return 119
-        case .botSettings:
+        case .botAddToGroupInfo:
             return 120
-        case .botHelp:
+        case .botShare:
             return 121
-        case .botPrivacy:
+        case .botSettings:
             return 122
-        case .shareContact:
+        case .botHelp:
             return 123
-        case .shareMyInfo:
+        case .botPrivacy:
             return 124
-        case .addContact:
+        case .shareContact:
             return 125
-        case .startSecretChat:
+        case .shareMyInfo:
             return 126
-        case .sharedMedia:
+        case .addContact:
             return 127
-        case .notifications:
+        case .startSecretChat:
             return 128
-        case .encryptionKey:
+        case .sharedMedia:
             return 129
-        case .groupInCommon:
+        case .notifications:
             return 130
+        case .encryptionKey:
+            return 131
+        case .groupInCommon:
+            return 132
         case let .setPhoto(_, _, type, _, _):
-            return 131 + type.rawValue
+            return 133 + type.rawValue
         case .resetPhoto:
-            return 135
-        case .setPhotoInfo:
-            return 136
-        case .block:
             return 137
-        case .reportReaction:
+        case .setPhotoInfo:
+            return 137
+        case .block:
             return 138
-        case .deleteChat:
+        case .reportReaction:
             return 139
-        case .deleteContact:
+        case .deleteChat:
             return 140
-        case .media:
+        case .deleteContact:
             return 141
+        case .media:
+            return 142
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1517,6 +1524,10 @@ enum UserInfoEntry: PeerInfoEntry {
     private var sortIndex:Int {
         switch self {
         case let .info(sectionId, _, _, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .personalChannelInfo(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .personalChannel(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .setFirstName(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1621,6 +1632,12 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .info(_, peerView, editable, updatingPhotoState, stories, viewType):
             return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, stories: stories, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: { image, control in
                 arguments.updateContactPhoto(image, control: control, type: .set)
+            })
+        case let .personalChannelInfo(sectionId, left, right, viewType):
+            return GeneralTextRowItem(initialSize, text: left, viewType: viewType, rightItem: .init(isLoading: false, text: .initialize(string: right, color: theme.colors.listGrayText, font: .normal(.small))))
+        case let .personalChannel(sectionId, item, viewType):
+            return PersonalChannelRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, item: item, viewType: viewType, action: {
+                arguments.openPersonalChannel(item)
             })
         case let .setFirstName(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
@@ -1817,7 +1834,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -1833,8 +1850,26 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     entries.append(UserInfoEntry.info(sectionId: sectionId, peerView: view, editable: editing, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
 
     
+    if let personalChannel {
+        entries.append(UserInfoEntry.section(sectionId: sectionId))
+        sectionId += 1
+        
+        let right: String
+        if let subscribers = personalChannel.subscribers {
+            let membersLocalized: String = strings().peerStatusSubscribersCountable(Int(subscribers))
+            right = membersLocalized.replacingOccurrences(of: "\(subscribers)", with: subscribers.formattedWithSeparator).uppercased()
+        } else {
+            right = ""
+        }
+        
+        entries.append(UserInfoEntry.personalChannelInfo(sectionId: sectionId, left: strings().peerInfoPersonalChannelTitle, right: right, viewType: .textTopItem))
+        entries.append(UserInfoEntry.personalChannel(sectionId: sectionId, item: personalChannel, viewType: .singleItem))
+    }
+    
     func applyBlock(_ block:[UserInfoEntry]) {
-        var block = block
+        var block = block.sorted { (p1, p2) -> Bool in
+            return p1.isOrderedBefore(p2)
+        }
         for (i, item) in block.enumerated() {
             block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
         }
@@ -1902,7 +1937,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let birthday = cachedUserData.birthday {
-                        infoBlock.append(.birthday(sectionId: sectionId, text: birthday.formatted, birthday.isEligble, viewType: .singleItem))
+                        infoBlock.append(.birthday(sectionId: sectionId, text: birthday.formattedYears, birthday.isEligble, viewType: .singleItem))
                     }
                 }
                 if let cachedUserData = view.cachedData as? CachedUserData {

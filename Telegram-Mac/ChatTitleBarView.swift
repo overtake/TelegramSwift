@@ -252,7 +252,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             }
 
-            if !peerEqual || !cachedEqual || !presenceEqual {
+            if !peerEqual || !cachedEqual || !presenceEqual || self.chatInteraction.mode.customChatLink != nil {
                 updateStatus(presentation: chatInteraction.presentation)
             }
         } else {

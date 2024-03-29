@@ -649,6 +649,12 @@ class ChatRowItem: TableRowItem {
         if message?.adAttribute != nil {
             top = 4
         }
+//        
+//        if !isBubbled, message?.adAttribute != nil {
+//            if !hasPhoto {
+//                left -= (36 + 10)
+//            }
+//        }
         
         if let author = authorText {
             top += author.layoutSize.height
@@ -2116,7 +2122,16 @@ class ChatRowItem: TableRowItem {
                 time -= context.timeDifference
                 
                 let dateFormatter = DateSelectorUtil.chatDateFormatter
-                let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                let dateColor = isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble))
+                
+                let dateFont: NSFont = renderType == .bubble ? .italic(.small) : .normal(.short)
+                
+                let attr: NSMutableAttributedString = NSAttributedString.initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: dateColor, font: dateFont).mutableCopy() as! NSMutableAttributedString
+                
+                if let attribute = message.inlineBotAttribute, let peerId = attribute.peerId, let peer = message.peers[peerId] {
+                    attr.insert(.initialize(string: "\(attribute.title ?? peer.displayTitle), ", color: dateColor, font: dateFont), at: 0)
+                }
+                
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
             } else if let _ = message.adAttribute {

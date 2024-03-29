@@ -245,7 +245,7 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     
     if let linkInvation = linkInvation {
@@ -271,6 +271,23 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                 
                 entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
                 index += 1
+            }
+        }
+        
+        if !blocks.isEmpty {
+            for block in blocks {
+                let found = peers.filter({ block.peerIds.contains($0.id) })
+                if !found.isEmpty {
+                    entries.append(.separator(index, theme, block.separator))
+                    index += 1
+                    for peer in found {
+                        if isset[peer.id] == nil {
+                            isset[peer.id] = peer.id
+                            entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
+                            index += 1
+                        }
+                    }
+                }
             }
         }
         
@@ -888,13 +905,13 @@ class SelectChatsBehavior: SelectPeersBehavior {
 
         if premiumBlock {
             //TODOLANG
-            entries.append(.separator(index, customTheme(), "USER TYPES"))
+            entries.append(.separator(index, customTheme(), strings().selectPeersUserTypes))
             index += 1
 
             entries.append(.peer(SelectPeerValue(peer: TelegramFilterCategory(category: .premiumUsers), presence: nil, subscribers: nil, ignoreStatus: true), index, true))
             index += 1
             
-            entries.append(.separator(index, customTheme(), "CHATS"))
+            entries.append(.separator(index, customTheme(), strings().selectPeersChats))
             index += 1
 
         }
@@ -952,14 +969,21 @@ class SelectChatsBehavior: SelectPeersBehavior {
     }
 }
 
+struct SelectPeersBlock {
+    let separator: String
+    let peerIds: [PeerId]
+}
+
 class SelectContactsBehavior : SelectPeersBehavior {
     fileprivate let index: PeerNameIndex = .lastNameFirst
     private var previousGlobal:Atomic<[SelectPeerValue]> = Atomic(value: [])
    
     var defaultSelected: [PeerId] = []
+    var blocks: [SelectPeersBlock] = []
     
-    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
+    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
         self.defaultSelected = defaultSelected
+        self.blocks = blocks
         super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
     }
     
@@ -977,6 +1001,8 @@ class SelectContactsBehavior : SelectPeersBehavior {
         let settings = self.settings
         let excludePeerIds = self.excludePeerIds
         let defaultSelected = self.defaultSelected
+        let blocks = self.blocks
+        
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             
@@ -991,7 +1017,7 @@ class SelectContactsBehavior : SelectPeersBehavior {
                     |> deliverOn(prepareQueue)
                     |> map { view, searchView, accountPeer, recentPeers -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, blocks: blocks, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme), updatedSearch)
                 }
                 
             } else  {

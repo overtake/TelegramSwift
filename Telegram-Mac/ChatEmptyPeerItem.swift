@@ -22,6 +22,9 @@ class ChatEmptyPeerItem: TableRowItem {
     
     private(set) var standImage: (CGImage, CGFloat)? = nil
     
+    private(set) var linkText: TextViewLayout?
+    
+    private (set) var introInfo: TextViewLayout?
     
     override var stableId: AnyHashable {
         return 0
@@ -149,11 +152,15 @@ class ChatEmptyPeerItem: TableRowItem {
             }
             self._shouldBlurService = false
         case let .customLink(contents):
-            //TODOLANG
-            _ = attr.append(string: "Link to Chat", color: theme.colors.text, font: .medium(.text))
+            _ = attr.append(string: strings().chatEmptyBusinessLinkTitle, color: theme.colors.text, font: .medium(.text))
             _ = attr.append(string: "\n\n")
-            _ = attr.append(string: "Add a message that will be\nentered in the message input\nfield for anyone who starts a\nchat with you using the link:", color: theme.colors.text, font: .normal(.text))
-
+            _ = attr.append(string: strings().chatEmptyBusinessLinkText, color: theme.colors.text, font: .normal(.text))
+            self.standImage = (NSImage(resource: .iconChatLinksToChat).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
+            
+            let linkLayout = TextViewLayout(.initialize(string: contents.link, color: theme.colors.text, font: .medium(.text)))
+            linkLayout.measure(width: .greatestFiniteMagnitude)
+            self.linkText = linkLayout
+            self._shouldBlurService = false
         }
         
         
@@ -172,7 +179,7 @@ class ChatEmptyPeerItem: TableRowItem {
 
             
             let sticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(chatInteraction.context.engine.stickers.randomGreetingSticker() |> deliverOnMainQueue)
-
+            let context = self.chatInteraction.context
             
             peerViewDisposable.set(combineLatest(cachedData, peer, sticker).start(next: { [weak self] cachedData, peer, sticker in
                 if let cachedData = cachedData as? CachedUserData, let user = peer, let self {
@@ -210,12 +217,20 @@ class ChatEmptyPeerItem: TableRowItem {
                     } else if case let .known(intro) = cachedData.businessIntro, let intro = intro {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: intro.title.isEmpty ? strings().chatEmptyChat : intro.title, color: theme.colors.text, font: .medium(.text))
-                        _ = attr.append(string: "\n\n", color: theme.colors.text, font: .medium(.text))
+                        _ = attr.append(string: "\n", color: theme.colors.text, font: .medium(.text))
                         _ = attr.append(string: intro.text.isEmpty ? strings().chatEmptyChatInfo : intro.text, color: theme.colors.text, font: .normal(.text))
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .center)
                         self.textViewLayout.interactions = globalLinkExecutor
                         self.sticker = intro.stickerFile ?? sticker?.file
+                        let info = parseMarkdownIntoAttributedString(strings().chatEmptyBusinessIntroHow(user.compactDisplayTitle), attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.text), bold: .init(font: .medium(.text), textColor: theme.colors.text), link: .init(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+                            return (NSAttributedString.Key.foregroundColor.rawValue, theme.colors.accent)
+                        })).detectBold(with: .medium(.text))
+                        
+                        
+                        let introInfo = TextViewLayout(info, alignment: .center)
+                        introInfo.interactions = globalLinkExecutor
+                        self.introInfo = introInfo
                     }
                     self.view?.set(item: self)
                 }
@@ -252,6 +267,9 @@ class ChatEmptyPeerView : TableRowView {
     
     private var premRequiredImageView: ImageView?
     private var premRequiredButton: TextButton?
+    
+    private var linkView: TextView? = nil
+    private var introInfoView: TextView?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -419,6 +437,47 @@ class ChatEmptyPeerView : TableRowView {
                 performSubviewRemoval(view, animated: false)
                 self.premRequiredImageView = nil
             }
+            if let linkText = item.linkText {
+                let current: TextView
+                if let view = self.linkView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.userInteractionEnabled = false
+                    current.isSelectable = false
+                    bgView.addSubview(current)
+                    self.linkView = current
+                }
+                current.update(linkText)
+            } else if let view = self.linkView {
+                performSubviewRemoval(view, animated: false)
+                self.linkView = nil
+            }
+            
+            if let introInfo = item.introInfo {
+                let current: TextView
+                if let view = self.introInfoView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.isSelectable = false
+                    current.scaleOnClick = true
+                    self.addSubview(current)
+                    self.introInfoView = current
+                    
+                    current.set(handler: { [weak item] _ in
+                        if let context = item?.chatInteraction.context {
+                            showModal(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
+                        }
+                    }, for: .Click)
+                }
+                introInfo.measure(width: 240)
+                introInfo.generateAutoBlock(backgroundColor: item.presentation.colors.background)
+                current.update(introInfo)
+            } else if let view = self.introInfoView {
+                performSubviewRemoval(view, animated: false)
+                self.introInfoView = nil
+            }
             
             if item.premiumRequired {
                 let current: TextButton
@@ -440,9 +499,9 @@ class ChatEmptyPeerView : TableRowView {
                 
                 
                 current.scaleOnClick = true
-                current.set(background: theme.colors.accent, for: .Normal)
+                current.set(background: item.presentation.colors.accent, for: .Normal)
                 current.set(font: .medium(.text), for: .Normal)
-                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
                 current.set(text: strings().chatEmptyPremiumRequiredAction, for: .Normal)
                 current.sizeToFit(NSMakeSize(20, 20))
                 current.layer?.cornerRadius = current.frame.height / 2
@@ -453,13 +512,21 @@ class ChatEmptyPeerView : TableRowView {
             
             let singleLine = item.textViewLayout.lines.count == 1
             
-            var h: CGFloat = [self.imageView, premRequiredButton, premRequiredImageView, stickerView].compactMap { $0 }.reduce(0, { $0 + $1.frame.height })
+            var h: CGFloat = [self.imageView, premRequiredButton, premRequiredImageView, stickerView, linkView].compactMap { $0 }.reduce(0, { $0 + $1.frame.height })
             
             if let _ = premRequiredButton {
                 h += 20
             }
             if let premRequiredImageView {
                 h += 10
+            }
+            
+            if let stickerView {
+                h += 10
+            }
+            
+            if let linkView {
+                h += 8
             }
             
             
@@ -487,10 +554,18 @@ class ChatEmptyPeerView : TableRowView {
                 view.centerX(y: textView.frame.maxY + 10)
             }
             
+            if let view = linkView {
+                view.centerX(y: textView.frame.maxY + 8)
+            }
+            
             if imageView == nil && premRequiredImageView == nil {
                 bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 10
             } else {
                 bgView.layer?.cornerRadius = 10
+            }
+            
+            if let introInfoView {
+                introInfoView.centerX(y: bgView.frame.maxY + 10)
             }
         }
     }

@@ -406,8 +406,13 @@ public func formatBirthdayToString(day: Int, month: Int, year: Int?) -> String? 
     }
 
     let dateFormatter = DateFormatter()
-    dateFormatter.dateStyle = .medium // Adjust this for different styles
-    dateFormatter.timeStyle = .none
+    if year == nil {
+        dateFormatter.dateFormat = "MMM d"
+    } else {
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+    }
+
     // The locale and time zone adjustments are optional and can be tailored to specific needs
     dateFormatter.locale = Locale.current // Use the current system locale
     dateFormatter.timeZone = TimeZone.current // Use the current system time zone

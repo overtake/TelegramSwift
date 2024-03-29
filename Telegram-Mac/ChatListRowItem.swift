@@ -2075,12 +2075,12 @@ class ChatListRowItem: TableRowItem {
     }
   
     override var height: CGFloat {
-        if let hideStatus = hideStatus, !shouldHideContent {
+        if let hideStatus = hideStatus {
             switch hideStatus {
             case .collapsed:
                 return 30
             default:
-                return 70
+                break
             }
         }
         if shouldHideContent {

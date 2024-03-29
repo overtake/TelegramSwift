@@ -15,7 +15,7 @@ import Postbox
 import ObjcUtils
 import TelegramMedia
 
-func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil) {
+func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil, duration: Double = 0.2) {
     
     let view = View(frame: window.frame.size.bounds)
     view.isEventLess = true
@@ -28,7 +28,7 @@ func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: 
     
     view.layer?.addSublayer(layer)
     
-    let transition = ContainedViewLayoutTransition.animated(duration: 0.2, curve: .linear)
+    let transition = ContainedViewLayoutTransition.animated(duration: duration, curve: .linear)
     
     let keyFrames = generateParabollicMotionKeyframes(from: fromPoint, to: toPoint, elevation: fromPoint.y < toPoint.y ? 50 : -50)
     

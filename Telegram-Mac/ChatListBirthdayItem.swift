@@ -17,10 +17,9 @@ final class ChatListAddBirthdayItem : GeneralRowItem {
     let info: TextViewLayout
     let context: AccountContext
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext) {
-        //TODOLANG
         self.context = context
-        self.title = .init(.initialize(string: "Add your birthday! 🎂", color: theme.colors.text, font: .medium(.text)))
-        self.info = .init(.initialize(string: "Let your contacts know when you're celebrating.", color: theme.colors.grayText, font: .normal(.text)))
+        self.title = .init(.initialize(string: strings().chatListBirthdayAddTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.info = .init(.initialize(string: strings().chatListBirthdayAddInfo, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, stableId: stableId)
     }
     
@@ -33,15 +32,8 @@ final class ChatListAddBirthdayItem : GeneralRowItem {
     }
     
     func invoke(_ date: Date) {
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let month = calendar.component(.month, from: date)
-        let year = calendar.component(.year, from: date)
-        
-        showModalText(for: context.window, text: strings().birthdayAlertAdded)
-        
-        _ = context.engine.accountData.updateBirthday(birthday: TelegramBirthday(day: Int32(day), month: Int32(month), year: Int32(year))).startStandalone()
-        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .setupBirthday).startStandalone()
+        editAccountUpdateBirthday(date, context: context)
+         _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .setupBirthday).startStandalone()
     }
     
     func dismiss() {
@@ -67,8 +59,17 @@ final class ChatListBirthdayItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, birthdays: [UIChatListBirthday], context: AccountContext) {
         self.birthdays = birthdays
         self.context = context
-        self.title = .init(.initialize(string: "\(birthdays.count) contact have birthdays today! 🎂", color: theme.colors.text, font: .medium(.text)))
-        self.info = .init(.initialize(string: "Gift them Telegram Premium.", color: theme.colors.grayText, font: .normal(.text)))
+        
+        let titleAttr = NSMutableAttributedString()
+        if birthdays.count == 1 {
+            titleAttr.append(string: strings().chatListBirthdaySingleTitle(birthdays[0].peer._asPeer().compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
+        } else {
+            titleAttr.append(string: strings().chatListBirthdayMultipleTitleCountable(birthdays.count), color: theme.colors.text, font: .medium(.text))
+        }
+        titleAttr.detectBoldColorInString(with: .medium(.text), color: theme.colors.accent)
+        
+        self.title = .init(titleAttr, maximumNumberOfLines: 1)
+        self.info = .init(.initialize(string: strings().chatListBirthdayInfoCountable(birthdays.count), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
 
         super.init(initialSize, stableId: stableId)
     }
@@ -76,19 +77,14 @@ final class ChatListBirthdayItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 15))
-        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count) - 1 * 15))
+        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 20))
+        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count) - 1 * 20))
         return true
     }
     
     func invoke() {
         let context = self.context
-        
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, defaultSelected: self.birthdays.map { $0.peer.id })
-        
-        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
-            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
-        })
+        multigift(context: context, selected: self.birthdays.map { $0.peer.id })
     }
     
     func dismiss() {
@@ -180,7 +176,7 @@ private final class ChatListBirthdayView : TableRowView {
         
         borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
         
-        let maxX = avatarsContainer.subviewsWidthSize.width + 20
+        let maxX = CGFloat(30 + (avatarsContainer.subviews.count - 1) * 20) + 20
         titleView.setFrameOrigin(NSMakePoint(maxX, 8))
         infoView.setFrameOrigin(NSMakePoint(maxX, frame.height - infoView.frame.height - 8))
         
@@ -205,7 +201,7 @@ private final class ChatListBirthdayView : TableRowView {
         self.titleView.update(item.title)
         self.infoView.update(item.info)
         
-        dismiss.set(image: theme.icons.recentDismiss, for: .Normal)
+        dismiss.set(image: NSImage(resource: .iconVoiceChatTooltipClose).precomposed(theme.colors.grayIcon), for: .Normal)
         dismiss.autohighlight = false
         dismiss.scaleOnClick = true
         dismiss.sizeToFit()
@@ -240,16 +236,16 @@ private final class ChatListBirthdayView : TableRowView {
             }
         }
         for inserted in inserted {
-            let control = AvatarContentView(context: item.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(30, 30))
+            let control = AvatarContentView(context: item.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(30, 30), inset: 8)
             control.updateLayout(size: NSMakeSize(30, 30), isClipped: inserted.0 != 0, animated: animated)
             control.userInteractionEnabled = false
             control.setFrameSize(NSMakeSize(30, 30))
-            control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 27, 0))
+            control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 20, 0))
             avatars.insert(control, at: inserted.0)
             avatarsContainer.subviews.insert(control, at: inserted.0)
             if animated {
                 if let index = inserted.2 {
-                    control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 32, 0), to: control.frame.origin, timingFunction: timingFunction)
+                    control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 22, 0), to: control.frame.origin, timingFunction: timingFunction)
                 } else {
                     control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
                     control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
@@ -259,7 +255,7 @@ private final class ChatListBirthdayView : TableRowView {
         for updated in updated {
             let control = avatars[updated.0]
             control.updateLayout(size: NSMakeSize(30, 30), isClipped: updated.0 != 0, animated: animated)
-            let updatedPoint = NSMakePoint(CGFloat(updated.0) * 27, 0)
+            let updatedPoint = NSMakePoint(CGFloat(updated.0) * 20, 0)
             if animated {
                 control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
             }
@@ -303,10 +299,13 @@ private final class ChatListAddBirthdayView : TableRowView {
             guard let self, let item = self.item as? ChatListAddBirthdayItem else {
                 return
             }
-            let controller = CalendarController(NSMakeRect(0, 0, 300, 300), item.context.window, current: Date(), lowYear: 1900, selectHandler: { date in
+            let controller = CalendarController(NSMakeRect(0, 0, 300, 300), item.context.window, current: Date(), lowYear: 1900, canBeNoYear: true, selectHandler: { date in
                 item.invoke(date)
             })
-            showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -40))
+            let nav = NavigationViewController(controller, item.context.window)
+            nav._frameRect = NSMakeRect(0, 0, 300, 310)
+            showModal(with: nav, for: item.context.window)
+
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] control in
@@ -344,7 +343,7 @@ private final class ChatListAddBirthdayView : TableRowView {
         self.titleView.update(item.title)
         self.infoView.update(item.info)
         
-        dismiss.set(image: theme.icons.recentDismiss, for: .Normal)
+        dismiss.set(image: NSImage(resource: .iconVoiceChatTooltipClose).precomposed(theme.colors.grayIcon), for: .Normal)
         dismiss.autohighlight = false
         dismiss.scaleOnClick = true
         dismiss.sizeToFit()

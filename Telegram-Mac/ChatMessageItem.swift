@@ -122,6 +122,14 @@ class ChatMessageItem: ChatRowItem {
         return [textLayout]
     }
     
+    var isFragmentAd: Bool {
+        if let adAttribute = message?.adAttribute {
+            return adAttribute.canReport
+        } else {
+            return false
+        }
+    }
+    
     var webpageAboveContent: Bool {
         if let attr = message?.webpagePreviewAttribute, self.webpageLayout != nil {
             if attr.leadingPreview {

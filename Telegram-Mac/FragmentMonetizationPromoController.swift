@@ -53,17 +53,17 @@ private final class RowItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext) {
         self.context = context
         
-        let headerText = NSAttributedString.initialize(string: "Earn From Your Channel", color: theme.colors.text, font: .medium(.title))
+        let headerText = NSAttributedString.initialize(string: strings().monetizationIntroTitle, color: theme.colors.text, font: .medium(.title))
         
-        let infoHeaderAttr = NSAttributedString.initialize(string: "What's \(clown) TON", color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
+        let infoHeaderAttr = NSAttributedString.initialize(string: strings().monetizationIntroInfoTitle(clown), color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
         infoHeaderAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.brilliant_static.file), for: clown)
         
         
-        let infoText = "TON is a blockchain platform and cryptocurrency that Telegram uses for its record scalability and ultra low commissions on transactions.\n[Learn More >]()"
+        let infoText = strings().monetizationIntroInfoText
         
         let infoAttr = parseMarkdownIntoAttributedString(infoText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { link in
+                execute(inapp: .external(link: link, false))
             }))
         })).mutableCopy() as! NSMutableAttributedString
                                                                                             
@@ -77,14 +77,16 @@ private final class RowItem : GeneralRowItem {
         self.infoLayout = .init(infoAttr, alignment: .center)
         self.infoLayout.measure(width: initialSize.width - 80)
         
+        self.infoLayout.interactions = globalLinkExecutor
+        
         var options:[Option] = []
         
-        options.append(.init(image: NSImage(resource: .iconFragmentAds).precomposed(theme.colors.accent), header: .init(.initialize(string: "Telegram Ads", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Telegram can display ads in your channel.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentAds).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroAdsTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroAdsText, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
-        options.append(.init(image: NSImage(resource: .iconFragmentSplitRevenue).precomposed(theme.colors.accent), header: .init(.initialize(string: "50:50 revenue split", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You receive 50% of the ad revenue in TON.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentSplitRevenue).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroSplitTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroSplitText("%"), color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
-        options.append(.init(image: NSImage(resource: .iconFragmentTonPayment).precomposed(theme.colors.accent), header: .init(.initialize(string: "Flexible withdrawals", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You can withdraw your TON any time.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentTonPayment).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroWithdrawalTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroWithdrawalText, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
         self.options = options
@@ -306,7 +308,7 @@ func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Understood", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().monetizationIntroUnderstood, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true, customTheme: {
         .init(background: theme.colors.background, grayForeground: theme.colors.background, activeBackground: theme.colors.background, listBackground: theme.colors.background)

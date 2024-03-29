@@ -18,15 +18,15 @@ private final class PreviewRowItem : GeneralRowItem {
     let sticker: TelegramMediaFile?
     let context: AccountContext
     init(_ initialSize: NSSize, stableId: AnyHashable, state: State, context: AccountContext, viewType: GeneralViewType) {
-        if let title = state.title, !title.isEmpty {
-            self.title = .init(.initialize(string: title, color: theme.colors.text, font: .medium(.text)), alignment: .center)
+        if !state.title.isEmpty {
+            self.title = .init(.initialize(string: state.title, color: theme.colors.text, font: .medium(.text)), alignment: .center)
         } else {
-            self.title = .init(.initialize(string: "No Messages here yet...", color: theme.colors.text, font: .medium(.text)), alignment: .center)
+            self.title = .init(.initialize(string: strings().businessIntroEmptyTitle, color: theme.colors.text, font: .medium(.text)), alignment: .center)
         }
-        if let message = state.message, !message.isEmpty {
-            self.message = .init(.initialize(string: message, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        if !state.message.isEmpty {
+            self.message = .init(.initialize(string: state.message, color: theme.colors.text, font: .normal(.small)), alignment: .center)
         } else {
-            self.message = .init(.initialize(string: "Send a message or click on the greeting below", color: theme.colors.text, font: .normal(.text)), alignment: .center)
+            self.message = .init(.initialize(string: strings().businessIntroEmptyText, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         }
         self.context = context
         self.sticker = state.sticker
@@ -46,11 +46,11 @@ private final class PreviewRowItem : GeneralRowItem {
         var height: CGFloat = 0
         if let title = self.title {
             height += title.layoutSize.height
-            height += 10
+            height += 5
         }
         if let message = self.message {
             height += message.layoutSize.height
-            height += 10
+            height += 5
         }
         return height + 120 + viewType.innerInset.top + viewType.innerInset.bottom
     }
@@ -96,11 +96,11 @@ private final class PreviewRowView : GeneralContainableRowView {
         var y: CGFloat = 10
         if let titleView {
             transition.updateFrame(view: titleView, frame: titleView.centerFrameX(y: y))
-            y += titleView.frame.height + 10
+            y += titleView.frame.height + 5
         }
         if let messageView {
             transition.updateFrame(view: messageView, frame: messageView.centerFrameX(y: y))
-            y += messageView.frame.height + 10
+            y += messageView.frame.height + 5
         }
         transition.updateFrame(view: stickerView, frame: stickerView.centerFrameX(y: y))
     }
@@ -184,8 +184,8 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var title: String?
-    var message: String?
+    var title: String
+    var message: String
     var sticker: TelegramMediaFile?
     var random: TelegramMediaFile?
     
@@ -194,7 +194,7 @@ private struct State : Equatable {
     var initialIntro: TelegramBusinessIntro?
     
     var mappedIntro: TelegramBusinessIntro? {
-        return .init(title: title ?? "", text: message ?? "", stickerFile: sticker?.fileId == random?.fileId ? nil : sticker)
+        return .init(title: title, text: message, stickerFile: sticker?.fileId == random?.fileId ? nil : sticker)
     }
 }
 
@@ -212,6 +212,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessIntroInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return PreviewRowItem(initialSize, stableId: stableId, state: state, context: arguments.context, viewType: .firstItem)
@@ -220,25 +223,29 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let intro_title_length_limit = arguments.context.appConfiguration.getGeneralValue("intro_title_length_limit", orElse: 32)
     let intro_description_length_limit = arguments.context.appConfiguration.getGeneralValue("intro_description_length_limit", orElse: 70)
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: "Enter Title", filter: { $0 }, limit: intro_title_length_limit))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: strings().businessIntroPlaceholderTitle, filter: { $0 }, limit: intro_title_length_limit))
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.message), error: nil, identifier: _id_message, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: "Enter Message", filter: { $0 }, limit: intro_description_length_limit))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.message), error: nil, identifier: _id_message, mode: .plain, data: .init(viewType: .innerItem), placeholder: nil, inputPlaceholder: strings().businessIntroPlaceholderText, filter: { $0 }, limit: intro_description_length_limit))
 
     let type: GeneralInteractedType
     if state.sticker != state.random, let image = state.icon_sticker {
         type = .imageContext(image, "")
     } else {
-        type = .context("Random")
+        type = .context(strings().businessIntroStickerRandom)
     }
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker, data: .init(name: "Custom Sticker", color: theme.colors.text, type: type, viewType: state.sticker != state.random ? .innerItem : .lastItem, action: arguments.openStickers)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker, data: .init(name: strings().businessIntroStickerText, color: theme.colors.text, type: type, viewType: .lastItem, action: arguments.openStickers)))
     // entries
-    if state.sticker != state.random {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker_reset, data: .init(name: "Reset Sticker", color: theme.colors.redUI, type: .none, viewType: .lastItem, action: arguments.resetSticker)))
+   
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessIntroStickerInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    
+    
+    
+    if state.sticker != state.random || !state.title.isEmpty || !state.message.isEmpty {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sticker_reset, data: .init(name: strings().businessIntroReset, color: theme.colors.redUI, type: .none, viewType: .singleItem, action: arguments.resetSticker)))
     }
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can customize the message people see before they start a chat with you."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    
-    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -250,7 +257,7 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
     
     let actionsDisposable = DisposableSet()
     
-    let initialState = State()
+    let initialState = State(title: "", message: "")
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -269,8 +276,8 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
             case let .known(intro):
                 current.sticker = intro?.stickerFile ?? item?.file
                 current.random = item?.file
-                current.title = intro?.title
-                current.message = intro?.text
+                current.title = intro?.title ?? ""
+                current.message = intro?.text ?? ""
             case .unknown:
                 current.sticker = item?.file
                 current.random = item?.file
@@ -327,6 +334,8 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
         updateState { current in
             var current = current
             current.sticker = current.random
+            current.title = ""
+            current.message = ""
             return current
         }
     })
@@ -335,13 +344,13 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Intro")
+    let controller = InputDataController(dataSignal: signal, title: strings().businessIntroTitle)
     
     controller.updateDatas = { data in
         updateState { current in
             var current = current
-            current.title = data[_id_title]?.stringValue
-            current.message = data[_id_message]?.stringValue
+            current.title = data[_id_title]?.stringValue ?? ""
+            current.message = data[_id_message]?.stringValue ?? ""
             return current
         }
         return .none

@@ -921,7 +921,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         let addressNameAssignment: Signal<[Peer]?, NoError> = .single(nil) |> then(context.engine.peers.channelAddressNameAssignmentAvailability(peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
             if case .addressNameLimitReached = result {
                 return context.engine.peers.adminedPublicChannels()
-                |> map { Optional($0.map { $0._asPeer() }) }
+                |> map { Optional($0.map { $0.peer._asPeer() }) }
             } else {
                 return .single([])
             }

@@ -46,11 +46,52 @@ extension TelegramBirthday {
         return day == dayYesterday && month == monthYesterday
     }
     
+    
+    func yearsSince() -> Int? {
+        
+        guard let year else {
+            return nil
+        }
+        
+        let calendar = Calendar.current
+        
+        // Components of the input date
+        var dateComponents = DateComponents()
+        dateComponents.day = Int(day)
+        dateComponents.month = Int(month)
+        dateComponents.year = Int(year)
+        
+        // Construct the date from components
+        guard let fromDate = calendar.date(from: dateComponents) else {
+            return nil // Invalid date was provided
+        }
+        
+        // Get the current date
+        let toDate = Date()
+        
+        // Calculate the difference in years
+        let components = calendar.dateComponents([.year], from: fromDate, to: toDate)
+        return components.year
+    }
+
+    
     var isEligble: Bool {
-        return self.isToday || self.isTomorrow()
+        return self.isToday || self.isTomorrow() || self.isYesterday()
     }
     var formatted: String {
         return formatBirthdayToString(day: Int(self.day), month: Int(self.month), year: self.year.flatMap(Int.init)) ?? ""
+    }
+    var formattedYears: String {
+        if let year = yearsSince() {
+            let string = formatted + " (\(strings().birthdayYearsOldCountable(year)))"
+            if isToday {
+                return "🎂 " + string
+            } else {
+                return string
+            }
+        } else {
+            return formatted
+        }
     }
 }
 
@@ -791,12 +832,8 @@ class ChatListController : PeersListController {
                 if !update.list.hasLater {
                     let hideStatus: ItemHideStatus
                     if state.appear == .short || state.splitState == .minimisize {
-                        switch hiddenItems.archive {
-                        case .hidden:
-                            hideStatus = hiddenItems.archive
-                        default:
-                            hideStatus = .normal
-                        }
+                        hideStatus = hiddenItems.archive
+
                     } else {
                         hideStatus = hiddenItems.archive
                     }
