@@ -1569,7 +1569,7 @@ final class StoryListView : Control, Notifable {
         
         self.addSubview(content)
         content.setFrameOrigin(point)
-        content.backgroundColor = .random
+      //  content.backgroundColor = .random
         let oldRect = content.frame
 
         
