@@ -224,7 +224,7 @@ private final class RowView: GeneralContainableRowView {
         headerView.update(item.headerLayout)
         iconView.backgroundColor = theme.colors.accent
         
-        self.gradient.colors = [NSColor(rgb: 0x4DBF40), NSColor(rgb: 0x99D25F)].map { $0.cgColor }
+        self.gradient.colors = [theme.colors.accent].map { $0.cgColor }
         self.gradient.startPoint = CGPoint(x: 0.5, y: 0)
         self.gradient.endPoint = CGPoint(x: 0.5, y: 1.0)
         self.gradient.type = .radial

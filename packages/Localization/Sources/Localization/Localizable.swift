@@ -3273,6 +3273,8 @@ public final class L10n {
   public static var chatAccessoryForwardYou: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.You") }
   /// VIEW THEME
   public static var chatActionViewTheme: String  { return L10n.tr("Localizable", "Chat.Action.ViewTheme") }
+  /// You have unsaved changes.\nReset?
+  public static var chatAlertUnsaved: String  { return L10n.tr("Localizable", "Chat.Alert.Unsaved") }
   /// %d
   public static func chatAlertForwardHeaderCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Alert.Forward.Header_countable", p1)
@@ -3405,6 +3407,8 @@ public final class L10n {
   public static func chatAlertForwardTextInnerZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_zero", p1)
   }
+  /// Reset
+  public static var chatAlertUnsavedReset: String  { return L10n.tr("Localizable", "Chat.Alert.Unsaved.Reset") }
   /// bot manages this chat
   public static var chatBotManagerFullAccess: String  { return L10n.tr("Localizable", "Chat.BotManager.FullAccess") }
   /// bot stopped
@@ -6913,6 +6917,24 @@ public final class L10n {
   public static var choosePeerTitleBotMultiple: String  { return L10n.tr("Localizable", "ChoosePeer.Title.Bot.Multiple") }
   /// Choose Users
   public static var choosePeerTitleUserMultiple: String  { return L10n.tr("Localizable", "ChoosePeer.Title.User.Multiple") }
+  /// Learn More
+  public static var collectibleItemInfoButtonOpenInfo: String  { return L10n.tr("Localizable", "CollectibleItemInfo.ButtonOpenInfo") }
+  /// The phone number **@%1$@** was acquired on\nFragment on %2$@ for %3$@** %4$@** (~%5$@).\n\n[Copy Link]()
+  public static func collectibleItemInfoPhoneText(_ p1: String, _ p2: String, _ p3: String, _ p4: String, _ p5: String) -> String {
+    return L10n.tr("Localizable", "CollectibleItemInfo.PhoneText", p1, p2, p3, p4, p5)
+  }
+  /// [%@]() is a collectible phone number\nthat belongs to
+  public static func collectibleItemInfoPhoneTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "CollectibleItemInfo.PhoneTitle", p1)
+  }
+  /// The **@%1$@** username was acquired on\nFragment on %2$@ for %3$@** %4$@** (~%5$@).\n\n[Copy Link]()
+  public static func collectibleItemInfoUsernameText(_ p1: String, _ p2: String, _ p3: String, _ p4: String, _ p5: String) -> String {
+    return L10n.tr("Localizable", "CollectibleItemInfo.UsernameText", p1, p2, p3, p4, p5)
+  }
+  /// [%@]() is a collectible username\nthat belongs to
+  public static func collectibleItemInfoUsernameTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "CollectibleItemInfo.UsernameTitle", p1)
+  }
   /// Create
   public static var composeCreate: String  { return L10n.tr("Localizable", "Compose.Create") }
   /// Next
@@ -9043,7 +9065,7 @@ public final class L10n {
   public static var inviteFailedPremiumAction: String  { return L10n.tr("Localizable", "InviteFailed.Premium.Action") }
   /// Upgrade to Premium
   public static var inviteFailedPremiumTitle: String  { return L10n.tr("Localizable", "InviteFailed.Premium.Title") }
-  /// **%@** accepts invitations to groups from contacts and **Premium** users
+  /// **%@** only accepts invitations to groups from contacts and **Premium** users
   public static func inviteFailedPremiumTextMultiple(_ p1: String) -> String {
     return L10n.tr("Localizable", "InviteFailed.Premium.Text.Multiple", p1)
   }

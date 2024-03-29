@@ -238,8 +238,8 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     }
     
     
-    open override func back(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop) -> Void {
-        if  !isLocked, let last = stack.last, last.invokeNavigationBack() {
+    override open func invokeBack(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop, checkLock: Bool = true) {
+        if  !isLocked, let last = stack.last, !checkLock || last.invokeNavigationBack() {
             if stackCount > 1 {
                 let ncontroller = stack[stackCount - 2]
                 let removeAnimateFlag = ((ncontroller == defaultEmpty || !animated) && !alwaysAnimate) && !forceAnimated
@@ -250,7 +250,10 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                 doSomethingOnEmptyBack?()
             }
         }
-        
+    }
+    
+    open override func back(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop) -> Void {
+        self.invokeBack(animated: animated, forceAnimated: forceAnimated, animationStyle: animationStyle, checkLock: true)
     }
     
     

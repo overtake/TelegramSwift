@@ -7491,6 +7491,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return result
     }
     
+    override func invokeNavigationBack() -> Bool {
+        switch mode {
+        case .customLink(let contents):
+            let current = self.chatInteraction.presentation.effectiveInput
+            if contents.text.attributes != current.attributes || contents.text.inputText != current.inputText {
+                verifyAlert(for: context.window, information: strings().chatAlertUnsaved, ok: strings().chatAlertUnsavedReset, successHandler: { [weak self] _ in
+                    self?.navigationController?.invokeBack(checkLock: false)
+                })
+                return false
+            }
+        default:
+            break
+        }
+        return true
+    }
+    
     override func backKeyAction() -> KeyHandlerResult {
         
         if let window = window, hasModals(window) {
