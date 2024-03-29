@@ -391,6 +391,9 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
             }
             return true
         }
+        if month.components.year! == 1, month.components.month! == 12 {
+            return false
+        }
         return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
     }
     
@@ -398,7 +401,7 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
         if self.onlyFuture {
             return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
         }
-        return month.components.year! > lowYear || (month.components.year == lowYear && month.components.month! >= 9)
+        return month.components.year! > lowYear || ((month.components.year == lowYear || month.components.year! == 1) && month.components.month! > 1)
     }
     
     override func getLeftBarViewOnce() -> BarView {

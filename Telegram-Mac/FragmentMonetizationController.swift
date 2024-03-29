@@ -908,6 +908,8 @@ private struct State : Equatable {
         var all: Balance
     }
     
+    var config_withdraw: Bool
+    
     
     var overview: Overview = .init(balance: .init(ton: 0, usdRate: 0), last: .init(ton: 0, usdRate: 0), all: .init(ton: 0, usdRate: 0))
     var balance: Balance = .init(ton: 0, usdRate: 0)
@@ -918,7 +920,7 @@ private struct State : Equatable {
     var peer: EnginePeer? = nil
     
     var canWithdraw: Bool {
-        return peer?._asPeer().groupAccess.isCreator ?? false
+        return (peer?._asPeer().groupAccess.isCreator ?? false) && config_withdraw
     }
     
     var revenueGraph: StatsGraph?
@@ -1060,10 +1062,17 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: state.balance, canWithdraw: state.canWithdraw, viewType: .singleItem, interactions: arguments.interactions, updateState: arguments.updateState, transfer: arguments.withdraw)
         }))
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().monetizationBalanceInfo, linkHandler: { link in
+        
+        let text: String
+        if state.config_withdraw {
+            text = strings().monetizationBalanceInfo
+        } else {
+            text = strings().monetizationBalanceComingLaterInfo
+        }
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { link in
             arguments.executeLink(link)
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
+        
     }
 
     
@@ -1124,7 +1133,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
     actionsDisposable.add(detailedDisposable)
 
 
-    let initialState = State()
+    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("channel_revenue_withdrawal_enabled", orElse: false))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

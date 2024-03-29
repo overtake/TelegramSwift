@@ -344,7 +344,7 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().businessIntroTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessIntroTitle, identifier: "business_intro")
     
     controller.updateDatas = { data in
         updateState { current in

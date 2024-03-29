@@ -8141,7 +8141,7 @@ public final class L10n {
   public static var fragmentAdsInfoOption2Info: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option2.Info") }
   /// Help the Channel Creator
   public static var fragmentAdsInfoOption2Title: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option2.Title") }
-  /// You can turn off ads by subscribing to Telegram Premium, and Level 30 channels can remove them for their subscribers.
+  /// You can turn off ads by subscribing to Telegram Premium, and Level 50 channels can remove them for their subscribers.
   public static var fragmentAdsInfoOption3Info: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Info") }
   /// Can Be Removed
   public static var fragmentAdsInfoOption3Title: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Title") }
@@ -10113,6 +10113,8 @@ public final class L10n {
   public static var monetizationSwitchOffAdsInfo: String  { return L10n.tr("Localizable", "Monetization.SwitchOffAdsInfo") }
   /// TRANSACTION HISTORY
   public static var monetizationTransactionsTitle: String  { return L10n.tr("Localizable", "Monetization.TransactionsTitle") }
+  /// In the coming weeks, you will be able to collect rewards using Fragment, a third-party platform used by advertisers to pay for ads. [Learn More >](telegram.org)
+  public static var monetizationBalanceComingLaterInfo: String  { return L10n.tr("Localizable", "Monetization.Balance.ComingLaterInfo") }
   /// Earn From Your Channel
   public static var monetizationIntroTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Title") }
   /// Understood
@@ -10121,7 +10123,7 @@ public final class L10n {
   public static var monetizationIntroAdsText: String  { return L10n.tr("Localizable", "Monetization.Intro.Ads.Text") }
   /// Telegram Ads
   public static var monetizationIntroAdsTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Ads.Title") }
-  /// TON is a blockchain platform and cryptocurrency that Telegram uses for its record scalability and ultra low commissions on transactions. [Learn More >](ton.org)
+  /// TON is a blockchain platform and cryptocurrency that Telegram uses for its high speed and low commissions on transactions. [Learn More >](ton.org)
   public static var monetizationIntroInfoText: String  { return L10n.tr("Localizable", "Monetization.Intro.Info.Text") }
   /// What's %@ TON?
   public static func monetizationIntroInfoTitle(_ p1: String) -> String {
@@ -10175,7 +10177,7 @@ public final class L10n {
   public static var monetizationWithdrawEnterPasswordText: String  { return L10n.tr("Localizable", "Monetization.Withdraw.EnterPassword.Text") }
   /// Enter Password
   public static var monetizationWithdrawEnterPasswordTitle: String  { return L10n.tr("Localizable", "Monetization.Withdraw.EnterPassword.Title") }
-  /// Withdraw is only available if:\n\n• 2-Step Verification was enabled for your account more than 7 days ago.\n\n• You have logged in on this device more than 24 hours ago.\n\nPlease come back later.
+  /// Withdrawal is only available if:\n\n• 2-Step Verification was enabled for your account more than 7 days ago.\n\n• You have logged in on this device more than 24 hours ago.\n\nPlease come back later.
   public static var monetizationWithdrawErrorText: String  { return L10n.tr("Localizable", "Monetization.Withdraw.Error.Text") }
   /// Add
   public static var navigationAdd: String  { return L10n.tr("Localizable", "Navigation.Add") }
@@ -11847,7 +11849,7 @@ public final class L10n {
   }
   /// Invite to Group via Link
   public static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
-  /// You don't have public channel. [Create >]()
+  /// You don't have public channels. [Create >]()
   public static var personalChannelEmpty: String  { return L10n.tr("Localizable", "PersonalChannel.Empty") }
   /// Hide Personal Channel
   public static var personalChannelHide: String  { return L10n.tr("Localizable", "PersonalChannel.Hide") }

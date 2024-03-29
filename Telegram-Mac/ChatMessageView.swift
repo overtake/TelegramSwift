@@ -85,8 +85,8 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         override func layout() {
             super.layout()
             close.setFrameOrigin(.zero)
-            separator.frame = NSMakeRect(6, close.frame.maxY, frame.width - 12, .borderSize)
-            more?.setFrameOrigin(NSMakePoint(0, close.frame.maxY))
+            separator.frame = NSMakeRect(6, close.frame.maxY + 3, frame.width - 12, .borderSize)
+            more?.setFrameOrigin(NSMakePoint(0, close.frame.maxY + 6))
 
         }
         
@@ -96,7 +96,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             
             separator.backgroundColor = theme.colors.grayIcon.withAlphaComponent(0.4)
 
-            close.set(image: NSImage(resource: .iconGradientClose).precomposed(theme.colors.grayIcon), for: .Normal)
+            close.set(image: NSImage(resource: .iconAdHide).precomposed(theme.colors.grayIcon), for: .Normal)
             close.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
             separator.isHidden = !item.isFragmentAd
             
@@ -128,7 +128,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                         })
                     }
                 }, for: .Down)
-                current.set(image: NSImage(resource: .iconChatActions).precomposed(theme.colors.grayIcon), for: .Normal)
+                current.set(image: NSImage(resource: .iconAdMore).precomposed(theme.colors.grayIcon), for: .Normal)
                 current.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
             } else if let view = self.more {
                 performSubviewRemoval(view, animated: animated)
@@ -221,7 +221,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     func adSettingFrame(_ item: ChatMessageItem) -> NSRect {
         let webpage = webpageFrame(item)
-        var rect = NSMakeRect(webpage.maxX + contentFrame(item).minX + 10, contentFrame(item).minY + webpage.minY, 30, item.isFragmentAd ? 60 : 30)
+        var rect = NSMakeRect(webpage.maxX + contentFrame(item).minX + 10, contentFrame(item).minY + webpage.minY, 30, item.isFragmentAd ? 69 : 30)
         if item.isBubbled {
             rect.origin.x += 10
             rect.origin.y = bubbleFrame(item).minY

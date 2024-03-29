@@ -580,7 +580,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         if datacenterId == 0 {
             self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId))
         } else {
-            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true))
+            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true, monetization: monetization))
         }
     }
     func share() {

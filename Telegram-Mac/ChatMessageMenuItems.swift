@@ -393,7 +393,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             if !context.premiumIsBlocked {
                 items.append(ContextMenuItem(strings().chatContextHideAd, handler: {
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
                 }, itemImage: MenuAnimation.menu_clear_history.value))
             }
             
