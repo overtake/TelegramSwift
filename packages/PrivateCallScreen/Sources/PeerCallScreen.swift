@@ -54,7 +54,7 @@ public final class PeerCallScreen : ViewController {
         self.external = external
         let size = NSMakeSize(720, 560)
         if let screen = NSScreen.main {
-            self.screen = Window(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled], backing: .buffered, defer: true, screen: screen)
+            self.screen = Window(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled, .closable], backing: .buffered, defer: true, screen: screen)
             self.screen.minSize = size
             self.screen.isOpaque = true
             self.screen.backgroundColor = .black

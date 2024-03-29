@@ -1782,7 +1782,7 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
                 emojiPackLevel = 0
 
                 
-                nameColorLevel = arguments.premiumConfiguration.minChannelNameColorLevel
+                nameColorLevel = arguments.context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[stateValue.with { $0.selected?.rawValue ?? 0 }] ?? 0
                 nameIconLevel = arguments.premiumConfiguration.minChannelNameIconLevel
 
                 profileColorLevel = arguments.context.peerNameColors.nameColorsChannelMinRequiredBoostLevel[stateValue.with { $0.selected_profile?.rawValue ?? 0 }] ?? 0
