@@ -85,6 +85,8 @@ final class StoryListNavigationView : View {
     
     private let listView: ListView
     
+    var seek:((Float)->Void)? = nil
+    
     private var selected: Int? = nil
     required init(frame frameRect: NSRect) {
         self.listView = ListView(frame: NSMakeRect(0, 0, frameRect.width, 2))
@@ -102,6 +104,14 @@ final class StoryListNavigationView : View {
         selector.style = ControlStyle(foregroundColor: .white, backgroundColor: .clear, highlightColor: .clear)
         selector.set(progress: 0, animated: false, duration: 0)
         
+        selector.onUserChanged = { [weak self] value in
+            self?.seek?(value)
+        }
+        selector.onLiveScrobbling = { [weak self] value in
+            if let value {
+                self?.seek?(value)
+            }
+        }
 
     }
     

@@ -82,7 +82,6 @@ private enum SelectivePrivacySettingsSection: Int32 {
 }
 
 private func stringForUserCount(_ count: Int, enableForPremium: Bool = false) -> String {
-    //TODOLANG
     if count == 0 {
         if enableForPremium {
             return strings().privacySettingsPremiumUsers

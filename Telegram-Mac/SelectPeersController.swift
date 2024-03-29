@@ -904,7 +904,6 @@ class SelectChatsBehavior: SelectPeersBehavior {
         var index:Int32 = 0
 
         if premiumBlock {
-            //TODOLANG
             entries.append(.separator(index, customTheme(), strings().selectPeersUserTypes))
             index += 1
 
