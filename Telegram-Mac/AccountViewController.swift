@@ -1047,6 +1047,15 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                     _ = tableView.select(item: item)
                 }
+            } else if let controller = navigation.controller as? ChatController {
+                switch controller.mode {
+                case .customChatContents, .customLink:
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
+                        _ = tableView.select(item: item)
+                    }
+                default:
+                    break
+                }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
