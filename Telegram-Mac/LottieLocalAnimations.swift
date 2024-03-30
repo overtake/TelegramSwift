@@ -42,6 +42,7 @@ enum LocalAnimatedSticker : String {
     case gigagroup
     case police
     case duck_empty
+    case ton_logo
     
     case voice_chat_raise_hand_1
     case voice_chat_raise_hand_2
@@ -461,6 +462,8 @@ enum LocalAnimatedSticker : String {
         case .fragment_username:
             playPolicy = .onceEnd
         case .fragment:
+            playPolicy = .onceEnd
+        case .ton_logo:
             playPolicy = .onceEnd
 
         default:

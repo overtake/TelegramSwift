@@ -345,6 +345,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.size = layer.size
         self.ignorePreview = layer.ignorePreview
         self.synchronyous = layer.synchronyous
+        self.color = nil
         super.init()
     }
     
@@ -403,6 +404,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     let textColor: NSColor
     let size: NSSize
     let synchronyous: Bool
+    let color: NSColor?
     
     init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
         self.aspectFilled = aspectFilled
@@ -413,6 +415,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.shimmerColor = shimmerColor
         self.fileId = emoji.fileId
         self.size = size
+        self.color = emoji.color
         self.ignorePreview = ignorePreview
         self.synchronyous = synchronyous
         super.init()
@@ -450,6 +453,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.size = size
         self.ignorePreview = ignorePreview
         self.synchronyous = synchronyous
+        self.color = nil
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -464,6 +468,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             unique = Int(arc4random64())
         }
         let textColor = self.textColor
+        let color = self.color
         if self.getColors == nil {
             self.getColors = { file in
                 var colors: [LottieColor] = []
@@ -472,6 +477,9 @@ final class InlineStickerItemLayer : SimpleLayer {
                 }
                 if file.paintToText {
                     colors.append(.init(keyPath: "", color: textColor))
+                }
+                if let color {
+                    colors.append(.init(keyPath: "", color: color))
                 }
                 return colors
             }

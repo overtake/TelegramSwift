@@ -61,7 +61,31 @@ private final class TransactionPreviewRowItem : GeneralRowItem {
             channelLayout.measure(width: .greatestFiniteMagnitude)
             self.channelLayout = channelLayout
         } else {
-            self.channelLayout = nil
+            var string: String?
+            
+            
+            switch transaction.source {
+            case let .withdraw(provider, status, _):
+                switch status {
+                case .failed:
+                    string = strings().monetizationTransactionFailed
+                case .pending:
+                    string = strings().monetizationTransactionPending
+                case .success:
+                    string = strings().monetizationTransactionWithdrawal(provider)
+                }
+            case .refund:
+                string = strings().monetizationTransactionRefund
+            case .incoming:
+                break
+            }
+            if let string {
+                let channelLayout: TextViewLayout = .init(.initialize(string: string, color: theme.colors.text, font: .medium(.text)))
+                channelLayout.measure(width: .greatestFiniteMagnitude)
+                self.channelLayout = channelLayout
+            } else {
+                self.channelLayout = nil
+            }
         }
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -71,7 +95,10 @@ private final class TransactionPreviewRowItem : GeneralRowItem {
         var height = amountLayout.layoutSize.height + self.dateLayout.layoutSize.height + 2
         
         if let channelLayout = channelLayout {
-            height += 20 + channelLayout.layoutSize.height + 30 + 10
+            height += 20 + channelLayout.layoutSize.height
+        }
+        if let _ = peer {
+            height += 30 + 10
         }
         
         return height
@@ -148,9 +175,11 @@ private final class TransactionPreviewRowView : GeneralContainableRowView {
         super.layout()
         textView.centerX(y: 0)
         dateView.centerX(y: textView.frame.maxY + 2)
-        if let procced, let channel {
+        if let procced {
             procced.centerX(y: dateView.frame.maxY + 20)
-            channel.centerX(y: procced.frame.maxY + 10)
+            if let channel {
+                channel.centerX(y: procced.frame.maxY + 10)
+            }
         }
     }
     
@@ -215,6 +244,19 @@ extension String {
         if range.location != NSNotFound {
             var lastIndex = self.count - 1
             while lastIndex > range.location && (self[self.index(self.startIndex, offsetBy: lastIndex)] == "0" || self[self.index(self.startIndex, offsetBy: lastIndex)] == "." || lastIndex > range.location + 4) {
+                lastIndex -= 1
+            }
+            string = String(self.prefix(lastIndex + 1))
+        }
+        return string
+    }
+    var prettyCurrencyNumberUsd: String {
+        let nsString = self as NSString
+        let range = nsString.range(of: ".")
+        var string = self
+        if range.location != NSNotFound {
+            var lastIndex = self.count - 1
+            while lastIndex > range.location && (self[self.index(self.startIndex, offsetBy: lastIndex)] == "0" || self[self.index(self.startIndex, offsetBy: lastIndex)] == "." || lastIndex > range.location + 2) {
                 lastIndex -= 1
             }
             string = String(self.prefix(lastIndex + 1))
@@ -299,13 +341,16 @@ private final class TransactionRowItem : GeneralRowItem {
         let amountAttr = NSMutableAttributedString()
         let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(.header)).smallDecemial
         amountAttr.append(justAmount)
-        amountAttr.append(string: " TON", color: theme.colors.text, font: .medium(.header))
         switch transaction.source {
         case .incoming, .refund:
             amountAttr.insert(.initialize(string: "+", font: .medium(.header)), at: 0)
             amountAttr.addAttribute(.foregroundColor, value: theme.colors.greenUI, range: amountAttr.range)
+            amountAttr.append(string: " ")
+            amountAttr.append(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: theme.colors.greenUI))
         case .withdraw:
             amountAttr.addAttribute(.foregroundColor, value: theme.colors.redUI, range: amountAttr.range)
+            amountAttr.append(string: " ")
+            amountAttr.append(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: theme.colors.redUI))
         }
         
         self.amount = .init(amountAttr)
@@ -349,7 +394,7 @@ private final class TransactionRowItem : GeneralRowItem {
 private final class TransactioRowView : GeneralContainableRowView {
     private let titleView = TextView()
     private let dateView = TextView()
-    private let amountView = TextView()
+    private let amountView = InteractiveTextView(frame: .zero)
     private var addressView: TextView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -364,7 +409,7 @@ private final class TransactioRowView : GeneralContainableRowView {
         dateView.isSelectable = false
         
         amountView.userInteractionEnabled = false
-        amountView.isSelectable = false
+       // amountView.isSelectable = false
         
         containerView.set(handler: { [weak self] _ in
             self?.updateColors()
@@ -424,7 +469,7 @@ private final class TransactioRowView : GeneralContainableRowView {
         }
         
         titleView.update(item.title)
-        amountView.update(item.amount)
+        amountView.set(text: item.amount, context: item.context)
         dateView.update(item.date)
         
         if let address = item.address {
@@ -472,7 +517,7 @@ private final class OverviewRowItem : GeneralRowItem {
         let amountAttr = NSMutableAttributedString()
         let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(overview.tonAmount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(.header)).smallDecemial
         amountAttr.append(justAmount)
-        amountAttr.append(string: " ~", color: theme.colors.grayText, font: .normal(.text))
+        amountAttr.append(string: " ≈", color: theme.colors.grayText, font: .normal(.text))
         
         let justAmount2 = NSAttributedString.initialize(string: overview.usdAmount, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
         amountAttr.append(justAmount2)
@@ -549,7 +594,10 @@ private final class OverviewRowView : GeneralContainableRowView {
             return
         }
         
-        icon.update(with: LocalAnimatedSticker.brilliant_static.file, size: icon.frame.size, context: item.context, table: item.table, parameters: LocalAnimatedSticker.brilliant_static.parameters, animated: animated)
+        let parameters = LocalAnimatedSticker.ton_logo.parameters
+        parameters.colors = [.init(keyPath: "", color: theme.colors.accent)]
+        
+        icon.update(with: LocalAnimatedSticker.ton_logo.file, size: icon.frame.size, context: item.context, table: item.table, parameters: parameters, animated: animated)
         
         amountView.update(item.amount)
         infoView.update(item.info)
@@ -579,7 +627,7 @@ private final class BalanceRowItem : GeneralRowItem {
         self.canWithdraw = canWithdraw
         
         let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.ton, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
-        let usdBalance = NSAttributedString.initialize(string: "~" + balance.usd, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
+        let usdBalance = NSAttributedString.initialize(string: "≈" + balance.usd, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
 
         self.tonBalance = .init(tonBalance)
         self.usdBalance = .init(usdBalance)
@@ -786,7 +834,11 @@ private final class BalanceRowView : GeneralContainableRowView {
         
         usdBalanceView.update(item.usdBalance)
         tonBalanceView.update(item.tonBalance)
-        tonView.update(with: LocalAnimatedSticker.brilliant_static.file, size: tonView.frame.size, context: item.context, table: item.table, parameters: LocalAnimatedSticker.brilliant_static.parameters, animated: animated)
+        
+        var parameters = LocalAnimatedSticker.ton_logo.parameters
+        parameters.colors = [.init(keyPath: "", color: theme.colors.accent)]
+        
+        tonView.update(with: LocalAnimatedSticker.ton_logo.file, size: tonView.frame.size, context: item.context, table: item.table, parameters: parameters, animated: animated)
         
         tonBalanceContainer.setFrameSize(tonBalanceContainer.subviewsWidthSize)
 
@@ -899,7 +951,7 @@ private struct State : Equatable {
         }
         
         var usd: String {
-            return "$" + "\(self.fractional / self.usdRate)".prettyCurrencyNumber
+            return "$" + "\(self.fractional * self.usdRate)".prettyCurrencyNumberUsd
         }
     }
     struct Overview : Equatable {

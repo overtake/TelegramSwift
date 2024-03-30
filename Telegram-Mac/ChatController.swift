@@ -3378,7 +3378,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         apply(strongSelf, atDate: atDate)
                     case let .customLink(contents):
                         contents.saveText?(presentation.effectiveInput)
-                        strongSelf.navigationController?.back()
+                        strongSelf.navigationController?.invokeBack(checkLock: false)
                     }
                     
                 } else {

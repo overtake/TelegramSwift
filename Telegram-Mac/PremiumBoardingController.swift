@@ -1235,6 +1235,7 @@ final class PremiumBoardingController : ModalViewController {
         
         actionsDisposable.add(context.engine.accountData.keepShortcutMessageListUpdated().startStrict())
         actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().startStrict())
+        actionsDisposable.add(context.engine.accountData.refreshBusinessChatLinks().startStrict())
         
         actionsDisposable.add(context.account.viewTracker.peerView(context.peerId, updateData: true).start())
         
