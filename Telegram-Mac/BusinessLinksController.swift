@@ -302,6 +302,8 @@ func BusinessLinksController(context: AccountContext) -> InputDataController {
     
     let links = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BusinessChatLinks(id: context.peerId))
     
+    actionsDisposable.add(context.engine.accountData.refreshBusinessChatLinks().startStrict())
+    
     actionsDisposable.add(links.start(next: { result in
         updateState { current in
             var current = current

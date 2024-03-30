@@ -25,10 +25,12 @@ struct ChatTextCustomEmojiAttribute : Equatable {
     let fileId: Int64
     let file: TelegramMediaFile?
     let emoji: String
-    init(fileId: Int64, file: TelegramMediaFile?, emoji: String) {
+    let color: NSColor?
+    init(fileId: Int64, file: TelegramMediaFile?, emoji: String, color: NSColor? = nil) {
         self.fileId = fileId
         self.emoji = emoji
         self.file = file
+        self.color = color
     }
 }
 

@@ -56,7 +56,7 @@ private final class RowItem : GeneralRowItem {
         let headerText = NSAttributedString.initialize(string: strings().monetizationIntroTitle, color: theme.colors.text, font: .medium(.title))
         
         let infoHeaderAttr = NSAttributedString.initialize(string: strings().monetizationIntroInfoTitle(clown), color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
-        infoHeaderAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.brilliant_static.file), for: clown)
+        infoHeaderAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: theme.colors.text), for: clown)
         
         
         let infoText = strings().monetizationIntroInfoText
