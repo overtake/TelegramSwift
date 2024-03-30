@@ -238,7 +238,7 @@ private struct State : Equatable {
                     categories.insert(.existingChats)
                 }
             }
-            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, excludePeers: Set(excludeIds), exclude: self.access == .all), canReply: self.replyAccess)
+            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, excludePeers: Set(excludeIds.filter { $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace }), exclude: self.access == .all), canReply: self.replyAccess)
         } else {
             return nil
         }
