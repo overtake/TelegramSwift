@@ -15,7 +15,7 @@ import TGUIKit
 private final class CenterView : TitledBarView {
     let segment: CatalinaStyledSegmentController
     var select:((Int)->Void)? = nil
-    init(controller: ViewController) {
+    init(controller: ViewController, monetization: Bool) {
         self.segment = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(controller: controller)
         
@@ -26,6 +26,12 @@ private final class CenterView : TitledBarView {
         segment.add(segment: .init(title: strings().statsBoosts, handler: { [weak self] in
             self?.select?(1)
         }))
+        if monetization {
+            segment.add(segment: .init(title: strings().statsMonetization, handler: { [weak self] in
+                self?.select?(2)
+            }))
+        }
+        
         
         self.addSubview(segment.view)
         
@@ -56,15 +62,22 @@ private final class CenterView : TitledBarView {
 final class ChannelStatsSegmentController : SectionViewController {
     private let stats: ViewController
     private let boosts: ViewController
+    private let monetization: ViewController?
     private let context: AccountContext
     private let peerId: PeerId
-    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool) {
+    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool, monetization: Bool = false) {
         self.context = context
         self.peerId = peerId
         if isChannel {
             self.stats = ChannelStatsViewController(context, peerId: peerId)
+            if monetization {
+                self.monetization = FragmentMonetizationController(context: context, peerId: peerId)
+            } else {
+                self.monetization = nil
+            }
         } else {
             self.stats = GroupStatsViewController(context, peerId: peerId)
+            self.monetization = nil
         }
         self.boosts = ChannelBoostStatsController(context: context, peerId: peerId)
 
@@ -72,12 +85,15 @@ final class ChannelStatsSegmentController : SectionViewController {
         items.append(SectionControllerItem(title: { "" }, controller: stats))
         items.append(SectionControllerItem(title: { "" }, controller: boosts))
 
+        if let monetization = self.monetization {
+            items.append(SectionControllerItem(title: { "" }, controller: monetization))
+        }
         super.init(sections: items, selected: 0, hasHeaderView: false, hasBar: true)
 
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
-        return CenterView(controller: self)
+        return CenterView(controller: self, monetization: self.monetization != nil)
     }
     
     override func getRightBarViewOnce() -> BarView {

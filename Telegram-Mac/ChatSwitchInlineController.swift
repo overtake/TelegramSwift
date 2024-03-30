@@ -47,12 +47,12 @@ class ChatSwitchInlineController: ChatController {
                                         let controller: ChatController
                                         switch self.fallbackMode {
                                         case .history, .pinned:
-                                            controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
+                                            controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic))
                                         case let .thread(data, mode):
-                                            controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
+                                            controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
-                                            controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
-                                        case .customChatContents:
+                                            controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic))
+                                        case .customChatContents, .customLink:
                                             fatalError()
                                         }
                                         self.navigationController?.push(controller)

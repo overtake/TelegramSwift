@@ -32,7 +32,11 @@ class WPArticleContentView: WPContentView {
 
     override func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let _ = imageView, let content = content as? WPArticleLayout, content.isFullImageSize, let image = content.content.image {
-            return (.image(ImageMediaReference.webPage(webPage: WebpageReference(content.webPage), media: image), ImagePreviewModalView.self), imageView)
+            if content.parent.adAttribute != nil {
+                return (.image(ImageMediaReference.message(message: MessageReference(content.parent), media: image), ImagePreviewModalView.self), imageView)
+            } else {
+                return (.image(ImageMediaReference.webPage(webPage: WebpageReference(content.webPage), media: image), ImagePreviewModalView.self), imageView)
+            }
         }
         return nil
     }
@@ -114,7 +118,11 @@ class WPArticleContentView: WPContentView {
             if let _ = layout.wallpaper, let file = layout.content.file {
                 fetchDisposable.set(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(layout.parent.id.peerId), userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: layout.wallpaperReference, resource: file.resource)).start())
             } else if let image = layout.content.image {
-                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
+                if layout.parent.adAttribute != nil {
+                    fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.parent), media: image)).start())
+                } else {
+                    fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
+                }
             } else if layout.isTheme, let file = layout.content.file {
                 fetchDisposable.set(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(layout.parent.id.peerId), userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: layout.wallpaperReference, resource: file.resource)).start())
             }
@@ -269,7 +277,11 @@ class WPArticleContentView: WPContentView {
                     }
                     updateImageSignal = chatWallpaper(account: layout.context.account, representations: image.representations, file: layout.content.file, webpage: layout.webPage, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false)
                 } else {
-                    updateImageSignal = chatWebpageSnippetPhoto(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
+                    if layout.parent.adAttribute != nil {
+                        updateImageSignal = chatWebpageSnippetPhoto(account: layout.context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.parent), media: image), scale: backingScaleFactor, small: layout.smallThumb)
+                    } else {
+                        updateImageSignal = chatWebpageSnippetPhoto(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image), scale: backingScaleFactor, small: layout.smallThumb)
+                    }
                 }
                 
                 if imageView == nil {

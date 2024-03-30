@@ -1168,6 +1168,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 }
             case .pinned:
                 return false
+            case .customLink:
+                return false
             }
         }
     }
@@ -3733,12 +3735,12 @@ extension NSAttributedString {
 
     }
     
-    static func embeddedAnimated(_ file: TelegramMediaFile) -> NSAttributedString {
+    static func embeddedAnimated(_ file: TelegramMediaFile, color: NSColor? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         
         let emoji: String = clown
         attr.append(string: emoji)
-        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji))), range: NSMakeRange(0, emoji.length))
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji, color: color))), range: NSMakeRange(0, emoji.length))
         return attr
     }
 }

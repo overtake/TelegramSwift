@@ -159,6 +159,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             }
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
+        case .customLink:
+            signal = .single((MessageHistoryView(tag: nil, namespaces: .all, entries: [], holeEarlier: false, holeLater: false, isLoading: false), ViewUpdateType.Generic, nil))
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
@@ -272,6 +274,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             }
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
+        case .customLink:
+            signal = .complete()
         }
         
         
@@ -350,6 +354,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: fixedCombinedReadStates?(), tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
+        case .customLink:
+            signal = .complete()
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
@@ -377,6 +383,8 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, ignoreRelatedChats: ignoreRelatedChats, fixedCombinedReadStates: fixedCombinedReadStates?(), tag: tag, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
+        case .customLink:
+            signal = .complete()
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in

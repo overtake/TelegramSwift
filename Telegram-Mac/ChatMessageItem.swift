@@ -25,10 +25,12 @@ struct ChatTextCustomEmojiAttribute : Equatable {
     let fileId: Int64
     let file: TelegramMediaFile?
     let emoji: String
-    init(fileId: Int64, file: TelegramMediaFile?, emoji: String) {
+    let color: NSColor?
+    init(fileId: Int64, file: TelegramMediaFile?, emoji: String, color: NSColor? = nil) {
         self.fileId = fileId
         self.emoji = emoji
         self.file = file
+        self.color = color
     }
 }
 
@@ -120,6 +122,14 @@ class ChatMessageItem: ChatRowItem {
     
     override var selectableLayout:[TextViewLayout] {
         return [textLayout]
+    }
+    
+    var isFragmentAd: Bool {
+        if let adAttribute = message?.adAttribute {
+            return adAttribute.canReport
+        } else {
+            return false
+        }
     }
     
     var webpageAboveContent: Bool {
@@ -489,7 +499,7 @@ class ChatMessageItem: ChatRowItem {
                     break
                 }
             } else if let adAttribute = message.adAttribute {
-                self.webpageLayout = WPArticleLayout(with: .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: nil, file: nil, story: nil, attributes: [], instantPage: nil), context: context, chatInteraction: chatInteraction, parent: message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: true, entities: message.textEntities?.entities, adAttribute: adAttribute)
+                self.webpageLayout = WPArticleLayout(with: .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: message.media.first as? TelegramMediaImage, file: message.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil), context: context, chatInteraction: chatInteraction, parent: message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: true, entities: message.textEntities?.entities, adAttribute: adAttribute)
             }
             
             super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)

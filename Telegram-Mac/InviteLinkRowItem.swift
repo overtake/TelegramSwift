@@ -21,7 +21,7 @@ private func generate(_ color: NSColor) -> CGImage {
         ctx.setFillColor(color.cgColor)
         ctx.fillEllipse(in: rect)
         
-        let image = NSImage(named: "Icon_ChatActionsActive")!.precomposed()
+        let image = NSImage(resource: .iconChatActionsActive).precomposed()
         
         ctx.clip(to: rect, mask: image)
         ctx.clear(rect)
@@ -30,7 +30,7 @@ private func generate(_ color: NSColor) -> CGImage {
     }, scale: System.backingScale)!
 }
 
-private let linkIcon: CGImage = NSImage(named: "Icon_ExportedInvitation_Link")!.precomposed(.white)
+private let linkIcon: CGImage = NSImage(resource: .iconExportedInvitationLink).precomposed(.white)
 
 
 

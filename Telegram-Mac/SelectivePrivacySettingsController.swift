@@ -22,6 +22,7 @@ enum SelectivePrivacySettingsKind {
     case phoneNumber
     case voiceMessages
     case bio
+    case birthday
 }
 
 private enum SelectivePrivacySettingType {
@@ -59,7 +60,8 @@ private final class SelectivePrivacySettingsControllerArguments {
     let removePublicPhoto:()->Void
     let toggleHideReadTime:()->Void
     let openPremium:()->Void
-    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void, uploadPublicPhoto:@escaping()->[ContextMenuItem], removePublicPhoto:@escaping()->Void, toggleHideReadTime:@escaping()->Void, openPremium:@escaping()->Void) {
+    let setupBirthday:()->Void
+    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void, uploadPublicPhoto:@escaping()->[ContextMenuItem], removePublicPhoto:@escaping()->Void, toggleHideReadTime:@escaping()->Void, openPremium:@escaping()->Void, setupBirthday:@escaping()->Void) {
         self.context = context
         self.updateType = updateType
         self.openEnableFor = openEnableFor
@@ -70,6 +72,7 @@ private final class SelectivePrivacySettingsControllerArguments {
         self.removePublicPhoto = removePublicPhoto
         self.toggleHideReadTime = toggleHideReadTime
         self.openPremium = openPremium
+        self.setupBirthday = setupBirthday
     }
 }
 
@@ -78,16 +81,21 @@ private enum SelectivePrivacySettingsSection: Int32 {
     case peers
 }
 
-private func stringForUserCount(_ count: Int) -> String {
+private func stringForUserCount(_ count: Int, enableForPremium: Bool = false) -> String {
     if count == 0 {
-        return strings().privacySettingsControllerAddUsers
+        if enableForPremium {
+            return strings().privacySettingsPremiumUsers
+        } else {
+            return strings().privacySettingsControllerAddUsers
+        }
     } else {
-        return strings().privacySettingsControllerUserCountCountable(count)
+        return strings().privacySettingsControllerUserCountCountable(count) + (enableForPremium ? ", \(strings().privacySettingsPremiumUsers)" : "")
     }
 }
 
 private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     case settingHeader(Int32, String, GeneralViewType)
+    case birthdayHeader(Int32, String, GeneralViewType)
     case everybody(Int32, Bool, GeneralViewType)
     case contacts(Int32, Bool, Bool, GeneralViewType)
     case nobody(Int32, Bool, Bool, GeneralViewType)
@@ -97,8 +105,8 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     case p2pHeader(Int32, String, GeneralViewType)
     case p2pDesc(Int32, String, GeneralViewType)
     case settingInfo(Int32, String, GeneralViewType)
-    case disableFor(Int32, String, Int, GeneralViewType)
-    case enableFor(Int32, String, Int, GeneralViewType)
+    case disableFor(Int32, String, String, GeneralViewType)
+    case enableFor(Int32, String, String, GeneralViewType)
     case p2pDisableFor(Int32, String, Int, GeneralViewType)
     case p2pEnableFor(Int32, String, Int, GeneralViewType)
     case p2pPeersInfo(Int32, GeneralViewType)
@@ -119,32 +127,33 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     var stableId: Int32 {
         switch self {
         case .settingHeader: return 0
-        case .everybody: return 1
-        case .contacts: return 2
-        case .nobody: return 3
-        case .settingInfo: return 4
-        case .disableFor: return 5
-        case .enableFor: return 6
-        case .peersInfo: return 7
-        case .p2pHeader: return 8
-        case .p2pAlways: return 9
-        case .p2pContacts: return 10
-        case .p2pNever: return 11
-        case .p2pDesc: return 12
-        case .p2pDisableFor: return 13
-        case .p2pEnableFor: return 14
-        case .p2pPeersInfo: return 15
-        case .phoneDiscoveryHeader: return 16
-        case .phoneDiscoveryEverybody: return 17
-        case .phoneDiscoveryMyContacts: return 18
-        case .phoneDiscoveryInfo: return 19
-        case .publicPhoto: return 20
-        case .removePublicPhoto: return 21
-        case .publicPhotoInfo: return 22
-        case .hideReadTime: return 23
-        case .hideReadTimeInfo: return 24
-        case .premium: return 25
-        case .premiumInfo: return 26
+        case .birthdayHeader: return 1
+        case .everybody: return 2
+        case .contacts: return 3
+        case .nobody: return 4
+        case .settingInfo: return 5
+        case .disableFor: return 6
+        case .enableFor: return 7
+        case .peersInfo: return 8
+        case .p2pHeader: return 9
+        case .p2pAlways: return 10
+        case .p2pContacts: return 11
+        case .p2pNever: return 12
+        case .p2pDesc: return 13
+        case .p2pDisableFor: return 14
+        case .p2pEnableFor: return 15
+        case .p2pPeersInfo: return 16
+        case .phoneDiscoveryHeader: return 17
+        case .phoneDiscoveryEverybody: return 18
+        case .phoneDiscoveryMyContacts: return 19
+        case .phoneDiscoveryInfo: return 20
+        case .publicPhoto: return 21
+        case .removePublicPhoto: return 22
+        case .publicPhotoInfo: return 23
+        case .hideReadTime: return 24
+        case .hideReadTimeInfo: return 25
+        case .premium: return 26
+        case .premiumInfo: return 27
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -152,6 +161,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     var index:Int32 {
         switch self {
         case .settingHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .birthdayHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
         case .everybody(let sectionId, _, _): return (sectionId * 1000) + stableId
         case .contacts(let sectionId, _, _, _): return (sectionId * 1000) + stableId
         case .nobody(let sectionId, _, _, _): return (sectionId * 1000) + stableId
@@ -191,6 +201,10 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         switch self {
         case let .settingHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .birthdayHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { _ in
+                arguments.setupBirthday()
+            }), textColor: theme.colors.listGrayText, linkColor: theme.colors.link, viewType: viewType, fontSize: 12)
         case let .everybody(_, value, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.everybody)
@@ -230,12 +244,12 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { _ in
                 arguments.openPremium()
             }), viewType: viewType)
-        case let .disableFor(_, title, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
+        case let .disableFor(_, title, string, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(string), viewType: viewType, action: {
                 arguments.openDisableFor(.main)
             })
-        case let .enableFor(_, title, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
+        case let .enableFor(_, title, string, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(string), viewType: viewType, action: {
                 arguments.openEnableFor(.main)
             })
         case let .peersInfo(_, viewType):
@@ -282,6 +296,8 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
     var disableFor: [PeerId: SelectivePrivacyPeer]
 
 
+    var enableForPremium: Bool = false
+    
     var saving: Bool
 
     var callP2PMode: SelectivePrivacySettingType?
@@ -291,8 +307,10 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
     var fallbackPhoto: TelegramMediaImage?
     var updatePhotoState: PeerInfoUpdatingPhotoState?
     var hideReadTime: Bool?
+    
+    var hasBirthday: Bool
 
-    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?, fallbackPhoto: TelegramMediaImage?, updatePhotoState: PeerInfoUpdatingPhotoState?, hideReadTime: Bool?) {
+    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?, fallbackPhoto: TelegramMediaImage?, updatePhotoState: PeerInfoUpdatingPhotoState?, hideReadTime: Bool?, enableForPremium: Bool, hasBirthday: Bool) {
         self.setting = setting
         self.enableFor = enableFor
         self.disableFor = disableFor
@@ -304,7 +322,8 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
         self.fallbackPhoto = fallbackPhoto
         self.updatePhotoState = updatePhotoState
         self.hideReadTime = hideReadTime
-
+        self.enableForPremium = enableForPremium
+        self.hasBirthday = hasBirthday
     }
 }
 
@@ -354,6 +373,12 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
         settingInfoText = strings().privacySettingsControllerBioCustomHelp
         disableForText = strings().privacySettingsControllerNeverShareWith
         enableForText = strings().privacySettingsControllerAlwaysShareWith
+    case .birthday:
+        settingTitle = strings().privacySettingsControllerBirthdayWhoCanSee
+        settingInfoText = strings().privacySettingsControllerBirthdayCustomHelp
+        disableForText = strings().privacySettingsControllerNeverShareWith
+        enableForText = strings().privacySettingsControllerAlwaysShareWith
+
     case .forwards:
         settingTitle = strings().privacySettingsControllerForwardsWhoCanForward
         settingInfoText = strings().privacySettingsControllerForwardsCustomHelp
@@ -369,6 +394,17 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
         disableForText = strings().privacySettingsControllerNeverShareWith
         enableForText = strings().privacySettingsControllerAlwaysShareWith
 
+    }
+    
+    switch kind {
+    case .birthday:
+        
+        if !state.hasBirthday {
+            entries.append(.birthdayHeader(sectionId, strings().privacySettingsControllerBirthdayAddHeader, .modern(position: .inner, insets: .init(left: 14, right: 14, top: 0, bottom: 20))))
+        }
+        
+    default:
+        break
     }
 
     entries.append(.settingHeader(sectionId, settingTitle, .textTopItem))
@@ -401,12 +437,12 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
     if kind != .voiceMessages || context.isPremium {
         switch state.setting {
         case .everybody:
-            entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor), .singleItem))
+            entries.append(.disableFor(sectionId, disableForText, stringForUserCount(countForSelectivePeers(state.disableFor), enableForPremium: false), .singleItem))
         case .contacts:
-            entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor), .firstItem))
-            entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor), .lastItem))
+            entries.append(.disableFor(sectionId, disableForText, stringForUserCount(countForSelectivePeers(state.disableFor), enableForPremium: false), .firstItem))
+            entries.append(.enableFor(sectionId, enableForText, stringForUserCount(countForSelectivePeers(state.enableFor), enableForPremium: state.enableForPremium), .lastItem))
         case .nobody:
-            entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor), .singleItem))
+            entries.append(.enableFor(sectionId, enableForText, stringForUserCount(countForSelectivePeers(state.enableFor), enableForPremium: state.enableForPremium), .singleItem))
         }
         entries.append(.peersInfo(sectionId, .textBottomItem))
     }
@@ -521,26 +557,28 @@ class SelectivePrivacySettingsController: TableViewController {
 
         var initialEnableFor: [PeerId: SelectivePrivacyPeer] = [:]
         var initialDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
+        var enableForPremium = false
 
         switch current {
-        case let .disableEveryone(enableFor, enableForCloseFriends):
+        case let .disableEveryone(enableFor, enableForCloseFriends, _enableForPremium):
             initialEnableFor = enableFor
-        case let .enableContacts(enableFor, disableFor):
+            enableForPremium = _enableForPremium
+        case let .enableContacts(enableFor, disableFor, _enableForPremium):
             initialEnableFor = enableFor
             initialDisableFor = disableFor
+            enableForPremium = _enableForPremium
         case let .enableEveryone(disableFor):
             initialDisableFor = disableFor
         }
 
         var initialCallP2PEnableFor: [PeerId: SelectivePrivacyPeer] = [:]
         var initialCallP2PDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
-
         if let callCurrent = callSettings {
             switch callCurrent {
-            case let .disableEveryone(enableFor, enableForCloseFriends):
+            case let .disableEveryone(enableFor, enableForCloseFriends, _):
                 initialCallP2PEnableFor = enableFor
                 initialCallP2PDisableFor = [:]
-            case let .enableContacts(enableFor, disableFor):
+            case let .enableContacts(enableFor, disableFor, _):
                 initialCallP2PEnableFor = enableFor
                 initialCallP2PDisableFor = disableFor
             case let .enableEveryone(disableFor):
@@ -551,7 +589,7 @@ class SelectivePrivacySettingsController: TableViewController {
         }
 
 
-        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled, fallbackPhoto: nil, updatePhotoState: nil, hideReadTime: self.globalSettings?.hideReadTime)
+        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled, fallbackPhoto: nil, updatePhotoState: nil, hideReadTime: self.globalSettings?.hideReadTime, enableForPremium: enableForPremium, hasBirthday: true)
 
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -568,6 +606,14 @@ class SelectivePrivacySettingsController: TableViewController {
 
         actionsDisposable.add(updatePhotoDisposable)
         
+        
+        actionsDisposable.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: context.peerId)).startStrict(next: { birthday in
+            updateState { current in
+                var current = current
+                current.hasBirthday = birthday != nil
+                return current
+            }
+        }))
         
         let globalSettings = self.globalSettings
       //  actionsDisposable.add(updateSettingsDisposable)
@@ -625,7 +671,7 @@ class SelectivePrivacySettingsController: TableViewController {
         
         func _updateVideo(_ signal:Signal<VideoAvatarGeneratorState, NoError>) -> Void {
 
-            let cancel = { [weak self] in
+            let cancel = {
                 updatePhotoDisposable.set(nil)
                 updateState { current in
                     var current = current
@@ -707,14 +753,14 @@ class SelectivePrivacySettingsController: TableViewController {
         
         func makeUpdatePhotoItems() -> [ContextMenuItem] {
             
-            let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
+            let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
                 let signal = image |> mapToSignal { image in
                     return putToTemp(image: image, compress: true)
                 } |> deliverOnMainQueue
-                _ = signal.start(next: { [weak self] path in
+                _ = signal.start(next: { path in
                     let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
                     showModal(with: controller, for: context.window, animationType: .scaleCenter)
-                    _ = controller.result.start(next: { [weak self] url, _ in
+                    _ = controller.result.startStandalone(next: { url, _ in
                         DispatchQueue.main.async {
                             _updatePhoto(url.path)
                         }
@@ -820,6 +866,8 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerAlwaysAllow
             case .bio:
                 title = strings().privacySettingsControllerAlwaysShare
+            case .birthday:
+                title = strings().privacySettingsControllerAlwaysShare
 
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
@@ -827,7 +875,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 peerIds = state.enableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, premiumUsers: kind == .groupInvitations ? stateValue.with { $0.enableForPremium } : nil, updated: { updatedPeerIds in
                 updateState { current in
                     var current = current
                     switch target {
@@ -836,7 +884,8 @@ class SelectivePrivacySettingsController: TableViewController {
                         for (key, _) in updatedPeerIds {
                             disableFor.removeValue(forKey: key)
                         }
-                        current.enableFor = updatedPeerIds
+                        current.enableForPremium = updatedPeerIds.contains (where: { $0.key.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace })
+                        current.enableFor = updatedPeerIds.filter({ $0.key.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace })
                         current.disableFor = disableFor
                     case .callP2P:
                         var callP2PDisableFor = current.callP2PDisableFor
@@ -869,13 +918,15 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerNeverShareWith
             case .bio:
                 title = strings().privacySettingsControllerNeverShareWith
+            case .birthday:
+                title = strings().privacySettingsControllerNeverShareWith
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
                 peerIds = state.disableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, premiumUsers: nil, updated: { updatedPeerIds in
                 updateState { current in
                     var current = current
                     switch target {
@@ -930,6 +981,16 @@ class SelectivePrivacySettingsController: TableViewController {
             }
         }, openPremium: {
             showModal(with: PremiumBoardingController(context: context, source: .last_seen, openFeatures: true), for: context.window)
+        }, setupBirthday: {
+            let controller = CalendarController(NSMakeRect(0, 0, 300, 300), context.window, current: Date(), lowYear: 1900, canBeNoYear: true, selectHandler: { date in
+                editAccountUpdateBirthday(date, context: context)
+            })
+            
+            let nav = NavigationViewController(controller, context.window)
+            
+            nav._frameRect = NSMakeRect(0, 0, 300, 310)
+            
+            showModal(with: nav, for: context.window)
         })
 
 
@@ -946,9 +1007,9 @@ class SelectivePrivacySettingsController: TableViewController {
                 case .everybody:
                     settings = SelectivePrivacySettings.enableEveryone(disableFor: current.disableFor)
                 case .contacts:
-                    settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor)
+                    settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor, enableForPremium: current.enableForPremium)
                 case .nobody:
-                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: false)
+                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: false, enableForPremium: current.enableForPremium)
                 }
 
                 if let mode = current.callP2PMode {
@@ -956,9 +1017,9 @@ class SelectivePrivacySettingsController: TableViewController {
                     case .everybody:
                         callSettings = SelectivePrivacySettings.enableEveryone(disableFor: current.callP2PDisableFor)
                     case .contacts:
-                        callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor)
+                        callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor, enableForPremium: current.enableForPremium)
                     case .nobody:
-                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: false)
+                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: false, enableForPremium: current.enableForPremium)
                     }
                 }
                 current.saving = true
@@ -984,6 +1045,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     type = .voiceMessages
                 case .bio:
                     type = .bio
+                case .birthday:
+                    type = .birthday
                 }
                 
                 var updatePhoneDiscoverySignal: Signal<Void, NoError> = Signal.complete()
@@ -1036,6 +1099,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     title = strings().privacySettingsVoiceMessages
                 case .bio:
                     title = strings().privacySettingsBio
+                case .birthday:
+                    title = strings().privacySettingsBirthday
                 }
 
                 self?.setCenterTitle(title)

@@ -269,6 +269,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             if let parent = parent, parent.id.peerId.namespace == Namespaces.Peer.SecretChat {
                 acceptDragging = false
             }
+            if hasHandlers {
+                super.mouseDown(with: event)
+            }
         }
         
         if !acceptDragging {
@@ -371,7 +374,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             return
         }
         
-        
+        if userInteractionEnabled, hasHandlers {
+            super.mouseUp(with: event)
+        }
         if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 || canSpamClicks {
             executeInteraction(false)
         } else {

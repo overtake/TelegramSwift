@@ -96,7 +96,7 @@ struct ChatHeaderState : Identifiable, Equatable {
     var main: Value
     var voiceChat: ChatActiveGroupCallInfo?
     var translate: ChatPresentationInterfaceState.TranslateState?
-    
+    var botManager: ChatBotManagerData?
     
     var stableId:Int {
         return main.stableId
@@ -132,9 +132,12 @@ struct ChatHeaderState : Identifiable, Equatable {
     var thirdClass: AnyClass {
         return ChatTranslateHeader.self
     }
+    var fourthClass: AnyClass {
+        return ChatBotManager.self
+    }
     
     var height:CGFloat {
-        return primaryHeight + secondaryHeight + thirdHeight
+        return primaryHeight + secondaryHeight + thirdHeight + fourthHeight
     }
 
     var primaryHeight:CGFloat {
@@ -184,6 +187,13 @@ struct ChatHeaderState : Identifiable, Equatable {
         }
         return height
     }
+    var fourthHeight:CGFloat {
+        var height: CGFloat = 0
+        if let _ = botManager {
+            height += 44
+        }
+        return height
+    }
     
     var toleranceHeight: CGFloat {
         return 0
@@ -208,6 +218,7 @@ class ChatHeaderController {
     private var primaryView: View?
     private var seconderyView : View?
     private var thirdView : View?
+    private var fourthView : View?
 
     var state:ChatHeaderState {
         return _headerState
@@ -217,15 +228,17 @@ class ChatHeaderController {
         if _headerState != state {
             _headerState = state
 
-            let (primary, secondary, third) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), thirdSize: NSMakeSize(view.frame.width, state.thirdHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView, t_v: self.thirdView)
+            let (primary, secondary, third, fourth) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), thirdSize: NSMakeSize(view.frame.width, state.thirdHeight), fourthSize: NSMakeSize(view.frame.width, state.fourthHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView, t_v: self.thirdView, f_v: self.fourthView)
 
             let previousPrimary = self.primaryView
             let previousSecondary = self.seconderyView
             let previousThird = self.thirdView
-            
+            let previousFourth = self.fourthView
+
             self.primaryView = primary
             self.seconderyView = secondary
             self.thirdView = third
+            self.fourthView = fourth
 
             var removed: [View] = []
             var added:[(View, NSPoint, NSPoint, View?)] = []
@@ -236,7 +249,7 @@ class ChatHeaderController {
                     removed.append(previousSecondary)
                 }
                 if let secondary = secondary {
-                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), previousSecondary))
+                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight + state.fourthHeight), NSMakePoint(0, state.fourthHeight), fourth ?? previousSecondary))
                 }
             }
             
@@ -245,30 +258,43 @@ class ChatHeaderController {
                     removed.append(previousPrimary)
                 }
                 if let primary = primary {
-                    added.append((primary, NSMakePoint(0, state.secondaryHeight - state.primaryHeight), NSMakePoint(0, state.secondaryHeight), secondary ?? previousPrimary))
+                    added.append((primary, NSMakePoint(0, state.secondaryHeight - state.primaryHeight - state.fourthHeight), NSMakePoint(0, state.secondaryHeight + state.fourthHeight), fourth ?? secondary ?? previousPrimary))
                 }
             }
+            
+            if previousFourth == nil || previousFourth != fourth {
+                if let previousFourth = previousFourth {
+                    removed.append(previousFourth)
+                }
+                if let fourth = fourth {
+                    added.append((fourth, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), previousFourth))
+                }
+            }
+            
             if previousThird == nil || previousThird != third {
                 if let previousThird = previousThird {
                     removed.append(previousThird)
                 }
                 if let third = third {
-                    added.append((third, NSMakePoint(0, (state.primaryHeight + state.secondaryHeight) - state.thirdHeight), NSMakePoint(0, state.primaryHeight + state.secondaryHeight), primary ?? secondary ?? previousThird))
+                    added.append((third, NSMakePoint(0, (state.primaryHeight + state.secondaryHeight + state.fourthHeight) - state.fourthHeight), NSMakePoint(0, state.primaryHeight + state.secondaryHeight + state.fourthHeight), fourth ?? primary ?? secondary ?? previousThird))
                 }
             }
 
+            if let fourth = fourth, previousFourth == fourth {
+                updated.append((fourth, NSMakePoint(0, 0), nil))
+            }
             
             if let secondary = secondary, previousSecondary == secondary {
-                updated.append((secondary, NSMakePoint(0, 0), nil))
+                updated.append((secondary, NSMakePoint(0, state.fourthHeight), fourth))
             }
             if let primary = primary, previousPrimary == primary {
-                updated.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
+                updated.append((primary, NSMakePoint(0, state.secondaryHeight + state.fourthHeight), fourth ?? secondary))
             }
             if let third = third, previousThird == third {
-                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight), primary ?? secondary))
+                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight + state.fourthHeight), fourth ?? primary ?? secondary))
             }
-            
-            if !added.isEmpty || primary != nil || secondary != nil || third != nil {
+           
+            if !added.isEmpty || primary != nil || secondary != nil || third != nil || fourth != nil {
                 let current: View
                 if let view = currentView {
                     current = view
@@ -337,15 +363,17 @@ class ChatHeaderController {
          (primaryView as? ChatSearchHeader)?.applySearchResponder(true)
     }
     
-    private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, thirdSize: NSSize, animated: Bool, p_v: View?, s_v: View?, t_v: View?) -> (primary: View?, secondary: View?, third: View?) {
+    private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, thirdSize: NSSize, fourthSize: NSSize, animated: Bool, p_v: View?, s_v: View?, t_v: View?, f_v: View?) -> (primary: View?, secondary: View?, third: View?, fourth: View?) {
         
         let primary:View?
         let secondary:View?
         let third: View?
-        
+        let fourth: View?
+
         let primaryRect: NSRect = .init(origin: .zero, size: primarySize)
         let secondaryRect: NSRect = .init(origin: .zero, size: secondarySize)
         let thirdRect: NSRect = .init(origin: .zero, size: thirdSize)
+        let fourthRect: NSRect = .init(origin: .zero, size: fourthSize)
 
         if p_v == nil || p_v?.className != NSStringFromClass(_headerState.primaryClass ?? NSView.self)  {
             switch _headerState.main {
@@ -399,11 +427,24 @@ class ChatHeaderController {
         } else {
             third = nil
         }
+        
+        if let _ = self._headerState.botManager {
+            if f_v == nil || f_v?.className != NSStringFromClass(_headerState.fourthClass) {
+                fourth = ChatBotManager(chatInteraction, state: _headerState, frame: thirdRect)
+                fourth?.autoresizingMask = [.width]
+            } else {
+                fourth = f_v
+                (fourth as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
+            }
+        } else {
+            fourth = nil
+        }
 
         primary?.setFrameSize(primarySize)
         secondary?.setFrameSize(secondarySize)
         third?.setFrameSize(thirdSize)
-        return (primary: primary, secondary: secondary, third: third)
+        fourth?.setFrameSize(fourthSize)
+        return (primary: primary, secondary: secondary, third: third, fourth: fourth)
     }
     
     init(_ chatInteraction:ChatInteraction) {
@@ -2218,3 +2259,157 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     }
 }
 
+
+
+
+private final class ChatBotManager : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let setup:ImageButton = ImageButton()
+    private let avatar = AvatarControl(font: .avatar(.title))
+    private let textView = TextView()
+    private let infoView = TextView()
+    
+    private let stop = TextButton()
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        avatar.setFrameSize(NSMakeSize(30, 30))
+
+        setup.disableActions()
+        setup.autohighlight = false
+        setup.scaleOnClick = true
+        
+        stop.scaleOnClick = true
+        stop.autohighlight = false
+        
+        let context = self.chatInteraction.context
+        let peerId = self.chatInteraction.peerId
+        
+        self.set(handler: { [weak self] _ in
+            guard let self, let data = self._state?.botManager, let url = data.settings.manageUrl else {
+                return
+            }
+            execute(inapp: inApp(for: url as NSString, context: context, openInfo: self.chatInteraction.openInfo))
+        }, for: .Click)
+
+        
+        stop.set(handler: { _ in
+            context.engine.peers.toggleChatManagingBotIsPaused(chatId: peerId)
+        }, for: .Click)
+
+        setup.contextMenu = { [weak self] in
+            
+            guard let data = self?._state?.botManager else {
+                return nil
+            }
+            
+            let menu = ContextMenu()
+            
+
+            menu.addItem(ContextMenuItem(strings().chatBotManagerContextManage, handler: {
+                context.bindings.rootNavigation().push(BusinessChatbotController(context: context))
+            }, itemImage: MenuAnimation.menu_gear.value))
+            
+            menu.addItem(ContextSeparatorItem())
+            
+            menu.addItem(ContextMenuItem(strings().chatBotManagerContextRevoke, handler: {
+                context.engine.peers.removeChatManagingBot(chatId: peerId)
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+            
+            
+            return menu
+        }
+
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        infoView.userInteractionEnabled = false
+        infoView.isSelectable = false
+        
+        addSubview(avatar)
+        addSubview(setup)
+        addSubview(textView)
+        addSubview(infoView)
+        addSubview(stop)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        if let data = state.botManager  {
+            textView.update(TextViewLayout(.initialize(string: data.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1))
+            let status: String
+            if data.bot.canReply {
+                if data.settings.isPaused {
+                    status = strings().chatBotManagerPaused
+                } else {
+                    status = strings().chatBotManagerReadOnly
+                }
+            } else {
+                status = strings().chatBotManagerFullAccess
+            }
+            stop.isHidden = !data.bot.canReply
+            self.stop.set(text: data.settings.isPaused ? strings().chatBotManagerStart : strings().chatBotManagerStop, for: .Normal)
+            infoView.update(TextViewLayout(.initialize(string: status, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+            self.avatar.setPeer(account: chatInteraction.context.account, peer: data.peer._asPeer())
+
+        }
+        
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+        self.setup.set(image: theme.icons.bot_manager_settings, for: .Normal)
+        self.setup.sizeToFit()
+        
+        self.stop.set(font: .medium(.text), for: .Normal)
+        self.stop.set(background: theme.colors.accent, for: .Normal)
+        self.stop.set(color: theme.colors.underSelectedColor, for: .Normal)
+        self.stop.sizeToFit(NSMakeSize(8, 4))
+        self.stop.layer?.cornerRadius = self.stop.frame.height / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        avatar.centerY(x: 25)
+        setup.centerY(x: frame.width - 23 - setup.frame.width)
+        
+        stop.centerY(x: setup.frame.minX - 10 - stop.frame.width)
+
+        let text_w = frame.width - avatar.frame.maxX - 20 - setup.frame.width - 10 - stop.frame.width - 10
+        textView.resize(text_w)
+        infoView.resize(text_w)
+
+        textView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, 6))
+        infoView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, frame.height - infoView.frame.height - 6))
+
+        
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}

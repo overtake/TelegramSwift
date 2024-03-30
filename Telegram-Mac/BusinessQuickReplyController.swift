@@ -562,7 +562,7 @@ func BusinessQuickReplyController(context: AccountContext) -> InputDataControlle
         return InputDataSignalValue(entries: entries(state, arguments: arguments), animated: !nextTransactionNonAnimated.swap(false))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().businessQuickReplyTitle, removeAfterDisappear: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessQuickReplyTitle, removeAfterDisappear: false, identifier: "business_quick_reply")
     
     controller.updateDoneValue = { data in
         return { f in

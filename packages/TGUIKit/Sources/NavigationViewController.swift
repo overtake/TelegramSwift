@@ -1005,8 +1005,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     }
     
 
-    open func back(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop) -> Void {
-        if !isLocked, let last = stack.last, last.invokeNavigationBack() {
+    open func invokeBack(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop, checkLock: Bool = true) {
+        if !isLocked, let last = stack.last, !checkLock || last.invokeNavigationBack() {
             if stackCount > 1 {
                 let controller = stack[stackCount - 2]
                 stack.removeLast()
@@ -1016,6 +1016,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 doSomethingOnEmptyBack?()
             }
         }
+    }
+    
+    open func back(animated:Bool = true, forceAnimated: Bool = false, animationStyle: ViewControllerStyle = .pop) -> Void {
+        self.invokeBack(animated: animated, forceAnimated: forceAnimated, animationStyle: animationStyle, checkLock: true)
     }
     
     

@@ -27,7 +27,7 @@ extension ChatListFilterPeerCategories {
     
     static let existingChats = ChatListFilterPeerCategories(rawValue: 1 << 9)
     static let newChats = ChatListFilterPeerCategories(rawValue: 1 << 10)
-
+    static let premiumUsers = ChatListFilterPeerCategories(rawValue: 1 << 11)
     
     static let Namespace: Int32 = 7
 }
@@ -139,6 +139,9 @@ final class TelegramFilterCategory : Peer {
         if category == .newChats {
             return strings().chatListFilterNewChats
         }
+        if category == .premiumUsers {
+            return strings().chatListFilterPremiumUsers
+        }
         return nil
     }
     
@@ -172,6 +175,9 @@ final class TelegramFilterCategory : Peer {
         }
         if category == .existingChats {
             return .icon(colors: theme.colors.peerColors(2), icon: theme.icons.chat_filter_existing_chats, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
+        }
+        if category == .premiumUsers {
+            return .icon(colors: (top: premiumGradient[1], bottom: premiumGradient[0]), icon: NSImage(resource: .iconPeerPremium).precomposed(.white), iconSize: NSMakeSize(20, 20), cornerRadius: 8)
         }
         return nil
     }

@@ -352,24 +352,28 @@ public extension NSAttributedString {
 
 public extension NSMutableAttributedString {
     
-    func detectBoldColorInString(with font: NSFont) {
-        detectBoldColorInString(with: font, string: self.string)
+    func detectBoldColorInString(with font: NSFont, color: NSColor? = nil) {
+        detectBoldColorInString(with: font, string: self.string, color: color)
     }
 
-    func detectBoldColorInString(with font: NSFont, string: String) {
+    func detectBoldColorInString(with font: NSFont, string: String, color: NSColor? = nil) {
         var offset: UInt = 0
         
         while (offset < string.count) {
             if let startRange = string.range(of: "**", options: [], range: string.index(string.startIndex, offsetBy: Int(offset))..<string.endIndex) {
                 offset = UInt(startRange.upperBound.utf16Offset(in: string))
                 
-                if let endRange = string.range(of: "**", options: [], range: string.index(string.startIndex, offsetBy: Int(offset))..<string.endIndex) {
+                let endOffset = string.index(string.startIndex, offsetBy: min(Int(offset), string.count))
+                
+                if let endRange = string.range(of: "**", options: [], range: endOffset..<string.endIndex) {
                     let startIndex = string.index(string.startIndex, offsetBy: Int(offset))
                     let endIndex = string.index(string.startIndex, offsetBy: Int(endRange.lowerBound.utf16Offset(in: string)))
                     let attributeRange = startIndex..<endIndex
                     
                     addAttribute(NSAttributedString.Key.font, value: font, range: NSRange(attributeRange, in: string))
-                    
+                    if let color {
+                        addAttribute(.foregroundColor, value: color, range: NSRange(attributeRange, in: string))
+                    }
                     offset = UInt(endRange.upperBound.utf16Offset(in: string))
                 }
             } else {
@@ -381,6 +385,7 @@ public extension NSMutableAttributedString {
             self.replaceCharacters(in: NSRange(startRange, in: self.string), with: "")
         }
     }
+    
     
     func mergeIntersectingAttributes(keepBest: Bool = true) {
         let mergedAttributedString = self

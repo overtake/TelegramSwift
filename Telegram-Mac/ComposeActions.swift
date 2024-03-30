@@ -75,7 +75,7 @@ func createGroupDirectly(with context: AccountContext, selectedPeers: [PeerId] =
             signal = context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds, ttlPeriod: result.autoremoveTimeout)
         } else {
             signal = context.engine.peers.createSupergroup(title: result.title, description: nil, username: result.username, isForum: result.isForum) |> map {
-                return .init(peerId: $0, failedToInvitePeerIds: [])
+                return .init(peerId: $0, result: .init(forbiddenPeers: []))
             } |> mapError { error -> CreateGroupError in
                 switch error {
                 case .generic:

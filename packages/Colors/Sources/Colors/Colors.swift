@@ -116,6 +116,55 @@ public extension NSColor {
         }
     }
     
+    var rgbHexString: String {
+        // Get the red, green, and blue components of the color
+        var r :CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        
+        
+        
+        let color = self.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+
+        
+        var rInt, gInt, bInt, aInt: Int
+        var rHex, gHex, bHex: String
+        
+        var hexColor: String
+        
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        
+        // println("R: \(r) G: \(g) B:\(b) A:\(a)")
+        
+        // Convert the components to numbers (unsigned decimal integer) between 0 and 255
+        rInt = Int(round(r * 255.0))
+        gInt = Int(round(g * 255.0))
+        bInt = Int(round(b * 255.0))
+        
+        // Convert the numbers to hex strings
+        rHex = rInt == 0 ? "00" : NSString(format:"%2X", rInt) as String
+        gHex = gInt == 0 ? "00" : NSString(format:"%2X", gInt) as String
+        bHex = bInt == 0 ? "00" : NSString(format:"%2X", bInt) as String
+        
+        rHex = rHex.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        gHex = gHex.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        bHex = bHex.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        
+        if rHex.length == 1 {
+            rHex = "0\(rHex)"
+        }
+        if gHex.length == 1 {
+            gHex = "0\(gHex)"
+        }
+        if bHex.length == 1 {
+            bHex = "0\(bHex)"
+        }
+        
+        hexColor = rHex + gHex + bHex
+        return "#" + hexColor
+    }
+    
 }
 
 
