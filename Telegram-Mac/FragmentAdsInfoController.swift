@@ -325,8 +325,8 @@ func FragmentAdsInfoController(context: AccountContext) -> InputDataModalControl
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: strings().fragmentAdsInfoOK, accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
+    let modalInteractions = ModalInteractions(acceptTitle: strings().fragmentAdsInfoOK, accept: { 
+        close?()
     }, singleButton: true, customTheme: {
         .init(background: theme.colors.background, grayForeground: theme.colors.background, activeBackground: theme.colors.background, listBackground: theme.colors.background)
     })

@@ -298,6 +298,8 @@ func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId
 
     let arguments = Arguments(context: context)
     
+    var close:(()->Void)? = nil
+    
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
@@ -308,15 +310,19 @@ func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: strings().monetizationIntroUnderstood, accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
+    let modalInteractions = ModalInteractions(acceptTitle: strings().monetizationIntroUnderstood, accept: {
+       close?()
     }, singleButton: true, customTheme: {
         .init(background: theme.colors.background, grayForeground: theme.colors.background, activeBackground: theme.colors.background, listBackground: theme.colors.background)
     })
     
     
-    
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(340, 0))
+    
+    
+    close = { [weak modalController] in
+        modalController?.close()
+    }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
