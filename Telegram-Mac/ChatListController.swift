@@ -1241,7 +1241,7 @@ class ChatListController : PeersListController {
                
                 return item.isFixedItem || item.groupId != .root
             }
-            first.swap(true)
+            _ = first.swap(true)
             let signal = context.engine.peers.setForumChannelPinnedTopics(id: peerId, threadIds: items) |> deliverOnMainQueue
             reorderDisposable.set(signal.start())
 
@@ -1280,7 +1280,7 @@ class ChatListController : PeersListController {
                
                 return item.isFixedItem || item.groupId != .root
             }
-            first.swap(true)
+            _ = first.swap(true)
             reorderDisposable.set(context.engine.peers.reorderPinnedItemIds(location: location, itemIds: items).start())
         }
         
