@@ -603,7 +603,7 @@ class ChatRowItem: TableRowItem {
     var hasPhoto: Bool {
         if let adAttribute = message?.adAttribute {
             if adAttribute.displayAvatar {
-                return false
+                return true
             } else {
                 return false
             }
@@ -649,6 +649,12 @@ class ChatRowItem: TableRowItem {
         if message?.adAttribute != nil {
             top = 4
         }
+//        
+//        if !isBubbled, message?.adAttribute != nil {
+//            if !hasPhoto {
+//                left -= (36 + 10)
+//            }
+//        }
         
         if let author = authorText {
             top += author.layoutSize.height
@@ -1576,6 +1582,11 @@ class ChatRowItem: TableRowItem {
         var renderType:ChatItemRenderType = .list
         var object = object
         
+        if let adAttribute = object.message?.adAttribute {
+            var bp = 0
+            bp += 1
+        }
+        
         var hiddenFwdTooltip:(()->Void)? = nil
         
         var captionMessage: Message? = object.message
@@ -2116,7 +2127,16 @@ class ChatRowItem: TableRowItem {
                 time -= context.timeDifference
                 
                 let dateFormatter = DateSelectorUtil.chatDateFormatter
-                let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                let dateColor = isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble))
+                
+                let dateFont: NSFont = renderType == .bubble ? .italic(.small) : .normal(.short)
+                
+                let attr: NSMutableAttributedString = NSAttributedString.initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: dateColor, font: dateFont).mutableCopy() as! NSMutableAttributedString
+                
+                if let attribute = message.inlineBotAttribute, let peerId = attribute.peerId, let peer = message.peers[peerId] {
+                    attr.insert(.initialize(string: "\(attribute.title ?? peer.displayTitle), ", color: dateColor, font: dateFont), at: 0)
+                }
+                
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
             } else if let _ = message.adAttribute {
@@ -2349,7 +2369,9 @@ class ChatRowItem: TableRowItem {
         }
         
         if let message = entry.message {
-            if message.media.count == 0 || message.anyMedia is TelegramMediaWebpage {
+            if message.adAttribute != nil {
+                return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+            } else if message.media.count == 0 || message.anyMedia is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {

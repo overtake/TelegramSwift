@@ -605,9 +605,10 @@ class GalleryViewer: NSResponder {
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: message.id.peerId, threadId: nil))
                 case let .customChatContents(contents):
                     signal = contents.historyView |> map { view in
-                        
                         return (MessageHistoryView(tag: nil, namespaces: .all, entries: view.0.entries, holeEarlier: false, holeLater: false, isLoading: false), ViewUpdateType.Generic, nil)
                     }
+                case .customLink:
+                    signal = .complete()
                 }
 
             

@@ -20,8 +20,8 @@ extension AddGroupMemberError {
             return .generic
         case .groupFull:
             return .generic
-        case .privacy:
-            return .restricted
+        case let .privacy(result):
+            return .restricted(result?.forbiddenPeers.first)
         case .notMutualContact:
             return .notMutualContact
         case .tooManyChannels:
@@ -769,6 +769,18 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
                 return state.withUpdatedTemporaryParticipants([]).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
             }
+            var forbidden: [TelegramForbiddenInvitePeer] = []
+            
+            for (_, failed) in result.failed {
+                switch failed {
+                case let .restricted(peer):
+                    if let peer {
+                        forbidden.append(peer)
+                    }
+                default:
+                    break
+                }
+            }
             
             let failed = result.failed.filter {
                 switch $0.1 {
@@ -787,7 +799,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
             }
             if !failed.isEmpty {
-                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 })
+                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 }, forbidden: forbidden)
             } else if let first = botFailed.first {
                 if case let .bot(memberId) = first.1 {
                     let _ = (context.account.postbox.transaction { transaction in
@@ -1205,7 +1217,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case setTitle(section:Int, text: String, viewType: GeneralViewType)
     case scam(section:Int, title: String, text: String, viewType: GeneralViewType)
     case about(section:Int, text: String, viewType: GeneralViewType)
-    case addressName(section:Int, name:[String], viewType: GeneralViewType)
+    case addressName(section:Int, name:[UserInfoAddress], viewType: GeneralViewType)
     case sharedMedia(section:Int, viewType: GeneralViewType)
     case notifications(section:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case usersHeader(section:Int, count:Int, viewType: GeneralViewType)
@@ -1810,18 +1822,23 @@ enum GroupInfoEntry: PeerInfoEntry {
                 }
         }, hashtag: arguments.context.bindings.globalSearch)
         case let .addressName(_, value, viewType):
-            let link = "https://t.me/\(value[0])"
+            let link = "@\(value[0].username)"
             
             let text: String
             if value.count > 1 {
-                text = strings().peerInfoUsernamesList("https://t.me/\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+                text = strings().peerInfoUsernamesList("@\(value[0].username)", value.suffix(value.count - 1).map { "@\($0.username)" }.joined(separator: ", "))
             } else {
-                text = "@\(value[0])"
+                text = "@\(value[0].username)"
             }
             let interactions = TextViewInteractions()
-            interactions.processURL = { value in
-                if let value = value as? inAppLink {
-                    arguments.copy(value.link)
+            interactions.processURL = { link in
+                if let link = link as? inAppLink {
+                    let found = value.first(where: {  $0.username == link.link.replacingOccurrences(of: "@", with: "") })
+                    if let found {
+                        arguments.openFragment(.username(found.username))
+                    } else {
+                        arguments.copy(link.link)
+                    }
                 }
             }
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
@@ -1985,7 +2002,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         var infoBlock: [GroupInfoEntry] = []
         func applyBlock(_ block:[GroupInfoEntry]) {
-            var block = block
+            var block = block.sorted { (p1, p2) -> Bool in
+                return p1.isOrderedBefore(p2)
+            }
             for (i, item) in block.enumerated() {
                 block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
             }
@@ -2250,11 +2269,11 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
-            var usernames = group.usernames.filter { $0.isActive }.map {
-                $0.username
+            var usernames:[UserInfoAddress] = group.usernames.filter { $0.isActive }.map {
+                .init(username: $0.username, collectable: $0.flags.contains(.isEditable))
             }
             if usernames.isEmpty, let address = group.addressName {
-                usernames.append(address)
+                usernames.append(.init(username: address, collectable: false))
             }
             if !usernames.isEmpty {
                 aboutBlock.append(GroupInfoEntry.addressName(section: GroupInfoSection.desc.rawValue, name: usernames, viewType: .singleItem))

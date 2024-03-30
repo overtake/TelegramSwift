@@ -2536,6 +2536,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
+        case .birthdays:
+            break
         case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:
             break
         }

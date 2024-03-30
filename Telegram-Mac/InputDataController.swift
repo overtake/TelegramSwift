@@ -18,12 +18,18 @@ public class InputDataModalController : ModalViewController {
     private let _modalInteractions: ModalInteractions?
     private let closeHandler: (@escaping()-> Void) -> Void
     private let themeDisposable = MetaDisposable()
-    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme) {
+    
+    private var _stake:[InputDataController] = []
+    
+    private let isMain: Bool
+    
+    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme, isMain: Bool = true) {
         self.controller = controller
         self._modalInteractions = modalInteractions
         self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 280), size.height)
         self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
+        self.isMain = isMain
         super.init(frame: controller._frameRect)
         
         self.getModalTheme = {
@@ -49,7 +55,63 @@ public class InputDataModalController : ModalViewController {
         return getModalTheme?() ?? super.modalTheme
     }
 
+    func push(_ controller: InputDataController, animated: Bool) {
+        self._stake.append(controller)
+        controller.modal = self.modal
+        controller.makeFirstFast = false
+        
+        let rect = NSMakeRect(frame.width, 0, frame.width, height)
+        controller.view.frame = rect
+        self.view.addSubview(controller.view)
+        if animated {
+            controller.view.layer?.animatePosition(from: NSMakePoint(frame.width, 0), to: .zero, duration: 0.35, timingFunction: .spring)
+            controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.3, timingFunction: .spring)
+        }
+                
+        self.updateSize(animated)
+        self.updateLocalizationAndTheme(theme: theme)
+        
+        
+        controller.modalTransitionHandler = { [weak self] _ in
+            if self?.dynamicSize == true {
+                self?.updateSize(animated)
+            }
+        }
+        
+        controller.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.updateScroll(position)
+        }))
+        
+        self.updateScroll(controller.tableView.scrollPosition().current)
+    }
     
+    func pop(animated: Bool) {
+        if !_stake.isEmpty {
+            var controller: InputDataController? = _stake.removeLast()
+            let view = controller!.genericView
+            
+            
+            view.frame = NSMakeRect(0, 0, frame.width, height)
+            view.updateLayout(size: view.frame.size, transition: .immediate)
+
+            let transition = animated ? ContainedViewLayoutTransition.animated(duration: 0.35, curve: .spring) : .immediate
+            let rect = NSMakeRect(frame.width, 0, frame.width, height)
+            transition.updateFrame(view: view, frame: rect, completion: { [weak view] _ in
+                view?.removeFromSuperview()
+                controller = nil
+            })
+           // transition.updateAlpha(view: view, alpha: 0)
+            view.updateLayout(size: rect.size, transition: transition)
+            
+
+            
+            self.updateSize(animated)
+            self.updateLocalizationAndTheme(theme: theme)
+            
+            self.updateScroll(self.controller.tableView.scrollPosition().current)
+
+        }
+    }
     
     var isFullScreenImpl: (()->Bool)? = nil
     
@@ -88,11 +150,15 @@ public class InputDataModalController : ModalViewController {
         super.close()
     }
     
+    var current: InputDataController {
+        return self._stake.last ?? self.controller
+    }
+    
     public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        if controller.defaultBarTitle.isEmpty {
+        if current.defaultBarTitle.isEmpty {
             return nil
         }
-        return (left: self.controller.leftModalHeader, center: self.controller.centerModalHeader ?? ModalHeaderData(title: controller.defaultBarTitle), right: self.controller.rightModalHeader)
+        return (left: self.current.leftModalHeader, center: current.centerModalHeader ?? ModalHeaderData(title: current.defaultBarTitle), right: current.rightModalHeader)
     }
     
     
@@ -105,43 +171,52 @@ public class InputDataModalController : ModalViewController {
     }
     
     public override func becomeFirstResponder() -> Bool? {
-        return controller.becomeFirstResponder()
+        return current.becomeFirstResponder()
     }
     
     public override func firstResponder() -> NSResponder? {
-        return controller.firstResponder()
+        return current.firstResponder()
     }
     
     public override func returnKeyAction() -> KeyHandlerResult {
-        let result = controller.returnKeyAction()
+        let result = current.returnKeyAction()
         return result
     }
     
     public override var hasNextResponder: Bool {
-        return controller.hasNextResponder
+        return current.hasNextResponder
     }
     
     public override func nextResponder() -> NSResponder? {
-        return controller.nextResponder()
+        return current.nextResponder()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        controller.viewWillAppear(animated)
+        current.viewWillAppear(animated)
     }
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        controller.viewDidAppear(animated)
-        controller.tableView.notifyScrollHandlers()
+        current.viewDidAppear(animated)
+        current.tableView.notifyScrollHandlers()
     }
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        controller.viewWillDisappear(animated)
+        current.viewWillDisappear(animated)
     }
     public override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        controller.viewDidDisappear(animated)
-        controller.didRemovedFromStack()
+        current.viewDidDisappear(animated)
+        current.didRemovedFromStack()
+    }
+    
+    public override func escapeKeyAction() -> KeyHandlerResult {
+        if self._stake.isEmpty {
+            return super.escapeKeyAction()
+        } else {
+            self.pop(animated: true)
+            return .invoked
+        }
     }
     
     
@@ -152,8 +227,9 @@ public class InputDataModalController : ModalViewController {
     private var first: Bool = true
     public override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        
-        updateSize(!first)
+        if isMain {
+            updateSize(!first)
+        }
     }
     
     var dynamicSizeImpl:(()->Bool)? = nil
@@ -162,15 +238,21 @@ public class InputDataModalController : ModalViewController {
         return self.dynamicSizeImpl?() ?? true
     }
     
+    var height: CGFloat {
+        let topHeight = current.genericView.topView?.frame.height ?? 0
+        let wh = view.window?.frame.height ?? 0
+        return min(min(wh - 100, 700), current.tableView.listHeight + topHeight)
+    }
+    
     override open func measure(size: NSSize) {
-        let topHeight = controller.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: false)
+        let topHeight = current.genericView.topView?.frame.height ?? 0
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 350))), min(min(size.height - 100, 700), current.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
-        let topHeight = controller.genericView.topView?.frame.height ?? 0
+        let topHeight = current.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 100, 700), current.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -202,7 +284,7 @@ public class InputDataModalController : ModalViewController {
         var first = true
         controller.modalTransitionHandler = { [weak self] animated in
             if self?.dynamicSize == true {
-                self?.updateSize(animated && !first)
+                self?.updateSize(animated && (!first || self?.view.superview is InputDataView))
                 first = false
             }
         }
@@ -210,27 +292,28 @@ public class InputDataModalController : ModalViewController {
 
         
         controller.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
-            guard let `self` = self else {
-                return
-            }
-            if self.controller.tableView.documentSize.height > self.controller.tableView.frame.height {
-                self.controller.tableView.verticalScrollElasticity = .automatic
-            } else {
-                self.controller.tableView.verticalScrollElasticity = .none
-            }
-            if position.rect.minY - self.controller.tableView.frame.height > 0 {
-                self.modal?.makeHeaderState(state: .active, animated: true)
-            } else {
-                self.modal?.makeHeaderState(state: .normal, animated: true)
-            }
+            self?.updateScroll(position)
         }))
         
     }
     
+    private func updateScroll(_ position: ScrollPosition) {
+        if self.current.tableView.documentSize.height > self.current.tableView.frame.height {
+            self.current.tableView.verticalScrollElasticity = .automatic
+        } else {
+            self.current.tableView.verticalScrollElasticity = .none
+        }
+        if position.rect.minY - self.current.tableView.frame.height > 0 {
+            self.modal?.makeHeaderState(state: .active, animated: true)
+        } else {
+            self.modal?.makeHeaderState(state: .normal, animated: true)
+        }
+    }
+    
     public override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
-        controller.genericView.change(size: frame.size, animated: transition.isAnimated)
-        controller.genericView.change(pos: frame.origin, animated: transition.isAnimated)
-        self.controller.genericView.updateLayout(size: frame.size, transition: transition)
+        current.genericView.change(size: frame.size, animated: transition.isAnimated)
+        current.genericView.change(pos: current != controller ? .zero : frame.origin, animated: transition.isAnimated)
+        current.genericView.updateLayout(size: frame.size, transition: transition)
     }
     
     deinit {
@@ -261,7 +344,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
         
         let cancelled: Atomic<Bool> = Atomic(value: false)
         
-        if Thread.isMainThread || makeFirstFast, left.isEmpty {
+        if Thread.isMainThread && makeFirstFast, left.isEmpty {
             var initialIndex:Int = 0
             var height:CGFloat = 0
             var firstInsertion:[(Int, TableRowItem)] = []
@@ -280,7 +363,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             initialIndex = firstInsertion.count
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchState))
             
-            applyQueue.justDispatch {
+            applyQueue.async {
                 if !cancelled.with({ $0 }) {
                     var insertions:[(Int, TableRowItem)] = []
                     
@@ -510,6 +593,8 @@ class InputDataController: GenericViewController<InputDataView> {
     
     var autoInputAction: Bool = false
     
+    var makeFirstFast: Bool = true
+    
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
         self.title = title
         self.validateData = validateData
@@ -699,6 +784,7 @@ class InputDataController: GenericViewController<InputDataView> {
         self.afterViewDidLoad?()
         genericView.tableView.getBackgroundColor = self.getBackgroundColor
         
+        let makeFirstFast = self.makeFirstFast
         
         appearanceDisposablet.set(appearanceSignal.start(next: { [weak self] _ in
             self?.updateLocalizationAndTheme(theme: theme)
@@ -726,7 +812,7 @@ class InputDataController: GenericViewController<InputDataView> {
         
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, values.get()) |> mapToQueue { appearance, state in
             let entries = state.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false), animateEverything: state.animateEverything, grouping: state.grouping)
+            return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false), animateEverything: state.animateEverything, grouping: state.grouping, makeFirstFast: makeFirstFast)
         } |> deliverOnMainQueue |> afterDisposed {
             previous.swap([])
         }

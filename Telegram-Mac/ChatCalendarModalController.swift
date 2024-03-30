@@ -166,7 +166,7 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                     break
                 }
             } else {
-                if month.components.year! < 2013 || (month.components.year == 2013 && month.components.month! <= 9) {
+                if month.components.year! < calendarArguments.lowYear || (month.components.year == calendarArguments.lowYear && month.components.month! <= 9) {
                     break
                 }
 
@@ -199,7 +199,7 @@ func ChatCalendarModalController(context: AccountContext, sparseCalendar: Sparse
         close?()
     })
 
-    let calendarAguments = CalendarMonthInteractions(selectAction: { selected in
+    let calendarAguments = CalendarMonthInteractions(lowYear: 2013, canBeNoYear: false, selectAction: { selected in
         
     }, backAction: { date in
        

@@ -65,8 +65,10 @@ enum PremiumLogEventsSource : Equatable {
     case message_privacy
     case saved_tags
     case business
+    case business_intro
     case business_standalone
     case folder_tags
+    case upload_limit
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -121,6 +123,10 @@ enum PremiumLogEventsSource : Equatable {
             return "business_standalone"
         case .folder_tags:
             return "folder_tags"
+        case .upload_limit:
+            return "upload_limit"
+        case .business_intro:
+            return "business_intro"
         }
     }
     
@@ -170,10 +176,14 @@ enum PremiumLogEventsSource : Equatable {
             return .message_privacy
         case .business:
             return nil
+        case .business_intro:
+            return .business_intro
         case .business_standalone:
             return nil
         case .folder_tags:
             return .folder_tags
+        case .upload_limit:
+            return nil
         }
     }
     
@@ -282,12 +292,13 @@ enum PremiumValue : String {
     case greeting_message
     case away_message
     case business_bots
-    
+    case business_intro
+    case business_links
     case folder_tags
     
     var isBusiness: Bool {
         switch self {
-        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots:
+        case .business_location, .business_hours, .quick_replies, .greeting_message, .away_message, .business_bots, .business_intro, .business_links:
             return true
         default:
             return false
@@ -316,7 +327,8 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x41a6a5),
                                  NSColor(rgb: 0x3eb26d),
                                  NSColor(rgb: 0x3dbd4a),
-                                 NSColor(rgb: 0x51c736)]
+                                 NSColor(rgb: 0x51c736),
+                                 NSColor(rgb: 0x5ed429)]
         return [colors[min(index, colors.count - 1)]]
     }
     
@@ -327,7 +339,9 @@ enum PremiumValue : String {
             NSColor(red: 0.937, green: 0.412, blue: 0.133, alpha: 1),
             NSColor(red: 0.914, green: 0.365, blue: 0.267, alpha: 1),
             NSColor(red: 0.949, green: 0.51, blue: 0.165, alpha: 1),
-            NSColor(red: 0.906, green: 0.584, blue: 0.098, alpha: 1)
+            NSColor(red: 0.906, green: 0.584, blue: 0.098, alpha: 1),
+            NSColor(red: 0.404, green: 0.42, blue: 1, alpha: 1),
+            NSColor(rgb: 0x5a78ff)
         ]
         return [colors[index]]
     }
@@ -424,6 +438,10 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessAway).precomposed(presentation.colors.accent)
         case .business_bots:
             return NSImage(resource: .iconPremiumBusinessBot).precomposed(presentation.colors.accent)
+        case .business_intro:
+            return NSImage(resource: .iconPremiumBusinessIntro).precomposed(presentation.colors.accent)
+        case .business_links:
+            return NSImage(resource: .iconPremiumBusinessLinks).precomposed(presentation.colors.accent)
         case .folder_tags:
             return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
         }
@@ -483,6 +501,10 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessAwayMessages
         case .business_bots:
             return strings().premiumBoardingBusinessChatBots
+        case .business_intro:
+            return strings().premiumBoardingBusinessIntro
+        case .business_links:
+            return strings().premiumBoardingBusinessLinks
         case .folder_tags:
             return strings().premiumBoardingTagFolders
         }
@@ -541,8 +563,13 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessAwayMessagesInfo
         case .business_bots:
             return strings().premiumBoardingBusinessChatBotsInfo
+        case .business_intro:
+            return strings().premiumBoardingBusinessIntroInfo
+        case .business_links:
+            return strings().premiumBoardingBusinessLinksInfo
         case .folder_tags:
             return strings().premiumBoardingTagFoldersInfo
+            
         }
     }
 }
@@ -664,7 +691,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("+\(state.values.count) MORE TELEGRAM PREMIUM FEATURES"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingMoreBusinessHeaderCountable(state.values.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
         }
     }
@@ -953,6 +980,7 @@ private final class PremiumBoardingView : View {
         return NSMakeSize(size.width, min(min(headerView.frame.height + tableView.listHeight + bottomHeight, 523), size.height))
     }
     
+    private var first = true
     func update(animated: Bool, arguments: Arguments, state: State) {
         let previousState = self.state
         self.state = state
@@ -961,10 +989,11 @@ private final class PremiumBoardingView : View {
         acceptView.setFrameSize(NSMakeSize(frame.width - 40, size.height))
         acceptView.layer?.cornerRadius = 10
         let transition: ContainedViewLayoutTransition
-        if animated {
+        if animated && !first {
             transition = .animated(duration: 0.2, curve: .easeOut)
         } else {
             transition = .immediate
+            first = false
         }
         
         
@@ -1206,6 +1235,7 @@ final class PremiumBoardingController : ModalViewController {
         
         actionsDisposable.add(context.engine.accountData.keepShortcutMessageListUpdated().startStrict())
         actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().startStrict())
+        actionsDisposable.add(context.engine.accountData.refreshBusinessChatLinks().startStrict())
         
         actionsDisposable.add(context.account.viewTracker.peerView(context.peerId, updateData: true).start())
         
@@ -1259,6 +1289,8 @@ final class PremiumBoardingController : ModalViewController {
                 return
             }
             
+            FastSettings.dismissPremiumPerk(value.rawValue)
+            
             if strongSelf.source == .business_standalone {
                 switch value {
                 case .business_location:
@@ -1273,6 +1305,10 @@ final class PremiumBoardingController : ModalViewController {
                     strongSelf.navigationController?.push(BusinessMessageController(context: context, type: .away))
                 case .business_bots:
                     strongSelf.navigationController?.push(BusinessChatbotController(context: context))
+                case .business_intro:
+                    strongSelf.navigationController?.push(BusinessIntroController(context: context))
+                case .business_links:
+                    strongSelf.navigationController?.push(BusinessLinksController(context: context))
                 default:
                     fatalError("not possible")
                 }
@@ -1284,7 +1320,6 @@ final class PremiumBoardingController : ModalViewController {
                 return strongSelf?.genericView.makeAcceptView()
             }), animated: animated)
             
-            FastSettings.dismissPremiumPerk(value.rawValue)
             updateState { current in
                 var current = current
                 current.newPerks.removeAll(where: { $0 == value.rawValue })

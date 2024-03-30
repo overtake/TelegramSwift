@@ -170,7 +170,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(faster_download)
         
         let voice_to_text = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        voice_to_text.setup(context: context, type: .voice_to_text, decoration: .swirlStars, getView: { _ in
+        voice_to_text.setup(context: context, type: .voice_to_text, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.voice_to_text.rawValue], position: .top)
             return view
@@ -178,7 +178,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(voice_to_text)
         
         let no_ads = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        no_ads.setup(context: context, type: .no_ads, decoration: .swirlStars, getView: { _ in
+        no_ads.setup(context: context, type: .no_ads, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.no_ads.rawValue], position: .bottom)
             return view
@@ -186,7 +186,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(no_ads)
         
         let unique_reactions = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        unique_reactions.setup(context: context, type: .infinite_reactions, decoration: .swirlStars, getView: { _ in
+        unique_reactions.setup(context: context, type: .infinite_reactions, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.infinite_reactions.rawValue], position: .top)
             return view
@@ -194,7 +194,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(unique_reactions)
         
         let statuses = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        statuses.setup(context: context, type: .emoji_status, decoration: .swirlStars, getView: { _ in
+        statuses.setup(context: context, type: .emoji_status, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.emoji_status.rawValue], position: .top)
             return view
@@ -211,7 +211,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(premium_stickers)
         
         let animated_emoji = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        animated_emoji.setup(context: context, type: .animated_emoji, decoration: .swirlStars, getView: { _ in
+        animated_emoji.setup(context: context, type: .animated_emoji, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.animated_emoji.rawValue], position: .bottom)
             return view
@@ -219,7 +219,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(animated_emoji)
         
         let advanced_chat_management = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        advanced_chat_management.setup(context: context, type: .advanced_chat_management, decoration: .swirlStars, getView: { _ in
+        advanced_chat_management.setup(context: context, type: .advanced_chat_management, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.advanced_chat_management.rawValue], position: .top)
             return view
@@ -235,7 +235,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(profile_badge)
         
         let animated_userpics = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        animated_userpics.setup(context: context, type: .animated_userpics, decoration: .swirlStars, getView: { _ in
+        animated_userpics.setup(context: context, type: .animated_userpics, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.animated_userpics.rawValue], position: .top)
             return view
@@ -350,7 +350,21 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(business_bots)
         
+        let business_intro = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_intro.setup(context: context, type: .business_intro, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_intro.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_intro)
         
+        let business_links = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_links.setup(context: context, type: .business_links, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_links.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_links)
         
         switch value {
         case .stories:
@@ -407,6 +421,10 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 25, animated: false)
         case .business_bots:
             slideView.displaySlide(at: 26, animated: false)
+        case .business_intro:
+            slideView.displaySlide(at: 27, animated: false)
+        case .business_links:
+            slideView.displaySlide(at: 28, animated: false)
         }
         
         needsLayout = true

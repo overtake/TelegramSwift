@@ -252,7 +252,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             }
 
-            if !peerEqual || !cachedEqual || !presenceEqual {
+            if !peerEqual || !cachedEqual || !presenceEqual || self.chatInteraction.mode.customChatLink != nil {
                 updateStatus(presentation: chatInteraction.presentation)
             }
         } else {
@@ -646,7 +646,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             let mode = chatInteraction.mode
             
 
-            self.hasPhoto = (!mode.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled) && mode.customChatContents == nil
+            self.hasPhoto = (!mode.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled) && mode.customChatContents == nil && mode.customChatLink == nil
             
             self.photoContainer.isHidden = !hasPhoto
 
@@ -772,9 +772,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private func updateTitle(_ force: Bool = false, presentation: ChatPresentationInterfaceState) {
         if let peerView = self.peerView, let peer = peerViewMainPeer(peerView) {
-            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: chatInteraction.mode.isSavedMessagesThread)
+            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: chatInteraction.mode.isSavedMessagesThread || chatInteraction.mode.customChatLink != nil)
             
-            if let customChatContents = chatInteraction.mode.customChatContents {
+            if let customLinkContents = chatInteraction.mode.customChatLink {
+                result = result.withUpdatedTitle(customLinkContents.name.isEmpty ? customLinkContents.link : customLinkContents.name).withUpdatedStatus(customLinkContents.name.isEmpty ? "" : customLinkContents.link)
+            } else if let customChatContents = chatInteraction.mode.customChatContents {
                 result = result.withUpdatedTitle(customChatContents.kind.text).withUpdatedStatus("")
             } else if chatInteraction.mode == .pinned {
                 result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0)).withUpdatedStatus("")

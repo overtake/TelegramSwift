@@ -106,7 +106,7 @@ func BusinessTimezonesController(context: AccountContext, timezones: [TimeZoneLi
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().businessHoursTimezone)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessHoursTimezone, identifier: "business_timezones")
     
     controller.onDeinit = {
         actionsDisposable.dispose()

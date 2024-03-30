@@ -53,17 +53,17 @@ private final class RowItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext) {
         self.context = context
         
-        let headerText = NSAttributedString.initialize(string: "Earn From Your Channel", color: theme.colors.text, font: .medium(.title))
+        let headerText = NSAttributedString.initialize(string: strings().monetizationIntroTitle, color: theme.colors.text, font: .medium(.title))
         
-        let infoHeaderAttr = NSAttributedString.initialize(string: "What's \(clown) TON", color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
-        infoHeaderAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.brilliant_static.file), for: clown)
+        let infoHeaderAttr = NSAttributedString.initialize(string: strings().monetizationIntroInfoTitle(clown), color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
+        infoHeaderAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: theme.colors.text), for: clown)
         
         
-        let infoText = "TON is a blockchain platform and cryptocurrency that Telegram uses for its record scalability and ultra low commissions on transactions.\n[Learn More >]()"
+        let infoText = strings().monetizationIntroInfoText
         
         let infoAttr = parseMarkdownIntoAttributedString(infoText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { link in
+                execute(inapp: .external(link: link, false))
             }))
         })).mutableCopy() as! NSMutableAttributedString
                                                                                             
@@ -77,14 +77,16 @@ private final class RowItem : GeneralRowItem {
         self.infoLayout = .init(infoAttr, alignment: .center)
         self.infoLayout.measure(width: initialSize.width - 80)
         
+        self.infoLayout.interactions = globalLinkExecutor
+        
         var options:[Option] = []
         
-        options.append(.init(image: theme.icons.channel_feature_link_icon, header: .init(.initialize(string: "Telegram Ads", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Telegram can display ads in your channel.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentAds).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroAdsTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroAdsText, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
-        options.append(.init(image: theme.icons.channel_feature_link_icon, header: .init(.initialize(string: "50:50 revenue split", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You receive 50% of the ad revenue in TON.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentSplitRevenue).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroSplitTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroSplitText("%"), color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
-        options.append(.init(image: theme.icons.channel_feature_link_icon, header: .init(.initialize(string: "Flexible withdrawals", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "You can withdraw your TON any time.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentTonPayment).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroWithdrawalTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroWithdrawalText, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
         self.options = options
@@ -93,7 +95,7 @@ private final class RowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        var height: CGFloat = 70
+        var height: CGFloat = 80
         height += 20
         height += headerLayout.layoutSize.height
         height += 20
@@ -152,8 +154,9 @@ private final class RowView: GeneralContainableRowView {
         }
     }
     
-    private let iconView = View(frame: NSMakeRect(0, 0, 70, 70))
-    private let stickerView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 60, 60))
+    private let iconView = View(frame: NSMakeRect(0, 0, 80, 80))
+    private let gradient = SimpleGradientLayer()
+    private let stickerView = ImageView()
     private let headerView = TextView()
     
     private let infoBlock = View()
@@ -165,6 +168,8 @@ private final class RowView: GeneralContainableRowView {
         super.init(frame: frameRect)
         addSubview(headerView)
         addSubview(iconView)
+        gradient.frame = iconView.bounds
+        iconView.layer?.addSublayer(gradient)
         infoBlock.addSubview(infoHeaderView)
         infoBlock.addSubview(infoView)
         addSubview(infoBlock)
@@ -219,7 +224,13 @@ private final class RowView: GeneralContainableRowView {
         headerView.update(item.headerLayout)
         iconView.backgroundColor = theme.colors.accent
         
-        stickerView.update(with: LocalAnimatedSticker.fragment_username.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment_username.parameters, animated: animated)
+        self.gradient.colors = [theme.colors.accent].map { $0.cgColor }
+        self.gradient.startPoint = CGPoint(x: 0.5, y: 0)
+        self.gradient.endPoint = CGPoint(x: 0.5, y: 1.0)
+        self.gradient.type = .radial
+
+        stickerView.image = NSImage(resource: .iconFragmentMonetization).precomposed(.white)
+        stickerView.sizeToFit()
         
         infoBlock.setFrameSize(NSMakeSize(frame.width - 40, 10 + infoHeaderView.frame.height + 10 + infoView.frame.height + 10))
         
@@ -287,6 +298,8 @@ func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId
 
     let arguments = Arguments(context: context)
     
+    var close:(()->Void)? = nil
+    
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
@@ -297,15 +310,19 @@ func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Understood", accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
+    let modalInteractions = ModalInteractions(acceptTitle: strings().monetizationIntroUnderstood, accept: {
+       close?()
     }, singleButton: true, customTheme: {
         .init(background: theme.colors.background, grayForeground: theme.colors.background, activeBackground: theme.colors.background, listBackground: theme.colors.background)
     })
     
     
-    
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(340, 0))
+    
+    
+    close = { [weak modalController] in
+        modalController?.close()
+    }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
