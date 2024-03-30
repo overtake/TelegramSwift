@@ -10153,6 +10153,34 @@ public final class L10n {
   public static var monetizationTransactionProceeds: String  { return L10n.tr("Localizable", "Monetization.Transaction.Proceeds") }
   /// Refund
   public static var monetizationTransactionRefund: String  { return L10n.tr("Localizable", "Monetization.Transaction.Refund") }
+  /// Show %d More Transaction
+  public static func monetizationTransactionShowMoreTransactionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_countable", p1)
+  }
+  /// Show %d More Transactions
+  public static func monetizationTransactionShowMoreTransactionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_few", p1)
+  }
+  /// Show %d More Transactions
+  public static func monetizationTransactionShowMoreTransactionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_many", p1)
+  }
+  /// Show %d More Transaction
+  public static func monetizationTransactionShowMoreTransactionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_one", p1)
+  }
+  /// Show %d More Transactions
+  public static func monetizationTransactionShowMoreTransactionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_other", p1)
+  }
+  /// Show %d More Transactions
+  public static func monetizationTransactionShowMoreTransactionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_two", p1)
+  }
+  /// Show %d More Transactions
+  public static func monetizationTransactionShowMoreTransactionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Monetization.Transaction.ShowMoreTransactions_zero", p1)
+  }
   /// Withdrawal via %@
   public static func monetizationTransactionWithdrawal(_ p1: String) -> String {
     return L10n.tr("Localizable", "Monetization.Transaction.Withdrawal", p1)

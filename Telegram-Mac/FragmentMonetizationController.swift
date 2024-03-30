@@ -911,7 +911,8 @@ private final class Arguments {
     let loadDetailedGraph:(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>
     let transaction:(State.Transaction)->Void
     let toggleAds:()->Void
-    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void) {
+    let loadMore:()->Void
+    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping()->Void) {
         self.context = context
         self.interactions = interactions
         self.updateState = updateState
@@ -921,6 +922,7 @@ private final class Arguments {
         self.loadDetailedGraph = loadDetailedGraph
         self.transaction = transaction
         self.toggleAds = toggleAds
+        self.loadMore = loadMore
     }
 }
 
@@ -966,6 +968,8 @@ private struct State : Equatable {
     var overview: Overview = .init(balance: .init(ton: 0, usdRate: 0), last: .init(ton: 0, usdRate: 0), all: .init(ton: 0, usdRate: 0))
     var balance: Balance = .init(ton: 0, usdRate: 0)
     var transactions: [Transaction] = []
+    var transactionsState: RevenueStatsTransactionsContext.State?
+    
     
     var withdrawError: RequestRevenueWithdrawalError? = nil
     
@@ -994,6 +998,9 @@ private let _id_top_hours_graph = InputDataIdentifier("_id_top_hours_graph")
 private let _id_revenue_graph = InputDataIdentifier("_id_revenue_graph")
 
 private let _id_switch_ad = InputDataIdentifier("_id_switch_ad")
+
+private let _id_loading = InputDataIdentifier("_id_loading")
+private let _id_load_more = InputDataIdentifier("_id_load_more")
 
 private func entries(_ state: State, arguments: Arguments, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -1129,7 +1136,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
 
     
        
-    if !state.transactions.isEmpty {
+    if !state.transactions.isEmpty, let transactionsState = state.transactionsState {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
@@ -1141,7 +1148,13 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         }
         var tuples: [Tuple] = []
         for (i, transaction) in state.transactions.enumerated() {
-            tuples.append(.init(transaction: transaction, viewType: bestGeneralViewType(state.transactions, for: i)))
+            var viewType = bestGeneralViewType(state.transactions, for: i)
+            if transactionsState.count > state.transactions.count || transactionsState.isLoadingMore {
+                if i == state.transactions.count - 1 {
+                    viewType = .innerItem
+                }
+            }
+            tuples.append(.init(transaction: transaction, viewType: viewType))
         }
         
         for tuple in tuples {
@@ -1150,6 +1163,14 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
                     arguments.transaction(tuple.transaction)
                 })
             }))
+        }
+        
+        if transactionsState.isLoadingMore {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return LoadingTableItem(initialSize, height: 40, stableId: stableId, viewType: .lastItem)
+            }))
+        } else if transactionsState.count > state.transactions.count {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_switch_ad, data: .init(name: strings().monetizationTransactionShowMoreTransactionsCountable(Int(transactionsState.count) - state.transactions.count), color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
         }
     }
     
@@ -1162,9 +1183,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     let afterNameImage = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(premiumConfiguration.minChannelRestrictAdsLevel)))
 
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_switch_ad, data: .init(name: strings().monetizationSwitchOffAds, color: theme.colors.text, type: .switchable(state.adsRestricted), viewType: .singleItem, action: {
-        arguments.toggleAds()
-    }, afterNameImage: afterNameImage, autoswitch: false)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_switch_ad, data: .init(name: strings().monetizationSwitchOffAds, color: theme.colors.text, type: .switchable(state.adsRestricted), viewType: .singleItem, action: arguments.toggleAds, afterNameImage: afterNameImage, autoswitch: false)))
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationSwitchOffAdsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
 
@@ -1247,7 +1266,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 }
                 
                 current.transactions = list
-                
+                current.transactionsState = transactions
                 return current
             }
         }
@@ -1366,6 +1385,8 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 showModal(with: BoostChannelModalController(context: context, peer: peer._asPeer(), boosts: status, myStatus: myBoost, infoOnly: true, source: .noAds(needLevel)), for: context.window)
             }
         }
+    }, loadMore: { [weak contextObject] in
+        contextObject?.transactions.loadMore()
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in
@@ -1377,16 +1398,16 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
     controller.contextObject = contextObject
     
     
-    controller.didLoad = { [weak contextObject] controller, _ in
-        controller.tableView.setScrollHandler({ position in
-            switch position.direction {
-            case .bottom:
-                contextObject?.transactions.loadMore()
-            default:
-                break
-            }
-        })
-    }
+//    controller.didLoad = { [weak contextObject] controller, _ in
+//        controller.tableView.setScrollHandler({ position in
+//            switch position.direction {
+//            case .bottom:
+//                contextObject?.transactions.loadMore()
+//            default:
+//                break
+//            }
+//        })
+//    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

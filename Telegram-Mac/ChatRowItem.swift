@@ -1582,6 +1582,11 @@ class ChatRowItem: TableRowItem {
         var renderType:ChatItemRenderType = .list
         var object = object
         
+        if let adAttribute = object.message?.adAttribute {
+            var bp = 0
+            bp += 1
+        }
+        
         var hiddenFwdTooltip:(()->Void)? = nil
         
         var captionMessage: Message? = object.message
@@ -2364,7 +2369,9 @@ class ChatRowItem: TableRowItem {
         }
         
         if let message = entry.message {
-            if message.media.count == 0 || message.anyMedia is TelegramMediaWebpage {
+            if message.adAttribute != nil {
+                return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+            } else if message.media.count == 0 || message.anyMedia is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
