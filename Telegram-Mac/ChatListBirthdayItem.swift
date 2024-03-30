@@ -88,7 +88,8 @@ final class ChatListBirthdayItem : GeneralRowItem {
     }
     
     func dismiss() {
-        
+        let peerIds = birthdays.map { $0.peer.id.id._internalGetInt64Value() }
+        _ = ApplicationSpecificNotice.setDismissedBirthdayPremiumGifts(accountManager: context.sharedContext.accountManager, values: peerIds).startStandalone()
     }
     
     
