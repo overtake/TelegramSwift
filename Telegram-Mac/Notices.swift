@@ -134,7 +134,8 @@ private func noticeKey(peerId: PeerId, key: Int32) -> ValueBoxKey {
 
 private enum ApplicationSpecificGlobalNotice: Int32 {
     case value = 0
-    
+    case dismissedBirthdayPremiumGifts = 1
+
     var key: ValueBoxKey {
         let v = ValueBoxKey(length: 4)
         v.setInt32(0, value: self.rawValue)
@@ -144,12 +145,20 @@ private enum ApplicationSpecificGlobalNotice: Int32 {
 
 
 private struct ApplicationSpecificNoticeKeys {
+    private static let globalNamespace: Int32 = 2
     private static let botPaymentLiabilityNamespace: Int32 = 1
+    private static let dismissedBirthdayPremiumGiftTipNamespace: Int32 = 10
+
+
   
     
     static func botPaymentLiabilityNotice(peerId: PeerId) -> NoticeEntryKey {
         return NoticeEntryKey(namespace: noticeNamespace(namespace: botPaymentLiabilityNamespace), key: noticeKey(peerId: peerId, key: 0))
     }
+    static func dismissedBirthdayPremiumGifts() -> NoticeEntryKey {
+        return NoticeEntryKey(namespace: noticeNamespace(namespace: globalNamespace), key: ApplicationSpecificGlobalNotice.dismissedBirthdayPremiumGifts.key)
+    }
+        
 }
 
 public struct ApplicationSpecificNotice {
@@ -170,4 +179,24 @@ public struct ApplicationSpecificNotice {
             }
         }
     }
+    
+    public static func dismissedBirthdayPremiumGifts(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<[Int64]?, NoError> {
+           return accountManager.noticeEntry(key: ApplicationSpecificNoticeKeys.dismissedBirthdayPremiumGifts())
+           |> map { view -> [Int64]? in
+               if let value = view.value?.get(ApplicationSpecificInt64ArrayNotice.self) {
+                   return value.values
+               } else {
+                   return nil
+               }
+           }
+       }
+       
+       public static func setDismissedBirthdayPremiumGifts(accountManager: AccountManager<TelegramAccountManagerTypes>, values: [Int64]) -> Signal<Void, NoError> {
+           return accountManager.transaction { transaction -> Void in
+               if let entry = CodableEntry(ApplicationSpecificInt64ArrayNotice(values: values)) {
+                   transaction.setNotice(ApplicationSpecificNoticeKeys.dismissedBirthdayPremiumGifts(), entry)
+               }
+           }
+       }
+
 }
