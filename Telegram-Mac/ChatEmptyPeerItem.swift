@@ -363,7 +363,7 @@ class ChatEmptyPeerView : TableRowView {
             
             textView.update(item.textViewLayout)
             
-            var size = NSMakeSize(item.textViewLayout.layoutSize.width + 20, 300)
+            var size = NSMakeSize(max(300, item.textViewLayout.layoutSize.width + 20), 300)
 
             
             if let image = item.image, let rep = image.representationForDisplayAtSize(PixelDimensions.init(1280, 1280)) {
