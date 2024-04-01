@@ -544,7 +544,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         if isBirthdayPlayable {
             let birthday = self.peerView.with({ ($0?.cachedData as? CachedUserData)?.birthday })
             
-            if let item = genericView.tableView.item(stableId: UserInfoEntry.birthday(sectionId: 0, text: "", false, viewType: .legacy).stableId.hashValue), let birthday, birthday.isToday || birthday.isYesterday() {
+            if let item = genericView.tableView.item(stableId: UserInfoEntry.birthday(sectionId: 0, text: "", false, viewType: .legacy).stableId.hashValue), let birthday, birthday.isToday {
                 playBirthdayAnimations(item, birthday: birthday)
             }
             isBirthdayPlayable = false
