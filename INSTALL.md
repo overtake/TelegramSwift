@@ -11,14 +11,18 @@
 3. Install tools: 
 	```
 	brew install cmake ninja openssl@1.1 zlib autoconf libtool automake yasm pkg-config
+ 	```
+4. Update ./scripts/rebuild file 
 	```
-4. Run scripts to configurate framework: 
+	replace "no" to "yes"
+	```
+5. Run scripts to configurate framework: 
 	```
 	sh %project_dir%/scripts/configure_frameworks.sh
 	```
 
-5. Open `Telegram-Mac.xcworkspace` in [the latest Xcode](https://apps.apple.com/us/app/xcode/id497799835).  
-6. Now you can **Build**!
+6. Open `Telegram-Mac.xcworkspace` in [the latest Xcode](https://apps.apple.com/us/app/xcode/id497799835).  
+7. Setup codesign and **Build**!
 
 
 
