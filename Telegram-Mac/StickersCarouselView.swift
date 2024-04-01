@@ -45,7 +45,7 @@ class StickersCarouselView: View, PremiumSlideView {
         self.scrollView = ScrollView()
         self.tapView = Control()
         
-        self.positionDelta = 1.0 / CGFloat(self.stickers.count)
+        self.positionDelta = 1.0 / CGFloat(max(1, self.stickers.count))
         
         super.init(frame: .zero)
         
@@ -209,12 +209,14 @@ class StickersCarouselView: View, PremiumSlideView {
     }
     
     func playSelectedSticker(index: Int?) {
-        let index = index ?? max(0, Int(round(self.currentPosition / self.positionDelta)) % self.stickers.count)
+        let index = index ?? max(0, Int(round(self.currentPosition / self.positionDelta)) % max(self.stickers.count, 1))
         
         guard !self.playingIndices.contains(index) else {
             return
         }
-        self.addEffect(to: index)
+        if self.stickers.count > index {
+            self.addEffect(to: index)
+        }
     }
     
     private var scrollStartPosition: (contentOffset: CGFloat, position: CGFloat)?

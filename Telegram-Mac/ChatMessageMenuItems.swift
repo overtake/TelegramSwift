@@ -321,6 +321,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }, removeTail: false))
                 }
                 
+             
+                
                 subItem.submenu = submenu
                 
                 items.append(subItem)
@@ -329,23 +331,75 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 
             }
             
-            items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
-                let link = "https://promote.telegram.org"
-                verifyAlert_button(for: context.window, information: strings().chatMessageAdText(link), cancel: "", option: strings().chatMessageAdReadMore, successHandler: { result in
-                    switch result {
-                    case .thrid:
-                     let link = inAppLink.external(link: link, false)
-                     execute(inapp: link)
-                    default:
-                        break
-                    }
-                })
-            }, itemImage: MenuAnimation.menu_report.value))
-            if !context.premiumIsBlocked {
-                items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+            if adAttribute.canReport {
+                
+                items.append(ContextMenuItem(strings().chatMessageSponsoredAbout, handler: {
+                    showModal(with: FragmentAdsInfoController(context: context), for: context.window)
+                }, itemImage: MenuAnimation.menu_show_info.value))
+                
+                items.append(ContextSeparatorItem())
+                
+                items.append(ContextMenuItem(strings().chatMessageSponsoredReport, handler: {
+                    _ = showModalProgress(signal: context.engine.messages.reportAdMessage(peerId: data.peerId, opaqueId: adAttribute.opaqueId, option: nil), for: context.window).startStandalone(next: { result in
+                        switch result {
+                        case .reported:
+                            showModalText(for: context.window, text: strings().chatMessageSponsoredReportAready)
+                        case .adsHidden:
+                            break
+                        case let .options(title, options):
+                            showComplicatedReport(context: context, title: title, info: strings().chatMessageSponsoredReportLearnMore, data: .init(list: options.map { .init(string: $0.text, id: $0.option) }, title: strings().chatMessageSponsoredReportOptionTitle), report: { report in
+                                return context.engine.messages.reportAdMessage(peerId: data.peerId, opaqueId: adAttribute.opaqueId, option: report.id) |> `catch` { error in
+                                    return .single(.reported)
+                                } |> deliverOnMainQueue |> map { result in
+                                    switch result {
+                                    case let .options(_, options):
+                                        return .init(list: options.map { .init(string: $0.text, id: $0.option) }, title: report.string)
+                                    case .reported:
+                                        showModalText(for: context.window, text: strings().chatMessageSponsoredReportSuccess)
+                                        chatInteraction.removeAd(adAttribute.opaqueId)
+                                        return nil
+                                    case .adsHidden:
+                                        return nil
+                                    }
+                                }
+                                
+                            })
+                        }
+                    }, error: { error in
+                        switch error {
+                        case .premiumRequired:
+                            showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                        case .generic:
+                            break
+                        }
+                    })
                 }, itemImage: MenuAnimation.menu_restrict.value))
+            } else {
+                items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
+                    let link = "https://promote.telegram.org"
+                    verifyAlert_button(for: context.window, information: strings().chatMessageAdText(link), cancel: "", option: strings().chatMessageAdReadMore, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                         let link = inAppLink.external(link: link, false)
+                         execute(inapp: link)
+                        default:
+                            break
+                        }
+                    })
+                }, itemImage: MenuAnimation.menu_report.value))
+
             }
+            
+            
+            if !context.premiumIsBlocked {
+                items.append(ContextMenuItem(strings().chatContextHideAd, handler: {
+                    showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                }, itemImage: MenuAnimation.menu_clear_history.value))
+            }
+            
+             
+            
+            
             return items
         }
         

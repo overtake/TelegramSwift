@@ -179,7 +179,7 @@ class GeneralTextRowItem: GeneralRowItem {
 
 
 class GeneralTextRowView : GeneralRowView {
-    private let textView:TextView = TextView()
+    let textView:TextView = TextView()
     private var progressView: ProgressIndicator?
     private var rightTextView: TextView?
     private var animatedView: MediaAnimatedStickerView?

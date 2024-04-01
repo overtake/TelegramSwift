@@ -771,7 +771,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
     case .sharedLinks:
         modalInteractions = nil
     default:
-        modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
+        modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak controller] in
             _ = controller?.returnKeyAction()
         }, singleButton: true)
     }

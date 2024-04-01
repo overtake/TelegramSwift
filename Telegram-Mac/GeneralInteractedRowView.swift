@@ -20,6 +20,8 @@ class GeneralInteractedRowView: GeneralRowView {
     private(set) var descriptionView: TextView?
     private let nextView:ImageView = ImageView()
     private var imageContext:ImageView?
+    
+    private let nameView = TextView()
 
     private var badgeView: View?
     
@@ -30,6 +32,9 @@ class GeneralInteractedRowView: GeneralRowView {
         
         
         if let item = item as? GeneralInteractedRowItem {
+            
+            
+            nameView.update(item.isSelected ? item.nameLayoutSelected : item.nameLayout)
                         
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
@@ -320,15 +325,6 @@ class GeneralInteractedRowView: GeneralRowView {
                     ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
                 }
                 
-                if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
-                    var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
-                    textRect.origin.x = item.inset.left + textXAdditional
-                    textRect.origin.y -= 2
-                    if item.descLayout != nil {
-                        textRect.origin.y = 10
-                    }
-                    nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                }
                 
                 if case let .colorSelector(stateback) = item.type {
                     ctx.setFillColor(stateback.cgColor)
@@ -356,20 +352,18 @@ class GeneralInteractedRowView: GeneralRowView {
                     ctx.fill(NSMakeRect(textXAdditional + insets.left, containerView.frame.height - .borderSize, containerView.frame.width - (insets.left + insets.right + textXAdditional), .borderSize))
                 }
                 
-                if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
-                    var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
-                    textRect.origin.x = insets.left + textXAdditional
-                    if item.descLayout == nil {
-                        textRect.origin.y = insets.top - 1
-                    } else {
-                        textRect.origin.y = 5
-                    }
-                    
-                    nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                    
-                    if let afterNameImage = item.afterNameImage {
-                        ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.backingSize.width, height: afterNameImage.backingSize.height))
-                    }
+                let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout)
+                
+                var textRect = focus(NSMakeSize(nameLayout.layoutSize.width,nameLayout.layoutSize.height))
+                textRect.origin.x = insets.left + textXAdditional
+                if item.descLayout == nil {
+                    textRect.origin.y = insets.top - 1
+                } else {
+                    textRect.origin.y = 5
+                }
+                                
+                if let afterNameImage = item.afterNameImage {
+                    ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.backingSize.width, height: afterNameImage.backingSize.height))
                 }
                 
                
@@ -393,6 +387,11 @@ class GeneralInteractedRowView: GeneralRowView {
         containerView.addSubview(nextView)
         self.containerView.displayDelegate = self
         self.addSubview(self.containerView)
+        
+        containerView.addSubview(nameView)
+        
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
         
         
         containerView.set(handler: { [weak self] _ in
@@ -516,11 +515,18 @@ class GeneralInteractedRowView: GeneralRowView {
                     badgeView.centerY(x:frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
                 }
                 
+                let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout)
+                
+                var textRect = focus(NSMakeSize(nameLayout.layoutSize.width, nameLayout.layoutSize.height))
+                textRect.origin.x = item.inset.left + textXAdditional
+                textRect.origin.y -= 2
+                if item.descLayout != nil {
+                    textRect.origin.y = 10
+                }
+                nameView.setFrameOrigin(textRect.origin)
+                
                 if let textView = textView {
-                    var width:CGFloat = 100
-                    if let name = item.nameLayout {
-                        width = containerView.frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
-                    }
+                    var width:CGFloat = containerView.frame.width - item.nameLayout.layoutSize.width - nextInset - insets.right - insets.left - 10
                     textView.textLayout?.measure(width: width)
                     textView.update(textView.textLayout)
                     textView.centerY(x: containerView.frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
@@ -557,11 +563,22 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let switchView = switchView {
                     switchView.centerY(x: containerView.frame.width - innerInsets.right - switchView.frame.width - nextInset, addition: -1)
                 }
+                
+                let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout)
+                
+                var textRect = focus(NSMakeSize(nameLayout.layoutSize.width, nameLayout.layoutSize.height))
+                textRect.origin.x = innerInsets.left + textXAdditional
+                if item.descLayout == nil {
+                    textRect.origin.y = innerInsets.top - 1
+                } else {
+                    textRect.origin.y = 5
+                }
+                
+                nameView.setFrameOrigin(textRect.origin)
+
+                
                 if let textView = textView {
-                    var width:CGFloat = 100
-                    if let name = item.nameLayout {
-                        width = containerView.frame.width - name.0.size.width - innerInsets.right - insets.left - 10
-                    }
+                    var width:CGFloat = containerView.frame.width - item.nameLayout.layoutSize.width - innerInsets.right - insets.left - 10
                     textView.textLayout?.measure(width: width)
                     textView.update(textView.textLayout)
                     textView.centerY(x: containerView.frame.width - innerInsets.right - textView.frame.width - nextInset)

@@ -13,6 +13,11 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 
+struct UserInfoPersonalChannel : Equatable {
+    let peer: EnginePeer
+    let message: EngineMessage?
+    let subscribers: Int32?
+}
 
 
 class PeerInfoArguments {
@@ -60,7 +65,7 @@ class PeerInfoArguments {
     
     func copy(_ string: String) {
         copyToClipboard(string)
-        pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
+        showModalText(for: context.window, text: strings().shareLinkCopied)
     }
     
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
@@ -83,6 +88,24 @@ class PeerInfoArguments {
     
     func openStory(_ initialId: StoryInitialIndex?) {
         StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
+    }
+    
+    func openFragment(_ subject: FragmentItemInfoScreenSubject) {
+        let context = self.context
+        
+        _ = showModalProgress(signal: FragmentItemInitialData(context: context, peerId: peerId, subject: subject), for: context.window).startStandalone(next: { [weak self] data in
+            if let data {
+                showModal(with: FragmentUsernameController(context: context, data: data), for: context.window)
+            } else {
+                switch subject {
+                case .phoneNumber(let string):
+                    self?.copy(formatPhoneNumber(string))
+                case .username(let string):
+                    self?.copy("@\(string)")
+                }
+            }
+            
+        })
     }
     
     func toggleNotifications(_ currentlyMuted: Bool) {
@@ -136,6 +159,7 @@ class PeerInfoArguments {
         deleteDisposable.dispose()
     }
 }
+
 
 struct TemporaryParticipant: Equatable {
     let peer: Peer
@@ -498,6 +522,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         super.viewDidResized(size)
     }
     
+    private var isBirthdayPlayable = true
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
@@ -513,7 +539,119 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             }
             return .rejected
         }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
+     
         
+        if isBirthdayPlayable {
+            let birthday = self.peerView.with({ ($0?.cachedData as? CachedUserData)?.birthday })
+            
+            if let item = genericView.tableView.item(stableId: UserInfoEntry.birthday(sectionId: 0, text: "", false, viewType: .legacy).stableId.hashValue), let birthday, birthday.isToday || birthday.isYesterday() {
+                playBirthdayAnimations(item, birthday: birthday)
+            }
+            isBirthdayPlayable = false
+        }
+        
+        
+    }
+    
+    private func playBirthdayAnimations(_ item: TableRowItem, birthday: TelegramBirthday) {
+        let context = self.context
+        if let emoji = ["🎉", "🎆", "🎈"].randomElement() {
+            
+            let numbers:[Int: String] = [0: "0️⃣",
+                          1: "1️⃣",
+                          2: "2️⃣",
+                          3: "3️⃣",
+                          4: "4️⃣",
+                          5: "5️⃣",
+                          6: "6️⃣",
+                          7: "7️⃣",
+                          8: "8️⃣",
+                          9: "9️⃣"]
+            
+            func separateNumbers(_ number: Int) -> [Int] {
+                let numberString = String(number)
+                var separatedNumbers = [Int]()
+                
+                for char in numberString {
+                    if let digit = Int(String(char)) {
+                        separatedNumbers.append(digit)
+                    }
+                }
+                
+                return separatedNumbers
+            }
+
+            
+            let yearStickers: Signal<[TelegramMediaFile], NoError>
+            if let year = birthday.yearsSince() {
+                yearStickers = context.engine.stickers.loadedStickerPack(reference: .name("FestiveFontEmoji"), forceActualized: false) |> mapToSignal { loaded in
+                    switch loaded {
+                    case let .result(_, items, _):
+                        var list: [TelegramMediaFile] = []
+                        for number in separateNumbers(Int(year)) {
+                            for item in items {
+                                if item.file.customEmojiText == numbers[number] {
+                                    list.append(item.file)
+                                }
+                            }
+                        }
+                        return .single(list)
+                    default:
+                        return .never()
+                    }
+                } |> take(1) |> deliverOnMainQueue
+            } else {
+                yearStickers = .single([])
+            }
+            
+                
+            _ = combineLatest(context.diceCache.animationEffect(for: emoji) |> take(1), yearStickers).startStandalone(next: { [weak item, weak self] values, yearStickers in
+                if let file = values.first, let itemView = item?.view {
+                    
+                    let layer = InlineStickerView(account: context.account, file: file.2, size: NSMakeSize(300, 300), playPolicy: .onceEnd)
+                    
+                    layer.isEventLess = true
+                    layer.userInteractionEnabled = false
+                    
+                    let point: NSPoint = itemView.convert(.zero, to: self?.genericView)
+
+                    layer.setFrameOrigin(point.offsetBy(dx: 0, dy: -layer.frame.height / 2))
+                    
+                    self?.genericView.addSubview(layer)
+                    
+                    layer.animateLayer.triggerOnState = (.stoped, { [weak layer] state in
+                        layer?.removeFromSuperview()
+                    })
+                    
+                    layer.animateLayer.triggerOnState = (.finished, { [weak layer] state in
+                        layer?.removeFromSuperview()
+                    })
+                    
+                    for (i, number) in yearStickers.enumerated() {
+                        
+                        let layer = InlineStickerItemLayer(account: context.account, file: number, size: NSMakeSize(80, 80))
+                        
+                        layer.superview = self?.genericView
+                        layer.isPlayable = true
+                        
+                        let point: NSPoint = itemView.convert(.zero, to: nil)
+
+                        layer.frame = CGRect.init(origin: point.offsetBy(dx: CGFloat(i) * layer.size.width, dy: -layer.size.height / 2), size: layer.size)
+                        
+                        layer.animateScale(from: 0.01, to: 1.0, duration: 0.2)
+                        layer.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+
+                        let windowSize = context.window.frame
+                        
+                        parabollicReactionAnimation(layer, fromPoint: layer.frame.origin, toPoint: NSMakePoint(windowSize.width / 2 + CGFloat(i) * layer.size.width, windowSize.height), window: context.window, completion: { _ in
+                            
+                        }, duration: 3.0)
+                    }
+                    
+                    PlayConfetti(for: context.window)
+                }
+            })
+        }
     }
     
     
@@ -665,6 +803,33 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             storiesSignal = .single(nil)
         }
         
+        let personalChannelSignal: Signal<UserInfoPersonalChannel?, NoError>
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            personalChannelSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.PersonalChannel(id: peerId)) |> mapToSignal { value in
+                switch value {
+                case let .known(channel):
+                    if let channel = channel {
+                        let message = context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: channel.peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 10, fixedCombinedReadStates: nil) |> map {
+                            $0.0.entries.last?.message
+                        }
+                        return combineLatest(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: channel.peerId)), message) |> map { peer, message in
+                            if let peer {
+                                return UserInfoPersonalChannel(peer: peer, message: message.flatMap(EngineMessage.init), subscribers: channel.subscriberCount)
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        return .single(nil)
+                    }
+                case .unknown:
+                    return .single(nil)
+                }
+            }
+        } else {
+            personalChannelSignal = .single(nil)
+        }
+        
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
             let inviteLinksCount: Signal<Int32, NoError>
@@ -742,12 +907,12 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             
            
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal, personalChannelSignal)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories, personalChannel -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
                     
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories, personalChannel: personalChannel).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     

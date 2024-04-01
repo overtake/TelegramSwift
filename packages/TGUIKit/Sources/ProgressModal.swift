@@ -220,7 +220,7 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
         let beforeModal:Signal<Void,Void> = .single(Void()) |> delay(0.25, queue: Queue.mainQueue())
         
         
-        beforeDisposable.add(beforeModal.start(completed: {
+        beforeDisposable.add(beforeModal.startStandalone(completed: {
             showModal(with: modal, for: window, animationType: .scaleCenter)
         }))
         
@@ -268,9 +268,11 @@ private final class TextAndLabelModalView : View {
     private let textView: TextView = TextView()
     private var titleView: TextView?
     private let visualEffectView = NSVisualEffectView(frame: NSZeroRect)
+    private let overlay = Control()
     private var button: TextButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
         
         self.visualEffectView.material = .ultraDark
         self.visualEffectView.blendingMode = .withinWindow
@@ -284,6 +286,9 @@ private final class TextAndLabelModalView : View {
         self.textView.userInteractionEnabled = true
         addSubview(self.textView)
         layer?.cornerRadius = 10
+        
+        addSubview(overlay)
+
         
         self.textView.set(handler: { [weak self] _ in
             self?.button?.send(event: .Down)
@@ -324,6 +329,10 @@ private final class TextAndLabelModalView : View {
                 callback?(string)
             }
         })
+        
+        overlay.set(handler: { _ in
+            callback?("")
+        }, for: .Down)
         
         textLayout.measure(width: min(400, maxSize.width - 80))
         self.textView.update(textLayout)
@@ -374,7 +383,7 @@ private final class TextAndLabelModalView : View {
 
     override func layout() {
         super.layout()
-        
+        overlay.frame = bounds
         visualEffectView.frame = bounds
 
         if let titleView = titleView {

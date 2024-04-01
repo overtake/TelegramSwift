@@ -138,7 +138,6 @@ private class ModalInteractionsContainer : View {
             acceptView.layer?.cornerRadius = 0
         }
         acceptView.set(font: .medium(.text), for: .Normal)
-        acceptView.set(text: interactions.acceptTitle, for: .Normal)
         updateDone()
         updateCancel()
     }
@@ -227,6 +226,9 @@ private class ModalInteractionsContainer : View {
             }
             self?.updateCancel()
         }
+        
+        acceptView.set(text: interactions.acceptTitle, for: .Normal)
+        
         updateLocalizationAndTheme(theme: presentation)
     }
     
@@ -357,7 +359,10 @@ private final class ModalHeaderView: View {
                 leftButton?.set(image: image, for: .Normal)
             }
             if left.contextMenu != nil {
-                leftButton?.contextMenu = {
+                leftButton?.contextMenu = { [weak self] in
+                    guard let left = self?.controller?.modalHeader?.left else {
+                        return nil
+                    }
                     let menu = ContextMenu()
                     if let items = left.contextMenu?() {
                         for item in items {
@@ -367,7 +372,10 @@ private final class ModalHeaderView: View {
                     return menu
                 }
             } else {
-                leftButton?.set(handler: { _ in
+                leftButton?.set(handler: { [weak self] _ in
+                    guard let left = self?.controller?.modalHeader?.left else {
+                        return
+                    }
                     left.handler?()
                 }, for: .Click)
             }
@@ -383,6 +391,9 @@ private final class ModalHeaderView: View {
         rightButton?.scaleOnClick = true
 
         
+        leftButton?.disableActions()
+        rightButton?.disableActions()
+
         addSubview(titleView)
     }
     
@@ -445,6 +456,7 @@ private final class ModalHeaderView: View {
 
             if let image = header.right?.image {
                 rightButton?.set(image: image, for: .Normal)
+                rightButton?.sizeToFit()
             }
             if let image = header.left?.image {
                 leftButton?.set(image: image, for: .Normal)

@@ -108,7 +108,9 @@ open class Control: View {
     
     var trackingArea:NSTrackingArea?
     
-    
+    public var hasHandlers: Bool {
+        return !handlers.isEmpty
+    }
     
     private var handlers:[ControlEventHandler] = []
     private var stateHandlers:[ControlStateHandler] = []

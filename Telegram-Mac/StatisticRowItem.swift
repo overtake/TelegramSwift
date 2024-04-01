@@ -22,6 +22,7 @@ public enum ChartItemType {
     case hourlyStep
     case twoAxisHourlyStep
     case twoAxis5MinStep
+    case currency
 }
 
 
@@ -29,7 +30,7 @@ public enum ChartItemType {
 class StatisticRowItem: GeneralRowItem {
     let collection: ChartsCollection
     let controller: BaseChartController
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, collection: ChartsCollection, viewType: GeneralViewType, type: ChartItemType, getDetailsData: @escaping (Date, @escaping (String?) -> Void) -> Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, collection: ChartsCollection, viewType: GeneralViewType, type: ChartItemType, rate: Double = 1.0, getDetailsData: @escaping (Date, @escaping (String?) -> Void) -> Void) {
         self.collection = collection
         
         let controller: BaseChartController
@@ -46,6 +47,9 @@ class StatisticRowItem: GeneralRowItem {
             controller = PercentPieChartController(chartsCollection: collection, initiallyZoomed: false)
         case .bars:
             controller = StackedBarsChartController(chartsCollection: collection)
+            controller.isZoomable = false
+        case .currency:
+            controller = StackedBarsChartController(chartsCollection: collection, isCrypto: true, rate: rate)
             controller.isZoomable = false
         case .step:
             controller = StepBarsChartController(chartsCollection: collection)

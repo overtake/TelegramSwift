@@ -155,6 +155,8 @@ final class StoryInteraction : InterfaceObserver {
         var entryId: PeerId? = nil
         var closed: Bool = false
         
+        var isSeeking = false
+        
         var wideInput: Bool {
             let accept = self.entryId?.namespace == Namespaces.Peer.CloudUser || self.entryId?.namespace == Namespaces.Peer.CloudChannel
             return (inputInFocus || hasPopover) && accept
@@ -173,7 +175,7 @@ final class StoryInteraction : InterfaceObserver {
         var canViewStats: Bool = false
         var reactions: AvailableReactions?
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel || isSeeking
         }
         
         var inTransition: Bool {

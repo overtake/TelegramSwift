@@ -587,7 +587,7 @@ class ChatListRowItem: TableRowItem {
             messageText = .initialize(string: strings().chatListArchiveStoryCountCountable(storyState.items.count), color: theme.chatList.grayTextColor, font: .normal(.text))
         }
         
-        if let messageText = messageText.mutableCopy() as? NSMutableAttributedString, !messageText.string
+        if let messageText = messageText.trimmed.mutableCopy() as? NSMutableAttributedString, !messageText.string
             .isEmpty {
             self.messageLayout = .init(messageText, maximumNumberOfLines: 2)
             let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
@@ -1061,7 +1061,7 @@ class ChatListRowItem: TableRowItem {
                     textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
                 }
             }
-            if let messageText = messageText, !messageText.string.isEmpty {
+            if let messageText = messageText?.trimmed, !messageText.string.isEmpty {
                 self.messageLayout = .init(messageText, maximumNumberOfLines: chatNameLayout != nil || tags != nil ? 1 : 2, cutout: textCutout)
                 
                 let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
@@ -1206,6 +1206,15 @@ class ChatListRowItem: TableRowItem {
             w += 24
         }
         w += (leftInset - 20)
+        
+        if let topicsLayout = forumTopicNameLayout, let _ = tags {
+            w += topicsLayout.layoutSize.width + 5
+            w += 40
+        }
+        if let _ = tags, !contentImageSpecs.isEmpty {
+            w += CGFloat(contentImageSpecs.count) * 16
+            w += 40
+        }
 
         return max(200, size.width) - margin * 3 - w - (isOutMessage ? isRead ? 20 : 12 : 0)
     }
@@ -1303,6 +1312,7 @@ class ChatListRowItem: TableRowItem {
 
         messageLayout?.measure(width: messageWidth)
         messageSelectedLayout?.measure(width: messageWidth)
+        
 
         self.topicsLayout?.measure(messageWidth)
    
@@ -2065,12 +2075,12 @@ class ChatListRowItem: TableRowItem {
     }
   
     override var height: CGFloat {
-        if let hideStatus = hideStatus, !shouldHideContent {
+        if let hideStatus = hideStatus {
             switch hideStatus {
             case .collapsed:
-                return 30
+                return width == 70 ? 70 : 30
             default:
-                return 70
+                break
             }
         }
         if shouldHideContent {

@@ -348,7 +348,7 @@ private struct State : Equatable {
                 })
             }
             
-            let recepients: TelegramBusinessRecipients = .init(categories: mappedCategories, additionalPeers: peerIds, exclude: recepient == .all)
+            let recepients: TelegramBusinessRecipients = .init(categories: mappedCategories, additionalPeers: peerIds, excludePeers: Set(), exclude: recepient == .all)
             return .init(shortcutId: shortcutId, recipients: recepients, inactivityDays: awayPeriod)
         } else {
             return nil
@@ -368,7 +368,7 @@ private struct State : Equatable {
                     $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace
                 })
             }
-            let recepients: TelegramBusinessRecipients = .init(categories: mappedCategories, additionalPeers: peerIds, exclude: recepient == .all)
+            let recepients: TelegramBusinessRecipients = .init(categories: mappedCategories, additionalPeers: peerIds, excludePeers: Set(), exclude: recepient == .all)
             return .init(shortcutId: shortcutId, recipients: recepients, schedule: scheduleAway, sendWhenOffline: onlyOffline)
         } else {
             return nil
@@ -764,7 +764,7 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
                 if let greetingMessage {
                     current.shortcut = shortcuts.items.first(where: { $0.id == greetingMessage.shortcutId })
                 } else {
-                    current.shortcut = shortcuts.items.first(where: { $0.shortcut == "greeting" || $0.shortcut == "_greeting" })
+                    current.shortcut = shortcuts.items.first(where: { $0.shortcut == "hello" || $0.shortcut == "_hello" })
                     current.recepient = .all
                 }
             }
@@ -998,7 +998,7 @@ func BusinessMessageController(context: AccountContext, type: BusinessMessageTyp
         return InputDataSignalValue(entries: entries(state, arguments: arguments), grouping: false)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: type.title, removeAfterDisappear: false, hasDone: true)
+    let controller = InputDataController(dataSignal: signal, title: type.title, removeAfterDisappear: false, hasDone: true, identifier: "business_message")
     
     
     controller.validateData = { _ in

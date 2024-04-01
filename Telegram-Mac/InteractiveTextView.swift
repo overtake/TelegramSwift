@@ -22,6 +22,8 @@ final class InteractiveTextView : Control {
         
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        layer?.masksToBounds = false
     }
     
     required init?(coder: NSCoder) {
@@ -52,7 +54,7 @@ final class InteractiveTextView : Control {
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
                 
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: emoji.color ?? textColor)
                 validIds.append(id)
                 
                 let rect = item.rect.insetBy(dx: -2, dy: -2)

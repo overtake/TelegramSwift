@@ -525,12 +525,46 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: FragmentMonetizationPromoController(context: context, peerId: context.peerId), for: context.window)
+//            var reasons: ComplicatedReport = .init(title: "WHAT IS WRONG WITH THIS AD?")
+//            reasons.list.append(.init(string: "I don’t like it", id: 0))
+//            reasons.list.append(.init(string: "I don't want to see ads", id: 1))
+//            reasons.list.append(.init(string: "Destination doesn't match the ad", id: 2))
+//            
+//            reasons.list.append(.init(string: "Word choice or style", id: 3, inner: .init(list: [.init(string: "Profanity or vulgarity", id: 0),
+//                                                                                                 .init(string: "Excessive formatting", id: 1),
+//                                                                                                 .init(string: "Unclear or vague meaning", id: 2)], title: "WHAT IS WRONG WITH THIS AD?")))
+//           
+//            reasons.list.append(.init(string: "Shocking or sexual content", id: 4, inner: .init(list: [.init(string: "Graphic or shocking content", id: 0),
+//                                                                                                       .init(string: "Nudity and sexual content", id: 1),
+//                                                                                                       .init(string: "Child abuse", id: 2)], title: "WHAT IS WRONG WITH THIS AD?")))
+//            reasons.list.append(.init(string: "Hate speech or threats", id: 5))
+//            reasons.list.append(.init(string: "Scam or misleading", id: 6, inner: .init(list: [.init(string: "Clickbait or exaggeration", id: 0),
+//                                                                                               .init(string: "Deceptive or harmful financial products", id: 1),
+//                                                                                               .init(string: "Impersonation", id: 2),
+//                                                                                               .init(string: "Malware or phishing", id: 3)], title: "WHAT IS WRONG WITH THIS AD?")))
+//            reasons.list.append(.init(string: "Illegal or questionable products", id: 7, inner: .init(list: [.init(string: "Drugs, alcohol or tobacco", id: 0),
+//                                                                                                             .init(string: "Uncertified medicine or supplements", id: 1),
+//                                                                                                             .init(string: "Weapons or firearms", id: 2),
+//                                                                                                             .init(string: "Fake money", id: 3),
+//                                                                                                             .init(string: "Fake documents", id: 4),
+//                                                                                                             .init(string: "Malware, phishing, hacked accounts", id: 5),
+//                                                                                                             .init(string: "Human trafficking or exploitation", id: 6),
+//                                                                                                             .init(string: "Wild or restricted animals", id: 7),
+//                                                                                                             .init(string: "Gambling", id: 8)], title: "WHAT IS WRONG WITH THIS AD?")))
+//            reasons.list.append(.init(string: "Copyright infringement", id: 8, inner: .init(list: [.init(string: "Piracy or copyright infringement", id: 0),
+//                                                                                                   .init(string: "Impersonation", id: 1)], title: "WHAT IS WRONG WITH THIS AD?")))
+//            reasons.list.append(.init(string: "Politics or religion", id: 9, inner: .init(list: [.init(string: "Political ads or endorsement", id: 0),
+//                                                                                                 .init(string: "Religious messages or practices", id: 1),
+//                                                                                                 .init(string: "Misinformation", id: 2)], title: "WHAT IS WRONG WITH THIS AD?")))
+//            reasons.list.append(.init(string: "Spam", id: 10))
+//
+//            showComplicatedReport(context: context, title: "Report Ad", info: nil, data: reasons)
+            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: FragmentUsernameController(context: context, peer: .init(context.myPeer!), username: "news"), for: context.window)
+            showModal(with: FragmentAdsInfoController(context: context), for: context.window)
             return .invoked
         }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         

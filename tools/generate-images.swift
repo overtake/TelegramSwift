@@ -925,6 +925,7 @@ func initialize() -> [String] {
     array.append("channel_feature_stories")
     array.append("channel_feature_emoji_pack")
     array.append("channel_feature_voice_to_text")
+    array.append("channel_feature_no_ads")
 
     array.append("chat_hidden_author")
     array.append("chat_my_notes")
@@ -932,6 +933,8 @@ func initialize() -> [String] {
     array.append("premium_required_forward")
     
     array.append("create_new_message_general")
+    
+    array.append("bot_manager_settings")
 
     return array
 }
