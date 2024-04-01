@@ -77,8 +77,8 @@ final class ChatListBirthdayItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 24))
-        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 24))
+        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.prefix(2).count - 1) * 24))
+        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.prefix(2).count - 1) * 24))
         return true
     }
     
