@@ -54,6 +54,89 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         }
     }
     
+    class AdSettingsView : View {
+        private let close: ImageButton = ImageButton()
+        private var more: ImageButton?
+        private let separator = View()
+        
+        private weak var item: ChatMessageItem?
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            
+            addSubview(close)
+            addSubview(separator)
+            
+            close.scaleOnClick = true
+            close.autohighlight = false
+            
+            close.set(handler: { [weak self] _ in
+                if let item = self?.item {
+                    item.webpageLayout?.premiumBoarding()
+                }
+            }, for: .Click)
+
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            close.setFrameOrigin(.zero)
+            separator.frame = NSMakeRect(6, close.frame.maxY + 3, frame.width - 12, .borderSize)
+            more?.setFrameOrigin(NSMakePoint(0, close.frame.maxY + 6))
+
+        }
+        
+        func update(_ item: ChatMessageItem, animated: Bool) {
+            self.item = item
+            backgroundColor = theme.colors.background
+            
+            separator.backgroundColor = theme.colors.grayIcon.withAlphaComponent(0.4)
+
+            close.set(image: NSImage(resource: .iconAdHide).precomposed(theme.colors.grayIcon), for: .Normal)
+            close.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+            separator.isHidden = !item.isFragmentAd
+            
+            
+            if item.isFragmentAd {
+                let current: ImageButton
+                if let view = self.more {
+                    current = view
+                } else {
+                    current = ImageButton(frame: NSMakeRect(0, 30, 30, 30))
+                    current.scaleOnClick = true
+                    current.autohighlight = false
+
+                    self.more = current
+                    addSubview(current)
+                    
+                   
+                    
+                }
+                current.removeAllHandlers()
+                current.set(handler: { [weak item] control in
+                    if let item = item, let event = NSApp.currentEvent {
+                        _ = item.menuItems(in: .zero).startStandalone(next: { [weak control] items in
+                            if let control = control {
+                                let menu = ContextMenu()
+                                menu.items = items
+                                AppMenu.show(menu: menu, event: event, for: control)
+                            }
+                        })
+                    }
+                }, for: .Down)
+                current.set(image: NSImage(resource: .iconAdMore).precomposed(theme.colors.grayIcon), for: .Normal)
+                current.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+            } else if let view = self.more {
+                performSubviewRemoval(view, animated: animated)
+                self.more = nil
+            }
+        }
+    }
+    
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let webpageContent = webpageContent {
@@ -79,6 +162,9 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
 
     private(set) var webpageContent:WPContentView?
     private var actionButton: ActionButton?
+    
+    
+    private var adSettingView: AdSettingsView?
     
     private var shimmerEffect: ShimmerView?
     private var shimmerMask: SimpleLayer?
@@ -133,6 +219,16 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
 
     }
     
+    func adSettingFrame(_ item: ChatMessageItem) -> NSRect {
+        let webpage = webpageFrame(item)
+        var rect = NSMakeRect(webpage.maxX + contentFrame(item).minX + 10, contentFrame(item).minY + webpage.minY, 30, item.isFragmentAd ? 69 : 30)
+        if item.isBubbled {
+            rect.origin.x += 10
+            rect.origin.y = bubbleFrame(item).minY
+        }
+        return rect
+    }
+    
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         super.updateLayout(size: size, transition: transition)
         guard let item = self.item as? ChatMessageItem else {
@@ -153,6 +249,10 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             }
             let contentRect = self.contentFrame(item)
             transition.updateFrame(view: actionButton, frame: CGRect(origin: NSMakePoint(contentRect.minX, contentRect.maxY - actionButton.frame.height + add), size: actionButton.frame.size))
+        }
+        
+        if let adSettingView {
+            transition.updateFrame(view: adSettingView, frame: adSettingFrame(item))
         }
     }
 
@@ -325,6 +425,22 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     self.shimmerMask = nil
                 }
             }
+            
+            if let adAttribute = item.message?.adAttribute {
+                let current: AdSettingsView
+                if let view = self.adSettingView {
+                    current = view
+                } else {
+                    current = AdSettingsView(frame: adSettingFrame(item))
+                    self.adSettingView = current
+                    self.rowView.addSubview(current)
+                }
+                current.update(item, animated: animated)
+                current.layer?.cornerRadius = current.frame.width / 2
+            } else if let view = self.adSettingView {
+                performSubviewRemoval(view, animated: animated)
+                self.adSettingView = nil
+            }
 
         }
 
@@ -342,7 +458,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     override func clickInContent(point: NSPoint) -> Bool {
         guard let item = item as? ChatMessageItem else {return true}
         
-        if let text = self.text {
+        if let text = self.text, !item.textLayout.lines.isEmpty {
             let point = text.convert(point, from: self)
             let layout = item.textLayout
             

@@ -241,6 +241,8 @@ public struct PeerCallState : Equatable {
     
     var statusTooltip: String? = nil
     
+    var mouseInside: Bool = true
+    
     public var externalState: ExternalPeerCallState = .init(state: .connecting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false, canBeRemoved: false)
     
     var status: PeerCallStatusValue {

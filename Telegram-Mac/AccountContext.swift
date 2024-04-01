@@ -42,6 +42,7 @@ public struct PremiumConfiguration {
             minChannelEmojiStatusLevel: 8,
             minChannelWallpaperLevel: 9,
             minChannelCustomWallpaperLevel: 10,
+            minChannelRestrictAdsLevel: 50,
             minGroupProfileIconLevel: 7,
             minGroupEmojiStatusLevel: 8,
             minGroupWallpaperLevel: 9,
@@ -65,6 +66,8 @@ public struct PremiumConfiguration {
     public let minChannelEmojiStatusLevel: Int32
     public let minChannelWallpaperLevel: Int32
     public let minChannelCustomWallpaperLevel: Int32
+    public let minChannelRestrictAdsLevel: Int32
+
     
     public let minGroupProfileIconLevel: Int32
     public let minGroupEmojiStatusLevel: Int32
@@ -88,6 +91,7 @@ public struct PremiumConfiguration {
         minChannelEmojiStatusLevel: Int32,
         minChannelWallpaperLevel: Int32,
         minChannelCustomWallpaperLevel: Int32,
+        minChannelRestrictAdsLevel: Int32,
         minGroupProfileIconLevel: Int32,
         minGroupEmojiStatusLevel: Int32,
         minGroupWallpaperLevel: Int32,
@@ -109,6 +113,7 @@ public struct PremiumConfiguration {
         self.minChannelEmojiStatusLevel = minChannelEmojiStatusLevel
         self.minChannelWallpaperLevel = minChannelWallpaperLevel
         self.minChannelCustomWallpaperLevel = minChannelCustomWallpaperLevel
+        self.minChannelRestrictAdsLevel = minChannelRestrictAdsLevel
         self.minGroupProfileIconLevel = minGroupProfileIconLevel
         self.minGroupEmojiStatusLevel = minGroupEmojiStatusLevel
         self.minGroupWallpaperLevel = minGroupWallpaperLevel
@@ -138,6 +143,7 @@ public struct PremiumConfiguration {
                 minChannelEmojiStatusLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelEmojiStatusLevel,
                 minChannelWallpaperLevel: get(data["channel_wallpaper_level_min"]) ?? defaultValue.minChannelWallpaperLevel,
                 minChannelCustomWallpaperLevel: get(data["channel_custom_wallpaper_level_min"]) ?? defaultValue.minChannelCustomWallpaperLevel,
+                minChannelRestrictAdsLevel: get(data["channel_restrict_sponsored_level_min"]) ?? defaultValue.minChannelRestrictAdsLevel,
                 minGroupProfileIconLevel: get(data["group_profile_bg_icon_level_min "]) ?? defaultValue.minGroupProfileIconLevel,
                 minGroupEmojiStatusLevel: get(data["group_emoji_status_level_min"]) ?? defaultValue.minGroupEmojiStatusLevel,
                 minGroupWallpaperLevel: get(data["group_wallpaper_level_min"]) ?? defaultValue.minGroupWallpaperLevel,
@@ -386,9 +392,16 @@ final class AccountContext {
     var cloudThemes:Signal<CloudThemesCachedData, NoError> {
         return _cloudThemes.get() |> deliverOnMainQueue
     }
+    
+    
+    var privacy:Signal<AccountPrivacySettings?, NoError> {
+        return bindings.mainController().settings.privacySettings
+    }
+    func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
+        bindings.mainController().settings.updatePrivacy(updated, kind: kind)
+    }
     #endif
-    
-    
+
     
     private let _emoticonThemes = Atomic<[(String, TelegramPresentationTheme)]>(value: [])
     var emoticonThemes: [(String, TelegramPresentationTheme)] {
@@ -439,6 +452,8 @@ final class AccountContext {
             self?.globalPeerHandler.set(.single(location))
         })
     }
+    
+    private(set) var autologinToken: String?
     
     let hasPassportSettings: Promise<Bool> = Promise(false)
 
@@ -915,8 +930,11 @@ final class AccountContext {
         self.globalLocationDisposable.set(globalPeerHandler.get().start(next: { [weak self] value in
             _ = self?._globalLocationId.swap(value)
         }))
+        let autologinToken = engine.data.subscribe(TelegramEngine.EngineData.Item.Configuration.Links()) |> deliverOnMainQueue
         
-        
+        actionsDisposable.add(autologinToken.start(next: { [weak self] token in
+            self?.autologinToken = token.autologinToken
+        }))
     }
     
     @objc private func updateKeyWindow() {
@@ -1184,15 +1202,27 @@ final class AccountContext {
         }
         let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
-        let create = select |> map { $0.first! } |> mapToSignal { peerId in
-            return engine.peers.createSecretChat(peerId: peerId) |> `catch` {_ in .complete()}
-            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
-                return showModalProgress(signal: .single(peerId), for: window)
-        }
+        let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
+            return engine.peers.createSecretChat(peerId: peerId)
+        } |> deliverOnMainQueue
         
         _ = create.start(next: { [weak self] peerId in
             guard let `self` = self else {return}
             self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
+        }, error: { [weak self] error in
+            guard let context = self else {
+                return
+            }
+            switch error {
+            case .generic:
+                showModalText(for: context.window, text: strings().unknownError)
+            case .limitExceeded:
+                showModalText(for: context.window, text: strings().loginFloodWait)
+            case let .premiumRequired(peer):
+                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
+            }
         })
     }
     #endif

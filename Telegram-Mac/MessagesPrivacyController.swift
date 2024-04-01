@@ -51,8 +51,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         arguments.toggle(false)
     })))
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contacts, data: .init(name: strings().privacySettingsMessagesContacts, color: theme.colors.text, type: state.globalSettings.nonContactChatsRequirePremium ? .selectable(true) : state.isPremium ? .selectable(false) : .image(theme.icons.premium_lock_gray), viewType: .lastItem, action: {
-        if state.isPremium {
+    let new_noncontact_peers_require_premium_without_ownpremium = arguments.context.appConfiguration.getBoolValue("new_noncontact_peers_require_premium_without_ownpremium", orElse: false)
+    
+    let isAvailable = state.isPremium || new_noncontact_peers_require_premium_without_ownpremium
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contacts, data: .init(name: strings().privacySettingsMessagesContacts, color: theme.colors.text, type: state.globalSettings.nonContactChatsRequirePremium ? .selectable(true) : isAvailable ? .selectable(false) : .image(theme.icons.premium_lock_gray), viewType: .lastItem, action: {
+        if isAvailable {
             arguments.toggle(true)
         } else {
             arguments.alert()

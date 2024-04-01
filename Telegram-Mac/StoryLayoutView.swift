@@ -14,6 +14,12 @@ import Postbox
 import TelegramMedia
 import MediaPlayer
 
+private var _nextSeekdId: Int = 0
+private func nextSeekdId() -> Int {
+    _nextSeekdId += 1
+    return _nextSeekdId
+}
+
 class StoryLayoutView : Control {
     
     var isHighQuality: Bool = true
@@ -228,6 +234,10 @@ class StoryLayoutView : Control {
     
     var duration: Double {
         return 7
+    }
+    
+    func seek(toProgress progress: Double) {
+        
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -632,6 +642,25 @@ class StoryVideoView : StoryImageView {
         self.view.setVideoLayerGravity(.resizeAspectFill)
     }
     
+    
+    override func seek(toProgress progress: Double) {
+        let seek = self.duration * progress
+        let result = min(duration * Double(progress), duration)
+
+        self.mediaPlayer?.seek(timestamp: seek)
+        
+        guard let status = state.status else {
+            return
+        }
+        switch status.status {
+        case .playing:
+            self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: result, baseRate: 1, volume: 1, seekId: nextSeekdId(), status: .playing)))
+        case .paused:
+            self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: result, baseRate: 1, volume: 1, seekId: nextSeekdId(), status: .paused)))
+        case .buffering:
+            break
+        }
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

@@ -366,7 +366,7 @@ func BusinessLocationController(context: AccountContext) -> InputDataController 
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().businessLocationTitle, removeAfterDisappear: false, hasDone: true)
+    let controller = InputDataController(dataSignal: signal, title: strings().businessLocationTitle, removeAfterDisappear: false, hasDone: true, identifier: "business_location")
     
     controller.updateDatas = { datas in
         updateState { current in

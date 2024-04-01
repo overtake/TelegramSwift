@@ -11,15 +11,19 @@ import TGUIKit
 import CalendarUtils
 
 struct CalendarMonthInteractions {
+    let lowYear: Int
+    let canBeNoYear: Bool
     let selectAction:(Date)->Void
     let backAction:((Date)->Void)?
     let nextAction:((Date)->Void)?
     let changeYear: (Int32, Date)->Void
-    init(selectAction:@escaping (Date)->Void, backAction:((Date)->Void)? = nil, nextAction:((Date)->Void)? = nil, changeYear: @escaping(Int32, Date)->Void) {
+    init(lowYear: Int, canBeNoYear: Bool, selectAction:@escaping (Date)->Void, backAction:((Date)->Void)? = nil, nextAction:((Date)->Void)? = nil, changeYear: @escaping(Int32, Date)->Void) {
         self.selectAction = selectAction
         self.backAction = backAction
         self.nextAction = nextAction
         self.changeYear = changeYear
+        self.lowYear = lowYear
+        self.canBeNoYear = canBeNoYear
     }
 }
 
@@ -294,9 +298,11 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     let month:CalendarMonthStruct
     let onlyFuture: Bool
     let limitedBy: Date?
-    init(_ month:Date, onlyFuture: Bool, limitedBy: Date?, selectDayAnyway: Bool, interactions:CalendarMonthInteractions) {
+    let lowYear: Int
+    init(_ month:Date, onlyFuture: Bool, limitedBy: Date?, selectDayAnyway: Bool, interactions:CalendarMonthInteractions, lowYear: Int = 2013) {
         self.onlyFuture = onlyFuture
         self.limitedBy = limitedBy
+        self.lowYear = lowYear
         self.month = CalendarMonthStruct(month: month, selectDayAnyway: selectDayAnyway, onlyFuture: self.onlyFuture, limitedBy: self.limitedBy, dayHandler: { day in
             interactions.selectAction(CalendarUtils.monthDay(day, date: month))
         })
@@ -309,13 +315,22 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     override func getCenterBarViewOnce() -> TitledBarView {
         let formatter:DateFormatter = DateFormatter()
         formatter.locale = Locale(identifier: appAppearance.language.languageCode)
-        formatter.dateFormat = "MMMM"
+        formatter.dateFormat = "LLLL"
         let monthString:String = formatter.string(from: month.month)
         formatter.dateFormat = "yyyy"
-        let yearString:String = formatter.string(from: month.month)
+        let yearString:String
+        if month.components.year == 1 {
+            yearString = "—"
+        } else {
+            yearString = formatter.string(from: month.month)
+        }
         
         let barView = TitledBarView(controller: self, .initialize(string: monthString, color: theme.colors.text, font:.medium(.text)), .initialize(string:yearString, color: theme.colors.grayText, font:.normal(.small)))
         barView.removeAllHandlers()
+        
+        let lowYear = self.interactions.lowYear
+        let canBeNoYear = self.interactions.canBeNoYear
+
         barView.contextMenu = { [weak self] in
             guard let `self` = self else {
                 return nil
@@ -329,7 +344,16 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
             
              var items:[ContextMenuItem] = []
             
-            for i in stride(from: 1900 + timeinfoNow.tm_year - 1, to: 2012, by: -1) {
+            if canBeNoYear {
+                items.append(.init("—", handler: { [weak self] in
+                    guard let `self` = self else {
+                        return
+                    }
+                    self.interactions.changeYear(1, self.month.month)
+                }))
+            }
+            
+            for i in stride(from: 1900 + timeinfoNow.tm_year, to: Int32(lowYear) - 1, by: -1) {
                 items.append(.init("\(i)", handler: { [weak self] in
                     guard let `self` = self else {
                         return
@@ -367,6 +391,9 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
             }
             return true
         }
+        if month.components.year! == 1, month.components.month! == 12 {
+            return false
+        }
         return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
     }
     
@@ -374,7 +401,7 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
         if self.onlyFuture {
             return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
         }
-        return month.components.year! > 2013 || (month.components.year == 2013 && month.components.month! >= 9)
+        return month.components.year! > lowYear || ((month.components.year == lowYear || month.components.year! == 1) && month.components.month! > 1)
     }
     
     override func getLeftBarViewOnce() -> BarView {

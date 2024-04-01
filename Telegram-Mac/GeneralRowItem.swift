@@ -230,10 +230,10 @@ enum GeneralViewType : Equatable {
         return .modern(position: .single, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var textTopItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 14, 3, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 14, 5, 0))
     }
     static var textBottomItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(3, 14, 0, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 14, 0, 0))
     }
     static var separator: GeneralViewType {
         return .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))

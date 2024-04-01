@@ -13,6 +13,87 @@ import Postbox
 import TelegramCore
 import InAppSettings
 import FetchManager
+extension TelegramBirthday {
+    var isToday: Bool {
+        let date = Date()
+        let calendar = Calendar.current
+
+        let day = calendar.component(.day, from: date)
+        let month = calendar.component(.month, from: date)
+        
+        return self.day == day && self.month == month
+    }
+    
+    func isTomorrow() -> Bool {
+        let currentDate = Date()
+        let calendar = Calendar.current
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: currentDate) else { return false }
+
+        let dayTomorrow = calendar.component(.day, from: tomorrow)
+        let monthTomorrow = calendar.component(.month, from: tomorrow)
+
+        return day == dayTomorrow && month == monthTomorrow
+    }
+
+    func isYesterday() -> Bool {
+        let currentDate = Date()
+        let calendar = Calendar.current
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: currentDate) else { return false }
+
+        let dayYesterday = calendar.component(.day, from: yesterday)
+        let monthYesterday = calendar.component(.month, from: yesterday)
+
+        return day == dayYesterday && month == monthYesterday
+    }
+    
+    
+    func yearsSince() -> Int? {
+        
+        guard let year else {
+            return nil
+        }
+        
+        let calendar = Calendar.current
+        
+        // Components of the input date
+        var dateComponents = DateComponents()
+        dateComponents.day = Int(day)
+        dateComponents.month = Int(month)
+        dateComponents.year = Int(year)
+        
+        // Construct the date from components
+        guard let fromDate = calendar.date(from: dateComponents) else {
+            return nil // Invalid date was provided
+        }
+        
+        // Get the current date
+        let toDate = Date()
+        
+        // Calculate the difference in years
+        let components = calendar.dateComponents([.year], from: fromDate, to: toDate)
+        return components.year
+    }
+
+    
+    var isEligble: Bool {
+        return self.isToday || self.isTomorrow() || self.isYesterday()
+    }
+    var formatted: String {
+        return formatBirthdayToString(day: Int(self.day), month: Int(self.month), year: self.year.flatMap(Int.init)) ?? ""
+    }
+    var formattedYears: String {
+        if let year = yearsSince() {
+            let string = formatted + " (\(strings().birthdayYearsOldCountable(year)))"
+            if isToday {
+                return "🎂 " + string
+            } else {
+                return string
+            }
+        } else {
+            return formatted
+        }
+    }
+}
 
 private final class Arguments {
     let context: AccountContext
@@ -63,7 +144,7 @@ enum UIChatListEntryId : Hashable {
     case sharedFolderUpdated
     case space
     case suspicious
-
+    case birthdays
 }
 
 
@@ -100,6 +181,10 @@ extension EngineChatList.Item {
     }
 }
 
+struct UIChatListBirthday : Equatable {
+    let birthday: TelegramBirthday
+    let peer: EnginePeer
+}
 
 enum UIChatListEntry : Identifiable, Comparable {
     case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool, folders: FilterData?)
@@ -109,6 +194,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case systemDeprecated(ChatListFilter)
     case sharedFolderUpdated(ChatFolderUpdates)
     case suspicious(NewSessionReview)
+    case birthdays([UIChatListBirthday])
     case space
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
@@ -139,6 +225,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case let .systemDeprecated(filter):
             if case .systemDeprecated(filter) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .birthdays(birthdays):
+            if case .birthdays(birthdays) = rhs {
                 return true
             } else {
                 return false
@@ -217,6 +309,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .sharedFolderUpdated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
+        case let .birthdays(birthdays):
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .loading:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         }
@@ -248,6 +342,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .loading
         case .suspicious:
             return .suspicious
+        case .birthdays:
+            return .birthdays
         case .space:
             return .space
         }
@@ -284,8 +380,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     }
                 }
                 
-                
-                
                 return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact, displayAsTopics: item.displayAsTopicList, folders: filterData)
 
             case let .group(_, item, animated, hideStatus, appearMode, hideContent, storyState):
@@ -306,10 +400,16 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }, hide: arguments.hideSharedFolderUpdates)
             case let .suspicious(session):
                 return SuspiciousAuthRowItem(initialSize, stableId: entry.stableId, context: arguments.context, session: session, accept: arguments.acceptSession, revoke: arguments.revokeSession)
+            case let .birthdays(birthdays):
+                if birthdays.isEmpty {
+                    return ChatListAddBirthdayItem(initialSize, stableId: entry.stableId, context: arguments.context)
+                } else {
+                    return ChatListBirthdayItem(initialSize, stableId: entry.stableId, birthdays: birthdays, context: arguments.context)
+                }
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
-                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) //StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, state: state, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) 
             }
         }
         
@@ -657,10 +757,37 @@ class ChatListController : PeersListController {
         
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
+                
         
-        var previousState: PeerListState?
 
-        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter, storyState, suspiciousSession -> Signal<TableUpdateTransition, NoError> in
+        let suggestions = context.engine.notices.getServerProvidedSuggestions()
+        let birthdays: Signal<[UIChatListBirthday], NoError> = combineLatest(ApplicationSpecificNotice.dismissedBirthdayPremiumGifts(accountManager: context.sharedContext.accountManager), context.account.stateManager.contactBirthdays) |> map { dismissed, list in
+            return list.filter {
+                $0.value.isToday
+            }.filter { birthday in
+                if let dismissed {
+                    return !dismissed.contains(birthday.key.id._internalGetInt64Value())
+                } else {
+                    return true
+                }
+            }
+        } |> mapToSignal { values in
+            return context.account.postbox.transaction { transaction in
+                var birthdays:[UIChatListBirthday] = []
+                for (key, value) in values {
+                    if let peer = transaction.getPeer(key) {
+                        birthdays.append(.init(birthday: value, peer: .init(peer)))
+                    }
+                }
+                return birthdays
+            }
+        }
+        
+        let myBirthday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: context.peerId))
+        
+        
+        
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday -> Signal<TableUpdateTransition, NoError> in
                                 
             let filterData = value.1
             let folderUpdates = value.3
@@ -711,12 +838,8 @@ class ChatListController : PeersListController {
                 if !update.list.hasLater {
                     let hideStatus: ItemHideStatus
                     if state.appear == .short || state.splitState == .minimisize {
-                        switch hiddenItems.archive {
-                        case .hidden:
-                            hideStatus = hiddenItems.archive
-                        default:
-                            hideStatus = .normal
-                        }
+                        hideStatus = hiddenItems.archive
+
                     } else {
                         hideStatus = hiddenItems.archive
                     }
@@ -748,9 +871,18 @@ class ChatListController : PeersListController {
                 mapped.append(.suspicious(suspiciousSession))
             }
             
-//            if !filterData.isEmpty && !filterData.sidebar, state.appear == .normal {
-//                mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
-//            }
+            if state.mode == .plain, !update.list.hasLater {
+                if suggestions.contains(.setupBirthday), myBirthday == nil {
+                    mapped.append(.birthdays([]))
+                } else {
+                    if !birthdays.isEmpty {
+                        mapped.append(.birthdays(birthdays))
+                    }
+                }
+            }
+            
+            
+            
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
                 mapped.append(.systemDeprecated(filterData.filter))
             }
@@ -1109,7 +1241,7 @@ class ChatListController : PeersListController {
                
                 return item.isFixedItem || item.groupId != .root
             }
-            items.move(at: from - offset, to: to - offset)
+            _ = first.swap(true)
             let signal = context.engine.peers.setForumChannelPinnedTopics(id: peerId, threadIds: items) |> deliverOnMainQueue
             reorderDisposable.set(signal.start())
 
@@ -1148,8 +1280,7 @@ class ChatListController : PeersListController {
                
                 return item.isFixedItem || item.groupId != .root
             }
-            
-            items.move(at: from - offset, to: to - offset)
+            _ = first.swap(true)
             reorderDisposable.set(context.engine.peers.reorderPinnedItemIds(location: location, itemIds: items).start())
         }
         
@@ -1266,7 +1397,8 @@ class ChatListController : PeersListController {
         
         
         
-        self.suggestAutoarchiveDisposable.set(combineLatest(queue: .mainQueue(), isLocked, context.isKeyWindow, getServerProvidedSuggestions(account: self.context.account)).start(next: { [weak self] locked, isKeyWindow, values in
+        
+        self.suggestAutoarchiveDisposable.set(combineLatest(queue: .mainQueue(), isLocked, context.isKeyWindow, context.engine.notices.getServerProvidedSuggestions()).start(next: { [weak self] locked, isKeyWindow, values in
                 guard let strongSelf = self, let navigation = strongSelf.navigationController else {
                     return
                 }
@@ -1288,8 +1420,7 @@ class ChatListController : PeersListController {
                 strongSelf.didSuggestAutoarchive = true
                 
                 let context = strongSelf.context
-            
-                _ = dismissServerProvidedSuggestion(account: strongSelf.context.account, suggestion: .autoarchivePopular).start()
+                _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .autoarchivePopular).startStandalone()
                 
                 verifyAlert_button(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, ok: strings().alertHideNewChatsOK, cancel: strings().alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
@@ -1698,7 +1829,7 @@ class ChatListController : PeersListController {
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController, !(item.isForum && !item.isTopic) {
                 switch controller.mode {
-                case .history, .thread, .customChatContents:
+                case .history, .thread, .customChatContents, .customLink:
                     if let modalAction = navigation.modalAction {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }

@@ -127,8 +127,8 @@ final class PeerCallActionView : Control {
     override init() {
         super.init(frame: CGRect(origin: .zero, size: CGSize(width: actionSize.width, height: actionSize.height + 5 + 15)))
 
-        imageLayer.contentsGravity = .center
-        backgroundLayer.contentsGravity = .center
+        imageLayer.contentsGravity = .resizeAspectFill
+        backgroundLayer.contentsGravity = .resizeAspectFill
         
         backgroundView.wantsLayer = true
         backgroundView.material = .light

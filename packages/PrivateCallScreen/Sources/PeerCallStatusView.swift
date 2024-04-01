@@ -45,7 +45,7 @@ private class ActiveCallView : View {
    
     
     private let signalView = SignalControl(frame: NSMakeRect(0, 0, 24, 10))
-    private let duration = DynamicCounterTextView()
+    private let duration = TextView()
     
     private var statusTimer: SwiftSignalKit.Timer?
 
@@ -70,10 +70,9 @@ private class ActiveCallView : View {
             let time = Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
             let text = String.durationTransformed(elapsed: Int(time))
             
-            let value = DynamicCounterTextView.make(for: text, count: text, font: .roundTimer(.text), textColor: .white, width: .greatestFiniteMagnitude)
-            
-            duration.update(value, animated: transition.isAnimated)
-            duration.change(size: value.size, animated: transition.isAnimated)
+            let durationText = TextViewLayout(.initialize(string: text, color: .white, font: .roundTimer(.text)))
+            durationText.measure(width: .greatestFiniteMagnitude)
+            duration.update(durationText)
             
             transition.updateFrame(view: self, frame: CGRect(origin: self.frame.origin, size: NSMakeSize(signalView.frame.width + 4 + duration.frame.width, self.frame.height)))
             self.updateLayout(size: self.frame.size, transition: transition)

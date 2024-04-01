@@ -39,6 +39,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case forceTouchReact(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchPreviewMedia(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case callSettings(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case showProfileId(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     var stableId: Int {
         switch self {
         case let .header(_, uniqueId, _):
@@ -87,6 +88,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 21
         case .callSettings:
             return 22
+        case .showProfileId:
+            return 23
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -139,6 +142,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .forceTouchPreviewMedia(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .callSettings(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .showProfileId(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .section(id):
             return (id + 1) * 1000 - id
@@ -239,6 +244,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
                 arguments.callSettings()
             })
+        case let .showProfileId(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsShowProfileIdText, type: .switchable(value), viewType: viewType, action: arguments.showProfileId)
         }
     }
 }
@@ -267,7 +274,8 @@ private final class GeneralSettingsArguments {
     let callSettings: ()->Void
     let openLiteMode: ()->Void
     let toggleSpellingKey:(String)->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void, toggleSpellingKey:@escaping(String)->Void) {
+    let showProfileId:()->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void, toggleSpellingKey:@escaping(String)->Void, showProfileId:@escaping()->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -288,6 +296,7 @@ private final class GeneralSettingsArguments {
         self.callSettings = callSettings
         self.openLiteMode = openLiteMode
         self.toggleSpellingKey = toggleSpellingKey
+        self.showProfileId = showProfileId
     }
    
 }
@@ -393,6 +402,14 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
+    
+    
+    entries.append(.showProfileId(sectionId: sectionId, enabled: FastSettings.canViewPeerId, viewType: .singleItem))
+
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+
+    
     return entries
 }
 
@@ -474,6 +491,8 @@ class GeneralSettingsViewController: TableViewController {
             context.bindings.rootNavigation().push(LiteModeController(context: context))
         }, toggleSpellingKey: { key in
             UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: key), forKey: key)
+        }, showProfileId: {
+            FastSettings.canViewPeerId = !FastSettings.canViewPeerId
         })
         
         let initialSize = atomicSize

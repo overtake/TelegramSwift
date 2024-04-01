@@ -54,8 +54,9 @@ class TextAndLabelItem: GeneralRowItem {
     let hideText: Bool?
     let toggleHide:(()->Void)?
     let _borderColor: NSColor
+    let gift: (()->Void)?
     private let added_contextItems: [ContextMenuItem]
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = []) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = [], gift: (()->Void)? = nil) {
         self.callback = callback
         self.accentColor = accentColor
         self.hideText = hideText
@@ -64,6 +65,7 @@ class TextAndLabelItem: GeneralRowItem {
         self.isTextSelectable = isTextSelectable
         self.copyMenuText = copyMenuText
         self._borderColor = borderColor
+        self.gift = gift
         self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))
         let attr = NSMutableAttributedString()
         var text = text.trimmed.fullTrimmed
@@ -121,9 +123,9 @@ class TextAndLabelItem: GeneralRowItem {
     var textWidth:CGFloat {
         switch viewType {
         case .legacy:
-            return width - inset.left - inset.right - (_copyToClipboard != nil ? 30 : 0)
+            return width - inset.left - inset.right - (_copyToClipboard != nil || gift != nil ? 30 : 0)
         case let .modern(_, inner):
-            return blockWidth - inner.left - inner.right - (_copyToClipboard != nil ? 30 : 0)
+            return blockWidth - inner.left - inner.right - (_copyToClipboard != nil || gift != nil ? 30 : 0)
         }
     }
     
@@ -282,11 +284,16 @@ class TextAndLabelRowView: GeneralRowView {
             }
         }, for: .Click)
         
-        copyView.autohighlight = true
+        copyView.autohighlight = false
+        copyView.scaleOnClick = true
         
         copyView.set(handler: { [weak self] _ in
             if let item = self?.item as? TextAndLabelItem {
-                item._copyToClipboard?()
+                if let gift = item.gift {
+                    gift()
+                } else {
+                    item._copyToClipboard?()
+                }
             }
         }, for: .Click)
         
@@ -363,14 +370,14 @@ class TextAndLabelRowView: GeneralRowView {
             moreView.setFrameSize(NSMakeSize(item.moreLayout.layoutSize.width + 10, item.moreLayout.layoutSize.height))
             moreView.background = theme.colors.background
             
-            copyView.set(image: NSImage(named: "Icon_FastCopyLink")!.precomposed(item.accentColor), for: .Normal)
+            copyView.set(image: NSImage(resource: item.gift != nil ? .iconGiftBirthday : .iconFastCopyLink).precomposed(item.accentColor), for: .Normal)
             copyView.sizeToFit()
             copyView.scaleOnClick = true
-            copyView.isHidden = item._copyToClipboard == nil
+            copyView.isHidden = item._copyToClipboard == nil && item.gift == nil
             toggleVisibility.isHidden = item.hideText == nil
             
             if let hideText = item.hideText {
-                toggleVisibility.set(image: NSImage(named: hideText ? "Icon_Eye_On" : "Icon_Eye_Off")!.precomposed(item.accentColor), for: .Normal)
+                toggleVisibility.set(image: NSImage(resource: hideText ? .iconEyeOn : .iconEyeOff).precomposed(item.accentColor), for: .Normal)
                 toggleVisibility.sizeToFit()
             }
             

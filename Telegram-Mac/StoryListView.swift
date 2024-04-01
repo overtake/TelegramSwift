@@ -1158,7 +1158,7 @@ final class StoryListView : Control, Notifable {
         container.layer?.masksToBounds = false
         content.layer?.masksToBounds = false
         interactiveMedias.layer?.masksToBounds = false
-        
+                
         container.addSubview(content)
         
         interactiveMedias.isEventLess = true
@@ -1168,6 +1168,38 @@ final class StoryListView : Control, Notifable {
         addSubview(container)
         controls.layer?.cornerRadius = 10
         
+        navigator.seek = { [weak self] value in
+            if let value {
+                self?.current?.seek(toProgress: Double(value))
+            }
+        }
+        
+        var seekPaused: Bool = false
+        
+        navigator.seekStart = { [weak self] in
+            self?.arguments?.interaction.update { current in
+                var current = current
+                current.isSeeking = true
+                return current
+            }
+            if case .playing = self?.current?.state  {
+                seekPaused = true
+                self?.current?.pause()
+            } else {
+                seekPaused = false
+            }
+        }
+        navigator.seekFinish = { [weak self] in
+            self?.arguments?.interaction.update { current in
+                var current = current
+                current.isSeeking = false
+                return current
+            }
+            if case .paused = self?.current?.state, seekPaused {
+                self?.current?.play()
+            }
+            seekPaused = false
+        }
         controls.set(handler: { [weak self] control in
             guard let arguments = self?.arguments, let story = self?.story, let peer = story.peer, let event = NSApp.currentEvent else {
                 return
@@ -1436,7 +1468,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 current = Control(frame: storyView.frame)
                 current.layer?.cornerRadius = 10
-                self.content.addSubview(current, positioned: .above, relativeTo: navigator)
+                self.content.addSubview(current, positioned: .below, relativeTo: navigator)
                 self.pauseOverlay = current
                 
                 current.set(handler: { [weak self] _ in
@@ -1500,7 +1532,7 @@ final class StoryListView : Control, Notifable {
             transition.updateFrame(view: controls, frame: rect.size.bounds)
             controls.updateLayout(size: rect.size, transition: transition)
                         
-            transition.updateFrame(view: navigator, frame: CGRect(origin: CGPoint(x: 0, y: 0 + 6), size: NSMakeSize(rect.width, 2)))
+            transition.updateFrame(view: navigator, frame: CGRect(origin: CGPoint(x: 0, y: 0 + 2), size: NSMakeSize(rect.width, 10)))
             navigator.updateLayout(size: rect.size, transition: transition)
             
             if let pauseOverlay = pauseOverlay {
@@ -1563,7 +1595,6 @@ final class StoryListView : Control, Notifable {
         
         self.addSubview(content)
         content.setFrameOrigin(point)
-        content.backgroundColor = .random
         let oldRect = content.frame
 
         
@@ -1722,7 +1753,7 @@ final class StoryListView : Control, Notifable {
                 current.layer?.opacity = 0
                 self.prevStoryView = current
             }
-            self.content.addSubview(current, positioned: .above, relativeTo: self.current)
+            self.content.addSubview(current, positioned: .below, relativeTo: self.navigator)
             current.direction = .horizontal(false)
         } else if let view = self.prevStoryView {
             performSubviewRemoval(view, animated: false)
@@ -1890,7 +1921,7 @@ final class StoryListView : Control, Notifable {
         
         switch state {
         case .playing:
-            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, duration: view.duration, animated: true)
+            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, canSeek: view is StoryVideoView, duration: view.duration, animated: true)
             if firstPlayingState {
                 self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
             }
@@ -1898,7 +1929,7 @@ final class StoryListView : Control, Notifable {
         case .finished:
             self.arguments?.nextStory()
         default:
-            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, duration: view.duration, animated: true)
+            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, canSeek: view is StoryVideoView, duration: view.duration, animated: true)
         }
     }
     

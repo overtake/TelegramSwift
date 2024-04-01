@@ -76,9 +76,10 @@ class ChatInputView: View, Notifable {
         self.accessory = ChatInputAccessory(chatInteraction:chatInteraction)
         self.contentView = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), NSHeight(frameRect)))
         self._ts = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), .borderSize))
-        self.attachView = ChatInputAttachView(frame: NSMakeRect(0, 0, 60, contentView.frame.height), chatInteraction:chatInteraction)
-        actionsView = ChatInputActionsView(frame: NSMakeRect(contentView.frame.width - 100, 0, 100, contentView.frame.height), chatInteraction:chatInteraction);
-        self.textView = UITextView(frame: NSMakeRect(attachView.frame.width, 0, contentView.frame.width - actionsView.frame.width, contentView.frame.height), interactions: self.textInteractions)
+        self.attachView = ChatInputAttachView(frame: NSMakeRect(0, 0, chatInteraction.mode.customChatLink != nil ? 20 : 60, contentView.frame.height), chatInteraction:chatInteraction)
+        self.attachView.isHidden = chatInteraction.mode.customChatLink != nil
+        self.actionsView = ChatInputActionsView(frame: NSMakeRect(contentView.frame.width - 100, 0, 100, contentView.frame.height), chatInteraction:chatInteraction);
+        self.textView = UITextView(frame: NSMakeRect(attachView.isHidden ? 0 : attachView.frame.width, 0, contentView.frame.width - actionsView.frame.width, contentView.frame.height), interactions: self.textInteractions)
 
         super.init(frame: frameRect)
         
@@ -93,6 +94,7 @@ class ChatInputView: View, Notifable {
         contentView.addSubview(attachView)
         
         bottomView.scrollerStyle = .overlay
+        
         
         contentView.addSubview(textView)
         contentView.addSubview(actionsView)
@@ -217,8 +219,6 @@ class ChatInputView: View, Notifable {
     private var textPlaceholder: String {
         
         
-       
-        
         if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
@@ -240,6 +240,9 @@ class ChatInputView: View, Notifable {
             case .quickReplyMessageInput:
                 return strings().chatInputBusinessQuickReply
             }
+        }
+        if case .customLink = chatInteraction.mode {
+            return strings().chatInputBusinessLink
         }
         
         guard let peer = chatInteraction.presentation.peer else {

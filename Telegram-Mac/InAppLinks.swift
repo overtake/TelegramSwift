@@ -131,7 +131,7 @@ enum ChatInitialActionBehavior : Equatable {
 
 enum ChatInitialAction : Equatable {
     case start(parameter: String, behavior: ChatInitialActionBehavior)
-    case inputText(text: String, behavior: ChatInitialActionBehavior)
+    case inputText(text: ChatTextInputState, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
     case forward(messageIds: [MessageId], text: ChatTextInputState?, behavior: ChatInitialActionBehavior)
     case reply(EngineMessageReplySubject, behavior: ChatInitialActionBehavior)
@@ -1253,6 +1253,25 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             
             showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
         })
+    case .businessLink(link: let link, slug: let slug, context: let context):
+        _ = showModalProgress(signal: context.engine.peers.resolveMessageLink(slug: slug), for: context.window).startStandalone(next: { link in
+            if let link {
+                let navigation = context.bindings.rootNavigation()
+                let current = navigation.controller as? ChatController
+                let textState = ChatTextInputState(inputText: link.message, selectionRange: link.message.length ..< link.message.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: link.entities), associatedMedia: [:]))
+                if let current {
+                    if current.chatLocation.peerId == link.peer.id {
+                        current.chatInteraction.invokeInitialAction(action: .inputText(text: textState, behavior: .automatic))
+                    } else {
+                        current.chatInteraction.openInfo(link.peer.id, true, nil, .inputText(text: textState, behavior: .automatic))
+                    }
+                } else {
+                    navigation.push(ChatAdditionController(context: context, chatLocation: .peer(link.peer.id), initialAction: .inputText(text: textState, behavior: .automatic)))
+                }
+            } else {
+                showModalText(for: context.window, text: strings().chatLinkUnavailable)
+            }
+        })
     }
     
 }
@@ -1399,6 +1418,8 @@ enum inAppLink {
     case story(link: String, username: String, storyId: Int32, messageId: MessageId?, context: AccountContext)
     case boost(link: String, username: String, context: AccountContext)
     case gift(link: String, slug: String, context: AccountContext)
+    case businessLink(link: String, slug: String, context: AccountContext)
+
     case multigift(link: String, context: AccountContext)
     var link: String {
         switch self {
@@ -1467,6 +1488,8 @@ enum inAppLink {
             return link
         case let .multigift(link, _):
             return link
+        case let .businessLink(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1476,7 +1499,7 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/"]
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift"]
@@ -1738,6 +1761,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if let context = context, data.count == 2 {
                             return .gift(link: urlString, slug: data[1], context: context)
                         }
+                    case actions_me[13]:
+                        let data = string.components(separatedBy: "/")
+                        if let context = context, data.count == 2 {
+                            return .businessLink(link: urlString, slug: data[1], context: context)
+                        }
                     default:
                         break
                     }
@@ -1787,6 +1815,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
                             action = .attachBot(value, nil, attach ?? choose)
                             break loop
+                        case keyURLText:
+                            if let text = vars[keyURLText], !text.isEmpty {
+                                action = .inputText(text: .init(inputText: text), behavior: .automatic)
+                            }
                         default:
                             break
                         }
@@ -1795,9 +1827,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         action = .joinVoiceChat(nil)
                     }
                 }
-                 if action == nil, let messageId = messageId {
-                     action = .source(messageId)
-                 }
+                 
+            
+                 
+                if action == nil, let messageId = messageId {
+                    action = .source(messageId)
+                }
+                 
                  
                 if let openInfo = openInfo {
                     if username == "iv" || username.isEmpty {
@@ -1835,6 +1871,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if username.hasPrefix("$") {
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
+                        
                         if components.count == 2, components[1] == "boost" {
                             return .boost(link: urlString, username: username, context: context)
                         } else if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
@@ -1996,6 +2033,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop
                             case keyURLAppname:
                                 action = .makeWebview(appname: value, command: vars[keyURLStartapp])
+                                break loop
+                            case keyURLText:
+                                if let text = vars[keyURLText], !text.isEmpty {
+                                    action = .inputText(text: .init(inputText: text), behavior: .automatic)
+                                }
                                 break loop
                             default:
                                 break

@@ -25,8 +25,8 @@ struct GeneralThumbAdditional {
 
 class GeneralInteractedRowItem: GeneralRowItem {
         
-    var nameLayout:(TextNodeLayout, TextNode)?
-    var nameLayoutSelected:(TextNodeLayout, TextNode)?
+    let nameLayout: TextViewLayout
+    let nameLayoutSelected: TextViewLayout
     let name:String
     let nameAttributed: NSAttributedString?
     var descLayout:TextViewLayout?
@@ -87,7 +87,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let switchAction:(()->Void)?
     let descClick:(()->Void)?
     let afterNameImage: CGImage?
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, nameAttributed: NSAttributedString? = nil, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: (()-> Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil, switchAction:(()->Void)? = nil, descClick:(()->Void)? = nil, afterNameImage: CGImage? = nil) {
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, nameAttributed: NSAttributedString? = nil, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: (()-> Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil, switchAction:(()->Void)? = nil, descClick:(()->Void)? = nil, afterNameImage: CGImage? = nil, iconTextInset: CGFloat? = nil, iconInset: CGFloat? = nil) {
         
         self.afterNameImage = afterNameImage
         self.name = name
@@ -103,7 +103,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         }
         self.nameStyle = nameStyle
         if thumb == nil, let icon = icon {
-            self.thumb = GeneralThumbAdditional(thumb: icon, textInset: nil)
+            self.thumb = GeneralThumbAdditional(thumb: icon, textInset: iconTextInset, thumbInset: iconInset)
         } else {
             self.thumb = thumb
         }
@@ -117,6 +117,16 @@ class GeneralInteractedRowItem: GeneralRowItem {
         self.activeThumb = activeIcon != nil ? GeneralThumbAdditional(thumb: activeIcon!, textInset: nil) : self.thumb
         self.switchAppearance = customTheme?.switchAppearance ?? switchAppearance
         self.descClick = descClick
+        
+        
+        let nameAttributed = self.nameAttributed ?? NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font)
+        
+        let nameAttributedSelected = self.nameAttributed ?? NSAttributedString.initialize(string: name, color: theme.colors.underSelectedColor, font: nameStyle.font)
+        
+        nameLayout = .init(nameAttributed, maximumNumberOfLines: 1)
+        nameLayoutSelected = .init(nameAttributedSelected, maximumNumberOfLines: 1)
+
+        
         super.init(initialSize, height: 0, stableId:stableId, type:type, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:border, inset:inset, enabled: enabled, error: error, customTheme: customTheme)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -131,7 +141,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
             }
             return height
         case let .modern(_, insets):
-            let height: CGFloat = super.height + insets.top + insets.bottom + nameLayout!.0.size.height
+            let height: CGFloat = super.height + insets.top + insets.bottom + nameLayout.layoutSize.height
             if let descLayout = self.descLayout {
                 if descLayout.lines.count > 1 {
                     return height + descLayout.layoutSize.height - 10
@@ -151,12 +161,10 @@ class GeneralInteractedRowItem: GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
                 
-        let nameAttributed = self.nameAttributed ?? NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font)
-        
-        let nameAttributedSelected = self.nameAttributed ?? NSAttributedString.initialize(string: name, color: theme.colors.underSelectedColor, font: nameStyle.font)
 
-        nameLayout = TextNode.layoutText(maybeNode: nil, nameAttributed, nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
-        nameLayoutSelected = TextNode.layoutText(maybeNode: nil, nameAttributedSelected, nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
+        nameLayout.measure(width: nameWidth)
+        nameLayoutSelected.measure(width: nameWidth)
+        
         descLayout?.measure(width: nameWidth)
         
         return result

@@ -20,8 +20,8 @@ extension AddGroupMemberError {
             return .generic
         case .groupFull:
             return .generic
-        case .privacy:
-            return .restricted
+        case let .privacy(result):
+            return .restricted(result?.forbiddenPeers.first)
         case .notMutualContact:
             return .notMutualContact
         case .tooManyChannels:
@@ -769,6 +769,18 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
                 return state.withUpdatedTemporaryParticipants([]).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
             }
+            var forbidden: [TelegramForbiddenInvitePeer] = []
+            
+            for (_, failed) in result.failed {
+                switch failed {
+                case let .restricted(peer):
+                    if let peer {
+                        forbidden.append(peer)
+                    }
+                default:
+                    break
+                }
+            }
             
             let failed = result.failed.filter {
                 switch $0.1 {
@@ -787,7 +799,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                 }
             }
             if !failed.isEmpty {
-                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 })
+                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 }, forbidden: forbidden)
             } else if let first = botFailed.first {
                 if case let .bot(memberId) = first.1 {
                     let _ = (context.account.postbox.transaction { transaction in
@@ -1205,7 +1217,8 @@ enum GroupInfoEntry: PeerInfoEntry {
     case setTitle(section:Int, text: String, viewType: GeneralViewType)
     case scam(section:Int, title: String, text: String, viewType: GeneralViewType)
     case about(section:Int, text: String, viewType: GeneralViewType)
-    case addressName(section:Int, name:[String], viewType: GeneralViewType)
+    case addressName(section:Int, name:[UserInfoAddress], viewType: GeneralViewType)
+    case peerId(section:Int, value: String, viewType: GeneralViewType)
     case sharedMedia(section:Int, viewType: GeneralViewType)
     case notifications(section:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case usersHeader(section:Int, count:Int, viewType: GeneralViewType)
@@ -1241,6 +1254,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .scam(section, title, text, _): return .scam(section: section, title: title, text: text, viewType: viewType)
         case let .about(section, text, _): return .about(section: section, text: text, viewType: viewType)
         case let .addressName(section, name, _): return .addressName(section: section, name: name, viewType: viewType)
+        case let .peerId(section, value, _): return .peerId(section: section, value: value, viewType: viewType)
         case let .sharedMedia(section, _): return .sharedMedia(section: section, viewType: viewType)
         case let .notifications(section, settings, _): return .notifications(section: section, settings: settings, viewType: viewType)
         case let .usersHeader(section, count, _): return .usersHeader(section: section, count: count, viewType: viewType)
@@ -1336,6 +1350,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             }
         case let .addressName(section, addressName, viewType):
             if case .addressName(section, addressName, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .peerId(section, value, viewType):
+            if case .peerId(section, value, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1591,58 +1611,60 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 3
         case .addressName:
             return 4
-        case .groupDescriptionSetup:
+        case .peerId:
             return 5
-        case .groupAboutDescription:
+        case .groupDescriptionSetup:
             return 6
-        case .notifications:
+        case .groupAboutDescription:
             return 7
-        case .sharedMedia:
+        case .notifications:
             return 8
-        case .groupTypeSetup:
+        case .sharedMedia:
             return 9
-        case .members:
+        case .groupTypeSetup:
             return 10
-        case .inviteLinks:
+        case .members:
             return 11
-        case .requests:
+        case .inviteLinks:
             return 12
-        case .reactions:
+        case .requests:
             return 13
-        case .color:
+        case .reactions:
             return 14
+        case .color:
+            return 15
         case .linkedChannel:
             return 16
         case .preHistory:
-            return 16
-        case .groupStickerset:
             return 17
-        case .autoDeleteMessages:
+        case .groupStickerset:
             return 18
-        case .groupManagementInfoLabel:
+        case .autoDeleteMessages:
             return 19
-        case .permissions:
+        case .groupManagementInfoLabel:
             return 20
-        case .blocked:
+        case .permissions:
             return 21
-        case .administrators:
+        case .blocked:
             return 22
-        case .toggleForum:
+        case .administrators:
             return 23
-        case .forumInfo:
+        case .toggleForum:
             return 24
-        case .usersHeader:
+        case .forumInfo:
             return 25
-        case .addMember:
+        case .usersHeader:
             return 26
+        case .addMember:
+            return 27
         case .member:
             fatalError("no stableIndex")
         case .showMore:
-            return 27
-        case .leave:
             return 28
-        case .media:
+        case .leave:
             return 29
+        case .media:
+            return 30
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -1657,6 +1679,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .about(sectionId, _, _):
             return sectionId
         case let .addressName(sectionId, _, _):
+            return sectionId
+        case let .peerId(sectionId, _, _):
             return sectionId
         case let .setTitle(sectionId, _, _):
             return sectionId
@@ -1726,6 +1750,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .about(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .addressName(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .peerId(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .setTitle(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1810,18 +1836,23 @@ enum GroupInfoEntry: PeerInfoEntry {
                 }
         }, hashtag: arguments.context.bindings.globalSearch)
         case let .addressName(_, value, viewType):
-            let link = "https://t.me/\(value[0])"
+            let link = "@\(value[0].username)"
             
             let text: String
             if value.count > 1 {
-                text = strings().peerInfoUsernamesList("https://t.me/\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+                text = strings().peerInfoUsernamesList("@\(value[0].username)", value.suffix(value.count - 1).map { "@\($0.username)" }.joined(separator: ", "))
             } else {
-                text = "@\(value[0])"
+                text = "@\(value[0].username)"
             }
             let interactions = TextViewInteractions()
-            interactions.processURL = { value in
-                if let value = value as? inAppLink {
-                    arguments.copy(value.link)
+            interactions.processURL = { link in
+                if let link = link as? inAppLink {
+                    let found = value.first(where: {  $0.username == link.link.replacingOccurrences(of: "@", with: "") })
+                    if let found {
+                        arguments.openFragment(.username(found.username))
+                    } else {
+                        arguments.copy(link.link)
+                    }
                 }
             }
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
@@ -1831,6 +1862,10 @@ enum GroupInfoEntry: PeerInfoEntry {
             }, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
+        case let .peerId(_, value, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: "PEER ID", copyMenuText: strings().textCopyText, text: value, context: arguments.context, viewType: viewType, canCopy: true, _copyToClipboard: {
+                arguments.copy(value)
+            })
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoGroupTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .notifications(_, settings, viewType):
@@ -1985,7 +2020,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         var infoBlock: [GroupInfoEntry] = []
         func applyBlock(_ block:[GroupInfoEntry]) {
-            var block = block
+            var block = block.sorted { (p1, p2) -> Bool in
+                return p1.isOrderedBefore(p2)
+            }
             for (i, item) in block.enumerated() {
                 block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
             }
@@ -2250,16 +2287,19 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
-            var usernames = group.usernames.filter { $0.isActive }.map {
-                $0.username
+            var usernames:[UserInfoAddress] = group.usernames.filter { $0.isActive }.map {
+                .init(username: $0.username, collectable: $0.flags.contains(.isEditable))
             }
             if usernames.isEmpty, let address = group.addressName {
-                usernames.append(address)
+                usernames.append(.init(username: address, collectable: false))
             }
             if !usernames.isEmpty {
                 aboutBlock.append(GroupInfoEntry.addressName(section: GroupInfoSection.desc.rawValue, name: usernames, viewType: .singleItem))
             }
-            
+            if FastSettings.canViewPeerId {
+                aboutBlock.append(GroupInfoEntry.peerId(section: GroupInfoSection.desc.rawValue, value: "\(group.id.id._internalGetInt64Value())", viewType: .singleItem))
+            }
+
             applyBlock(aboutBlock)
             
 

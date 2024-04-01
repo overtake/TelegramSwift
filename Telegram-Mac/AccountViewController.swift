@@ -16,6 +16,7 @@ import SwiftSignalKit
 let normalAccountsLimit: Int = 3
 
 
+
 struct SetupPasswordConfiguration {
     
     let setup2Fa: Bool
@@ -789,6 +790,43 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     }
     
     private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), (Bool, Bool))> = Promise()
+    
+    
+    func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
+        let privacy = self.settings.get() |> deliverOnMainQueue |> take(1)
+        
+        _ = privacy.startStandalone(next: { [weak self] privacy, web, proxy, value in
+            var privacy = privacy
+            switch kind {
+            case .presence:
+                privacy?.presence = updated
+            case .groupInvitations:
+                privacy?.groupInvitations = updated
+            case .voiceCalls:
+                privacy?.voiceCalls = updated
+            case .profilePhoto:
+                privacy?.profilePhoto = updated
+            case .forwards:
+                privacy?.forwards = updated
+            case .phoneNumber:
+                privacy?.phoneNumber = updated
+            case .voiceMessages:
+                privacy?.voiceMessages = updated
+            case .bio:
+                privacy?.bio = updated
+            case .birthday:
+                privacy?.birthday = updated
+            }
+            DispatchQueue.main.async {
+                self?.settings.set(.single((privacy, web, proxy, value)))
+            }
+        })
+    }
+    
+    var privacySettings: Signal<AccountPrivacySettings?, NoError> {
+        return settings.get() |> map { $0.0 }
+    }
+    
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<(Bool, Bool)> = Promise((false, false))
     fileprivate let hasFilters: Promise<Bool> = Promise(false)
@@ -884,15 +922,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
             }
         }, giftPremium: {
-            
-            let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
-            
-            _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour).start(next: { peerIds in
-                
-                showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
-            })
-            
-            //showModal(with: ShareModalController(GiftPremiumShareObject(context)), for: context.window)
+            multigift(context: context)
         }, addAccount: { accounts in
             let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
             let hasPremium = accounts.contains(where: { $0.peer.isPremium })
@@ -1045,9 +1075,18 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
                     _ = tableView.select(item: item)
                 }
-            } else if let controller = navigation.controller as? PremiumBoardingController {
+            } else if let _ = navigation.controller as? PremiumBoardingController {
                 if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                     _ = tableView.select(item: item)
+                }
+            } else if let controller = navigation.controller as? ChatController {
+                switch controller.mode {
+                case .customChatContents, .customLink:
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
+                        _ = tableView.select(item: item)
+                    }
+                default:
+                    break
                 }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
@@ -1081,6 +1120,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     }
                 case controller.identifier == "app_appearance":
                     if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
+                        _ = tableView.select(item: item)
+                    }
+                case controller.identifier.hasPrefix("business"):
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(19))) {
                         _ = tableView.select(item: item)
                     }
                 default:

@@ -682,7 +682,7 @@ class PCallSession {
             presentationState = CallState(state: .terminated(id, reason, options.contains(.reportRating)), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
         case let .requesting(ringing):
             presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .active(_, _, keyVisualHash, _, _, _, _):
+        case let .active(_, _, keyVisualHash, _, _, _, _, _):
             self.callWasActive = true
             if let callContextState = callContextState {
                 switch callContextState.state {
@@ -718,7 +718,7 @@ class PCallSession {
         switch sessionState.state {
         case .requesting:
             break
-        case let .active(id, key, _, connections, maxLayer, version, allowsP2P):
+        case let .active(id, key, _, connections, maxLayer, version, _, allowsP2P):
             if !wasActive {
                 let logName = "\(id.id)_\(id.accessHash)"
                 

@@ -993,6 +993,8 @@ class PreviewSenderController: ModalViewController, Notifable {
             sendCurrentMedia?(silent, atDate, asSpoiler)
         case .pinned:
             break
+        case .customLink:
+            break
         }
     }
     
@@ -1834,11 +1836,18 @@ class PreviewSenderController: ModalViewController, Notifable {
         let result = InputPasteboardParser.canProccessPasteboard(pasteboard, context: context)
         
     
-        let pasteRtf:()->Void = { [weak self] in
+        let pasteRtf:()->Bool = { [weak self] in
             guard let `self` = self else {
-                return
+                return false
             }
-            if let data = pasteboard.data(forType: .rtfd) ?? pasteboard.data(forType: .rtf) {
+            if let data = pasteboard.data(forType: .kInApp) {
+                let decoder = AdaptedPostboxDecoder()
+                if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
+                    let state = decoded.unique(isPremium: self.contextChatInteraction.context.isPremium)
+                    self.contextChatInteraction.appendText(state.attributedString())
+                    return true
+                }
+            } else if let data = pasteboard.data(forType: .rtfd) ?? pasteboard.data(forType: .rtf) {
                 if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
                     
                     let (attributed, attachments) = attributed.applyRtf()
@@ -1849,10 +1858,11 @@ class PreviewSenderController: ModalViewController, Notifable {
                                 self?.insertAdditionUrls?(urls)
                             }
                         }))
+                        return true
                     }
                 }
             }
-            
+            return false
         }
         
         if !result {
@@ -1860,9 +1870,13 @@ class PreviewSenderController: ModalViewController, Notifable {
                 self?.insertAdditionUrls?(urls)
                 
                 if urls.isEmpty {
-                    pasteRtf()
+                    _ = pasteRtf()
                 }
             }))
+        } else {
+            if pasteRtf() {
+                return true
+            }
         }
         
         return !result
