@@ -19,15 +19,15 @@ final class ChatListAddBirthdayItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext) {
         self.context = context
         self.title = .init(.initialize(string: strings().chatListBirthdayAddTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.info = .init(.initialize(string: strings().chatListBirthdayAddInfo, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        self.info = .init(.initialize(string: strings().chatListBirthdayAddInfo, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2)
         super.init(initialSize, stableId: stableId)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.title.measure(width: width - 20 - 24)
-        self.info.measure(width: width - 20 - 24)
+        self.title.measure(width: width - 20 - 15)
+        self.info.measure(width: width - 20 - 15)
         return true
     }
     
@@ -69,7 +69,7 @@ final class ChatListBirthdayItem : GeneralRowItem {
         titleAttr.detectBoldColorInString(with: .medium(.text), color: theme.colors.accent)
         
         self.title = .init(titleAttr, maximumNumberOfLines: 1)
-        self.info = .init(.initialize(string: strings().chatListBirthdayInfoCountable(birthdays.count), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        self.info = .init(.initialize(string: strings().chatListBirthdayInfoCountable(birthdays.count), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2)
 
         super.init(initialSize, stableId: stableId)
     }
@@ -78,7 +78,7 @@ final class ChatListBirthdayItem : GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 20))
-        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count) - 1 * 20))
+        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 20))
         return true
     }
     
@@ -310,7 +310,7 @@ private final class ChatListAddBirthdayView : TableRowView {
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] control in
-            if let item = self?.item as? ChatListBirthdayItem {
+            if let item = self?.item as? ChatListAddBirthdayItem {
                 item.dismiss()
             }
         }, for: .Click)

@@ -791,6 +791,38 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), (Bool, Bool))> = Promise()
     
+    
+    func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
+        let privacy = self.settings.get() |> deliverOnMainQueue |> take(1)
+        
+        _ = privacy.startStandalone(next: { [weak self] privacy, web, proxy, value in
+            var privacy = privacy
+            switch kind {
+            case .presence:
+                privacy?.presence = updated
+            case .groupInvitations:
+                privacy?.groupInvitations = updated
+            case .voiceCalls:
+                privacy?.voiceCalls = updated
+            case .profilePhoto:
+                privacy?.profilePhoto = updated
+            case .forwards:
+                privacy?.forwards = updated
+            case .phoneNumber:
+                privacy?.phoneNumber = updated
+            case .voiceMessages:
+                privacy?.voiceMessages = updated
+            case .bio:
+                privacy?.bio = updated
+            case .birthday:
+                privacy?.birthday = updated
+            }
+            DispatchQueue.main.async {
+                self?.settings.set(.single((privacy, web, proxy, value)))
+            }
+        })
+    }
+    
     var privacySettings: Signal<AccountPrivacySettings?, NoError> {
         return settings.get() |> map { $0.0 }
     }

@@ -207,7 +207,7 @@ private let _id_birthday = InputDataIdentifier("_id_birthday")
 private let _id_birthday_remove = InputDataIdentifier("_id_birthday_remove")
 private let _id_personal_channel = InputDataIdentifier("_id_personal_channel")
 
-private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, activeAccounts: [AccountWithInfo], updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
+private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, activeAccounts: [AccountWithInfo], privacy: AccountPrivacySettings?, updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -264,11 +264,22 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
         index += 1
     }
     
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().editAccountBirthdayInfoOnlyContacts, linkHandler: { _ in
-        arguments.openBirthdayPrivacy()
-    }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-    index += 1
+    if let privacy = privacy?.birthday {
+        let string: String
+        switch privacy {
+        case .enableEveryone:
+            string = strings().editAccountBirthdayInfoEveryone
+        case .enableContacts:
+            string = strings().editAccountBirthdayInfoOnlyContacts
+        case .disableEveryone:
+            string = strings().editAccountBirthdayInfoNobody
+        }
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(string, linkHandler: { _ in
+            arguments.openBirthdayPrivacy()
+        }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        index += 1
+    }
+   
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -577,12 +588,14 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             showModal(with: nav, for: context.window)
         }
     }, openBirthdayPrivacy: {
-        let privacySignal = context.bindings.mainController().settings.privacySettings |> take(1) |> deliverOnMainQueue
+        let privacySignal = context.privacy |> take(1) |> deliverOnMainQueue
         
         let _ = (privacySignal
             |> deliverOnMainQueue).startStandalone(next: { info in
             if let info = info {
-                context.bindings.rootNavigation().push(SelectivePrivacySettingsController(context, kind: .birthday, current: info.birthday, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _, _ in }))
+                context.bindings.rootNavigation().push(SelectivePrivacySettingsController(context, kind: .birthday, current: info.birthday, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _, _ in
+                    context.updatePrivacy(updated, kind: .birthday)
+                }))
             }
         })
     }, removeBirthday: {
@@ -591,7 +604,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         showModal(with: PersonalChannelController(context: context), for: context.window)
     })
     
-    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo, context
+        .privacy) |> map {
+            editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, privacy: $0.3, updateState: updateState)
+    } |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()

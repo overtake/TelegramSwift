@@ -7497,6 +7497,8 @@ public final class L10n {
   public static var editAccountBirthdayRemove: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Remove") }
   /// Everyone will see your birthday. [Change >]()
   public static var editAccountBirthdayInfoEveryone: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Info.Everyone") }
+  /// Nobody will see your birthday. [Change >]()
+  public static var editAccountBirthdayInfoNobody: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Info.Nobody") }
   /// Only your contacts will see your birthday. [Change >]()
   public static var editAccountBirthdayInfoOnlyContacts: String  { return L10n.tr("Localizable", "EditAccount.Birthday.Info.OnlyContacts") }
   /// Add
@@ -8353,6 +8355,8 @@ public final class L10n {
   public static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
   public static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
+  /// Show Peer IDs in Profile
+  public static var generalSettingsShowProfileIdText: String  { return L10n.tr("Localizable", "GeneralSettings.ShowProfileId.Text") }
   /// Check Grammar With Spelling
   public static var generalSettingsSpellingCheckGrammarSpelling: String  { return L10n.tr("Localizable", "GeneralSettings.Spelling.CheckGrammarSpelling") }
   /// Correct Spelling Automatically

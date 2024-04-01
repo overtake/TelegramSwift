@@ -751,7 +751,12 @@ final class ReactionPeerMenu : ContextMenuItem {
                                 }
                             })
                             ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
-                            ContextMenuItem.checkPremiumRequired(menuItem, context: context, peer: peer)
+                            switch destination {
+                            case .forward:
+                                ContextMenuItem.checkPremiumRequired(menuItem, context: context, peer: peer)
+                            default:
+                                break
+                            }
                             menu.addItem(menuItem)
                         }
                        

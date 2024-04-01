@@ -332,6 +332,16 @@ class FastSettings {
             UserDefaults.standard.set(newValue, forKey: kIsMinimisizeType)
         }
     }
+    static var canViewPeerId: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "kCanViewPeerId")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "kCanViewPeerId")
+        }
+    }
+    
+    
     
     static var sidebarEnabled:Bool {
         return UserDefaults.standard.bool(forKey: kSidebarType)

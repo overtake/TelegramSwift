@@ -666,6 +666,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case scam(sectionId: ChannelInfoSection, title: String, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case userName(sectionId: ChannelInfoSection, value: [UserInfoAddress], viewType: GeneralViewType)
+    case peerId(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
@@ -694,6 +695,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
+        case let .peerId(sectionId, value, _): return .peerId(sectionId: sectionId, value: value, viewType: viewType)
         case let .setTitle(sectionId, text, _): return .setTitle(sectionId: sectionId, text: text, viewType: viewType)
         case let .admins(sectionId, count, _): return .admins(sectionId: sectionId, count: count, viewType: viewType)
         case let .blocked(sectionId, count, _): return .blocked(sectionId: sectionId, count: count, viewType: viewType)
@@ -780,6 +782,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .userName(sectionId, value, viewType):
             switch entry {
             case .userName(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .peerId(sectionId, value, viewType):
+            switch entry {
+            case .peerId(sectionId, value, viewType):
                 return true
             default:
                 return false
@@ -929,6 +938,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 3
         case .userName:
             return 4
+        case .peerId:
+            return 5
         case .admins:
             return 8
         case .members:
@@ -982,6 +993,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .userName(sectionId, _, _):
             return sectionId.rawValue
+        case let .peerId(sectionId, _, _):
+            return sectionId.rawValue
         case let .admins(sectionId, _, _):
             return sectionId.rawValue
         case let .blocked(sectionId, _, _):
@@ -1034,6 +1047,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .about(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .userName(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .peerId(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .admins(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1124,6 +1139,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
+        case let .peerId(_, value, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: "PEER ID", copyMenuText: strings().textCopyText, text: value, context: arguments.context, viewType: viewType, canCopy: true, _copyToClipboard: {
+                arguments.copy(value)
+            })
         case let .report(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
@@ -1333,7 +1352,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             if !usernames.isEmpty {
                 aboutBlock.append(.userName(sectionId: .desc, value: usernames, viewType: .singleItem))
             }
-            
+            if FastSettings.canViewPeerId {
+                aboutBlock.append(.peerId(sectionId: .desc, value: "\(channel.id.id._internalGetInt64Value())", viewType: .singleItem))
+            }
             applyBlock(aboutBlock)
 
         }
