@@ -1857,7 +1857,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     entries.append(UserInfoEntry.info(sectionId: sectionId, peerView: view, editable: editing, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
 
     
-    if let personalChannel {
+    if let personalChannel, !editing {
         entries.append(UserInfoEntry.section(sectionId: sectionId))
         sectionId += 1
         
