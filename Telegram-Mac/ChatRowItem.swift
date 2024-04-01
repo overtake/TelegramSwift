@@ -2522,6 +2522,8 @@ class ChatRowItem: TableRowItem {
                         if item.webpageLayout != nil {
                             w = _contentSize.width
                         }
+                    } else if let _ = self as? ChatGiveawayRowItem {
+                        w = _contentSize.width
                     }
                     reactions.measure(for: w)
                 }
