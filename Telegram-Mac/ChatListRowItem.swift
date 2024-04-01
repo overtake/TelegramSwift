@@ -2078,7 +2078,7 @@ class ChatListRowItem: TableRowItem {
         if let hideStatus = hideStatus {
             switch hideStatus {
             case .collapsed:
-                return 30
+                return width == 70 ? 70 : 30
             default:
                 break
             }

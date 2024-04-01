@@ -456,13 +456,13 @@ class UserInfoArguments : PeerInfoArguments {
         let peer = context.account.postbox.loadedPeerWithId(peerId)
         let premiumRequired = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId))
         
-        let signal = combineLatest(peer, premiumRequired) |> deliverOnMainQueue |> mapToSignal { peer, premiumRequired -> Signal<PeerId?, NoError> in
+        let signal = combineLatest(peer, premiumRequired) |> castError(CreateSecretChatError.self) |> deliverOnMainQueue |> mapToSignal { peer, premiumRequired -> Signal<PeerId?, CreateSecretChatError> in
             if !context.isPremium && premiumRequired {
                 return .single(nil)
             }
-            let confirm = verifyAlertSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), ok: strings().peerInfoConfirmSecretChatOK)
-            return confirm |> filter { $0 == .basic } |> mapToSignal { _ -> Signal<PeerId?, NoError> in
-                return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window) |> map(Optional.init)
+            let confirm = verifyAlertSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), ok: strings().peerInfoConfirmSecretChatOK) |> castError(CreateSecretChatError.self)
+            return confirm |> filter { $0 == .basic } |> mapToSignal { _ -> Signal<PeerId?, CreateSecretChatError> in
+                return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id), for: context.window) |> map(Optional.init)
             }
         } |> deliverOnMainQueue
         
@@ -472,11 +472,18 @@ class UserInfoArguments : PeerInfoArguments {
             if let strongSelf = self {
                 if let peerId = peerId {
                     strongSelf.pushViewController(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
-                } else {
-                    showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(strongSelf.peer?.compactDisplayTitle ?? ""), button: strings().alertLearnMore, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context), for: context.window)
-                    })
                 }
+            }
+        }, error: { error in
+            switch error {
+            case .generic:
+                showModalText(for: context.window, text: strings().unknownError)
+            case .limitExceeded:
+                showModalText(for: context.window, text: strings().loginFloodWait)
+            case let .premiumRequired(peer):
+                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
             }
         }))
     }
@@ -983,6 +990,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case birthday(sectionId:Int, text: String, Bool, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
+    case peerId(sectionId:Int, value: String, viewType: GeneralViewType)
     case userName(sectionId:Int, value: [UserInfoAddress], viewType: GeneralViewType)
     case businessLocation(sectionId:Int, peer: EnginePeer, businessLocation: TelegramBusinessLocation, viewType: GeneralViewType)
     case businessHours(sectionId:Int, peer: EnginePeer, businessHours: TelegramBusinessHours, revealed: Bool, displayMyZone: Bool, viewType: GeneralViewType)
@@ -1029,6 +1037,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
+        case let .peerId(sectionId, value, _): return .peerId(sectionId: sectionId, value: value, viewType: viewType)
         case let .businessLocation(sectionId, peer, location, _): return .businessLocation(sectionId: sectionId, peer: peer, businessLocation: location, viewType: viewType)
         case let .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, _): return .businessHours(sectionId: sectionId, peer: peer, businessHours: businessHours, revealed: revealed, displayMyZone: displayMyZone, viewType: viewType)
         case let .reportReaction(sectionId, value, _): return .reportReaction(sectionId: sectionId, value: value, viewType: viewType)
@@ -1221,6 +1230,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .userName(sectionId, value, viewType):
             switch entry {
             case .userName(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .peerId(sectionId, value, viewType):
+            switch entry {
+            case .peerId(sectionId, value, viewType):
                 return true
             default:
                 return false
@@ -1449,56 +1465,58 @@ enum UserInfoEntry: PeerInfoEntry {
             return 114
         case .userName:
             return 115
-        case .businessHours:
+        case .peerId:
             return 116
-        case .businessLocation:
+        case .businessHours:
             return 117
-        case .sendMessage:
+        case .businessLocation:
             return 118
-        case .botAddToGroup:
+        case .sendMessage:
             return 119
-        case .botAddToGroupInfo:
+        case .botAddToGroup:
             return 120
-        case .botShare:
+        case .botAddToGroupInfo:
             return 121
-        case .botSettings:
+        case .botShare:
             return 122
-        case .botHelp:
+        case .botSettings:
             return 123
-        case .botPrivacy:
+        case .botHelp:
             return 124
-        case .shareContact:
+        case .botPrivacy:
             return 125
-        case .shareMyInfo:
+        case .shareContact:
             return 126
-        case .addContact:
+        case .shareMyInfo:
             return 127
-        case .startSecretChat:
+        case .addContact:
             return 128
-        case .sharedMedia:
+        case .startSecretChat:
             return 129
-        case .notifications:
+        case .sharedMedia:
             return 130
-        case .encryptionKey:
+        case .notifications:
             return 131
-        case .groupInCommon:
+        case .encryptionKey:
             return 132
+        case .groupInCommon:
+            return 133
         case let .setPhoto(_, _, type, _, _):
-            return 133 + type.rawValue
+            return 134 + type.rawValue
         case .resetPhoto:
-            return 137
-        case .setPhotoInfo:
-            return 137
-        case .block:
             return 138
-        case .reportReaction:
+        case .setPhotoInfo:
             return 139
-        case .deleteChat:
+        case .block:
             return 140
-        case .deleteContact:
+        case .reportReaction:
             return 141
-        case .media:
+        case .deleteChat:
             return 142
+        case .deleteContact:
+            return 143
+        case .media:
+            return 144
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1535,6 +1553,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .peerId(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .businessHours(sectionId, _, _, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1711,6 +1731,10 @@ enum UserInfoEntry: PeerInfoEntry {
             return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
+        case let .peerId(_, value, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: "PEER ID", copyMenuText: strings().textCopyText, text: value, context: arguments.context, viewType: viewType, canCopy: true, _copyToClipboard: {
+                arguments.copy(value)
+            })
         case let .businessLocation(_, peer, location, viewType):
             return PeerInfoLocationRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peer: peer._asPeer(), location: location, viewType: viewType, open: {
                 arguments.openLocation(peer._asPeer(), location)
@@ -1916,6 +1940,10 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                 if !usernames.isEmpty {
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
+                }
+                
+                if FastSettings.canViewPeerId {
+                    infoBlock.append(.peerId(sectionId: sectionId, value: "\(user.id.id._internalGetInt64Value())", viewType: .singleItem))
                 }
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {

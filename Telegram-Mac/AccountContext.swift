@@ -392,9 +392,16 @@ final class AccountContext {
     var cloudThemes:Signal<CloudThemesCachedData, NoError> {
         return _cloudThemes.get() |> deliverOnMainQueue
     }
+    
+    
+    var privacy:Signal<AccountPrivacySettings?, NoError> {
+        return bindings.mainController().settings.privacySettings
+    }
+    func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
+        bindings.mainController().settings.updatePrivacy(updated, kind: kind)
+    }
     #endif
-    
-    
+
     
     private let _emoticonThemes = Atomic<[(String, TelegramPresentationTheme)]>(value: [])
     var emoticonThemes: [(String, TelegramPresentationTheme)] {
@@ -1195,15 +1202,27 @@ final class AccountContext {
         }
         let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
-        let create = select |> map { $0.first! } |> mapToSignal { peerId in
-            return engine.peers.createSecretChat(peerId: peerId) |> `catch` {_ in .complete()}
-            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
-                return showModalProgress(signal: .single(peerId), for: window)
-        }
+        let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
+            return engine.peers.createSecretChat(peerId: peerId)
+        } |> deliverOnMainQueue
         
         _ = create.start(next: { [weak self] peerId in
             guard let `self` = self else {return}
             self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
+        }, error: { [weak self] error in
+            guard let context = self else {
+                return
+            }
+            switch error {
+            case .generic:
+                showModalText(for: context.window, text: strings().unknownError)
+            case .limitExceeded:
+                showModalText(for: context.window, text: strings().loginFloodWait)
+            case let .premiumRequired(peer):
+                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
+            }
         })
     }
     #endif

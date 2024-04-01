@@ -65,7 +65,7 @@ class PeerInfoArguments {
     
     func copy(_ string: String) {
         copyToClipboard(string)
-        pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
+        showModalText(for: context.window, text: strings().shareLinkCopied)
     }
     
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {

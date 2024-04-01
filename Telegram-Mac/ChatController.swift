@@ -836,7 +836,7 @@ class ChatControllerView : View, ChatInputDelegate {
             var tags: [EmojiTag]? = nil
             
             if let savedMessageTags = interfaceState.savedMessageTags {
-                if interfaceState.accountPeer?.isPremium == false || !savedMessageTags.tags.isEmpty {
+                if interfaceState.accountPeer?.isPremium == false || !savedMessageTags.tags.isEmpty, chatInteraction.peerId == chatInteraction.context.peerId {
                     tags = []
                 }
                 for tag in savedMessageTags.tags {

@@ -338,6 +338,11 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
             current.message = ""
             return current
         }
+        let state = stateValue.with { $0 }
+        if state.initialIntro != state.mappedIntro {
+            _ = context.engine.accountData.updateBusinessIntro(intro: state.mappedIntro).startStandalone()
+            showModalText(for: context.window, text: strings().businessUpdated)
+        }
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

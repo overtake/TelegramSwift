@@ -63,7 +63,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     for (i, report) in state.data.list.enumerated() {
         let viewType: GeneralViewType = bestGeneralViewType(state.data.list, for: i)
-        let type: GeneralInteractedType = report.inner != nil ? .next : .none
+        let type: GeneralInteractedType = report.inner != nil ? .next : .next
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_report(report), data: .init(name: report.string, color: theme.colors.text, type: type, viewType: viewType, action: {
             arguments.select(report)
         })))

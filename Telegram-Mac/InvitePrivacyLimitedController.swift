@@ -397,6 +397,22 @@ private struct State : Equatable {
         }
         return link != nil
     }
+    var canInviteAnyone: Bool {
+        if canInvite {
+            if !forbidden.isEmpty {
+                for forbidden in forbidden {
+                    if !forbidden.premiumRequiredToContact {
+                        return true
+                    }
+                }
+                return false
+            } else {
+                return true
+            }
+        } else {
+            return false
+        }
+    }
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -532,10 +548,10 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
     controller.validateData = { _ in
                 
         return .fail(.doSomething(next: { f in
-            
-            if stateValue.with({ $0.canInvite }) {
-                let data = stateValue.with { $0.cachedData?.data }
-                let peer = stateValue.with { $0.peer?.peer }
+            let state = stateValue.with { $0 }
+            if state.canInvite {
+                let data = state.cachedData?.data
+                let peer = state.peer?.peer
 
                 var link: String?
                 if let data = data as? CachedGroupData {
@@ -554,10 +570,11 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
                         return enqueueMessages(account: context.account, peerId: $0.peer.id, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
                     }
                     _ = combineLatest(combine).start()
-                    
-                    delay(0.2, closure: {
-                        _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.3).start()
-                    })
+                    if state.canInviteAnyone {
+                        delay(0.2, closure: {
+                            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.3).start()
+                        })
+                    }
                 }
             }
         
@@ -570,7 +587,14 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
     let modalInteractions = ModalInteractions(acceptTitle: strings().inviteFailedOK, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
-
+    
+    controller.afterTransaction = { [weak modalInteractions] controller in
+        if let modalInteractions = modalInteractions {
+            modalInteractions.updateDone({ button in
+                button.set(text: stateValue.with { $0.canInviteAnyone } ? strings().inviteFailedOK : strings().modalOK, for: .Normal)
+            })
+        }
+    }
     arguments.select.singleUpdater = { [weak modalInteractions] updated in
         modalInteractions?.updateDone { title in
             if stateValue.with({ $0.canInvite }) {
