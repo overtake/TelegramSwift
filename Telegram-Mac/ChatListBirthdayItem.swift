@@ -77,8 +77,8 @@ final class ChatListBirthdayItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 20))
-        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 20))
+        self.title.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 24))
+        self.info.measure(width: width - 20 - 20 - CGFloat(30 + (birthdays.count - 1) * 24))
         return true
     }
     
@@ -205,7 +205,7 @@ private final class ChatListBirthdayView : TableRowView {
         dismiss.set(image: NSImage(resource: .iconVoiceChatTooltipClose).precomposed(theme.colors.grayIcon), for: .Normal)
         dismiss.autohighlight = false
         dismiss.scaleOnClick = true
-        dismiss.sizeToFit()
+        dismiss.sizeToFit(NSMakeSize(10, 10))
         
         
         borderView.backgroundColor = theme.colors.border
@@ -214,7 +214,7 @@ private final class ChatListBirthdayView : TableRowView {
         let timingFunction = CAMediaTimingFunctionName.easeOut
         
         
-        let peers:[Avatar] = item.birthdays.prefix(3).reduce([], { current, value in
+        let peers:[Avatar] = item.birthdays.prefix(2).reduce([], { current, value in
             var current = current
             current.append(.init(peer: value.peer._asPeer(), index: current.count))
             return current
@@ -347,8 +347,8 @@ private final class ChatListAddBirthdayView : TableRowView {
         dismiss.set(image: NSImage(resource: .iconVoiceChatTooltipClose).precomposed(theme.colors.grayIcon), for: .Normal)
         dismiss.autohighlight = false
         dismiss.scaleOnClick = true
-        dismiss.sizeToFit()
-        
+        dismiss.sizeToFit(NSMakeSize(10, 10))
+
         borderView.backgroundColor = theme.colors.border
     }
 }

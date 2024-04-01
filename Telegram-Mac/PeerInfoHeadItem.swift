@@ -1066,8 +1066,8 @@ private final class NameContainer : View {
                 addSubview(current)
                 self.showStatusView = current
             }
-            current.set(color: theme.colors.accent, for: .Normal)
-            current.set(background: theme.colors.accent.withAlphaComponent(0.2), for: .Normal)
+            current.set(color: item.accentColor, for: .Normal)
+            current.set(background: item.accentColor.withAlphaComponent(0.2), for: .Normal)
             current.set(text: strings().peerStatusShow, for: .Normal)
             current.sizeToFit(NSMakeSize(5, 5))
             current.layer?.cornerRadius = current.frame.height * 0.5

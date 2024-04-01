@@ -762,21 +762,18 @@ class ChatListController : PeersListController {
 
         let suggestions = context.engine.notices.getServerProvidedSuggestions()
         let birthdays: Signal<[UIChatListBirthday], NoError> = combineLatest(ApplicationSpecificNotice.dismissedBirthdayPremiumGifts(accountManager: context.sharedContext.accountManager), context.account.stateManager.contactBirthdays) |> map { dismissed, list in
-            return list.filter {
+            return (list.filter {
                 $0.value.isToday
-            }.filter { birthday in
-                if let dismissed {
-                    return !dismissed.contains(birthday.key.id._internalGetInt64Value())
-                } else {
-                    return true
-                }
-            }
-        } |> mapToSignal { values in
+            }, dismissed ?? [])
+        } |> mapToSignal { values, dismissed in
             return context.account.postbox.transaction { transaction in
                 var birthdays:[UIChatListBirthday] = []
-                for (key, value) in values {
-                    if let peer = transaction.getPeer(key) {
-                        birthdays.append(.init(birthday: value, peer: .init(peer)))
+                let allDismissed = values.allSatisfy { dismissed.contains($0.key.id._internalGetInt64Value()) }
+                if !allDismissed {
+                    for (key, value) in values {
+                        if let peer = transaction.getPeer(key) {
+                            birthdays.append(.init(birthday: value, peer: .init(peer)))
+                        }
                     }
                 }
                 return birthdays
