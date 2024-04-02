@@ -323,8 +323,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stories(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsMyStories, icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
-                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsMyProfile, icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
+                PeerInfoController.push(navigation: arguments.context.bindings.rootNavigation(), context: arguments.context, peerId: arguments.context.peerId, animated: false)
+//                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .attach(_, bot, viewType):
             var icon: CGImage?
@@ -545,7 +546,13 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 10))
     index += 1
     
-        
+    
+    entries.append(.stories(index: index, viewType: .singleItem))
+    index += 1
+
+    entries.append(.whiteSpace(index: index, height: 10))
+    index += 1
+    
     for bot in attachMenuBots {
         if bot.flags.contains(.showInSettings) {
             entries.append(.attach(index: index, bot, viewType: .singleItem))
@@ -553,8 +560,6 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         }
     }
     
-    entries.append(.stories(index: index, viewType: .singleItem))
-    index += 1
     
     if !proxySettings.0.servers.isEmpty {
         entries.append(.whiteSpace(index: index, height: 10))
@@ -1067,7 +1072,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
                     _ = tableView.select(item: item)
                 }
-            } else if navigation.controller is StoryMediaController {
+            } else if let controller = navigation.controller as? PeerInfoController, controller.peerId == context.peerId {
                 if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(5))) {
                     _ = tableView.select(item: item)
                 }

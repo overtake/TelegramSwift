@@ -307,7 +307,7 @@ final class StoryMediaView : View {
                     current.layer?.animatePosition(from: NSMakePoint(0, frame.height), to: current.frame.origin)
                 }
             }
-            current.update(title: arguments.isArchive ? "Save to Profile" : "Remove from Profile", enabled: !selected.isEmpty, callback: { [weak arguments] in
+            current.update(title: arguments.isArchive ? strings().storyMyInputSaveToProfile : strings().storyMyInputRemoveFromProfile, enabled: !selected.isEmpty, callback: { [weak arguments] in
                 arguments?.processSelected()
             })
         } else if let view = self.panel {
@@ -415,7 +415,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
     }
 
     
-    private func toggleSelection() {
+    func toggleSelection() {
         
         let button = self.rightBarView as? TextButtonBarView
         
@@ -565,7 +565,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 return current
             }
             if state.totalCount > 0 {
-                self?.setCenterStatus("\(state.totalCount) stories")
+                self?.setCenterStatus(strings().chatListArchiveStoryCountCountable(state.totalCount).lowercased())
             } else {
                 self?.setCenterStatus(nil)
             }

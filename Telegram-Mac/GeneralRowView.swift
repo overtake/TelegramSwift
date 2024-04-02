@@ -68,7 +68,7 @@ class GeneralContainableRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {

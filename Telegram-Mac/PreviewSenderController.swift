@@ -1559,6 +1559,12 @@ class PreviewSenderController: ModalViewController, Notifable {
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
         
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.quote))
+            return .invoked
+        }, with: self, for: .I, priority: .high, modifierFlags: [.shift, .command])
+
+        
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.monospace))
             return .invoked

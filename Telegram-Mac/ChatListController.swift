@@ -868,7 +868,7 @@ class ChatListController : PeersListController {
                 mapped.append(.suspicious(suspiciousSession))
             }
             
-            if state.mode == .plain, !update.list.hasLater {
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
                 if suggestions.contains(.setupBirthday), myBirthday == nil {
                     mapped.append(.birthdays([]))
                 } else {

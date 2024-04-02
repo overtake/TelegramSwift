@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "stories (7).png",
+      "filename" : "my_profile.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "stories@2x (1).png",
+      "filename" : "my_profile@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

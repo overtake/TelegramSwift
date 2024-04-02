@@ -363,7 +363,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private var argumentsAction: DisposableSet = DisposableSet()
     var disposable:MetaDisposable = MetaDisposable()
-    
+
     private let mediaController: PeerMediaController
     
     let threadInfo: ThreadInfo?
@@ -448,14 +448,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
     }
     
-    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true) {
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
             controller.view.shake(beep: true)
             return
         }
         let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
         _ = signal.start(next: { [weak navigation] peer in
-            navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source))
+            navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source), animated, style: animated ? .push : Optional.none)
         })
     }
     
@@ -507,6 +507,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             })
         }
         
+     
         
     }
     
@@ -950,12 +951,12 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                     if peerId.namespace == Namespaces.Peer.SecretChat {
                         editable = false
                     } else {
-                        editable = context.account.peerId != peer.id
+                        editable = true//context.account.peerId != peer.id
                     }
                 } else if let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
                     editable = true
                 } else {
-                    editable = false
+                    editable = context.peerId != peerId
                 }
             } else {
                 editable = false
@@ -1002,11 +1003,17 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 guard let `self` = self else {
                     return
                 }
-                let updateState = arguments.updateEditable(state == .Edit, peerView: peerView, controller: self)
-                self.genericView.tableView.scroll(to: .up(true))
-                
-                if updateState {
-                    self.applyState(state)
+                if self.peerId == self.context.peerId {
+                    EditAccountInfoController(context: arguments.context, f: { [weak self] controller in
+                        self?.navigationController?.push(controller)
+                    })
+                } else {
+                    let updateState = arguments.updateEditable(state == .Edit, peerView: peerView, controller: self)
+                    self.genericView.tableView.scroll(to: .up(true))
+                    
+                    if updateState {
+                        self.applyState(state)
+                    }
                 }
             })
         }

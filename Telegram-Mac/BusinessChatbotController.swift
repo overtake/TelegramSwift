@@ -300,6 +300,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
     } else {
         entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .firstItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessChatbotsPlaceholder, filter: { $0 }, limit: 60))
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatBotsFooter), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
     }
     
     if let result = state.botsResult {
