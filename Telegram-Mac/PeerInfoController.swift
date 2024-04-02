@@ -956,7 +956,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 } else if let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
                     editable = true
                 } else {
-                    editable = context.peerId != peerId
+                    editable = context.peerId == peerId
                 }
             } else {
                 editable = false
