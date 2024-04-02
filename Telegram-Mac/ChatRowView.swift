@@ -18,13 +18,22 @@ import DustLayer
 
 class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate, RevealTableView {
     
-    struct CaptionView {
+    class CaptionView {
         let id: UInt32
         let shim: Bool
         let view: TextView
-        
+        init(id: UInt32, shim: Bool, view: TextView) {
+            self.id = id
+            self.shim = shim
+            self.view = view
+        }
         func isSame(to other: ChatRowItem.RowCaption) -> Bool {
             return self.id == other.id && self.view.textLayout?.attributedString.string == other.layout.attributedString.string
+        }
+        
+        deinit {
+            var bp = 0
+            bp += 1
         }
     }
     struct CaptionShimmerView {

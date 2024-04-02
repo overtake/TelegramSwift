@@ -530,8 +530,8 @@ class ChatMediaItem: ChatRowItem {
                 return self?.menuAdditionView ?? .single(nil)
             }
             if let layout = self.captionLayouts.first {
-                interactions.menuItems = { [weak self] type in
-                    if let interactions = self?.chatInteraction, let entry = self?.entry {
+                interactions.menuItems = { [weak self, weak layout] type in
+                    if let interactions = self?.chatInteraction, let entry = self?.entry, let layout {
                         return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
                     }
                     return .complete()
