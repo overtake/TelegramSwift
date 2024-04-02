@@ -167,10 +167,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
             self.chatInputTextViewDidUpdateText()
         }
     }
-    
+    var placeholderFontSize: CGFloat? = nil
     var placeholder: String = "" {
         didSet {
-            self.view.placeholderString = .initialize(string: placeholder, color: inputTheme.grayTextColor, font: .normal(inputTheme.fontSize))
+            self.view.placeholderString = .initialize(string: placeholder, color: inputTheme.grayTextColor, font: .normal(placeholderFontSize ?? inputTheme.fontSize))
         }
     }
     

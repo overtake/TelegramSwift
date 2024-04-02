@@ -117,6 +117,8 @@ public final class L10n {
   public static var accountSettingsLanguage: String  { return L10n.tr("Localizable", "AccountSettings.Language") }
   /// Logout
   public static var accountSettingsLogout: String  { return L10n.tr("Localizable", "AccountSettings.Logout") }
+  /// My Profile
+  public static var accountSettingsMyProfile: String  { return L10n.tr("Localizable", "AccountSettings.MyProfile") }
   /// My Stories
   public static var accountSettingsMyStories: String  { return L10n.tr("Localizable", "AccountSettings.MyStories") }
   /// Notifications
@@ -899,6 +901,8 @@ public final class L10n {
   public static var businessAwayMessageTitle: String  { return L10n.tr("Localizable", "Business.AwayMessage.Title") }
   /// This bot doesn't support Telegram Business yet.
   public static var businessChatBotsBotNotSupported: String  { return L10n.tr("Localizable", "Business.ChatBots.BotNotSupported") }
+  /// Enter the username or URL of the Telegram bot that you want to automatically process your chats.
+  public static var businessChatBotsFooter: String  { return L10n.tr("Localizable", "Business.ChatBots.Footer") }
   /// ADD
   public static var businessChatbotsAdd: String  { return L10n.tr("Localizable", "Business.Chatbots.Add") }
   /// CHATS
@@ -11615,6 +11619,8 @@ public final class L10n {
   public static var peerListTitleForum: String  { return L10n.tr("Localizable", "PeerList.Title.Forum") }
   /// Saved Messages
   public static var peerListTitleSavedMessages: String  { return L10n.tr("Localizable", "PeerList.Title.SavedMessages") }
+  /// Archive Posts
+  public static var peerMediaArchivePosts: String  { return L10n.tr("Localizable", "PeerMedia.ArchivePosts") }
   /// Audio
   public static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
   /// Groups
@@ -14648,6 +14654,342 @@ public final class L10n {
   /// Folder %@ Updated
   public static func sharedFolderTooltipUpdatedTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Title", p1)
+  }
+  /// %d
+  public static func sharedMediaArchiveStoryCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_countable", p1)
+  }
+  /// %d archive posts
+  public static func sharedMediaArchiveStoryCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_few", p1)
+  }
+  /// %d archive posts
+  public static func sharedMediaArchiveStoryCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_many", p1)
+  }
+  /// %d archive post
+  public static func sharedMediaArchiveStoryCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_one", p1)
+  }
+  /// %d archive posts
+  public static func sharedMediaArchiveStoryCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_other", p1)
+  }
+  /// %d archive posts
+  public static func sharedMediaArchiveStoryCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_two", p1)
+  }
+  /// %d archive posts
+  public static func sharedMediaArchiveStoryCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaCommonGroupsCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_countable", p1)
+  }
+  /// %d groups in common
+  public static func sharedMediaCommonGroupsCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_few", p1)
+  }
+  /// %d groups in common
+  public static func sharedMediaCommonGroupsCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_many", p1)
+  }
+  /// %d group in common
+  public static func sharedMediaCommonGroupsCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_one", p1)
+  }
+  /// %d groups in common
+  public static func sharedMediaCommonGroupsCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_other", p1)
+  }
+  /// %d groups in common
+  public static func sharedMediaCommonGroupsCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_two", p1)
+  }
+  /// %d groups in common
+  public static func sharedMediaCommonGroupsCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaFileCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_countable", p1)
+  }
+  /// %d files
+  public static func sharedMediaFileCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_few", p1)
+  }
+  /// %d files
+  public static func sharedMediaFileCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_many", p1)
+  }
+  /// %d file
+  public static func sharedMediaFileCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_one", p1)
+  }
+  /// %d files
+  public static func sharedMediaFileCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_other", p1)
+  }
+  /// %d files
+  public static func sharedMediaFileCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_two", p1)
+  }
+  /// %d files
+  public static func sharedMediaFileCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.FileCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaGifCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_countable", p1)
+  }
+  /// %d GIFs
+  public static func sharedMediaGifCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_few", p1)
+  }
+  /// %d GIFs
+  public static func sharedMediaGifCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_many", p1)
+  }
+  /// %d GIF
+  public static func sharedMediaGifCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_one", p1)
+  }
+  /// %d GIFs
+  public static func sharedMediaGifCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_other", p1)
+  }
+  /// %d GIFs
+  public static func sharedMediaGifCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_two", p1)
+  }
+  /// %d GIFs
+  public static func sharedMediaGifCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.GifCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaLinkCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_countable", p1)
+  }
+  /// %d links
+  public static func sharedMediaLinkCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_few", p1)
+  }
+  /// %d links
+  public static func sharedMediaLinkCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_many", p1)
+  }
+  /// %d link
+  public static func sharedMediaLinkCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_one", p1)
+  }
+  /// %d links
+  public static func sharedMediaLinkCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_other", p1)
+  }
+  /// %d links
+  public static func sharedMediaLinkCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_two", p1)
+  }
+  /// %d links
+  public static func sharedMediaLinkCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.LinkCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaMediaCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_countable", p1)
+  }
+  /// %d medias
+  public static func sharedMediaMediaCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_few", p1)
+  }
+  /// %d medias
+  public static func sharedMediaMediaCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_many", p1)
+  }
+  /// %d media
+  public static func sharedMediaMediaCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_one", p1)
+  }
+  /// %d medias
+  public static func sharedMediaMediaCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_other", p1)
+  }
+  /// %d medias
+  public static func sharedMediaMediaCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_two", p1)
+  }
+  /// %d media
+  public static func sharedMediaMediaCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MediaCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaMusicCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_countable", p1)
+  }
+  /// %d music files
+  public static func sharedMediaMusicCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_few", p1)
+  }
+  /// %d music files
+  public static func sharedMediaMusicCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_many", p1)
+  }
+  /// %d music file
+  public static func sharedMediaMusicCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_one", p1)
+  }
+  /// %d music files
+  public static func sharedMediaMusicCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_other", p1)
+  }
+  /// %d music files
+  public static func sharedMediaMusicCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_two", p1)
+  }
+  /// %d music files
+  public static func sharedMediaMusicCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.MusicCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaSavedCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_countable", p1)
+  }
+  /// %d messages
+  public static func sharedMediaSavedCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_few", p1)
+  }
+  /// %d messages
+  public static func sharedMediaSavedCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_many", p1)
+  }
+  /// %d message
+  public static func sharedMediaSavedCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_one", p1)
+  }
+  /// %d messages
+  public static func sharedMediaSavedCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_other", p1)
+  }
+  /// %d messages
+  public static func sharedMediaSavedCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_two", p1)
+  }
+  /// %d messages
+  public static func sharedMediaSavedCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaSavedMessagesCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_countable", p1)
+  }
+  /// %d chats
+  public static func sharedMediaSavedMessagesCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_few", p1)
+  }
+  /// %d chats
+  public static func sharedMediaSavedMessagesCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_many", p1)
+  }
+  /// %d chat
+  public static func sharedMediaSavedMessagesCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_one", p1)
+  }
+  /// %d chats
+  public static func sharedMediaSavedMessagesCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_other", p1)
+  }
+  /// %d chats
+  public static func sharedMediaSavedMessagesCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_two", p1)
+  }
+  /// %d chats
+  public static func sharedMediaSavedMessagesCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaSimilarCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_countable", p1)
+  }
+  /// %d similar channels
+  public static func sharedMediaSimilarCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_few", p1)
+  }
+  /// %d similar channels
+  public static func sharedMediaSimilarCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_many", p1)
+  }
+  /// %d similar channel
+  public static func sharedMediaSimilarCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_one", p1)
+  }
+  /// %d similar channels
+  public static func sharedMediaSimilarCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_other", p1)
+  }
+  /// %d similar channels
+  public static func sharedMediaSimilarCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_two", p1)
+  }
+  /// %d similar channels
+  public static func sharedMediaSimilarCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaStoryCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_countable", p1)
+  }
+  /// %d posts
+  public static func sharedMediaStoryCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_few", p1)
+  }
+  /// %d posts
+  public static func sharedMediaStoryCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_many", p1)
+  }
+  /// %d post
+  public static func sharedMediaStoryCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_one", p1)
+  }
+  /// %d posts
+  public static func sharedMediaStoryCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_other", p1)
+  }
+  /// %d posts
+  public static func sharedMediaStoryCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_two", p1)
+  }
+  /// %d posts
+  public static func sharedMediaStoryCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StoryCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaVoiceCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_countable", p1)
+  }
+  /// %d voice messages
+  public static func sharedMediaVoiceCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_few", p1)
+  }
+  /// %d voice messages
+  public static func sharedMediaVoiceCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_many", p1)
+  }
+  /// %d voice message
+  public static func sharedMediaVoiceCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_one", p1)
+  }
+  /// %d voice messages
+  public static func sharedMediaVoiceCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_other", p1)
+  }
+  /// %d voice messages
+  public static func sharedMediaVoiceCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_two", p1)
+  }
+  /// %d voice messages
+  public static func sharedMediaVoiceCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.VoiceCount_zero", p1)
   }
   /// CHAT
   public static var shortcutsControllerChat: String  { return L10n.tr("Localizable", "ShortcutsController.Chat") }

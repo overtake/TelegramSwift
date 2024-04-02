@@ -62,8 +62,9 @@ private final class ReactionsRowView: GeneralContainableRowView {
         
         overlay.isSelectable = false
         
+        inputView.placeholderFontSize = 13
         inputView.placeholder = strings().channelReactionsPlaceholder
-                
+
         
         overlay.set(handler: { [weak self] control in
             guard let item = self?.item as? ReactionsRowItem else {
@@ -296,6 +297,7 @@ private struct State : Equatable {
 private let _id_enabled = InputDataIdentifier("_id_enabled")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
 private let _id_add = InputDataIdentifier("_id_add")
+private let _id_max_limit = InputDataIdentifier("_id_max_limit")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -349,6 +351,32 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.createPack()
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
+                
+        #if DEBUG
+        //TODOLANG
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MAXIMUM REACTIONS PER POST"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_max_limit, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            
+            var sizes: [Int32] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            
+            let titles: [String] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+            
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: 0, sizes: sizes, hasMarkers: false, titles: titles, viewType: .singleItem, selectAction: { index in
+                //arguments.usageLimit(sizes[index])
+            })
+
+        }))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Limit the number of different reactions that can be added to a post, including already published posts."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+        #endif
         
     }
    

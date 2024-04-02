@@ -781,7 +781,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             } else if chatInteraction.mode == .pinned {
                 result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0)).withUpdatedStatus("")
             } else if chatInteraction.mode == .scheduled {
-                result = result.withUpdatedTitle(strings().chatTitleScheduledMessages)
+                result = result.withUpdatedTitle(strings().chatTitleScheduledMessages).withUpdatedStatus("")
             } else if case let .thread(data, mode) = chatInteraction.mode {
                 switch mode {
                 case .comments:

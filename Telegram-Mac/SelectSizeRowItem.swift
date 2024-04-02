@@ -294,7 +294,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                     let title = titles[i]
                     let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
 
-                    var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
+                    var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 4, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
 
                     if i == titles.count - 1 {
                         rect.origin.x = min(rect.minX, (point.x + 5) - titleNode.0.size.width)

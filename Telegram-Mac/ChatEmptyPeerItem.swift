@@ -177,12 +177,10 @@ class ChatEmptyPeerItem: TableRowItem {
             
             let peer: Signal<Peer?, NoError> = .single(chatInteraction.presentation.mainPeer) |> then(getPeerView(peerId: chatInteraction.peerId, postbox: chatInteraction.context.account.postbox)) |> deliverOnMainQueue
 
-            
             let sticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(chatInteraction.context.engine.stickers.randomGreetingSticker() |> deliverOnMainQueue)
-            let context = self.chatInteraction.context
             
             peerViewDisposable.set(combineLatest(cachedData, peer, sticker).start(next: { [weak self] cachedData, peer, sticker in
-                if let cachedData = cachedData as? CachedUserData, let user = peer, let self {
+                if let cachedData = cachedData as? CachedUserData, let user = peer, let self, self.chatInteraction.mode == .history {
                     if let botInfo = cachedData.botInfo {
                         var about = botInfo.description
                         if about.isEmpty {
@@ -517,20 +515,20 @@ class ChatEmptyPeerView : TableRowView {
             if let _ = premRequiredButton {
                 h += 20
             }
-            if let premRequiredImageView {
+            if let _ = premRequiredImageView {
                 h += 10
             }
             
-            if let stickerView {
+            if let _ = stickerView {
                 h += 10
             }
             
-            if let linkView {
+            if let _ = linkView {
                 h += 8
             }
             
             
-            bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, h + textView.frame.height + 20))
+            bgView.setFrameSize(NSMakeSize(max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20), h + textView.frame.height + 20))
 
             
             bgView.addSubview(self.textView)
