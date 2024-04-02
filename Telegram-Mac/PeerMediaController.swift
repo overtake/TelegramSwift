@@ -1397,7 +1397,7 @@ protocol PeerMediaSearchable : AnyObject {
         summaries.append(.voiceOrInstantVideo)
         summaries.append(.music)
 
-        let counters = combineLatest(self.modeValue.get(), context.engine.data.subscribe(EngineDataMap(
+        let counters: Signal<(PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]), NoError> = combineLatest(self.modeValue.get(), context.engine.data.subscribe(EngineDataMap(
             summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: peerId, threadId: nil, tag: $0) }
         )), storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount)
         |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
