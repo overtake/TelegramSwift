@@ -215,25 +215,38 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
         guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
             return
         }
-        guard let initial = node.geometry?.materials.first?.emission.contentsTransform else {
-            return
+        
+        for node in node.childNodes {
+            guard let initial = node.geometry?.materials.first?.emission.contentsTransform else {
+                return
+            }
+            
+            if let material = node.geometry?.materials.first {
+                if node.name == "Logos" {
+                    material.metalness.intensity = 0.1
+                } else {
+                    material.metalness.intensity = 0.3
+                }
+            }
+            
+            let animation = CABasicAnimation(keyPath: "contentsTransform")
+            animation.fillMode = .forwards
+            animation.fromValue = NSValue(scnMatrix4: initial)
+            animation.toValue = NSValue(scnMatrix4: SCNMatrix4Translate(initial, -1.6, 0.0, 0.0))
+            animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animation.beginTime = 1.1
+            animation.duration = 0.9
+            
+            let group = CAAnimationGroup()
+            group.animations = [animation]
+            group.beginTime = 1.0
+            group.duration = 4.0
+            group.repeatCount = .infinity
+            
+            node.geometry?.materials.first?.emission.addAnimation(group, forKey: "shimmer")
         }
-        
-        let animation = CABasicAnimation(keyPath: "contentsTransform")
-        animation.fillMode = .forwards
-        animation.fromValue = NSValue(scnMatrix4: initial)
-        animation.toValue = NSValue(scnMatrix4: SCNMatrix4Translate(initial, -1.6, 0.0, 0.0))
-        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        animation.beginTime = 0.6
-        animation.duration = 0.9
-        
-        let group = CAAnimationGroup()
-        group.animations = [animation]
-        group.beginTime = 1.0
-        group.duration = 3.0
-        group.repeatCount = .infinity
-        
-        node.geometry?.materials.first?.emission.addAnimation(group, forKey: "shimmer")
+
+
         
 //        if #available(macOS 14.0, *), let material = node.geometry?.materials.first {
 //            material.metalness.intensity = 0.3
