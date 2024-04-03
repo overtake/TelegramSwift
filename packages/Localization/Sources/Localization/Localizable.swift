@@ -3277,6 +3277,8 @@ public final class L10n {
   public static var chatAccessoryForwardYou: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.You") }
   /// VIEW THEME
   public static var chatActionViewTheme: String  { return L10n.tr("Localizable", "Chat.Action.ViewTheme") }
+  /// what's this?
+  public static var chatAdWhatThis: String  { return L10n.tr("Localizable", "Chat.Ad.WhatThis") }
   /// You have unsaved changes.\nReset?
   public static var chatAlertUnsaved: String  { return L10n.tr("Localizable", "Chat.Alert.Unsaved") }
   /// %d
