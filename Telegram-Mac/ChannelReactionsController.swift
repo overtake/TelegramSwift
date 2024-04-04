@@ -357,15 +357,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        
+        let reactions_uniq_max = arguments.context.appConfiguration.getGeneralValue("reactions_uniq_max", orElse: 11)
+        var sizes: [Int32] = []
+        var titles: [String] = []
+
+        for i in 1 ... reactions_uniq_max {
+            sizes.append(i)
+            titles.append("\(i)")
+        }
+                
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MAXIMUM REACTIONS PER POST"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
+       
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_max_limit, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            
-            var sizes: [Int32] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-            
-            let titles: [String] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
             
             return SelectSizeRowItem(initialSize, stableId: stableId, current: 0, sizes: sizes, hasMarkers: false, titles: titles, viewType: .singleItem, selectAction: { index in
                 //arguments.usageLimit(sizes[index])
@@ -394,7 +399,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
 
     let textInteractions = TextView_Interactions()
 
-    
+    var enabled: Bool = true
     if let allowedReactions = allowedReactions {
         
         switch allowedReactions {
@@ -420,11 +425,16 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
                 }
             }
         case .empty:
-            break
+            for reaction in availableReactions.reactions {
+                textInteractions.update { _ in
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                }
+            }
+            enabled = false
         }
     }
     
-    let initialState = State(available: availableReactions, state: textInteractions.presentation)
+    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
