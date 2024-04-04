@@ -82,7 +82,7 @@ extension TelegramBirthday {
         return formatBirthdayToString(day: Int(self.day), month: Int(self.month), year: self.year.flatMap(Int.init)) ?? ""
     }
     var formattedYears: String {
-        if let year = yearsSince() {
+        if let year = yearsSince(), year > 0 {
             let string = formatted + " (\(strings().birthdayYearsOldCountable(year)))"
             if isToday {
                 return "🎂 " + string
