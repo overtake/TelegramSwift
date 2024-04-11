@@ -1753,7 +1753,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let liveTranslateDisposable = MetaDisposable()
     private let presentationDisposable = DisposableSet()
     private let storiesDisposable = MetaDisposable()
-    private let answersAndOnlineDisposable = MetaDisposable()
     private let keepShortcutDisposable = MetaDisposable()
     
     private let preloadPersonalChannel = MetaDisposable()
@@ -2717,11 +2716,95 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             recommendedChannels = .single(nil)
         }
-                
         
+        let counters: Signal<ChatTitleCounters, NoError> = peerView.get() |> mapToSignal { peerView in
+            let peerView = peerView as? PeerView
+            
+            let answersCount: Signal<Int32?, NoError>
+            let onlineMemberCount:Signal<Int32?, NoError>
+
+            
+            if let threadId = threadId64 {
+                switch mode {
+                case let .thread(data, _):
+                    if mode.isSavedMessagesThread {
+                        let savedMessagesPeerId: PeerId = PeerId(data.threadId)
+                        
+                        let threadPeerId = savedMessagesPeerId
+                        let basicPeerKey: PostboxViewKey = .basicPeer(threadPeerId)
+                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: savedMessagesPeerId.toInt64(), namespace: Namespaces.Message.Cloud, customTag: nil)
+                        answersCount = context.account.postbox.combinedView(keys: [basicPeerKey, countViewKey])
+                        |> map { views -> Int32? in
+                            let peer = ((views.views[basicPeerKey] as? BasicPeerView)?.peer).flatMap(EnginePeer.init)
+                            
+                            var messageCount = 0
+                            if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                messageCount += Int(count)
+                            }
+                            
+                            return Int32(messageCount)
+                        }
+
+                    } else if isThread {
+                        answersCount = context.account.postbox.messageView(data.effectiveTopId)
+                            |> map {
+                                $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
+                            }
+                            |> map {
+                                $0?.count
+                            }
+                            |> deliverOnMainQueue
+                    } else {
+                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud, customTag: nil)
+                        let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local, customTag: nil)
+                        
+                        answersCount = context.account.postbox.combinedView(keys: [countViewKey, localCountViewKey])
+                        |> map { views -> Int32 in
+                            var messageCount = 0
+                            if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                if threadId == 1 {
+                                    messageCount += Int(count)
+                                } else {
+                                    messageCount += max(Int(count) - 1, 0)
+                                }
+                            }
+                            if let summaryView = views.views[localCountViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                messageCount += Int(count)
+                            }
+                            return Int32(messageCount)
+                        } |> map(Optional.init) |> deliverOnMainQueue
+                    }
+                default:
+                    answersCount = .single(nil)
+                }
+            } else {
+                answersCount = .single(nil)
+            }
+            
+            
+            if let peerView = peerView, let peer = peerViewMainPeer(peerView), peer.isSupergroup || peer.isGigagroup {
+                if let cachedData = peerView.cachedData as? CachedChannelData {
+                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    } else {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    }
+
+                } else {
+                    onlineMemberCount = .single(nil)
+                }
+            } else {
+                onlineMemberCount = .single(nil)
+            }
+            
+            return combineLatest(answersCount, onlineMemberCount) |> map {
+                return .init(replies: $0, online: $1)
+            }
+        } |> deliverOnMainQueue
         
+
       
-        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal, context.chatThemes).start(next: { [weak self] presentation, wallpaper, translate, storyState, emoticonThemes in
+        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal, context.chatThemes, counters).start(next: { [weak self] presentation, wallpaper, translate, storyState, emoticonThemes, counters in
             let emoticon = presentation.emoticon
             let theme = presentation.theme
             let genuie = presentation.genuie
@@ -2731,6 +2814,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.presentation_genuie = genuie
                 current.translate = translate
                 current.storyState = storyState
+                current.answersAndOnline = counters
                 switch wallpaper {
                 case let .result(result):
                     current.presentation = theme.withUpdatedEmoticonThemes(emoticonThemes)
@@ -6458,100 +6542,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .single(Void())
         }
         
-        let counters: Signal<ChatTitleCounters, NoError> = peerView.get() |> mapToSignal { peerView in
-            let peerView = peerView as? PeerView
-            
-            let answersCount: Signal<Int32?, NoError>
-            let onlineMemberCount:Signal<Int32?, NoError>
-
-            
-            if let threadId = threadId64 {
-                switch mode {
-                case let .thread(data, _):
-                    if mode.isSavedMessagesThread {
-                        let savedMessagesPeerId: PeerId = PeerId(data.threadId)
-                        
-                        let threadPeerId = savedMessagesPeerId
-                        let basicPeerKey: PostboxViewKey = .basicPeer(threadPeerId)
-                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: savedMessagesPeerId.toInt64(), namespace: Namespaces.Message.Cloud, customTag: nil)
-                        answersCount = context.account.postbox.combinedView(keys: [basicPeerKey, countViewKey])
-                        |> map { views -> Int32? in
-                            let peer = ((views.views[basicPeerKey] as? BasicPeerView)?.peer).flatMap(EnginePeer.init)
-                            
-                            var messageCount = 0
-                            if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
-                                messageCount += Int(count)
-                            }
-                            
-                            return Int32(messageCount)
-                        }
-
-                    } else if isThread {
-                        answersCount = context.account.postbox.messageView(data.effectiveTopId)
-                            |> map {
-                                $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
-                            }
-                            |> map {
-                                $0?.count
-                            }
-                            |> deliverOnMainQueue
-                    } else {
-                        let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud, customTag: nil)
-                        let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local, customTag: nil)
-                        
-                        answersCount = context.account.postbox.combinedView(keys: [countViewKey, localCountViewKey])
-                        |> map { views -> Int32 in
-                            var messageCount = 0
-                            if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
-                                if threadId == 1 {
-                                    messageCount += Int(count)
-                                } else {
-                                    messageCount += max(Int(count) - 1, 0)
-                                }
-                            }
-                            if let summaryView = views.views[localCountViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
-                                messageCount += Int(count)
-                            }
-                            return Int32(messageCount)
-                        } |> map(Optional.init) |> deliverOnMainQueue
-                    }
-                default:
-                    answersCount = .single(nil)
-                }
-            } else {
-                answersCount = .single(nil)
-            }
-            
-            
-            if let peerView = peerView, let peer = peerViewMainPeer(peerView), peer.isSupergroup || peer.isGigagroup {
-                if let cachedData = peerView.cachedData as? CachedChannelData {
-                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                    } else {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                    }
-
-                } else {
-                    onlineMemberCount = .single(nil)
-                }
-            } else {
-                onlineMemberCount = .single(nil)
-            }
-            
-            return combineLatest(answersCount, onlineMemberCount) |> map {
-                return .init(replies: $0, online: $1)
-            }
-        } |> deliverOnMainQueue
-        
        
         
-        self.answersAndOnlineDisposable.set(counters.start(next: { [weak self] counters in
-            self?.updateState { current in
-                var current = current
-                current.answersAndOnline = counters
-                return current
-            }
-        }))
         
         pollChannelDiscussionDisposable.set(discussion.start())
         

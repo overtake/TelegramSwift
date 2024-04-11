@@ -603,6 +603,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             verifyAlert_button(for: context.window, information: strings().storyMediaDeleteConfirmCountable(ids.count), ok: strings().modalDelete, successHandler: { _ in
                 _ = context.engine.messages.deleteStories(peerId: peerId, ids: ids).startStandalone()
                 _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 3).startStandalone()
+                self?.toggleSelection()
             })
             
         }, togglePinned: { [weak self] story in
@@ -627,6 +628,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             } else {
                 showModalText(for: context.window, text: strings().storyMediaTooltipLimitCountable(Int(maxPinLimit)))
             }
+            self?.toggleSelection()
         })
 
         let stateSignal = listContext.state |> deliverOnMainQueue
