@@ -326,13 +326,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     //TODOLANG
-    if state.channel.hasPermission(.banMembers), let defaultBannedRights = state.channel.defaultBannedRights {
+    if state.channel.hasPermission(.banMembers), let defaultBannedRights = state.channel.defaultBannedRights, state.banSelected {
         
         if !state.banFully {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("WHAT CAN \(state.allPeers.count) SELECTED USERS DO?"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatManageMessagesWhatCountable(state.banPeerSelected.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
             var currentRightsFlags: TelegramChatBannedRightsFlags
@@ -396,24 +396,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
         }
         
-        let text: String
-        if state.banFully {
-            if state.allPeers.count == 1 {
-                text = "[Partially restrict this user](part)"
+        if state.banSelected {
+            let text: String
+            if state.banFully {
+                text = strings().chatManageMessagesRestrictPartiallyCountable(state.banPeerSelected.count)
             } else {
-                text = "[Partially restrict users](part)"
+                text = strings().chatManageMessagesRestrictFullyCountable(state.banPeerSelected.count)
             }
-        } else {
-            if state.allPeers.count == 1 {
-                text = "[Fully ban this user](full)"
-            } else {
-                text = "[Fully ban users](full)"
-            }
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { type in
+                arguments.toggleBan(type)
+            }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+
         }
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { type in
-            arguments.toggleBan(type)
-        }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
+       
     }
     
 
@@ -600,7 +596,7 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
                     }
                 }
                 
-              
+                
                 signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: .init(flags: flags, untilDate: Int32.max)))
             }
         }

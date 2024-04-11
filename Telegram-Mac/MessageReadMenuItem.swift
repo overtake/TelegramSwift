@@ -765,7 +765,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                 self?.submenu = menu
             }))
         }
-        
+        ContextMenuItem.makeItemAvatar(self, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message))
         ContextMenuItem.checkPremiumRequired(self, context: context, peer: peer)
     }
     

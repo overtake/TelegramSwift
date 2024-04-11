@@ -887,7 +887,9 @@ class ChatListController : PeersListController {
             }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
-                additionItems.append(.grace(true))
+                if suggestions.contains(.gracePremium) {
+                    additionItems.append(.grace(true))
+                }
             }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {

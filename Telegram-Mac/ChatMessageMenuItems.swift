@@ -751,7 +751,6 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     _ = forwardObject.perform(to: [peer.id], threadId: makeThreadIdMessageId(peerId: peer.id, threadId: threadId)).start()
                 }))
 
-                ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil))
                 
                 return item
             }

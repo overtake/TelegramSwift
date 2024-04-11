@@ -159,7 +159,6 @@ private func makeItem(_ peer: Peer, context: AccountContext, callback:@escaping(
         callback(peer.id)
     }, peer: peer, context: context, reaction: nil, destination: .common)
     
-    ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), selfAsSaved: false)
     
     return item
 }

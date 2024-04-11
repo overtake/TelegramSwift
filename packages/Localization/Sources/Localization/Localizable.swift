@@ -4489,6 +4489,66 @@ public final class L10n {
   }
   /// Updated just now
   public static var chatLiveLocationUpdatedNow: String  { return L10n.tr("Localizable", "Chat.LiveLocation.UpdatedNow") }
+  /// %d
+  public static func chatManageMessagesRestrictFullyCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_countable", p1)
+  }
+  /// [Fully ban selected users](full)
+  public static var chatManageMessagesRestrictFullyFew: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_few") }
+  /// [Fully ban selected users](full)
+  public static var chatManageMessagesRestrictFullyMany: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_many") }
+  /// [Fully ban this user](full)
+  public static var chatManageMessagesRestrictFullyOne: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_one") }
+  /// [Fully ban selected users](full)
+  public static var chatManageMessagesRestrictFullyOther: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_other") }
+  /// [Fully ban selected users](full)
+  public static var chatManageMessagesRestrictFullyTwo: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_two") }
+  /// [Fully ban selected users](full)
+  public static var chatManageMessagesRestrictFullyZero: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictFully_zero") }
+  /// %d
+  public static func chatManageMessagesRestrictPartiallyCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_countable", p1)
+  }
+  /// [Partially restrict selected users](part)
+  public static var chatManageMessagesRestrictPartiallyFew: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_few") }
+  /// [Partially restrict selected users](part)
+  public static var chatManageMessagesRestrictPartiallyMany: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_many") }
+  /// [Partially restrict this user](part)
+  public static var chatManageMessagesRestrictPartiallyOne: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_one") }
+  /// [Partially restrict selected users](part)
+  public static var chatManageMessagesRestrictPartiallyOther: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_other") }
+  /// [Partially restrict selected users](part)
+  public static var chatManageMessagesRestrictPartiallyTwo: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_two") }
+  /// [Partially restrict users](part)
+  public static var chatManageMessagesRestrictPartiallyZero: String  { return L10n.tr("Localizable", "Chat.ManageMessages.RestrictPartially_zero") }
+  /// %d
+  public static func chatManageMessagesWhatCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_countable", p1)
+  }
+  /// WHAT CAN %d SELECTED USERS DO?
+  public static func chatManageMessagesWhatFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_few", p1)
+  }
+  /// WHAT CAN %d SELECTED USERS DO?
+  public static func chatManageMessagesWhatMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_many", p1)
+  }
+  /// WHAT CAN %d SELECTED USER DO?
+  public static func chatManageMessagesWhatOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_one", p1)
+  }
+  /// WHAT CAN %d SELECTED USERS DO?
+  public static func chatManageMessagesWhatOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_other", p1)
+  }
+  /// WHAT CAN %d SELECTED USERS DO?
+  public static func chatManageMessagesWhatTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_two", p1)
+  }
+  /// WHAT CAN %d SELECTED USERS DO?
+  public static func chatManageMessagesWhatZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.ManageMessages.What_zero", p1)
+  }
   /// Delete for All
   public static var chatMessageDeleteForAll: String  { return L10n.tr("Localizable", "Chat.Message.DeleteForAll") }
   /// Delete for everyone
@@ -6381,6 +6441,10 @@ public final class L10n {
   public static func chatListFolderUpdatesTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_zero", p1)
   }
+  /// Don't lose access to exclusive features.
+  public static var chatListGracePeriodInfo: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Info") }
+  /// ⚠️ Your Premium subscription is expiring!
+  public static var chatListGracePeriodTitle: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Title") }
   /// For 1 Day
   public static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
   /// For 1 Hour

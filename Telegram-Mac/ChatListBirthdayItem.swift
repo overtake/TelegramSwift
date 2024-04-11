@@ -82,6 +82,19 @@ final class ChatListBirthdayItem : GeneralRowItem {
         return true
     }
     
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        var items: [ContextMenuItem] = []
+        let context = self.context
+        for birthday in birthdays {
+            items.append(ReactionPeerMenu(title: birthday.peer._asPeer().displayTitle, handler: { [weak self] in
+                self?.context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(birthday.peer.id)))
+                
+            }, peer: birthday.peer._asPeer(), context: context, reaction: nil))
+        }
+        
+        return .single(items)
+    }
+    
     func invoke() {
         let context = self.context
         multigift(context: context, selected: self.birthdays.map { $0.peer.id })
