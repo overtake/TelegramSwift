@@ -1315,15 +1315,17 @@ func canReportMessage(_ message: Message, _ context: AccountContext) -> Bool {
 func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Account) -> Bool {
     
     if let peer = peer as? TelegramChannel, peer.isSupergroup, peer.hasPermission(.deleteAllMessages) {
-        let peerId:PeerId? = messages[0].author?.id
-        if account.peerId != peerId {
-            for message in messages {
-                if peerId != message.author?.id || !message.flags.contains(.Incoming) {
+        for message in messages {
+            let peerId:PeerId? = message.effectiveAuthor?.id
+            if account.peerId != peerId {
+                if !message.flags.contains(.Incoming) {
                     return false
                 }
+            } else {
+                return false
             }
-            return true
         }
+        return true
     }
     
     return false

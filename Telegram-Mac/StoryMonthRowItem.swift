@@ -25,7 +25,7 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
     let viewType:MediaCell.Type
     let corners:ImageCorners
     let context: AccountContext
-    
+    let isPinned: Bool
     var isSecret: Bool {
         return false
     }
@@ -93,7 +93,8 @@ final class StoryMonthRowItem : GeneralRowItem {
     fileprivate let openStory:(StoryInitialIndex?)->Void
     fileprivate let toggleSelected: (StoryId)->Void
     fileprivate let menuItems: (EngineStoryItem)->[ContextMenuItem]
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem]) {
+    fileprivate let pinnedIds:Set<Int32>
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, pinnedIds:Set<Int32>, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem]) {
         self.items = items
         self.selected = selected
         self.standalone = standalone
@@ -103,6 +104,7 @@ final class StoryMonthRowItem : GeneralRowItem {
         self.openStory = openStory
         self.toggleSelected = toggleSelected
         self.menuItems = menuItems
+        self.pinnedIds = pinnedIds
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsets())
     }
     
@@ -230,7 +232,7 @@ final class StoryMonthRowItem : GeneralRowItem {
             }
             let corners = ImageCorners(topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
             
-            let cell = StoryCellLayoutItem(item: item, peerReference: peerReference, peerId: peerId, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, context: context)
+            let cell = StoryCellLayoutItem(item: item, peerReference: peerReference, peerId: peerId, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, context: context, isPinned: self.pinnedIds.contains(item.id))
             
             self.layoutItems.append(cell)
             point.x += itemSize.width

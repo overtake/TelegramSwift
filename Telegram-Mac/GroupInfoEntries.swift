@@ -2075,7 +2075,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     let cachedGroupData = view.cachedData as? CachedGroupData
                                         
                     let text: String
-                    if let allowed = cachedGroupData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                    if let allowed = cachedGroupData?.reactionSettings.knownValue?.allowedReactions, let availableReactions = availableReactions {
                         switch allowed {
                         case .all:
                             text = strings().peerInfoReactionsAll
@@ -2089,7 +2089,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     }
                     
                     
-                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
                     
                 default:
                     break
@@ -2152,7 +2152,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if access.canEditGroupInfo {
                                         
                     let text: String
-                    if let allowed = cachedChannelData.allowedReactions.knownValue, let availableReactions = availableReactions {
+                    if let allowed = cachedChannelData.reactionSettings.knownValue?.allowedReactions, let availableReactions = availableReactions {
                         switch allowed {
                         case .all:
                             text = strings().peerInfoReactionsAll
@@ -2166,7 +2166,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     }
                     actionBlock.append(.color(section: GroupInfoSection.type.rawValue, peer: PeerEquatable(peer: channel), viewType: .singleItem))
 
-                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
                 }
                 
 

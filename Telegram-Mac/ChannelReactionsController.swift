@@ -123,6 +123,7 @@ private final class ReactionsRowView: GeneralContainableRowView {
                 return false
             }
         }
+        item.interactions.inputDidUpdate = { _ in }
 
         self.inputView.set(item.state.textInputState())
 
@@ -223,14 +224,15 @@ private final class Arguments {
     let createPack:()->Void
     let addReactions:(Control?)->Void
     let updateState:(Updated_ChatTextInputState)->Void
-
-    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
+    let updateMaxReactionsCount: (Int32)->Void
+    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, updateMaxReactionsCount: @escaping(Int32)->Void) {
         self.context = context
         self.interactions = interactions
         self.toggleEnabled = toggleEnabled
         self.createPack = createPack
         self.addReactions = addReactions
         self.updateState = updateState
+        self.updateMaxReactionsCount = updateMaxReactionsCount
     }
 }
 
@@ -241,6 +243,8 @@ private struct State : Equatable {
     
     var stats: ChannelBoostStatus?
     var myStatus: MyBoostStatus?
+    
+    var maxReactionsCount: Int32?
     
     var selected: [Int64] {
         let attributes = chatTextAttributes(from: state.inputText)
@@ -352,8 +356,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
                 
-        #if DEBUG
-        //TODOLANG
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
@@ -366,22 +368,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             titles.append("\(i)")
         }
                 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MAXIMUM REACTIONS PER POST"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelReactionsMaxCountTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
        
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_max_limit, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: 0, sizes: sizes, hasMarkers: false, titles: titles, viewType: .singleItem, selectAction: { index in
-                //arguments.usageLimit(sizes[index])
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.maxReactionsCount ?? reactions_uniq_max, sizes: sizes, hasMarkers: false, titles: titles, viewType: .singleItem, selectAction: { index in
+                arguments.updateMaxReactionsCount(sizes[index])
             })
-
         }))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Limit the number of different reactions that can be added to a post, including already published posts."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelReactionsMaxCountInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
-        #endif
         
     }
    
@@ -392,7 +391,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions) -> InputDataModalController {
+func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions, reactionsCount: Int32?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -434,7 +433,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         }
     }
     
-    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation)
+    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation, maxReactionsCount: reactionsCount)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -537,6 +536,13 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             current.state = state
             return current
         }
+    }, updateMaxReactionsCount: { count in
+        updateState { current in
+            var current = current
+            current.maxReactionsCount = count
+            return current
+        }
+        
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in
@@ -554,7 +560,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     
     controller.validateData = { _ in
         
-        _ = showModalProgress(signal: context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: stateValue.with { $0.allowedReactions }), for: context.window).start(error: { error in
+        _ = showModalProgress(signal: context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: stateValue.with { $0.allowedReactions }, maxReactionCount: stateValue.with { $0.maxReactionsCount })), for: context.window).start(error: { error in
             
             switch error {
             case .boostRequired:

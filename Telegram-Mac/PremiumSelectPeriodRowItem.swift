@@ -58,6 +58,18 @@ struct PremiumPeriod : Equatable {
             return strings().premiumBoardingSubscribeYear(fullAmount)
         }
     }
+    var renewString: String {
+        switch period {
+        case .month:
+            return strings().premiumBoardingRenewMonth(fullAmount)
+        case .sixMonth:
+            return strings().premiumBoardingRenewSixMonth(fullAmount)
+        case .year:
+            return strings().premiumBoardingRenewYear(fullAmount)
+        }
+    }
+    
+    
     var fullAmount: String {
         let price: String
         if let storeProduct = storeProduct {

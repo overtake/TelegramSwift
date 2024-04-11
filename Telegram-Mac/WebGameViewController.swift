@@ -122,6 +122,11 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         "var TelegramWebviewProxy = new TelegramWebviewProxyProto();"
         
         let configuration = WKWebViewConfiguration()
+        
+        if FastSettings.debugWebApp {
+            configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        }
+        
         let userController = WKUserContentController()
         
         let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)

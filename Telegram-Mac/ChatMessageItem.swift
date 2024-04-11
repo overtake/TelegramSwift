@@ -224,9 +224,11 @@ class ChatMessageItem: ChatRowItem {
     
     var hasExternalLink: Bool {
         if let adAtribute = message?.adAttribute {
-            if case .webPage = adAtribute.target {
+            let inapp = inApp(for: adAtribute.url.nsstring, context: context)
+            switch inapp {
+            case .external:
                 return true
-            } else {
+            default:
                 return false
             }
         }

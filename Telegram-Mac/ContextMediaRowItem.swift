@@ -239,6 +239,10 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             effectiveFile = FileMediaReference.customEmoji(media: media)
                         case let .story(peer, id, _):
                             effectiveFile = FileMediaReference.story(peer: peer, id: id, media: file)
+                        case .savedSticker(media: let media):
+                            effectiveFile = FileMediaReference.savedSticker(media: media)
+                        case .recentSticker(media: let media):
+                            effectiveFile = FileMediaReference.recentSticker(media: media)
                         }
                         
                     }

@@ -962,6 +962,14 @@ class PeerListContainerView : Control {
                         }, itemImage: MenuAnimation.menu_save_as.value))
                     }
                     
+                    if state.forumPeer == nil, !state.mode.isForumLike {
+                        items.append(ContextMenuItem(strings().chatListChannelsTag, handler: {
+                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil, isChannels: true))
+                            updateTitle([strings().chatListChannelsTag], theme.icons.search_filter)
+
+                        }, itemImage: MenuAnimation.menu_channel.value))
+                    }
+                    
                     for tag in tags {
                         var append: Bool = false
                         if currentTag != tag.0 {
@@ -1680,6 +1688,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             break
         }
+        
+        actionsDisposable.add(context.engine.peers.requestGlobalRecommendedChannelsIfNeeded().startStrict())
                 
         genericView.tableView._scrollDidEndLiveScrolling = { [weak self] in
             _ = self?.finishOverscroll()
@@ -2537,6 +2547,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
         case .birthdays:
+            break
+        case .grace:
             break
         case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:
             break

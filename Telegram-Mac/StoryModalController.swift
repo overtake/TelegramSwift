@@ -495,9 +495,9 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
     let peerAllowed: Signal<PeerAllowedReactions?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
     |> map { cachedData in
         if let cachedData = cachedData as? CachedGroupData {
-            return cachedData.allowedReactions.knownValue
+            return cachedData.reactionSettings.knownValue?.allowedReactions
         } else if let cachedData = cachedData as? CachedChannelData {
-            return cachedData.allowedReactions.knownValue
+            return cachedData.reactionSettings.knownValue?.allowedReactions
         } else {
             return nil
         }

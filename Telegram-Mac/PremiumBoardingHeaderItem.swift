@@ -18,6 +18,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
     enum SceneType {
         case coin
         case star
+        case grace
     }
     
     fileprivate let titleLayout: TextViewLayout
@@ -46,6 +47,10 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
             } else {
                 _ = info.append(string: strings().premiumBoardingBusinessTelegramBusinessHeaderInfo2, color: presentation.colors.text, font: .normal(.text))
             }
+        case .grace:
+            title = .initialize(string: strings().premiumBoardingGraceTitle, color: presentation.colors.text, font: .medium(.header))
+            _ = info.append(string: strings().premiumBoardingGraceText, color: presentation.colors.text, font: .normal(.text))
+            info.detectBoldColorInString(with: .medium(.text))
         case .star:
             if let peer = peer {
                 if case let .gift(from, _, months, _, _) = source {
@@ -255,7 +260,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 switch item.sceneType {
                 case .coin:
                     current = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
-                case .star:
+                case .star, .grace:
                     current = PremiumStarSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
                 }
                 addSubview(current)

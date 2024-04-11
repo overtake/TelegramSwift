@@ -331,11 +331,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     case .right:
                         container.frame = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
                     case .left:
-                        let offset = innerInsets.left + 20 + innerInsets.left
+                        let offset = innerInsets.left + 20 + innerInsets.right
                         container.frame = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                     }
                 case .deletable:
-                    let offset = innerInsets.left + 24 + innerInsets.left
+                    let offset = innerInsets.left + 24 + innerInsets.right
                     container.frame = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                 }
                 
@@ -434,11 +434,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 case .right:
                     containerRect = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
                 case .left:
-                    let offset = innerInsets.left + 20 + innerInsets.left
+                    let offset = innerInsets.left + 20 + innerInsets.right
                     containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                 }
             case .deletable:
-                let offset = innerInsets.left + 24 + innerInsets.left
+                let offset = innerInsets.left + 24 + innerInsets.right
                 containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
             }
             separatorRect = NSMakeRect(containerRect.minX + item.textInset, containerRect.height - .borderSize, containerRect.width - item.textInset, .borderSize)

@@ -345,6 +345,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         secureField.font = .normal(.text)
         secureField.textView?.insertionPointColor = theme.colors.text
         secureField.sizeToFit()
+        
                 
     }
     

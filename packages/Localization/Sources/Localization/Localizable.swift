@@ -2945,6 +2945,10 @@ public final class L10n {
   public static var channelReactionsAddInfo: String  { return L10n.tr("Localizable", "ChannelReactions.Add.Info") }
   /// You can add emoji from any emoji pack as a reaction.
   public static var channelReactionsEnableReactionsInfo: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions.Info") }
+  /// Limit the number of different reactions that can be added to a post, including already published posts.
+  public static var channelReactionsMaxCountInfo: String  { return L10n.tr("Localizable", "ChannelReactions.MaxCount.Info") }
+  /// MAXIMUM REACTIONS PER POST
+  public static var channelReactionsMaxCountTitle: String  { return L10n.tr("Localizable", "ChannelReactions.MaxCount.Title") }
   /// OVERVIEW
   public static var channelStatsOverview: String  { return L10n.tr("Localizable", "ChannelStats.Overview") }
   /// %d
@@ -5907,6 +5911,8 @@ public final class L10n {
   public static func chatListBirthdaySingleTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.BirthdaySingleTitle", p1)
   }
+  /// Channels
+  public static var chatListChannelsTag: String  { return L10n.tr("Localizable", "ChatList.ChannelsTag") }
   /// Show All
   public static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// All
@@ -11967,6 +11973,10 @@ public final class L10n {
   public static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
   /// WHAT'S INCLUDED
   public static var premiumWhatsIncluded: String  { return L10n.tr("Localizable", "Premium.WhatsIncluded") }
+  /// Unfortunately, your latest payment didn't come through. To keep your access to **exclusive features**, please renew the subscription.
+  public static var premiumBoardingGraceText: String  { return L10n.tr("Localizable", "Premium.Boarding.GraceText") }
+  /// Your benefits will expire soon!
+  public static var premiumBoardingGraceTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.GraceTitle") }
   /// Go **beyond the limits**, get **exclusive features** and support us by subscribing to **Telegram Premium**.
   public static var premiumBoardingInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Info") }
   /// Subscribe for %@ per month
@@ -12131,6 +12141,18 @@ public final class L10n {
   public static var premiumBoardingReactionsNewInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Info") }
   /// Infinite Reactions
   public static var premiumBoardingReactionsNewTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Title") }
+  /// Renew for %@ / month
+  public static func premiumBoardingRenewMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Renew.Month", p1)
+  }
+  /// Renew for %@ / six month
+  public static func premiumBoardingRenewSixMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Renew.SixMonth", p1)
+  }
+  /// Renew for %@ / year
+  public static func premiumBoardingRenewYear(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Renew.Year", p1)
+  }
   /// Organize your Saved Messages with tags for quicker access.
   public static var premiumBoardingSavedTagsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.SavedTags.Info") }
   /// Tags for Messages
@@ -13417,6 +13439,8 @@ public final class L10n {
   public static var searchPopularDelete: String  { return L10n.tr("Localizable", "Search.Popular.Delete") }
   /// Saved
   public static var searchPopularSavedMessages: String  { return L10n.tr("Localizable", "Search.Popular.SavedMessages") }
+  /// CHANNELS YOU JOINED
+  public static var searchSeparatorChannelsJoined: String  { return L10n.tr("Localizable", "Search.Separator.ChannelsJoined") }
   /// contacts and chats
   public static var searchSeparatorChatsAndContacts: String  { return L10n.tr("Localizable", "Search.Separator.ChatsAndContacts") }
   /// global search
@@ -13427,6 +13451,8 @@ public final class L10n {
   public static var searchSeparatorPopular: String  { return L10n.tr("Localizable", "Search.Separator.Popular") }
   /// Recent
   public static var searchSeparatorRecent: String  { return L10n.tr("Localizable", "Search.Separator.Recent") }
+  /// RECOMMENDED CHANNELS
+  public static var searchSeparatorRecommended: String  { return L10n.tr("Localizable", "Search.Separator.Recommended") }
   /// Topics
   public static var searchSeparatorTopics: String  { return L10n.tr("Localizable", "Search.Separator.Topics") }
   /// Search
@@ -16083,12 +16109,50 @@ public final class L10n {
   public static var storyListContextUnarchive: String  { return L10n.tr("Localizable", "StoryList.Context.Unarchive") }
   /// View Profile
   public static var storyListContextViewProfile: String  { return L10n.tr("Localizable", "StoryList.Context.ViewProfile") }
+  /// Archive
+  public static var storyMediaArchive: String  { return L10n.tr("Localizable", "StoryMedia.Archive") }
   /// Only you can see archived stories unless you choose to save them to your profile
   public static var storyMediaArchiveText: String  { return L10n.tr("Localizable", "StoryMedia.ArchiveText") }
+  /// Delete
+  public static var storyMediaDelete: String  { return L10n.tr("Localizable", "StoryMedia.Delete") }
+  /// %d
+  public static func storyMediaDeleteConfirmCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_countable", p1)
+  }
+  /// Are you sure you want to delete %d stories?
+  public static func storyMediaDeleteConfirmFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_few", p1)
+  }
+  /// Are you sure you want to delete %d stories?
+  public static func storyMediaDeleteConfirmMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_many", p1)
+  }
+  /// Are you sure you want to delete %d story?
+  public static func storyMediaDeleteConfirmOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_one", p1)
+  }
+  /// Are you sure you want to delete %d stories?
+  public static func storyMediaDeleteConfirmOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_other", p1)
+  }
+  /// Are you sure you want to delete %d stories?
+  public static func storyMediaDeleteConfirmTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_two", p1)
+  }
+  /// Are you sure you want to delete %d stories?
+  public static func storyMediaDeleteConfirmZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.DeleteConfirm_zero", p1)
+  }
   /// Done
   public static var storyMediaDone: String  { return L10n.tr("Localizable", "StoryMedia.Done") }
+  /// Pin
+  public static var storyMediaPin: String  { return L10n.tr("Localizable", "StoryMedia.Pin") }
   /// Select
   public static var storyMediaSelect: String  { return L10n.tr("Localizable", "StoryMedia.Select") }
+  /// Unarchive
+  public static var storyMediaUnarchive: String  { return L10n.tr("Localizable", "StoryMedia.Unarchive") }
+  /// Unpin
+  public static var storyMediaUnpin: String  { return L10n.tr("Localizable", "StoryMedia.Unpin") }
   /// Upload a new story to view it here
   public static var storyMediaArchiveEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Archive.Empty.Text") }
   /// No Archived Stories
@@ -16105,6 +16169,66 @@ public final class L10n {
   public static var storyMediaTitleArchive: String  { return L10n.tr("Localizable", "StoryMedia.Title.Archive") }
   /// My Stories
   public static var storyMediaTitleMyStories: String  { return L10n.tr("Localizable", "StoryMedia.Title.MyStories") }
+  /// %d
+  public static func storyMediaTooltipLimitCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_countable", p1)
+  }
+  /// You can't pin more then %d stories
+  public static func storyMediaTooltipLimitFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_few", p1)
+  }
+  /// You can't pin more then %d stories
+  public static func storyMediaTooltipLimitMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_many", p1)
+  }
+  /// You can't pin more then %d story
+  public static func storyMediaTooltipLimitOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_one", p1)
+  }
+  /// You can't pin more then %d stories
+  public static func storyMediaTooltipLimitOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_other", p1)
+  }
+  /// You can't pin more then %d stories
+  public static func storyMediaTooltipLimitTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_two", p1)
+  }
+  /// You can't pin more then %d stories
+  public static func storyMediaTooltipLimitZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Limit_zero", p1)
+  }
+  /// %d
+  public static func storyMediaTooltipPinnedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_countable", p1)
+  }
+  /// Stories Pinned
+  public static var storyMediaTooltipPinnedFew: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_few") }
+  /// Stories Pinned
+  public static var storyMediaTooltipPinnedMany: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_many") }
+  /// Story Pinned
+  public static var storyMediaTooltipPinnedOne: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_one") }
+  /// Stories Pinned
+  public static var storyMediaTooltipPinnedOther: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_other") }
+  /// Stories Pinned
+  public static var storyMediaTooltipPinnedTwo: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_two") }
+  /// Stories Pinned
+  public static var storyMediaTooltipPinnedZero: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Pinned_zero") }
+  /// %d
+  public static func storyMediaTooltipUnpinnedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_countable", p1)
+  }
+  /// Stories Unpinned
+  public static var storyMediaTooltipUnpinnedFew: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_few") }
+  /// Stories Unpinned
+  public static var storyMediaTooltipUnpinnedMany: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_many") }
+  /// Story Unpinned
+  public static var storyMediaTooltipUnpinnedOne: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_one") }
+  /// Stories Unpinned
+  public static var storyMediaTooltipUnpinnedOther: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_other") }
+  /// Stories Unpinned
+  public static var storyMediaTooltipUnpinnedTwo: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_two") }
+  /// Stories Unpinned
+  public static var storyMediaTooltipUnpinnedZero: String  { return L10n.tr("Localizable", "StoryMedia.Tooltip.Unpinned_zero") }
   /// Allow Screenshots
   public static var storyPrivacyAllowScreenshot: String  { return L10n.tr("Localizable", "StoryPrivacy.AllowScreenshot") }
   /// Keep this story on your profile even after it expires in 24 hours. Privacy settings will apply.
@@ -16329,10 +16453,98 @@ public final class L10n {
   public static var supergroupDeleteRestrictionDeleteAllMessages: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages") }
   /// Delete Message
   public static var supergroupDeleteRestrictionDeleteMessage: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteMessage") }
+  /// ADDITIONAL ACTIONS
+  public static var supergroupDeleteRestrictionHeader: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Header") }
+  /// %d
+  public static func supergroupDeleteRestrictionMultiTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_countable", p1)
+  }
+  /// Delete %d Messages
+  public static func supergroupDeleteRestrictionMultiTitleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_few", p1)
+  }
+  /// Delete %d Messages
+  public static func supergroupDeleteRestrictionMultiTitleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_many", p1)
+  }
+  /// Delete %d Message
+  public static func supergroupDeleteRestrictionMultiTitleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_one", p1)
+  }
+  /// Delete %d Messages
+  public static func supergroupDeleteRestrictionMultiTitleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_other", p1)
+  }
+  /// Delete %d Messages
+  public static func supergroupDeleteRestrictionMultiTitleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_two", p1)
+  }
+  /// Delete %d Messages
+  public static func supergroupDeleteRestrictionMultiTitleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_zero", p1)
+  }
+  /// Proceed
+  public static var supergroupDeleteRestrictionProceed: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Proceed") }
   /// Report Spam
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
   /// Manage Messages
   public static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
+  /// %d
+  public static func supergroupDeleteRestrictionBanUserMultiCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_countable", p1)
+  }
+  /// Ban %d Users
+  public static func supergroupDeleteRestrictionBanUserMultiFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_few", p1)
+  }
+  /// Ban %d Users
+  public static func supergroupDeleteRestrictionBanUserMultiMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_many", p1)
+  }
+  /// Ban %d User
+  public static func supergroupDeleteRestrictionBanUserMultiOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_one", p1)
+  }
+  /// Ban %d Users
+  public static func supergroupDeleteRestrictionBanUserMultiOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_other", p1)
+  }
+  /// Ban %d Users
+  public static func supergroupDeleteRestrictionBanUserMultiTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_two", p1)
+  }
+  /// Ban %d Users
+  public static func supergroupDeleteRestrictionBanUserMultiZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_zero", p1)
+  }
+  /// %d
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_countable", p1)
+  }
+  /// Delete All From %d Users
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_few", p1)
+  }
+  /// Delete All From %d Users
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_many", p1)
+  }
+  /// Delete All From %d User
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_one", p1)
+  }
+  /// Delete All From %d Users
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_other", p1)
+  }
+  /// Delete All From %d Users
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_two", p1)
+  }
+  /// Delete All From %d Users
+  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_zero", p1)
+  }
   /// App Data Storage
   public static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
   /// %d GB
