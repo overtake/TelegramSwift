@@ -455,7 +455,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
         let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
         _ = signal.start(next: { [weak navigation] peer in
-            navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source), animated, style: animated ? .push : Optional.none)
+            if peer.restrictionText == nil {
+                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source), animated, style: animated ? .push : Optional.none)
+            }
         })
     }
     

@@ -324,9 +324,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
     }
     
-    
-    //TODOLANG
-    if state.channel.hasPermission(.banMembers), let defaultBannedRights = state.channel.defaultBannedRights, state.banSelected {
+        if state.channel.hasPermission(.banMembers), let defaultBannedRights = state.channel.defaultBannedRights, state.banSelected {
         
         if !state.banFully {
             entries.append(.sectionId(sectionId, type: .normal))
@@ -609,9 +607,11 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
             for memberId in state.deletePeerSelected {
                 signals.append(context.engine.messages.clearAuthorHistory(peerId: peerId, memberId: memberId))
             }
-
         }
-
+        
+        _ = combineLatest(signals).start()
+        
+        close?()
         onComplete()
         return .none
     }

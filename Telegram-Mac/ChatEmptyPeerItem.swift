@@ -85,24 +85,8 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: "\n")
                 _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
             } else {
-                if let restriction = chatInteraction.presentation.restrictionInfo {
-                    var hasRule: Bool = false
-                    for rule in restriction.rules {
-                        #if APP_STORE
-                        if rule.platform == "ios" || rule.platform == "all" {
-                            if !chatInteraction.context.contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
-                                _ = attr.append(string: rule.text, color: theme.chatServiceItemTextColor, font: .medium(.text))
-                                hasRule = true
-                                break
-                            }
-                        }
-                        #endif
-                    }
-                    if !hasRule {
-                        _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
-                        lineSpacing = nil
-                    }
-                    
+                if let restriction = chatInteraction.presentation.peer?.restrictionText {
+                    _ = attr.append(string: restriction, color: theme.chatServiceItemTextColor, font: .medium(.text))
                 } else {
                     lineSpacing = nil
                     _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))

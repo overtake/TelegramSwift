@@ -291,6 +291,7 @@
 		27716D2C2B7E95CD00244412 /* CallScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27716D2B2B7E95CD00244412 /* CallScreenController.swift */; };
 		2771FC522BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2771FC512BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift */; };
 		2771FC542BC53F54009A5DDE /* InputTextDataRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2771FC532BC53F54009A5DDE /* InputTextDataRowItem.swift */; };
+		2771FC5A2BC81B9D009A5DDE /* Auth_Word.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2771FC592BC81B9D009A5DDE /* Auth_Word.swift */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
 		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
@@ -1832,6 +1833,7 @@
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
 		2771FC512BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteGroupMessagesController.swift; sourceTree = "<group>"; };
 		2771FC532BC53F54009A5DDE /* InputTextDataRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputTextDataRowItem.swift; sourceTree = "<group>"; };
+		2771FC592BC81B9D009A5DDE /* Auth_Word.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Word.swift; sourceTree = "<group>"; };
 		2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = text; path = voice_chat_raise_hand_1.tgs; sourceTree = "<group>"; };
 		2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertController.swift; sourceTree = "<group>"; };
 		2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertRowItem.swift; sourceTree = "<group>"; };
@@ -3378,6 +3380,7 @@
 				27F2BBCC27BE7F9700A37463 /* Auth_CodeEntryContol.swift */,
 				27F2BBCE27BEA4A400A37463 /* Auth_AwaitingReset.swift */,
 				27F2BBD227BF8CD300A37463 /* Auth_Signup.swift */,
+				2771FC592BC81B9D009A5DDE /* Auth_Word.swift */,
 			);
 			name = modern;
 			sourceTree = "<group>";
@@ -7357,6 +7360,7 @@
 				2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */,
 				D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */,
 				2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */,
+				2771FC5A2BC81B9D009A5DDE /* Auth_Word.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				270340622823FE5200D0156C /* PremiumLimitConfig.swift in Sources */,
 				A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */,

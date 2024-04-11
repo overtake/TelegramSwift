@@ -832,7 +832,9 @@ class ChatControllerView : View, ChatInputDelegate {
          */
         
         var value:ChatHeaderState.Value
-        if interfaceState.searchMode.inSearch {
+        if interfaceState.peer?.restrictionText != nil {
+            value = .none
+        } else if interfaceState.searchMode.inSearch {
             var tags: [EmojiTag]? = nil
             
             if let savedMessageTags = interfaceState.savedMessageTags {
@@ -928,15 +930,20 @@ class ChatControllerView : View, ChatInputDelegate {
             value = .none
         }
         let translate: ChatPresentationInterfaceState.TranslateState?
-        if let translateState = interfaceState.translateState, translateState.canTranslate {
-            if case .search = value {
-                translate = nil
+        if interfaceState.peer?.restrictionText == nil {
+            if let translateState = interfaceState.translateState, translateState.canTranslate {
+                if case .search = value {
+                    translate = nil
+                } else {
+                    translate = translateState
+                }
             } else {
-                translate = translateState
+                translate = nil
             }
         } else {
             translate = nil
         }
+        
         
         
         let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.connectedBot)
@@ -6992,7 +6999,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                             return !found
                         })
-                        if !found {
+                        if !found, !self.genericView.tableView.isEmpty {
                             showModalText(for: context.window, text: strings().chatOpenMessageNotExist, title: nil)
                         }
                     })
@@ -7117,9 +7124,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         editButton.contextMenu = { [weak self] in
             
-            guard let `self` = self, let peerView = self.currentPeerView else {
+            guard let `self` = self, let peerView = self.currentPeerView, peerViewMainPeer(peerView)?.restrictionText == nil else {
                 return nil
             }
+            
             let chatInteraction = self.chatInteraction
             let menu = ContextMenu(betterInside: true)
             let mode = self.mode
@@ -7159,6 +7167,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case .history:
                 switch chatLocation {
                 case let .peer(peerId):
+                    
                     
                     items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
                         self?.changeState()
@@ -7213,16 +7222,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }, itemImage: MenuAnimation.menu_change_colors.value))
                             }
                         }
-                        /*
-                         else if let peer = peer as? TelegramChannel {
-                             if peer.hasPermission(.changeInfo) {
-                                 items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
-                                     self?.showChatThemeSelector()
-                                 }, itemImage: MenuAnimation.menu_change_colors.value))
-                             }
-                         }
-                         */
-                        
                         let deleteChat = { [weak self] in
                             guard let `self` = self else {return}
                             let signal = removeChatInteractively(context: context, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
@@ -7366,6 +7365,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     contents.editName?()
                 }, itemImage: MenuAnimation.menu_edit.value))
             }
+            
             for item in items {
                 menu.addItem(item)
             }
@@ -7505,11 +7505,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     override func invokeNavigationBack() -> Bool {
+        let presentation = self.chatInteraction.presentation
+        let context = self.context
         switch mode {
         case .customLink(let contents):
-            let current = self.chatInteraction.presentation.effectiveInput
+            let current = presentation.effectiveInput
             if contents.text.attributes != current.attributes || contents.text.inputText != current.inputText {
                 verifyAlert(for: context.window, information: strings().chatAlertUnsaved, ok: strings().chatAlertUnsavedReset, successHandler: { [weak self] _ in
+                    self?.navigationController?.invokeBack(checkLock: false)
+                })
+                return false
+            }
+        case let .customChatContents(contents):
+            if presentation.historyCount == 0 {
+                let title: String
+                let info: String
+                switch contents.kind {
+                case .greetingMessageInput:
+                    title = strings().quickReplyChatRemoveGreetingMessageTitle
+                    info = strings().quickReplyChatRemoveGreetingMessageTitle
+                case .awayMessageInput:
+                    title = strings().quickReplyChatRemoveAwayMessageTitle
+                    info = strings().quickReplyChatRemoveAwayMessageText
+                case .quickReplyMessageInput(let shortcut):
+                    title = strings().quickReplyChatRemoveGenericTitle
+                    info = strings().quickReplyChatRemoveGenericText
+                }
+                verifyAlert(for: context.window, header: title, information: info, ok: strings().quickReplyChatRemoveGenericDeleteAction, successHandler: { [weak self] _ in
                     self?.navigationController?.invokeBack(checkLock: false)
                 })
                 return false

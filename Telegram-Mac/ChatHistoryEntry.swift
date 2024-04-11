@@ -500,6 +500,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         topMessageIndex = topMessages.count - 1
     }
     
+    if let restrictionText = peer?.restrictionText {
+        return []
+    }
+    
     
     var joinMessage: Message?
     if let channelPeer = peer {
