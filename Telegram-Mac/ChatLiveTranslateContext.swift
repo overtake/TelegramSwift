@@ -192,7 +192,7 @@ final class ChatLiveTranslateContext {
     
     
     
-    private let statePromise = ValuePromise(State.default, ignoreRepeated: true)
+    private let statePromise = ValuePromise<State>(ignoreRepeated: true)
     private let stateValue = Atomic(value: State.default)
     
     private func updateState(_ f: (State) -> State) -> Void {
@@ -469,7 +469,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                 |> then(
                     context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 32, fixedCombinedReadStates: nil)
                     |> filter { messageHistoryView -> Bool in
-                        return messageHistoryView.0.entries.count > 1
+                        return messageHistoryView.0.entries.count > 10
                     }
                     |> take(1)
                     |> map { messageHistoryView, _, _ -> ChatTranslationState? in
@@ -478,9 +478,6 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                         var fromLangs: [String: Int] = [:]
                         var count = 0
                         for message in messages {
-                            if let _ = URL(string: message.text) {
-                                continue
-                            }
                             if message.text.count > 10 {
                                 var text = String(message.text.prefix(256))
                                 if var entities = message.textEntitiesAttribute?.entities.filter({ $0.type.isCode }) {
@@ -511,22 +508,26 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                             }
                         }
                         
-                        
                         var mostFrequent: (String, Int)?
-                        for (lang, count) in fromLangs {
-                            if let current = mostFrequent {
-                                if count > current.1 {
+                        if count >= 5 {
+                            for (lang, count) in fromLangs {
+                                if let current = mostFrequent {
+                                    if count > current.1 {
+                                        mostFrequent = (lang, count)
+                                    }
+                                } else {
                                     mostFrequent = (lang, count)
                                 }
-                            } else {
-                                mostFrequent = (lang, count)
                             }
                         }
-                        let fromLang = mostFrequent?.0 ?? ""
-                        let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: false, paywall: false)
-                        let _ = updateChatTranslationState(engine: context.engine, peerId: peerId, state: state).start()
-                        if !dontTranslateLanguages.contains(fromLang) {
-                            return state
+                        if let fromLang = mostFrequent?.0 {
+                            let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: false, paywall: false)
+                            let _ = updateChatTranslationState(engine: context.engine, peerId: peerId, state: state).start()
+                            if !dontTranslateLanguages.contains(fromLang) {
+                                return state
+                            } else {
+                                return nil
+                            }
                         } else {
                             return nil
                         }
