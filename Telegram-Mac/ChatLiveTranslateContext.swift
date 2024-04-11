@@ -502,7 +502,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
 
                                 let fromLang = Translate.detectLanguage(for: text)
                                 if let fromLang = fromLang {
-                                    fromLangs[fromLang] = (fromLangs[fromLang] ?? 0) + message.text.count
+                                    fromLangs[fromLang] = (fromLangs[fromLang] ?? 0) + 1
                                     count += 1
                                 }
                             }

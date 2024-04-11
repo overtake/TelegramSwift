@@ -602,11 +602,7 @@ class ChatRowItem: TableRowItem {
     
     var hasPhoto: Bool {
         if let adAttribute = message?.adAttribute {
-            if adAttribute.displayAvatar {
-                return true
-            } else {
-                return false
-            }
+            return false
         }
         if !isBubbled {
             if case .Full = itemType {
@@ -3110,14 +3106,25 @@ class ChatRowItem: TableRowItem {
             let peerAllowed: Signal<PeerAllowedReactions?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
             |> map { cachedData in
                 if let cachedData = cachedData as? CachedGroupData {
-                    return cachedData.allowedReactions.knownValue
+                    return cachedData.reactionSettings.knownValue?.allowedReactions
                 } else if let cachedData = cachedData as? CachedChannelData {
-                    return cachedData.allowedReactions.knownValue
+                    return cachedData.reactionSettings.knownValue?.allowedReactions
                 } else {
                     return nil
                 }
             }
             |> take(1)
+            
+            let maximumReactionsLimit: Signal<Int32?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+            |> map { cachedData in
+                if let cachedData = cachedData as? CachedChannelData {
+                    return cachedData.reactionSettings.knownValue?.maxReactionCount
+                } else {
+                    return nil
+                }
+            }
+            |> take(1)
+
             
             let isTags = context.peerId == peerId
 
@@ -3182,10 +3189,10 @@ class ChatRowItem: TableRowItem {
             }
             
             
-            let signal = combineLatest(queue: .mainQueue(), builtin, peerAllowed, reactions)
+            let signal = combineLatest(queue: .mainQueue(), builtin, peerAllowed, reactions, maximumReactionsLimit)
             |> take(1)
 
-            return signal |> map { builtin, peerAllowed, reactions in
+            return signal |> map { builtin, peerAllowed, reactions, maximumReactionsLimit in
                 let enabled = builtin?.enabled ?? []
 
                 var available:[ContextReaction] = []
@@ -3257,7 +3264,10 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 var uniqueLimit: Int = .max
-                if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
+                
+                if let maximumReactionsLimit = maximumReactionsLimit {
+                    uniqueLimit = Int(maximumReactionsLimit)
+                } else if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
                     uniqueLimit = Int(value)
                 }
                 

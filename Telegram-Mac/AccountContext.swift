@@ -169,6 +169,13 @@ extension AppConfiguration {
             return defaultValue
         }
     }
+    func getStringValue(_ key: String, orElse defaultValue: String) -> String {
+        if let value = self.data?[key] as? String {
+            return value
+        } else {
+            return defaultValue
+        }
+    }
     func getBoolValue(_ key: String, orElse defaultValue: Bool) -> Bool {
         if let value = self.data?[key] as? Bool {
             return value

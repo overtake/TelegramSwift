@@ -35,6 +35,7 @@ final class InputAnimatedEmojiAttach: View {
             
         self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, playPolicy: playPolicy, textColor: textColor)
         
+        self.media.superview = self
         let mediaRect = self.focus(media.frame.size)
         
         self.media.isPlayable = !isLite(.emoji)

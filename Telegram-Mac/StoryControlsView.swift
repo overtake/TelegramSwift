@@ -13,17 +13,17 @@ import Postbox
 import SwiftSignalKit
 import DateUtils
 
-private let more_image = NSImage(named: "Icon_StoryMore")!.precomposed(NSColor.white)
-private let muted_image = NSImage(named: "Icon_StoryMute")!.precomposed(NSColor.white)
-private let cant_unmute = NSImage(named: "Icon_StoryMute")!.precomposed(NSColor.white.withAlphaComponent(0.75))
+private let more_image = NSImage(resource: .iconStoryMore).precomposed(NSColor.white)
+private let muted_image = NSImage(resource: .iconStoryMute).precomposed(NSColor.white)
+private let cant_unmute = NSImage(resource: .iconStoryMute).precomposed(NSColor.white.withAlphaComponent(0.75))
 
 
-private let unmuted_image = NSImage(named: "Icon_StoryUnmute")!.precomposed(NSColor.white)
+private let unmuted_image = NSImage(resource: .iconStoryUnmute).precomposed(NSColor.white)
 
-private let privacy_close_friends = NSImage(named: "Icon_StoryCloseFriends")!.precomposed()
-private let privacy_contacts = NSImage(named: "Icon_Story_Contacts")!.precomposed()
-private let privacy_selected_contacts = NSImage(named: "Icon_Story_Selected_Contacts")!.precomposed()
-private let forward_repost = NSImage(named: "Icon_StoryView_Repost")!.precomposed(NSColor.white)
+private let privacy_close_friends = NSImage(resource: .iconStoryCloseFriends).precomposed()
+private let privacy_contacts = NSImage(resource: .iconStoryContacts).precomposed()
+private let privacy_selected_contacts = NSImage(resource: .iconStorySelectedContacts).precomposed()
+private let forward_repost = NSImage(resource: .iconStoryViewRepost).precomposed(NSColor.white)
 
 
 private final class RepostView : View {

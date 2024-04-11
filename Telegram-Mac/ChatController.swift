@@ -3608,7 +3608,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let strongSelf = strongSelf, let peer = strongSelf.chatInteraction.peer {
                         var canDelete:Bool = true
                         var canDeleteForEveryone = true
-                        var otherCounter:Int32 = 0
+                        var allPeers:Set<PeerId> = Set()
                         let peerId = peer.id
                         var _mustDeleteForEveryoneMessage: Bool = true
                         for message in messages {
@@ -3620,23 +3620,36 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                             if !canDeleteForEveryoneMessage(message, context: context) {
                                 canDeleteForEveryone = false
+                                if let author = message.effectiveAuthor {
+                                    if !allPeers.contains(author.id) {
+                                        allPeers.insert(author.id)
+                                    }
+                                }
                             } else {
                                 if message.effectiveAuthor?.id != context.peerId && !(context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser)  {
                                     if let peer = message.peers[message.id.peerId] as? TelegramGroup {
                                         inner: switch peer.role {
                                         case .member:
-                                            otherCounter += 1
+                                            if let author = message.effectiveAuthor {
+                                                if !allPeers.contains(author.id) {
+                                                    allPeers.insert(author.id)
+                                                }
+                                            }
                                         default:
                                             break inner
                                         }
                                     } else {
-                                        otherCounter += 1
+                                        if let author = message.effectiveAuthor {
+                                            if !allPeers.contains(author.id) {
+                                                allPeers.insert(author.id)
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                         
-                        if otherCounter > 0 || peer.id == context.peerId {
+                        if peer.id == context.peerId {
                             canDeleteForEveryone = false
                         }
                         if messages.isEmpty {
@@ -3645,55 +3658,63 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         
                         if canDelete {
-                            if mustManageDeleteMessages(messages, for: peer, account: context.account), let memberId = messages[0].author?.id {
+                            if mustManageDeleteMessages(messages, for: peer, account: context.account) {
                                 
                                 var options:[ModalOptionSet] = []
                                 
-                                options.append(ModalOptionSet(title: strings().supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true))
                                 
                                 var hasRestrict: Bool = false
                                 
                                 if let channel = peer as? TelegramChannel {
                                     if channel.hasPermission(.banMembers) {
-                                        options.append(ModalOptionSet(title: strings().supergroupDeleteRestrictionBanUser, selected: false, editable: true))
+                                        options.append(ModalOptionSet(title: allPeers.count == 1 ? strings().supergroupDeleteRestrictionBanUser : strings().supergroupDeleteRestrictionBanUserMultiCountable(allPeers.count), selected: false, editable: true))
                                         hasRestrict = true
                                     }
                                 }
                                 options.append(ModalOptionSet(title: strings().supergroupDeleteRestrictionReportSpam, selected: false, editable: true))
-                                options.append(ModalOptionSet(title: strings().supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true))
+                                options.append(ModalOptionSet(title: allPeers.count == 1 ? strings().supergroupDeleteRestrictionDeleteAllMessages : strings().supergroupDeleteRestrictionDeleteAllMessagesMultiCountable(allPeers.count), selected: false, editable: true))
                                 
-                                
-                                
-                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (strings().modalDone, theme.colors.accent), title: strings().supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
-                                    
-                                    var signals:[Signal<Void, NoError>] = []
-                                    
-                                    var index:Int = 0
-                                    if result[index] == .selected {
-                                        signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forEveryone))
-                                    }
-                                    index += 1
-                                    
-                                    if hasRestrict {
-                                        if result[index] == .selected {
-                                            signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: .init(flags: [.banReadMessages], untilDate: Int32.max)))
-                                        }
-                                        index += 1
-                                    }
-                                    
-                                    if result[index] == .selected {
-                                        signals.append(context.engine.peers.reportPeerMessages(messageIds: messageIds, reason: .spam, message: ""))
-                                    }
-                                    index += 1
-
-                                    if result[index] == .selected {
-                                        signals.append(context.engine.messages.clearAuthorHistory(peerId: peerId, memberId: memberId))
-                                    }
-                                    index += 1
-
-                                    _ = combineLatest(signals).startStandalone()
-                                    strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
-                                }), for: context.window)
+                                if let channel = peer as? TelegramChannel {
+                                    showModal(with: DeleteGroupMessagesController(context: context, channel: channel, messages: messages, allPeers: allPeers, onComplete: { [weak strongSelf] in
+                                        strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
+                                    }), for: context.window)
+                                }
+//
+//                                
+//                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (strings().supergroupDeleteRestrictionProceed, theme.colors.accent), header: strings().supergroupDeleteRestrictionHeader, title: strings().supergroupDeleteRestrictionMultiTitleCountable(messages.count), result: { [weak strongSelf] result in
+//                                    
+//                                    var signals:[Signal<Void, NoError>] = []
+//                                    
+//                                    var index:Int = 0
+//                                    if result[index] == .selected {
+//                                        signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forEveryone))
+//                                    }
+//                                    index += 1
+//                                    
+//                                    if hasRestrict {
+//                                        if result[index] == .selected {
+//                                            for memberId in allPeers {
+//                                                signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: .init(flags: [.banReadMessages], untilDate: Int32.max)))
+//                                            }
+//                                        }
+//                                        index += 1
+//                                    }
+//                                    
+//                                    if result[index] == .selected {
+//                                        signals.append(context.engine.peers.reportPeerMessages(messageIds: messageIds, reason: .spam, message: ""))
+//                                    }
+//                                    index += 1
+//
+//                                    if result[index] == .selected {
+//                                        for memberId in allPeers {
+//                                            signals.append(context.engine.messages.clearAuthorHistory(peerId: peerId, memberId: memberId))
+//                                        }
+//                                    }
+//                                    index += 1
+//
+//                                    _ = combineLatest(signals).startStandalone()
+//                                    strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
+//                                }), for: context.window)
                                 
                             } else  {
                                 
@@ -5486,10 +5507,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                     } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                            .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
+                            .withUpdatedAllowedReactions(cachedData.reactionSettings.knownValue?.allowedReactions)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                            .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
+                            .withUpdatedAllowedReactions(cachedData.reactionSettings.knownValue?.allowedReactions)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                     }
@@ -5790,10 +5811,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                         } else if let cachedData = peerView.cachedData as? CachedChannelData {
                             present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
+                                .withUpdatedAllowedReactions(cachedData.reactionSettings.knownValue?.allowedReactions)
                         } else if let cachedData = peerView.cachedData as? CachedGroupData {
                             present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
+                                .withUpdatedAllowedReactions(cachedData.reactionSettings.knownValue?.allowedReactions)
                         }
                         
                         present = present.withUpdatedDiscussionGroupId(discussionGroupId)

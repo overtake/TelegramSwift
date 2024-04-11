@@ -145,6 +145,7 @@ enum UIChatListEntryId : Hashable {
     case space
     case suspicious
     case birthdays
+    case grace
 }
 
 
@@ -195,6 +196,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case sharedFolderUpdated(ChatFolderUpdates)
     case suspicious(NewSessionReview)
     case birthdays([UIChatListBirthday])
+    case grace(Bool)
     case space
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
@@ -231,6 +233,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case let .birthdays(birthdays):
             if case .birthdays(birthdays) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .grace(canClose):
+            if case .grace(canClose) = rhs {
                 return true
             } else {
                 return false
@@ -309,7 +317,9 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .sharedFolderUpdated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
-        case let .birthdays(birthdays):
+        case .birthdays:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
+        case .grace:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .loading:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
@@ -344,6 +354,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .suspicious
         case .birthdays:
             return .birthdays
+        case .grace:
+            return .grace
         case .space:
             return .space
         }
@@ -406,6 +418,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 } else {
                     return ChatListBirthdayItem(initialSize, stableId: entry.stableId, birthdays: birthdays, context: arguments.context)
                 }
+            case let .grace(canClose):
+                return ChatListGraceRowItem(initialSize, stableId: entry.stableId, context: arguments.context, canClose: canClose)
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
@@ -864,27 +878,37 @@ class ChatListController : PeersListController {
                     mapped.append(.loading(filterData.filter))
                 }
             }
+            
+            
+            var additionItems: [UIChatListEntry] = []
+            
             if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState != .minimisize {
-                mapped.append(.suspicious(suspiciousSession))
+                additionItems.append(.suspicious(suspiciousSession))
+            }
+            
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
+                additionItems.append(.grace(true))
             }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
                 if suggestions.contains(.setupBirthday), myBirthday == nil {
-                    mapped.append(.birthdays([]))
+                    additionItems.append(.birthdays([]))
                 } else {
                     if !birthdays.isEmpty {
-                        mapped.append(.birthdays(birthdays))
+                        additionItems.append(.birthdays(birthdays))
                     }
                 }
             }
             
-            
-            
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
-                mapped.append(.systemDeprecated(filterData.filter))
+                additionItems.append(.systemDeprecated(filterData.filter))
             }
             if let updates = folderUpdates {
-                mapped.append(.sharedFolderUpdated(updates))
+                additionItems.append(.sharedFolderUpdated(updates))
+            }
+            
+            if let first = additionItems.first {
+                mapped.append(first)
             }
             
             

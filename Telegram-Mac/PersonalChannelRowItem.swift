@@ -18,13 +18,14 @@ final class PersonalChannelRowItem: GeneralRowItem {
     let dateLayout: TextViewLayout?
     let context: AccountContext
     let peer: EnginePeer
+    let message: EngineMessage?
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, item: UserInfoPersonalChannel, viewType: GeneralViewType, action:@escaping()->Void) {
         self.context = context
         self.peer = item.peer
         self.titleLayout = .init(.initialize(string: item.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         let text = chatListText(account: context.account, for: item.message?._asMessage())
         self.textLayout = .init(text, maximumNumberOfLines: 2)
-        
+        self.message = item.message
         if let message = item.message {
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
@@ -57,6 +58,40 @@ private final class PersonalChannelRowView : GeneralContainableRowView {
     private let textView = InteractiveTextView(frame: .zero)
     private var dateView: TextView?
     private var statusControl: PremiumStatusControl?
+    private var loadingView: LoadingView?
+    
+    private class LoadingView : View {
+        private let messageView = ShimmerView()
+        private let dateLoading = ShimmerView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(messageView)
+            addSubview(dateLoading)
+        }
+        
+        
+        override func layout() {
+            super.layout()
+            
+            messageView.frame = NSMakeRect(72, 32, 200, 13)
+            dateLoading.frame = NSMakeRect(frame.width - 11 - 50, 10, 50, 13)
+            
+            messageView.layer?.cornerRadius = messageView.frame.height / 2
+            dateLoading.layer?.cornerRadius = dateLoading.frame.height / 2
+
+            messageView.update(backgroundColor: .blackTransparent, data: nil, size: messageView.frame.size, imageSize: messageView.frame.size)
+            messageView.updateAbsoluteRect(messageView.bounds, within: messageView.frame.size)
+            
+            dateLoading.update(backgroundColor: .blackTransparent, data: nil, size: dateLoading.frame.size, imageSize: dateLoading.frame.size)
+            dateLoading.updateAbsoluteRect(dateLoading.bounds, within: dateLoading.frame.size)
+
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         avatar.setFrameSize(NSMakeSize(50, 50))
@@ -117,6 +152,8 @@ private final class PersonalChannelRowView : GeneralContainableRowView {
         if let dateView {
             dateView.setFrameOrigin(NSMakePoint(containerView.frame.width - dateView.frame.width - 14, 10))
         }
+        
+        loadingView?.frame = containerView.bounds
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -141,11 +178,27 @@ private final class PersonalChannelRowView : GeneralContainableRowView {
                 current.userInteractionEnabled = false
                 current.isSelectable = false
                 addSubview(current)
+                
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             current.update(dateLayout)
         } else if let view = self.dateView {
             performSubviewRemoval(view, animated: animated)
             self.dateView = nil
+        }
+        
+        if item.message == nil {
+            let current: LoadingView
+            if let view = self.loadingView {
+                current = view
+            } else {
+                current = LoadingView(frame: containerView.bounds)
+                self.loadingView = current
+                addSubview(current)
+            }
+        } else if let view = self.loadingView {
+            performSubviewRemoval(view, animated: animated)
+            self.loadingView = nil
         }
         
         let control = PremiumStatusControl.control(item.peer._asPeer(), account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, color: theme.colors.accent, cached: self.statusControl, animated: animated)

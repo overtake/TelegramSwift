@@ -163,7 +163,7 @@ final class GroupCallView : View {
         self.addSubview(visualBackgroundView)
         self.addSubview(backgroundContainerView)
         
-        backgroundContainerView.backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(0.7)
+        backgroundContainerView.backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(1.0)
 
 
         visualBackgroundView.wantsLayer = true

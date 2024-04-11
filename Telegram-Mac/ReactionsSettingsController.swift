@@ -316,8 +316,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
                     updated = .limited(selected)
                 }
             }
-            
-            _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: updated).start()
+            _ = context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: updated, maxReactionCount: nil)).startStandalone()
         default:
             break
         }

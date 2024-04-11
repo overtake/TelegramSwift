@@ -12,11 +12,29 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import TGUIKit
+import InputView
 
 private let optionsLimit: Int = 10
 private let maxTextLength:Int32 = 255
 private let maxOptionLength: Int32 = 100
 
+
+private class Arguments {
+    let context: AccountContext
+    let textInteractions: TextView_Interactions
+    let deleteOption:(InputDataIdentifier) -> Void
+    let updateQuizSelected:(InputDataIdentifier) -> Void
+    let updateMode: (NewPollMode)->Void
+    let updateState:(Updated_ChatTextInputState)->Void
+    init(context: AccountContext, textInteractions: TextView_Interactions, deleteOption: @escaping (InputDataIdentifier) -> Void, updateQuizSelected: @escaping (InputDataIdentifier) -> Void, updateMode: @escaping (NewPollMode) -> Void, updateState: @escaping (Updated_ChatTextInputState) -> Void) {
+        self.context = context
+        self.textInteractions = textInteractions
+        self.deleteOption = deleteOption
+        self.updateQuizSelected = updateQuizSelected
+        self.updateMode = updateMode
+        self.updateState = updateState
+    }
+}
 
 private func _id_input_option() -> InputDataIdentifier {
     return InputDataIdentifier("_id_input_option_\(arc4random())")
@@ -121,32 +139,35 @@ private enum NewPollMode : Equatable {
 }
 
 private struct NewPollState : Equatable {
-    let title: String
-    let options: [NewPollOption]
     private let random: UInt32
-    let mode: NewPollMode
-    let isQuiz: Bool?
-    let quizExplanation: NSAttributedString
-    init(title: String, options: [NewPollOption], random: UInt32, mode: NewPollMode, isQuiz: Bool?, quizExplanation: NSAttributedString) {
+
+    var title: String
+    var options: [NewPollOption]
+    var mode: NewPollMode
+    var isQuiz: Bool?
+    var quizExplanation: NSAttributedString
+    var textState: Updated_ChatTextInputState
+    init(title: String, options: [NewPollOption], random: UInt32, mode: NewPollMode, isQuiz: Bool?, quizExplanation: NSAttributedString, textState: Updated_ChatTextInputState) {
         self.title = title
         self.options = options
         self.random = random
         self.mode = mode
         self.isQuiz = isQuiz
         self.quizExplanation = quizExplanation
+        self.textState = textState
     }
     
     func withUpdatedTitle(_ title: String) -> NewPollState {
-        return NewPollState(title: title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     func withDeleteOption(_ identifier: InputDataIdentifier) -> NewPollState {
         var options = self.options
         options.removeAll(where: {$0.identifier == identifier})
-        return NewPollState(title: title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     
     func withUnselectItems() -> NewPollState {
-        return NewPollState(title: self.title, options: self.options.map { $0.withUpdatedSelected(false) }, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: self.title, options: self.options.map { $0.withUpdatedSelected(false) }, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     
     func withUpdatedOption(_ f:(NewPollOption) -> NewPollOption, forKey identifier: InputDataIdentifier) -> NewPollState {
@@ -154,7 +175,7 @@ private struct NewPollState : Equatable {
         if let index = options.firstIndex(where: {$0.identifier == identifier}) {
             options[index] = f(options[index])
         }
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     
     func withUpdatedOptions(_ data:[InputDataIdentifier : InputDataValue]) -> NewPollState {
@@ -164,18 +185,18 @@ private struct NewPollState : Equatable {
                 options[index] = options[index].withUpdatedText(value.stringValue ?? options[index].text)
             }
         }
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     
     func withAddedOption(_ option: NewPollOption) -> NewPollState {
         var options = self.options
         options.append(option)
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     func withUpdatedPos(_ previous: Int, _ current: Int) -> NewPollState {
         var options = self.options
         options.move(at: previous, to: current)
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     
     func indexOf(_ identifier: InputDataIdentifier) -> Int? {
@@ -183,13 +204,13 @@ private struct NewPollState : Equatable {
     }
     
     func withUpdatedState() -> NewPollState {
-         return NewPollState(title: self.title, options: self.options, random: arc4random(), mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+         return NewPollState(title: self.title, options: self.options, random: arc4random(), mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     func withUpdatedMode(_ mode: NewPollMode) -> NewPollState {
-        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
+        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation, textState: self.textState)
     }
     func withUpdatedQuizExplanation(_ quizExplanation: NSAttributedString) -> NewPollState {
-        return NewPollState(title: self.title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: quizExplanation)
+        return NewPollState(title: self.title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: quizExplanation, textState: self.textState)
     }
     
     var isEnabled: Bool {
@@ -235,7 +256,7 @@ private struct NewPollState : Equatable {
     }
 }
 
-private func newPollEntries(_ state: NewPollState, context: AccountContext, canBePublic: Bool, deleteOption:@escaping(InputDataIdentifier) -> Void, updateQuizSelected:@escaping(InputDataIdentifier) -> Void, updateMode: @escaping(NewPollMode)->Void) -> [InputDataEntry] {
+private func entries(_ state: NewPollState, arguments: Arguments, canBePublic: Bool) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -246,6 +267,11 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? strings().newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : strings().newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
         
+    
+//    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input_title, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
+//        return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.textInteractions, state: state.textState, viewType: .singleItem, placeholder: nil, inputPlaceholder: strings().newPollQuestionPlaceholder, filter: { $0 }, updateState: arguments.updateState, limit: maxTextLength, hasEmoji: true)
+//    }))
+    
     entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().newPollQuestionPlaceholder, filter: { text in
         
         var text = text
@@ -292,9 +318,8 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         case .normal:
             placeholder = InputDataInputPlaceholder(hasLimitationText: true)
         case .quiz:
-            
             placeholder = InputDataInputPlaceholder(nil, icon: option.selected ? theme.icons.chatToggleSelected : theme.icons.poll_quiz_unselected, drawBorderAfterPlaceholder: true, hasLimitationText: true, action: {
-                updateQuizSelected(option.identifier)
+                arguments.updateQuizSelected(option.identifier)
                 //deleteOption(option.identifier)
             })
         }
@@ -302,7 +327,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         
         
         entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.recentDismiss, .custom({ _, _ in 
-            deleteOption(option.identifier)
+            arguments.deleteOption(option.identifier)
         }))), placeholder: placeholder, inputPlaceholder: strings().newPollOptionsPlaceholder, filter: { text in
             return text.trimmingCharacters(in: CharacterSet.newlines)
         }, limit: maxOptionLength))
@@ -335,7 +360,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     
     if canBePublic {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: strings().newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: hideQuiz && hideMultiple ? .singleItem : .firstItem, justUpdate: arc4random64(), action: {
-            updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
+            arguments.updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
         })))
         index += 1
     }
@@ -345,12 +370,12 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     if !hideMultiple {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: strings().newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: canBePublic ? hideQuiz ? .lastItem : .innerItem : hideQuiz ? .lastItem : .firstItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
             if state.mode.isMultiple {
-                updateMode(.normal(anonymous: state.mode.isAnonymous))
+                arguments.updateMode(.normal(anonymous: state.mode.isAnonymous))
             } else {
-                updateMode(.multiple(anonymous: state.mode.isAnonymous))
+                arguments.updateMode(.multiple(anonymous: state.mode.isAnonymous))
             }
         }, disabledAction: {
-            alert(for: context.window, info: strings().newPollQuizMultipleError)
+            alert(for: arguments.context.window, info: strings().newPollQuizMultipleError)
         })))
         index += 1
     }
@@ -360,9 +385,9 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     if !hideQuiz {
         entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: strings().newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
             if state.mode.isQuiz {
-                updateMode(.normal(anonymous: state.mode.isAnonymous))
+                arguments.updateMode(.normal(anonymous: state.mode.isAnonymous))
             } else {
-                updateMode(.quiz(anonymous: state.mode.isAnonymous))
+                arguments.updateMode(.quiz(anonymous: state.mode.isAnonymous))
             }
         })))
         index += 1
@@ -408,6 +433,8 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
 func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) -> InputDataModalController {
     
     
+    let context = chatInteraction.context
+    
     let mode: NewPollMode
     if let isQuiz = isQuiz, isQuiz {
         mode = .quiz(anonymous: true)
@@ -415,7 +442,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         mode = .normal(anonymous: true)
     }
     
-    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: mode, isQuiz: isQuiz, quizExplanation: NSAttributedString())
+    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: mode, isQuiz: isQuiz, quizExplanation: NSAttributedString(), textState: .init())
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -428,26 +455,23 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
 
     let animated: Atomic<Bool> = Atomic(value: false)
     
-    let deleteOption:(InputDataIdentifier)-> Void = { identifier in
+    var showTooltipForQuiz:(()->Void)? = nil
+    
+    let textInteractions = TextView_Interactions()
+    
+    let arguments = Arguments(context: context, textInteractions: textInteractions, deleteOption: { identifier in
         let state = stateValue.with { $0 }
         updateState { state in
             return state.withDeleteOption(identifier)
         }
         shouldMakeNearResponderAfterTransition = (identifier, state.indexOf(identifier)!)
-    }
-    let updateQuizSelected:(InputDataIdentifier)-> Void = { identifier in
+    }, updateQuizSelected: { identifier in
         updateState { state in
             return state.withUnselectItems().withUpdatedOption({ option -> NewPollOption in
                 return option.withUpdatedSelected(true)
             }, forKey: identifier)
         }
-    }
-    
-    
-    var showTooltipForQuiz:(()->Void)? = nil
-
-    
-    let updateMode:(NewPollMode)->Void = { mode in
+    }, updateMode: { mode in
         let oldMode = stateValue.with { $0.mode }
 
         updateState { state in
@@ -460,7 +484,17 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         if mode.isQuiz && !oldMode.isQuiz {
             showTooltipForQuiz?()
         }
-    }
+    }, updateState: { state in
+        textInteractions.update { _ in
+            return state
+        }
+        updateState { current in
+            var current = current
+            current.textState = state
+            return current
+        }
+    })
+    
     
     let addOption:(Bool)-> InputDataValidation = { byClick in
         let option = NewPollOption(identifier: _id_input_option(), text: "", selected: false)
@@ -504,10 +538,9 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         canBePublic = true
     }
     
-    let context = chatInteraction.context
     
-    let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> deliverOnPrepareQueue |> map { value in
-        return InputDataSignalValue(entries: newPollEntries(value, context: context, canBePublic: canBePublic, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
+    let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> deliverOnMainQueue |> map { value in
+        return InputDataSignalValue(entries: entries(value, arguments: arguments, canBePublic: canBePublic), animated: animated.swap(true))
     }
     
     
@@ -632,44 +665,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
             
             return true
         })
-        
-//
-//        let resort = TableResortController(resortRange: range, startTimeout: 0.1, start: { _ in
-//
-//        }, resort: { _ in
-//
-//        }, complete: { [weak controller] previous, current in
-//            if previous != current {
-//                _ = animated.swap(false)
-//
-//                updateState { state in
-//                    return state.withUpdatedPos(previous - range.location, current - range.location)
-//                }
-//            } else {
-//                updateState { state in
-//                    return state.withUpdatedState()
-//                }
-//            }
-//            if let identifier = controller?.currentFirstResponderIdentifier {
-//                shouldMakeNextResponderAfterTransition = (identifier, false, nil, false)
-//            }
-//
-//        }, updateItems: { currentView, items in
-//
-////            let items = items.compactMap { $0 as? GeneralRowItem }.filter({ $0.view?.identifier != NSUserInterfaceItemIdentifier("-1")})
-////            for (i, item) in items.enumerated() {
-////                NSLog("\(item.view)")
-////                item.updateViewType(bestGeneralViewType(items, for: i))
-////                item.view?.set(item: item, animated: true)
-////            }
-////            if let item = currentView?.item as? GeneralRowItem {
-////                //item.updateViewType(.singleItem)
-////                currentView?.set(item: item, animated: true)
-////            }
-//
-//        })
-//        controller.tableView.resortController = resort
-//
+
         interactions.updateDone { done in
             done.isEnabled = state.isEnabled
         }
@@ -716,7 +712,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         let state = stateValue.with { $0 }
         if let index = state.options.firstIndex(where: { $0.identifier == identifier}) {
             if state.options[index].text.isEmpty {
-                deleteOption(state.options[index].identifier)
+                arguments.deleteOption(state.options[index].identifier)
                 return .invoked
             }
         }

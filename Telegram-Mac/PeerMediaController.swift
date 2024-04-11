@@ -641,7 +641,17 @@ protocol PeerMediaSearchable : AnyObject {
         self.stories = StoryMediaController(context: context, peerId: peerId, listContext: storyListContext)
         self.similarChannels = SimilarChannelsController(context: context, peerId: peerId, recommendedChannels: nil)
 
+         
+         
         super.init(context)
+         
+         self.stories.parentToggleSelection = { [weak self] in
+             self?.changeState()
+         }
+         
+         self.archiveStories?.parentToggleSelection = { [weak self] in
+             self?.changeState()
+         }
         
         updateTitle = { [weak self] result in
             if let title = result.title {

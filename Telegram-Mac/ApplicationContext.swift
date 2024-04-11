@@ -409,12 +409,21 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         window.set(handler: { _ -> KeyHandlerResult in
             
+            
             appDelegate?.sharedApplicationContextValue?.notificationManager.updatePasslock(context.sharedContext.accountManager.transaction { transaction -> Bool in
                 switch transaction.getAccessChallengeData() {
                 case .none:
                     return false
                 default:
                     return true
+                }
+            })
+            
+            let hasPasscode = context.sharedContext.accountManager.transaction { $0.getAccessChallengeData() != .none } |> deliverOnMainQueue
+            
+            _ = hasPasscode.startStandalone(next: { value in
+                if !value {
+                    context.bindings.rootNavigation().push(PasscodeSettingsViewController(context))
                 }
             })
                         

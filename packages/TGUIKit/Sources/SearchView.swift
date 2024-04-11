@@ -367,6 +367,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         if self.query.isEmpty {
             if !tags.isEmpty {
                 customSearchControl?.deleteTag(tags.count - 1)
+                self.needsLayout = true
             } else {
                 self.change(state: .None, true)
             }

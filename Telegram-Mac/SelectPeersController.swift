@@ -237,6 +237,10 @@ struct SelectPeerValue : Equatable {
         }
         if peer.isBot {
             string = strings().presenceBot.lowercased()
+            if let addressName = peer.addressName {
+                color = customTheme?.accentColor ?? theme.colors.accent
+                string = "@\(addressName)" + " (\(string))"
+            }
         }
         if ignoreStatus {
             return (nil, customTheme?.grayTextColor ?? theme.colors.grayText)
