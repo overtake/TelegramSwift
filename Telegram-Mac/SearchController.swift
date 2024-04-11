@@ -209,6 +209,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case separator(text: String, index:Int, state:SeparatorBlockState)
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
     case emptySearch
+    case emptyChannels
     var stableId: ChatListSearchEntryStableId {
         switch self {
         case let .localPeer(peer, _, secretChat, _, _, _, _):
@@ -235,6 +236,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .topPeers
         case .emptySearch:
             return .emptySearch
+        case .emptyChannels:
+            return .emptySearch
         }
     }
     
@@ -257,6 +260,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
         case let .topPeers(index, _, _, _, _, _, _):
             return index
         case .emptySearch:
+            return 0
+        case .emptyChannels:
             return 0
         }
     }
@@ -318,6 +323,12 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             }
         case .emptySearch:
             if case .emptySearch = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .emptyChannels:
+            if case .emptyChannels = rhs {
                 return true
             } else {
                 return false
@@ -544,6 +555,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             return SeparatorRowItem(initialSize, ChatListSearchEntryStableId.separator(index), string: text.uppercased(), right: right?.lowercased(), state: state, border: [.Right])
         case .emptySearch:
             return SearchEmptyRowItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, border: [.Right])
+        case .emptyChannels:
+            let attr = NSMutableAttributedString()
+            attr.append(string: strings().chatListChannelSearchEmptyTitle, color: theme.colors.darkGrayText, font: .medium(.header))
+            attr.append(string: "\n")
+            attr.append(string: strings().chatListChannelSearchEmptyInfo, color: theme.colors.darkGrayText, font: .normal(.text))
+            return AnimatedStickerHeaderItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, context: arguments.context, sticker: LocalAnimatedSticker.duck_empty, text: attr, bgColor: theme.colors.background, isFullView: true)
         case let .topPeers(_, articlesEnabled, unreadArticles, selfPeer, peers, unread, online):
             return PopularPeersRowItem(initialSize, stableId: entry.stableId, context: arguments.context, selfPeer: selfPeer, articlesEnabled: articlesEnabled, unreadArticles: unreadArticles, peers: peers, unread: unread, online: online, action: { type in
                 arguments.openTopPeer(type)
@@ -1128,7 +1145,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                     
                     if entries.isEmpty {
-                        entries.append(.emptySearch)
+                        entries.append(.emptyChannels)
                     }
                     
                     return (entries.sorted(by: <), false)

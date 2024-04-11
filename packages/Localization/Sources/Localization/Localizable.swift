@@ -885,6 +885,8 @@ public final class L10n {
   public static var businessScheduleEnd: String  { return L10n.tr("Localizable", "Business.ScheduleEnd") }
   /// Schedule Start
   public static var businessScheduleStart: String  { return L10n.tr("Localizable", "Business.ScheduleStart") }
+  /// Do Not Hide Ads
+  public static var businessSwitchAd: String  { return L10n.tr("Localizable", "Business.SwitchAd") }
   /// Your Telegram Business has been updated
   public static var businessUpdated: String  { return L10n.tr("Localizable", "Business.Updated") }
   /// Only if Offline
@@ -1183,6 +1185,10 @@ public final class L10n {
   public static var businessQuickReplyEditTitle: String  { return L10n.tr("Localizable", "Business.QuickReply.Edit.Title") }
   /// Limit Reached
   public static var businessSelectPeersLimit: String  { return L10n.tr("Localizable", "Business.SelectPeers.Limit") }
+  /// As a Premium subscriber, you don't see any ads on Telegram, but you can turn them on, for example, to view your own ads that you launched on the [Telegram Ad Platform >](telegram.org)
+  public static var businessSwitchAdInfo: String  { return L10n.tr("Localizable", "Business.SwitchAd.Info") }
+  /// ADS IN CHANNELS
+  public static var businessSwitchAdTitle: String  { return L10n.tr("Localizable", "Business.SwitchAd.Title") }
   /// Hide Telegram
   public static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
   /// F
@@ -6051,6 +6057,10 @@ public final class L10n {
   public static var chatListBirthdayAddInfo: String  { return L10n.tr("Localizable", "ChatList.Birthday.Add.Info") }
   /// Add your birthday! 🎂
   public static var chatListBirthdayAddTitle: String  { return L10n.tr("Localizable", "ChatList.Birthday.Add.Title") }
+  /// You are not currently subscribed to any channel.
+  public static var chatListChannelSearchEmptyInfo: String  { return L10n.tr("Localizable", "ChatList.ChannelSearch.Empty.Info") }
+  /// No channels yet...
+  public static var chatListChannelSearchEmptyTitle: String  { return L10n.tr("Localizable", "ChatList.ChannelSearch.Empty.Title") }
   /// Call
   public static var chatListContextCall: String  { return L10n.tr("Localizable", "ChatList.Context.Call") }
   /// Clear History
@@ -13221,6 +13231,20 @@ public final class L10n {
   public static var proxySettingsQRText: String  { return L10n.tr("Localizable", "ProxySettings.QR.Text") }
   /// Preview
   public static var quickLookPreview: String  { return L10n.tr("Localizable", "QuickLook.Preview") }
+  /// You didn't create an away message. Exiting will remove it.
+  public static var quickReplyChatRemoveAwayMessageText: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveAwayMessage.Text") }
+  /// Remove Away Message
+  public static var quickReplyChatRemoveAwayMessageTitle: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveAwayMessage.Title") }
+  /// Delete
+  public static var quickReplyChatRemoveGenericDeleteAction: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveGeneric.DeleteAction") }
+  /// You didn't create a quick reply message. Exiting will remove the shortcut.
+  public static var quickReplyChatRemoveGenericText: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveGeneric.Text") }
+  /// Remove Shortcut
+  public static var quickReplyChatRemoveGenericTitle: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveGeneric.Title") }
+  /// You didn't create a greeting message. Exiting will remove it.
+  public static var quickReplyChatRemoveGreetingMessageText: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveGreetingMessage.Text") }
+  /// Remove Greeting Message
+  public static var quickReplyChatRemoveGreetingMessageTitle: String  { return L10n.tr("Localizable", "QuickReply.ChatRemoveGreetingMessage.Title") }
   /// **TAB** or **↑ ↓** to navigate, **⮐** to select, **ESC** to dismiss
   public static var quickSwitcherDescription: String  { return L10n.tr("Localizable", "QuickSwitcher.Description") }
   /// Popular

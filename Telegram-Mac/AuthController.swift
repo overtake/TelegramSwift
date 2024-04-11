@@ -288,6 +288,7 @@ class AuthController : GenericViewController<AuthView> {
     private let email_recovery_c: Auth_EmailController
     private let awaiting_reset_c: Auth_AwaitingResetController
     private let signup_c: Auth_SignupController
+    private let word_c: Auth_WordController
     
     private let otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])
     
@@ -304,7 +305,8 @@ class AuthController : GenericViewController<AuthView> {
         self.email_recovery_c = .init(frame: NSMakeRect(0, 0, 380, 300))
         self.awaiting_reset_c = .init(frame: NSMakeRect(0, 0, 380, 300))
         self.signup_c = .init(frame: NSMakeRect(0, 0, 380, 300))
-        
+        self.word_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+
         self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
         #if !APP_STORE
         updateController = UpdateTabController(sharedContext)
@@ -436,7 +438,6 @@ class AuthController : GenericViewController<AuthView> {
                     }
                 }))
             }
-            
         }
         
         
@@ -945,6 +946,14 @@ class AuthController : GenericViewController<AuthView> {
             }
             set(controller, animated: true)
         }
+    }
+    
+    func test() {
+        let controller = self.word_c
+        if controller == self.current {
+            return
+        }
+        set(controller, animated: true)
     }
     
     private func sendCode(_ phoneNumber: String, updateState:@escaping((State) -> State) -> Void) {

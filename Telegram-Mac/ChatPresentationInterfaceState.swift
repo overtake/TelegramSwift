@@ -659,6 +659,12 @@ class ChatPresentationInterfaceState: Equatable {
                 return .block("")
             }
             
+            if self.peer?.restrictionText != nil {
+                return .action(strings().navigationClose, { chatInteraction in
+                    chatInteraction.context.bindings.rootNavigation().back()
+                }, nil)
+            }
+            
 //            #if DEBUG
 //            if let peer = peer as? TelegramChannel, peer.adminRights == nil {
 //                return .action(strings().boostGroupChatInputAction, { chatInteraction in

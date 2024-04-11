@@ -760,19 +760,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        //TODOLANG
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADS IN CHANNELS"), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessSwitchAdTitle), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_toggle_ads, data: .init(name: "Do Not Hide Ads", color: theme.colors.text, type: .switchable(state.adsEnabled) , viewType: .singleItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_toggle_ads, data: .init(name: strings().businessSwitchAd, color: theme.colors.text, type: .switchable(state.adsEnabled) , viewType: .singleItem, action: {
             arguments.toggleAds(!state.adsEnabled)
         })))
         
         
         
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("As a Premium subscriber, you don't see any ads on Telegram, but you can turn them on, for example, to view your own ads that you launched on the [Telegram Ad Platform >](telegram.org)", linkHandler: arguments.execute), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().businessSwitchAdInfo, linkHandler: arguments.execute), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
 
     }
