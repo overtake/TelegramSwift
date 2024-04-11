@@ -20,9 +20,8 @@ final class ChatListGraceRowItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, canClose: Bool) {
         self.context = context
         self.canClose = canClose
-        //TODOLANG
-        self.title = .init(.initialize(string: "⚠️ Your Premium subscription is expiring!", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.info = .init(.initialize(string: "Don't lose access to exclusive features.", color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2)
+        self.title = .init(.initialize(string: strings().chatListGracePeriodTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.info = .init(.initialize(string: strings().chatListGracePeriodInfo, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2)
         super.init(initialSize, stableId: stableId)
     }
     
@@ -36,6 +35,7 @@ final class ChatListGraceRowItem : GeneralRowItem {
     
     func invoke() {
         showModal(with: PremiumBoardingController(context: context, source: .grace_period), for: context.window)
+        let _ = self.context.engine.notices.dismissServerProvidedSuggestion(suggestion: .gracePremium).startStandalone()
     }
     
     func dismiss() {
