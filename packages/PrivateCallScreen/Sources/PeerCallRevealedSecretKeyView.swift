@@ -42,7 +42,7 @@ internal final class PeerCallRevealedSecretKeyView : NSVisualEffectView, CallVie
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         //TODOLANG
-        let header = TextViewLayout(.initialize(string: "This call is end-to-end encrypted", color: .white, font: .medium(.title)), alignment: .center)
+        let header = TextViewLayout(.initialize(string: L10n.peerCallScreenE2E, color: .white, font: .medium(.title)), alignment: .center)
 
         header.measure(width: 300 - 40)
         headerView.update(header)
@@ -106,7 +106,7 @@ internal final class PeerCallRevealedSecretKeyView : NSVisualEffectView, CallVie
         
         self.arguments = arguments
         
-        let text = "If emoji on **\(state.compactTitle)** screen are the same, this call is 100% secure."
+        let text = L10n.peerCallScreenE2EInfo(state.compactTitle, "100%")
         let textLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         textLayout.measure(width: 300 - 40)
         
