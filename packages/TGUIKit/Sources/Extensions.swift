@@ -1339,6 +1339,12 @@ public extension CGRect {
         return CGPoint(x: self.maxX, y: self.maxY)
     }
     
+    func makeSize(_ size: NSSize) -> CGRect {
+        var rect = self
+        rect.size = size
+        return rect
+    }
+    
     var center: CGPoint {
         return CGPoint(x: self.midX, y: self.midY)
     }

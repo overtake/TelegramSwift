@@ -289,7 +289,7 @@ class AuthController : GenericViewController<AuthView> {
     private let awaiting_reset_c: Auth_AwaitingResetController
     private let signup_c: Auth_SignupController
     private let word_c: Auth_WordController
-    
+
     private let otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])
     
     init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
@@ -950,11 +950,20 @@ class AuthController : GenericViewController<AuthView> {
     
     func test() {
         let controller = self.word_c
+        
+        controller.update(locked: false, error: nil, pattern: "qwef", takeNext: { _ in
+        }, takeError: {
+            
+        }, takeReset: {
+            
+        })
+        
         if controller == self.current {
             return
         }
         set(controller, animated: true)
     }
+    
     
     private func sendCode(_ phoneNumber: String, updateState:@escaping((State) -> State) -> Void) {
         guard let window = self.window else {
@@ -1112,6 +1121,15 @@ class AuthController : GenericViewController<AuthView> {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         NSApp.activate(ignoringOtherApps: true)
+        
+        #if DEBUG
+        window?.set(handler: { [weak self] _ in
+            self?.test()
+            return .invoked
+        }, with: self, for: .E, priority: .supreme)
+        
+        #endif
+       
     }
     
 }

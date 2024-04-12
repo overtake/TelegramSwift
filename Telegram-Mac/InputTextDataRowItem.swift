@@ -23,7 +23,6 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let filter:(String)->String
     let limit:Int32
     
-    fileprivate let interactions: TextView_Interactions
     fileprivate let state: Updated_ChatTextInputState
     fileprivate let updateState:(Updated_ChatTextInputState)->Void
     
@@ -50,7 +49,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
 
     fileprivate let rightItem: InputDataRightItem?
     fileprivate let canMakeTransformations: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, interactions: TextView_Interactions, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false) {
         self.filter = filter
         self.limit = limit
         self.context = context
@@ -58,7 +57,6 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.hasEmoji = hasEmoji
         self.canMakeTransformations = canMakeTransformations
         self.rightItem = rightItem
-        self.interactions = interactions
         self.updateState = updateState
         self.state = state
         self.inputPlaceholder = .initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text))
@@ -98,6 +96,17 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
         var width = blockWidth - viewType.innerInset.left - viewType.innerInset.right - 4
         if hasEmoji {
             width -= 20
+        }
+        if let placeholder = placeholder, let icon = placeholder.icon {
+            width -= (icon.backingSize.width + viewType.innerInset.left)
+        }
+        if let rightItem {
+            switch rightItem {
+            case .action(let cGImage, _):
+                width -= (cGImage.backingSize.width + 5)
+            case .loading:
+                width -= 20
+            }
         }
         return width
     }
@@ -147,7 +156,10 @@ class InputTextDataRowView : GeneralContainableRowView {
     internal let textView: UITextView = UITextView(frame: NSZeroRect)
     private let textLimitation: TextViewLabel = TextViewLabel(frame: NSMakeRect(0, 0, 16, 14))
     
+    private let inputSwapDisposable = MetaDisposable()
+    
     private var emoji: ImageButton?
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -167,7 +179,38 @@ class InputTextDataRowView : GeneralContainableRowView {
               
     }
     
+    
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], range: NSRange, animated: Bool) {
+        
+        guard let item = item as? InputTextDataRowItem, let content = item.table?.superview?.superview else {
+            return
+        }
+        
+        let context = item.context
+        
+        if !files.isEmpty {
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(inputView: self.textView, textContent: self.textView.scrollView.contentView, relativeView: content, window: context.window, context: context, presentation: theme, highlightRect: { [weak self] range, whole in
+                    return self?.textView.highlight(for: range, whole: whole) ?? .zero
+                })
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+
+    
     deinit {
+        inputSwapDisposable.dispose()
     }
     
     override func shakeView() {
@@ -207,6 +250,17 @@ class InputTextDataRowView : GeneralContainableRowView {
         self.textView.inputApplyTransform(.attribute(TextInputAttributes.monospace))
     }
     
+    override var additionBorderInset: CGFloat {
+        if let item = self.item as? InputTextDataRowItem {
+            var inset: CGFloat = 0
+            if let placeholderAction {
+                inset += placeholderAction.frame.width + item.viewType.innerInset.left
+            }
+            return inset
+        }
+        return super.additionBorderInset
+    }
+    
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         super.updateLayout(size: size, transition: transition)
@@ -215,23 +269,33 @@ class InputTextDataRowView : GeneralContainableRowView {
                      
         let innerInsets = item.viewType.innerInset
         
-        let (textSize, textHeight) = textViewSize()
-                
-        transition.updateFrame(view: textView, frame: CGRect(origin: CGPoint(x: item.viewType.innerInset.left, y: item.viewType.innerInset.top - 5), size: textSize))
-        textView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+        transition.updateFrame(view: placeholderTextView, frame: CGRect(origin: NSMakePoint(innerInsets.left, innerInsets.top), size: placeholderTextView.frame.size))
         
-        transition.updateFrame(view: placeholderTextView, frame: CGRect.init(origin: NSMakePoint(innerInsets.left, innerInsets.top), size: placeholderTextView.frame.size))
+        var textOffset: CGFloat = 0
+        
         if let placeholderAction {
             transition.updateFrame(view: placeholderAction, frame: CGRect(origin: NSMakePoint(innerInsets.left, innerInsets.top - 1), size: placeholderAction.frame.size))
+            textOffset += placeholderAction.frame.width + innerInsets.left
         }
+
+        
+        let (textSize, textHeight) = textViewSize()
+                
+        transition.updateFrame(view: textView, frame: CGRect(origin: CGPoint(x: item.viewType.innerInset.left + textOffset, y: item.viewType.innerInset.top - 5), size: textSize))
+        textView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+        
             
+        var emojiOffset: CGFloat = 0
+        
         if let rightItem = item.rightItem {
             switch rightItem {
             case .action:
-                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right, innerInsets.top), size: rightActionView.frame.size))
+                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right, innerInsets.top - 3), size: rightActionView.frame.size))
+                emojiOffset += rightActionView.frame.width + 5
             case .loading:
                 if let loadingView = loadingView  {
                     transition.updateFrame(view: loadingView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - loadingView.frame.width - innerInsets.right, innerInsets.top), size: loadingView.frame.size))
+                    emojiOffset += rightActionView.frame.width + 5
                 }
             }
         }
@@ -239,8 +303,11 @@ class InputTextDataRowView : GeneralContainableRowView {
         
         
         if let emoji {
-            transition.updateFrame(view: emoji, frame: CGRect.init(origin: NSMakePoint(containerView.frame.width - emoji.frame.width - 5, 5), size: emoji.frame.size))
+            transition.updateFrame(view: emoji, frame: CGRect(origin: NSMakePoint(containerView.frame.width - emoji.frame.width - innerInsets.right - emojiOffset, innerInsets.top - 1), size: emoji.frame.size))
         }
+        
+        self.textInputSuggestionsView?.updateRect(transition: transition)
+
     }
 
     
@@ -250,56 +317,19 @@ class InputTextDataRowView : GeneralContainableRowView {
         }
         return theme.colors.background
     }
-    
-    var textColor: NSColor {
-        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
-            return customTheme.textColor
-        }
-        return theme.colors.text
-    }
-    var linkColor: NSColor {
-        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
-            return customTheme.accentColor
-        }
-        return theme.colors.accent
-    }
-    var grayText: NSColor {
-        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
-            return customTheme.grayTextColor
-        }
-        return theme.colors.grayText
-    }
-    var redColor: NSColor {
-        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
-            return customTheme.redColor
-        }
-        return theme.colors.redUI
-    }
-    override var borderColor: NSColor {
-        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
-            return customTheme.borderColor
-        }
-        return theme.colors.border
-    }
-    
-    var indicatorColor: NSColor {
-        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
-            return customTheme.indicatorColor
-        }
-        return theme.colors.indicatorColor
-    }
-    
+
     override func updateColors() {
+        super.updateColors()
+        
         placeholderTextView.backgroundColor = backdorColor
         
         var inputTheme = textView.inputTheme
         inputTheme = inputTheme.withUpdatedFontSize(.text)
-        inputTheme = inputTheme.withUpdatedTextColor(textColor)
         
         textView.inputTheme = inputTheme
 
         containerView.backgroundColor = backdorColor
-        loadingView?.progressColor = grayText
+        loadingView?.progressColor = theme.colors.grayText
         guard let item = item as? InputTextDataRowItem else {
             return
         }
@@ -364,7 +394,7 @@ class InputTextDataRowView : GeneralContainableRowView {
             case .loading:
                 if loadingView == nil {
                     loadingView = ProgressIndicator(frame: NSMakeRect(0, 0, 18, 18))
-                    loadingView?.progressColor = self.grayText
+                    loadingView?.progressColor = theme.colors.grayText
                     containerView.addSubview(loadingView!)
                 }
                 rightActionView.isHidden = true
@@ -412,7 +442,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         
         if item.hasTextLimitation {
             textLimitation.isHidden = item.state.inputText.string.length < item.limit / 3 * 2 || item.state.inputText.string.length == item.limit
-            let color: NSColor = item.state.inputText.string.length > item.limit ? self.redColor : self.grayText
+            let color: NSColor = item.state.inputText.string.length > item.limit ? theme.colors.redUI : theme.colors.grayText
             textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.state.inputText.string.length))", color: color, font: .normal(.small))
             textLimitation.sizeToFit()
         } else {
@@ -439,14 +469,14 @@ class InputTextDataRowView : GeneralContainableRowView {
                         emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(item.context.peerId), context: item.context))
 
                         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _ in
-                            if let item = self?.item as? InputTextDataRowItem {
+                            if let item = self?.item as? InputTextDataRowItem, let textView = self?.textView {
                                 let text = sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown
-                                item.updateState(item.interactions.insertText(.makeAnimated(sticker.file, text: text)))
+                                item.updateState(textView.interactions.insertText(.makeAnimated(sticker.file, text: text)))
                             }
                         }
                         interactions.sendEmoji = { [weak self] string, _ in
-                            if let item = self?.item as? InputTextDataRowItem {
-                                item.updateState(item.interactions.insertText(.initialize(string: string)))
+                            if let item = self?.item as? InputTextDataRowItem, let textView = self?.textView {
+                                item.updateState(textView.interactions.insertText(.initialize(string: string)))
                             }
                         }
                         
@@ -454,7 +484,7 @@ class InputTextDataRowView : GeneralContainableRowView {
                     }
                 }, for: .Click)
             }
-            current.set(image: theme.icons.chatEntertainment, for: .Normal)
+            current.set(image: NSImage.init(resource: .iconCustomEmojiSmall).precomposed(theme.colors.grayIcon), for: .Normal)
             current.sizeToFit()
         } else if let view = self.emoji {
             performSubviewRemoval(view, animated: animated)
@@ -470,11 +500,8 @@ class InputTextDataRowView : GeneralContainableRowView {
         textView.interactions.min_height = 20
         textView.interactions.canTransform = false
         
-        item.interactions.min_height = 20
-        item.interactions.max_height = 500
-        item.interactions.canTransform = false
 
-        item.interactions.filterEvent = { event in
+        textView.interactions.filterEvent = { event in
             if let chars = event.characters {
                 return !item.filter(chars).isEmpty
             } else {
@@ -482,13 +509,12 @@ class InputTextDataRowView : GeneralContainableRowView {
             }
         }
         
-        item.interactions.inputDidUpdate = { _ in }
-
+        textView.interactions.inputDidUpdate = { _ in }
+        
         self.textView.set(item.state.textInputState())
 
-        self.textView.interactions = item.interactions
         
-        item.interactions.inputDidUpdate = { [weak self] state in
+        textView.interactions.inputDidUpdate = { [weak self] state in
             guard let `self` = self else {
                 return
             }
@@ -519,7 +545,35 @@ class InputTextDataRowView : GeneralContainableRowView {
             return
         }
         
+        let context = item.context
+        
         item.updateState(state)
+        
+        
+        let input = state.textInputState()
+        
+        let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+        var cleanup = true
+        if let textInputContextState = textInputContextState, item.hasEmoji {
+            if textInputContextState.1.contains(.swapEmoji) {
+                let stringRange = textInputContextState.0
+                let range = NSRange(string: input.inputText, range: stringRange)
+                if !input.isAnimatedEmoji(at: range) {
+                    let query = String(input.inputText[stringRange])
+                    let signal = InputSwapSuggestionsPanelItems(query, peerId: context.peerId, context: context)
+                    |> deliverOnMainQueue
+                    self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                        self?.updateTextInputSuggestions(files, range: range, animated: true)
+                    }))
+                    cleanup = false
+                }
+            }
+        }
+        
+        if cleanup {
+            self.updateTextInputSuggestions([], range: NSMakeRange(0, 0), animated: true)
+            self.inputSwapDisposable.set(nil)
+        }
         
     }
     
