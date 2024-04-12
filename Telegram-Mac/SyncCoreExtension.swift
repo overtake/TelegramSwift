@@ -95,7 +95,7 @@ extension Peer {
         if let peer = self as? TelegramChannel {
             if let restrictionInfo = peer.restrictionInfo {
                 for rule in restrictionInfo.rules {
-                    #if APP_STORE
+                    #if APP_STORE || STABLE
                     if rule.platform == "ios" || rule.platform == "all" {
                         return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason)
                     }
@@ -106,12 +106,18 @@ extension Peer {
         return false
     }
     
-    var restrictionText:String? {
+    func restrictionText(_ contentSettings: ContentSettings?) -> String? {
         if let peer = self as? TelegramChannel {
             if let restrictionInfo = peer.restrictionInfo {
                 for rule in restrictionInfo.rules {
                     if rule.platform == "ios" || rule.platform == "all" {
-                        return rule.text
+                        if let contentSettings {
+                            if !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
+                                return rule.text
+                            }
+                        } else {
+                            return rule.text
+                        }
                     }
                 }
             }

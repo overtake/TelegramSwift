@@ -85,7 +85,7 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: "\n")
                 _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
             } else {
-                if let restriction = chatInteraction.presentation.peer?.restrictionText {
+                if let restriction = chatInteraction.presentation.peer?.restrictionText(chatInteraction.context.contentSettings) {
                     _ = attr.append(string: restriction, color: theme.chatServiceItemTextColor, font: .medium(.text))
                 } else {
                     lineSpacing = nil

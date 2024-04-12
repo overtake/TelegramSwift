@@ -3163,6 +3163,34 @@ public final class L10n {
   public static var chatLiveLocation: String  { return L10n.tr("Localizable", "Chat.LiveLocation") }
   /// owner
   public static var chatOwnerBadge: String  { return L10n.tr("Localizable", "Chat.OwnerBadge") }
+  /// %d
+  public static func chatQuickReplyMessageLimitReachedTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_countable", p1)
+  }
+  /// Limit of %d messages reached
+  public static func chatQuickReplyMessageLimitReachedTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_few", p1)
+  }
+  /// Limit of %d messages reached
+  public static func chatQuickReplyMessageLimitReachedTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_many", p1)
+  }
+  /// Limit of %d message reached
+  public static func chatQuickReplyMessageLimitReachedTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_one", p1)
+  }
+  /// Limit of %d messages reached
+  public static func chatQuickReplyMessageLimitReachedTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_other", p1)
+  }
+  /// Limit of %d messages reached
+  public static func chatQuickReplyMessageLimitReachedTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_two", p1)
+  }
+  /// Limit of %d messages reached
+  public static func chatQuickReplyMessageLimitReachedTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.QuickReplyMessageLimitReachedText_zero", p1)
+  }
   /// Reply to %@
   public static func chatReplyMessagePanelTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.ReplyMessagePanelTitle", p1)
@@ -16571,7 +16599,7 @@ public final class L10n {
   public static func supergroupDeleteRestrictionMultiTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_zero", p1)
   }
-  /// Proceed
+  /// Delete
   public static var supergroupDeleteRestrictionProceed: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Proceed") }
   /// Report Spam
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }

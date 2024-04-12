@@ -353,7 +353,7 @@ fileprivate class PreviewSenderView : Control {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(inputView: self.textView.inputView, textContent: self.textView.scrollView.contentView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: self.theme, highlightRect: { [weak self] range, whole in
+                current = InputSwapSuggestionsPanel(inputView: self.textView, textContent: self.textView.scrollView.contentView, relativeView: self, window: context.window, context: context, presentation: self.theme, highlightRect: { [weak self] range, whole in
                     return self?.textView.highlight(for: range, whole: whole) ?? .zero
                 })
                 self.textInputSuggestionsView = current

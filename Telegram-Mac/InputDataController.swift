@@ -999,7 +999,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        _ = self.window?.makeFirstResponder(nil)
+        _ = self.window?.makeFirstResponder(nextResponder())
         super.viewDidAppear(animated)
         
         didAppear?(self)
@@ -1048,29 +1048,40 @@ class InputDataController: GenericViewController<InputDataView> {
         }, with: self, for: .F, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            let view = self?.findReponsderView as? InputDataRowView
-            
-            view?.makeBold()
+            if let view = self?.findReponsderView as? InputDataRowView {
+                view.makeBold()
+            } else if let view = self?.findReponsderView as? InputTextDataRowView {
+                view.makeBold()
+            }
             return .invoked
         }, with: self, for: .B, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            let view = self?.findReponsderView as? InputDataRowView
-            view?.makeUrl()
+            if let view = self?.findReponsderView as? InputDataRowView {
+                view.makeUrl()
+            } else if let view = self?.findReponsderView as? InputTextDataRowView {
+                view.makeUrl()
+            }
             return .invoked
         }, with: self, for: .U, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            let view = self?.findReponsderView as? InputDataRowView
-            view?.makeItalic()
+            if let view = self?.findReponsderView as? InputDataRowView {
+                view.makeItalic()
+            } else if let view = self?.findReponsderView as? InputTextDataRowView {
+                view.makeItalic()
+            }
             return .invoked
         }, with: self, for: .I, priority: self.responderPriority, modifierFlags: [.command])
         
         
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            let view = self?.findReponsderView as? InputDataRowView
-            view?.makeMonospace()
+            if let view = self?.findReponsderView as? InputDataRowView {
+                view.makeMonospace()
+            } else if let view = self?.findReponsderView as? InputTextDataRowView {
+                view.makeMonospace()
+            }
             return .invoked
         }, with: self, for: .K, priority: responderPriority, modifierFlags: [.command, .shift])
         

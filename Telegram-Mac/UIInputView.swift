@@ -248,6 +248,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     }
     
     func inputApplyTransform(_ reason: InputViewTransformReason) {
+        
+        if !interactions.canTransform {
+            return
+        }
         switch reason {
         case let .attribute(attribute):
             self.interactions.update({ current in

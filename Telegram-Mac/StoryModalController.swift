@@ -1018,7 +1018,7 @@ private final class StoryViewController: Control, Notifable {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(inputView: textView.inputView, textContent: textView.scrollView.contentView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: darkAppearance, highlightRect: { [weak textView] range, whole in
+                current = InputSwapSuggestionsPanel(inputView: textView, textContent: textView.scrollView.contentView, relativeView: self, window: context.window, context: context, presentation: darkAppearance, highlightRect: { [weak textView] range, whole in
                     return textView?.highlight(for: range, whole: whole) ?? .zero
                 })
                 self.textInputSuggestionsView = current
