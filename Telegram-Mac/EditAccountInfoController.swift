@@ -674,7 +674,9 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 f(.fail(.fields([_id_info : .shake])))
             }
             var signals:[Signal<Void, NoError>] = []
+            
             if let peerView = peerView {
+                
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
                 if let names = updates.0 {
                     
@@ -682,6 +684,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 }
                 if let about = updates.1 {
                     signals.append(context.engine.accountData.updateAbout(about: about) |> `catch` { _ in .complete()})
+                }
+                if updates.0 == nil, updates.1 == nil {
+                    close?()
+                    return
                 }
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }
@@ -702,7 +708,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             let current = stateValue.modify {$0}
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
-                f((updates.0 != nil || updates.1 != nil) ? .enabled(strings().navigationDone) : .disabled(strings().navigationDone))
+                f(.enabled(strings().navigationDone))
             } else {
                 f(.disabled(strings().navigationDone))
             }

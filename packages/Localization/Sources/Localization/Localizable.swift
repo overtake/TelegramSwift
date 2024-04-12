@@ -11219,6 +11219,12 @@ public final class L10n {
   public static func peerStatusMemberOnlineZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Peer.Status.Member.Online_zero", p1)
   }
+  /// This call is end-to-end encrypted
+  public static var peerCallScreenE2E: String  { return L10n.tr("Localizable", "PeerCall.Screen.E2E") }
+  /// If emoji on **%1$@** screen are the same, this call is %2$@ secure.
+  public static func peerCallScreenE2EInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "PeerCall.Screen.E2E.Info", p1, p2)
+  }
   /// about
   public static var peerInfoAbout: String  { return L10n.tr("Localizable", "PeerInfo.about") }
   /// Add Contact
