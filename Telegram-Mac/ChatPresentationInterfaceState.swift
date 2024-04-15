@@ -658,6 +658,9 @@ class ChatPresentationInterfaceState: Equatable {
             if self.interfaceState.themeEditing {
                 return .block("")
             }
+            if self.chatMode == .preview {
+                return .block("")
+            }
             
             if self.peer?.restrictionText(contentSettings) != nil {
                 return .action(strings().navigationClose, { chatInteraction in

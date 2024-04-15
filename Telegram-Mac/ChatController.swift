@@ -3759,64 +3759,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                         if canDelete {
                             if mustManageDeleteMessages(messages, for: peer, account: context.account) {
-                                
-                                var options:[ModalOptionSet] = []
-                                
-                                
-                                var hasRestrict: Bool = false
-                                
-                                if let channel = peer as? TelegramChannel {
-                                    if channel.hasPermission(.banMembers) {
-                                        options.append(ModalOptionSet(title: allPeers.count == 1 ? strings().supergroupDeleteRestrictionBanUser : strings().supergroupDeleteRestrictionBanUserMultiCountable(allPeers.count), selected: false, editable: true))
-                                        hasRestrict = true
-                                    }
-                                }
-                                options.append(ModalOptionSet(title: strings().supergroupDeleteRestrictionReportSpam, selected: false, editable: true))
-                                options.append(ModalOptionSet(title: allPeers.count == 1 ? strings().supergroupDeleteRestrictionDeleteAllMessages : strings().supergroupDeleteRestrictionDeleteAllMessagesMultiCountable(allPeers.count), selected: false, editable: true))
-                                
                                 if let channel = peer as? TelegramChannel {
                                     showModal(with: DeleteGroupMessagesController(context: context, channel: channel, messages: messages, allPeers: allPeers, onComplete: { [weak strongSelf] in
                                         strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
                                     }), for: context.window)
                                 }
-//
-//                                
-//                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (strings().supergroupDeleteRestrictionProceed, theme.colors.accent), header: strings().supergroupDeleteRestrictionHeader, title: strings().supergroupDeleteRestrictionMultiTitleCountable(messages.count), result: { [weak strongSelf] result in
-//                                    
-//                                    var signals:[Signal<Void, NoError>] = []
-//                                    
-//                                    var index:Int = 0
-//                                    if result[index] == .selected {
-//                                        signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forEveryone))
-//                                    }
-//                                    index += 1
-//                                    
-//                                    if hasRestrict {
-//                                        if result[index] == .selected {
-//                                            for memberId in allPeers {
-//                                                signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: .init(flags: [.banReadMessages], untilDate: Int32.max)))
-//                                            }
-//                                        }
-//                                        index += 1
-//                                    }
-//                                    
-//                                    if result[index] == .selected {
-//                                        signals.append(context.engine.peers.reportPeerMessages(messageIds: messageIds, reason: .spam, message: ""))
-//                                    }
-//                                    index += 1
-//
-//                                    if result[index] == .selected {
-//                                        for memberId in allPeers {
-//                                            signals.append(context.engine.messages.clearAuthorHistory(peerId: peerId, memberId: memberId))
-//                                        }
-//                                    }
-//                                    index += 1
-//
-//                                    _ = combineLatest(signals).startStandalone()
-//                                    strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
-//                                }), for: context.window)
-                                
-                            } else  {
+                            } else {
                                 
                                 let successHandler: (ConfirmResult)->Void = { [weak strongSelf] result in
                                     
@@ -8194,6 +8142,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     override func firstResponder() -> NSResponder? {
+        if mode == .preview {
+            return self.genericView
+        }
         return self.genericView.responder
     }
     

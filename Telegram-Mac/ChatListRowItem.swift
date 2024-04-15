@@ -1595,6 +1595,12 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
+        let previewChat:()->Void = {
+            if let peerId = peerId {
+                ChatListRowItem.previewChat(peerId: peerId, context: context)
+            }
+        }
+        
         let toggleArchive:(Bool)->Void = { unarchive in
             if let peerId = peerId {
                 ChatListRowItem.toggleArchive(context: context, associatedGroupId: unarchive ? .archive : associatedGroupId, peerId: peerId)
@@ -1919,6 +1925,12 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
+            if peerId != nil {
+                firstGroup.append(ContextMenuItem(strings().chatListContextPreview, handler: {
+                    previewChat()
+                }, itemImage: MenuAnimation.menu_show_info.value))
+            }
+            
             var submenu: [ContextMenuItem] = []
             if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat, !mode.savedMessages {
                 for item in filters.list {
@@ -2103,12 +2115,16 @@ class ChatListRowItem: TableRowItem {
         guard let peerId = peerId else {
             return
         }
+        ChatListRowItem.previewChat(peerId: peerId, context: context)
+
+    }
+    
+    static func previewChat(peerId: PeerId, context: AccountContext) {
         let controller = ChatController(context: context, chatLocation: .peer(peerId), mode: .preview)
         let navigation:NavigationViewController = NavigationViewController(controller, context.window)
         navigation._frameRect = NSMakeRect(0, 0, 350, 440)
         
         showModal(with: navigation, for: context.window)
-
     }
     
 }

@@ -17,7 +17,7 @@ public struct AdditionalSettings: Codable, Equatable {
     public let useTouchId: Bool
     public let previewChats: Bool
     public static var defaultSettings: AdditionalSettings {
-        return AdditionalSettings(useTouchId: false, previewChats: true)
+        return AdditionalSettings(useTouchId: false, previewChats: false)
     }
     
     public init(useTouchId: Bool, previewChats: Bool) {
@@ -29,7 +29,7 @@ public struct AdditionalSettings: Codable, Equatable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         self.useTouchId = try container.decode(Bool.self, forKey: "ti")
-        self.previewChats = try container.decodeIfPresent(Bool.self, forKey: "pc") ?? true
+        self.previewChats = try container.decodeIfPresent(Bool.self, forKey: "pc") ?? false
     }
     
     public func encode(to encoder: Encoder) throws {

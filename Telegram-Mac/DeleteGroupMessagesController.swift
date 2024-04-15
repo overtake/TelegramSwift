@@ -239,15 +239,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }, toggle: {
        // arguments.toggleReveal(_id_report)
     })))
+    
 
-    options.append(.init(text: state.allPeers.count == 1 ? strings().supergroupDeleteRestrictionDeleteAllMessages : strings().supergroupDeleteRestrictionDeleteAllMessagesMultiCountable(state.allPeers.count), selected: state.deleteSelected, revealed: state.deleteRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.deletePeerSelected, viewType: !state.channel.hasPermission(.banMembers) ? .lastItem : .innerItem, stableId: _id_delete_all, callback: .init(callback: {
+    options.append(.init(text: state.allPeers.count == 1 ? strings().supergroupDeleteRestrictionDeleteAllMessages : strings().supergroupDeleteRestrictionDeleteAllMessagesMulti, selected: state.deleteSelected, revealed: state.deleteRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.deletePeerSelected, viewType: !state.channel.hasPermission(.banMembers) ? .lastItem : .innerItem, stableId: _id_delete_all, callback: .init(callback: {
         arguments.toggleSelected(_id_delete_all)
     }, toggle: {
         arguments.toggleReveal(_id_delete_all)
     })))
     
     if state.channel.hasPermission(.banMembers) {
-        options.append(.init(text: state.allPeers.count == 1 ? strings().supergroupDeleteRestrictionBanUser : strings().supergroupDeleteRestrictionBanUserMultiCountable(state.allPeers.count), selected: state.banSelected, revealed: state.banRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.banPeerSelected, viewType: !state.banRevealed || state.allPeers.count == 1 ? .lastItem : .innerItem, stableId: _id_ban, callback: .init(callback: {
+        options.append(.init(text: state.allPeers.count == 1 ? (!state.banFully ? strings().supergroupDeleteRestrictionRestrictUser : strings().supergroupDeleteRestrictionBanUser) : (!state.banFully ? strings().supergroupDeleteRestrictionRestrictUserMulti : strings().supergroupDeleteRestrictionBanUserMulti), selected: state.banSelected, revealed: state.banRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.banPeerSelected, viewType: !state.banRevealed || state.allPeers.count == 1 ? .lastItem : .innerItem, stableId: _id_ban, callback: .init(callback: {
             arguments.toggleSelected(_id_ban)
         }, toggle: {
             arguments.toggleReveal(_id_ban)

@@ -8471,7 +8471,7 @@ public final class L10n {
   public static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
   public static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
-  /// Click on unread badge to preview chat without reading last messages.
+  /// Click on the unread badge to preview chats without marking them as read.
   public static var generalSettingsPreviewChatsInfo: String  { return L10n.tr("Localizable", "GeneralSettings.PreviewChats.Info") }
   /// Preview Chats
   public static var generalSettingsPreviewChatsText: String  { return L10n.tr("Localizable", "GeneralSettings.PreviewChats.Text") }
@@ -16615,64 +16615,16 @@ public final class L10n {
   public static var supergroupDeleteRestrictionProceed: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Proceed") }
   /// Report Spam
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
+  /// Restrict User
+  public static var supergroupDeleteRestrictionRestrictUser: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.RestrictUser") }
   /// Manage Messages
   public static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
-  /// %d
-  public static func supergroupDeleteRestrictionBanUserMultiCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_countable", p1)
-  }
-  /// Ban %d Users
-  public static func supergroupDeleteRestrictionBanUserMultiFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_few", p1)
-  }
-  /// Ban %d Users
-  public static func supergroupDeleteRestrictionBanUserMultiMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_many", p1)
-  }
-  /// Ban %d User
-  public static func supergroupDeleteRestrictionBanUserMultiOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_one", p1)
-  }
-  /// Ban %d Users
-  public static func supergroupDeleteRestrictionBanUserMultiOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_other", p1)
-  }
-  /// Ban %d Users
-  public static func supergroupDeleteRestrictionBanUserMultiTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_two", p1)
-  }
-  /// Ban %d Users
-  public static func supergroupDeleteRestrictionBanUserMultiZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi_zero", p1)
-  }
-  /// %d
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_countable", p1)
-  }
-  /// Delete All From %d Users
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_few", p1)
-  }
-  /// Delete All From %d Users
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_many", p1)
-  }
-  /// Delete All From %d User
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_one", p1)
-  }
-  /// Delete All From %d Users
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_other", p1)
-  }
-  /// Delete All From %d Users
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_two", p1)
-  }
-  /// Delete All From %d Users
-  public static func supergroupDeleteRestrictionDeleteAllMessagesMultiZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi_zero", p1)
-  }
+  /// Ban All Users
+  public static var supergroupDeleteRestrictionBanUserMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi") }
+  /// Delete All From All Users
+  public static var supergroupDeleteRestrictionDeleteAllMessagesMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi") }
+  /// Restrict All Users
+  public static var supergroupDeleteRestrictionRestrictUserMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.RestrictUser.Multi") }
   /// App Data Storage
   public static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
   /// %d GB
