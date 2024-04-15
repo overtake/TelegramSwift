@@ -1468,7 +1468,7 @@ func closeCall(minimisize: Bool = false) {
 private var peerCall: PeerCallScreen?
 func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
     
-    #if arch(arm64) && (BETA || DEBUG)
+    #if arch(arm64)
 
     callScreen(context, result)
     

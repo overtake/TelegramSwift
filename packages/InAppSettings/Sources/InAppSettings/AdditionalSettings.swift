@@ -15,33 +15,39 @@ import TelegramCore
 
 public struct AdditionalSettings: Codable, Equatable {
     public let useTouchId: Bool
-    
+    public let previewChats: Bool
     public static var defaultSettings: AdditionalSettings {
-        return AdditionalSettings(useTouchId: false)
+        return AdditionalSettings(useTouchId: false, previewChats: true)
     }
     
-    public init(useTouchId: Bool) {
+    public init(useTouchId: Bool, previewChats: Bool) {
         self.useTouchId = useTouchId
+        self.previewChats = previewChats
     }
     
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         self.useTouchId = try container.decode(Bool.self, forKey: "ti")
+        self.previewChats = try container.decodeIfPresent(Bool.self, forKey: "pc") ?? true
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
         try container.encode(self.useTouchId, forKey: "ti")
+        try container.encode(self.previewChats, forKey: "pc")
     }
     
     
     public static func ==(lhs: AdditionalSettings, rhs: AdditionalSettings) -> Bool {
-        return lhs.useTouchId == rhs.useTouchId
+        return lhs.useTouchId == rhs.useTouchId && lhs.previewChats == rhs.previewChats
     }
     
     public func withUpdatedTouchId(_ useTouchId: Bool) -> AdditionalSettings {
-        return AdditionalSettings(useTouchId: useTouchId)
+        return AdditionalSettings(useTouchId: useTouchId, previewChats: self.previewChats)
+    }
+    public func withUpdatedPreviewChats(_ previewChats: Bool) -> AdditionalSettings {
+        return AdditionalSettings(useTouchId: self.useTouchId, previewChats: previewChats)
     }
 }
 

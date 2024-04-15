@@ -489,6 +489,7 @@ class ChatListRowItem: TableRowItem {
         self.isArchiveItem = true
         self.folders = nil
         self.tags = nil
+        self.canPreviewChat = false
         if let storyState = storyState, storyState.items.count > 0 {
             let unseenCount: Int = storyState.items.reduce(0, {
                 $0 + ($1.unseenCount > 0 ? 1 : 0)
@@ -678,7 +679,9 @@ class ChatListRowItem: TableRowItem {
     
     let tags: ChatListTags?
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil) {
+    let canPreviewChat: Bool
+    
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil, canPreviewChat: Bool = false) {
         
         
         
@@ -748,6 +751,7 @@ class ChatListRowItem: TableRowItem {
         self._stableId = stableId
         self.isContact = isContact
         self.folders = folders
+        self.canPreviewChat = canPreviewChat
         
         if let folders, folders.showTags, let peer, splitState != .minimisize, mode.threadData == nil {
             var tags: [ChatListTag] = []
@@ -2093,6 +2097,18 @@ class ChatListRowItem: TableRowItem {
         case .topic:
             return 53 + (displayLayout?.layoutSize.height ?? 17)
         }
+    }
+    
+    func previewChat() {
+        guard let peerId = peerId else {
+            return
+        }
+        let controller = ChatController(context: context, chatLocation: .peer(peerId), mode: .preview)
+        let navigation:NavigationViewController = NavigationViewController(controller, context.window)
+        navigation._frameRect = NSMakeRect(0, 0, 350, 440)
+        
+        showModal(with: navigation, for: context.window)
+
     }
     
 }

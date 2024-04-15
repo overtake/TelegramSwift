@@ -144,12 +144,19 @@ enum ChatMode : Equatable {
             } else {
                 return false
             }
+        case .preview:
+            if case .preview = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
     case history
     case scheduled
     case pinned
+    case preview
     case thread(data: ChatReplyThreadMessage, mode: ReplyThreadMode)
     case customChatContents(contents: ChatCustomContentsProtocol)
     case customLink(contents: ChatCustomLinkContent)
@@ -811,7 +818,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
     
         var voiceChat: ChatActiveGroupCallInfo?
-        if interfaceState.groupCall?.data?.groupCall == nil, interfaceState.threadInfo == nil {
+        if interfaceState.groupCall?.data?.groupCall == nil, interfaceState.threadInfo == nil, interfaceState.chatMode != .preview {
             if let data = interfaceState.groupCall?.data {
                 if data.participantCount == 0 && interfaceState.groupCall?.activeCall.scheduleTimestamp == nil {
                     voiceChat = nil
@@ -930,7 +937,7 @@ class ChatControllerView : View, ChatInputDelegate {
             value = .none
         }
         let translate: ChatPresentationInterfaceState.TranslateState?
-        if interfaceState.peer?.restrictionText(interfaceState.contentSettings) == nil {
+        if interfaceState.peer?.restrictionText(interfaceState.contentSettings) == nil, interfaceState.chatMode != .preview {
             if let translateState = interfaceState.translateState, translateState.canTranslate {
                 if case .search = value {
                     translate = nil
@@ -946,7 +953,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         
         
-        let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.connectedBot)
+        let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.chatMode == .preview ? nil : interfaceState.connectedBot)
 
         header.updateState(state, animated: animated, for: self)
         
@@ -3245,7 +3252,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 
                 switch strongSelf.mode {
-                case .history, .thread:
+                case .history, .thread, .preview:
                     let signal = context.engine.messages.searchMessageIdByTimestamp(peerId: peerId, threadId: strongSelf.mode.threadId64, timestamp: Int32(date.timeIntervalSince1970))
                     
                     self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
@@ -3470,6 +3477,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case let .customLink(contents):
                         contents.saveText?(presentation.effectiveInput)
                         strongSelf.navigationController?.invokeBack(checkLock: false)
+                    case  .preview:
+                        break
                     }
                     
                 } else {
@@ -4036,6 +4045,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 case .customLink:
                     break
+                case  .preview:
+                    break
                 }
                 
             }
@@ -4247,6 +4258,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 case .customLink:
                     break
+                case .preview:
+                    break
                 }
                 
             }
@@ -4441,6 +4454,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 case .customLink:
                     break
+                case .preview:
+                    break
                 }
             }
             
@@ -4604,6 +4619,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .pinned:
                     break
                 case .customLink:
+                    break
+                case .preview:
                     break
                 }
             }
@@ -4780,6 +4797,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         break
                     case .customLink:
                         break
+                    case .preview:
+                        break
                     }
                 }
             }
@@ -4832,6 +4851,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .pinned:
                     break
                 case .customLink:
+                    break
+                case .preview:
                     break
                 }
             }
@@ -5588,7 +5609,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }).withUpdatedContentSettings(context.contentSettings)
                 
                 switch mode {
-                case .history, .thread:
+                case .history, .thread, .preview:
                     let isLiveCall: Bool
                     if let peer = present.peer {
                         isLiveCall = peer.isGigagroup || peer.isChannel
@@ -5839,7 +5860,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
-            case .history, .thread, .customChatContents, .customLink:
+            case .history, .thread, .customChatContents, .customLink, .preview:
                 
                 var wasGroupChannel: Bool?
                 if let peer = self.chatInteraction.presentation.mainPeer as? TelegramChannel  {
@@ -6709,6 +6730,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if presentation.reportMode != nil {
             return false
         }
+        if chatInteraction.mode == .preview {
+            return false
+        }
         if presentation.chatMode.customChatContents != nil {
             return false
         }
@@ -7077,8 +7101,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
         editButton?.style = navigationButtonStyle
-        editButton?.set(image: theme.icons.chatActions, for: .Normal)
-        editButton?.set(image: theme.icons.chatActionsActive, for: .Highlight)
+        
+        switch mode {
+        case .preview:
+            editButton?.set(image: theme.icons.modalClose, for: .Normal)
+            editButton?.set(image: theme.icons.modalClose, for: .Highlight)
+        default:
+            editButton?.set(image: theme.icons.chatActions, for: .Normal)
+            editButton?.set(image: theme.icons.chatActionsActive, for: .Highlight)
+        }
+        
 
         
         editButton?.setFrameSize(70, 50)
@@ -7123,255 +7155,268 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let chatLocation = self.chatLocation
         
         
-        editButton.contextMenu = { [weak self] in
-            
-            guard let `self` = self, let peerView = self.currentPeerView, peerViewMainPeer(peerView)?.restrictionText(context.contentSettings) == nil else {
-                return nil
-            }
-            
-            let chatInteraction = self.chatInteraction
-            let menu = ContextMenu(betterInside: true)
-            let mode = self.mode
-            var items:[ContextMenuItem] = []
-            let peerId = chatLocation.peerId
-            
-            
-            switch mode {
-            case .history, .thread:
-                if peerId == context.peerId {
-                    let displaySavedChatsAsTopics = chatInteraction.presentation.displaySavedChatsAsTopics
-                    
-                    items.append(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: { [weak self] in
-                        context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
-                        self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(context.peerId)))
-                    }, itemImage: !displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
-                    
-                    items.append(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: { [weak self] in
-                        context.engine.peers.updateSavedMessagesViewAsTopics(value: true)
-                        self?.navigationController?.back()
-                        ForumUI.open(context.peerId, context: context)
-                    }, itemImage: displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
-                    
-                    items.append(ContextSeparatorItem())
+        switch mode {
+        case .preview:
+            editButton.set(handler: { [weak self] _ in
+                self?.navigationController?.modal?.close()
+            }, for: .Click)
+        default:
+            editButton.contextMenu = { [weak self] in
+                
+                guard let `self` = self, let peerView = self.currentPeerView, peerViewMainPeer(peerView)?.restrictionText(context.contentSettings) == nil else {
+                    return nil
                 }
-            default:
-                break
-            }
-            
-            switch self.mode {
-            case .scheduled:
-                items.append(ContextMenuItem(strings().chatContextClearScheduled, handler: {
-                    verifyAlert_button(for: context.window, header: strings().chatContextClearScheduledConfirmHeader, information: strings().chatContextClearScheduledConfirmInfo, ok: strings().chatContextClearScheduledConfirmOK, successHandler: { _ in
-                        _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, threadId: nil, type: .scheduledMessages).start()
-                    })
-                }, itemImage: MenuAnimation.menu_schedule_message.value))
-            case .history:
-                switch chatLocation {
-                case let .peer(peerId):
-                    
-                    
-                    items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
-                        self?.changeState()
-                    }, itemImage: MenuAnimation.menu_edit.value))
-                    
-                    if peerId != repliesPeerId {
-                        items.append(ContextMenuItem(strings().chatContextInfo, handler: { [weak self] in
-                            self?.chatInteraction.openInfo(peerId, false, nil, nil)
-                        }, itemImage: MenuAnimation.menu_show_info.value))
+                
+                let chatInteraction = self.chatInteraction
+                let menu = ContextMenu(betterInside: true)
+                let mode = self.mode
+                var items:[ContextMenuItem] = []
+                let peerId = chatLocation.peerId
+                
+                
+                switch mode {
+                case .history, .thread:
+                    if peerId == context.peerId {
+                        let displaySavedChatsAsTopics = chatInteraction.presentation.displaySavedChatsAsTopics
+                        
+                        items.append(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: { [weak self] in
+                            context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
+                            self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(context.peerId)))
+                        }, itemImage: !displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
+                        
+                        items.append(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: { [weak self] in
+                            context.engine.peers.updateSavedMessagesViewAsTopics(value: true)
+                            self?.navigationController?.back()
+                            ForumUI.open(context.peerId, context: context)
+                        }, itemImage: displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
+                        
+                        items.append(ContextSeparatorItem())
                     }
-                    
-                    
-                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, !self.isAdChat  {
-                        if chatInteraction.peerId != context.peerId {
-                            items.append(ContextMenuItem(!notificationSettings.isMuted ? strings().chatContextEnableNotifications : strings().chatContextDisableNotifications, handler: { [weak self] in
-                                self?.chatInteraction.toggleNotifications(notificationSettings.isMuted)
-                            }, itemImage: notificationSettings.isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
-                        }
-                    }
-                    
-                    if let peer = peerView.peers[peerView.peerId], let mainPeer = peerViewMainPeer(peerView) {
-                        
-                        var activeCall = (peerView.cachedData as? CachedGroupData)?.activeCall
-                        activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
-                        
-                        let canDeleteForAll: Bool? = (peerView.cachedData as? CachedChannelData)?.flags.contains(.canDeleteHistory)
-                        
-                        if peer.groupAccess.canMakeVoiceChat {
-                            var isLiveStream: Bool = false
-                            if let peer = peer as? TelegramChannel {
-                                isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
-                            }
-                            items.append(ContextMenuItem(isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, handler: { [weak self] in
-                                self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
-                            }, itemImage: MenuAnimation.menu_video_chat.value))
-                        }
-                        if peer.isUser, peer.id != context.peerId {
-                            if !peer.isBot, !isServicePeer(peer) {
-                                items.append(ContextMenuItem(strings().peerInfoActionVideoCall, handler: { [weak self] in
-                                    self?.chatInteraction.call(isVideo: true)
-                                }, itemImage: MenuAnimation.menu_video_call.value))
-                            }
-                            
-                            if !isServicePeer(peer) {
-                                items.append(ContextMenuItem(strings().chatContextCreateGroup, handler: { [weak self] in
-                                    self?.createGroup()
-                                }, itemImage: MenuAnimation.menu_create_group.value))
-                            }
-                            if !isServicePeer(peer) {
-                                items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
-                                    self?.showChatThemeSelector()
-                                }, itemImage: MenuAnimation.menu_change_colors.value))
-                            }
-                        }
-                        let deleteChat = { [weak self] in
-                            guard let `self` = self else {return}
-                            let signal = removeChatInteractively(context: context, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
-                                return context.globalPeerHandler.get() |> take(1)
-                                } |> deliverOnMainQueue
-                            
-                            self.deleteChatDisposable.set(signal.start(next: { [weak self] location in
-                                if location == self?.chatInteraction.chatLocation {
-                                    self?.context.bindings.rootNavigation().close()
-                                }
-                            }))
-                        }
-                        
-                        let animation: LocalAnimatedSticker
-                        let text: String
-                        if peer.isGroup {
-                            text = strings().chatListContextDeleteAndExit
-                            animation = .menu_delete
-                        } else if peer.isChannel {
-                            text = strings().chatListContextLeaveChannel
-                            animation = .menu_leave
-                        } else if peer.isSupergroup {
-                            text = strings().chatListContextLeaveGroup
-                            animation = .menu_leave
-                        } else {
-                            text = strings().chatListContextDeleteChat
-                            animation = .menu_delete
-                        }
-                        
-                        if !items.isEmpty {
-                            items.append(ContextSeparatorItem())
-                        }
-
-                        if peer.canManageDestructTimer && context.peerId != peer.id, !isServicePeer(peer) && !peer.isSecretChat {
-                            
-                            let best:(Int32) -> MenuAnimation = { value in
-//                                    if value == Int32.secondsInHour {
-//                                        return MenuAnimation.menu_autodelete_1h
-//                                    }
-                                if value == Int32.secondsInDay {
-                                    return MenuAnimation.menu_autodelete_1d
-                                }
-                                if value == Int32.secondsInWeek {
-                                    return MenuAnimation.menu_autodelete_1w
-                                }
-                                if value == Int32.secondsInMonth {
-                                    return MenuAnimation.menu_autodelete_1m
-                                }
-                                if value == 0 {
-                                    return MenuAnimation.menu_autodelete_never
-                                }
-                                return MenuAnimation.menu_autodelete_customize
-                            }
-                            
-                            var selected: Int32 = 0
-                            var values:[Int32] = [0, .secondsInDay, .secondsInWeek, .secondsInMonth]
-
-                            if let timeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
-                                if !values.contains(timeout.effectiveValue) {
-                                    values.append(timeout.effectiveValue)
-                                }
-                                selected = timeout.effectiveValue
-                            }
-                            let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
-                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
-                            }, itemImage: selected == 0 ?  MenuAnimation.menu_secret_chat.value : best(selected).value)
-                            
-                            
-                            
-                            let submenu = ContextMenu()
-                            
-                            
-         
-                            
-                            let updateTimer:(Int32)->Void = { value in
-                                _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: value == 0 ? nil : value), for: context.window).start()
-                            }
-                            
-                            for value in values {
-                                
-                                
-                                
-                                if value == 0 {
-                                    submenu.addItem(ContextMenuItem(strings().autoremoveMessagesNever, handler: {
-                                        updateTimer(value)
-                                    }, state: selected == value ? .on : nil, itemImage: best(value).value))
-                                } else {
-                                    submenu.addItem(ContextMenuItem(autoremoveLocalized(Int(value)), handler: {
-                                        updateTimer(value)
-                                    }, state: selected == value ? .on : nil, itemImage: best(value).value))
-                                }
-                            }
-                            
-                            item.submenu = submenu
-                            items.append(item)
-                        }
-                        if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
-                            items.append(ContextMenuItem(strings().chatContextClearHistory, handler: {
-                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
-                            }, itemImage: MenuAnimation.menu_clear_history.value))
-                        }
-                       
-                        
-                        items.append(ContextMenuItem(text, handler: deleteChat, itemMode: .destruct, itemImage: animation.value))
-                        
-                    }
-                case .thread:
+                default:
                     break
                 }
-            case .pinned:
-                 items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
-                    self?.changeState()
-                 }, itemImage: MenuAnimation.menu_edit.value))
-            case .thread:
-                items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
-                   self?.changeState()
-                }, itemImage: MenuAnimation.menu_edit.value))
-                let threadId = chatInteraction.mode.threadId64
-                if let threadId = threadId, let threadData = chatInteraction.presentation.threadInfo, let peer = chatInteraction.peer {
-                    if threadData.isOwnedByMe || peer.isAdmin {
-                        if !mode.isSavedMessagesThread {
-                            items.append(ContextMenuItem(!threadData.isClosed ? strings().chatListContextPause : strings().chatListContextStart, handler: {
-                                _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !threadData.isClosed).start()
-                            }, itemImage: !threadData.isClosed ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
-                            
-                            items.append(ContextSeparatorItem())
+                
+                switch self.mode {
+                case .scheduled:
+                    items.append(ContextMenuItem(strings().chatContextClearScheduled, handler: {
+                        verifyAlert_button(for: context.window, header: strings().chatContextClearScheduledConfirmHeader, information: strings().chatContextClearScheduledConfirmInfo, ok: strings().chatContextClearScheduledConfirmOK, successHandler: { _ in
+                            _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, threadId: nil, type: .scheduledMessages).start()
+                        })
+                    }, itemImage: MenuAnimation.menu_schedule_message.value))
+                case .history:
+                    switch chatLocation {
+                    case let .peer(peerId):
+                        
+                        
+                        items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                            self?.changeState()
+                        }, itemImage: MenuAnimation.menu_edit.value))
+                        
+                        if peerId != repliesPeerId {
+                            items.append(ContextMenuItem(strings().chatContextInfo, handler: { [weak self] in
+                                self?.chatInteraction.openInfo(peerId, false, nil, nil)
+                            }, itemImage: MenuAnimation.menu_show_info.value))
                         }
-                        if threadId != 1 {
-                            items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
-                                _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
-                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        
+                        
+                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, !self.isAdChat  {
+                            if chatInteraction.peerId != context.peerId {
+                                items.append(ContextMenuItem(!notificationSettings.isMuted ? strings().chatContextEnableNotifications : strings().chatContextDisableNotifications, handler: { [weak self] in
+                                    self?.chatInteraction.toggleNotifications(notificationSettings.isMuted)
+                                }, itemImage: notificationSettings.isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
+                            }
+                        }
+                        
+                        if let peer = peerView.peers[peerView.peerId], let mainPeer = peerViewMainPeer(peerView) {
+                            
+                            var activeCall = (peerView.cachedData as? CachedGroupData)?.activeCall
+                            activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
+                            
+                            let canDeleteForAll: Bool? = (peerView.cachedData as? CachedChannelData)?.flags.contains(.canDeleteHistory)
+                            
+                            if peer.groupAccess.canMakeVoiceChat {
+                                var isLiveStream: Bool = false
+                                if let peer = peer as? TelegramChannel {
+                                    isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
+                                }
+                                items.append(ContextMenuItem(isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, handler: { [weak self] in
+                                    self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
+                                }, itemImage: MenuAnimation.menu_video_chat.value))
+                            }
+                            if peer.isUser, peer.id != context.peerId {
+                                if !peer.isBot, !isServicePeer(peer) {
+                                    items.append(ContextMenuItem(strings().peerInfoActionVideoCall, handler: { [weak self] in
+                                        self?.chatInteraction.call(isVideo: true)
+                                    }, itemImage: MenuAnimation.menu_video_call.value))
+                                }
+                                
+                                if !isServicePeer(peer) {
+                                    items.append(ContextMenuItem(strings().chatContextCreateGroup, handler: { [weak self] in
+                                        self?.createGroup()
+                                    }, itemImage: MenuAnimation.menu_create_group.value))
+                                }
+                                if !isServicePeer(peer) {
+                                    items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
+                                        self?.showChatThemeSelector()
+                                    }, itemImage: MenuAnimation.menu_change_colors.value))
+                                }
+                            }
+                            let deleteChat = { [weak self] in
+                                guard let `self` = self else {return}
+                                let signal = removeChatInteractively(context: context, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
+                                    return context.globalPeerHandler.get() |> take(1)
+                                    } |> deliverOnMainQueue
+                                
+                                self.deleteChatDisposable.set(signal.start(next: { [weak self] location in
+                                    if location == self?.chatInteraction.chatLocation {
+                                        self?.context.bindings.rootNavigation().close()
+                                    }
+                                }))
+                            }
+                            
+                            let animation: LocalAnimatedSticker
+                            let text: String
+                            if peer.isGroup {
+                                text = strings().chatListContextDeleteAndExit
+                                animation = .menu_delete
+                            } else if peer.isChannel {
+                                text = strings().chatListContextLeaveChannel
+                                animation = .menu_leave
+                            } else if peer.isSupergroup {
+                                text = strings().chatListContextLeaveGroup
+                                animation = .menu_leave
+                            } else {
+                                text = strings().chatListContextDeleteChat
+                                animation = .menu_delete
+                            }
+                            
+                            if !items.isEmpty {
+                                items.append(ContextSeparatorItem())
+                            }
+
+                            if peer.canManageDestructTimer && context.peerId != peer.id, !isServicePeer(peer) && !peer.isSecretChat {
+                                
+                                let best:(Int32) -> MenuAnimation = { value in
+    //                                    if value == Int32.secondsInHour {
+    //                                        return MenuAnimation.menu_autodelete_1h
+    //                                    }
+                                    if value == Int32.secondsInDay {
+                                        return MenuAnimation.menu_autodelete_1d
+                                    }
+                                    if value == Int32.secondsInWeek {
+                                        return MenuAnimation.menu_autodelete_1w
+                                    }
+                                    if value == Int32.secondsInMonth {
+                                        return MenuAnimation.menu_autodelete_1m
+                                    }
+                                    if value == 0 {
+                                        return MenuAnimation.menu_autodelete_never
+                                    }
+                                    return MenuAnimation.menu_autodelete_customize
+                                }
+                                
+                                var selected: Int32 = 0
+                                var values:[Int32] = [0, .secondsInDay, .secondsInWeek, .secondsInMonth]
+
+                                if let timeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
+                                    if !values.contains(timeout.effectiveValue) {
+                                        values.append(timeout.effectiveValue)
+                                    }
+                                    selected = timeout.effectiveValue
+                                }
+                                let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
+                                    clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
+                                }, itemImage: selected == 0 ?  MenuAnimation.menu_secret_chat.value : best(selected).value)
+                                
+                                
+                                
+                                let submenu = ContextMenu()
+                                
+                                
+             
+                                
+                                let updateTimer:(Int32)->Void = { value in
+                                    _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: value == 0 ? nil : value), for: context.window).start()
+                                }
+                                
+                                for value in values {
+                                    
+                                    
+                                    
+                                    if value == 0 {
+                                        submenu.addItem(ContextMenuItem(strings().autoremoveMessagesNever, handler: {
+                                            updateTimer(value)
+                                        }, state: selected == value ? .on : nil, itemImage: best(value).value))
+                                    } else {
+                                        submenu.addItem(ContextMenuItem(autoremoveLocalized(Int(value)), handler: {
+                                            updateTimer(value)
+                                        }, state: selected == value ? .on : nil, itemImage: best(value).value))
+                                    }
+                                }
+                                
+                                item.submenu = submenu
+                                items.append(item)
+                            }
+                            if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
+                                items.append(ContextMenuItem(strings().chatContextClearHistory, handler: {
+                                    clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
+                                }, itemImage: MenuAnimation.menu_clear_history.value))
+                            }
+                           
+                            
+                            items.append(ContextMenuItem(text, handler: deleteChat, itemMode: .destruct, itemImage: animation.value))
+                            
+                        }
+                    case .thread:
+                        break
+                    }
+                case .pinned:
+                     items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                        self?.changeState()
+                     }, itemImage: MenuAnimation.menu_edit.value))
+                case .thread:
+                    items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                       self?.changeState()
+                    }, itemImage: MenuAnimation.menu_edit.value))
+                    let threadId = chatInteraction.mode.threadId64
+                    if let threadId = threadId, let threadData = chatInteraction.presentation.threadInfo, let peer = chatInteraction.peer {
+                        if threadData.isOwnedByMe || peer.isAdmin {
+                            if !mode.isSavedMessagesThread {
+                                items.append(ContextMenuItem(!threadData.isClosed ? strings().chatListContextPause : strings().chatListContextStart, handler: {
+                                    _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !threadData.isClosed).start()
+                                }, itemImage: !threadData.isClosed ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
+                                
+                                items.append(ContextSeparatorItem())
+                            }
+                            if threadId != 1 {
+                                items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
+                                    _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
+                                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                            }
                         }
                     }
+                case .customChatContents:
+                    items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                       self?.changeState()
+                    }, itemImage: MenuAnimation.menu_edit.value))
+                case let .customLink(contents):
+                    items.append(ContextMenuItem(strings().chatContextBusinessLinkEditName, handler: {
+                        contents.editName?()
+                    }, itemImage: MenuAnimation.menu_edit.value))
+                case .preview:
+                    items.append(ContextMenuItem(strings().navigationClose, handler: { [weak self] in
+                        self?.navigationController?.modal?.close()
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
                 }
-            case .customChatContents:
-                items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
-                   self?.changeState()
-                }, itemImage: MenuAnimation.menu_edit.value))
-            case let .customLink(contents):
-                items.append(ContextMenuItem(strings().chatContextBusinessLinkEditName, handler: {
-                    contents.editName?()
-                }, itemImage: MenuAnimation.menu_edit.value))
+                
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
             }
-            
-            for item in items {
-                menu.addItem(item)
-            }
-            return menu
+
         }
+        
         
         requestUpdateRightBar()
         return back
@@ -8158,7 +8203,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.context.globalPeerHandler.set(.single(chatLocation))
+        switch self.mode {
+        case .history, .thread:
+            self.context.globalPeerHandler.set(.single(chatLocation))
+        default:
+            break
+        }
 
         self.genericView.tableView.notifyScrollHandlers()
         self.genericView.updateHeader(chatInteraction.presentation, false, false)

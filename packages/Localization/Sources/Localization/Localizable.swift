@@ -3805,6 +3805,8 @@ public final class L10n {
   public static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
   /// Scheduled until online
   public static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
+  /// You will no longer see ads from Telegram.
+  public static var chatDisableAdTooltip: String  { return L10n.tr("Localizable", "Chat.DisableAd.Tooltip") }
   /// Sorry, this post has been removed from the discussion group.
   public static var chatDiscussionMessageDeleted: String  { return L10n.tr("Localizable", "Chat.Discussion.MessageDeleted") }
   /// %d
@@ -8469,6 +8471,10 @@ public final class L10n {
   public static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
   public static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
+  /// Click on unread badge to preview chat without reading last messages.
+  public static var generalSettingsPreviewChatsInfo: String  { return L10n.tr("Localizable", "GeneralSettings.PreviewChats.Info") }
+  /// Preview Chats
+  public static var generalSettingsPreviewChatsText: String  { return L10n.tr("Localizable", "GeneralSettings.PreviewChats.Text") }
   /// Show Peer IDs in Profile
   public static var generalSettingsShowProfileIdText: String  { return L10n.tr("Localizable", "GeneralSettings.ShowProfileId.Text") }
   /// Check Grammar With Spelling

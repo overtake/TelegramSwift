@@ -384,7 +384,13 @@ class WPLayout: Equatable {
     }
     
     func premiumBoarding() {
-        showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+        if context.isPremium, let opaqueId = self.adAttribute?.opaqueId {
+            _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+            chatInteraction.removeAd(opaqueId)
+            showModalText(for: context.window, text: strings().chatDisableAdTooltip)
+        } else {
+            showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+        }
     }
     
     func invokeAction() {

@@ -995,6 +995,8 @@ class PreviewSenderController: ModalViewController, Notifable {
             break
         case .customLink:
             break
+        case .preview:
+            break
         }
     }
     

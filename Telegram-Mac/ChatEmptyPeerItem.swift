@@ -60,7 +60,7 @@ class ChatEmptyPeerItem: TableRowItem {
         
         let textColor: NSColor = isLite(.blur) ? theme.colors.text : theme.chatServiceItemTextColor
         switch chatInteraction.mode {
-        case .history:
+        case .history, .preview:
             if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                 _ = attr.append(string: strings().chatSecretChatEmptyHeader, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
