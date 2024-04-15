@@ -1170,6 +1170,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 return false
             case .customLink:
                 return false
+            case .preview:
+                return false
             }
         }
     }

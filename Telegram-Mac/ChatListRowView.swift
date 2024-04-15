@@ -927,7 +927,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
         
-    private var badgeView:View?
+    private var badgeView:Control?
     private var badgeShortView:View?
 
     private var mentionsView: ImageView?
@@ -1864,14 +1864,23 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              if let badgeNode = item.ctxBadgeNode {
                  var presented: Bool = false
                  if badgeView == nil {
-                     badgeView = View()
+                     badgeView = Control()
+                     badgeView?.scaleOnClick = true
                      contentView.addSubview(badgeView!)
                      presented = true
+                    badgeView?.set(handler: { [weak self] _ in
+                         if let item = self?.item as? ChatListRowItem {
+                             item.previewChat()
+                         }
+                     }, for: .Click)
                  }
+                 
+                 badgeView?.userInteractionEnabled = item.peerId != nil && item.canPreviewChat
                  badgeView?.setFrameSize(badgeNode.size)
                  badgeNode.aroundFill = nil
                  badgeNode.view = badgeView
                  badgeNode.setNeedDisplay()
+                 
                  
                  let point = badgePoint(item)
 

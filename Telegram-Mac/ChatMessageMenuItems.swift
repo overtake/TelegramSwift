@@ -261,7 +261,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let context = data.chatInteraction.context
         let account = context.account
         let mode = chatInteraction.mode
-        var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode
+        var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode || mode == .preview
         
         if !isService, let story = data.message.media.first as? TelegramMediaStory {
             isService = story.isMention
@@ -832,7 +832,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemImage: MenuAnimation.menu_select_messages.value))
         }
         
-        if let channel = data.message.peers[message.id.peerId] as? TelegramChannel, channel.isChannel {
+        if let channel = data.message.peers[message.id.peerId] as? TelegramChannel, channel.isChannel, !isService {
             var views: Int = 0
             for attribute in message.attributes {
                 if let attribute = attribute as? ViewCountMessageAttribute {

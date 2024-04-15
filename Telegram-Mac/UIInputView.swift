@@ -459,6 +459,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         })
     }
     
+    func makeFirstResponder() {
+        self.window?.makeFirstResponder(self.inputView)
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         self.inputTheme = theme.inputTheme
