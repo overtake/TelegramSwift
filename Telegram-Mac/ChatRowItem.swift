@@ -958,6 +958,10 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
+        if chatInteraction.mode == .preview {
+            return false
+        }
+        
         
         if message.isCopyProtected() {
             return false
