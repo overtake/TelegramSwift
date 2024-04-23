@@ -723,6 +723,8 @@ private final class PollOptionView : Control {
         progressView.userInteractionEnabled = false
         progressView.roundCorners = true
         
+        layer?.masksToBounds = false
+        
         progressView.isEventLess = true
         
         set(handler: { [weak self] control in
@@ -1001,6 +1003,7 @@ private final class PollView : Control {
         typeView.userInteractionEnabled = false
         addSubview(titleView)
         addSubview(typeView)
+        
         
         titleView.textView.isSelectable = true
     }

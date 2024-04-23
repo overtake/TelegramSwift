@@ -322,7 +322,8 @@ final class InputDataGeneralTextData : Equatable {
     let centerViewAlignment: Bool
     let alignment: NSTextAlignment
     let linkColor: NSColor
-    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 20, right: 20, top:4, bottom:2), centerViewAlignment: Bool = false, alignment: NSTextAlignment = .left, linkColor: NSColor = theme.colors.link) {
+    let context: AccountContext?
+    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 20, right: 20, top:4, bottom:2), centerViewAlignment: Bool = false, alignment: NSTextAlignment = .left, linkColor: NSColor = theme.colors.link, context: AccountContext? = nil) {
         self.color = color
         self.detectBold = detectBold
         self.viewType = viewType
@@ -334,6 +335,7 @@ final class InputDataGeneralTextData : Equatable {
         self.alignment = alignment
         self.centerViewAlignment = centerViewAlignment
         self.linkColor = linkColor
+        self.context = context
     }
     static func ==(lhs: InputDataGeneralTextData, rhs: InputDataGeneralTextData) -> Bool {
         return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.fontSize == rhs.fontSize && lhs.clickable == rhs.clickable && lhs.inset == rhs.inset && lhs.centerViewAlignment == rhs.centerViewAlignment && lhs.alignment == rhs.alignment && lhs.linkColor == rhs.linkColor
@@ -498,7 +500,7 @@ enum InputDataEntry : Identifiable, Comparable {
             }
             return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
         case let .desc(_, _, text, data):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, linkColor: data.linkColor, alignment: data.alignment, inset: data.inset, centerViewAlignment: data.centerViewAlignment, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize, contextMenu: data.contextMenu, clickable: data.clickable)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, linkColor: data.linkColor, alignment: data.alignment, inset: data.inset, centerViewAlignment: data.centerViewAlignment, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize, contextMenu: data.contextMenu, clickable: data.clickable, context: data.context)
         case let .custom(_, _, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, viewType, values):
