@@ -18,7 +18,7 @@ import Strings
 import InputView
 import ColorPalette
 import CodeSyntax
-
+import TelegramMedia
 
 
 struct ChatTextCustomEmojiAttribute : Equatable {
@@ -44,9 +44,10 @@ final class InlineStickerItem : Hashable {
     }
     
     let source: Source
-    
-    init(source: Source) {
+    let playPolicy: LottiePlayPolicy?
+    init(source: Source, playPolicy: LottiePlayPolicy? = nil) {
         self.source = source
+        self.playPolicy = playPolicy
     }
     
     func hash(into hasher: inout Hasher) {

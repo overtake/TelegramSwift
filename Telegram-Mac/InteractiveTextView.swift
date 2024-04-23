@@ -64,7 +64,7 @@ final class InteractiveTextView : Control {
                     view = current
                 } else {
                     itemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
                     itemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)

@@ -343,6 +343,19 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             if let media = message.media.first as? TelegramMediaPoll {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
             }
+            
+            var replacements:[String: TelegramMediaFile] = [:]
+            replacements["📊"] = LocalAnimatedSticker.chatlist_poll.file
+            replacements["🎮"] = LocalAnimatedSticker.chatlist_game.file
+            replacements["🎵"] = LocalAnimatedSticker.chatlist_music.file
+            replacements["🎤"] = LocalAnimatedSticker.chatlist_voice.file
+
+            for (key, value) in replacements {
+                let range = attributedText.string.nsstring.range(of: key)
+                if range.location == 0, !message.media.isEmpty {
+                    attributedText.insertEmbedded(.embeddedAnimated(value, playPolicy: .once), for: key)
+                }
+            }
            
         } else if message.extendedMedia is TelegramMediaAction {
             let service = serviceMessageText(message, account:account, isReplied: isReplied)

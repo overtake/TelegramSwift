@@ -22,6 +22,7 @@ import ThemeSettings
 import Accelerate
 import TGModernGrowingTextView
 import InputView
+import TelegramMedia
 
 func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
     if let messageId = messageId {
@@ -3748,12 +3749,12 @@ extension NSAttributedString {
 
     }
     
-    static func embeddedAnimated(_ file: TelegramMediaFile, color: NSColor? = nil) -> NSAttributedString {
+    static func embeddedAnimated(_ file: TelegramMediaFile, color: NSColor? = nil, playPolicy: LottiePlayPolicy? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         
         let emoji: String = clown
         attr.append(string: emoji)
-        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji, color: color))), range: NSMakeRange(0, emoji.length))
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji, color: color)), playPolicy: playPolicy), range: NSMakeRange(0, emoji.length))
         return attr
     }
 }
