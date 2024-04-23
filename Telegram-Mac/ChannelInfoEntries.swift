@@ -304,6 +304,16 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(ChannelMembersViewController(context, peerId: peerId))
     }
     
+    func eventLog() {
+        let context = self.context
+        let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+        _ = signal.startStandalone(next: { [weak self] peer in
+            if let peer {
+                self?.pullNavigation()?.push(ChannelEventLogController(context, peer: peer))
+            }
+        })
+    }
+    
     func admins() -> Void {
         pushViewController(ChannelAdminsViewController(context, peerId: peerId))
     }
@@ -669,6 +679,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case peerId(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
+    case recent(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case members(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
@@ -698,6 +709,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .peerId(sectionId, value, _): return .peerId(sectionId: sectionId, value: value, viewType: viewType)
         case let .setTitle(sectionId, text, _): return .setTitle(sectionId: sectionId, text: text, viewType: viewType)
         case let .admins(sectionId, count, _): return .admins(sectionId: sectionId, count: count, viewType: viewType)
+        case let .recent(sectionId, _): return .recent(sectionId: sectionId, viewType: viewType)
         case let .blocked(sectionId, count, _): return .blocked(sectionId: sectionId, count: count, viewType: viewType)
         case let .members(sectionId, count, _): return .members(sectionId: sectionId, count: count, viewType: viewType)
         case let .link(sectionId, addressName, _): return .link(sectionId: sectionId, addressName: addressName, viewType: viewType)
@@ -809,6 +821,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             }
         case let .admins(sectionId, count, viewType):
             if case .admins(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .recent(sectionId, viewType):
+            if case .recent(sectionId, viewType) = entry {
                 return true
             } else {
                 return false
@@ -948,34 +966,36 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 10
         case .blocked:
             return 11
-        case .link:
+        case .recent:
             return 12
-        case .inviteLinks:
+        case .link:
             return 13
-        case .requests:
+        case .inviteLinks:
             return 14
-        case .color:
+        case .requests:
             return 15
-        case .reactions:
+        case .color:
             return 16
-        case .discussion:
+        case .reactions:
             return 17
-        case .discussionDesc:
+        case .discussion:
             return 18
-        case .aboutInput:
+        case .discussionDesc:
             return 19
-        case .aboutDesc:
+        case .aboutInput:
             return 20
-        case .signMessages:
+        case .aboutDesc:
             return 21
-        case .signDesc:
+        case .signMessages:
             return 22
-        case .report:
+        case .signDesc:
             return 23
-        case .leave:
+        case .report:
             return 24
-        case .media:
+        case .leave:
             return 25
+        case .media:
+            return 26
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -996,6 +1016,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .peerId(sectionId, _, _):
             return sectionId.rawValue
         case let .admins(sectionId, _, _):
+            return sectionId.rawValue
+        case let .recent(sectionId, _):
             return sectionId.rawValue
         case let .blocked(sectionId, _, _):
             return sectionId.rawValue
@@ -1051,6 +1073,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .peerId(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .admins(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .recent(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .blocked(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1151,6 +1175,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSubscribers, icon: theme.icons.peerInfoMembers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
         case let .admins(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
+        case let .recent(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoRecentActions, icon: theme.icons.peerInfoRecentActions, type: .next, viewType: viewType, action: arguments.eventLog)
         case let .blocked(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoRemovedUsers, icon: theme.icons.profile_removed, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
         case let .link(_, addressName: addressName, viewType):
@@ -1371,12 +1397,13 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             }
             entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
             entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
-            
+
             if let cachedData = view.cachedData as? CachedChannelData, cachedData.flags.contains(.canViewStats) {
                 entries.append(.stats(section: .manage, datacenterId: cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue), viewType: .innerItem))
             }
             
-            entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
+            entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .innerItem))
+            entries.append(.recent(sectionId: .manage, viewType: .lastItem))
 
         }
     }

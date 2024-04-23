@@ -1323,7 +1323,7 @@ public final class TextViewLayout : Equatable {
     }
     
     
-    func rects(_ fromRange: NSRange) -> [(CGRect, TextViewLine)] {
+    public func rects(_ fromRange: NSRange) -> [(CGRect, TextViewLine)] {
         var rects:[(CGRect, TextViewLine)] = []
         for i in 0 ..< lines.count {
             let line = lines[i]

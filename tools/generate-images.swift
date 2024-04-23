@@ -378,6 +378,7 @@ func initialize() -> [String] {
     array.append("chatPollVoteUnselectedBubble_incoming")
     array.append("chatPollVoteUnselectedBubble_outgoing")
     array.append("peerInfoAdmins")
+    array.append("peerInfoRecentActions")
     array.append("peerInfoPermissions")
     array.append("peerInfoBanned")
     array.append("peerInfoMembers")
@@ -854,7 +855,7 @@ func initialize() -> [String] {
     array.append("msg_emoji_vacation")
     array.append("msg_emoji_what")
     array.append("msg_emoji_work")
-
+    array.append("msg_emoji_premium")
     
     array.append("installed_stickers_archive")
     array.append("installed_stickers_custom_emoji")
@@ -935,6 +936,7 @@ func initialize() -> [String] {
     array.append("create_new_message_general")
     
     array.append("bot_manager_settings")
+    
 
     return array
 }

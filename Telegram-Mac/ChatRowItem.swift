@@ -16,6 +16,8 @@ import DateUtils
 import InAppSettings
 import ColorPalette
 
+private let forwardKeyString = ":##"
+
 struct ChatFloatingPhoto {
     var point: NSPoint
     var items:[ChatRowItem]
@@ -204,8 +206,9 @@ class ChatRowItem: TableRowItem {
 
     private var forwardHeaderNode:TextNode?
     private(set) var forwardHeader: TextViewLayout?
-    
     private(set) var forwardNameLayout: TextViewLayout?
+    private(set) var forwardPhotoPlaceRange: NSRange?
+    
     var captionLayouts:[RowCaption] = []
     private(set) var authorText:TextViewLayout?
     private(set) var adminBadge:TextViewLayout?
@@ -730,6 +733,13 @@ class ChatRowItem: TableRowItem {
         return entry.stableId
     }
     
+    override func isEqual(_ object: Any?) -> Bool {
+        if let object = object as? ChatRowItem {
+            return self.entry == object.entry
+        }
+        return false
+    }
+    
     var hasSource: Bool {
         switch chatInteraction.mode {
         case .pinned:
@@ -889,9 +899,6 @@ class ChatRowItem: TableRowItem {
         guard let message = message else {
             return false
         }
-        
-        
-        
         if isSharable {
             if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
                 return false
@@ -1181,6 +1188,8 @@ class ChatRowItem: TableRowItem {
     static func hasBubble(_ message: Message?, entry: ChatHistoryEntry, type: ChatItemType, sharedContext: SharedAccountContext) -> Bool {
         if let message = message, let media = message.anyMedia {
             
+            
+            
             if let file = media as? TelegramMediaFile {
                 if file.isStaticSticker {
                     return false
@@ -1247,6 +1256,9 @@ class ChatRowItem: TableRowItem {
             }
         
         } else if let message = message {
+            if entry.additionalData.eventLog != nil {
+                return true
+            }
             return !bigEmojiMessage(sharedContext, message: message)
         }
         return true
@@ -1356,6 +1368,9 @@ class ChatRowItem: TableRowItem {
         if chatInteraction.isLogInteraction {
             return nil
         }
+        if chatInteraction.mode == .preview {
+            return nil
+        }
         
         if !isStateOverlayLayout || hasBubble || !channelHasCommentButton {
             return nil
@@ -1404,6 +1419,10 @@ class ChatRowItem: TableRowItem {
         if !channelHasCommentButton {
             return nil
         }
+        if chatInteraction.mode == .preview {
+            return nil
+        }
+        
         if isStateOverlayLayout, let media = effectiveCommentMessage?.anyMedia, !media.isInteractiveMedia {
             return nil
         } else if (self is ChatVideoMessageItem) {
@@ -1949,14 +1968,26 @@ class ChatRowItem: TableRowItem {
                             if let signature = message.forwardInfo?.authorSignature, message.isAnonymousMessage {
                                 fullName += " (\(signature))"
                             }
-                            text = strings().chatBubblesForwardedFromNew(fullName)
+                            if message.forwardInfo?.author != nil {
+                                text = strings().chatBubblesForwardedFromWithPhoto(fullName)
+                            } else {
+                                text = strings().chatBubblesForwardedFromNew(fullName)
+                            }
                             linkString = fullName
                         }
                         if !attr.string.isEmpty, let link = attr.attribute(NSAttributedString.Key.link, at: 0, effectiveRange: nil) {
                             let newAttr = NSAttributedString.initialize(string: text, color: forwardNameColor, font: .normal(.short))
                             attr = newAttr.mutableCopy() as! NSMutableAttributedString
 
+                            
                             let range = attr.string.nsstring.range(of: linkString)
+                            
+                            
+                            let hashRange = attr.string.nsstring.range(of: forwardKeyString)
+                            if hashRange.location != NSNotFound, hashRange.max < range.min {
+                                attr.addAttribute(.foregroundColor, value: NSColor.clear, range: NSMakeRange(hashRange.location + 1, hashRange.length - 1))
+                                self.forwardPhotoPlaceRange = NSMakeRange(hashRange.location + 1, hashRange.length - 1)
+                            }
 
                             if range.location != NSNotFound {
                                 attr.addAttribute(.link, value: link, range: range)
@@ -2900,7 +2931,14 @@ class ChatRowItem: TableRowItem {
     
     func openTopic() {
         if let message = message, let threadId = message.threadId {
-            _ = ForumUI.openTopic(threadId, peerId: chatInteraction.peerId, context: context, messageId: message.id, animated: true, addition: true).start()
+            let isLog = chatInteraction.isLogInteraction
+            _ = ForumUI.openTopic(threadId, peerId: chatInteraction.peerId, context: context, messageId: isLog ? nil : message.id, animated: true, addition: true).start()
+        }
+    }
+    
+    func openForwardInfo() {
+        if let author = message?.forwardInfo?.author {
+            chatInteraction.openInfo(author.id, false, nil, nil)
         }
     }
     

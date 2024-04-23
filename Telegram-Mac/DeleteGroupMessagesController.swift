@@ -12,6 +12,25 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+private func generateAfterMedia(_ count: String, revealed: Bool) -> CGImage {
+    
+    let layout = TextNode.layoutText(.initialize(string: count, color: theme.colors.text, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+    let image = NSImage(resource: revealed ? .iconSmallChevronUp : .iconSmallChevronDown).precomposed(theme.colors.text, flipVertical: true)
+
+    return generateImage(NSMakeSize(layout.0.size.width + 3 + image.backingSize.width, layout.0.size.height), contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        var rect = size.bounds.focus(layout.0.size)
+        rect.origin.x = 0
+        layout.1.draw(rect, in: ctx, backingScaleFactor: 2, backgroundColor: .clear)
+        
+        var imageRect = size.bounds.focus(image.backingSize)
+        imageRect.origin.x = rect.maxX + 3
+        ctx.draw(image, in: imageRect)
+    })!
+}
+
+
 private struct Option : Equatable {
     class Function : Equatable {
         let callback: ()->Void
@@ -29,6 +48,7 @@ private struct Option : Equatable {
     var selected: Bool
     var revealed: Bool
     var peerSelected: Set<PeerId>?
+    var count: Int?
     var viewType: GeneralViewType
     let stableId: InputDataIdentifier
     var callback: Function
@@ -44,10 +64,10 @@ private class RowItem : GeneralRowItem {
         self.option = option
         self.name = .init(.initialize(string: option.text, color: theme.colors.text, font: .normal(.text)))
         
-        if let selected = option.peerSelected, selected.count > 0 {
+        if let selected = option.count {
             let attr = NSMutableAttributedString()
             attr.append(.embedded(name: "Icon_Reply_Group", color: theme.colors.text, resize: false))
-            attr.append(string: " \(selected.count)", color: theme.colors.text, font: .normal(.text))
+            attr.append(string: " \(selected)", color: theme.colors.text, font: .normal(.text))
             
             self.revealText = .init(attr)
             self.revealText?.measure(width: .greatestFiniteMagnitude)
@@ -73,10 +93,13 @@ private final class RowView: GeneralContainableRowView {
     private let textView = TextView()
     private var countView: InteractiveTextView?
     private var chevron: ImageView?
+    private let action = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(selectingControl)
         addSubview(textView)
+        
+        addSubview(action)
         
         selectingControl.userInteractionEnabled = true
         
@@ -87,11 +110,16 @@ private final class RowView: GeneralContainableRowView {
             guard let item = self?.item as? RowItem else {
                 return
             }
-            if item.option.peerSelected == nil {
-                item.option.callback.callback()
-            } else {
-                item.option.callback.toggle()
+            item.option.callback.callback()
+
+        }, for: .Click)
+        
+        action.set(handler: { [weak self] _ in
+            guard let item = self?.item as? RowItem else {
+                return
             }
+            item.option.callback.toggle()
+
         }, for: .Click)
         
         selectingControl.set(handler: { [weak self] _ in
@@ -100,6 +128,7 @@ private final class RowView: GeneralContainableRowView {
             }
             item.option.callback.callback()
         }, for: .Click)
+        
     }
     
     override var additionBorderInset: CGFloat {
@@ -114,11 +143,14 @@ private final class RowView: GeneralContainableRowView {
         super.layout()
         selectingControl.centerY(x: 10)
         textView.centerY(x: selectingControl.frame.maxX + 10)
+        
+        action.centerY(x: containerView.frame.width - action.frame.width - 14)
+        
         if let chevron = chevron {
-            chevron.centerY(x: containerView.frame.width - chevron.frame.width - 14)
+            chevron.centerY(x: action.frame.width - chevron.frame.width)
         }
         if let countView {
-            countView.centerY(x: containerView.frame.width - countView.frame.width - 14 - 18)
+            countView.centerY(x: action.frame.width - countView.frame.width - 18)
         }
     }
     
@@ -136,7 +168,7 @@ private final class RowView: GeneralContainableRowView {
             } else {
                 current = InteractiveTextView(frame: .zero)
                 self.countView = current
-                addSubview(current)
+                action.addSubview(current)
             }
             current.userInteractionEnabled = false
             current.set(text: revealText, context: item.context)
@@ -152,7 +184,7 @@ private final class RowView: GeneralContainableRowView {
             } else {
                 current = ImageView(frame: .zero)
                 self.chevron = current
-                addSubview(current)
+                action.addSubview(current)
             }
             current.isEventLess = true
             current.animates = animated
@@ -162,6 +194,9 @@ private final class RowView: GeneralContainableRowView {
             performSubviewRemoval(view, animated: animated)
             self.chevron = nil
         }
+        
+        action.setFrameSize(action.subviewsWidthSize)
+        action.scaleOnClick = true
         
         selectingControl.set(selected: item.option.selected, animated: animated)
         
@@ -205,17 +240,34 @@ private struct State : Equatable {
     var spamSelected: Bool = false
     var banSelected: Bool = false
     var deleteSelected: Bool = false
+    var deleteListSelected: Bool = true
     
     var spamPeerSelected: Set<PeerId> = Set()
     var banPeerSelected: Set<PeerId> = Set()
     var deletePeerSelected: Set<PeerId> = Set()
+    
+    var isEmpty: Bool {
+        return !spamSelected && !banSelected && !deleteSelected && !deleteListSelected
+    }
+    
+    var text: String {
+        if spamSelected, !banSelected && !deleteSelected && !deleteListSelected {
+            return strings().supergroupDeleteRestrictionReport
+        } else if banSelected, !spamSelected && !deleteSelected && !deleteListSelected {
+            return banFully ? strings().supergroupDeleteRestrictionBan : strings().supergroupDeleteRestrictionRestrict
+        } else if deleteSelected || deleteListSelected, !spamSelected && !banSelected {
+            return strings().supergroupDeleteRestrictionDelete
+        } else {
+            return strings().supergroupDeleteRestrictionProceed
+        }
+    }
 
 }
 
 private let _id_report = InputDataIdentifier("_id_report")
 private let _id_ban = InputDataIdentifier("_id_ban")
 private let _id_delete_all = InputDataIdentifier("_id_delete_all")
-
+private let _id_delete = InputDataIdentifier("_id_delete")
 private func _id_peer(_ id: PeerId, _ section: InputDataIdentifier) -> InputDataIdentifier {
     return .init("_id_peer_\(id.toInt64())_\(section.identifier)")
 }
@@ -229,26 +281,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().supergroupDeleteRestrictionHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().supergroupDeleteRestrictionHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+//    index += 1
     
     var options: [Option] = []
     
-    options.append(.init(text: strings().supergroupDeleteRestrictionReportSpam, selected: state.spamSelected, revealed: state.spamRevealed, viewType: .firstItem, stableId: _id_report, callback: .init(callback: {
+    options.append(.init(text: state.messages.count == 1 ? strings().supergroupDeleteRestrictionDeleteMessage : strings().supergroupDeleteRestrictionDeleteMessageMulti, selected: state.deleteListSelected || state.deleteSelected, revealed: false, viewType: .firstItem, stableId: _id_delete, callback: .init(callback: {
+        arguments.toggleSelected(_id_delete)
+    }, toggle: { })))
+    
+    options.append(.init(text: strings().supergroupDeleteRestrictionReportSpam, selected: state.spamSelected, revealed: state.spamRevealed, viewType: .innerItem, stableId: _id_report, callback: .init(callback: {
         arguments.toggleSelected(_id_report)
-    }, toggle: {
-       // arguments.toggleReveal(_id_report)
-    })))
+    }, toggle: { })))
     
 
-    options.append(.init(text: state.allPeers.count == 1 ? strings().supergroupDeleteRestrictionDeleteAllMessages : strings().supergroupDeleteRestrictionDeleteAllMessagesMulti, selected: state.deleteSelected, revealed: state.deleteRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.deletePeerSelected, viewType: !state.channel.hasPermission(.banMembers) ? .lastItem : .innerItem, stableId: _id_delete_all, callback: .init(callback: {
+    options.append(.init(text: state.allPeers.count == 1 ? strings().supergroupDeleteRestrictionDeleteAllMessages : strings().supergroupDeleteRestrictionDeleteAllMessagesMulti, selected: state.deleteSelected, revealed: state.deleteRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.deletePeerSelected, count: state.allPeers.count == 1 ? nil : state.allPeers.count, viewType: !state.channel.hasPermission(.banMembers) ? .lastItem : .innerItem, stableId: _id_delete_all, callback: .init(callback: {
         arguments.toggleSelected(_id_delete_all)
     }, toggle: {
         arguments.toggleReveal(_id_delete_all)
     })))
     
     if state.channel.hasPermission(.banMembers) {
-        options.append(.init(text: state.allPeers.count == 1 ? (!state.banFully ? strings().supergroupDeleteRestrictionRestrictUser : strings().supergroupDeleteRestrictionBanUser) : (!state.banFully ? strings().supergroupDeleteRestrictionRestrictUserMulti : strings().supergroupDeleteRestrictionBanUserMulti), selected: state.banSelected, revealed: state.banRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.banPeerSelected, viewType: !state.banRevealed || state.allPeers.count == 1 ? .lastItem : .innerItem, stableId: _id_ban, callback: .init(callback: {
+        options.append(.init(text: state.allPeers.count == 1 ? (!state.banFully ? strings().supergroupDeleteRestrictionRestrictUser : strings().supergroupDeleteRestrictionBanUser) : (!state.banFully ? strings().supergroupDeleteRestrictionRestrictUserMulti : strings().supergroupDeleteRestrictionBanUserMulti), selected: state.banSelected, revealed: state.banRevealed, peerSelected: state.allPeers.count == 1 ? nil : state.banPeerSelected, count: state.allPeers.count == 1 ? nil : state.allPeers.count, viewType: !state.banRevealed || state.allPeers.count == 1 ? .lastItem : .innerItem, stableId: _id_ban, callback: .init(callback: {
             arguments.toggleSelected(_id_ban)
         }, toggle: {
             arguments.toggleReveal(_id_ban)
@@ -359,9 +413,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let string: NSMutableAttributedString = NSMutableAttributedString()
                 string.append(string: stringForGroupPermission(right: right, channel: state.channel), color: theme.colors.text, font: .normal(.title))
 
+                var afterNameImage: CGImage?
+                
                 if right == .banSendMedia {
                     let count = banSendMediaSubList().filter({ (currentRightsFlags.contains($0.0)) }).count
-                    string.append(string: " \(count)/\(banSendMediaSubList().count)", color: theme.colors.text, font: .bold(.small))
+                    afterNameImage = generateAfterMedia( "\(count)/\(banSendMediaSubList().count)", revealed: state.mediaRevealed)
+                } else {
+                    afterNameImage = nil
                 }
                 
                 let rightEnabled = defaultEnabled && currentRightsFlags.contains(right)
@@ -378,14 +436,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     action()
                 }, switchAction: {
                     arguments.toggleRight(right, rightEnabled)
-                }, nameAttributed: string)))
+                }, nameAttributed: string, afterNameImage: afterNameImage)))
                 
                 if right == .banSendMedia, state.mediaRevealed {
                     for (subRight, _) in banSendMediaSubList() {
                         let string = stringForGroupPermission(right: subRight, channel: state.channel)
                         let defaultEnabled = !defaultBannedRights.flags.contains(subRight)
                         let subRightEnabled = defaultEnabled && currentRightsFlags.contains(subRight)
-                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_id_right_\(right.rawValue)_\(subRight.rawValue)"), data: .init(name: string, color: theme.colors.text, type: .switchable(subRightEnabled), viewType: .innerItem, enabled: defaultEnabled, action: {
+                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_id_right_\(right.rawValue)_\(subRight.rawValue)"), data: .init(name: string, color: theme.colors.text, type: .selectableLeft(subRightEnabled), viewType: .innerItem, enabled: defaultEnabled, action: {
                             arguments.toggleRight(subRight, subRightEnabled)
                         })))
                     }
@@ -512,6 +570,8 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
                 } else {
                     current.deletePeerSelected = Set()
                 }
+            } else if id == _id_delete {
+                current.deleteListSelected = !current.deleteListSelected
             }
             return current
         }
@@ -563,7 +623,9 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
         let state = stateValue.with { $0 }
         var signals:[Signal<Void, NoError>] = []
 
-        signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forEveryone))
+        if state.deleteListSelected {
+            signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forEveryone))
+        }
         
         if state.banSelected {
             for memberId in state.banPeerSelected {
@@ -622,6 +684,15 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
     }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    controller.afterTransaction = { [weak modalInteractions] _ in
+        modalInteractions?.updateDone { button in
+            let state = stateValue.with { $0 }
+            button.isEnabled = !state.isEmpty
+            
+            button.set(text: state.text, for: .Normal)
+        }
+    }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         close?()

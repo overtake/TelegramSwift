@@ -710,6 +710,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
     
+    public var allItems:[TableRowItem] {
+        return list
+    }
+    
     public var view: NSTableView {
         return tableView
     }

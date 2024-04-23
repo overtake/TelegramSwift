@@ -10,9 +10,8 @@ import Cocoa
 import TGUIKit
 
 
-class GeneralInteractedRowView: GeneralRowView {
+class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         
-    let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
     private(set) var selectLeftControl: SelectingControl?
     private(set) var progressView: ProgressIndicator?
@@ -78,10 +77,20 @@ class GeneralInteractedRowView: GeneralRowView {
                 } else {
                     
                     current = SelectingControl(unselectedImage: unselected, selectedImage: selected)
+                    current.scaleOnClick = true
                     containerView.addSubview(current)
                     self.selectLeftControl = current
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let item = self?.item as? GeneralInteractedRowItem {
+                            item.switchAction?()
+                        }
+                    }, for: .Click)
                 }
                 current.update(unselectedImage: unselected, selectedImage: selected, selected: value, animated: animated)
+                
+                current.userInteractionEnabled = item.switchAction != nil
+                
                 
                 current.layer?.opacity = item.enabled ? 1 : 0.7
             } else if let view = self.selectLeftControl {
@@ -298,7 +307,7 @@ class GeneralInteractedRowView: GeneralRowView {
             }
         }
         if let _ = self.selectLeftControl {
-            textXAdditional += 24 + item.viewType.innerInset.left
+            textXAdditional += 24 + 14
         }
         return textXAdditional
     }
@@ -385,8 +394,8 @@ class GeneralInteractedRowView: GeneralRowView {
         
         nextView.sizeToFit()
         containerView.addSubview(nextView)
-        self.containerView.displayDelegate = self
-        self.addSubview(self.containerView)
+
+        containerView.displayDelegate = self
         
         containerView.addSubview(nameView)
         
@@ -500,8 +509,6 @@ class GeneralInteractedRowView: GeneralRowView {
                         
             switch item.viewType {
             case .legacy:
-                self.containerView.frame = bounds
-                self.containerView.setCorners([])
                 if let descriptionView = descriptionView {
                     descriptionView.setFrameOrigin(insets.left + textXAdditional, floorToScreenPixels(backingScaleFactor, frame.height - descriptionView.frame.height - 6))
                 }
@@ -546,11 +553,7 @@ class GeneralInteractedRowView: GeneralRowView {
                     progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
                 }
             case let .modern(_, innerInsets):
-                self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)
-                
-                
-                self.containerView.setCorners(self.isResorting ? GeneralViewItemCorners.all : item.viewType.corners)
-                
+                                
                 if let current = self.selectLeftControl {
                     current.centerY(x: innerInsets.left)
                 }

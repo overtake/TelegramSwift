@@ -210,13 +210,13 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.groupAccess.canMakeVoiceChat {
                             if peer.isSupergroup, isUnmutedForAll {
-                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                             } else {
-                                entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation, true))
+                                entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation, true))
                             }
                         } else if peer.groupAccess.canAddMembers {
-                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                         }
                     }
                 }
@@ -399,16 +399,16 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                         if peer.addressName != nil {
                             if peer.groupAccess.canMakeVoiceChat {
                                 if peer.isSupergroup, isUnmutedForAll {
-                                    entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                                 } else {
-                                    entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                    entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation, true))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation, true))
                                 }
                             } else {
-                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                             }
                         } else {
-                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                         }
                     }
                 }

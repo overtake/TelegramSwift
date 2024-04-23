@@ -91,6 +91,7 @@ enum LocalAnimatedSticker : String {
     case email_recovery
     case qrcode_matrix
     case login_airplane
+    case login_word
     
     case hand_animation
     
@@ -284,6 +285,7 @@ enum LocalAnimatedSticker : String {
     case menu_boost
     case menu_boost_plus
     case menu_search
+    case menu_eye
     
     case emoji_category_activities
     case emoji_category_angry

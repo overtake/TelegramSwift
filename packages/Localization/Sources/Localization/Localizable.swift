@@ -581,6 +581,8 @@ public final class L10n {
   public static var bioPlaceholder: String  { return L10n.tr("Localizable", "Bio.Placeholder") }
   /// Save
   public static var bioSave: String  { return L10n.tr("Localizable", "Bio.Save") }
+  /// Add Your Birthday
+  public static var birthdayAddYourBirthday: String  { return L10n.tr("Localizable", "Birthday.AddYourBirthday") }
   /// %d
   public static func birthdayYearsOldCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Birthday.YearsOld_countable", p1)
@@ -1435,8 +1437,10 @@ public final class L10n {
   public static var canvasUndo: String  { return L10n.tr("Localizable", "Canvas.Undo") }
   /// All Admins
   public static var chanelEventFilterAllAdmins: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllAdmins") }
-  /// All Events
-  public static var chanelEventFilterAllEvents: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllEvents") }
+  /// Settings
+  public static var chanelEventFilterSettings: String  { return L10n.tr("Localizable", "Chanel.EventFilter.Settings") }
+  /// Show Actions by All Admins
+  public static var chanelEventFilterAllAdminsNew: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllAdmins.New") }
   /// You have changed your phone number to %@.
   public static func changeNumberConfirmCodeSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChangeNumber.ConfirmCode.Success", p1)
@@ -1977,9 +1981,17 @@ public final class L10n {
   public static func channelEventLogServiceDisabledSlowMode(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.DisabledSlowMode", p1)
   }
+  /// %@ enabled topics
+  public static func channelEventLogServiceDisabledTopics(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.DisabledTopics", p1)
+  }
   /// %@ disabled channel signatures
   public static func channelEventLogServiceDisableSignatures(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.DisableSignatures", p1)
+  }
+  /// %@ enabled topics
+  public static func channelEventLogServiceEnabledTopics(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.EnabledTopics", p1)
   }
   /// %@ enabled channel signatures
   public static func channelEventLogServiceEnableSignatures(_ p1: String) -> String {
@@ -1992,6 +2004,14 @@ public final class L10n {
   /// %@ edited this channel's link:
   public static func channelEventLogServiceLinkUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.LinkUpdated", p1)
+  }
+  /// %@ made the group history hidden from new members
+  public static func channelEventLogServiceMessageGroupPreHistoryHidden(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.MessageGroupPreHistoryHidden", p1)
+  }
+  /// %@ made the group history visible for new members
+  public static func channelEventLogServiceMessageGroupPreHistoryVisible(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.MessageGroupPreHistoryVisible", p1)
   }
   /// - Title
   public static var channelEventLogServiceMinusTitle: String  { return L10n.tr("Localizable", "Channel.EventLog.Service.MinusTitle") }
@@ -2031,6 +2051,10 @@ public final class L10n {
   public static func channelEventLogServiceUpdateLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.UpdateLeft", p1)
   }
+  /// All Actions
+  public static var channelEventLogsTitleFull: String  { return L10n.tr("Localizable", "Channel.EventLogs.TitleFull") }
+  /// Selected Actions
+  public static var channelEventLogsTitleSelected: String  { return L10n.tr("Localizable", "Channel.EventLogs.TitleSelected") }
   /// Chat Admins
   public static var channelEventLogsFilterTitle: String  { return L10n.tr("Localizable", "Channel.EventLogs.Filter.Title") }
   /// This option is disabled in channel Permissions for all members.
@@ -2875,16 +2899,24 @@ public final class L10n {
   }
   /// Channel Info
   public static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
+  /// Channel Settings
+  public static var channelEventFilterChannelSettings: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelSettings") }
   /// Deleted Messages
   public static var channelEventFilterDeletedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.DeletedMessages") }
   /// Edited Messages
   public static var channelEventFilterEditedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.EditedMessages") }
   /// Group Info
   public static var channelEventFilterGroupInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.GroupInfo") }
+  /// Group Settings
+  public static var channelEventFilterGroupSettings: String  { return L10n.tr("Localizable", "ChannelEventFilter.GroupSettings") }
   /// Invite Links
   public static var channelEventFilterInvites: String  { return L10n.tr("Localizable", "ChannelEventFilter.Invites") }
   /// Members Removed
   public static var channelEventFilterLeavingMembers: String  { return L10n.tr("Localizable", "ChannelEventFilter.LeavingMembers") }
+  /// Members and Admins
+  public static var channelEventFilterMembersAndAdmins: String  { return L10n.tr("Localizable", "ChannelEventFilter.MembersAndAdmins") }
+  /// Messages
+  public static var channelEventFilterMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.Messages") }
   /// New Admins
   public static var channelEventFilterNewAdmins: String  { return L10n.tr("Localizable", "ChannelEventFilter.NewAdmins") }
   /// New Members
@@ -3475,6 +3507,10 @@ public final class L10n {
   public static func chatBubblesForwardedFromNew(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom_New", p1)
   }
+  /// Forwarded from:## %@
+  public static func chatBubblesForwardedFromWithPhoto(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom_WithPhoto", p1)
+  }
   /// Forwarded Story From: [%@]()
   public static func chatBubblesForwardedStory(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedStory", p1)
@@ -3575,6 +3611,8 @@ public final class L10n {
   public static var chatContextArchive: String  { return L10n.tr("Localizable", "Chat.Context.Archive") }
   /// Auto-Delete Messages
   public static var chatContextAutoDelete: String  { return L10n.tr("Localizable", "Chat.Context.AutoDelete") }
+  /// Ban
+  public static var chatContextBan: String  { return L10n.tr("Localizable", "Chat.Context.Ban") }
   /// Block Group
   public static var chatContextBlockGroup: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup") }
   /// Block User
@@ -4653,6 +4691,8 @@ public final class L10n {
   public static func chatMessageAdText(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Message.Ad.Text", p1)
   }
+  /// https://ads.telegram.org
+  public static var chatMessageAdUrl: String  { return L10n.tr("Localizable", "Chat.Message.Ad.Url") }
   /// Quote
   public static var chatMessageContextQuote: String  { return L10n.tr("Localizable", "Chat.Message.Context.Quote") }
   /// Loo Long.
@@ -7945,6 +7985,10 @@ public final class L10n {
   public static var errorUsernameUnderscopeEnd: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeEnd") }
   /// A username can't start with an underscore.
   public static var errorUsernameUnderscopeStart: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeStart") }
+  /// %1$@ and %2$@
+  public static func eventLogServiceAnd(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.And", p1, p2)
+  }
   /// Banned %1$@ %2$@
   public static func eventLogServiceBanned1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.Banned1", p1, p2)
@@ -7997,9 +8041,93 @@ public final class L10n {
   public static func eventLogServiceRemovePinned(_ p1: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.RemovePinned", p1)
   }
+  /// %d
+  public static func eventLogServiceShowMoreCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_countable", p1)
+  }
+  /// Show %d More Messages
+  public static func eventLogServiceShowMoreFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_few", p1)
+  }
+  /// Show %d More Messages
+  public static func eventLogServiceShowMoreMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_many", p1)
+  }
+  /// Show %d More Message
+  public static func eventLogServiceShowMoreOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_one", p1)
+  }
+  /// Show %d More Messages
+  public static func eventLogServiceShowMoreOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_other", p1)
+  }
+  /// Show %d More Messages
+  public static func eventLogServiceShowMoreTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_two", p1)
+  }
+  /// Show %d More Messages
+  public static func eventLogServiceShowMoreZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.ShowMore_zero", p1)
+  }
   /// %@ pinned message:
   public static func eventLogServiceUpdatePinned(_ p1: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.UpdatePinned", p1)
+  }
+  /// %1$@ %2$d %3$@
+  public static func eventLogServiceDeletedMessageMultipleHideCountable(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_countable", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [hide all](s)
+  public static func eventLogServiceDeletedMessageMultipleHideFew(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_few", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [hide all](s)
+  public static func eventLogServiceDeletedMessageMultipleHideMany(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_many", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d message from %3$@ [hide all](s)
+  public static func eventLogServiceDeletedMessageMultipleHideOne(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_one", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [hide all](s)
+  public static func eventLogServiceDeletedMessageMultipleHideOther(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_other", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [hide all](s)
+  public static func eventLogServiceDeletedMessageMultipleHideTwo(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_two", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [hide all](s)
+  public static func eventLogServiceDeletedMessageMultipleHideZero(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Hide_zero", p1, p2, p3)
+  }
+  /// %1$@ %2$d %3$@
+  public static func eventLogServiceDeletedMessageMultipleShowCountable(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_countable", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [show all](s)
+  public static func eventLogServiceDeletedMessageMultipleShowFew(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_few", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [show all](s)
+  public static func eventLogServiceDeletedMessageMultipleShowMany(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_many", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d message from %3$@ [show all](s)
+  public static func eventLogServiceDeletedMessageMultipleShowOne(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_one", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [show all](s)
+  public static func eventLogServiceDeletedMessageMultipleShowOther(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_other", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [show all](s)
+  public static func eventLogServiceDeletedMessageMultipleShowTwo(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_two", p1, p2, p3)
+  }
+  /// %1$@ deleted %2$d messages from %3$@ [show all](s)
+  public static func eventLogServiceDeletedMessageMultipleShowZero(_ p1: String, _ p2: Int, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.DeletedMessageMultiple.Show_zero", p1, p2, p3)
   }
   /// Add Members
   public static var eventLogServiceDemoteAddMembers: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.AddMembers") }
@@ -9611,6 +9739,30 @@ public final class L10n {
   public static var loginEnterCodeFromApp: String  { return L10n.tr("Localizable", "Login.EnterCodeFromApp") }
   /// You have enabled Two-Step Verification, your account is now protected with an additional password.
   public static var loginEnterPasswoуrdDescription: String  { return L10n.tr("Localizable", "Login.EnterPasswoуrdDescription") }
+  /// We've sent you an SMS with a secret phrase that starts with **"%1$@"** to your phone **%2$@**.
+  public static func loginEnterPhraseBeginningText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Login.EnterPhraseBeginningText", p1, p2)
+  }
+  /// Enter Phrase from SMS
+  public static var loginEnterPhrasePlaceholder: String  { return L10n.tr("Localizable", "Login.EnterPhrasePlaceholder") }
+  /// We've sent you an SMS with a secret phrase to your phone **%@**.
+  public static func loginEnterPhraseText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.EnterPhraseText", p1)
+  }
+  /// Enter Phrase
+  public static var loginEnterPhraseTitle: String  { return L10n.tr("Localizable", "Login.EnterPhraseTitle") }
+  /// We've sent you an SMS with a secret word that starts with **"%1$@"** to your phone **%2$@**.
+  public static func loginEnterWordBeginningText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Login.EnterWordBeginningText", p1, p2)
+  }
+  /// Enter Word from SMS
+  public static var loginEnterWordPlaceholder: String  { return L10n.tr("Localizable", "Login.EnterWordPlaceholder") }
+  /// We've sent you an SMS with a secret word to your phone **%@**.
+  public static func loginEnterWordText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.EnterWordText", p1)
+  }
+  /// Enter Word
+  public static var loginEnterWordTitle: String  { return L10n.tr("Localizable", "Login.EnterWordTitle") }
   /// Too many attempts, please try again later.
   public static var loginFloodWait: String  { return L10n.tr("Localizable", "Login.FloodWait") }
   /// Invalid Country Code
@@ -9657,6 +9809,8 @@ public final class L10n {
   public static func loginWillSendSms(_ p1: Int, _ p2: String) -> String {
     return L10n.tr("Localizable", "Login.willSendSms", p1, p2)
   }
+  /// Incorrect, please try again.
+  public static var loginWrongPhraseError: String  { return L10n.tr("Localizable", "Login.WrongPhraseError") }
   /// your code
   public static var loginYourCodeLabel: String  { return L10n.tr("Localizable", "Login.YourCodeLabel") }
   /// your password
@@ -11355,6 +11509,8 @@ public final class L10n {
   public static var peerInfoPreHistory: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory") }
   /// Reactions
   public static var peerInfoReactions: String  { return L10n.tr("Localizable", "PeerInfo.Reactions") }
+  /// Recent Action
+  public static var peerInfoRecentActions: String  { return L10n.tr("Localizable", "PeerInfo.RecentActions") }
   /// Removed Users
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
@@ -15971,6 +16127,8 @@ public final class L10n {
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
   }
+  /// repost to my stories
+  public static var storyRepostToMy: String  { return L10n.tr("Localizable", "Story.RepostToMy") }
   /// Nobody has viewed your story yet.
   public static var storyAlertNoViews: String  { return L10n.tr("Localizable", "Story.Alert.NoViews") }
   /// List of viewers isn't available after 24 hours of story expiration.
@@ -16575,14 +16733,16 @@ public final class L10n {
   public static var supergroupConvertDescription: String  { return L10n.tr("Localizable", "Supergroup.Convert.Description") }
   /// **Note**: This action cannot be undone.
   public static var supergroupConvertUndone: String  { return L10n.tr("Localizable", "Supergroup.Convert.Undone") }
+  /// Ban
+  public static var supergroupDeleteRestrictionBan: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Ban") }
   /// Ban User
   public static var supergroupDeleteRestrictionBanUser: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser") }
+  /// Delete
+  public static var supergroupDeleteRestrictionDelete: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Delete") }
   /// Delete All Messages
   public static var supergroupDeleteRestrictionDeleteAllMessages: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages") }
   /// Delete Message
   public static var supergroupDeleteRestrictionDeleteMessage: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteMessage") }
-  /// ADDITIONAL ACTIONS
-  public static var supergroupDeleteRestrictionHeader: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Header") }
   /// %d
   public static func supergroupDeleteRestrictionMultiTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_countable", p1)
@@ -16611,18 +16771,24 @@ public final class L10n {
   public static func supergroupDeleteRestrictionMultiTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Supergroup.DeleteRestriction.MultiTitle_zero", p1)
   }
-  /// Delete
+  /// Done
   public static var supergroupDeleteRestrictionProceed: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Proceed") }
+  /// Report
+  public static var supergroupDeleteRestrictionReport: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Report") }
   /// Report Spam
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
+  /// Restrict
+  public static var supergroupDeleteRestrictionRestrict: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Restrict") }
   /// Restrict User
   public static var supergroupDeleteRestrictionRestrictUser: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.RestrictUser") }
   /// Manage Messages
   public static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
   /// Ban All Users
   public static var supergroupDeleteRestrictionBanUserMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.BanUser.Multi") }
-  /// Delete All From All Users
+  /// Delete All From Users
   public static var supergroupDeleteRestrictionDeleteAllMessagesMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteAllMessages.Multi") }
+  /// Delete Messages
+  public static var supergroupDeleteRestrictionDeleteMessageMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.DeleteMessage.Multi") }
   /// Restrict All Users
   public static var supergroupDeleteRestrictionRestrictUserMulti: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.RestrictUser.Multi") }
   /// App Data Storage

@@ -19,7 +19,7 @@ class ContextListRowItem: TableRowItem {
 
     let result:ChatContextResult
     let results:ChatContextResultCollection
-    private let _index:Int64
+    private let _index1:Int64
     let context: AccountContext
     let iconSignal:Signal<ImageDataTransformation, NoError>
     let arguments:TransformImageArguments?
@@ -32,14 +32,14 @@ class ContextListRowItem: TableRowItem {
     private var vClass:AnyClass = ContextListImageView.self
     private let text:NSAttributedString
     override var stableId: AnyHashable {
-        return Int64(_index)
+        return Int64(_index1)
     }
     
     init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:ChatContextResult, _ index:Int64, _ context: AccountContext, _ chatInteraction:ChatInteraction) {
         self.result = result
         self.results = results
         self.chatInteraction = chatInteraction
-        self._index = index
+        self._index1 = index
         self.context = context
         var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil

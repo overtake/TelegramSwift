@@ -61,7 +61,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private(set) var forwardHeader:TextView?
     private(set) var forwardName:TextView?
-    
+    private(set) var forwardPhoto: AvatarControl?
     private(set) var forwardLine:SimpleLayer?
 
     
@@ -822,6 +822,17 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return point
     }
     
+    func forwardPhotoPoint(_ item: ChatRowItem) -> NSPoint {
+        var point = self.forwardNamePoint(item)
+        if let layout = item.forwardNameLayout, let range = item.forwardPhotoPlaceRange {
+            if let rect = layout.rects(range).first {
+                point.x += rect.0.minX + 2
+                point.y += 1
+            }
+        }
+        return point
+    }
+    
     override func layout() {
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
@@ -852,6 +863,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     forwardName = nil
                 }
                 
+                if let view = self.forwardPhoto {
+                    performSubviewRemoval(view, animated: animated)
+                    self.forwardPhoto = nil
+                }
+                
                 if forwardAccessory == nil {
                     forwardAccessory = ChatBubbleAccessoryForward(frame: CGRect(origin: forwardNamePoint(item), size: forwardNameLayout.layoutSize))
                     rowView.addSubview(forwardAccessory!)
@@ -868,6 +884,29 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     forwardName?.isSelectable = false
                     rowView.addSubview(forwardName!)
                 }
+                
+                if let range = item.forwardPhotoPlaceRange {
+                    let current: AvatarControl
+                    if let view = self.forwardPhoto {
+                        current = view
+                    } else {
+                        current = AvatarControl(font: .avatar(4))
+                        current.setFrameSize(NSMakeSize(14, 14))
+                        current.setFrameOrigin(forwardPhotoPoint(item))
+                        rowView.addSubview(current)
+                        self.forwardPhoto = current
+                    }
+                    current.setPeer(account: item.context.account, peer: item.message?.forwardInfo?.author, message: item.message)
+                    
+                    current.removeAllHandlers()
+                    current.set(handler: { [weak item] _ in
+                        item?.openForwardInfo()
+                    }, for: .Click)
+                } else if let view = self.forwardPhoto {
+                    performSubviewRemoval(view, animated: animated)
+                    self.forwardPhoto = nil
+                }
+                
                 forwardName?.update(forwardNameLayout)
             }
             
@@ -879,6 +918,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if let view = forwardAccessory {
                 performSubviewRemoval(view, animated: animated, scale: true)
                 forwardAccessory = nil
+            }
+            if let view = self.forwardPhoto {
+                performSubviewRemoval(view, animated: animated)
+                self.forwardPhoto = nil
             }
         }
     }
@@ -1708,7 +1751,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let rect: NSRect
                 let tempRect: NSRect
             }
-            var views:[NSView] = [self.rightView, self.nameView, self.statusControl, self.forwardStatusControl, self.replyView, self.adminBadge, self.boostBadge, self.forwardName, self.viaAccessory].compactMap { $0 }
+            var views:[NSView] = [self.rightView, self.nameView, self.statusControl, self.forwardStatusControl, self.replyView, self.adminBadge, self.boostBadge, self.forwardName, self.forwardPhoto, self.viaAccessory].compactMap { $0 }
             views.append(contentsOf: self.captionViews.map { $0.view })
             let shakeItems = views.map { view -> ShakeItem in
                 return ShakeItem(view: view, rect: view.frame, tempRect: self.bubbleView.convert(view.frame, from: view.superview))
@@ -1863,6 +1906,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let view = forwardName {
             transition.updateFrame(view: view, frame: CGRect(origin: forwardNamePoint(item), size: view.frame.size))
+        }
+        if let view = forwardPhoto {
+            transition.updateFrame(view: view, frame: CGRect(origin: forwardPhotoPoint(item), size: view.frame.size))
         }
         if let view = forwardHeader {
             transition.updateFrame(view: view, frame: forwardHeaderRect(item))

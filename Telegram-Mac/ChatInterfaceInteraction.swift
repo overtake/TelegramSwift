@@ -9,7 +9,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-
+import CodeSyntax
 import TGUIKit
 import SwiftSignalKit
 import MapKit
@@ -210,6 +210,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var boostToUnrestrict:(BoostChannelSource)->Void = { _ in }
     
+    var executeReplymarkup:(MessageId)->Void = { _ in }
     var toggleUnderMouseMessage:()->Void = { }
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
@@ -217,6 +218,8 @@ final class ChatInteraction : InterfaceObserver  {
     var sendMessageShortcut:(ShortcutMessageList.Item)->Void = { _ in }
     
     var replyToAnother:(EngineMessageReplySubject, Bool)->Void = { _, _ in }
+    
+    var enqueueCodeSyntax:(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
@@ -892,7 +895,9 @@ final class ChatInteraction : InterfaceObserver  {
                 }
             })
         }
-        return ReplyMarkupInteractions(context: context, proccess: {_,_  in})
+        return ReplyMarkupInteractions(context: context, proccess: { [weak self] _,_ in
+            self?.executeReplymarkup(keyboardMessage.id)
+        })
     }
     
     

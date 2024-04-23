@@ -83,7 +83,6 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         addSubview(textView)
         
         
-        self.scaleOnClick = true
         
         layer?.cornerRadius = .cornerRadius
         
@@ -114,6 +113,9 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
 
     func update(with layout:WPLayout, animated: Bool) -> Void {
         self.content = layout
+        
+        self.scaleOnClick = layout.content.type != "edited"
+
         
         textView.update(layout.textLayout)
         
@@ -149,7 +151,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             self.action = nil
         }
         
-        if let pattern = layout.presentation.pattern {
+        if let pattern = layout.presentation.pattern, layout.content.type != "edited" {
             if patternTarget?.textColor != layout.presentation.activity.main {
                 patternTarget = .init(account: layout.context.account, inlinePacksContext: layout.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: layout.presentation.activity.main)
                 patternTarget?.noDelayBeforeplay = true

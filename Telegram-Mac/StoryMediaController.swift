@@ -44,7 +44,7 @@ private enum Entry : TableItemListNodeEntry {
                     
                     items.append(ContextMenuItem(pinnedIds.contains(story.id) ? strings().messageContextUnpin : strings().messageContextPin, handler: { [weak arguments] in
                         arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_pin.value))
+                    }, itemImage: pinnedIds.contains(story.id) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
                     
                     items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak arguments] in
                         arguments?.toggleSelected(.init(peerId: peerId, id: story.id))

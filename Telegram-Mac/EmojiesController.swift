@@ -61,6 +61,8 @@ private extension EmojiSearchCategories.Group {
             return theme.icons.msg_emoji_activities
         case "home":
             return theme.icons.msg_emoji_home
+        case "premium":
+            return theme.icons.msg_emoji_premium
         default:
             return nil
         }

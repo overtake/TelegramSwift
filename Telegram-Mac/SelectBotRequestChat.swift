@@ -452,7 +452,7 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
             if let tuple = tuple {
                 entries.append(.actionButton(tuple.name, tuple.icon, 0, GeneralRowItem.Theme(), { _ in
                     tuple.action?()
-                }))
+                }, true))
             }
         }
                

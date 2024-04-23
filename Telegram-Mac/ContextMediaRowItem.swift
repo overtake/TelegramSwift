@@ -31,7 +31,7 @@ class ContextMediaRowItem: TableRowItem {
 
     
     let result:InputMediaContextRow
-    private let _index:Int64
+    private let _index1:Int64
     let context: AccountContext
     let arguments: ContextMediaArguments
     let collection: ChatContextResultCollection?
@@ -40,14 +40,14 @@ class ContextMediaRowItem: TableRowItem {
         if let _stableId = _stableId {
             return _stableId
         } else {
-            return _index
+            return _index1
         }
     }
     
     init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments, collection: ChatContextResultCollection? = nil, stableId: AnyHashable? = nil) {
         self.result = result
         self.arguments = arguments
-        self._index = index
+        self._index1 = index
         self.context = context
         self.collection = collection
         self._stableId = stableId

@@ -510,7 +510,12 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             }
 
         }, eventLogs: { [weak self] in
-            self?.navigationController?.push(ChannelEventLogController(context, peerId: peerId))
+            let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+            _ = signal.startStandalone(next: { peer in
+                if let peer {
+                    self?.navigationController?.push(ChannelEventLogController(context, peer: peer))
+                }
+            })
         }, toggleAntispam: { value in
             _ = showModalProgress(signal: context.engine.peers.toggleAntiSpamProtection(peerId: peerId, enabled: value), for: context.window).start()
         }, toggleSignatures: { enabled in

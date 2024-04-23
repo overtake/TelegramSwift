@@ -2401,7 +2401,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if let peerId = story.peerId, story.sharable {
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
                 
-                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: "repost to my stories")], topSeparator: "", bottomSeparator: "", selectable: false)
+                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: strings().storyRepostToMy)], topSeparator: "", bottomSeparator: "", selectable: false)
                 
                 showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id), additionTopItems: additionTopItems, repostAction: {
                     repost(story)
@@ -2441,7 +2441,14 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
         
-        let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self] input, peerId, id, source in
+        let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self, weak interactions] input, peerId, id, source in
+            
+            
+            let locked = interactions?.presentation.lock ?? true
+            
+            if locked {
+                return
+            }
             
             if let timeout = self?.arguments?.interaction.presentation.slowMode?.timeout {
                 self?.genericView.showTooltip(.tooltip(slowModeTooltipText(timeout), MenuAnimation.menu_clear_history))

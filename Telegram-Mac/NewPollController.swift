@@ -235,7 +235,7 @@ private struct NewPollState : Equatable {
         var answers: [Data]?
         for (i, option) in self.options.enumerated() {
             if !option.text.trimmed.isEmpty {
-                options.append(TelegramMediaPollOption(text: option.text.trimmed, opaqueIdentifier: "\(i)".data(using: .utf8)!))
+                options.append(TelegramMediaPollOption(text: option.text.trimmed, entities: option.textState.textInputState().messageTextEntities(), opaqueIdentifier: "\(i)".data(using: .utf8)!))
                 if option.selected {
                     answers = [options.last!.opaqueIdentifier]
                 }
@@ -250,7 +250,7 @@ private struct NewPollState : Equatable {
             solution = nil
         }
         
-        return TelegramMediaPoll(pollId: MediaId(namespace: Namespaces.Media.LocalPoll, id: arc4random64()), publicity: mode.publicity, kind: mode.kind, text: title.trimmed, options: options, correctAnswers: answers, results: TelegramMediaPollResults(voters: nil, totalVoters: nil, recentVoters: [], solution: solution), isClosed: false, deadlineTimeout: nil)
+        return TelegramMediaPoll(pollId: MediaId(namespace: Namespaces.Media.LocalPoll, id: arc4random64()), publicity: mode.publicity, kind: mode.kind, text: title.trimmed, textEntities: self.textState.textInputState().messageTextEntities(), options: options, correctAnswers: answers, results: TelegramMediaPollResults(voters: nil, totalVoters: nil, recentVoters: [], solution: solution), isClosed: false, deadlineTimeout: nil)
     }
 }
 

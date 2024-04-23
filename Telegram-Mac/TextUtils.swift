@@ -339,6 +339,10 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
             
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
+            
+            if let media = message.media.first as? TelegramMediaPoll {
+                InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
+            }
            
         } else if message.extendedMedia is TelegramMediaAction {
             let service = serviceMessageText(message, account:account, isReplied: isReplied)

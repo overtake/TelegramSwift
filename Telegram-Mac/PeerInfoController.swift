@@ -967,6 +967,24 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             
             self?.genericView.tableView.merge(with:transition)
             self?.readyOnce()
+            
+            if let peer = peerViewMainPeer(peerView) {
+                if let channel = peer as? TelegramChannel {
+                    switch channel.participationStatus {
+                    case .member, .left:
+                        break
+                    case .kicked:
+                        self?.navigationController?.close()
+                    }
+                } else if let group = peer as? TelegramGroup {
+                    switch group.membership {
+                    case .Member, .Left:
+                        break
+                    case .Removed:
+                        self?.navigationController?.close()
+                    }
+                }
+            }
 
         }))
         
