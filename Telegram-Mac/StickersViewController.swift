@@ -1733,6 +1733,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     
     override var supportSwipes: Bool {
+        if let categories = genericView.categories, categories._mouseInside() || genericView.searchView._mouseInside() {
+            return false
+        }
         return !self.genericView.packsView._mouseInside()
     }
     
