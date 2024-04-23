@@ -1027,7 +1027,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         fifthBlock.append(ContextMenuItem(strings().chatContextBan, handler: {
                             _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: author.id, bannedRights: TelegramChatBannedRights(flags: .banReadMessages, untilDate: .max)).startStandalone()
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 3.0).startStandalone()
-                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_ban.value))
                     }
                    
                     

@@ -244,6 +244,7 @@
 		2760E55626970513001C59F8 /* WidgetStorageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55526970513001C59F8 /* WidgetStorageController.swift */; };
 		2760E55926970672001C59F8 /* WidgetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55826970672001C59F8 /* WidgetButton.swift */; };
 		2760E55B269706D7001C59F8 /* WidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55A269706D7001C59F8 /* WidgetView.swift */; };
+		2761432A2BD7E2900034338C /* menu_ban.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276143292BD7E2900034338C /* menu_ban.tgs */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
@@ -1778,6 +1779,7 @@
 		2760E55526970513001C59F8 /* WidgetStorageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStorageController.swift; sourceTree = "<group>"; };
 		2760E55826970672001C59F8 /* WidgetButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetButton.swift; sourceTree = "<group>"; };
 		2760E55A269706D7001C59F8 /* WidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetView.swift; sourceTree = "<group>"; };
+		276143292BD7E2900034338C /* menu_ban.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_ban.tgs; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
@@ -3765,6 +3767,7 @@
 				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
 				275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */,
 				27B836472B6396E500E82683 /* menu_hd_lock.tgs */,
+				276143292BD7E2900034338C /* menu_ban.tgs */,
 				270595E32B6BDCF500E05493 /* menu_boost.tgs */,
 				27A01AD22B9AF40800C59661 /* menu_search.tgs */,
 				27B836482B6396E600E82683 /* menu_hd.tgs */,
@@ -6812,6 +6815,7 @@
 				27CB177027638F4000DD25E0 /* menu_replace.tgs in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				277840B02BB6F8660026CC3A /* business.scn in Resources */,
+				2761432A2BD7E2900034338C /* menu_ban.tgs in Resources */,
 				27916F2F287D77660046DB44 /* animals.tgs in Resources */,
 				27803BF427A3E944007B0FA9 /* menu_folder_telegram.tgs in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
@@ -8029,7 +8033,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.10.2;
+				MARKETING_VERSION = 10.12;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8081,7 +8085,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.10.2;
+				MARKETING_VERSION = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8128,7 +8132,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.10.2;
+				MARKETING_VERSION = 10.12;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8245,7 +8249,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.10.2;
+				MARKETING_VERSION = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
