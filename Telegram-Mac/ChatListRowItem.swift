@@ -1915,7 +1915,7 @@ class ChatListRowItem: TableRowItem {
             if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus, !mode.savedMessages {
                 switch hideStatus {
                 case .collapsed:
-                    firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
+                    firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand, handler: {
                         ChatListRowItem.collapseOrExpandArchive(context: context)
                     }, itemImage: MenuAnimation.menu_expand.value))
                 default:
@@ -1928,7 +1928,7 @@ class ChatListRowItem: TableRowItem {
             if peerId != nil {
                 firstGroup.append(ContextMenuItem(strings().chatListContextPreview, handler: {
                     previewChat()
-                }, itemImage: MenuAnimation.menu_show_info.value))
+                }, itemImage: MenuAnimation.menu_eye.value))
             }
             
             var submenu: [ContextMenuItem] = []
@@ -2122,7 +2122,7 @@ class ChatListRowItem: TableRowItem {
     static func previewChat(peerId: PeerId, context: AccountContext) {
         let controller = ChatController(context: context, chatLocation: .peer(peerId), mode: .preview)
         let navigation:NavigationViewController = NavigationViewController(controller, context.window)
-        navigation._frameRect = NSMakeRect(0, 0, 350, 440)
+        navigation._frameRect = NSMakeRect(0, 0, 400, 500)
         
         showModal(with: navigation, for: context.window)
     }

@@ -11,15 +11,64 @@ import AppKit
 import TelegramCore
 import TelegramMedia
 import InputView
+import SwiftSignalKit
+
+private struct Localize {
+    static func placeholder(_ type: SentAuthorizationCodeType) -> String {
+        switch type {
+        case .phrase:
+            return strings().loginEnterPhrasePlaceholder
+        case .word:
+            return strings().loginEnterWordPlaceholder
+        default:
+            fatalError()
+        }
+    }
+    static func title(_ type: SentAuthorizationCodeType) -> String {
+        switch type {
+        case .phrase:
+            return strings().loginEnterPhraseTitle
+        case .word:
+            return strings().loginEnterWordTitle
+        default:
+            fatalError()
+        }
+    }
+    
+    static func text(_ type: SentAuthorizationCodeType, phonenumber: String) -> String {
+        switch type {
+        case let .phrase(startsWith):
+            if let startsWith {
+                return strings().loginEnterPhraseBeginningText(startsWith, phonenumber)
+            } else {
+                return strings().loginEnterPhraseText(phonenumber)
+            }
+        case let .word(startsWith):
+            if let startsWith {
+                return strings().loginEnterWordBeginningText(startsWith, phonenumber)
+            } else {
+                return strings().loginEnterWordText(phonenumber)
+            }
+        default:
+            fatalError()
+        }
+    }
+}
 
 private final class Auth_WordInputView : View {
-    private let input: UITextView = .init(frame: .zero)
+    let input: UITextView = .init(frame: .zero)
     private let separator = View()
+    
+    var isError: Bool = false {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(input)
         addSubview(separator)
-        self.input.placeholder = "Enter Word from SMS"
         
         
         input.interactions.min_height = 34
@@ -38,7 +87,7 @@ private final class Auth_WordInputView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        separator.backgroundColor = theme.colors.border
+        separator.backgroundColor = isError ? theme.colors.redUI : theme.colors.border
     }
     
     var textWidth: CGFloat {
@@ -89,6 +138,7 @@ private final class Auth_WordHeaderView : View {
     private let playerView:LottiePlayerView = LottiePlayerView()
     private let header: TextView = TextView()
     private let desc: TextView = TextView()
+    
     private var descAttr: NSAttributedString?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -104,18 +154,30 @@ private final class Auth_WordHeaderView : View {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    private var codeType: SentAuthorizationCodeType = .word(startsWith: nil)
+    private var phonenumber: String = ""
+    
+    func updateCodeType(_ type: SentAuthorizationCodeType, phonenumber: String) {
+        self.codeType = type
+        self.phonenumber = phonenumber
+        self.updateLocalizationAndTheme(theme: theme)
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        
+        
+        
         let theme = theme as! TelegramPresentationTheme
-        if let data = LocalAnimatedSticker.business_links.data {
-            self.playerView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("business_links"), size: Auth_Insets.wordSize, backingScale: Int(System.backingScale), fitzModifier: nil, colors: []), playPolicy: .onceEnd))
+        if let data = LocalAnimatedSticker.login_word.data {
+            self.playerView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("login_word"), size: Auth_Insets.wordSize, backingScale: Int(System.backingScale), fitzModifier: nil, colors: []), playPolicy: .onceEnd))
         }
         
-        let layout = TextViewLayout(.initialize(string: "Enter Word", color: theme.colors.text, font: Auth_Insets.headerFont))
+        let layout = TextViewLayout(.initialize(string: Localize.title(codeType), color: theme.colors.text, font: Auth_Insets.headerFont))
         layout.measure(width: frame.width)
         self.header.update(layout)
         
-        let descAttr: NSAttributedString = .initialize(string: "We've sent you an SMS with a secret word to your phone **+971 12 345 6789**.", color: theme.colors.grayText, font: Auth_Insets.infoFont).detectBold(with: .medium(Auth_Insets.infoFont.pointSize))
+        let descAttr: NSAttributedString = .initialize(string: Localize.text(codeType, phonenumber: phonenumber), color: theme.colors.grayText, font: Auth_Insets.infoFont).detectBold(with: .medium(Auth_Insets.infoFont.pointSize))
         
         let descLayout = TextViewLayout(descAttr, alignment: .center)
         descLayout.measure(width: frame.width)
@@ -157,8 +219,18 @@ final class Auth_WordView: View {
     
     private var takeNext:((String)->Void)?
     private var takeReset:(()->Void)?
+    private var takeError:(()->Void)?
+    private var takeResend:(()->Void)?
+    private var takeNextType:(()->Void)?
     
-    private var pattern: String = ""
+    private var makeError:((AuthorizationCodeVerificationError)->Void)?
+
+    private var codeType: SentAuthorizationCodeType = .word(startsWith: nil)
+    private let interactions = TextView_Interactions()
+    
+    private var nextTextView: TextView?
+    private let disposable = MetaDisposable()
+
     
     required init(frame frameRect: NSRect) {
         header = Auth_WordHeaderView(frame: frameRect.size.bounds)
@@ -170,35 +242,22 @@ final class Auth_WordView: View {
 
         addSubview(container)
         nextView.set(handler: { [weak self] _ in
-            //self?.control.invoke()
+            self?.invoke()
         }, for: .Click)
         
         updateLocalizationAndTheme(theme: theme)
+        
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         nextView.updateLocalizationAndTheme(theme: theme)
-                
-        let text = strings().loginNewEmailFooter(self.pattern)
-        
-        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.header), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.header), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  { [weak self] _ in
-                self?.takeReset?()
-            }))
-        }))
-        
-
-        let layout = TextViewLayout(attr, alignment: .center)
-        layout.measure(width: .greatestFiniteMagnitude)
-        layout.interactions = globalLinkExecutor
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
         self.updateLayout(size: self.frame.size, transition: .immediate)
-        
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -212,13 +271,16 @@ final class Auth_WordView: View {
         transition.updateFrame(view: error, frame: error.centerFrameX(y: control.frame.maxY + Auth_Insets.betweenError))
         transition.updateFrame(view: nextView, frame: nextView.centerFrameX(y: control.frame.maxY + Auth_Insets.betweenNextView))
         
+        if let nextTextView {
+            transition.updateFrame(view: nextTextView, frame: nextTextView.centerFrameX(y: container.frame.maxY + Auth_Insets.betweenHeader))
+        }
 
     }
     
     func invoke() {
-//        if !self.control.value.isEmpty, !locked {
-//            self.takeNext?(self.control.value)
-//        }
+        if !self.control.input.isEmpty, !locked {
+            self.takeNext?(self.control.input.string())
+        }
     }
     
     func firstResponder() -> NSResponder? {
@@ -228,44 +290,188 @@ final class Auth_WordView: View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    func update(locked: Bool, error: PasswordRecoveryError?, pattern: String, takeNext: @escaping(String)->Void, takeError:@escaping()->Void, takeReset:@escaping()->Void) {
-//        self.input.update(locked: locked, hint: hint, invoke: { [weak self] in
-//            self?.invoke()
-//        }, takeError: takeError)
-        self.pattern = pattern
+    
+    private func updateInputState(_ state: Updated_ChatTextInputState) {
+        
+        switch self.codeType {
+        case let .word(startsWith), let .phrase(startsWith):
+            if let startsWith {
+                if !state.inputText.string.hasPrefix(startsWith), !state.inputText.string.isEmpty {
+                    self.makeError?(.invalidCode)
+                } else {
+                    self.takeError?()
+                }
+            } else {
+                self.takeError?()
+            }
+        default:
+            break
+        }
+    }
+    
+    func update(locked: Bool, error: AuthorizationCodeVerificationError?, phonenumber: String, timeout: Int32?, codeType: SentAuthorizationCodeType, nextType: AuthorizationCodeNextType?, takeNext: @escaping(String)->Void, takeError:@escaping()->Void, makeError:@escaping(AuthorizationCodeVerificationError)->Void, takeReset:@escaping()->Void, takeResend: @escaping()->Void, takeNextType: @escaping()->Void) {
+        
+        
+        self.header.updateCodeType(codeType, phonenumber: phonenumber)
+        self.control.input.placeholder = Localize.placeholder(codeType)
+        
+        
+        interactions.inputIsEnabled = !locked
+        interactions.inputDidUpdate = { [weak self] state in
+            guard let self else {
+                return
+            }
+            self.updateLayout(size: self.frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            self.updateInputState(state)
+        }
+        interactions.processEnter = { [weak self] _ in
+            self?.invoke()
+            return true
+        }
+        
+        self.control.input.interactions = interactions
+        
+        self.codeType = codeType
         self.takeNext = takeNext
         self.takeReset = takeReset
+        self.makeError = makeError
+        self.takeError = takeError
+        self.takeResend = takeResend
+        self.takeNextType = takeNextType
         self.locked = locked
         
-//        let size = self.control.update(count: 6)
-//        self.control.setFrameSize(size)
-//        self.control.takeNext = takeNext
-//        self.control.takeError = takeError
-//        self.control.set(locked: locked, animated: true)
-
+        
         nextView.updateLocked(locked)
         
         if let error = error {
-            let text: String
+            let textError:String
             switch error {
-            case .invalidCode:
-                text = strings().twoStepAuthEmailCodeInvalid
-            case .expired:
-                text = strings().twoStepAuthEmailCodeExpired
-            case .generic:
-                text = strings().unknownError
             case .limitExceeded:
-                text = strings().loginFloodWait
+                textError = strings().loginFloodWait
+            case .invalidCode:
+                textError = strings().loginWrongPhraseError
+            case .generic:
+                textError = strings().phoneCodeExpired
+            case .codeExpired:
+                textError = strings().phoneCodeExpired
+            case .invalidEmailToken:
+                fatalError()
+            case .invalidEmailAddress:
+                fatalError()
             }
-            self.error.state.set(.error(text))
+            self.error.state.set(.error(textError))
             self.control.shake(beep: true)
+            self.control.isError = true
         } else {
             self.error.state.set(.normal)
+            self.control.isError = false
         }
         
         needsLayout = true
+        
+        
+        if let timeout = timeout {
+            runNextTimer(codeType, nextType, timeout)
+        }
+        updateAfterTick(codeType, nextType, timeout)
+        
         updateLocalizationAndTheme(theme: theme)
     }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    func runNextTimer(_ type:SentAuthorizationCodeType, _ nextType:AuthorizationCodeNextType?, _ timeout:Int32) {
+        disposable.set(countdown(Double(timeout), delay: 1).start(next: { [weak self] value in
+            self?.updateAfterTick(type, nextType, Int32(value))
+        }, completed: {
+            
+        }))
+    }
+
+    func updateAfterTick(_ type:SentAuthorizationCodeType, _ nextType:AuthorizationCodeNextType?, _ timeout:Int32?) {
+                
+        var nextText:String = ""
+        
+        switch type {
+        case .otherSession, .word, .phrase:
+            nextText = strings().loginSendSmsIfNotReceivedAppCode
+        default:
+            break
+        }
+        
+        if let nextType = nextType, nextText.isEmpty {
+            if let timeout = timeout {
+                let timeout = Int(timeout)
+                let minutes = timeout / 60;
+                let sec = timeout % 60;
+                let secValue = sec > 9 ? "\(sec)" : "0\(sec)"
+                if timeout > 0 {
+                    switch nextType {
+                    case .call:
+                        nextText = strings().loginWillCall(minutes, secValue)
+                        break
+                    case .sms:
+                        nextText = strings().loginWillSendSms(minutes, secValue)
+                        break
+                    default:
+                        break
+                    }
+                } else {
+                    switch nextType {
+                    case .call:
+                        nextText = strings().loginPhoneDialed
+                        break
+                    default:
+                        break
+                    }
+                }
+                
+            } else {
+                nextText = strings().loginSendSmsIfNotReceivedAppCode
+            }
+        }
+        
+        var nextLayout: TextViewLayout? = nil
+        if !nextText.isEmpty {
+            let attr = NSMutableAttributedString()
+            
+            _ = attr.append(string: nextText, color: theme.colors.link , font: .normal(.title))
+            attr.add(link: inAppLink.callback("resend", { [weak self] _ in
+                self?.takeResend?()
+            }), for: attr.range)
+            
+            attr.addAttribute(NSAttributedString.Key.foregroundColor, value: theme.colors.link, range: attr.range)
+
+            let layout = TextViewLayout(attr)
+            layout.interactions = globalLinkExecutor
+            layout.measure(width: frame.width - 40)
+            nextLayout = layout
+        }
+        
+        if let nextLayout = nextLayout {
+            let current: TextView
+            if let nextTextView = nextTextView {
+                current = nextTextView
+            } else {
+                current = TextView()
+                self.nextTextView = current
+                addSubview(current)
+            }
+            var point = focus(nextLayout.layoutSize).origin
+            point.y = container.frame.maxY + 30
+            current.update(nextLayout, origin: point)
+        } else if let nextTextView = nextTextView {
+            performSubviewRemoval(nextTextView, animated: true)
+            self.nextTextView = nil
+        }
+        
+        needsLayout = true
+    }
+
+    
+    
     
     func playAnimation() {
         header.playAnimation()
@@ -280,8 +486,8 @@ final class Auth_WordController : GenericViewController<Auth_WordView> {
         readyOnce()
     }
     
-    func update(locked: Bool, error: PasswordRecoveryError?, pattern: String, takeNext: @escaping(String)->Void, takeError:@escaping()->Void, takeReset:@escaping()->Void) {
-        self.genericView.update(locked: locked, error: error, pattern: pattern, takeNext: takeNext, takeError: takeError, takeReset: takeReset)
+    func update(locked: Bool, error: AuthorizationCodeVerificationError?, phonenumber: String, timeout: Int32?, codeType: SentAuthorizationCodeType, nextType: AuthorizationCodeNextType?, takeNext: @escaping(String)->Void, takeError:@escaping()->Void, makeError: @escaping(AuthorizationCodeVerificationError)->Void, takeReset:@escaping()->Void, takeResend: @escaping()->Void, takeNextType:@escaping()->Void) {
+        self.genericView.update(locked: locked, error: error, phonenumber: phonenumber, timeout: timeout, codeType: codeType, nextType: nextType, takeNext: takeNext, takeError: takeError, makeError: makeError, takeReset: takeReset, takeResend: takeResend, takeNextType: takeNextType)
     }
     
     override func firstResponder() -> NSResponder? {

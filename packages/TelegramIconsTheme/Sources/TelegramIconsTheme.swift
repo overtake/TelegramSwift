@@ -4893,6 +4893,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var peerInfoRecentActions: CGImage {
+      if let image = cached.with({ $0["peerInfoRecentActions"] }) {
+          return image
+      } else {
+          let image = _peerInfoRecentActions()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoRecentActions"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var peerInfoPermissions: CGImage {
       if let image = cached.with({ $0["peerInfoPermissions"] }) {
           return image
@@ -9625,6 +9638,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var msg_emoji_premium: CGImage {
+      if let image = cached.with({ $0["msg_emoji_premium"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_premium()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_premium"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var installed_stickers_archive: CGImage {
       if let image = cached.with({ $0["installed_stickers_archive"] }) {
           return image
@@ -10743,6 +10769,7 @@ public final class TelegramIconsTheme {
   private let _chatPollVoteUnselectedBubble_incoming: ()->CGImage
   private let _chatPollVoteUnselectedBubble_outgoing: ()->CGImage
   private let _peerInfoAdmins: ()->CGImage
+  private let _peerInfoRecentActions: ()->CGImage
   private let _peerInfoPermissions: ()->CGImage
   private let _peerInfoBanned: ()->CGImage
   private let _peerInfoMembers: ()->CGImage
@@ -11107,6 +11134,7 @@ public final class TelegramIconsTheme {
   private let _msg_emoji_vacation: ()->CGImage
   private let _msg_emoji_what: ()->CGImage
   private let _msg_emoji_work: ()->CGImage
+  private let _msg_emoji_premium: ()->CGImage
   private let _installed_stickers_archive: ()->CGImage
   private let _installed_stickers_custom_emoji: ()->CGImage
   private let _installed_stickers_dynamic_order: ()->CGImage
@@ -11542,6 +11570,7 @@ public final class TelegramIconsTheme {
       chatPollVoteUnselectedBubble_incoming: @escaping()->CGImage,
       chatPollVoteUnselectedBubble_outgoing: @escaping()->CGImage,
       peerInfoAdmins: @escaping()->CGImage,
+      peerInfoRecentActions: @escaping()->CGImage,
       peerInfoPermissions: @escaping()->CGImage,
       peerInfoBanned: @escaping()->CGImage,
       peerInfoMembers: @escaping()->CGImage,
@@ -11906,6 +11935,7 @@ public final class TelegramIconsTheme {
       msg_emoji_vacation: @escaping()->CGImage,
       msg_emoji_what: @escaping()->CGImage,
       msg_emoji_work: @escaping()->CGImage,
+      msg_emoji_premium: @escaping()->CGImage,
       installed_stickers_archive: @escaping()->CGImage,
       installed_stickers_custom_emoji: @escaping()->CGImage,
       installed_stickers_dynamic_order: @escaping()->CGImage,
@@ -12340,6 +12370,7 @@ public final class TelegramIconsTheme {
       self._chatPollVoteUnselectedBubble_incoming = chatPollVoteUnselectedBubble_incoming
       self._chatPollVoteUnselectedBubble_outgoing = chatPollVoteUnselectedBubble_outgoing
       self._peerInfoAdmins = peerInfoAdmins
+      self._peerInfoRecentActions = peerInfoRecentActions
       self._peerInfoPermissions = peerInfoPermissions
       self._peerInfoBanned = peerInfoBanned
       self._peerInfoMembers = peerInfoMembers
@@ -12704,6 +12735,7 @@ public final class TelegramIconsTheme {
       self._msg_emoji_vacation = msg_emoji_vacation
       self._msg_emoji_what = msg_emoji_what
       self._msg_emoji_work = msg_emoji_work
+      self._msg_emoji_premium = msg_emoji_premium
       self._installed_stickers_archive = installed_stickers_archive
       self._installed_stickers_custom_emoji = installed_stickers_custom_emoji
       self._installed_stickers_dynamic_order = installed_stickers_dynamic_order

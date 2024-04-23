@@ -34,6 +34,7 @@ import AppCenter
 import AppCenterCrashes
 #endif
 
+
 final class CodeSyntax {
     private let syntaxer: Syntaxer
     private init() {
@@ -46,6 +47,7 @@ final class CodeSyntax {
     fileprivate static func initialize() {
         _ = CodeSyntax.standart
     }
+    
     
     static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
         return standart.syntaxer.syntax(code, language: language, theme: theme)

@@ -27,7 +27,7 @@ let premiumGradient = [NSColor(rgb: 0x6B93FF), NSColor(rgb: 0x976FFF), NSColor(r
 
 func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -> CGImage {
     let layout = TextNode.layoutText(count, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
-    let image = NSImage(named: "Icon_Boost_Prepaid")!.precomposed(bgColor, flipVertical: true)
+    let image = NSImage(resource: .iconBoostPrepaid).precomposed(bgColor, flipVertical: true)
 
     return generateImage(NSMakeSize(layout.0.size.width + 10 + image.backingSize.width + 5, 24), rotatedContext: { size, ctx in
         ctx.clear(size.bounds)
@@ -2478,6 +2478,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatPollVoteUnselectedBubble_incoming: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_incoming.withAlphaComponent(0.3)) },
                                                chatPollVoteUnselectedBubble_outgoing: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(palette.grayTextBubble_outgoing.withAlphaComponent(0.3)) },
                                                peerInfoAdmins: { NSImage(named: "Icon_ChatAdmins")!.precomposed(flipVertical: true) },
+                                               peerInfoRecentActions: { NSImage(resource: .iconProfileRecentLog).precomposed(flipVertical: true) },
                                                peerInfoPermissions: { NSImage(named: "Icon_ChatPermissions")!.precomposed(flipVertical: true) },
                                                peerInfoBanned: { NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true) },
                                                peerInfoMembers: { NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true) },
@@ -2849,6 +2850,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 msg_emoji_vacation: { NSImage(named: "msg_emoji_vacation")!.precomposed(palette.grayIcon) },
                                                 msg_emoji_what: { NSImage(named: "msg_emoji_what")!.precomposed(palette.grayIcon) },
                                                 msg_emoji_work: { NSImage(named: "msg_emoji_work")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_premium: { NSImage(named: "msg_emoji_premium")!.precomposed(palette.grayIcon) },
                                                 installed_stickers_archive: { NSImage(named: "Icon_InstalledStickers_Archive")!.precomposed(flipVertical: true) },
                                                 installed_stickers_custom_emoji: { NSImage(named: "Icon_InstalledStickers_CustomEmoji")!.precomposed(flipVertical: true) },
                                                 installed_stickers_dynamic_order: { NSImage(named: "Icon_InstalledStickers_DynamicOrder")!.precomposed(flipVertical: true) },

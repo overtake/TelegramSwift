@@ -185,6 +185,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     
     private var updatingInputState: Bool = false
     
+    var isEmpty: Bool {
+        return self.inputTextState.inputText.string.isEmpty
+    }
+    
     func chatInputTextViewDidUpdateText() {
         refreshInputView()
         

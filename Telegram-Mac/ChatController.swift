@@ -16,6 +16,52 @@ import InAppSettings
 import ObjcUtils
 import ThemeSettings
 import DustLayer
+import CodeSyntax
+
+struct CodeSyntaxKey: Hashable {
+    let messageId: MessageId
+    let range: NSRange
+    let language: String
+    let theme: SyntaxterTheme
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(messageId)
+        hasher.combine(range)
+        hasher.combine(language)
+        hasher.combine(theme.textColor.hexString)
+    }
+    
+    static func ==(lhs: CodeSyntaxKey, rhs: CodeSyntaxKey) -> Bool {
+        if lhs.messageId != rhs.messageId {
+            return false
+        }
+        if lhs.range != rhs.range {
+            return false
+        }
+        if lhs.language != rhs.language {
+            return false
+        }
+        if lhs.theme.textFont != rhs.theme.textFont {
+            return false
+        }
+        if lhs.theme.dark != rhs.theme.dark {
+            return false
+        }
+        if lhs.theme.textColor != rhs.theme.textColor {
+            return false
+        }
+        if lhs.theme.italicFont != rhs.theme.italicFont {
+            return false
+        }
+        if lhs.theme.mediumFont != rhs.theme.mediumFont {
+            return false
+        }
+        return true
+    }
+}
+struct CodeSyntaxResult : Equatable {
+    let resut: NSAttributedString?
+}
 
 struct ChatTitleCounters : Equatable {
     var replies: Int32?
@@ -519,6 +565,9 @@ class ChatControllerView : View, ChatInputDelegate {
             chatInteraction.scrollToLatest(false)
         }, for: .Click)
         scroller.forceHide()
+        
+        tableView.automaticallyAdjustsContentInsets = false
+        
         addSubview(scroller, positioned: .below, relativeTo: inputView)
         
         let context = chatInteraction.context
@@ -960,8 +1009,11 @@ class ChatControllerView : View, ChatInputDelegate {
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
 
         updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
-        tableView.automaticallyAdjustsContentInsets = false
-        tableView.contentInsets = .init(top: state.height)
+//        if let count = interfaceState.historyCount, count > 0 {
+//            tableView.contentInsets = .init(top: state.height)
+//        } else {
+//            tableView.contentInsets = .init(top: 0)
+//        }
     }
     
     private var scrollerRect: NSRect {
@@ -1748,6 +1800,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let editCurrentMessagePhotoDisposable = MetaDisposable()
     private let failedMessageEventsDisposable = MetaDisposable()
     private let selectMessagePollOptionDisposables: DisposableDict<MessageId> = DisposableDict()
+    private let codeSyntaxHighlightDisposables: DisposableDict<CodeSyntaxKey> = DisposableDict()
+
     private let hasScheduledMessagesDisposable = MetaDisposable()
     private let chatUndoDisposable = MetaDisposable()
     private let discussionDataLoadDisposable = MetaDisposable()
@@ -1864,6 +1918,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     
     private struct State : Equatable {
+        
+      
+        
         var transribe: [MessageId: TranscribeAudioState] = [:]
         var topicCreatorId: PeerId?
         var threadLoading: MessageId?
@@ -1877,6 +1934,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var presentation_emoticon: String? = nil
         
         var answersAndOnline: ChatTitleCounters = .init()
+        
+        var codeSyntaxes: [CodeSyntaxKey : CodeSyntaxResult] = [:]
     }
     private func updateState(_ f:(State)->State) -> Void {
         stateValue.set(uiState.modify(f))
@@ -3000,7 +3059,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -5140,6 +5199,42 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         }
         
+        chatInteraction.enqueueCodeSyntax = { [weak self] messageId, range, code, language, theme in
+            assertOnMainThread()
+            
+            let codeSyntaxes = self?.uiState.with { $0.codeSyntaxes }
+            
+            let key = CodeSyntaxKey(messageId: messageId, range: range, language: language, theme: theme)
+            if codeSyntaxes?[key] == nil {
+                
+                self?.updateState({ current in
+                    var current = current
+                    current.codeSyntaxes[key] = .init(resut: nil)
+                    return current
+                })
+                
+                let signal: Signal<CodeSyntaxResult, NoError> = Signal { subscriber in
+                    subscriber.putNext(.init(resut: CodeSyntax.syntax(code: code, language: language, theme: theme)))
+                    subscriber.putCompletion()
+                    return EmptyDisposable
+                }
+                |> runOn(.concurrentBackgroundQueue())
+                |> deliverOnMainQueue
+                
+                self?.codeSyntaxHighlightDisposables.set(signal.startStrict(next: { result in
+                    self?.updateState({ current in
+                        var current = current
+                        current.codeSyntaxes[key] = result
+                        return current
+                    })
+                }), forKey: key)
+            }
+
+            
+            
+           
+        }
+        
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in
             if let `self` = self {
                 
@@ -6852,6 +6947,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         prevIsLoading = isLoading
+        
       
         self.currentAnimationRows = []
         
@@ -7646,6 +7742,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         networkSpeedEventsDisposable?.dispose()
         titleUpdateDisposable.dispose()
         preloadPersonalChannel.dispose()
+        codeSyntaxHighlightDisposables.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -8162,7 +8259,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
 
         self.genericView.tableView.notifyScrollHandlers()
-        self.genericView.updateHeader(chatInteraction.presentation, false, false)
+//        self.genericView.updateHeader(chatInteraction.presentation, false, false)
         if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
             header.view.update(with: object)

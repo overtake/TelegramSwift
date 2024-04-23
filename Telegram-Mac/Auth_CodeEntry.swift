@@ -127,12 +127,12 @@ final class Auth_CodeEntryView: View {
     private let error: LoginErrorStateView = LoginErrorStateView()
     private let nextView: Auth_NextView = Auth_NextView()
     
-    private let disposable = MetaDisposable()
     
     private var takeResend:(()->Void)?
     
     private var nextTextView: TextView?
-    
+    private let disposable = MetaDisposable()
+
     private var fragmentUrl: String?
     
     required init(frame frameRect: NSRect) {

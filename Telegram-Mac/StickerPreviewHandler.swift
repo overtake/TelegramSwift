@@ -160,7 +160,7 @@ class ModalPreviewHandler : NSObject {
         window.removeAllHandlers(for: self)
         if let view = self.global.fileAtLocationInWindow(self.window.mouseLocationOutsideOfEventStream)?.1 {
             let content = modal.genericView.contentView?.getContentView() ?? modal.genericView
-            let rect = view.convert(view.bounds, to: modal.genericView.superview?.superview)
+            let rect = view.convert(view.bounds, to: modal.genericView.superview?.superview?.superview)
             modal.close(animationType: .scaleToRect(rect, content))
         } else {
             modal.close()

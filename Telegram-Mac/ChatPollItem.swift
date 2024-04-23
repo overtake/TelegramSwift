@@ -363,8 +363,12 @@ class ChatPollItem: ChatRowItem {
             }
             
             let nameFont: NSFont = .normal(.text)//voted && isSelected ? .bold(.text) : .normal(.text)
-            let nameLayout = TextViewLayout(.initialize(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont), alwaysStaticItems: true)
-
+            
+            let optionText = NSMutableAttributedString()
+            optionText.append(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont)
+            InlineStickerItem.apply(to: optionText, associatedMedia: message?.associatedMedia ?? [:], entities: option.entities, isPremium: context.isPremium)
+            
+            let nameLayout = TextViewLayout(optionText, alwaysStaticItems: true)
             
             let wrapper = PollOption(option: option, nameText: nameLayout, percent: percent, realPercent: realPercent, voteCount: votedCount, isSelected: isSelected, isIncoming: isIncoming, isBubbled: renderType == .bubble, voted: voted, isLoading: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier) && object.additionalData.pollStateData.isLoading, presentation: self.presentation, isCorrect: isCorrect, isQuiz: poll.kind == .quiz, isMultipleSelected: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier), vote: { [weak self] control in
                 self?.voteOption(option, for: control)
@@ -397,8 +401,13 @@ class ChatPollItem: ChatRowItem {
         }
         
 
+        let titleAttr = NSMutableAttributedString()
+        titleAttr.append(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text))
         
-        self.titleText = TextViewLayout(.initialize(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text)), alwaysStaticItems: true)
+        InlineStickerItem.apply(to: titleAttr, associatedMedia: message?.associatedMedia ?? [:], entities: poll.textEntities, isPremium: context.isPremium)
+
+        
+        self.titleText = TextViewLayout(titleAttr, alwaysStaticItems: true)
         
         let typeText: String = self.isBotQuiz ? strings().chatQuizTextType : poll.title
         
@@ -650,12 +659,11 @@ final class ChatPollItemView : ChatRowView {
     }
     
     override var selectableTextViews: [TextView] {
-        return [contentNode.titleView]
+        return [contentNode.titleView.textView]
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
-        let point = contentView.convert(location, from: nil)
-        return NSPointInRect(point, NSMakeRect(0, contentNode.titleView.frame.minY, contentNode.frame.width, contentNode.titleView.frame.height))
+        return true
     }
     
     override var needsDisplay: Bool {
@@ -695,7 +703,7 @@ final class ChatPollItemView : ChatRowView {
 
 private final class PollOptionView : Control {
     private var percentView: ImageView?
-    private let nameView: TextView = TextView()
+    private let nameView: InteractiveTextView = InteractiveTextView(frame: .zero)
     private var selectingView:ImageView?
     private let progressView: LinearProgressControl = LinearProgressControl(progressHeight: 5)
     private var progressIndicator: ProgressIndicator?
@@ -707,7 +715,6 @@ private final class PollOptionView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         nameView.userInteractionEnabled = false
-        nameView.isSelectable = false
         progressView.hasMinumimVisibility = true
         addSubview(nameView)
         addSubview(progressView)
@@ -727,7 +734,7 @@ private final class PollOptionView : Control {
         return 13
     }
     
-    func update(with option: PollOption, animated: Bool) {
+    func update(with option: PollOption, context: AccountContext, animated: Bool) {
         let animated = animated && self.option != option
         let previousOption = self.option
 
@@ -739,7 +746,9 @@ private final class PollOptionView : Control {
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
         
-        nameView.update(option.nameText, origin: NSMakePoint(option.leftOptionInset, 0))
+        nameView.set(text: option.nameText, context: context)
+        nameView.setFrameOrigin(NSMakePoint(option.leftOptionInset, 0))
+        
         progressView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 5))
         borderView.backgroundColor = option.presentation.chat.pollOptionBorder(option.isIncoming, option.isBubbled)
         borderView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5 - .borderSize + progressView.progressHeight, frame.width - nameView.frame.minX, .borderSize)
@@ -975,7 +984,7 @@ private final class PollOptionView : Control {
 }
 
 private final class PollView : Control {
-    fileprivate let titleView: TextView = TextView()
+    fileprivate let titleView: InteractiveTextView = InteractiveTextView(frame: .zero)
     private let typeView: TextView = TextView()
     private var actionButton: TextButton?
     private var totalVotesTextView: TextView?
@@ -992,11 +1001,13 @@ private final class PollView : Control {
         typeView.userInteractionEnabled = false
         addSubview(titleView)
         addSubview(typeView)
+        
+        titleView.textView.isSelectable = true
     }
     
     func update(with item: ChatPollItem, animated: Bool) {
         
-        titleView.update(item.titleText)
+        titleView.set(text: item.titleText, context: item.context)
         typeView.update(item.titleTypeText)
         
         var y: CGFloat = 0
@@ -1019,7 +1030,7 @@ private final class PollView : Control {
             
             
             self.options[i].frame = NSMakeRect(0, y - (i > 0 ? PollOption.spaceBetweenOptions : 0), frame.width, option.contentSize.height)
-            self.options[i].update(with: option, animated: animated)
+            self.options[i].update(with: option, context: item.context, animated: animated)
             y += option.contentSize.height
             if i != item.options.count - 1 {
                 y += PollOption.spaceBetweenOptions

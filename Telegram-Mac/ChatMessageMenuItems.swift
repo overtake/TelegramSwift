@@ -230,26 +230,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 
 
 func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true) -> Signal<[ContextMenuItem], NoError> {
-    
-    if chatInteraction.isLogInteraction {
-        let context = chatInteraction.context
-        if let adminLog = entry?.additionalData.eventLog {
-            let config = AntiSpamBotConfiguration.with(appConfiguration: context.appConfiguration)
-            if adminLog.peerId == config.antiSpamBotId {
-                return.single([ContextMenuItem(strings().chatContextReportFalsePositive, handler: {
-                    
-                    _ = context.engine.peers.reportAntiSpamFalsePositive(peerId: message.id.peerId, messageId: message.id).start()
-                    
-                    showModalText(for: context.window, text: strings().chatContextReportFalsePositiveThanks)
-                    
-                }, itemImage: MenuAnimation.menu_report_false_positive.value)])
-            }
-        }
-        return .single([])
-    } else if chatInteraction.disableSelectAbility {
-        return .single([])
-    }
-    
+
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
         
         let peer = data.message.peers[data.message.id.peerId]
@@ -261,7 +242,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let context = data.chatInteraction.context
         let account = context.account
         let mode = chatInteraction.mode
-        var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode || mode == .preview
+        var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode || mode == .preview || chatInteraction.isLogInteraction
         
         if !isService, let story = data.message.media.first as? TelegramMediaStory {
             isService = story.isMention
@@ -376,7 +357,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }, itemImage: MenuAnimation.menu_restrict.value))
             } else {
                 items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
-                    let link = "https://promote.telegram.org"
+                    let link = strings().chatMessageAdUrl
                     verifyAlert_button(for: context.window, information: strings().chatMessageAdText(link), cancel: "", option: strings().chatMessageAdReadMore, successHandler: { result in
                         switch result {
                         case .thrid:
@@ -403,7 +384,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             return items
         }
         
-        if data.disableSelectAbility, data.isLogInteraction || data.chatState == .selecting {
+        if data.disableSelectAbility, data.chatState == .selecting {
             return []
         }
         
@@ -440,7 +421,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         
-        if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode, threadData: chatInteraction.presentation.threadInfo)  {
+        if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode, threadData: chatInteraction.presentation.threadInfo) && !data.isLogInteraction {
             firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: {
                 data.chatInteraction.setupReplyMessage(data.message, .init(messageId: data.message.id, quote: nil))
             }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
@@ -982,7 +963,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
-        if (MessageReadMenuItem.canViewReadStats(message: data.message, chatInteraction: data.chatInteraction, appConfig: appConfiguration)), data.isRead {
+        if (MessageReadMenuItem.canViewReadStats(message: data.message, chatInteraction: data.chatInteraction, appConfig: appConfiguration)), data.isRead, !data.isLogInteraction {
             if data.message.id.peerId.namespace == Namespaces.Peer.CloudUser  {
                 fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message, availableReactions: data.availableReactions))
             } else {
@@ -994,7 +975,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 //        fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message))
 //        #endif
         
-        if canReportMessage(data.message, context), data.chatMode != .pinned {
+        if canReportMessage(data.message, context), data.chatMode != .pinned, !data.isLogInteraction {
             
             let report = ContextMenuItem(strings().messageContextReport, itemImage: MenuAnimation.menu_report.value)
             
@@ -1032,7 +1013,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                                 switch participant {
                                 case let .member(memberId, _, _, _, _):
                                     showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: memberId, initialParticipant: participant, updated: { updatedRights in
-                                        _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: author.id, bannedRights: updatedRights).start()
+                                        _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: author.id, bannedRights: updatedRights).startStandalone()
+                                        _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 3.0).startStandalone()
                                     }), for: context.window)
                                 default:
                                     break
@@ -1040,6 +1022,15 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             }
                         })
                     }, itemImage: MenuAnimation.menu_restrict.value))
+                    
+                    if data.isLogInteraction {
+                        fifthBlock.append(ContextMenuItem(strings().chatContextBan, handler: {
+                            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: author.id, bannedRights: TelegramChatBannedRights(flags: .banReadMessages, untilDate: .max)).startStandalone()
+                            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 3.0).startStandalone()
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    }
+                   
+                    
                 }
             }
         }
@@ -1050,14 +1041,29 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemImage: MenuAnimation.menu_clear_history.value))
         }
 
-        if canDeleteMessage(data.message, account: account, mode: data.chatMode) {
+        if canDeleteMessage(data.message, account: account, mode: data.chatMode), !data.isLogInteraction {
             fifthBlock.append(ContextMenuItem(strings().messageContextDelete, handler: {
                 data.chatInteraction.deleteMessages([data.message.id])
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         }
         
+        if data.isLogInteraction {
+            if let adminLog = entry?.additionalData.eventLog {
+                let config = AntiSpamBotConfiguration.with(appConfiguration: context.appConfiguration)
+                if adminLog.peerId == config.antiSpamBotId {
+                    firstBlock.append(ContextMenuItem(strings().chatContextReportFalsePositive, handler: {
+                        
+                        _ = context.engine.peers.reportAntiSpamFalsePositive(peerId: message.id.peerId, messageId: message.id).start()
+                        
+                        showModalText(for: context.window, text: strings().chatContextReportFalsePositiveThanks)
+                        
+                    }, itemImage: MenuAnimation.menu_report_false_positive.value))
+                }
+            }
+        }
+        
         #if BETA || DEBUG
-        if let mediaId = message.media.first?.id {
+        if let mediaId = message.media.first?.id, !data.isLogInteraction {
             fifthBlock.append(ContextSeparatorItem())
             fifthBlock.append(ContextMenuItem("Copy Media Id (dev)", handler: {
                 copyToClipboard("\(mediaId.id)")

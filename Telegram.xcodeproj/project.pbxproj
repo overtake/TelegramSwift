@@ -227,6 +227,8 @@
 		2755491A2747C24F0098A3CD /* device_linux.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2755490F2747C24F0098A3CD /* device_linux.tgs */; };
 		2755491D274B7FCB0098A3CD /* TextRecognizing in Frameworks */ = {isa = PBXBuildFile; productRef = 2755491C274B7FCB0098A3CD /* TextRecognizing */; };
 		275801442ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */; };
+		275A4E8E2BCE3CBC00903838 /* menu_eye.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */; };
+		275A4E902BCE6C3700903838 /* login_word.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275A4E8F2BCE6C3700903838 /* login_word.tgs */; };
 		275C14132A61780F000DDACF /* expired_story.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275C14122A61780F000DDACF /* expired_story.tgs */; };
 		275C14152A6549F8000DDACF /* StoryNoReplyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */; };
 		275C14172A66A3CD000DDACF /* AvatarStoryControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */; };
@@ -1759,6 +1761,8 @@
 		2755490F2747C24F0098A3CD /* device_linux.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_linux.tgs; sourceTree = "<group>"; };
 		2755491B274B7B3C0098A3CD /* TextRecognizing */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextRecognizing; path = packages/TextRecognizing; sourceTree = "<group>"; };
 		275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGiveawayGiftRowItem.swift; sourceTree = "<group>"; };
+		275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_eye.tgs; sourceTree = "<group>"; };
+		275A4E8F2BCE6C3700903838 /* login_word.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_word.tgs; sourceTree = "<group>"; };
 		275C14122A61780F000DDACF /* expired_story.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = expired_story.tgs; sourceTree = "<group>"; };
 		275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryNoReplyInput.swift; sourceTree = "<group>"; };
 		275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarStoryControl.swift; sourceTree = "<group>"; };
@@ -3759,6 +3763,7 @@
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
+				275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */,
 				27B836472B6396E500E82683 /* menu_hd_lock.tgs */,
 				270595E32B6BDCF500E05493 /* menu_boost.tgs */,
 				27A01AD22B9AF40800C59661 /* menu_search.tgs */,
@@ -5935,6 +5940,7 @@
 				2750B8BF2B887E9A0035C37F /* business_greeting_message.tgs */,
 				2750B8BE2B887E990035C37F /* business_hours.tgs */,
 				277840AA2BB1A1350026CC3A /* business_links.tgs */,
+				275A4E8F2BCE6C3700903838 /* login_word.tgs */,
 				279DF45C2B99A29200E644A7 /* fragment_username.tgs */,
 				277840B22BB7EBC60026CC3A /* ton_logo.tgs */,
 				2750B8C12B887E9C0035C37F /* business_quick_reply.tgs */,
@@ -6570,6 +6576,7 @@
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				277DFE682784842C00F78396 /* menu_sun.tgs in Resources */,
+				275A4E902BCE6C3700903838 /* login_word.tgs in Resources */,
 				27336738276241EE0027441E /* menu_remove_gif.tgs in Resources */,
 				2733671927620B7B0027441E /* menu_leave.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
@@ -6884,6 +6891,7 @@
 				27A08A2227E8B73D00284048 /* change_sim.tgs in Resources */,
 				27B8364C2B6396E600E82683 /* menu_sd.tgs in Resources */,
 				2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */,
+				275A4E8E2BCE3CBC00903838 /* menu_eye.tgs in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

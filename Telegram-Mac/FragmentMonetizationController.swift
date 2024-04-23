@@ -1029,12 +1029,12 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         }
         
         var graphs: [Graph] = []
-        if let graph = state.topHoursGraph {
+        if let graph = state.topHoursGraph, !graph.isEmpty {
             graphs.append(Graph(graph: graph, title: strings().monetizationImpressionsTitle, identifier: _id_top_hours_graph, type: .hourlyStep, rate: 1.0, load: { identifier in
                
             }))
         }
-        if let graph = state.revenueGraph {
+        if let graph = state.revenueGraph, !graph.isEmpty {
             graphs.append(Graph(graph: graph, title: strings().monetizationAdRevenueTitle, identifier: _id_revenue_graph, type: .currency, rate: state.balance.usdRate, load: { identifier in
                 
             }))
@@ -1221,7 +1221,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         }
     }
     
-    let stats = RevenueStatsContext(postbox: context.account.postbox, network: context.account.network, peerId: peerId)
+    let stats = RevenueStatsContext(account: context.account, peerId: peerId)
     let transactions = RevenueStatsTransactionsContext(account: context.account, peerId: peerId)
     
     let contextObject = ContextObject(stats: stats, transactions: transactions)
@@ -1235,10 +1235,10 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 
                 current.peer = peer
                 
-                current.balance = .init(ton: stats.currentBalance, usdRate: stats.usdRate)
-                current.overview.balance = .init(ton: stats.availableBalance, usdRate: stats.usdRate)
-                current.overview.all = .init(ton: stats.overallRevenue, usdRate: stats.usdRate)
-                current.overview.last = .init(ton: stats.currentBalance, usdRate: stats.usdRate)
+                current.balance = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
+                current.overview.balance = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
+                current.overview.all = .init(ton: stats.balances.overallRevenue, usdRate: stats.usdRate)
+                current.overview.last = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
                 
                 current.revenueGraph = stats.revenueGraph
                 current.topHoursGraph = stats.topHoursGraph
