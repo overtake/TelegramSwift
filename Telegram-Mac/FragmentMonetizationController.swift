@@ -248,6 +248,9 @@ extension String {
             }
             string = String(self.prefix(lastIndex + 1))
         }
+        if string.hasSuffix(".") {
+            _ = string.removeLast()
+        }
         return string
     }
     var prettyCurrencyNumberUsd: String {

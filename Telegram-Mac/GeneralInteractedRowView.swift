@@ -234,9 +234,9 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         }
         super.set(item: item, animated: animated)
         
-        
-        containerView.needsLayout = true
+        needsLayout = true
         containerView.needsDisplay = true
+        
     }
     
     override func updateIsResorting() {
@@ -392,7 +392,6 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         
         containerView.layerContentsRedrawPolicy = .duringViewResize
         
-        nextView.sizeToFit()
         containerView.addSubview(nextView)
 
         containerView.displayDelegate = self
@@ -533,7 +532,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 nameView.setFrameOrigin(textRect.origin)
                 
                 if let textView = textView {
-                    var width:CGFloat = containerView.frame.width - item.nameLayout.layoutSize.width - nextInset - insets.right - insets.left - 10
+                    let width:CGFloat = containerView.frame.width - item.nameLayout.layoutSize.width - nextInset - insets.right - insets.left - 10
                     textView.textLayout?.measure(width: width)
                     textView.update(textView.textLayout)
                     textView.centerY(x: containerView.frame.width - insets.right - textView.frame.width - nextInset, addition: -1)

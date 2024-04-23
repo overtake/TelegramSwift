@@ -581,6 +581,10 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         chatInteraction.executeReplymarkup = { messageId in
             arguments.toggleReveal(messageId)
         }
+        
+        chatInteraction.focusMessageId = { [weak self] messageId, focusTarget, _ in
+            self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: focusTarget))
+        }
 
         genericView.info.set(handler: { _ in
             alert(for: context.window, header: strings().channelEventLogAlertHeader, info: strings().channelEventLogAlertInfo)

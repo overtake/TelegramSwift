@@ -1408,7 +1408,15 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         if mode == .selectAvatar {
             searchCategories = .single(nil)
         } else {
-            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .combinedChatStickers)
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .combinedChatStickers) |> map { groups in
+                var groups = groups?.groups ?? []
+                if mode == .intro {
+                    if let index = groups.firstIndex(where: { $0.kind == .greeting }) {
+                        groups.move(at: index, to: 0)
+                    }
+                }
+                return .init(hash: 0, groups: groups)
+            }
         }
 
         
