@@ -389,11 +389,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func onShowContextMenu() {
         guard let item = item as? ChatRowItem else {return}
         renderLayoutType(item, animated: true)
-
         updateColors()
         updateMouse(animated: false)
-        item.chatInteraction.focusInputField()
-        super.onCloseContextMenu()
+        super.onShowContextMenu()
     }
     
     override func onCloseContextMenu() {
@@ -401,6 +399,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         renderLayoutType(item, animated: true)
         updateColors()
         updateMouse(animated: false)
+        item.chatInteraction.focusInputField()
         super.onCloseContextMenu()
     }
     
