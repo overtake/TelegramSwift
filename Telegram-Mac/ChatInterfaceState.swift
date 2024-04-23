@@ -222,12 +222,7 @@ extension ChatTextInputAttribute {
                 return false
             }
         case .animated(_, let string, let id, let file, let itemCollectionId):
-            switch rhs {
-            case .animated(_, string, id, file, itemCollectionId):
-                return true
-            default:
-                return false
-            }
+            return false
         }
     }
 

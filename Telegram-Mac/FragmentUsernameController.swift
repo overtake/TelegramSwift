@@ -223,12 +223,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     if let peer = state.data.peer {
-        
-        
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return RowItem(initialSize, stableId: stableId, peer: peer, context: arguments.context, info: state.data.collectibleItemInfo, dismiss: arguments.dismiss)
         }))
-        
     }
   
     entries.append(.sectionId(sectionId, type: .customModern(10)))

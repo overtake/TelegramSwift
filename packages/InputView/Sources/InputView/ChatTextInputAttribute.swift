@@ -93,7 +93,7 @@ public final class TextInputTextCustomEmojiAttribute: NSObject, Codable {
     
     override public func isEqual(_ object: Any?) -> Bool {
         if let other = object as? TextInputTextCustomEmojiAttribute {
-            return self.fileId == other.fileId && self.file?.fileId == other.file?.fileId
+            return self === other
         } else {
             return false
         }

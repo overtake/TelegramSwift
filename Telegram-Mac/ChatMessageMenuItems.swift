@@ -513,24 +513,24 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
                         if let textLayout = textLayout {
                             let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
-                            attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
-                                if let value = data[TextInputAttributes.embedded] as? InlineStickerItem {
-                                    switch value.source {
-                                    case let .attribute(value):
-                                        attr.replaceCharacters(in: range, with: value.emoji)
-                                    default:
-                                        break
-                                    }
-                                }
-                            })
+//                            attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+//                                if let value = data[TextInputAttributes.embedded] as? InlineStickerItem {
+//                                    switch value.source {
+//                                    case let .attribute(value):
+//                                        attr.replaceCharacters(in: range, with: value.emoji)
+//                                    default:
+//                                        break
+//                                    }
+//                                }
+//                            })
                             var effectiveRange = textLayout.selectedRange.range
                             let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
                             let pb = NSPasteboard.general
                             pb.clearContents()
                             pb.declareTypes([.string], owner: textLayout)
-                            let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                            if let attribute = attribute as? inAppLink {
-                                pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                            let attribute = selectedText.attribute(TextInputAttributes.textUrl, at: 0, effectiveRange: &effectiveRange)
+                            if let attribute = attribute as? TextInputTextUrlAttribute {
+                                pb.setString(attribute.url.isEmpty ? selectedText.string : attribute.url, forType: .string)
                             } else {
                                 pb.setString(selectedText.string, forType: .string)
                             }
