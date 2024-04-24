@@ -911,9 +911,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private let revealRightView: View = View()
     
     private var messageTextView:TextView? = nil
-    private var chatNameTextView: TextView? = nil
+    private var chatNameTextView: InteractiveTextView? = nil
     private var dateTextView: TextView? = nil
-    private var displayNameView: TextView? = nil
+    private var displayNameView: InteractiveTextView? = nil
     
     private var storyReplyImageView : ImageView?
     
@@ -923,7 +923,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var topicsView: TopicNameAndTextView?
     
-    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
         
@@ -1365,7 +1365,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
         
         for (_, value) in inlineStickerItemViews {
-            checkValue(value)
+            if let value = value as? InlineStickerItemLayer {
+                checkValue(value)
+            }
         }
         if let value = inlineTopicPhotoLayer {
             checkValue(value)
@@ -1380,36 +1382,38 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         var index: Int = textView.hashValue
 
         for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source, item.rect.width > 10 {
+            if let stickerItem = item.value as? InlineStickerItem, item.rect.width > 10 {
                 
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
-                validIds.append(id)
-                
-                let rect = item.rect.insetBy(dx: -2, dy: -2)
-                
-                let textColor = stickerItem.playPolicy == nil && self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
-                
-                let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, current.textColor == textColor {
-                    view = current
-                } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
-                    self.inlineStickerItemViews[id] = view
-                    view.superview = textView
-                    textView.addEmbeddedLayer(view)
-                }
-                index += 1
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
+                if case let .attribute(emoji) = stickerItem.source {
+                    let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                    validIds.append(id)
+                    
+                    let rect = item.rect.insetBy(dx: -2, dy: -2)
+                    
+                    let textColor = stickerItem.playPolicy == nil && self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                    
+                    let view: InlineStickerItemLayer
+                    if let current = self.inlineStickerItemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size, current.textColor == textColor {
+                        view = current
                     } else {
-                        isKeyWindow = window.isKeyWindow
+                        self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
+                        self.inlineStickerItemViews[id] = view
+                        view.superview = textView
+                        textView.addEmbeddedLayer(view)
                     }
-                }
-                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
-                view.frame = rect
+                    index += 1
+                    var isKeyWindow: Bool = false
+                    if let window = window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
+                    }
+                    view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                    view.frame = rect
+                } 
             }
         }
         
@@ -1493,17 +1497,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              
              if let displayLayout = item.ctxDisplayLayout {
-                 let current: TextView
+                 let current: InteractiveTextView
                  if let view = self.displayNameView {
                      current = view
                  } else {
-                     current = TextView()
+                     current = InteractiveTextView(frame: .zero)
                      current.userInteractionEnabled = false
-                     current.isSelectable = false
                      self.displayNameView = current
                      contentView.addSubview(current)
                  }
-                 current.update(displayLayout)
+                 current.set(text: displayLayout, context: item.context)
              } else if let view = self.displayNameView {
                  performSubviewRemoval(view, animated: animated)
                  self.displayNameView = nil
@@ -1579,17 +1582,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              }
              
              if let nameText = item.ctxChatNameLayout, !hiddenMessage {
-                 let current: TextView
+                 let current: InteractiveTextView
                  if let view = self.chatNameTextView {
                      current = view
                  } else {
-                     current = TextView()
+                     current = InteractiveTextView()
                      current.userInteractionEnabled = false
-                     current.isSelectable = false
                      self.chatNameTextView = current
                      self.contentView.addSubview(current)
                  }
-                 current.update(nameText)
+                 current.set(text: nameText, context: item.context)
                  
              } else if let view = self.chatNameTextView {
                  self.chatNameTextView = nil

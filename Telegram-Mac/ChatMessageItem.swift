@@ -41,6 +41,7 @@ final class InlineStickerItem : Hashable {
     enum Source : Equatable {
         case attribute(ChatTextCustomEmojiAttribute)
         case reference(StickerPackItem)
+        case avatar(EnginePeer)
     }
     
     let source: Source
@@ -56,6 +57,8 @@ final class InlineStickerItem : Hashable {
             hasher.combine(emoji.fileId)
         case let .reference(sticker):
             hasher.combine(sticker.file.fileId.id)
+        case let .avatar(peer):
+            hasher.combine(peer.id)
         }
     }
     

@@ -15,7 +15,12 @@ final class InteractiveTextView : Control {
     
     var isLite: Bool = false
     
-    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
+    
+    convenience override init() {
+        self.init(frame: .zero)
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
@@ -40,7 +45,7 @@ final class InteractiveTextView : Control {
     }
     
     
-    func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: InlineStickerItemLayer]) {
+    func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: SimpleLayer]) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = self.textView.hashValue
         
@@ -54,26 +59,45 @@ final class InteractiveTextView : Control {
         }
 
         for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+            if let stickerItem = item.value as? InlineStickerItem, item.rect.width > 10 {
+                if case let .attribute(emoji) = stickerItem.source {
+                    
+                    let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: emoji.color ?? textColor)
+                    validIds.append(id)
+                    
+                    let rect = item.rect.insetBy(dx: -2, dy: -2)
+                    
+                    let view: InlineStickerItemLayer
+                    if let current = itemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size && current.textColor == id.color {
+                        view = current
+                    } else {
+                        itemViews[id]?.removeFromSuperlayer()
+                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
+                        itemViews[id] = view
+                        view.superview = textView
+                        textView.addEmbeddedLayer(view)
+                    }
+                    index += 1
+                    
+                    view.frame = rect
+                } else if case let .avatar(peer) = stickerItem.source {
+                    let id = InlineStickerItemLayer.Key(id: peer.id.toInt64(), index: index)
+                    validIds.append(id)
+                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 2, item.rect.width, item.rect.width)
+                   
+                    let view: InlineAvatarLayer
+                    if let current = itemViews[id] as? InlineAvatarLayer {
+                        view = current
+                    } else {
+                        itemViews[id]?.removeFromSuperlayer()
+                        view = InlineAvatarLayer(context: context, frame: rect, peer: peer)
+                        itemViews[id] = view
+                        textView.addEmbeddedLayer(view)
+                    }
+                    index += 1
+                    view.frame = rect
+               }
                 
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: emoji.color ?? textColor)
-                validIds.append(id)
-                
-                let rect = item.rect.insetBy(dx: -2, dy: -2)
-                
-                let view: InlineStickerItemLayer
-                if let current = itemViews[id], current.frame.size == rect.size && current.textColor == id.color {
-                    view = current
-                } else {
-                    itemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
-                    itemViews[id] = view
-                    view.superview = textView
-                    textView.addEmbeddedLayer(view)
-                }
-                index += 1
-                
-                view.frame = rect
             }
         }
         
@@ -106,8 +130,10 @@ final class InteractiveTextView : Control {
     
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
-            if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow && !isLite
+            if let value = value as? InlineStickerItemLayer {
+                if let superview = value.superview {
+                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow && !isLite
+                }
             }
         }
     }

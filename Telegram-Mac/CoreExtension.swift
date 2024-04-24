@@ -3757,6 +3757,18 @@ extension NSAttributedString {
         attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji, color: color)), playPolicy: playPolicy), range: NSMakeRange(0, emoji.length))
         return attr
     }
+    
+    static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .avatar(peer)), range: NSMakeRange(0, emoji.length))
+        if space {
+            attr.append(string: " ")
+        }
+        return attr
+    }
 }
 
 

@@ -5753,7 +5753,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             
             self.state = self.chatInteraction.presentation.state == .selecting ? .Edit : .Normal
-            self.notify(with: self.chatInteraction.presentation, oldValue: ChatPresentationInterfaceState(chatLocation: self.chatInteraction.chatLocation, chatMode: self.chatInteraction.mode), animated: false, force: true)
             
             
         } |> map {_ in}
@@ -5896,10 +5895,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot, updaterPromise.get()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot, _ in
             
+            
+            let animated = !isFirst.swap(false)
                         
             guard let `self` = self else {return}
             let title = (self.centerBarView as? ChatTitleBarView)
-            title?.update(postboxView as? PeerView, story: uiState.storyState, counters: uiState.answersAndOnline, animated: !isFirst.swap(false))
+            title?.update(postboxView as? PeerView, story: uiState.storyState, counters: uiState.answersAndOnline, animated: animated)
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
@@ -6099,6 +6100,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         return nil
                     }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil).withUpdatedCachedData(peerView?.cachedData).withUpdatedThreadInfo(threadInfo)
                 })
+            }
+            if !animated {
+                self.notify(with: self.chatInteraction.presentation, oldValue: ChatPresentationInterfaceState(chatLocation: self.chatLocation, chatMode: self.mode), animated: animated)
             }
         }))
         
@@ -7792,6 +7796,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 break
             }
         }
+        
 
         let context = self.context
         context.closeFolderFirst = false
@@ -8160,6 +8165,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        // if !context.isInGlobalSearch {
             _ = context.window.makeFirstResponder(genericView.inputView.textView.inputView)
        // }
+    
         
         var beginPendingTime:CFAbsoluteTime?
         

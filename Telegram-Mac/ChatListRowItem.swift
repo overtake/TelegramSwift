@@ -921,8 +921,12 @@ class ChatListRowItem: TableRowItem {
                         
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
                         
+                        if author.id != context.account.peerId {
+                            attr.insert(.embeddedAvatar(.init(author)), at: 0)
+                        }
+                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+
                         if !attr.string.isEmpty {
                             self.chatNameLayout = .init(attr, maximumNumberOfLines: 1)
                             
