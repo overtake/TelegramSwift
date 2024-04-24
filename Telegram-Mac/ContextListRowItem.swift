@@ -92,7 +92,7 @@ class ContextListRowItem: TableRowItem {
             let iconSize = representation.dimensions.size.aspectFilled(CGSize(width: 50, height: 50))
             
             let imageCorners = ImageCorners(topLeft: .Corner(2.0), topRight: .Corner(2.0), bottomLeft: .Corner(2.0), bottomRight: .Corner(2.0))
-            arguments = TransformImageArguments(corners: imageCorners, imageSize: representation.dimensions.size, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+            arguments = TransformImageArguments(corners: imageCorners, imageSize: iconSize, boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsets())
             iconText = nil
         } else {
             arguments = nil
@@ -206,9 +206,6 @@ class ContextListImageView : TableRowView {
     
     override func layout() {
         super.layout()
-        if let item = item as? ContextListRowItem, let arguments = item.arguments {
-            image.set(arguments: arguments)
-        }
         image.centerY(x:10)
     }
     
@@ -233,6 +230,10 @@ class ContextListImageView : TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         let updated = self.item != item
         super.set(item: item)
+        
+        if let item = item as? ContextListRowItem, let arguments = item.arguments {
+            image.set(arguments: arguments)
+        }
         
         if let item = item as? ContextListRowItem, updated {
             if let capImage = item.capImage {
