@@ -1866,8 +1866,8 @@ class PreviewSenderController: ModalViewController, Notifable {
                                 self?.insertAdditionUrls?(urls)
                             }
                         }))
-                        return true
                     }
+                    return true
                 }
             }
             return false

@@ -235,8 +235,9 @@ class ChatInputAccessory: View {
                     items.append(ContextSeparatorItem())
 
                 }
-                
-                items.append(ContextMenuItem(strings().chatAlertForwardActionAnother, handler: anotherAction, itemImage: MenuAnimation.menu_replace.value))
+                if let peer = state.peer, !peer.isCopyProtected {
+                    items.append(ContextMenuItem(strings().chatAlertForwardActionAnother, handler: anotherAction, itemImage: MenuAnimation.menu_replace.value))
+                }
                 
                 let menu = ContextMenu()
                 for item in items {
@@ -265,9 +266,11 @@ class ChatInputAccessory: View {
             
             container.contextMenu = {
                 let menu = ContextMenu()
-                menu.addItem(ContextMenuItem(strings().chatInputReplyReplyToAnother, handler: {
-                    self.chatInteraction.replyToAnother(replyMessageId, true)
-                }, itemImage: MenuAnimation.menu_replace.value))
+                if let peer = state.peer, !peer.isCopyProtected {
+                    menu.addItem(ContextMenuItem(strings().chatInputReplyReplyToAnother, handler: {
+                        self.chatInteraction.replyToAnother(replyMessageId, true)
+                    }, itemImage: MenuAnimation.menu_replace.value))
+                }
                 return menu
                 
             }
