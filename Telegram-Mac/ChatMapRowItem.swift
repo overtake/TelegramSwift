@@ -114,11 +114,16 @@ class ChatMapRowItem: ChatMediaItem {
     var isLiveLocationView: Bool {
         if let media = media as? TelegramMediaMap, let message = message {
             if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-                var time:TimeInterval = Date().timeIntervalSince1970
-                time -= context.timeDifference
-                if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                if liveBroadcastingTimeout == .max {
                     return true
+                } else {
+                    var time:TimeInterval = Date().timeIntervalSince1970
+                    time -= context.timeDifference
+                    if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                        return true
+                    }
                 }
+                
             }
         }
         return false

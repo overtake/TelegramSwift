@@ -249,6 +249,7 @@
 		276143312BD7EEC50034338C /* chatlist_voice.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2761432D2BD7EEC30034338C /* chatlist_voice.tgs */; };
 		276143322BD7EEC50034338C /* chatlist_game.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2761432E2BD7EEC40034338C /* chatlist_game.tgs */; };
 		276143332BD7EEC50034338C /* chatlist_music.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2761432F2BD7EEC50034338C /* chatlist_music.tgs */; };
+		276143372BD93AE00034338C /* InlineAvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143362BD93AE00034338C /* InlineAvatarLayer.swift */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
@@ -1788,6 +1789,7 @@
 		2761432D2BD7EEC30034338C /* chatlist_voice.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = chatlist_voice.tgs; sourceTree = "<group>"; };
 		2761432E2BD7EEC40034338C /* chatlist_game.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = chatlist_game.tgs; sourceTree = "<group>"; };
 		2761432F2BD7EEC50034338C /* chatlist_music.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = chatlist_music.tgs; sourceTree = "<group>"; };
+		276143362BD93AE00034338C /* InlineAvatarLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAvatarLayer.swift; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
@@ -4532,6 +4534,7 @@
 				276885022770D7BE0021C891 /* AddReactionManager.swift */,
 				2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */,
 				27CCE83B2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift */,
+				276143362BD93AE00034338C /* InlineAvatarLayer.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -7102,6 +7105,7 @@
 				27867A292AE2876100E25BB8 /* BoostReassignController.swift in Sources */,
 				A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */,
 				A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */,
+				276143372BD93AE00034338C /* InlineAvatarLayer.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
 				D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */,
 				D02BD7C7232D4DB200D1814A /* AppearanceThumbs.swift in Sources */,
