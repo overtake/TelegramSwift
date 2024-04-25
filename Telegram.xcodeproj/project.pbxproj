@@ -258,8 +258,8 @@
 		2761437B2BDA667A0034338C /* AppDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143762BDA66770034338C /* AppDataModel.swift */; };
 		2761437C2BDA667A0034338C /* AccountEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143772BDA66780034338C /* AccountEntity.swift */; };
 		2761437D2BDA667A0034338C /* AccountEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143772BDA66780034338C /* AccountEntity.swift */; };
-		2761437E2BDA667A0034338C /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143782BDA66790034338C /* Repository.swift */; };
-		2761437F2BDA667A0034338C /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143782BDA66790034338C /* Repository.swift */; };
+		2761437E2BDA667A0034338C /* AppIntentsData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143782BDA66790034338C /* AppIntentsData.swift */; };
+		2761437F2BDA667A0034338C /* AppIntentsData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143782BDA66790034338C /* AppIntentsData.swift */; };
 		276143802BDA667A0034338C /* AccountEntityQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143792BDA667A0034338C /* AccountEntityQuery.swift */; };
 		276143812BDA667A0034338C /* AccountEntityQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143792BDA667A0034338C /* AccountEntityQuery.swift */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
@@ -1818,7 +1818,7 @@
 		2761435D2BDA57350034338C /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		276143762BDA66770034338C /* AppDataModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDataModel.swift; sourceTree = "<group>"; };
 		276143772BDA66780034338C /* AccountEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountEntity.swift; sourceTree = "<group>"; };
-		276143782BDA66790034338C /* Repository.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		276143782BDA66790034338C /* AppIntentsData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppIntentsData.swift; sourceTree = "<group>"; };
 		276143792BDA667A0034338C /* AccountEntityQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountEntityQuery.swift; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
@@ -3499,7 +3499,7 @@
 				276143772BDA66780034338C /* AccountEntity.swift */,
 				276143792BDA667A0034338C /* AccountEntityQuery.swift */,
 				276143762BDA66770034338C /* AppDataModel.swift */,
-				276143782BDA66790034338C /* Repository.swift */,
+				276143782BDA66790034338C /* AppIntentsData.swift */,
 			);
 			name = AppIntents;
 			sourceTree = "<group>";
@@ -7078,7 +7078,7 @@
 			files = (
 				2761437D2BDA667A0034338C /* AccountEntity.swift in Sources */,
 				2761437B2BDA667A0034338C /* AppDataModel.swift in Sources */,
-				2761437F2BDA667A0034338C /* Repository.swift in Sources */,
+				2761437F2BDA667A0034338C /* AppIntentsData.swift in Sources */,
 				276143812BDA667A0034338C /* AccountEntityQuery.swift in Sources */,
 				2761434F2BDA50730034338C /* FocusIntents.swift in Sources */,
 				2761434D2BDA50730034338C /* FocusIntentsExtension.swift in Sources */,
@@ -7594,7 +7594,7 @@
 				C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */,
 				D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */,
 				274952852AA472F600499498 /* BoostChannelModalController.swift in Sources */,
-				2761437E2BDA667A0034338C /* Repository.swift in Sources */,
+				2761437E2BDA667A0034338C /* AppIntentsData.swift in Sources */,
 				C2CE43E420E2CFE800656543 /* PlayerListController.swift in Sources */,
 				27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */,
 				9F21A7DC21C290E00037784F /* InstantPageTableItem.swift in Sources */,

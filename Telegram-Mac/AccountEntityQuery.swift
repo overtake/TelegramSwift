@@ -10,7 +10,7 @@ import AppIntents
 @available(macOS 13, *)
 public struct AccountEntityQuery: EntityQuery {
     public func entities(for identifiers: [AccountEntity.ID]) async throws -> [AccountEntity] {
-        Repository.shared.accountsLoggedIn.filter {
+        AppIntentsData.shared.accountsLoggedIn.filter {
             identifiers.contains($0.id)
         }
     }
@@ -20,6 +20,6 @@ public struct AccountEntityQuery: EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [AccountEntity] {
-        Repository.shared.accountsLoggedIn
+        AppIntentsData.shared.accountsLoggedIn
     }
 }

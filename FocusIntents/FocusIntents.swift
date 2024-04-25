@@ -8,28 +8,22 @@
 
 import AppIntents
 import OSLog
-import TelegramIntents
 
 
 @available(macOS 13, *)
-struct ExampleFocusFilter: SetFocusFilterIntent {
-    // MARK: - Parameters configurable using Focus filters or Shortcuts.
+struct FocusFilter: SetFocusFilterIntent {
     
     /// Providing a default value ensures setting this required Boolean value.
     @Parameter(title: "Use Dark Mode", default: false)
     var alwaysUseDarkMode: Bool
-    
-    @Parameter(title: "Status Message")
-    var status: String?
     
     /// A representation of a chat account this app uses for notification filtering and suppression.
     /// The user receives suggestions from the suggestedEntities() function that AccountEntityQuery declares.
     @Parameter(title: "Selected Account")
     var account: AccountEntity?
     
-    /// The shared dependency set using AppDependencyManager.
     @Dependency
-    var repository: Repository
+    var repository: AppIntentsData
     
     // MARK: - Filter information.
     static var title: LocalizedStringResource = "Set account, status & look"
@@ -40,8 +34,7 @@ struct ExampleFocusFilter: SetFocusFilterIntent {
     
     /// The dynamic representation that displays after creating a Focus filter.
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(primaryText)",
-                              subtitle: "\(secondaryText)")
+        DisplayRepresentation(title: "\(primaryText)")
     }
     
     private var primaryText: String {
@@ -51,12 +44,6 @@ struct ExampleFocusFilter: SetFocusFilterIntent {
         return "Account: \(accountName)"
     }
     
-    private var secondaryText: String {
-        guard let status = status else {
-            return "Status: not set"
-        }
-        return status
-    }
     
     // MARK: - Notification filtering and suppression.
     /// The system suppresses notifications from this app that include a filter criteria field if the
@@ -75,31 +62,27 @@ struct ExampleFocusFilter: SetFocusFilterIntent {
         return FocusFilterAppContext(notificationFilterPredicate: predicate)
     }
     
-    // MARK: - Focus suggestions.
     /// The system uses this to prefill the filter parameters when you choose Settings > Focus > Do Not Disturb (or another Focus)
     /// and then choose Add Filter > Example Chat App.
-    static func suggestedFocusFilters(for context: FocusFilterSuggestionContext) async -> [ExampleFocusFilter] {
-        let workFilter = ExampleFocusFilter()
+    static func suggestedFocusFilters(for context: FocusFilterSuggestionContext) async -> [FocusFilter] {
+        let workFilter = FocusFilter()
         workFilter.alwaysUseDarkMode = true
-        workFilter.status = "Currently working"
         workFilter.account = AccountEntity.exampleAccounts["work-account-identifier"]
         
         return [workFilter]
     }
     
-    // MARK: - Perform function.
     /// The system calls this function when enabling or disabling Focus.
     func perform() async throws -> some IntentResult {
         logger.debug("Perform called")
         let appDataModel = AppDataModel(alwaysUseDarkMode: self.alwaysUseDarkMode,
-                                        status: self.status,
                                         selectedAccountID: nil)
         repository.updateAppDataModelStore(appDataModel)
         return .result()
     }
 }
 
-extension ExampleFocusFilter {
+extension FocusFilter {
     var logger: Logger {
         let subsystem = Bundle.main.bundleIdentifier!
         return Logger(subsystem: subsystem, category: "ExampleFocusFilter")
