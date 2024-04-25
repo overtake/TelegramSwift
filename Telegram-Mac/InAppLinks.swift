@@ -1817,7 +1817,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             break loop
                         case keyURLText:
                             if let text = vars[keyURLText], !text.isEmpty {
-                                action = .inputText(text: .init(inputText: escape(with: text)), behavior: .automatic)
+                                action = .inputText(text: .init(inputText: escape(with: text, addPercent: false)), behavior: .automatic)
                             }
                         default:
                             break
@@ -2036,7 +2036,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop
                             case keyURLText:
                                 if let text = vars[keyURLText], !text.isEmpty {
-                                    action = .inputText(text: .init(inputText: text), behavior: .automatic)
+                                    action = .inputText(text: .init(inputText: escape(with: text, addPercent: false)), behavior: .automatic)
                                 }
                                 break loop
                             default:
