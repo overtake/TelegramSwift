@@ -1302,13 +1302,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func tryApplyAutologinToken(_ url: String) -> String? {
-        if let context = contextValue?.context {
-            let config = context.appConfiguration
-            if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
-                return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+        var result: String?
+        self.enumerateAccountContexts { context in
+            if context.window == NSApp.keyWindow {
+                let config = context.appConfiguration
+                if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
+                    result = value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+                }
             }
         }
-        return nil
+        return result
     }
     
     func applicationDidHide(_ notification: Notification) {
