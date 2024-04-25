@@ -173,11 +173,12 @@ class ChatServiceItem: ChatRowItem {
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
                             if range.location != NSNotFound {
-                                attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                                let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                                attributedString.add(link: link, for: range, color: nameColor(authorId))
                                 attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                                 
                                 if let author = message.author {
-                                    attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                    attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                                 }
                             }
                         }
@@ -196,12 +197,13 @@ class ChatServiceItem: ChatRowItem {
                             if let peer = message.peers[peerId] {
                                 let range = attributedString.append(string: peer.displayTitle, color: nameColor(peer.id), font: .medium(theme.fontSize))
                                 if range.location != NSNotFound {
-                                    attributedString.add(link:inAppLink.peerInfo(link: "", peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
+                                    let link = inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                                    attributedString.add(link: link, for: range, color: nameColor(peerId))
                                     if peerId != peerIds.last {
                                         _ = attributedString.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                                     }
                                     if range.location != NSNotFound {
-                                        attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace), at: range.location)
+                                        attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace, link: link), at: range.location)
                                         if peerId == peerIds.last {
                                             attributedString.insert(.initialize(string: " "), at: range.location)
                                         }
@@ -213,11 +215,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -232,12 +235,13 @@ class ChatServiceItem: ChatRowItem {
                             if let peer = message.peers[peerId] {
                                 let range = attributedString.append(string: peer.displayTitle, color: nameColor(peerId), font: .medium(theme.fontSize))
                                 if range.location != NSNotFound {
-                                    attributedString.add(link:inAppLink.peerInfo(link: "", peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                                    let link = inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                                    attributedString.add(link: link, for: range, color: nameColor(peer.id))
                                     if peerId != peerIds.last {
                                         _ = attributedString.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                                     }
                                     if range.location != NSNotFound {
-                                        attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace), at: range.location)
+                                        attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace, link: link), at: range.location)
                                         if peerId == peerIds.last {
                                             attributedString.insert(.initialize(string: " "), at: range.location)
                                         }
@@ -249,11 +253,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -278,11 +283,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -296,11 +302,12 @@ class ChatServiceItem: ChatRowItem {
                         
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -343,11 +350,13 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -357,11 +366,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -410,11 +420,12 @@ class ChatServiceItem: ChatRowItem {
                                 }
                                 let range = attributedString.string.nsstring.range(of: authorName)
                                 if range.location != NSNotFound {
-                                    attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                                    let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                                    attributedString.add(link: link, for: range, color: nameColor(authorId))
                                     attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                                     
                                     if let author = message.author {
-                                        attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                        attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                                     }
                                 }
                             }
@@ -426,11 +437,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -473,11 +485,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.append(string: authorName, color: linkColor, font: NSFont.medium(theme.fontSize))
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             _ = attributedString.append(string: " ")
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -525,11 +538,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -548,26 +562,31 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
                     if let peer = message.peers[toId], !peer.displayTitle.isEmpty {
                         let range = attributedString.string.nsstring.range(of: peer.displayTitle)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link:link, for: range, color: nameColor(peer.id))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                            attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace, link: link), at: range.location)
                         }
                     }
                     if let peer = message.peers[fromId], !peer.displayTitle.isEmpty {
                         let range = attributedString.string.nsstring.range(of: peer.displayTitle)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(peer.id))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                            attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace, link: link), at: range.location)
                         }
                     }
                 case let .groupPhoneCall(callId, accessHash, scheduleDate, duration):
@@ -615,11 +634,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -650,11 +670,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -677,14 +698,15 @@ class ChatServiceItem: ChatRowItem {
                         
                         if let peer = message.peers[peerId] {
                             let range = list.append(string: peer.displayTitle, color: nameColor(peerId), font: .medium(theme.fontSize))
-                            list.add(link:inAppLink.peerInfo(link: "", peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            let link = inAppLink.peerInfo(link: "", peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            list.add(link: link, for: range, color: nameColor(peer.id))
                             if peerId != peerIds.last {
                                 _ = list.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                             }
                             if range.location != NSNotFound {
-                                attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace), at: range.location)
+                                list.insert(.embeddedAvatar(.init(peer), space: !noSpace, link: link), at: range.location)
                                 if peerId == peerIds.last {
-                                    attributedString.insert(.initialize(string: " "), at: range.location)
+                                    list.insert(.initialize(string: " "), at: range.location)
                                 }
                             }
                         }
@@ -713,11 +735,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -740,11 +763,12 @@ class ChatServiceItem: ChatRowItem {
                     
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                        attributedString.add(link: link, for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         
                         if let author = message.author {
-                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                         }
                     }
                 case let .webViewData(text):
@@ -768,11 +792,12 @@ class ChatServiceItem: ChatRowItem {
                     
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                        attributedString.add(link: link, for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         
                         if let author = message.author {
-                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                         }
                     }
                 case let .suggestedProfilePhoto(image):
@@ -798,11 +823,12 @@ class ChatServiceItem: ChatRowItem {
                         
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -818,11 +844,12 @@ class ChatServiceItem: ChatRowItem {
                     
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                        attributedString.add(link: link, for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         
                         if let author = message.author {
-                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                         }
                     }
                     if let fileId = iconFileId {
@@ -929,10 +956,11 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -961,8 +989,10 @@ class ChatServiceItem: ChatRowItem {
                             if let peer = message.peers[peerId] {
                                 let range = attributedString.string.nsstring.range(of: peer.displayTitle)
                                 if range.location != NSNotFound {
-                                    attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
+                                    let link = inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo)
+                                    attributedString.add(link: link, for: range, color: nameColor(peerId))
                                     attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                                    attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace, link: link), at: range.location)
                                 }
                             }
 
@@ -990,11 +1020,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                        
@@ -1014,11 +1045,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -1029,11 +1061,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
@@ -1088,11 +1121,12 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
                             }
                         }
                     }
