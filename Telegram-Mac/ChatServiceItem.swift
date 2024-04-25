@@ -153,25 +153,10 @@ class ChatServiceItem: ChatRowItem {
             authorName = displayTitle
         }
         let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
-
+        let noSpace = theme.wallpaper.wallpaper != .none && entry.renderType == .bubble
         
         let nameColor:(PeerId) -> NSColor = { peerId in
             return theme.chatServiceItemTextColor
-
-//            if theme.controllerBackgroundMode.hasWallpaper {
-//                return theme.chatServiceItemTextColor
-//            }
-//            let mainPeer = coreMessageMainPeer(message)
-//
-//            if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
-//                if let peer = mainPeer as? TelegramChannel, case .broadcast(_) = peer.info {
-//                    return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
-//                } else if context.peerId != peerId {
-//                    let value = abs(Int(peerId.id._internalGetInt64Value()) % 7)
-//                    return theme.chat.peerName(value)
-//                }
-//            }
-//            return theme.chat.linkColor(isIncoming, false)
         }
         
         
@@ -192,7 +177,7 @@ class ChatServiceItem: ChatRowItem {
                                 attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                                 
                                 if let author = message.author {
-                                    attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                    attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                                 }
                             }
                         }
@@ -215,7 +200,12 @@ class ChatServiceItem: ChatRowItem {
                                     if peerId != peerIds.last {
                                         _ = attributedString.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                                     }
-                                    attributedString.insert(.embeddedAvatar(.init(peer), space: entry.renderType == .list), at: range.location)
+                                    if range.location != NSNotFound {
+                                        attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace), at: range.location)
+                                        if peerId == peerIds.last {
+                                            attributedString.insert(.initialize(string: " "), at: range.location)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -227,7 +217,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -246,6 +236,12 @@ class ChatServiceItem: ChatRowItem {
                                     if peerId != peerIds.last {
                                         _ = attributedString.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
                                     }
+                                    if range.location != NSNotFound {
+                                        attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace), at: range.location)
+                                        if peerId == peerIds.last {
+                                            attributedString.insert(.initialize(string: " "), at: range.location)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -257,7 +253,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -286,7 +282,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -304,7 +300,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -351,7 +347,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -365,7 +361,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -418,7 +414,7 @@ class ChatServiceItem: ChatRowItem {
                                     attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                                     
                                     if let author = message.author {
-                                        attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                        attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                                     }
                                 }
                             }
@@ -434,7 +430,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -481,7 +477,7 @@ class ChatServiceItem: ChatRowItem {
                             _ = attributedString.append(string: " ")
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -533,7 +529,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -556,7 +552,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -623,7 +619,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -658,7 +654,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -684,6 +680,12 @@ class ChatServiceItem: ChatRowItem {
                             list.add(link:inAppLink.peerInfo(link: "", peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
                             if peerId != peerIds.last {
                                 _ = list.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
+                            }
+                            if range.location != NSNotFound {
+                                attributedString.insert(.embeddedAvatar(.init(peer), space: !noSpace), at: range.location)
+                                if peerId == peerIds.last {
+                                    attributedString.insert(.initialize(string: " "), at: range.location)
+                                }
                             }
                         }
                     }
@@ -715,7 +717,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -742,7 +744,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         
                         if let author = message.author {
-                            attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                         }
                     }
                 case let .webViewData(text):
@@ -770,7 +772,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         
                         if let author = message.author {
-                            attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                         }
                     }
                 case let .suggestedProfilePhoto(image):
@@ -800,7 +802,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -820,7 +822,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         
                         if let author = message.author {
-                            attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                            attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                         }
                     }
                     if let fileId = iconFileId {
@@ -930,7 +932,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -992,7 +994,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                        
@@ -1016,7 +1018,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -1031,7 +1033,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -1090,7 +1092,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
                             if let author = message.author {
-                                attributedString.insert(.embeddedAvatar(.init(author), space: entry.renderType == .list), at: range.location)
+                                attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace), at: range.location)
                             }
                         }
                     }
@@ -2398,10 +2400,10 @@ class ChatServiceRowView: TableRowView {
                     var rect = NSMakeRect(item.rect.minX, item.rect.minY, item.rect.width, item.rect.width)
                    
                     if textView.textLayout?.hasBlock == true {
-                        rect.origin.x += 6
+                        rect.origin.x += 7
                         rect.origin.y += 4
                     } else {
-                        rect.origin.y += 3
+                        rect.origin.y += 2
                     }
                     
                     let view: InlineAvatarLayer

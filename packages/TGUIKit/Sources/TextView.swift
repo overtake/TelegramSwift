@@ -1476,7 +1476,7 @@ public final class TextViewLayout : Equatable {
                 rects[i].size.height = height
                 if self.penFlush == 0.5 {
                     rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
-                    rects[i].size.width += 20
+                    rects[i].size.width += 14
                 } else {
                     rects[i].size.width += 10
                     rects[i].origin.x -= 5
