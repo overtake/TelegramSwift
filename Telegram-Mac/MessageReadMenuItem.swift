@@ -575,6 +575,9 @@ final class MessageReadMenuItem : ContextMenuItem {
         if chatInteraction.mode == .scheduled {
             return false
         }
+        if peer.isBot {
+            return false
+        }
         
         if let attr = message.reactionsAttribute, !attr.reactions.isEmpty {
             if !attr.canViewList {
