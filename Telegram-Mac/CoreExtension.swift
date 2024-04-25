@@ -3758,7 +3758,7 @@ extension NSAttributedString {
         return attr
     }
     
-    static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true) -> NSAttributedString {
+    static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true, link: Any? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         
         let emoji: String = clown
@@ -3766,6 +3766,9 @@ extension NSAttributedString {
         attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .avatar(peer)), range: NSMakeRange(0, emoji.length))
         if space {
             attr.append(string: " ")
+        }
+        if let link {
+            attr.addAttribute(NSAttributedString.Key.link, value: link, range: attr.range)
         }
         return attr
     }
