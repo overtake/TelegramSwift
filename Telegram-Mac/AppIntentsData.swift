@@ -9,8 +9,8 @@ import OSLog
 import AppIntents
 
 @available(macOS 13, *)
-public final class Repository: Sendable {
-    public  enum RepositoryError: Error, CustomLocalizedStringResourceConvertible {
+public final class AppIntentsData: Sendable {
+    public enum RepositoryError: Error, CustomLocalizedStringResourceConvertible {
         case notFound
         
         public var localizedStringResource: LocalizedStringResource {
@@ -20,9 +20,10 @@ public final class Repository: Sendable {
         }
     }
     
-    public static let shared = Repository()
+    
+    public static let shared = AppIntentsData()
 
-    public static var suiteUserDefaults = UserDefaults(suiteName: "group.exampleChatApp")!
+    public static var suiteUserDefaults = UserDefaults(suiteName: "ru.keepcoder.Telegram")!
     
     public func updateAppDataModelStore(_ appDataModel: AppDataModel) {
         let encoder = JSONEncoder()
@@ -48,7 +49,7 @@ public final class Repository: Sendable {
 }
 
 @available(macOS 13, *)
-public extension Repository {
+public extension AppIntentsData {
     var logger: Logger {
         let subsystem = Bundle.main.bundleIdentifier!
         return Logger(subsystem: subsystem, category: "Repository")
