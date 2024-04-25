@@ -191,6 +191,7 @@ class GeneralTextRowView : GeneralRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
+        textView.textView.userInteractionEnabled = true
     }
     
     override var firstResponder: NSResponder? {
