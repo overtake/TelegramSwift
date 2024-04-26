@@ -536,10 +536,15 @@ class ChatRowItem: TableRowItem {
             if let media = media as? TelegramMediaMap {
                 if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                     var time:TimeInterval = Date().timeIntervalSince1970
-                    time -= context.timeDifference
-                    if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                    if liveBroadcastingTimeout == .max {
                         return false
+                    } else {
+                        time -= context.timeDifference
+                        if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                            return false
+                        }
                     }
+                   
                 }
                 return media.venue == nil
             }
@@ -1687,11 +1692,16 @@ class ChatRowItem: TableRowItem {
                 
                 if let media = media as? TelegramMediaMap {
                     if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-                        var time:TimeInterval = Date().timeIntervalSince1970
-                        time -= context.timeDifference
-                        if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                        if liveBroadcastingTimeout == .max {
                             return false
+                        } else {
+                            var time:TimeInterval = Date().timeIntervalSince1970
+                            time -= context.timeDifference
+                            if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                                return false
+                            }
                         }
+                        
                     }
                     return media.venue == nil
                 }
