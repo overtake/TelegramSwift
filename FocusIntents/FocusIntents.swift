@@ -8,83 +8,60 @@
 
 import AppIntents
 import OSLog
+import TelegramCore
+import Postbox
+import SwiftSignalKit
+import InAppSettings
+import ApiCredentials
+
+//private let accountManager: AccountManager<TelegramAccountManagerTypes> = {
+//    let containerUrl = ApiEnvironment.containerURL!
+//    let rootPath = containerUrl.path
+//    return AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true, removeDatabaseOnError: true)
+//}()
+
 
 
 @available(macOS 13, *)
 struct FocusFilter: SetFocusFilterIntent {
     
-    /// Providing a default value ensures setting this required Boolean value.
-    @Parameter(title: "Use Dark Mode", default: false)
-    var alwaysUseDarkMode: Bool
+    @Parameter(title: "Use Dark Mode", default: nil)
+    var alwaysUseDarkMode: Bool?
     
-    /// A representation of a chat account this app uses for notification filtering and suppression.
-    /// The user receives suggestions from the suggestedEntities() function that AccountEntityQuery declares.
-    @Parameter(title: "Selected Account")
-    var account: AccountEntity?
-    
-    @Dependency
-    var repository: AppIntentsData
     
     // MARK: - Filter information.
-    static var title: LocalizedStringResource = "Set account, status & look"
+    static var title: LocalizedStringResource = "Set Appearance"
     
-    static var description: IntentDescription? = """
-    Select an account, set your status, and configure the look of Example Chat App.
+    static var description: LocalizedStringResource? = """
+    Configure Appearance of app in focus mode
     """
     
     /// The dynamic representation that displays after creating a Focus filter.
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(primaryText)")
+        DisplayRepresentation(title: "Appearance",
+                              subtitle: "Dark Mode")
     }
     
-    private var primaryText: String {
-        guard let accountName = self.account?.displayName else {
-            return "Account: none selected"
-        }
-        return "Account: \(accountName)"
-    }
-    
-    
-    // MARK: - Notification filtering and suppression.
-    /// The system suppresses notifications from this app that include a filter criteria field if the
-    /// FocusFilterAppContext notificationFilterPredicate evaluates to false.
+
     var appContext: FocusFilterAppContext {
-        logger.debug("App Context Called")
-        let predicate: NSPredicate
-        // Evaluate the predicate against parameters from this instance.
-        if let account = account {
-            // If there’s a selected account, suppress notifications that don't have
-            // the selected account's identifier in the notification's filter criteria.
-            predicate = NSPredicate(format: "SELF IN %@", [account.id])
-        } else {
-            predicate = NSPredicate(value: true)
-        }
-        return FocusFilterAppContext(notificationFilterPredicate: predicate)
+        return FocusFilterAppContext(notificationFilterPredicate: nil)
     }
     
-    /// The system uses this to prefill the filter parameters when you choose Settings > Focus > Do Not Disturb (or another Focus)
-    /// and then choose Add Filter > Example Chat App.
     static func suggestedFocusFilters(for context: FocusFilterSuggestionContext) async -> [FocusFilter] {
         let workFilter = FocusFilter()
         workFilter.alwaysUseDarkMode = true
-        workFilter.account = AccountEntity.exampleAccounts["work-account-identifier"]
-        
         return [workFilter]
     }
     
-    /// The system calls this function when enabling or disabling Focus.
     func perform() async throws -> some IntentResult {
-        logger.debug("Perform called")
-        let appDataModel = AppDataModel(alwaysUseDarkMode: self.alwaysUseDarkMode,
-                                        selectedAccountID: nil)
-        repository.updateAppDataModelStore(appDataModel)
+        let model = AppIntentDataModel(alwaysUseDarkMode: self.alwaysUseDarkMode)
+        if let model = model.encoded() {
+            UserDefaults(suiteName: ApiEnvironment.intentsBundleId)?.set(model, forKey: AppIntentDataModel.key)
+        }
         return .result()
     }
 }
 
 extension FocusFilter {
-    var logger: Logger {
-        let subsystem = Bundle.main.bundleIdentifier!
-        return Logger(subsystem: subsystem, category: "ExampleFocusFilter")
-    }
+
 }
