@@ -7,7 +7,12 @@
 //
 
 import AppIntents
+import OSLog
+
 
 @main
 struct FocusIntentsExtension: AppIntentsExtension {
+    init() {
+        AppDependencyManager.shared.add(dependency: AppIntentsData.shared)
+    }
 }

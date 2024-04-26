@@ -942,6 +942,10 @@ final class AccountContext {
         actionsDisposable.add(autologinToken.start(next: { [weak self] token in
             self?.autologinToken = token.autologinToken
         }))
+        
+        (additionalSettings(accountManager: sharedContext.accountManager) |> deliverOnMainQueue).start(next: { value in
+            NSLog("dark mode in focus = \(value.alwaysDarkMode)")
+        })
     }
     
     @objc private func updateKeyWindow() {

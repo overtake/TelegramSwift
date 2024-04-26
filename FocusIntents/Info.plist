@@ -7,5 +7,7 @@
 		<key>EXExtensionPointIdentifier</key>
 		<string>com.apple.appintents-extension</string>
 	</dict>
+	<key>SOURCE</key>
+	<string>${SOURCE}</string>
 </dict>
 </plist>

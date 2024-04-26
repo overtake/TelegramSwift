@@ -35,6 +35,41 @@ import AppCenterCrashes
 #endif
 
 
+
+@available(macOS 13, *)
+class AppIntentObserver : NSObject {
+    
+    private let defaults = UserDefaults(suiteName: ApiEnvironment.intentsBundleId)!
+    
+    override init() {
+        super.init()
+        defaults.addObserver(self, forKeyPath: AppIntentDataModel.key, options: .new, context: nil)
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == AppIntentDataModel.key {
+            update()
+        }
+    }
+    
+    deinit {
+        defaults.removeObserver(self, forKeyPath: AppIntentDataModel.key)
+    }
+    
+    var onUpdate:((AppIntentDataModel?)->Void)?
+    
+    func update() {
+        let modelData = defaults.value(forKey: AppIntentDataModel.key) as? Data
+        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
+            onUpdate?(model)
+        } else {
+            onUpdate?(nil)
+        }
+    }
+    
+    public static let shared: AppIntentObserver = AppIntentObserver()
+}
+
 final class CodeSyntax {
     private let syntaxer: Syntaxer
     private init() {
@@ -227,6 +262,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         CodeSyntax.initialize()
+        
+        
+        
+        
        // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
      //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
@@ -438,7 +477,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                  transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
             }) |> deliverOnMainQueue
             
-            data.start(next: { themeSettings, localization in
+            _ = data.startStandalone(next: { themeSettings, localization in
                 System.legacyMenu = themeSettings.legacyMenu
 
                 if let localization = localization {
@@ -619,10 +658,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     } |> deliverOnMainQueue
                 
                 
-                _ = autoNightSignal.start(next: { preference, _ in
+                _ = combineLatest(autoNightSignal, additionalSettings(accountManager: accountManager)).start(next: { value1, value2 in
+                    
+                    let preference = value1.0
+                    let alwaysDarkMode = value2.alwaysDarkMode
                     
                     var isEnabled: Bool
                     var isDark: Bool = false
+                    
 
                     if let schedule = preference.schedule {
                         
@@ -727,6 +770,20 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
                 
                 self.hangKeybind(sharedContext)
+                
+                
+                if #available(macOS 13, *) {
+                    AppIntentObserver.shared.onUpdate = { value in
+                        _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
+                            if value?.alwaysUseDarkMode == true {
+                                return settings.withUpdatedToDefault(dark: true)
+                            } else {
+                                return settings.withUpdatedToDefault(dark: settings.defaultIsDark)
+                            }
+                        }).start()
+                    }
+                    AppIntentObserver.shared.update()
+                }
                 
                 
                 let rawAccounts = sharedContext.activeAccounts
