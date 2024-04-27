@@ -540,7 +540,7 @@ class ChatRowItem: TableRowItem {
                         return false
                     } else {
                         time -= context.timeDifference
-                        if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                        if Int(time) < Int(message.timestamp) + Int(liveBroadcastingTimeout) {
                             return false
                         }
                     }
@@ -1697,7 +1697,7 @@ class ChatRowItem: TableRowItem {
                         } else {
                             var time:TimeInterval = Date().timeIntervalSince1970
                             time -= context.timeDifference
-                            if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                            if Int(time) < Int(message.timestamp) + Int(liveBroadcastingTimeout) {
                                 return false
                             }
                         }

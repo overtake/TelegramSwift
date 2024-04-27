@@ -283,6 +283,7 @@ private final class ChatListBirthdayView : TableRowView {
         
         self.peers = peers
         
+        needsLayout = true
     }
 
 }
