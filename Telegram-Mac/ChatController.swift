@@ -6388,7 +6388,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     contentRequiredValidation = true
                                 } else if message.flags.contains(.Incoming), let media = media as? TelegramMediaMap, let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                                     let timestamp = Int32(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970)
-                                    if message.timestamp + liveBroadcastingTimeout > timestamp {
+                                    if Int(message.timestamp) + Int(liveBroadcastingTimeout) > Int(timestamp) {
                                         messageIdsWithLiveLocation.append(message.id)
                                     }
                                 } else if let telegramFile = media as? TelegramMediaFile {
