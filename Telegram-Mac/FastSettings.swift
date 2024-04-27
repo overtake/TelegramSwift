@@ -744,12 +744,12 @@ class FastSettings {
     static func clear_uuid(_ id: Int64) {
         if #available(macOS 14.0, *) {
             if let uuid = FastSettings.getUUID(id) {
-                autoreleasepool {
-                    let configuration = WKWebViewConfiguration()
-                    configuration.websiteDataStore = WKWebsiteDataStore(forIdentifier: uuid)
-                }
-                WKWebsiteDataStore.remove(forIdentifier: uuid, completionHandler: { _ in
-                })
+//                autoreleasepool {
+//                    let configuration = WKWebViewConfiguration()
+//                    configuration.websiteDataStore = WKWebsiteDataStore(forIdentifier: uuid)
+//                }
+//                WKWebsiteDataStore.remove(forIdentifier: uuid, completionHandler: { _ in
+//                })
             }
         }
     }
