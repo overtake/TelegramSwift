@@ -552,56 +552,17 @@ class ChatInputActionsView: View {
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
 
-        
-        send.contextMenu = { [weak chatInteraction] in
-            
-            
-            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer {
-                let context = chatInteraction.context
-                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                    return nil
-                }
-                if chatInteraction.presentation.state != .normal {
-                    return nil
-                }
-                var items:[ContextMenuItem] = []
-                
-                if peer.id != chatInteraction.context.account.peerId {
-                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak chatInteraction] in
-                        chatInteraction?.sendMessage(true, nil)
-                    }, itemImage: MenuAnimation.menu_mute.value))
-                }
-                switch chatInteraction.mode {
-                case .history, .thread:
-                    if !peer.isSecretChat {
-                        let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
-                        items.append(ContextMenuItem(text, handler: { [weak chatInteraction] in
-                            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
-                                chatInteraction?.sendMessage(false, date)
-                            }), for: context.window)
-                        }, itemImage: MenuAnimation.menu_schedule_message.value))
-                        
-                        if peer.id != chatInteraction.context.peerId, chatInteraction.presentation.canScheduleWhenOnline {
-                            
-                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
-                                chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
-                            }, itemImage: MenuAnimation.menu_online.value))
-                        }
+        send.set(handler: { control in
+            if let event = NSApp.currentEvent {
+                let sendMenu = chatInteraction.sendMessageMenu() |> deliverOnMainQueue
+                _ = sendMenu.startStandalone(next: { menu in
+                    if let menu {
+                        AppMenu.show(menu: menu, event: event, for: control)
                     }
-                default:
-                    break
-                }
-                if !items.isEmpty {
-                    let menu = ContextMenu()
-                    for item in items {
-                        menu.addItem(item)
-                    }
-                    return menu
-                }
+                })
             }
-            return nil
-        }
-        
+        }, for: .RightDown)
+                
         send.set(handler: { [weak chatInteraction] control in
              chatInteraction?.sendMessage(false, nil)
         }, for: .Click)

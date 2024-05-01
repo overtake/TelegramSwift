@@ -867,7 +867,9 @@ final class AppMenuController : NSObject  {
             window.contentView?.layer?.animateScaleSpringFrom(anchor: NSMakePoint(anchor.x, rect.height / 2), from: 0.1, to: 1, duration: 0.2, bounce: false)
             
             window.set(mouseHandler: { [weak self] event in
-                self?.closeAll()
+                if self?.menu.closeOutside == true {
+                    self?.closeAll()
+                }
                 return .rejected
             }, with: self, for: .leftMouseUp, priority: .supreme)
             

@@ -927,7 +927,6 @@ private class ServiceEventLogRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        textView.backgroundColor = backdorColor
         messageContent?.updateColors(backdorColor)
     }
     

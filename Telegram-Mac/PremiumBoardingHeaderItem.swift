@@ -75,7 +75,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                             }))
                         })) as! NSMutableAttributedString
                         
-                        let range = attr.string.nsstring.range(of: "🤡")
+                        let range = attr.string.nsstring.range(of: clown)
                         if range.location != NSNotFound {
                             attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: packFile.fileId.id, file: packFile, emoji: ""))), range: range)
                         }

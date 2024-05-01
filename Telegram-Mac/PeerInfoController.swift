@@ -285,13 +285,13 @@ final class PeerInfoView : View {
         addSubview(tableView)
         addSubview(navBgView)
         addSubview(navigationBarView)
+        self.addSubview(borderView)
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         navigationBarView.backgroundColor = .clear
         navBgView.backgroundColor = theme.colors.background
         borderView.backgroundColor = theme.colors.border
-        navBgView.addSubview(borderView)
     }
     
 //    override func hitTest(_ point: NSPoint) -> NSView? {
@@ -336,6 +336,7 @@ final class PeerInfoView : View {
     
     fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {
         self.navBgView.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
+        borderView.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
       //  self.navigationBarView.bottomBorder.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
     }
 }

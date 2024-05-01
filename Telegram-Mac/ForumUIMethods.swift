@@ -286,7 +286,7 @@ func generateTopicIcon(size: NSSize, backgroundColors: [NSColor], strokeColors: 
         
        
         let lineOffset = CGPoint(x: 0, y: floor(realSize.height * 0.05) + 1)
-        let lineOrigin = CGPoint(x: round(-lineBounds.origin.x + (realSize.width - lineBounds.size.width) / 2.0) + lineOffset.x, y: round(-lineBounds.origin.y + (realSize.height - lineBounds.size.height) / 2.0) + lineOffset.y)
+        let lineOrigin = CGPoint(x: round(-lineBounds.origin.x + (realSize.width - lineBounds.size.width) / 2.0) + lineOffset.x, y: round(-lineBounds.origin.y + (realSize.height - lineBounds.size.height) / 2.0) + lineOffset.y - 1)
         
         context.translateBy(x: realSize.width / 2.0, y: realSize.height / 2.0)
         context.scaleBy(x: 1.0, y: -1.0)

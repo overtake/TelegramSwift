@@ -717,7 +717,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var previousHeight:CGFloat = 50
     func inputChanged(height: CGFloat, animated: Bool) {
-        updateFrame(self.frame, transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        updateFrame(NSMakeRect(0, 50, self.frame.width, self.frame.height), transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     required init?(coder: NSCoder) {
@@ -3569,6 +3569,213 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        chatInteraction.sendMessageMenu = { [weak self] in
+            guard let self else {
+                return .single(nil)
+            }
+            let presentation = self.chatInteraction.presentation
+            let chatInteraction = self.chatInteraction
+            
+            guard let peer = presentation.peer else {
+                return .single(nil)
+            }
+            
+            let context = context
+            if let slowMode = presentation.slowMode, slowMode.hasLocked {
+                return .single(nil)
+            }
+            if presentation.state != .normal {
+                return .single(nil)
+            }
+            var items:[ContextMenuItem] = []
+            
+            if peer.id != context.account.peerId {
+                items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak chatInteraction] in
+                    chatInteraction?.sendMessage(true, nil)
+                }, itemImage: MenuAnimation.menu_mute.value))
+            }
+            switch chatInteraction.mode {
+            case .history, .thread:
+                if !peer.isSecretChat {
+                    let text = peer.id == context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
+                    items.append(ContextMenuItem(text, handler: { [weak chatInteraction] in
+                        showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
+                            chatInteraction?.sendMessage(false, date)
+                        }), for: context.window)
+                    }, itemImage: MenuAnimation.menu_schedule_message.value))
+                    
+                    if peer.id != context.peerId, presentation.canScheduleWhenOnline {
+                        
+                        items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
+                            chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
+                        }, itemImage: MenuAnimation.menu_online.value))
+                    }
+                }
+            default:
+                break
+            }
+                                    
+            let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.top_reactions |> map { view in
+                
+                var recentReactionsView: OrderedItemListView?
+                var topReactionsView: OrderedItemListView?
+                var defaultTagReactions: OrderedItemListView?
+                for orderedView in view.orderedItemListsViews {
+                    if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
+                        recentReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
+                        topReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                        defaultTagReactions = orderedView
+                    }
+                }
+                var recentReactionsItems:[RecentReactionItem] = []
+                var topReactionsItems:[RecentReactionItem] = []
+                var defaultTagReactionsItems:[RecentReactionItem] = []
+
+                if let recentReactionsView = recentReactionsView {
+                    for item in recentReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        recentReactionsItems.append(item)
+                    }
+                }
+                if let defaultTagReactions = defaultTagReactions {
+                    for item in defaultTagReactions.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        defaultTagReactionsItems.append(item)
+                    }
+                }
+                if let topReactionsView = topReactionsView {
+                    for item in topReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        topReactionsItems.append(item)
+                    }
+                }
+                return topReactionsItems.filter { value in
+                    if context.isPremium {
+                        return true
+                    } else {
+                        if case .custom = value.content {
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                }
+            }
+            
+            let builtin = context.reactions.stateValue
+            
+            return combineLatest(queue: .mainQueue(), reactions, builtin) |> take(1) |> map { reactions, builtin in
+                let enabled = builtin?.enabled ?? []
+
+                let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
+                    return false
+                }
+
+                let available: [ContextReaction] = Array(reactions.compactMap { value in
+                    switch value.content {
+                    case let .builtin(emoji):
+                        if let generic = enabled.first(where: { $0.value.string == emoji }) {
+                            return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(generic.value))
+                        } else {
+                            return nil
+                        }
+                    case let .custom(file):
+                        return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: isSelected(.custom(file.fileId.id)))
+                    }
+                }.prefix(7))
+                
+                
+                
+                let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: true)
+                //TODOLANG
+                let aboveText: String = "Add an animation effect"
+                
+                let w_width = width + 20
+                let color = theme.colors.darkGrayText.withAlphaComponent(0.8)
+                let link = theme.colors.link.withAlphaComponent(0.8)
+                let attributed = parseMarkdownIntoAttributedString(aboveText, attributes: .init(body: .init(font: .normal(.text), textColor: color), bold: .init(font: .medium(.text), textColor: color), link: .init(font: .normal(.text), textColor: link), linkAttribute: { link in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                    }))
+                })).detectBold(with: .medium(.text))
+                let aboveLayout = TextViewLayout(attributed, maximumNumberOfLines: 2, alignment: .center)
+                aboveLayout.measure(width: w_width - 24)
+                aboveLayout.interactions = globalLinkExecutor
+                
+                let rect = NSMakeRect(0, 0, w_width, 40 + 20 + aboveLayout.layoutSize.height + 4)
+                
+                let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+                panel._canBecomeMain = false
+                panel._canBecomeKey = false
+                panel.level = .popUpMenu
+                panel.backgroundColor = .clear
+                panel.isOpaque = false
+                panel.hasShadow = false
+                
+
+                let reveal:((ContextAddReactionsListView & StickerFramesCollector)->Void)?
+                
+                
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+                
+                reveal = { view in
+                    let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
+                        let value: UpdateMessageReaction
+                        if let bundle = sticker.file.stickerText {
+                            value = .builtin(bundle)
+                        } else {
+                            value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
+                        }
+                        var contains: Bool = false
+                        for reaction in reactions {
+                            switch reaction.content {
+                            case let .custom(file):
+                                if file.fileId == sticker.file.fileId {
+                                    contains = true
+                                    break
+                                }
+                            default:
+                                break
+                            }
+                        }
+                       
+                    })
+                    window.show(view)
+                }
+                
+                
+                let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
+                    
+                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout)
+                
+                
+                panel.contentView?.addSubview(view)
+                panel.contentView?.wantsLayer = true
+                view.autoresizingMask = [.width, .height]
+                
+                let menu = ContextMenu()
+                #if DEBUG
+                if peer.isUser {
+//                    menu.closeOutside = false
+                    menu.topWindow = panel
+                }
+                #endif
+                
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
+            }
+        }
+        
         chatInteraction.updateEditingMessageMedia = { [weak self] exts, asMedia in
             guard let `self` = self else {return}
             
@@ -6388,7 +6595,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     contentRequiredValidation = true
                                 } else if message.flags.contains(.Incoming), let media = media as? TelegramMediaMap, let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                                     let timestamp = Int32(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970)
-                                    if message.timestamp + liveBroadcastingTimeout > timestamp {
+                                    if Int(message.timestamp) + Int(liveBroadcastingTimeout) > Int(timestamp) {
                                         messageIdsWithLiveLocation.append(message.id)
                                     }
                                 } else if let telegramFile = media as? TelegramMediaFile {
@@ -6499,6 +6706,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                             if message.id.namespace == Namespaces.Message.Cloud {
                                 if !message.text.isEmpty {
+                                    messagesToTranslate.append(message)
+                                } else if let _ = message.media.first as? TelegramMediaPoll {
                                     messagesToTranslate.append(message)
                                 }
                                 if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
@@ -6816,6 +7025,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private func checkMessageDeletions(_ previous: ChatHistoryView?, _ currentView: ChatHistoryView) {
         
         if isLite(.animations) {
+            return
+        }
+        if hasModals(context.window) || !context.window.isKeyWindow {
             return
         }
         
@@ -7621,7 +7833,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .awayMessageInput:
                     title = strings().quickReplyChatRemoveAwayMessageTitle
                     info = strings().quickReplyChatRemoveAwayMessageText
-                case .quickReplyMessageInput(let shortcut):
+                case .quickReplyMessageInput:
                     title = strings().quickReplyChatRemoveGenericTitle
                     info = strings().quickReplyChatRemoveGenericText
                 }

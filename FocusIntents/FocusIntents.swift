@@ -14,32 +14,37 @@ import SwiftSignalKit
 import InAppSettings
 import ApiCredentials
 
-//private let accountManager: AccountManager<TelegramAccountManagerTypes> = {
-//    let containerUrl = ApiEnvironment.containerURL!
-//    let rootPath = containerUrl.path
-//    return AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true, removeDatabaseOnError: true)
-//}()
-
-
 
 @available(macOS 13, *)
 struct FocusFilter: SetFocusFilterIntent {
     
-    @Parameter(title: "Use Dark Mode", default: nil)
-    var alwaysUseDarkMode: Bool?
+    @Parameter(title: "Use Dark Mode", description: "Automatically enable dark mode.", default: false)
+    var alwaysUseDarkMode: Bool
     
+    @Parameter(title: "Set Unable Status", description: "Set your account status to Unable. This feature requires Telegram Premium.", default: false)
+    var unableStatus: Bool
+
     
-    // MARK: - Filter information.
-    static var title: LocalizedStringResource = "Set Appearance"
+    static var title: LocalizedStringResource = "Set Appearance And Status"
     
     static var description: LocalizedStringResource? = """
     Configure Appearance of app in focus mode
     """
     
-    /// The dynamic representation that displays after creating a Focus filter.
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "Appearance",
-                              subtitle: "Dark Mode")
+        var status: String = ""
+        if alwaysUseDarkMode {
+            status += "Dark Mode"
+        }
+        if unableStatus {
+            if status.isEmpty {
+                status += "Status"
+            } else {
+                status += ", Status"
+            }
+        }
+        return DisplayRepresentation(title: "Appearance And Status",
+                                     subtitle: LocalizedStringResource(stringLiteral: status))
     }
     
 
@@ -50,18 +55,15 @@ struct FocusFilter: SetFocusFilterIntent {
     static func suggestedFocusFilters(for context: FocusFilterSuggestionContext) async -> [FocusFilter] {
         let workFilter = FocusFilter()
         workFilter.alwaysUseDarkMode = true
+        workFilter.unableStatus = true
         return [workFilter]
     }
     
     func perform() async throws -> some IntentResult {
-        let model = AppIntentDataModel(alwaysUseDarkMode: self.alwaysUseDarkMode)
+        let model = AppIntentDataModel(alwaysUseDarkMode: self.alwaysUseDarkMode, useUnableStatus: self.unableStatus)
         if let model = model.encoded() {
             UserDefaults(suiteName: ApiEnvironment.intentsBundleId)?.set(model, forKey: AppIntentDataModel.key)
         }
         return .result()
     }
-}
-
-extension FocusFilter {
-
 }

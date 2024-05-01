@@ -288,17 +288,20 @@ final class ChatLiveTranslateContext {
                         textCount += msg.text.count
                         count += 1
                         return textCount < 25000 && count < 21
-                    }).map { $0.id }.uniqueElements.sorted(by: >)
-                    if !messages.isEmpty {
-                        self?.activateTranslation(for: messages, state: state)
+                    }).uniqueElements
+                    
+                    let messageIds = messages.map { $0.id }.uniqueElements.sorted(by: >)
+                    if !messageIds.isEmpty {
+                        self?.activateTranslation(for: messageIds, state: state)
                     }
                 }
             }
-            
         }))
     }
+        
     private func activateTranslation(for msgIds: [MessageId], state: State) -> Void {
         let signal = context.engine.messages.translateMessages(messageIds: msgIds, toLang: state.to)
+        
         actionsDisposable.add(signal.start(next: { [weak self] results in
             self?.updateState { current in
                 var current = current
@@ -347,8 +350,8 @@ final class ChatLiveTranslateContext {
                 return
             }
             let toLang = self.stateValue.with { $0.to }
-            let msgs = message.filter { $0.translationAttribute(toLang: toLang) == nil }.map { $0 }
-            let translated = message.filter { $0.translationAttribute(toLang: toLang) != nil }.map { $0 }
+            let msgs = message.filter { !$0.hasTranslationAttribute(toLang: toLang) }.map { $0 }
+            let translated = message.filter { $0.hasTranslationAttribute(toLang: toLang) }.map { $0 }
             
             if !translated.isEmpty {
                 self.updateState { current in
@@ -376,7 +379,7 @@ final class ChatLiveTranslateContext {
                     guard let `self` = self else {
                         return
                     }
-                    self.holder.removeAll()
+                //    self.holder.removeAll()
                     self.updateState { current in
                         var current = current
                         if current.translate {

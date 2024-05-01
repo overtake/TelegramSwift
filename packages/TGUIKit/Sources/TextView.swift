@@ -776,6 +776,8 @@ public final class TextViewLayout : Equatable {
     public var cutout:TextViewCutout?
     public var mayBlocked: Bool = false
     fileprivate var blockImage:(CGPoint, CGImage?) = (CGPoint(), nil)
+    
+    public var maskBlockImage:(CGPoint, CGImage?) = (CGPoint(), nil)
         
     public fileprivate(set) var lineSpacing:CGFloat?
     
@@ -2157,6 +2159,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private let embeddedContainer = SimpleLayer()
     
     private var blockHeaderRects: [(NSRect, NSRange)] = []
+    
+    private var shimmerEffect: ShimmerView?
+    private var shimmerMask: SimpleLayer?
 
     private var clearExceptRevealed: Bool = false
     private var inAnimation: Bool = false {
@@ -3328,6 +3333,59 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
         }
     }
-    
-    
+}
+
+
+public extension TextView {
+    func setIsShimmering(_ value: Bool, animated: Bool) {
+        if value, let blockImage = textLayout?.maskBlockImage.1 {
+            let size = blockImage.size
+            let current: ShimmerView
+            if let view = self.shimmerEffect {
+                current = view
+            } else {
+                current = ShimmerView()
+                self.shimmerEffect = current
+                self.addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
+            current.updateAbsoluteRect(size.bounds, within: size)
+            
+            let frame = self.bounds
+            current.frame = blockImage.backingSize.bounds.offsetBy(dx: frame.minX - 5, dy: frame.minY - 1)
+            
+            if let blockImage = textLayout?.maskBlockImage.1 {
+                if shimmerMask == nil {
+                    shimmerMask = SimpleLayer()
+                }
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
+                fr = CATransform3DScale(fr, 1, -1, 1)
+                fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
+                
+                shimmerMask?.transform = fr
+                shimmerMask?.contentsScale = 2.0
+                shimmerMask?.contents = blockImage
+                shimmerMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
+                current.layer?.mask = shimmerMask
+            } else {
+                self.shimmerMask = nil
+                current.layer?.mask = nil
+            }
+        } else {
+            if let view = self.shimmerEffect {
+                let shimmerMask = self.shimmerMask
+                performSubviewRemoval(view, animated: animated, completed: { [weak shimmerMask] _ in
+                    shimmerMask?.removeFromSuperlayer()
+                })
+                self.shimmerEffect = nil
+                self.shimmerMask = nil
+            }
+        }
+
+    }
 }

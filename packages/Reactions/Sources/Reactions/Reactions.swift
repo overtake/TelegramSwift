@@ -2,6 +2,7 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 import Foundation
+import InAppSettings
 
 public final class Reactions {
     
@@ -101,6 +102,12 @@ public final class Reactions {
                 _ = engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
             }
         }
+        _ = updateSomeSettingsInteractively(postbox: self.engine.account.postbox, { current in
+            var current = current
+            current.focusIntentStatusFallback = nil
+            current.focusIntentStatusEnabled = false
+            return current
+        }).startStandalone()
     }
     
     deinit {

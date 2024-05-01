@@ -297,6 +297,14 @@ public final class L10n {
   public static var appUpdateUnarchiving: String  { return L10n.tr("Localizable", "AppUpdate.Unarchiving") }
   /// You have the latest version of Telegram.
   public static var appUpdateUptodate: String  { return L10n.tr("Localizable", "AppUpdate.Uptodate") }
+  /// Failed to download archive. Please try again.
+  public static var appUpdateErrorFailedDownload: String  { return L10n.tr("Localizable", "AppUpdate.Error.FailedDownload") }
+  /// Failed to download updating info. Please try again.
+  public static var appUpdateErrorFailedUpdating: String  { return L10n.tr("Localizable", "AppUpdate.Error.FailedUpdating") }
+  /// No internal link for this version. Please try again.
+  public static var appUpdateErrorNoInternal: String  { return L10n.tr("Localizable", "AppUpdate.Error.NoInternal") }
+  /// Wrong internal link. Please try again.
+  public static var appUpdateErrorWrongInternal: String  { return L10n.tr("Localizable", "AppUpdate.Error.WrongInternal") }
   /// NEW VERSION (your version: %@)
   public static func appUpdateTitleNew(_ p1: String) -> String {
     return L10n.tr("Localizable", "AppUpdate.Title.New", p1)

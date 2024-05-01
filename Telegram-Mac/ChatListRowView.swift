@@ -348,7 +348,7 @@ final class ChatListTopicNameAndTextLayout {
         
         if let data = items.first {
             let attr = NSMutableAttributedString()
-            let title = "🤡 " + data.title
+            let title = "\(clown) " + data.title
             let temp = NSAttributedString.initialize(string: title, color: theme.colors.text, font: .normal(.text))
             
             
@@ -359,7 +359,7 @@ final class ChatListTopicNameAndTextLayout {
             
             _ = attr.append(string: title.prefixWithDots(Int(maxCount - 3)), color: theme.colors.text, font: .normal(.text))
             
-            let range = attr.string.nsstring.range(of: "🤡")
+            let range = attr.string.nsstring.range(of: clown)
             if range.location != NSNotFound {
                 let item: InlineStickerItem
                 if let fileId = data.iconFileId {
@@ -412,7 +412,7 @@ final class ChatListTopicNameAndTextLayout {
                 let attr = NSMutableAttributedString()
                 for item in rest {
                     
-                    var range = attr.append(string: "🤡" + item.title, color: item.isUnread ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
+                    var range = attr.append(string: clown + item.title, color: item.isUnread ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
                     
                     range = NSMakeRange(range.location, 2)
                     
@@ -1199,7 +1199,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         
                     }
                     if item.appearMode == .short, item.isTopic {
-                        addition += 20
+                        //addition += 20
                     }
                     
                     if let statusControl = statusControl {
@@ -1763,7 +1763,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              case let .topic(_, data):
                  
                  if item.titleMode == .normal {
-                     let value: CGFloat = item.appearMode == .short && !item.shouldHideContent ? 16 : 30
+                     let value: CGFloat = item.appearMode == .short && !item.shouldHideContent ? 20 : 30
                      let size = NSMakeSize(value, value)
                      let current: InlineStickerItemLayer
                      let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor, isGeneral: item.mode.isGeneralTopic)
@@ -2921,7 +2921,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 addition += theme.icons.secretImage.backingSize.height
             }
             if item.appearMode == .short, item.isTopic {
-                addition += 20
+               // addition += 20
             }
             displayNameView.setFrameOrigin(NSMakePoint(item.leftInset + addition, item.margin - 1))
             

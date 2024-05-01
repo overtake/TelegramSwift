@@ -331,13 +331,13 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 
                 if item.drawCustomSeparator, !isSelect && !self.isResorting && containerView.controlState != .Highlight {
                     ctx.setFillColor(borderColor.cgColor)
-                    ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
+                    ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, containerView.frame.width - (item.inset.left + item.inset.right), .borderSize))
                 }
                 
                 
                 if case let .colorSelector(stateback) = item.type {
                     ctx.setFillColor(stateback.cgColor)
-                    ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels(backingScaleFactor, (frame.height - 14) / 2), 14, 14))
+                    ctx.fillEllipse(in: NSMakeRect(containerView.frame.width - 14 - item.inset.right - 16, floorToScreenPixels(backingScaleFactor, (frame.height - 14) / 2), 14, 14))
                 }
             case let .modern(position, insets):
                 let t = item.isSelected ? item.activeThumb : item.thumb
@@ -514,11 +514,11 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (insets.right == 0 ? 10 : 0)
                 
                 if let switchView = switchView {
-                    switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
+                    switchView.centerY(x:containerView.frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
                 }
                 
                 if let badgeView = badgeView {
-                    badgeView.centerY(x:frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
+                    badgeView.centerY(x:containerView.frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
                 }
                 
                 let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout)
@@ -547,9 +547,9 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                     }
                 }
                 
-                nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
+                nextView.centerY(x: containerView.frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
                 if let progressView = progressView {
-                    progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
+                    progressView.centerY(x: containerView.frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
                 }
             case let .modern(_, innerInsets):
                                 

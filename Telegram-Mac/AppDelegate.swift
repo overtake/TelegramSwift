@@ -41,8 +41,14 @@ class AppIntentObserver : NSObject {
     
     private let defaults = UserDefaults(suiteName: ApiEnvironment.intentsBundleId)!
     
+    private var current: AppIntentDataModel?
+    
     override init() {
         super.init()
+        let modelData = defaults.value(forKey: AppIntentDataModel.keyInternal) as? Data
+        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
+            self.current = model
+        }
         defaults.addObserver(self, forKeyPath: AppIntentDataModel.key, options: .new, context: nil)
     }
     
@@ -60,11 +66,19 @@ class AppIntentObserver : NSObject {
     
     func update() {
         let modelData = defaults.value(forKey: AppIntentDataModel.key) as? Data
-        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
-            onUpdate?(model)
+        let model: AppIntentDataModel?
+        if let modelData, let value = AppIntentDataModel.decoded(modelData) {
+            model = value
         } else {
-            onUpdate?(nil)
+            model = nil
         }
+        if let model = model {
+            defaults.setValue(model.encoded(), forKey: AppIntentDataModel.keyInternal)
+        }
+        if model != self.current {
+            self.onUpdate?(model)
+        }
+        self.current = model
     }
     
     public static let shared: AppIntentObserver = AppIntentObserver()
@@ -781,6 +795,43 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 return settings.withUpdatedToDefault(dark: settings.defaultIsDark)
                             }
                         }).start()
+                        
+                        if let value = value?.useUnableStatus {
+                            
+                            _ = (sharedContext.activeAccountsWithInfo |> deliverOnMainQueue |> take(1)).startStandalone(next: { accounts in
+                                for account in accounts.1 {
+                                    _ = updateSomeSettingsInteractively(postbox: account.account.postbox, { current in
+                                        var current = current
+                                        if value {
+                                            current.focusIntentStatusFallback = account.peer.emojiStatus?.fileId
+                                        }
+                                        current.focusIntentStatusEnabled = value
+                                        return current
+                                    }).startStandalone()
+                                }
+                            })
+                            
+                            if value {
+                               
+                                
+                                /*
+                                 let files = context.diceCache.top_emojies_status |> deliverOnMainQueue
+                                  _ = files.startStandalone(next: { files in
+                                      if let file = files.first(where: { $0.customEmojiText == "⛔️" }) {
+                                          _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                                      }
+                                  })
+                                 */
+                                
+                                if let context = self.contextValue?.context {
+                                  
+                                }
+                                
+
+                            } else {
+                                
+                            }
+                        }
                     }
                     AppIntentObserver.shared.update()
                 }
@@ -1359,13 +1410,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func tryApplyAutologinToken(_ url: String) -> String? {
-        if let context = contextValue?.context {
-            let config = context.appConfiguration
-            if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
-                return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+        var result: String?
+        self.enumerateAccountContexts { context in
+            if context.window == NSApp.keyWindow {
+                let config = context.appConfiguration
+                if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
+                    result = value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+                }
             }
         }
-        return nil
+        return result
     }
     
     func applicationDidHide(_ notification: Notification) {
