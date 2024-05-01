@@ -118,7 +118,7 @@ private func translate(context: AccountContext, from: String?, to: String, block
     for block in blocks {
         signals.append(context.engine.messages.translate(text: block, toLang: to) |> `catch` { _ in return .fail(.generic)} |> mapToSignal { value in
             if let value = value {
-                return .single((detect: nil, result: value))
+                return .single((detect: nil, result: value.0))
             } else {
                 return Translate.translateText(text: block, from: from, to: to)
             }

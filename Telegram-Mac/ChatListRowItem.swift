@@ -833,12 +833,12 @@ class ChatListRowItem: TableRowItem {
         }
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
-        self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: isTopic ? 2 : 1)
+        self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: 1)
         
         let selected = titleText.mutableCopy() as! NSMutableAttributedString
         if let color = selected.attribute(.selectedColor, at: 0, effectiveRange: nil) {
             selected.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selected.range)
-            self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: isTopic ? 2 : 1)
+            self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: 1)
         }
                 
         if !forumTopicItems.isEmpty, let message = messages.first, tags == nil {
@@ -922,7 +922,7 @@ class ChatListRowItem: TableRowItem {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
                         
-                        if author.id != context.account.peerId {
+                        if author.id != context.account.peerId, !isTopic {
                             attr.insert(.embeddedAvatar(.init(author)), at: 0)
                         }
                         attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
@@ -1284,7 +1284,7 @@ class ChatListRowItem: TableRowItem {
                 return 50 + (10 * 2.0)
             } else {
                 if appearMode == .short {
-                    return 10.0
+                    return 35
                 } else {
                     return 30 + (10 * 2.0)
                 }

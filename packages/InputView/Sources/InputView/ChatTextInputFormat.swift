@@ -124,7 +124,13 @@ public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, s
             result.removeAttribute(attribute, range: range)
         }
         result.replaceCharacters(in:nsRange, with: text)
-        let updatedRange = NSMakeRange(nsRange.location, max(nsRange.length, text.length))
+        let length: Int
+        if nsRange.length > text.length {
+            length = min(nsRange.length, text.length)
+        } else {
+            length = max(nsRange.length, text.length)
+        }
+        let updatedRange = NSMakeRange(nsRange.location, length)
         result.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: url), range: updatedRange)
         return Updated_ChatTextInputState(inputText: result, selectionRange: updatedRange.lowerBound ..< updatedRange.upperBound)
     } else {

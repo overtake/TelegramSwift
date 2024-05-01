@@ -16,7 +16,7 @@ import FastBlur
 import ObjcUtils
 import Accelerate
 import TelegramMedia
-
+import InAppSettings
 final class EmojiesSectionRowItem : GeneralRowItem {
     
     enum Item : Equatable {
@@ -358,11 +358,26 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                         
                         let lrect = context.window.convertFromScreen(srect)
                         
+                        
                         for hour in hours {
                             items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
                                 self?.callback(sticker, self?.info, hour, lrect)
                             }))
                         }
+                        
+                        if #available(macOS 13, *) {
+                            items.append(ContextSeparatorItem())
+                            //TODO LANG
+                            items.append(ContextMenuItem("Apply for Focus Filter", handler: {
+                                _ = updateSomeSettingsInteractively(postbox: context.account.postbox, { current in
+                                    var current = current
+                                    current.focusIntentStatusActive = sticker.file.fileId.id
+                                    return current
+                                }).startStandalone()
+                                showModalText(for: context.window, text: "This emoji will be used for system Focus Mode")
+                            }))
+                        }
+                       
                     }
                 }
             }

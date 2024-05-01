@@ -22,7 +22,7 @@ import InAppPurchaseManager
 import ApiCredentials
 
 let clown: String = "🤡"
-
+let focusIntentEmoji = "⛔️"
 
 
 public struct PremiumConfiguration {
@@ -923,6 +923,46 @@ final class AccountContext {
         
         actionsDisposable.add(requestApplicationIcons(engine: engine).start())
 
+        let focusIntentStatus = someAccountSetings(postbox: account.postbox) 
+        |> distinctUntilChanged(isEqual: { 
+            $0.focusIntentStatusEnabled == $1.focusIntentStatusEnabled &&
+            $0.focusIntentStatusActive == $1.focusIntentStatusActive
+        })
+        |> deliverOnMainQueue
+        
+        actionsDisposable.add(focusIntentStatus.startStandalone(next: { [weak self] settings in
+            guard let self else {
+                return
+            }
+            let setStatus:(Int64?)->Void = { [weak self] fileId in
+                guard let self else {
+                    return
+                }
+                if let fileId {
+                    let file = self.inlinePacksContext.load(fileId: fileId) |> deliverOnMainQueue
+                    _ = file.startStandalone(next: { file in
+                        _ = engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                    })
+                } else {
+                    _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: nil).start()
+                }
+            }
+            if settings.focusIntentStatusEnabled {
+                if let fileId = settings.focusIntentStatusActive {
+                    setStatus(fileId)
+                } else {
+                     _ = (self.diceCache.top_emojies_status |> deliverOnMainQueue).startStandalone(next: { files in
+                         if let file = files.first(where: { $0.customEmojiText == focusIntentEmoji }) {
+                             setStatus(file.fileId.id)
+                         }
+                     })
+                }
+            } else if let fileId = settings.focusIntentStatusFallback {
+                setStatus(fileId)
+            } else {
+                setStatus(nil)
+            }
+        }))
         
         #endif
         
@@ -942,10 +982,6 @@ final class AccountContext {
         actionsDisposable.add(autologinToken.start(next: { [weak self] token in
             self?.autologinToken = token.autologinToken
         }))
-        
-        (additionalSettings(accountManager: sharedContext.accountManager) |> deliverOnMainQueue).start(next: { value in
-            NSLog("dark mode in focus = \(value.alwaysDarkMode)")
-        })
     }
     
     @objc private func updateKeyWindow() {

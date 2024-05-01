@@ -125,6 +125,20 @@ class DiceCache {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 100)
     }
     
+    var top_emojies_status: Signal<[TelegramMediaFile], NoError> {
+        return engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false)
+        |> map { result -> [TelegramMediaFile] in
+            switch result {
+            case let .result(_, items, _):
+                return items.map(\.file)
+            default:
+                return []
+            }
+        }
+        |> take(1)
+    }
+
+    
     var emojies_status: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
     }

@@ -354,7 +354,6 @@
 		277C209827A2F6160070B3BF /* YuvConversion in Frameworks */ = {isa = PBXBuildFile; productRef = 277C209727A2F6160070B3BF /* YuvConversion */; };
 		277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */; };
 		277D281A2AD02F1800CC6420 /* InputView in Frameworks */ = {isa = PBXBuildFile; productRef = 277D28192AD02F1800CC6420 /* InputView */; };
-		277D281C2AD0322E00CC6420 /* ExperimentalTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277D281B2AD0322E00CC6420 /* ExperimentalTextView.swift */; };
 		277DFE6127842E6600F78396 /* Translate in Frameworks */ = {isa = PBXBuildFile; productRef = 277DFE6027842E6600F78396 /* Translate */; };
 		277DFE6327843B6700F78396 /* TranslateModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6227843B6700F78396 /* TranslateModalController.swift */; };
 		277DFE6627843F5100F78396 /* TranslateTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */; };
@@ -1919,7 +1918,6 @@
 		277C209627A2F6090070B3BF /* YuvConversion */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = YuvConversion; path = "submodules/telegram-ios/submodules/YuvConversion"; sourceTree = "<group>"; };
 		277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputMenuView.swift; sourceTree = "<group>"; };
 		277D28182AD02EF900CC6420 /* InputView */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = InputView; path = packages/InputView; sourceTree = "<group>"; };
-		277D281B2AD0322E00CC6420 /* ExperimentalTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalTextView.swift; sourceTree = "<group>"; };
 		277DFE5F27842E3A00F78396 /* Translate */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Translate; path = packages/Translate; sourceTree = "<group>"; };
 		277DFE6227843B6700F78396 /* TranslateModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateModalController.swift; sourceTree = "<group>"; };
 		277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateTableRowItem.swift; sourceTree = "<group>"; };
@@ -5983,7 +5981,6 @@
 			isa = PBXGroup;
 			children = (
 				A7F28336239A808500742C20 /* TemplateController.swift */,
-				277D281B2AD0322E00CC6420 /* ExperimentalTextView.swift */,
 				275E85202B219011007A72CA /* MetalEngineTestController.swift */,
 			);
 			name = experemental;
@@ -7899,7 +7896,6 @@
 				273060AA2B984AE700F3317D /* TimeRangeSelectorController.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */,
-				277D281C2AD0322E00CC6420 /* ExperimentalTextView.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
 				27ABFD272858C65B006C3301 /* FasterStarsView.swift in Sources */,
 				2761437A2BDA667A0034338C /* AppIntentDataModel.swift in Sources */,
@@ -8256,7 +8252,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 245582;
+				CURRENT_PROJECT_VERSION = 245482;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				ENABLE_BITCODE = NO;
@@ -8292,7 +8288,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.12;
+				MARKETING_VERSION = 10.12.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8344,7 +8340,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.12;
+				MARKETING_VERSION = 10.12.2;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8392,7 +8388,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.12;
+				MARKETING_VERSION = 10.12.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8474,7 +8470,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 245582;
+				CURRENT_PROJECT_VERSION = 245482;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 6N38VWS5BX;
@@ -8511,7 +8507,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.12;
+				MARKETING_VERSION = 10.12.2;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (

@@ -1238,8 +1238,8 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 
                 current.peer = peer
                 
-                current.balance = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
-                current.overview.balance = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
+                current.balance = .init(ton: stats.balances.availableBalance, usdRate: stats.usdRate)
+                current.overview.balance = .init(ton: stats.balances.availableBalance, usdRate: stats.usdRate)
                 current.overview.all = .init(ton: stats.balances.overallRevenue, usdRate: stats.usdRate)
                 current.overview.last = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
                 

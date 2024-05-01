@@ -488,6 +488,16 @@ public extension Message {
         return nil
     }
     
+    
+    func hasTranslationAttribute(toLang: String) -> Bool {
+        for attr in attributes {
+            if let attr = attr as? TranslationMessageAttribute, attr.toLang == toLang {
+                return true
+            }
+        }
+        return false
+    }
+    
     var isMediaSpoilered: Bool {
         for attr in attributes {
             if attr is MediaSpoilerMessageAttribute {

@@ -630,6 +630,7 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
         if state.banSelected {
             for memberId in state.banPeerSelected {
                 var rights: TelegramChatBannedRightsFlags
+                var flags: TelegramChatBannedRightsFlags = []
                 if state.banFully {
                     rights = [.banReadMessages]
                 } else if let defaultBannedRightsFlags = channel.defaultBannedRights?.flags {
@@ -646,16 +647,20 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
                 } else {
                     rights = []
                 }
-                var list = allGroupPermissionList(peer: state.channel).map { $0.0 }
-                list.append(contentsOf: banSendMediaSubList().map { $0.0 })
-                
-                var flags: TelegramChatBannedRightsFlags = []
-                
-                for right in list {
-                    if !rights.contains(right) {
-                        flags.insert(right)
+                if state.banFully {
+                    flags = rights
+                } else {
+                    var list = allGroupPermissionList(peer: state.channel).map { $0.0 }
+                    list.append(contentsOf: banSendMediaSubList().map { $0.0 })
+                    
+                    
+                    for right in list {
+                        if !rights.contains(right) {
+                            flags.insert(right)
+                        }
                     }
                 }
+                
                 
                 
                 signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: .init(flags: flags, untilDate: Int32.max)))

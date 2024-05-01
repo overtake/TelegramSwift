@@ -150,6 +150,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     }
     
     public var topWindow: Window?
+    public var closeOutside: Bool = true
     
     public var loadMore: (()->Void)? = nil
 

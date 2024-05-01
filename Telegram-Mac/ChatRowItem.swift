@@ -536,10 +536,15 @@ class ChatRowItem: TableRowItem {
             if let media = media as? TelegramMediaMap {
                 if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                     var time:TimeInterval = Date().timeIntervalSince1970
-                    time -= context.timeDifference
-                    if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                    if liveBroadcastingTimeout == .max {
                         return false
+                    } else {
+                        time -= context.timeDifference
+                        if Int(time) < Int(message.timestamp) + Int(liveBroadcastingTimeout) {
+                            return false
+                        }
                     }
+                   
                 }
                 return media.venue == nil
             }
@@ -1687,11 +1692,16 @@ class ChatRowItem: TableRowItem {
                 
                 if let media = media as? TelegramMediaMap {
                     if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-                        var time:TimeInterval = Date().timeIntervalSince1970
-                        time -= context.timeDifference
-                        if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                        if liveBroadcastingTimeout == .max {
                             return false
+                        } else {
+                            var time:TimeInterval = Date().timeIntervalSince1970
+                            time -= context.timeDifference
+                            if Int(time) < Int(message.timestamp) + Int(liveBroadcastingTimeout) {
+                                return false
+                            }
                         }
+                        
                     }
                     return media.venue == nil
                 }
@@ -3335,10 +3345,6 @@ class ChatRowItem: TableRowItem {
                     accessToAll = false
                 }
                 
-                
-//                if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
-//                    available.move(at: index, to: 0)
-//                }
                 
                 guard !available.isEmpty else {
                     return nil

@@ -1,26 +1,19 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-A data model to use for sharing information between the app and its App Intents extension.
-*/
 
 import Foundation
 @available(macOS 13, *)
-public struct AppIntentDataModel: Codable {
+public struct AppIntentDataModel: Codable, Equatable {
     
     static let key: String = "appIntentData"
-    
-    public init(alwaysUseDarkMode: Bool? = nil) {
+    static let keyInternal: String = "appIntentData_Internal"
+
+    public init(alwaysUseDarkMode: Bool = false, useUnableStatus: Bool = false) {
         self.alwaysUseDarkMode = alwaysUseDarkMode
+        self.useUnableStatus = useUnableStatus
     }
     
-    public let alwaysUseDarkMode: Bool?
-    
-    public var isFocusFilterEnabled: Bool {
-        alwaysUseDarkMode == true
-    }
-    
+    public let alwaysUseDarkMode: Bool
+    public let useUnableStatus: Bool
+
     func encoded() -> Data? {
         let encoder = JSONEncoder()
         do {
