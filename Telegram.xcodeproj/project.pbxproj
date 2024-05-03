@@ -253,7 +253,6 @@
 		2761434F2BDA50730034338C /* FocusIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761434E2BDA50730034338C /* FocusIntents.swift */; };
 		2761435E2BDA57350034338C /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2761435D2BDA57350034338C /* AppIntents.framework */; };
 		276143672BDA61A30034338C /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		276143682BDA61CD0034338C /* FocusIntents.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 2761434A2BDA50720034338C /* FocusIntents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2761437A2BDA667A0034338C /* AppIntentDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143762BDA66770034338C /* AppIntentDataModel.swift */; };
 		2761437B2BDA667A0034338C /* AppIntentDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143762BDA66770034338C /* AppIntentDataModel.swift */; };
 		2761437E2BDA667A0034338C /* AppIntentsData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143782BDA66790034338C /* AppIntentsData.swift */; };
@@ -1502,13 +1501,6 @@
 			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
 			remoteInfo = TelegramShare;
 		};
-		276143522BDA50730034338C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 276143492BDA50720034338C;
-			remoteInfo = FocusIntents;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1529,7 +1521,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				276143682BDA61CD0034338C /* FocusIntents.appex in Embed App Extensions */,
 				276143672BDA61A30034338C /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
@@ -6413,7 +6404,6 @@
 			);
 			dependencies = (
 				2745FEC8274F943200546B05 /* PBXTargetDependency */,
-				276143532BDA50730034338C /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			packageProductDependencies = (
@@ -8005,11 +7995,6 @@
 			isa = PBXTargetDependency;
 			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
 			targetProxy = 2745FEC7274F943200546B05 /* PBXContainerItemProxy */;
-		};
-		276143532BDA50730034338C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 276143492BDA50720034338C /* FocusIntents */;
-			targetProxy = 276143522BDA50730034338C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
