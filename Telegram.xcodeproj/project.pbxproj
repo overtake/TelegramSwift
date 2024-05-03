@@ -251,7 +251,6 @@
 		276143372BD93AE00034338C /* InlineAvatarLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143362BD93AE00034338C /* InlineAvatarLayer.swift */; };
 		2761434D2BDA50730034338C /* FocusIntentsExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761434C2BDA50730034338C /* FocusIntentsExtension.swift */; };
 		2761434F2BDA50730034338C /* FocusIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761434E2BDA50730034338C /* FocusIntents.swift */; };
-		2761435E2BDA57350034338C /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2761435D2BDA57350034338C /* AppIntents.framework */; };
 		276143672BDA61A30034338C /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2761437A2BDA667A0034338C /* AppIntentDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143762BDA66770034338C /* AppIntentDataModel.swift */; };
 		2761437B2BDA667A0034338C /* AppIntentDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276143762BDA66770034338C /* AppIntentDataModel.swift */; };
@@ -3159,7 +3158,6 @@
 				27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
 				27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */,
-				2761435E2BDA57350034338C /* AppIntents.framework in Frameworks */,
 				27B8361C2B5FCD0300E82683 /* Dock in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				27D696F0274F8449008A723E /* KeyboardKey in Frameworks */,
