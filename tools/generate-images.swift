@@ -695,6 +695,7 @@ func initialize() -> [String] {
     array.append("audioplayer_volume_off")
     array.append("audioplayer_speed_x1")
     array.append("audioplayer_speed_x2")
+    array.append("audioplayer_list")
 
     array.append("chat_info_voice_chat")
     

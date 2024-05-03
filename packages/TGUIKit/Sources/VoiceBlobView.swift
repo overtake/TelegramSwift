@@ -7,10 +7,9 @@
 //
 
 import Cocoa
-import TGUIKit
 import SwiftSignalKit
 
-final class VoiceBlobView: View {
+public final class VoiceBlobView: View {
     
     private let smallBlob: BlobView
     private let mediumBlob: BlobView
@@ -25,9 +24,9 @@ final class VoiceBlobView: View {
     
     private(set) var isAnimating = false
     
-    typealias BlobRange = (min: CGFloat, max: CGFloat)
+    public typealias BlobRange = (min: CGFloat, max: CGFloat)
     
-    init(
+    public init(
         frame: CGRect,
         maxLevel: CGFloat,
         smallBlobRange: BlobRange,
@@ -96,13 +95,13 @@ final class VoiceBlobView: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func setColor(_ color: NSColor, animated: Bool) {
+    public func setColor(_ color: NSColor, animated: Bool) {
         smallBlob.setColor(color)
         mediumBlob.setColor(color.withAlphaComponent(0.3))
         bigBlob.setColor(color.withAlphaComponent(0.15))
     }
     
-    func updateLevel(_ level: CGFloat) {
+    public func updateLevel(_ level: CGFloat) {
         let normalizedLevel = min(1, max(level / maxLevel, 0))
         
         smallBlob.updateSpeedLevel(to: normalizedLevel)
@@ -112,7 +111,7 @@ final class VoiceBlobView: View {
         audioLevel = normalizedLevel
     }
     
-    func startAnimating() {
+    public func startAnimating() {
         guard !isAnimating else { return }
         isAnimating = true
         
@@ -124,7 +123,7 @@ final class VoiceBlobView: View {
         displayLinkAnimator?.isPaused = false
     }
     
-    func stopAnimating() {
+    public func stopAnimating() {
         guard isAnimating else { return }
         isAnimating = false
         
@@ -150,7 +149,7 @@ final class VoiceBlobView: View {
         }
     }
     
-    override func layout() {
+    public override func layout() {
         super.layout()
         
         smallBlob.frame = bounds
@@ -160,6 +159,8 @@ final class VoiceBlobView: View {
         updateBlobsState()
     }
 }
+
+private let generateQueue = Queue()
 
 final class BlobView: View {
     
@@ -217,7 +218,7 @@ final class BlobView: View {
                 return EmptyDisposable
                 
             }
-            |> runOn(resourcesQueue)
+            |> runOn(generateQueue)
             |> deliverOnMainQueue
             
             
@@ -392,7 +393,7 @@ final class BlobView: View {
     }
 }
 
-extension CGPath {
+public extension CGPath {
 
 
     static func smoothCurve(through points: [CGPoint], length: CGFloat, smoothness: CGFloat, curve: Bool = false) -> CGPath {

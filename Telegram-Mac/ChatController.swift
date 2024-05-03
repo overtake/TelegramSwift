@@ -717,7 +717,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var previousHeight:CGFloat = 50
     func inputChanged(height: CGFloat, animated: Bool) {
-        updateFrame(NSMakeRect(0, 50, self.frame.width, self.frame.height), transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        updateFrame(self.frame, transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     required init?(coder: NSCoder) {
@@ -1009,11 +1009,11 @@ class ChatControllerView : View, ChatInputDelegate {
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
 
         updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
-//        if let count = interfaceState.historyCount, count > 0 {
-//            tableView.contentInsets = .init(top: state.height)
-//        } else {
-//            tableView.contentInsets = .init(top: 0)
-//        }
+        if let count = interfaceState.historyCount, count > 0 {
+            tableView.contentInsets = .init(top: state.height)
+        } else {
+            tableView.contentInsets = .init(top: 0)
+        }
     }
     
     private var scrollerRect: NSRect {
@@ -4784,6 +4784,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } else {
                 self?.liveTranslate?.toggleTranslate()
             }
+            self?.genericView.tableView.notifyScrollHandlers()
         }
         chatInteraction.hideTranslation = { [weak self] in
             if !context.isPremium {

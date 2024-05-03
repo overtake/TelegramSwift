@@ -2730,6 +2730,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                audioplayer_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) },
                                                audioplayer_speed_x1: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.grayIcon) },
                                                audioplayer_speed_x2: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.accentIcon) },
+                                               audioplayer_list: { NSImage(resource: .iconAudioPlayerList).precomposed(palette.grayIcon) },
                                                chat_info_voice_chat: { NSImage(named: "Icon_VoiceChat_Title")!.precomposed(palette.accentIcon) },
                                                chat_info_create_group: { NSImage(named: "Icon_NewGroup")!.precomposed(palette.accentIcon) },
                                                chat_info_change_colors: { NSImage(named: "Icon_ChangeColors")!.precomposed(palette.accentIcon) },

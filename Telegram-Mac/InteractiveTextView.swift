@@ -35,10 +35,12 @@ final class InteractiveTextView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(text: TextViewLayout, context: AccountContext?) {
+    func set(text: TextViewLayout?, context: AccountContext?) {
         self.textView.update(text)
-        self.setFrameSize(text.layoutSize)
-        if let context {
+        if let text {
+            self.setFrameSize(text.layoutSize)
+        }
+        if let context, let text {
             self.isLite = context.isLite(.emoji)
             self.updateInlineStickers(context: context, textLayout: text, itemViews: &inlineStickerItemViews)
         }

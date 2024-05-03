@@ -3328,7 +3328,7 @@ class ChatRowItem: TableRowItem {
                     available = reactions.compactMap { reaction in
                         switch reaction.value {
                         case let .custom(fileId):
-                            if accessToAll {
+                            if !accessToAll {
                                 let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                                 return .custom(value: reaction.value, fileId: fileId, message.associatedMedia[mediaId] as? TelegramMediaFile, isSelected: isSelected(reaction.value))
                             } else {

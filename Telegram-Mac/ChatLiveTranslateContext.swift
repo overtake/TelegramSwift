@@ -66,48 +66,6 @@ struct ChatTranslationState: Codable {
 }
 
 
-
-func translateMessageIds(context: AccountContext, messageIds: [EngineMessage.Id], toLang: String) -> Signal<Void, NoError> {
-    return context.account.postbox.transaction { transaction -> Signal<Void, NoError> in
-        var messageIdsToTranslate: [EngineMessage.Id] = []
-        var messageIdsSet = Set<EngineMessage.Id>()
-        for messageId in messageIds {
-            if let message = transaction.getMessage(messageId) {
-                if let replyAttribute = message.attributes.first(where: { $0 is ReplyMessageAttribute }) as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[replyAttribute.messageId] {
-                    if !replyMessage.text.isEmpty {
-                        if let translation = replyMessage.attributes.first(where: { $0 is TranslationMessageAttribute }) as? TranslationMessageAttribute, translation.toLang == toLang {
-                        } else {
-                            if !messageIdsSet.contains(replyMessage.id) {
-                                messageIdsToTranslate.append(replyMessage.id)
-                                messageIdsSet.insert(replyMessage.id)
-                            }
-                        }
-                    }
-                }
-                if !message.text.isEmpty && message.author?.id != context.account.peerId {
-                    if let translation = message.attributes.first(where: { $0 is TranslationMessageAttribute }) as? TranslationMessageAttribute, translation.toLang == toLang {
-                    } else {
-                        if !messageIdsSet.contains(messageId) {
-                            messageIdsToTranslate.append(messageId)
-                            messageIdsSet.insert(messageId)
-                        }
-                    }
-                }
-            } else {
-                if !messageIdsSet.contains(messageId) {
-                    messageIdsToTranslate.append(messageId)
-                    messageIdsSet.insert(messageId)
-                }
-            }
-        }
-        return context.engine.messages.translateMessages(messageIds: messageIdsToTranslate, toLang: toLang)
-        |> `catch` { _ -> Signal<Void, NoError> in
-            return .complete()
-        }
-    } |> switchToLatest
-}
-
-
 private func cachedChatTranslationState(engine: TelegramEngine, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
     let key = ValueBoxKey(length: 8)
     key.setInt64(0, value: peerId.id._internalGetInt64Value())
@@ -350,6 +308,10 @@ final class ChatLiveTranslateContext {
                 return
             }
             let toLang = self.stateValue.with { $0.to }
+            let isEnabled = self.stateValue.with { $0.canTranslate && $0.translate }
+            if !isEnabled {
+                return
+            }
             let msgs = message.filter { !$0.hasTranslationAttribute(toLang: toLang) }.map { $0 }
             let translated = message.filter { $0.hasTranslationAttribute(toLang: toLang) }.map { $0 }
             

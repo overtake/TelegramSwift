@@ -262,7 +262,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     private var startIndex:Int = -1
     let view:GalleryPageView = GalleryPageView()
-    private let textView: TextView = TextView()
+    private let textView: InteractiveTextView = InteractiveTextView()
     private var publicPhotoView: PublicPhotoView?
     private let textContainer = View()
     private let textScrollView = ScrollView()
@@ -335,8 +335,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }))
         
         cache.countLimit = 10
-        textView.isSelectable = false
-        textView.userInteractionEnabled = true
+        textView.textView.isSelectable = false
+        textView.textView.userInteractionEnabled = true
         
         var dragged: NSPoint? = nil
         
@@ -369,9 +369,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
 
             if self.textScrollView.superview != nil, NSPointInRect(point, self.textScrollView.frame) {
-                self.textView.mouseUp(with: event)
+                self.textView.textView.mouseUp(with: event)
                 return .invoked
-            } else if self.textView.mouseInside() {
+            } else if self.textView.textView.mouseInside() {
                 return .invoked
             } else if let view = self.publicPhotoView, NSPointInRect(point, view.frame) {
                 return .invokeNext
@@ -401,16 +401,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 if hasPictureInPicture {
                     return .rejected
-                }
-                
-                if let recognition = view.recognition {
-                    if recognition.hasSelectedText {
-                        var bp = 0
-                        bp += 1
-                    } else {
-                        var bp = 0
-                        bp += 1
-                    }
                 }
                 
                 _ = interactions.dismiss(event)
@@ -525,7 +515,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     private func configureTextAutohide() {
         let view = controller.selectedViewController?.view as? MagnifyView
-        if textScrollView.superview != nil {
+        if textScrollView.superview != controller.view {
             textScrollView.removeFromSuperview()
             controller.view.addSubview(textScrollView)
         }
@@ -767,7 +757,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 }
             } else {
                 let updated = controller.selectedIndex != index
-                currentController = controller.selectedViewController
                 if controller.selectedIndex != index {
                     controller.selectedIndex = index
                     pageControllerDidEndLiveTransition(controller, force: updated)
@@ -775,6 +764,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     selectedIndex.set(index)
                     pageControllerDidEndLiveTransition(controller, force: updated)
                 }
+                currentController = controller.selectedViewController
             }
             
             if items.count > 1, hasInited {
@@ -851,23 +841,22 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let item = self.item(at: pageController.selectedIndex)
         if let text = item.caption {
             text.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
-            textView.update(text)
+            textView.set(text: text, context: item.context)
             textView.backgroundColor = .clear
-            textView.disableBackgroundDrawing = true
             
             
             controller.view.addSubview(textScrollView)
 //            textScrollView.change(opacity: 1.0)
-            textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height))
+            textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height) + 10)
             textScrollView.centerX(y: 100)
             textScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
             textScrollView.layer?.cornerRadius = .cornerRadius
             
             textContainer.frame = NSMakeRect(0, 0, textScrollView.frame.width, textView.frame.height)
-            textView.center()
+            textView.centerX(y: 5)
 
         } else {
-            textView.update(nil)
+            textView.set(text: nil, context: nil)
             textScrollView.removeFromSuperview()
         }
         

@@ -999,7 +999,6 @@
 		A7E831F4255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
 		A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */; };
 		A7E83214255E992D0095A167 /* WaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E83213255E992D0095A167 /* WaveView.swift */; };
-		A7E832192562CFC70095A167 /* VoiceBlobView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E832182562CFC70095A167 /* VoiceBlobView.swift */; };
 		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
 		A7F283002395168300742C20 /* SettingsSearchRecentQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */; };
 		A7F283022395185B00742C20 /* SettingsSearchableItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F283012395185B00742C20 /* SettingsSearchableItems.swift */; };
@@ -2521,7 +2520,6 @@
 		A7E831F2255041020095A167 /* IsEqualMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsEqualMessages.swift; sourceTree = "<group>"; };
 		A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColdStartPasslockController.swift; sourceTree = "<group>"; };
 		A7E83213255E992D0095A167 /* WaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveView.swift; sourceTree = "<group>"; };
-		A7E832182562CFC70095A167 /* VoiceBlobView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceBlobView.swift; sourceTree = "<group>"; };
 		A7ED5DAE236C7CE100040372 /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchRecentQueries.swift; sourceTree = "<group>"; };
 		A7F283012395185B00742C20 /* SettingsSearchableItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchableItems.swift; sourceTree = "<group>"; };
@@ -4859,7 +4857,6 @@
 				C25911361DF1A68200671E72 /* ChatInputRecordingView.swift */,
 				D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */,
 				A7E83213255E992D0095A167 /* WaveView.swift */,
-				A7E832182562CFC70095A167 /* VoiceBlobView.swift */,
 				27CE2DC12AD6623D001FA1C7 /* UIInputView.swift */,
 			);
 			name = input;
@@ -7701,7 +7698,6 @@
 				A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */,
 				271D4F38276B69BD004FD034 /* ReactionsSettingsController.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* VideoStickerContentView.swift in Sources */,
-				A7E832192562CFC70095A167 /* VoiceBlobView.swift in Sources */,
 				2760E55626970513001C59F8 /* WidgetStorageController.swift in Sources */,
 				D0D139252524A31E005FCF35 /* RepliesHeaderRowItem.swift in Sources */,
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
