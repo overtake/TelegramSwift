@@ -492,6 +492,11 @@ public extension Message {
     func hasTranslationAttribute(toLang: String) -> Bool {
         for attr in attributes {
             if let attr = attr as? TranslationMessageAttribute, attr.toLang == toLang {
+                if let poll = self.media.first as? TelegramMediaPoll {
+                    if poll.results.solution != nil {
+                        return attr.pollSolution != nil
+                    }
+                }
                 return true
             }
         }

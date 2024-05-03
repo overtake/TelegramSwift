@@ -22,7 +22,16 @@ private extension TelegramMediaPoll {
         for (i, option) in options.enumerated() {
             options[i] = .init(text: poll.additional[i].text, entities: poll.additional[i].entities, opaqueIdentifier: option.opaqueIdentifier)
         }
-        return .init(pollId: self.pollId, publicity: self.publicity, kind: self.kind, text: poll.text, textEntities: poll.entities, options: options, correctAnswers: self.correctAnswers, results: self.results, isClosed: self.isClosed, deadlineTimeout: self.deadlineTimeout)
+        
+        let solution: TelegramMediaPollResults.Solution?
+        if let value = poll.pollSolution {
+            solution = .init(text: value.text, entities: value.entities)
+        } else {
+            solution = self.results.solution
+        }
+        
+        let result: TelegramMediaPollResults = .init(voters: self.results.voters, totalVoters: self.results.totalVoters, recentVoters: self.results.recentVoters, solution: solution)
+        return .init(pollId: self.pollId, publicity: self.publicity, kind: self.kind, text: poll.text, textEntities: poll.entities, options: options, correctAnswers: self.correctAnswers, results: result, isClosed: self.isClosed, deadlineTimeout: self.deadlineTimeout)
     }
 }
 

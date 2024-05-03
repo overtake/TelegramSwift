@@ -483,17 +483,43 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
+        if let poll = message.media.first as? TelegramMediaPoll, mode.customChatContents == nil {
+            var text = poll.text
+            var entities: [MessageTextEntity] = []
+            entities.append(contentsOf: poll.textEntities)
+            text += "\n"
+            
+            for option in poll.options {
+                text += "\n🔘 \(option.text)"
+                for entity in option.entities {
+                    var current = entity
+                    current.range = entity.range.lowerBound + text.length - option.text.length ..< entity.range.upperBound + text.length - option.text.length
+                    entities.append(current)
+                }
+            }
+            let language = Translate.detectLanguage(for: text)
+                        
+            let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
+            if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
+                thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
+                    showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text, entities: entities, canBreak: false), for: context.window)
+                    data.chatInteraction.enableTranslatePaywall()
+                }, itemImage: MenuAnimation.menu_translate.value))
+            }
+        }
+        
     //    if !data.message.isCopyProtected() {
         if let textLayout = data.textLayout?.0, mode.customChatContents == nil {
             
             if !textLayout.selectedRange.hasSelectText {
                 let text = message.text
+                let entities = message.textEntities?.entities ?? []
                 let language = Translate.detectLanguage(for: text)
                 
                 let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
                 if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text, entities: entities), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }
@@ -513,18 +539,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
                         if let textLayout = textLayout {
                             let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
-//                            attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
-//                                if let value = data[TextInputAttributes.embedded] as? InlineStickerItem {
-//                                    switch value.source {
-//                                    case let .attribute(value):
-//                                        attr.replaceCharacters(in: range, with: value.emoji)
-//                                    default:
-//                                        break
-//                                    }
-//                                }
-//                            })
+
                             var effectiveRange = textLayout.selectedRange.range
                             let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                            
                             let pb = NSPasteboard.general
                             pb.clearContents()
                             pb.declareTypes([.string], owner: textLayout)
@@ -551,12 +569,18 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     })
                     if let range = attr.range.intersection(textLayout.selectedRange.range) {
                         let selectedText = attr.attributedSubstring(from: range)
-                        let text = selectedText.string
+                        
+                        let state = ChatTextInputState(attributedText: selectedText, selectionRange: 0..<0)
+                        let entities = state.messageTextEntities()
+
+                        let text = state.inputText
                         let language = Translate.detectLanguage(for: text)
                         let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
+                        
+                        
                         if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                                showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
+                                showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text, entities: entities), for: context.window)
                                 data.chatInteraction.enableTranslatePaywall()
                             }, itemImage: MenuAnimation.menu_translate.value))
                         }

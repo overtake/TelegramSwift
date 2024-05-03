@@ -1799,7 +1799,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     loop: for (key,value) in vars {
                         switch key {
                         case keyURLStart:
-                            action = .start(parameter: value, behavior: .none)
+                            action = .start(parameter: escape(with: value, addPercent: false), behavior: .none)
                             break loop;
                         case keyURLStartGroup, keyURLStartChannel:
                             if let openInfo = openInfo, let context = context {
@@ -2016,7 +2016,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         loop: for (key,value) in vars {
                             switch key {
                             case keyURLStart:
-                                action = .start(parameter: value, behavior: .none)
+                                action = .start(parameter: escape(with: value, addPercent: false), behavior: .none)
                                 break loop;
                             case keyURLStartGroup, keyURLStartChannel:
                                 if let context = context {

@@ -241,6 +241,9 @@ class GalleryViewer: NSResponder {
     let type:GalleryAppearType
     let chatMode: ChatMode?
     private let reversed: Bool
+    
+    private var liveTranslate: ChatLiveTranslateContext?
+    
     private init(context: AccountContext, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType, reversed:Bool = false, chatMode: ChatMode? = nil) {
         self.context = context
         self.delegate = delegate
@@ -569,6 +572,10 @@ class GalleryViewer: NSResponder {
         let pagerSize = self.pagerSize
         let indexes:Atomic<(earlierId: MessageIndex?, laterId: MessageIndex?)> = Atomic(value:(nil, nil))
         
+        
+        self.liveTranslate = .init(peerId: message.id.peerId, context: context)
+
+        
         if let item = item, let entry = item.entry.chatEntry {
             _ = current.swap([entry])
             
@@ -578,9 +585,15 @@ class GalleryViewer: NSResponder {
             ready.set(.single(true))
         }
         
-        let signal = request.get()
-            |> distinctUntilChanged
-            |> mapToSignal { index -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
+        let translate: Signal<ChatLiveTranslateContext.State?, NoError>
+        if let liveTranslate {
+            translate = liveTranslate.state |> map(Optional.init)
+        } else {
+            translate = .single(nil)
+        }
+        
+        let signal = combineLatest(request.get() |> distinctUntilChanged, translate |> distinctUntilChanged)
+            |> mapToSignal { index, translate -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                 
                 var type = type
                 let tags: HistoryViewInputTag? = tagsForMessage(message).flatMap { .tag($0) }
@@ -646,7 +659,7 @@ class GalleryViewer: NSResponder {
 
                 case .history:
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
-                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
+                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false, translate: translate).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
                                 return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil

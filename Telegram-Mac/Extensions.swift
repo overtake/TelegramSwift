@@ -2568,6 +2568,17 @@ struct DateSelectorUtil {
     static func formatTime(_ date: Date) -> String {
         return timerFormatter.string(from: date)
     }
+    
+    
+    static let timerShortFormatter: DateFormatter = {
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+        return timeFormatter
+    }()
+    
+    static func shortFormatTime(_ date: Date) -> String {
+        return timerShortFormatter.string(from: date)
+    }
 }
 
 

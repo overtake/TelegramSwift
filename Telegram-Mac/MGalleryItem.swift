@@ -435,48 +435,49 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self.context = context
         self._pagerSize = pagerSize
         if let message = entry.message, !message.text.isEmpty, !(message.anyMedia is TelegramMediaWebpage) {
-            let caption = message.text
-            let attr = NSMutableAttributedString()
-            _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
-            let controller = context.bindings.rootNavigation().controller as? ChatController
-
-            if let peer = message.peers[message.id.peerId] {
-                var type: ParsingType = [.Links, .Mentions, .Hashtags]
-                if peer.isGroup || peer.isSupergroup, peer.canSendMessage() {
-                    if let _ = controller {
-                        type.insert(.Commands)
+            
+            var text: String = message.text
+            var entities: [MessageTextEntity] = message.entities
+            if let translate = entry.chatEntry?.additionalData.translate {
+                switch translate {
+                case .loading:
+                    break
+                case let .complete(toLang: toLang):
+                    if let attribute = message.translationAttribute(toLang: toLang) {
+                        text = attribute.text
+                        entities = attribute.entities
                     }
                 }
-                attr.detectLinks(type: type, context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
-                    let navigation = context.bindings.rootNavigation()
-                    let controller = navigation.controller
-                    if toChat {
-                        if peerId == (controller as? ChatController)?.chatInteraction.peerId {
-                            if let postId = postId {
-                                (controller as? ChatController)?.chatInteraction.focusMessageId(nil, .init(messageId: postId, string: nil), TableScrollState.CenterEmpty)
-                            }
-                        } else {
-                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
-                        }
-                    } else {
-                        PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
-                    }
-                    viewer?.close()
-                }, hashtag: { hashtag in
-                    context.bindings.globalSearch(hashtag)
-                    viewer?.close()
-                }, command: { commandText in
-                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: peer.id, replyId: nil, threadId: message.threadId, atDate: nil).start()
-                    viewer?.close()
-                }, applyProxy: { server in
-                    applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
-                    viewer?.close()
-                })
-                
             }
             
-           
+            let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: FontSize.text, openInfo: { peerId, toChat, postId, action in
+                let navigation = context.bindings.rootNavigation()
+                let controller = navigation.controller
+                if toChat {
+                    if peerId == (controller as? ChatController)?.chatInteraction.peerId {
+                        if let postId = postId {
+                            (controller as? ChatController)?.chatInteraction.focusMessageId(nil, .init(messageId: postId, string: nil), TableScrollState.CenterEmpty)
+                        }
+                    } else {
+                        navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
+                    }
+                } else {
+                    PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
+                }
+                viewer?.close()
+            }, botCommand: { commandText in
+                _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: message.id.peerId, replyId: nil, threadId: message.threadId, atDate: nil).start()
+                viewer?.close()
+            }, hashtag: { hashtag in
+                context.bindings.globalSearch(hashtag)
+                viewer?.close()
+            }, applyProxy: { server in
+                applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
+                viewer?.close()
+            }, textColor: .white, isDark: true, bubbled: false).mutableCopy() as! NSMutableAttributedString
             
+            InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
+
             var spoilers:[TextViewLayout.Spoiler] = []
             for attr in message.attributes {
                 if let attr = attr as? TextEntitiesMessageAttribute {
@@ -492,7 +493,9 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 }
             }
             
-            self.caption = TextViewLayout(attr, alignment: .left, spoilers: spoilers)
+            self.caption = TextViewLayout(attr, alignment: .left, spoilers: spoilers, onSpoilerReveal: {
+                
+            })
             self.caption?.interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
                     execute(inapp: link, afterComplete: { value in
