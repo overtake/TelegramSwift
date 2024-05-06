@@ -475,7 +475,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     }
     
     func invoke() -> KeyHandlerResult {
-        if let selectedItem = genericView.highlightedItem() ?? genericView.selectedItem()  {
+        if let selectedItem = genericView.selectedItem()  {
             if let selectedItem = selectedItem as? ShortPeerRowItem {
                 chatInteraction.movePeerToInput(selectedItem.peer)
             } else if let selectedItem = selectedItem as? ContextListRowItem {
