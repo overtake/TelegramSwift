@@ -116,11 +116,12 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case channelReactions
         case channelStatus
         case defaultTags
+        case messageEffects
     }
     let mode: Mode
     let color: NSColor?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
-        self.itemSize = NSMakeSize(41, 34)
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], isBig: Bool = false, groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+        self.itemSize = isBig ? NSMakeSize(66, 59) : NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
         self.color = color
@@ -139,8 +140,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.context = context
         self.callback = callback
         
-        if stableId != AnyHashable(0), let info = info {
-            var text = info.title.uppercased()
+        if stableId != AnyHashable(0), let info = info, !info.title.isEmpty {
+            let text = info.title.uppercased()
             if groupEmojiPack {
                 sectionLayout = .init(.initialize(string: strings().emojiSectionGroupEmoji, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
             }
@@ -164,7 +165,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 } else {
                     self.unlockText = nil
                 }
-            case .channelReactions, .channelStatus:
+            case .channelReactions, .channelStatus, .messageEffects:
                 self.unlockText = nil
             case .preview:
                 if stableId != AnyHashable(0) {
@@ -447,6 +448,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 self.installPack?(info, self.stickerItems)
             case .channelStatus:
                 self.installPack?(info, self.stickerItems)
+            case .messageEffects:
+                break
             }
             
         }

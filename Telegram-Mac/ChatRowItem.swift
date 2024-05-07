@@ -143,6 +143,8 @@ class ChatRowItem: TableRowItem {
     private(set) var replyCount:TextViewLayout?
     private(set) var postAuthor:TextViewLayout?
     private(set) var editedLabel:TextViewLayout?
+    
+    private(set) var messageEffect: AvailableMessageEffects.MessageEffect?
    
     private(set) var fullDate:String?
     private(set) var originalFullDate:String?
@@ -1599,6 +1601,8 @@ class ChatRowItem: TableRowItem {
         self.downloadSettings = downloadSettings
         self._approximateSynchronousValue = Thread.isMainThread
         self._avatarSynchronousValue = Thread.isMainThread
+        self.messageEffect = object.additionalData.messageEffect
+        
         var message: Message?
         var isRead: Bool = true
         var itemType: ChatItemType = .Full(rank: nil, header: .normal)
@@ -3625,6 +3629,13 @@ class ChatRowItem: TableRowItem {
             }
         }
         return nil
+    }
+    
+    func invokeMessageEffect() {
+        if let message = message {
+            let mirror = self.renderType == .list ? false : message.isIncoming(context.account, renderType == .bubble)
+            chatInteraction.runPremiumScreenEffect(message, mirror, false)
+        }
     }
 }
 

@@ -643,6 +643,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
     }
     
+    func open_channel() {
+        pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
+    }
+    
     func updateEditingDescriptionText(_ text:String) -> Void {
         updateState { state in
             if let editingState = state.editingState {

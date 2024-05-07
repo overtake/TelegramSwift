@@ -407,6 +407,7 @@
 		27867A272AE0364200E25BB8 /* bot_menu_web_app.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */; };
 		27867A292AE2876100E25BB8 /* BoostReassignController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27867A282AE2876100E25BB8 /* BoostReassignController.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
+		2787AD622BEA4DE00046578E /* VCardModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787AD612BEA4DE00046578E /* VCardModalController.swift */; };
 		278926C327550BB200923087 /* ColorPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C227550BB200923087 /* ColorPalette */; };
 		278926C527550C8200923087 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C427550C8200923087 /* FoundationUtils */; };
 		278926C727550C8800923087 /* Strings in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C627550C8800923087 /* Strings */; };
@@ -1966,6 +1967,7 @@
 		27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = bot_menu_web_app.tgs; sourceTree = "<group>"; };
 		27867A282AE2876100E25BB8 /* BoostReassignController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostReassignController.swift; sourceTree = "<group>"; };
 		278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPatternPreviewController.swift; sourceTree = "<group>"; };
+		2787AD612BEA4DE00046578E /* VCardModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VCardModalController.swift; sourceTree = "<group>"; };
 		278926CD27551B4800923087 /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = "<group>"; };
 		278926CE27551B5600923087 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		278926CF2755222700923087 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -3554,6 +3556,7 @@
 			isa = PBXGroup;
 			children = (
 				2771FC512BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift */,
+				2787AD612BEA4DE00046578E /* VCardModalController.swift */,
 			);
 			name = panels;
 			sourceTree = "<group>";
@@ -7518,6 +7521,7 @@
 				A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */,
 				9F7D421F22203DB1007B68BB /* ChannelStatisticsController.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
+				2787AD622BEA4DE00046578E /* VCardModalController.swift in Sources */,
 				9F153D1421F0C7F800B95D82 /* WallpaperPreviewController.swift in Sources */,
 				27EF749729C44078009FA57B /* ShareCloudFolderController.swift in Sources */,
 				27CFB01C2B3D327600221DE7 /* PeerMediaSavedMessagesController.swift in Sources */,

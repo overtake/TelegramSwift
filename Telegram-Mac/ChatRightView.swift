@@ -31,6 +31,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         private(set) var edit: NSRect?
         private(set) var date: NSRect?
         private(set) var failed: NSRect?
+        private(set) var effect: NSRect?
         private let isStateOverlay: Bool
         init(_ item: ChatRowItem, size: NSSize) {
             
@@ -39,7 +40,12 @@ class ChatRightView: View, ViewDisplayDelegate {
                         
             var x: CGFloat = item.isStateOverlayLayout ? 4 : 0
             
-            
+            if let _ = item.messageEffect {
+                var rect = size.bounds.focus(NSMakeSize(12, 12))
+                rect.origin.x = x + 2
+                self.effect = rect
+                x = rect.maxX
+            }
             
             if let views = item.replyCount {
                 var rect_i = size.bounds.focus(item.presentation.chat.repliesCountIcon(item).backingSize)
@@ -93,7 +99,6 @@ class ChatRightView: View, ViewDisplayDelegate {
                 rect.origin.x = x + 2
                 self.failed = rect
                 x = rect.maxX
-                
             }
             
             if stateIsEnd {
@@ -164,7 +169,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             let rects = [self.state,
                          self.read,
                          self.sending,
-                         self.reactions,
+                         self.effect,
                          self.replyCount,
                          self.viewsCount,
                          self.viewsImage,
@@ -213,7 +218,7 @@ class ChatRightView: View, ViewDisplayDelegate {
     private var stateView:ImageView?
     private var readImageView:ImageView?
     private var sendingView:SendingClockProgress?
-    private(set) var reactionsView: ChatReactionsView?
+    private(set) var effectView: InlineStickerView?
     private var replyCountView: TextView?
     private var replyCountImage: ImageView?
     private var viewsCountView: TextView?
@@ -261,8 +266,21 @@ class ChatRightView: View, ViewDisplayDelegate {
             return nil
         }
         
-        if let view = self.reactionsView {
-            self.reactionsView = nil
+        if let effect = item.messageEffect {
+            if self.effectView?.animateLayer.fileId != effect.effectSticker.fileId.id {
+                if let view = self.effectView {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                let current = InlineStickerView(account: item.context.account, file: effect.effectSticker, size: NSMakeSize(12, 12), playPolicy: .onceEnd)
+                current.userInteractionEnabled = true
+                current.set(handler: { [weak self] _ in
+                    self?.item?.invokeMessageEffect()
+                }, for: .SingleClick)
+                self.effectView = current
+                addSubview(current)
+            }
+        } else if let view = self.effectView {
+            self.effectView = nil
             performSubviewRemoval(view, animated: animated, scale: true)
         }
         if let sendingRect = frames.sending {
@@ -514,7 +532,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         }
         
         
-        if let frame = frames.reactions, let view = reactionsView {
+        if let frame = frames.effect, let view = effectView {
             transition.updateFrame(view: view, frame: frame)
         }
         if let frame = frames.pin, let view = pinView {

@@ -164,7 +164,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil, customChatContents: ChatCustomContentsProtocol? = nil) -> Signal<[MessageId?],NoError> {
+    public static func enqueue(input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil) -> Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         let dynamicEmojiOrder = context.stickerSettings.dynamicPackOrder
@@ -224,6 +224,9 @@ class Sender: NSObject {
             }
             if let sendAsPeerId = sendAsPeerId {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
+            }
+            if let messageEffect {
+                attributes.append(EffectMessageAttribute(id: messageEffect.id))
             }
             attributes.append(WebpagePreviewMessageAttribute(leadingPreview: !linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false, isSafe: true))
 

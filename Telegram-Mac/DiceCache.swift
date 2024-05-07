@@ -121,6 +121,10 @@ class DiceCache {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
     }
     
+    var emojies_reactions_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+    }
+    
     var top_reactions: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 100)
     }
@@ -137,19 +141,38 @@ class DiceCache {
         }
         |> take(1)
     }
+    
+    var availableMessageEffects: Signal<AvailableMessageEffects?, NoError> {
+        return engine.stickers.availableMessageEffects()
+    }
 
     
     var emojies_status: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
     }
+    
+    var emojies_status_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+    }
+    
     var background_icons: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    
+    var background_icons_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
     }
     var channel_statuses: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudIconChannelStatusEmoji], aroundIndex: nil, count: 8000)
     }
+    var channel_statuses_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudIconChannelStatusEmoji], aroundIndex: nil, count: 2000)
+    }
     var emojies: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    var emojies_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
     }
     
     var premium_gifts: Signal<LoadedStickerPack, NoError> {

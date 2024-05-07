@@ -40,6 +40,9 @@ class ChatMediaLayoutParameters : Equatable {
     
     var runPremiumScreenEffect:(Message)->Void = { _ in }
     
+    var markDiceAsPlayed:(Message)->Void = { _ in }
+    var dicePlayed:(Message)->Bool = { _ in return true }
+    
     var mirror: Bool = false
     
     private var _timeCodeInitializer: Double? = nil
@@ -215,6 +218,9 @@ class ChatMediaItem: ChatRowItem {
     
     
     private func updateParameters() {
+        
+        let context = self.context
+        
         parameters?.chatLocationInput = chatInteraction.chatLocationInput
         parameters?.chatMode = chatInteraction.mode
         
@@ -230,6 +236,18 @@ class ChatMediaItem: ChatRowItem {
             return .single(nil)
         }
         
+        
+        parameters?.markDiceAsPlayed = { message in
+            _ = ApplicationSpecificNotice.addPlayedMessageEffects(accountManager: context.sharedContext.accountManager, values: [message.id]).startStandalone()
+        }
+        
+        parameters?.dicePlayed = { [weak self] message in
+            if let presentation = self?.chatInteraction.presentation {
+                return presentation.playedMessageEffects.contains(message.id)
+            } else {
+                return true
+            }
+        }
         
         
         parameters?.cancelOperation = { [unowned context, weak self] message, media in

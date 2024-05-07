@@ -561,6 +561,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         FontCacheKey.initializeCache()
         
+        clearUserDefaultsObject(forKeyPrefix: "dice_")
+        
         self.appEncryption = appEncryption
         
         let rootPath = containerUrl!
