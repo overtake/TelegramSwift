@@ -152,7 +152,7 @@ final class ReactionsWindowController : NSObject {
     private var keyDisposable: Disposable?
     private var panelKeyDisposable: Disposable?
 
-    private func makeView(_ content: NSView, _ initialView: NSView, _ initialRect: NSRect, animated: Bool, theme: TelegramPresentationTheme) -> (Window, V) {
+    private func makeView(_ content: NSView, _ initialView: NSView, _ initialRect: NSRect, animated: Bool, theme: TelegramPresentationTheme, moveTop: Bool) -> (Window, V) {
         
         let v = V(content, theme: theme)
         
@@ -162,6 +162,11 @@ final class ReactionsWindowController : NSObject {
             let offset = initialView.subviews[1].frame.minY - 8
             wAdd = (initialView.frame.height - 60) + offset // (18 is reaction offset y in parent)
             initialAdd = offset // (18 is reaction offset y in parent)
+            
+            if moveTop {
+                wAdd += 46
+                initialAdd += 46
+            }
         }
         
         let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36 - wAdd, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
@@ -197,14 +202,15 @@ final class ReactionsWindowController : NSObject {
     private var onClose:(()->Void)?
     private let presentation: TelegramPresentationTheme
     private let name: String
+    private let moveTop: Bool
     private var skipAppearAnimation = false
-    init(_ context: AccountContext, peerId: PeerId, selectedItems: [EmojiesSectionRowItem.SelectedItem], react: @escaping(StickerPackItem, NSRect?)->Void, onClose:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme, name: String = "") {
+    init(_ context: AccountContext, peerId: PeerId, selectedItems: [EmojiesSectionRowItem.SelectedItem], react: @escaping(StickerPackItem, NSRect?)->Void, onClose:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme, name: String = "", moveTop: Bool = false, mode: EmojiesController.Mode = .reactions) {
         self.context = context
         self.presentation = presentation
         self.onClose = onClose
         self.name = name
-        
-        self.emojies = .init(context, mode: context.peerId == peerId ? .defaultTags : .reactions, selectedItems: selectedItems, presentation: presentation)
+        self.moveTop = moveTop
+        self.emojies = .init(context, mode: context.peerId == peerId ? .defaultTags : mode, selectedItems: selectedItems, presentation: presentation)
         self.emojies.loadViewIfNeeded()
         super.init()
         
@@ -277,7 +283,7 @@ final class ReactionsWindowController : NSObject {
                 
         
         self.emojies.view.frame = self.emojies.view.bounds
-        let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated, theme: self.presentation)
+        let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated, theme: self.presentation, moveTop: moveTop)
         
         panel.makeKeyAndOrderFront(nil)
         
@@ -286,6 +292,8 @@ final class ReactionsWindowController : NSObject {
         self.panel = panel
         let context = self.context
                 
+        
+        
 
         panel.set(handler: { [weak self] _ in
             self?.close(animated: true)
@@ -302,7 +310,7 @@ final class ReactionsWindowController : NSObject {
                 self?.close(animated: true)
             }
             return .rejected
-        }, with: self, for: .leftMouseUp)
+        }, with: self, for: .leftMouseUp, priority: .supreme)
         
         context.window.set(handler: { [weak self] _ in
             self?.close(animated: true)
@@ -380,6 +388,12 @@ final class ReactionsWindowController : NSObject {
             if initialScreenRect.origin.y - 200 < 0, let panel = self.panel {
                 self.skipAppearAnimation = true
                 panel.setFrame(NSMakeRect(panel.frame.minX, panel.frame.minY + 100, panel.frame.width, panel.frame.height), display: true, animate: true)
+            }
+                        
+            if self.moveTop {
+                if let menu = contextOnScreen() {
+                    menu.setFrame(menu.frame.offsetBy(dx: 0, dy: -216), display: true, animate: false)
+                }
             }
             
         })

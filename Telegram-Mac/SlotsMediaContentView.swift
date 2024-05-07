@@ -170,7 +170,7 @@ class SlotsMediaContentView: ChatMediaContentView {
         
         let sent: Bool = media.value != nil
         
-        let played: Bool = FastSettings.diceHasAlreadyPlayed(parent)
+        let played: Bool = parameters?.dicePlayed(parent) ?? true
         
         
         
@@ -240,7 +240,7 @@ class SlotsMediaContentView: ChatMediaContentView {
                     }
                     if sent {
                         animation.onFinish = {
-                            FastSettings.markDiceAsPlayed(parent)
+                            parameters?.markDiceAsPlayed(parent)
                             if !played, value.is777, !parent.isIncoming(context.account, theme.bubbled) {
                                 PlayConfetti(for: context.window)
                             }

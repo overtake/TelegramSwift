@@ -7183,6 +7183,8 @@ public final class L10n {
   public static var contactInfoPhoneLabelWork: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelWork") }
   /// work fax
   public static var contactInfoPhoneLabelWorkFax: String  { return L10n.tr("Localizable", "ContactInfo.PhoneLabelWorkFax") }
+  /// title
+  public static var contactInfoTitle: String  { return L10n.tr("Localizable", "ContactInfo.Title") }
   /// homepage
   public static var contactInfoURLLabelHomepage: String  { return L10n.tr("Localizable", "ContactInfo.URLLabelHomepage") }
   /// Add Contact
@@ -11631,6 +11633,8 @@ public final class L10n {
   public static var peerInfoActionMore: String  { return L10n.tr("Localizable", "PeerInfo.Action.More") }
   /// Mute
   public static var peerInfoActionMute: String  { return L10n.tr("Localizable", "PeerInfo.Action.Mute") }
+  /// Open
+  public static var peerInfoActionOpenChannel: String  { return L10n.tr("Localizable", "PeerInfo.Action.OpenChannel") }
   /// Report
   public static var peerInfoActionReport: String  { return L10n.tr("Localizable", "PeerInfo.Action.Report") }
   /// Secret

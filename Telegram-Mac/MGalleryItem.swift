@@ -474,7 +474,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             }, applyProxy: { server in
                 applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
                 viewer?.close()
-            }, textColor: .white, isDark: true, bubbled: false).mutableCopy() as! NSMutableAttributedString
+            }, textColor: NSColor(0xffffff), isDark: true, bubbled: false).mutableCopy() as! NSMutableAttributedString
             
             InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
 

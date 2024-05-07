@@ -717,7 +717,9 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var previousHeight:CGFloat = 50
     func inputChanged(height: CGFloat, animated: Bool) {
-        updateFrame(self.frame, transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        if superview != nil {
+            updateFrame(self.frame, transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -796,7 +798,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
         if let backgroundView = backgroundView, let navigationView = navigationView {
             let size = NSMakeSize(navigationView.bounds.width, navigationView.bounds.height)
-            transition.updateFrame(view: backgroundView, frame: NSMakeRect(0, -frame.minY, size.width, size.height))
+            ContainedViewLayoutTransition.immediate.updateFrame(view: backgroundView, frame: NSMakeRect(0, -frame.minY, size.width, size.height))
         }
         
         
@@ -1008,7 +1010,9 @@ class ChatControllerView : View, ChatInputDelegate {
         
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
 
-        updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        if superview != nil {
+            updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        }
         if let count = interfaceState.historyCount, count > 0 {
             tableView.contentInsets = .init(top: state.height)
         } else {
@@ -2538,6 +2542,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         
         let animatedEmojiStickers: Signal<[String: StickerPackItem], NoError> = context.diceCache.animatedEmojies
+        let messageEffects: Signal<AvailableMessageEffects?, NoError> = context.engine.stickers.availableMessageEffects()
+
         
         let savedMessageTags: Signal<SavedMessageTags?, NoError>
         if peerId == self.context.account.peerId {
@@ -2931,6 +2937,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   maxReadIndex.get(),
                                                   searchState.get(),
                                                   animatedEmojiStickers,
+                                                  messageEffects,
                                                   savedMessageTags,
                                                   customChannelDiscussionReadState,
                                                   customThreadOutgoingReadState,
@@ -2940,7 +2947,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   stateValue.get(),
                                                   peerView.get(),
                                                   recommendedChannels
-    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, savedMessageTags, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState, peerView, recommendedChannels -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, messageEffects, savedMessageTags, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState, peerView, recommendedChannels -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
@@ -3059,7 +3066,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -3282,8 +3289,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return nil
                 }.updatedInterfaceState { current in
                 
-                    var value: ChatInterfaceState = current.withUpdatedReplyMessageId(nil).withUpdatedInputState(ChatTextInputState()).withUpdatedForwardMessageIds([]).withUpdatedComposeDisableUrlPreview(nil)
-                
+                    var value: ChatInterfaceState = current
+                        .withUpdatedReplyMessageId(nil)
+                        .withUpdatedInputState(ChatTextInputState())
+                        .withUpdatedForwardMessageIds([])
+                        .withUpdatedComposeDisableUrlPreview(nil)
+                        .withUpdatedMessageEffect(nil)
                 
                     if let message = presentation.keyboardButtonsMessage, let replyMarkup = message.replyMarkup {
                         if replyMarkup.flags.contains(.setupReply) {
@@ -3448,6 +3459,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let presentation = strongSelf.chatInteraction.presentation
                 let peerId = strongSelf.chatInteraction.peerId
                 let currentSendAsPeerId = presentation.currentSendAsPeerId
+                let messageEffect = presentation.interfaceState.messageEffect?.effect
                 if presentation.abilityToSend {
                     func apply(_ controller: ChatController, atDate: Date?) {
                         var invokeSignal:Signal<Never, NoError> = .complete()
@@ -3460,7 +3472,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             setNextToTransaction = true
                             invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, linkBelowMessage: presentation.interfaceState.linkBelowMessage, largeMedia: presentation.interfaceState.largeMedia, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
                                 _ = strongSelf?.nextTransaction.execute()
-                            }, customChatContents: customChatContents) |> deliverOnMainQueue |> ignoreValues
+                            }, customChatContents: customChatContents, messageEffect: messageEffect) |> deliverOnMainQueue |> ignoreValues
                             
                         }
                         
@@ -3569,7 +3581,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.sendMessageMenu = { [weak self] in
+        chatInteraction.sendMessageMenu = { [weak self] fromEffect in
             guard let self else {
                 return .single(nil)
             }
@@ -3589,112 +3601,51 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             var items:[ContextMenuItem] = []
             
-            if peer.id != context.account.peerId {
+            if peer.id != context.account.peerId, !fromEffect {
                 items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak chatInteraction] in
                     chatInteraction?.sendMessage(true, nil)
                 }, itemImage: MenuAnimation.menu_mute.value))
             }
             switch chatInteraction.mode {
             case .history, .thread:
-                if !peer.isSecretChat {
-                    let text = peer.id == context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
-                    items.append(ContextMenuItem(text, handler: { [weak chatInteraction] in
-                        showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
-                            chatInteraction?.sendMessage(false, date)
-                        }), for: context.window)
-                    }, itemImage: MenuAnimation.menu_schedule_message.value))
-                    
-                    if peer.id != context.peerId, presentation.canScheduleWhenOnline {
+                if fromEffect {
+                    items.append(ContextMenuItem(strings().modalRemove, handler: { [weak self] in
+                        self?.chatInteraction.update {
+                            $0.updatedInterfaceState {
+                                $0.withUpdatedMessageEffect(nil)
+                            }
+                        }
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                } else {
+                    if !peer.isSecretChat {
+                        let text = peer.id == context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
+                        items.append(ContextMenuItem(text, handler: { [weak chatInteraction] in
+                            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
+                                chatInteraction?.sendMessage(false, date)
+                            }), for: context.window)
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
                         
-                        items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
-                            chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
-                        }, itemImage: MenuAnimation.menu_online.value))
+                        if peer.id != context.peerId, presentation.canScheduleWhenOnline {
+                            
+                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
+                                chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
+                            }, itemImage: MenuAnimation.menu_online.value))
+                        }
                     }
                 }
+                
+                
             default:
                 break
             }
                                     
-            let reactions:Signal<[RecentReactionItem], NoError> = context.diceCache.top_reactions |> map { view in
+            let reactions:Signal<[AvailableMessageEffects.MessageEffect], NoError> = context.diceCache.availableMessageEffects |> map { view in
+                return view?.messageEffects ?? []
+            } |> deliverOnMainQueue |> take(1)
+                        
+            return reactions |> map { [weak self] reactions in
                 
-                var recentReactionsView: OrderedItemListView?
-                var topReactionsView: OrderedItemListView?
-                var defaultTagReactions: OrderedItemListView?
-                for orderedView in view.orderedItemListsViews {
-                    if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
-                        recentReactionsView = orderedView
-                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
-                        topReactionsView = orderedView
-                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
-                        defaultTagReactions = orderedView
-                    }
-                }
-                var recentReactionsItems:[RecentReactionItem] = []
-                var topReactionsItems:[RecentReactionItem] = []
-                var defaultTagReactionsItems:[RecentReactionItem] = []
-
-                if let recentReactionsView = recentReactionsView {
-                    for item in recentReactionsView.items {
-                        guard let item = item.contents.get(RecentReactionItem.self) else {
-                            continue
-                        }
-                        recentReactionsItems.append(item)
-                    }
-                }
-                if let defaultTagReactions = defaultTagReactions {
-                    for item in defaultTagReactions.items {
-                        guard let item = item.contents.get(RecentReactionItem.self) else {
-                            continue
-                        }
-                        defaultTagReactionsItems.append(item)
-                    }
-                }
-                if let topReactionsView = topReactionsView {
-                    for item in topReactionsView.items {
-                        guard let item = item.contents.get(RecentReactionItem.self) else {
-                            continue
-                        }
-                        topReactionsItems.append(item)
-                    }
-                }
-                return topReactionsItems.filter { value in
-                    if context.isPremium {
-                        return true
-                    } else {
-                        if case .custom = value.content {
-                            return false
-                        } else {
-                            return true
-                        }
-                    }
-                }
-            }
-            
-            let builtin = context.reactions.stateValue
-            
-            return combineLatest(queue: .mainQueue(), reactions, builtin) |> take(1) |> map { reactions, builtin in
-                let enabled = builtin?.enabled ?? []
-
-                let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
-                    return false
-                }
-
-                let available: [ContextReaction] = Array(reactions.compactMap { value in
-                    switch value.content {
-                    case let .builtin(emoji):
-                        if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                            return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(generic.value))
-                        } else {
-                            return nil
-                        }
-                    case let .custom(file):
-                        return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: isSelected(.custom(file.fileId.id)))
-                    }
-                }.prefix(7))
-                
-                
-                
-                let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: true)
+                let width = ContextAddReactionsListView.width(for: reactions.count, maxCount: 7, allowToAll: true)
                 //TODOLANG
                 let aboveText: String = "Add an animation effect"
                 
@@ -3726,34 +3677,46 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
                 
+                if let effect = presentation.interfaceState.messageEffect {
+                    selectedItems.append(.init(source: .custom(effect.effect.effectSticker.fileId.id), type: .transparent))
+                }
+                
+                let update:(Int64, NSRect?)->Void = { fileId, fromRect in
+                    let effect = reactions.first(where: {
+                        $0.effectSticker.fileId.id == fileId
+                    })
+                    let current = self?.chatInteraction.presentation.interfaceState.messageEffect
+                    let value: ChatInterfaceMessageEffect?
+                    if let effect, current?.effect != effect {
+                        value = ChatInterfaceMessageEffect(effect: effect, fromRect: fromRect)
+                    } else {
+                        value = nil
+                    }
+                    self?.chatInteraction.update {
+                        $0.updatedInterfaceState {
+                            $0.withUpdatedMessageEffect(value)
+                        }
+                    }
+                }
+                
                 reveal = { view in
                     let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
-                        let value: UpdateMessageReaction
-                        if let bundle = sticker.file.stickerText {
-                            value = .builtin(bundle)
-                        } else {
-                            value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
-                        }
-                        var contains: Bool = false
-                        for reaction in reactions {
-                            switch reaction.content {
-                            case let .custom(file):
-                                if file.fileId == sticker.file.fileId {
-                                    contains = true
-                                    break
-                                }
-                            default:
-                                break
-                            }
-                        }
-                       
-                    })
+                        update(sticker.file.fileId.id, fromRect)
+                    }, moveTop: true, mode: .messageEffects)
                     window.show(view)
                 }
                 
+                let available: [ContextReaction] = Array(reactions.map { value in
+                    return .custom(value: .custom(value.effectSticker.fileId.id), fileId: value.effectSticker.fileId.id, value.effectSticker, isSelected: presentation.interfaceState.messageEffect?.effect.effectSticker.fileId.id == value.effectSticker.fileId.id)
+                }.prefix(7))
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
-                    
+                    switch value {
+                    case let .custom(fileId):
+                        update(fileId, fromRect)
+                    default:
+                        break
+                    }
                 }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout)
                 
                 
@@ -3761,13 +3724,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 panel.contentView?.wantsLayer = true
                 view.autoresizingMask = [.width, .height]
                 
-                let menu = ContextMenu()
-                #if DEBUG
-                if peer.isUser {
-//                    menu.closeOutside = false
+                let menu = ContextMenu(bottomAnchor: true)
+                if peer.isUser, peer.id != context.peerId {
                     menu.topWindow = panel
                 }
-                #endif
                 
                 for item in items {
                     menu.addItem(item)
@@ -4570,7 +4530,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return
             }
             let messageId = message.id
-            FastSettings.markDiceAsPlayed(message)
             if strongSelf.isOnScreen {
                 strongSelf.emojiEffects.addPremiumEffect(mirror: mirror, isIncoming: isIncoming, messageId: messageId, viewFrame: context.window.bounds, for: context.window.contentView!)
             }
@@ -4579,7 +4538,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self else {
                 return
             }
-            FastSettings.markDiceAsPlayed(message)
             let messageId = message.id
             if strongSelf.isOnScreen {
                 strongSelf.emojiEffects.addAnimation(emoji.fixed, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
@@ -6101,7 +6059,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
 
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot, updaterPromise.get()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot, _ in
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot, updaterPromise.get(), ApplicationSpecificNotice.playedMessageEffects(accountManager: context.sharedContext.accountManager)).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot, _, playedMessageEffects in
             
             
             let animated = !isFirst.swap(false)
@@ -6187,6 +6145,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedAttachItems(attachItems)
                         present = present.withUpdatedShortcuts(shortcuts)
                         present = present.withUpdatedConnectedBot(connectedBot)
+                        present = present.withUpdatedPlayedMessageEffects(playedMessageEffects ?? [])
 
                         var contactStatus: ChatPeerStatus?
                         if let cachedData = peerView.cachedData as? CachedUserData {
@@ -7300,16 +7259,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if !isLoading {
             var items:[ChatRowItem] = []
             var animatedEmojiItems:[ChatRowItem] = []
+            var effectItems:[ChatRowItem] = []
+            
+            let played: Set<MessageId> = Set(chatInteraction.presentation.playedMessageEffects)
+
             self.genericView.tableView.enumerateVisibleItems(with: { item in
-                if let item = item as? ChatRowItem, let view = item.view {
+                if let item = item as? ChatRowItem, let view = item.view, let message = item.message, !played.contains(message.id) {
                     if view.visibleRect == view.bounds {
-                        if let file = item.message?.anyMedia as? TelegramMediaFile {
+                        if let file = message.anyMedia as? TelegramMediaFile {
                             if !file.noPremium, !context.premiumIsBlocked, file.isPremiumSticker {
                                 items.append(item)
-                            } else if file.isEmojiAnimatedSticker || file.isCustomEmoji, file.isPremiumEmoji, let message = item.message {
+                            } else if file.isEmojiAnimatedSticker || file.isCustomEmoji, file.isPremiumEmoji {
                                 if message.globallyUniqueId != nil || message.flags.contains(.Incoming) {
                                     animatedEmojiItems.append(item)
                                 }
+                            }
+                        } else if let _ = item.entry.additionalData.messageEffect {
+                            if message.globallyUniqueId != nil || message.flags.contains(.Incoming) {
+                                effectItems.append(item)
                             }
                         }
                         
@@ -7317,24 +7284,31 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 return true
             })
+            
+            let playedIds = (items + animatedEmojiItems + effectItems).compactMap { $0.message?.id }
+            
             for item in items {
                 if let message = item.message {
-                    if !FastSettings.diceHasAlreadyPlayed(message) {
-                        let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
-                        chatInteraction.runPremiumScreenEffect(message, mirror, false)
-                    }
+                    let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
+                    chatInteraction.runPremiumScreenEffect(message, mirror, false)
+                }
+            }
+            for item in effectItems {
+                if let message = item.message {
+                    let mirror = item.renderType == .list ? false : message.isIncoming(item.context.account, item.renderType == .bubble)
+                    chatInteraction.runPremiumScreenEffect(message, mirror, false)
                 }
             }
             for item in animatedEmojiItems {
                 if let message = item.message {
-                    if !FastSettings.diceHasAlreadyPlayed(message) {
-                        let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
-                        if let emoji = message.file?.stickerText {
-                            chatInteraction.runEmojiScreenEffect(emoji, message, mirror, false)
-                        }
+                    let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
+                    if let emoji = message.file?.stickerText {
+                        chatInteraction.runEmojiScreenEffect(emoji, message, mirror, false)
                     }
                 }
             }
+            
+            _ = ApplicationSpecificNotice.addPlayedMessageEffects(accountManager: context.sharedContext.accountManager, values: playedIds).startStandalone()
         }
         
         if !didSetReady {

@@ -347,6 +347,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: strings().peerInfoActionJoinChannel, color: item.accentColor, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
                 arguments.join_channel()
             }))
+        } else if peer.participationStatus == .member {
+            items.append(ActionItem(text: strings().peerInfoActionOpenChannel, color: item.accentColor, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
+                arguments.open_channel()
+            }))
         }
         
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {

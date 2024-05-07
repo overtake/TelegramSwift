@@ -16,6 +16,17 @@ import InAppSettings
 import TGUIKit
 import WebKit
 
+func clearUserDefaultsObject(forKeyPrefix prefix: String) {
+    let defaults = UserDefaults.standard
+    let keys = defaults.dictionaryRepresentation().keys
+    
+    for key in keys {
+        if key.hasPrefix(prefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+}
+
 enum SendingType :String {
     case enter = "enter"
     case cmdEnter = "cmdEnter"
@@ -629,13 +640,6 @@ class FastSettings {
         })
     }
     
-    static func diceHasAlreadyPlayed(_ message: Message) -> Bool {
-        return UserDefaults.standard.bool(forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
-    }
-    static func markDiceAsPlayed(_ message: Message) {
-        UserDefaults.standard.set(true, forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
-        UserDefaults.standard.synchronize()
-    }
     
     static func updateLeftColumnWidth(_ width: CGFloat) {
         UserDefaults.standard.set(round(width), forKey: kLeftColumnWidth)

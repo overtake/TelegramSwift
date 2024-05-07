@@ -206,7 +206,7 @@ final class ChatInteraction : InterfaceObserver  {
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
     
-    var sendMessageMenu:()->Signal<ContextMenu?, NoError> = { .single(nil) }
+    var sendMessageMenu:(Bool)->Signal<ContextMenu?, NoError> = { _ in .single(nil) }
     
     var removeAd:(Data)->Void = { _ in }
     

@@ -812,6 +812,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if item.isBubbled && item.hasBubble {
             let bubbleFrame = self.bubbleFrame(item)
             point.x = bubbleFrame.minX + (item.isIncoming ? item.bubbleContentInset + item.additionBubbleInset : item.bubbleContentInset)
+            point.y -= 3
         } else if item.isBubbled, let forwardAccessory = forwardAccessory {
             let contentFrame = self.contentFrame(item)
             point.x = item.isIncoming ? contentFrame.maxX : contentFrame.minX - forwardAccessory.frame.width
@@ -1663,11 +1664,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         case .effect:
             if let media = self as? ChatMediaView {
                 return media.contentNode
+            } else {
+                return rightView.effectView
             }
         case let .reaction(value):
             if let reactionsView = reactionsView {
-                return reactionsView.getReactionView(value)
-            } else if let reactionsView = self.rightView.reactionsView {
                 return reactionsView.getReactionView(value)
             }
         }
@@ -1677,8 +1678,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func playSeenReactionEffect(_ checkUnseen: Bool) {
         if let reactionsView = reactionsView {
             reactionsView.playSeenReactionEffect(checkUnseen)
-        } else {
-            rightView.reactionsView?.playSeenReactionEffect(checkUnseen)
         }
     }
     

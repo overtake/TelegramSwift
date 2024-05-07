@@ -466,6 +466,15 @@ public extension Message {
         return nil
     }
     
+    var effectAttribute: EffectMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? EffectMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var isExpiredStory: Bool {
         if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId] {
             return data.get(Stories.StoredItem.self) == nil

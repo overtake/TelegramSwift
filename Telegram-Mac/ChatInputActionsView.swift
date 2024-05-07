@@ -253,9 +253,9 @@ class ChatInputActionsView: View {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
 
-                if chatInteraction.hasSetDestructiveTimer {
+                if chatInteraction.hasSetDestructiveTimer, value.interfaceState.messageEffect == nil {
                     if secretTimer == nil {
                         secretTimer = ImageButton()
                         secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
@@ -477,7 +477,7 @@ class ChatInputActionsView: View {
         
         var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
         
-        if chatInteraction.hasSetDestructiveTimer {
+        if chatInteraction.hasSetDestructiveTimer, chatInteraction.presentation.interfaceState.messageEffect == nil {
             size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
         }
         if chatInteraction.presentation.keyboardButtonsMessage != nil {
@@ -551,17 +551,25 @@ class ChatInputActionsView: View {
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
-
-        send.set(handler: { control in
+        
+        let showMenu:(Control)->Void = { control in
             if let event = NSApp.currentEvent {
-                let sendMenu = chatInteraction.sendMessageMenu() |> deliverOnMainQueue
+                let sendMenu = chatInteraction.sendMessageMenu(false) |> deliverOnMainQueue
                 _ = sendMenu.startStandalone(next: { menu in
                     if let menu {
                         AppMenu.show(menu: menu, event: event, for: control)
                     }
                 })
             }
+        }
+
+        send.set(handler: { control in
+            showMenu(control)
         }, for: .RightDown)
+        
+        send.set(handler: { control in
+            showMenu(control)
+        }, for: .LongMouseDown)
                 
         send.set(handler: { [weak chatInteraction] control in
              chatInteraction?.sendMessage(false, nil)
