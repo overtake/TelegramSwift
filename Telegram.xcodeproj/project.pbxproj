@@ -8408,7 +8408,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 245682;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
