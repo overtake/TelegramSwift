@@ -928,7 +928,7 @@ class PeerListContainerView : Control {
                                             (.gif, strings().searchFilterGIFs, theme.icons.search_filter_media),
                                             (.file, strings().searchFilterFiles, theme.icons.search_filter_files)]
         
-        let collectTags: ()-> ([String], CGImage) = {
+        let collectTags: ()-> ([SearchView.TagInfo], CGImage) = {
             var values: [String] = []
             let image: CGImage
 
@@ -945,7 +945,7 @@ class PeerListContainerView : Control {
             } else {
                 image = theme.icons.search_filter
             }
-            return (values, image)
+            return (values.map { .init(text: $0) }, image)
         }
         
         switch state.searchState {
@@ -965,7 +965,7 @@ class PeerListContainerView : Control {
                     if state.forumPeer == nil, !state.mode.isForumLike {
                         items.append(ContextMenuItem(strings().chatListChannelsTag, handler: {
                             updateSearchTags(SearchTags(messageTags: nil, peerTag: nil, isChannels: true))
-                            updateTitle([strings().chatListChannelsTag], theme.icons.search_filter)
+                            updateTitle([.init(text: strings().chatListChannelsTag)], theme.icons.search_filter)
 
                         }, itemImage: MenuAnimation.menu_channel.value))
                     }
@@ -1649,7 +1649,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
                     }
                 }
-                self.genericView.searchView.updateTags([strings().chatListDownloadsTag], theme.icons.search_filter_downloads)
+                self.genericView.searchView.updateTags([.init(text: strings().chatListDownloadsTag)], theme.icons.search_filter_downloads)
             })
         }
     }

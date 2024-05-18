@@ -2643,7 +2643,7 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }, hashtag: { [weak self] string in
             self?.close()
-            self?.context.bindings.globalSearch(string)
+            self?.context.bindings.globalSearch(string, self?.stories.stateValue?.slice?.peer.id)
         }, report: report,
         toggleHide: toggleHide,
         showFriendsTooltip: { [weak self] _, story in
@@ -2970,7 +2970,7 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
-        chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler in
+        chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler, messageEffect, leadingText in
             guard let interactions = self?.interactions else {
                 return
             }
@@ -2989,7 +2989,7 @@ final class StoryModalController : ModalViewController, Notifable {
             
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
+                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, messageEffect: messageEffect, leadingText: leadingText).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media(medias))
                 })

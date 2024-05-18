@@ -19,6 +19,10 @@ class GeneralContainableRowView : TableRowView {
         containerView.addSubview(borderView)
     }
     
+    override var firstResponder: NSResponder? {
+        return nil
+    }
+    
     deinit {
         self.containerView.removeAllSubviews()
     }

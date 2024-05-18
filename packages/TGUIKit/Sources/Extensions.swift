@@ -357,24 +357,28 @@ public extension NSMutableAttributedString {
     }
 
     func detectBoldColorInString(with font: NSFont, string: String, color: NSColor? = nil) {
-        var offset: UInt = 0
+        var offset: Int = 0
         
-        while (offset < string.count) {
-            if let startRange = string.range(of: "**", options: [], range: string.index(string.startIndex, offsetBy: Int(offset))..<string.endIndex) {
-                offset = UInt(startRange.upperBound.utf16Offset(in: string))
+        let nsString = string.nsstring
+        
+        while (offset < nsString.length) {
+            let startRange = nsString.range(of: "**", options: [], range: NSRange(location: offset, length: nsString.length - offset))
+            if startRange.location != NSNotFound {
+                offset = startRange.upperBound
                 
-                let endOffset = string.index(string.startIndex, offsetBy: min(Int(offset), string.count))
+                let endOffset = min(offset, nsString.length)
                 
-                if let endRange = string.range(of: "**", options: [], range: endOffset..<string.endIndex) {
-                    let startIndex = string.index(string.startIndex, offsetBy: Int(offset))
-                    let endIndex = string.index(string.startIndex, offsetBy: Int(endRange.lowerBound.utf16Offset(in: string)))
-                    let attributeRange = startIndex..<endIndex
+                let endRange = nsString.range(of: "**", options: [], range: NSRange(location: endOffset, length: nsString.length - endOffset))
+                if endRange.location != NSNotFound {
+                    let startIndex = offset
+                    let endIndex = endRange.lowerBound
+                    let attributeRange = NSRange(location: startIndex, length: endIndex - startIndex)
                     
-                    addAttribute(NSAttributedString.Key.font, value: font, range: NSRange(attributeRange, in: string))
-                    if let color {
-                        addAttribute(.foregroundColor, value: color, range: NSRange(attributeRange, in: string))
+                    addAttribute(NSAttributedString.Key.font, value: font, range: attributeRange)
+                    if let color = color {
+                        addAttribute(.foregroundColor, value: color, range: attributeRange)
                     }
-                    offset = UInt(endRange.upperBound.utf16Offset(in: string))
+                    offset = endRange.upperBound
                 }
             } else {
                 break

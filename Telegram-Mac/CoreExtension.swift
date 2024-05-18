@@ -1206,6 +1206,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 return false
             case .preview:
                 return false
+            case .searchHashtags:
+                return false
             }
         }
     }

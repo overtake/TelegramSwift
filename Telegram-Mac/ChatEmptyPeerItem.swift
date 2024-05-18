@@ -92,7 +92,7 @@ class ChatEmptyPeerItem: TableRowItem {
                     _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
                 }
             }
-        case .scheduled:
+        case .scheduled, .searchHashtags:
             lineSpacing = nil
             _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
         case let .thread(_, mode):
@@ -181,7 +181,9 @@ class ChatEmptyPeerItem: TableRowItem {
                         }
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
-                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                        }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
                         self.textViewLayout.interactions = globalLinkExecutor
@@ -190,7 +192,9 @@ class ChatEmptyPeerItem: TableRowItem {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
                         attr.detectBoldColorInString(with: .medium(.text))
-                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                        }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .center)
                         self.textViewLayout.interactions = globalLinkExecutor

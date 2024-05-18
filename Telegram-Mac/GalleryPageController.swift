@@ -852,7 +852,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             textScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
             textScrollView.layer?.cornerRadius = .cornerRadius
             
-            textContainer.frame = NSMakeRect(0, 0, textScrollView.frame.width, textView.frame.height)
+            textContainer.frame = NSMakeRect(0, 0, textScrollView.frame.width, textView.frame.height + 10)
             textView.centerX(y: 5)
 
         } else {

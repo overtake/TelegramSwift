@@ -435,8 +435,8 @@ final class InputDataView : BackgroundView {
     
     fileprivate var topView: NSView?
     
-    required init(frame frameRect: NSRect) {
-        tableView = TableView(frame: frameRect.size.bounds)
+    init(frame frameRect: NSRect, isFlipped: Bool) {
+        tableView = TableView(frame: frameRect.size.bounds, isFlipped: isFlipped)
         super.init(frame: frameRect)
         addSubview(tableView)
     }
@@ -467,6 +467,11 @@ final class InputDataView : BackgroundView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
     override func layout() {
         super.layout()
         self.updateLayout(size: self.frame.size, transition: .immediate)
@@ -595,7 +600,9 @@ class InputDataController: GenericViewController<InputDataView> {
     
     var makeFirstFast: Bool = true
     
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
+    let isFlipped: Bool
+    
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }, isFlipped: Bool = true) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
@@ -615,6 +622,7 @@ class InputDataController: GenericViewController<InputDataView> {
         self.tabKeyInvocation = tabKeyInvocation
         self.searchKeyInvocation = searchKeyInvocation
         self.getBackgroundColor = getBackgroundColor
+        self.isFlipped = isFlipped
         super.init()
         values.set(dataSignal)
     }
@@ -1190,6 +1198,10 @@ class InputDataController: GenericViewController<InputDataView> {
     deinit {
         disposable.dispose()
         appearanceDisposablet.dispose()
+    }
+    
+    override func initializer() -> InputDataView {
+        return InputDataView(frame: initializationRect, isFlipped: isFlipped)
     }
     
 }

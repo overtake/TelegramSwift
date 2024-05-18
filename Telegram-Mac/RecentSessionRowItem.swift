@@ -30,11 +30,11 @@ class RecentSessionRowItem: GeneralRowItem {
         let attr = NSMutableAttributedString()
         
                 
-        _ = attr.append(string:session.appName + " " + session.appVersion.prefixWithDots(30) + ", " + session.platform + " " + session.systemVersion, color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: (session.appName + " " + session.appVersion.prefixWithDots(30) + ", " + session.platform + " " + session.systemVersion).trimmed, color: theme.colors.text, font: .normal(.text))
         
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: session.ip + " " + session.country, color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: (session.ip + " " + session.country).trimmed, color: theme.colors.grayText, font: .normal(.text))
         
         descLayout = TextViewLayout(attr, maximumNumberOfLines: 0, lineSpacing: 2)
     

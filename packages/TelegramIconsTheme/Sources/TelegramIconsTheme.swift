@@ -3398,6 +3398,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsStars: CGImage {
+      if let image = cached.with({ $0["settingsStars"] }) {
+          return image
+      } else {
+          let image = _settingsStars()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStars"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var generalCheck: CGImage {
       if let image = cached.with({ $0["generalCheck"] }) {
           return image
@@ -7246,6 +7259,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var search_filter_hashtag: CGImage {
+      if let image = cached.with({ $0["search_filter_hashtag"] }) {
+          return image
+      } else {
+          let image = _search_filter_hashtag()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_hashtag"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var search_hashtag_chevron: CGImage {
+      if let image = cached.with({ $0["search_hashtag_chevron"] }) {
+          return image
+      } else {
+          let image = _search_hashtag_chevron()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_hashtag_chevron"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_reply_count_bubble_incoming: CGImage {
       if let image = cached.with({ $0["chat_reply_count_bubble_incoming"] }) {
           return image
@@ -10405,6 +10444,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var preview_text_down: CGImage {
+      if let image = cached.with({ $0["preview_text_down"] }) {
+          return image
+      } else {
+          let image = _preview_text_down()
+          _ = cached.modify { current in 
+              var current = current
+              current["preview_text_down"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var preview_text_up: CGImage {
+      if let image = cached.with({ $0["preview_text_up"] }) {
+          return image
+      } else {
+          let image = _preview_text_up()
+          _ = cached.modify { current in 
+              var current = current
+              current["preview_text_up"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10667,6 +10732,7 @@ public final class TelegramIconsTheme {
   private let _settingsProfile: ()->CGImage
   private let _settingsBusiness: ()->CGImage
   private let _settingsBusinessActive: ()->CGImage
+  private let _settingsStars: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
   private let _settingsLogout: ()->CGImage
@@ -10963,6 +11029,8 @@ public final class TelegramIconsTheme {
   private let _search_filter_downloads: ()->CGImage
   private let _search_filter_add_peer: ()->CGImage
   private let _search_filter_add_peer_active: ()->CGImage
+  private let _search_filter_hashtag: ()->CGImage
+  private let _search_hashtag_chevron: ()->CGImage
   private let _chat_reply_count_bubble_incoming: ()->CGImage
   private let _chat_reply_count_bubble_outgoing: ()->CGImage
   private let _chat_reply_count: ()->CGImage
@@ -11206,6 +11274,8 @@ public final class TelegramIconsTheme {
   private let _premium_required_forward: ()->CGImage
   private let _create_new_message_general: ()->CGImage
   private let _bot_manager_settings: ()->CGImage
+  private let _preview_text_down: ()->CGImage
+  private let _preview_text_up: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11469,6 +11539,7 @@ public final class TelegramIconsTheme {
       settingsProfile: @escaping()->CGImage,
       settingsBusiness: @escaping()->CGImage,
       settingsBusinessActive: @escaping()->CGImage,
+      settingsStars: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
       settingsLogout: @escaping()->CGImage,
@@ -11765,6 +11836,8 @@ public final class TelegramIconsTheme {
       search_filter_downloads: @escaping()->CGImage,
       search_filter_add_peer: @escaping()->CGImage,
       search_filter_add_peer_active: @escaping()->CGImage,
+      search_filter_hashtag: @escaping()->CGImage,
+      search_hashtag_chevron: @escaping()->CGImage,
       chat_reply_count_bubble_incoming: @escaping()->CGImage,
       chat_reply_count_bubble_outgoing: @escaping()->CGImage,
       chat_reply_count: @escaping()->CGImage,
@@ -12007,7 +12080,9 @@ public final class TelegramIconsTheme {
       chat_my_notes: @escaping()->CGImage,
       premium_required_forward: @escaping()->CGImage,
       create_new_message_general: @escaping()->CGImage,
-      bot_manager_settings: @escaping()->CGImage
+      bot_manager_settings: @escaping()->CGImage,
+      preview_text_down: @escaping()->CGImage,
+      preview_text_up: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12270,6 +12345,7 @@ public final class TelegramIconsTheme {
       self._settingsProfile = settingsProfile
       self._settingsBusiness = settingsBusiness
       self._settingsBusinessActive = settingsBusinessActive
+      self._settingsStars = settingsStars
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
       self._settingsLogout = settingsLogout
@@ -12566,6 +12642,8 @@ public final class TelegramIconsTheme {
       self._search_filter_downloads = search_filter_downloads
       self._search_filter_add_peer = search_filter_add_peer
       self._search_filter_add_peer_active = search_filter_add_peer_active
+      self._search_filter_hashtag = search_filter_hashtag
+      self._search_hashtag_chevron = search_hashtag_chevron
       self._chat_reply_count_bubble_incoming = chat_reply_count_bubble_incoming
       self._chat_reply_count_bubble_outgoing = chat_reply_count_bubble_outgoing
       self._chat_reply_count = chat_reply_count
@@ -12809,5 +12887,7 @@ public final class TelegramIconsTheme {
       self._premium_required_forward = premium_required_forward
       self._create_new_message_general = create_new_message_general
       self._bot_manager_settings = bot_manager_settings
+      self._preview_text_down = preview_text_down
+      self._preview_text_up = preview_text_up
   }
 }

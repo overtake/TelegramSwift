@@ -124,13 +124,57 @@ final class CornerMaskLayer : SimpleShapeLayer {
 
 }
 
+private let sensitiveImage = NSImage(resource: .iconMediaSensitiveContent).precomposed(.white)
+
 final class MediaInkView : Control {
+    
+    private final class SensitiveView: NSVisualEffectView {
+        private let textView = TextView()
+        private let imageView = ImageView()
+        required override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.wantsLayer = true
+            self.material = .ultraDark
+            self.blendingMode = .withinWindow
+            self.state = .active
+            
+            addSubview(textView)
+            addSubview(imageView)
+            
+            
+            imageView.image = sensitiveImage
+            imageView.sizeToFit()
+            
+            let textLayout = TextViewLayout(.initialize(string: strings().chatSensitiveContent, color: NSColor.white, font: .medium(.text)))
+            textLayout.measure(width: .greatestFiniteMagnitude)
+            
+            textView.update(textLayout)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+            setFrameSize(NSMakeSize(textView.frame.width + 25 + imageView.frame.width, 30))
+        }
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            self.imageView.centerY(x: 10)
+            self.textView.centerY(x: imageView.frame.maxX + 5)
+        }
+    }
     
     private let inkView: MediaDustView = MediaDustView()
     private var inkMaskView: CornerMaskLayer?
 
     private let preview: TransformImageView = TransformImageView()
     
+    private var sensitiveView: SensitiveView?
+    
+    private var isSensitive: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(preview)
@@ -140,23 +184,31 @@ final class MediaInkView : Control {
 
     }
     
-    deinit {
-        var bp = 0
-        bp += 1
-    }
-    
-    override func removeFromSuperview() {
-        super.removeFromSuperview()
-    }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool) {
+    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool, isSensitive: Bool) {
         
         
-        //let imageSize = imageReference.media.representationForDisplayAtSize(.init(640, 640))?.dimensions.size ?? size
+        self.isSensitive = isSensitive
+        
+        if isSensitive {
+            let current: SensitiveView
+            if let view = self.sensitiveView {
+                current = view
+            } else {
+                current = SensitiveView(frame: NSMakeRect(0, 0, 100, 30))
+                current.layer?.cornerRadius = current.frame.height / 2
+                self.sensitiveView = current
+                addSubview(current)
+            }
+        } else if let view = self.sensitiveView {
+            performSubviewRemoval(view, animated: false)
+            self.sensitiveView = nil
+        }
+                
         
         let signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: System.backingScale, synchronousLoad: synchronousLoad)
         let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
@@ -179,7 +231,10 @@ final class MediaInkView : Control {
         let current = self.inkView
         current.frame = inkRect
         
-        current.update(size: inkRect.size, color: NSColor.white, textColor: .black)
+        let path = CGMutablePath()
+        path.addRect(inkRect.size.bounds)
+        
+        current.update(size: inkRect.size, color: NSColor.white, textColor: .black, mask: buttonPath(path))
        
         if let positionFlags = positionFlags {
             let mask: CornerMaskLayer
@@ -198,6 +253,22 @@ final class MediaInkView : Control {
             layer?.cornerRadius = 4
         }
         preview.frame = size.bounds
+        
+        needsLayout = true
+
+    }
+    
+    private func buttonPath(_ basic: CGPath) -> CGPath {
+        let buttonPath = CGMutablePath()
+
+        buttonPath.addPath(basic)
+        
+        if let view = self.sensitiveView {
+            let buttonRect = view.frame
+            buttonPath.addRoundedRect(in: buttonRect, cornerWidth: buttonRect.height / 2, cornerHeight: buttonRect.height / 2)
+        }
+                    
+        return buttonPath
     }
     
     override func layout() {
@@ -205,6 +276,7 @@ final class MediaInkView : Control {
         preview.frame = bounds
         inkMaskView?.frame = bounds
         inkView.frame = bounds.insetBy(dx: -20, dy: -20)
+        sensitiveView?.center()
     }
 }
 
@@ -835,7 +907,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
 
                 
-                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue)
+                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: false)
                 current.frame = size.bounds
             } else {
                 if let view = self.inkView {

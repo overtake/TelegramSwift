@@ -248,7 +248,7 @@ class ChatInvoiceItem: ChatRowItem {
 }
 
 
-private class MediaDustView: View {
+class MediaDustView2: View {
     private var currentParams: (size: CGSize, color: NSColor)?
     private var animColor: CGColor?
         
@@ -375,14 +375,14 @@ class ChatInvoiceView : ChatRowView {
         }
         
         private let imageView = TransformImageView()
-        private let dustView: MediaDustView
+        private let dustView: MediaDustView2
         private let maskLayer = SimpleShapeLayer()
         private let button = Button(frame: NSMakeRect(0, 0, 80, 32))
         
         var callback:(()->Void)? = nil
         
         required init(frame frameRect: NSRect) {
-            self.dustView = MediaDustView(frame: frameRect.size.bounds)
+            self.dustView = MediaDustView2(frame: frameRect.size.bounds)
             super.init(frame: frameRect)
             addSubview(imageView)
             addSubview(dustView)

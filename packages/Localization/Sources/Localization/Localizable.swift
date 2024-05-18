@@ -139,6 +139,8 @@ public final class L10n {
   public static var accountSettingsSetProfilePhoto: String  { return L10n.tr("Localizable", "AccountSettings.SetProfilePhoto") }
   /// Set a Username
   public static var accountSettingsSetUsername: String  { return L10n.tr("Localizable", "AccountSettings.SetUsername") }
+  /// Telegram Stars
+  public static var accountSettingsStars: String  { return L10n.tr("Localizable", "AccountSettings.Stars") }
   /// Stickers
   public static var accountSettingsStickers: String  { return L10n.tr("Localizable", "AccountSettings.Stickers") }
   /// Stickers and Emoji
@@ -3255,6 +3257,8 @@ public final class L10n {
   }
   /// Slowmode is enabled.
   public static var chatSendMessageSlowmodeError: String  { return L10n.tr("Localizable", "Chat.SendMessageSlowmodeError") }
+  /// 18+ Content
+  public static var chatSensitiveContent: String  { return L10n.tr("Localizable", "Chat.SensitiveContent") }
   /// Share
   public static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
@@ -3807,6 +3811,8 @@ public final class L10n {
   public static func chatContextMessageContainsEmojiZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_zero", p1)
   }
+  /// Add an animation effect
+  public static var chatContextMessageEffectAdd: String  { return L10n.tr("Localizable", "Chat.Context.MessageEffect.Add") }
   /// Mention
   public static var chatContextPeerMention: String  { return L10n.tr("Localizable", "Chat.Context.Peer.Mention") }
   /// Open Profile
@@ -4351,6 +4357,12 @@ public final class L10n {
   }
   /// Scheduled Voice Chat
   public static var chatGroupCallScheduledTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Scheduled.Title") }
+  /// My Messages
+  public static var chatHashtagMyMessages: String  { return L10n.tr("Localizable", "Chat.Hashtag.MyMessages") }
+  /// Public Posts
+  public static var chatHashtagPublicPosts: String  { return L10n.tr("Localizable", "Chat.Hashtag.PublicPosts") }
+  /// This Chat
+  public static var chatHashtagThisChat: String  { return L10n.tr("Localizable", "Chat.Hashtag.ThisChat") }
   /// Pinned message
   public static var chatHeaderPinnedMessage: String  { return L10n.tr("Localizable", "Chat.Header.PinnedMessage") }
   /// Pinned message #%d
@@ -5149,6 +5161,12 @@ public final class L10n {
   public static func chatSendVoicePrivacyError(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.SendVoice.PrivacyError", p1)
   }
+  /// This media may contain sensitive content suitable only for adults. Do you still want to view it?
+  public static var chatSensitiveContentConfirm: String  { return L10n.tr("Localizable", "Chat.SensitiveContent.Confirm") }
+  /// View Anyway
+  public static var chatSensitiveContentConfirmOk: String  { return L10n.tr("Localizable", "Chat.SensitiveContent.Confirm.Ok") }
+  /// Always show 18+ media
+  public static var chatSensitiveContentConfirmThird: String  { return L10n.tr("Localizable", "Chat.SensitiveContent.Confirm.Third") }
   /// You allowed this bot to message you when you logged in on %@
   public static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
@@ -7439,6 +7457,8 @@ public final class L10n {
   public static var dataAndStorageDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.DownloadFolder") }
   /// Network Usage
   public static var dataAndStorageNetworkUsage: String  { return L10n.tr("Localizable", "DataAndStorage.NetworkUsage") }
+  /// Show 18+ Content
+  public static var dataAndStorageSensitiveContent: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent") }
   /// Storage Usage
   public static var dataAndStorageStorageUsage: String  { return L10n.tr("Localizable", "DataAndStorage.StorageUsage") }
   /// AUTOMATIC AUDIO DOWNLOAD
@@ -7493,6 +7513,14 @@ public final class L10n {
   public static var dataAndStorageCateroryFileSizeLimitHeader: String  { return L10n.tr("Localizable", "DataAndStorage.CateroryFileSizeLimit.Header") }
   /// Undo all custom auto-download settings.
   public static var dataAndStorageConfirmResetSettings: String  { return L10n.tr("Localizable", "DataAndStorage.Confirm.ResetSettings") }
+  /// Do not hide media that contain content suitable only for adults.
+  public static var dataAndStorageSensitiveContentInfo: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Info") }
+  /// 18+ Content
+  public static var dataAndStorageSensitiveContentConfirmHeader: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Header") }
+  /// Confirm
+  public static var dataAndStorageSensitiveContentConfirmOk: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Ok") }
+  /// Confirm that you are over 18 years old and update your settings to see potentially explicit and sensitive content.
+  public static var dataAndStorageSensitiveContentConfirmText: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Text") }
   /// Today
   public static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
   /// Delete for all members
@@ -7885,6 +7913,8 @@ public final class L10n {
   }
   /// GROUP EMOJI
   public static var emojiSectionGroupEmoji: String  { return L10n.tr("Localizable", "EmojiSection.GroupEmoji") }
+  /// MESSAGE EFFECTS
+  public static var emojiesMessageEffectsTitle: String  { return L10n.tr("Localizable", "Emojies.MessageEffects.Title") }
   /// Appearance
   public static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
   /// Suggest Stickers By Emoji
@@ -8275,6 +8305,12 @@ public final class L10n {
   }
   /// revoked
   public static var exportedInvitationStatusRevoked: String  { return L10n.tr("Localizable", "ExportedInvitation.Status.Revoked") }
+  /// Add Fack Check
+  public static var factCheckPlaceholder: String  { return L10n.tr("Localizable", "FactCheck.Placeholder") }
+  /// Fack Check
+  public static var factCheckTitle: String  { return L10n.tr("Localizable", "FactCheck.Title") }
+  /// what's this?
+  public static var factCheckWhatThis: String  { return L10n.tr("Localizable", "FactCheck.WhatThis") }
   /// Disable Dark Mode
   public static var fastSettingsDisableDarkMode: String  { return L10n.tr("Localizable", "FastSettings.DisableDarkMode") }
   /// Enable Dark Mode
@@ -12853,6 +12889,10 @@ public final class L10n {
   public static var previewSenderFileTooltip: String  { return L10n.tr("Localizable", "PreviewSender.FileTooltip") }
   /// Send in a quick way
   public static var previewSenderMediaTooltip: String  { return L10n.tr("Localizable", "PreviewSender.MediaTooltip") }
+  /// Move Caption Down
+  public static var previewSenderMoveTextDown: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextDown") }
+  /// Move Caption Up
+  public static var previewSenderMoveTextUp: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextUp") }
   /// Send With Spoiler
   public static var previewSenderSendAsSpoiler: String  { return L10n.tr("Localizable", "PreviewSender.SendAsSpoiler") }
   /// %d

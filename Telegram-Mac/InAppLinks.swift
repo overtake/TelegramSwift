@@ -19,6 +19,9 @@ import Translate
 import InputView
 //import WalletCore
 
+
+let XTR: String = "XTR"
+
 extension ResolvePeerResult : Equatable {
     var result: EnginePeer? {
         switch self {
@@ -1145,7 +1148,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
         
         _ = signal.start(next: { invoice in
-            showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: context.window)
+            if invoice.currency == XTR {
+                showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug)), for: context.window)
+            } else {
+                showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: context.window)
+            }
         }, error: { error in
             showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
         })

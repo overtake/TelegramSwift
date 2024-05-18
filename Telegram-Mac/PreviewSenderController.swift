@@ -14,6 +14,7 @@ import SwiftSignalKit
 import Postbox
 import InputView
 import ColorPalette
+import TelegramMedia
 
 private enum SecretMediaTtl {
     case off
@@ -35,9 +36,14 @@ fileprivate struct PreviewSendingState : Hashable {
         case file = 1
         case archive = 3
     }
+    enum Sort : Int32 {
+        case down
+        case up
+    }
     let state:State
     let isCollage: Bool
     let isSpoiler: Bool
+    let sort: Sort
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(state)
@@ -45,14 +51,25 @@ fileprivate struct PreviewSendingState : Hashable {
         hasher.combine(isSpoiler)
     }
     
+    var sortValue: Sort {
+        if state != .media {
+            return .down
+        } else {
+            return self.sort
+        }
+    }
+    
     func withUpdatedState(_ state: State) -> PreviewSendingState {
-        return .init(state: state, isCollage: self.isCollage, isSpoiler: self.isSpoiler)
+        return .init(state: state, isCollage: self.isCollage, isSpoiler: self.isSpoiler, sort: self.sort)
     }
     func withUpdatedIsCollage(_ isCollage: Bool) -> PreviewSendingState {
-        return .init(state: self.state, isCollage: isCollage, isSpoiler: self.isSpoiler)
+        return .init(state: self.state, isCollage: isCollage, isSpoiler: self.isSpoiler, sort: self.sort)
     }
     func withUpdatedIsSpoiler(_ isSpoiler: Bool) -> PreviewSendingState {
-        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler)
+        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: self.sort)
+    }
+    func withUpdatedSort(_ sort: Sort) -> PreviewSendingState {
+        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: sort)
     }
 }
 
@@ -99,13 +116,15 @@ fileprivate class PreviewSenderView : Control {
     fileprivate let collageButton = ImageButton()
     fileprivate let archiveButton = ImageButton()
     fileprivate let spoilerButton = ImageButton()
+    fileprivate let sortButton = ImageButton()
     fileprivate let textContainerView: View = View()
     fileprivate let separator: View = View()
     fileprivate let forHelperView: View = View()
     fileprivate weak var controller: PreviewSenderController?
+    fileprivate var messageEffect: InputMessageEffectView?
     fileprivate var stateValueInteractiveUpdate: ((PreviewSendingState)->Void)?
     
-    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true, isSpoiler: false)
+    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true, isSpoiler: false, sort: .down)
     var state: PreviewSendingState {
         set {
             let previous = _state
@@ -114,10 +133,13 @@ fileprivate class PreviewSenderView : Control {
             self.photoButton.isSelected = newValue.state == .media
             self.collageButton.isSelected = newValue.isCollage
             self.archiveButton.isSelected = newValue.state == .archive
+            
             self.spoilerButton.isSelected = newValue.isSpoiler
+            self.spoilerButton.appTooltip = newValue.isSpoiler ? strings().previewSenderSpoilerTooltipDisable : strings().previewSenderSpoilerTooltipEnable
 
-            spoilerButton.appTooltip = newValue.isSpoiler ? strings().previewSenderSpoilerTooltipDisable : strings().previewSenderSpoilerTooltipEnable
-
+            self.sortButton.isSelected = false
+            self.sortButton.set(image: newValue.sort == .down ? theme.icons.preview_text_up : theme.icons.preview_text_down, for: .Normal)
+            self.sortButton.appTooltip = newValue.sort == .down ? strings().previewSenderMoveTextUp : strings().previewSenderMoveTextDown
             
             DispatchQueue.main.async {
                 if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self._window {
@@ -128,6 +150,7 @@ fileprivate class PreviewSenderView : Control {
                 self.collageButton.controlState = .Normal
                 self.archiveButton.controlState = .Normal
                 self.spoilerButton.controlState = .Normal
+                self.sortButton.controlState = .Normal
             }
         }
         get {
@@ -196,13 +219,19 @@ fileprivate class PreviewSenderView : Control {
         
         archiveButton.set(handler: {  _ in
             updateValue {
-                $0.withUpdatedState(.archive)
+                $0.withUpdatedState($0.state == .archive ? .media : .archive)
             }
         }, for: .Click)
         
         spoilerButton.set(handler: { _ in
             updateValue {
                 $0.withUpdatedIsSpoiler(!$0.isSpoiler)
+            }
+        }, for: .Click)
+        
+        sortButton.set(handler: { _ in
+            updateValue {
+                $0.withUpdatedSort($0.sort == .down ? .up : .down)
             }
         }, for: .Click)
         
@@ -234,6 +263,10 @@ fileprivate class PreviewSenderView : Control {
         
         spoilerButton.set(image: theme.icons.send_media_spoiler, for: .Normal)
         _ = spoilerButton.sizeToFit()
+        
+        sortButton.set(image: theme.icons.preview_text_up, for: .Normal)
+        _ = sortButton.sizeToFit()
+
 
         headerView.addSubview(closeButton)
         headerView.addSubview(fileButton)
@@ -241,6 +274,7 @@ fileprivate class PreviewSenderView : Control {
         headerView.addSubview(collageButton)
         headerView.addSubview(archiveButton)
         headerView.addSubview(spoilerButton)
+        headerView.addSubview(sortButton)
 
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false
@@ -274,57 +308,8 @@ fileprivate class PreviewSenderView : Control {
         
 
         
-        sendButton.contextMenu = { [weak self] in
-            if let controller = self?.controller, let peer = controller.chatInteraction.peer {
-                let chatInteraction = controller.chatInteraction
-                let context = chatInteraction.context
-                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                    return nil
-                }
-                var items:[ContextMenuItem] = []
-                
-                if peer.id != chatInteraction.context.account.peerId {
-                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak controller] in
-                        controller?.send(true)
-                    }, itemImage: MenuAnimation.menu_mute.value))
-                }
-                switch chatInteraction.mode {
-                case .history, .thread:
-                    if !peer.isSecretChat {
-                        items.append(ContextMenuItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, handler: { [weak controller] in
-                            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
-                                controller?.send(false, atDate: date)
-                            }), for: context.window)
-                        }, itemImage: MenuAnimation.menu_schedule_message.value))
-                        
-                        if peer.id != chatInteraction.context.peerId, chatInteraction.presentation.canScheduleWhenOnline {
-                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: {  [weak controller] in
-                                controller?.send(false, atDate: scheduleWhenOnlineDate)
-                            }, itemImage: MenuAnimation.menu_online.value))
-                        }
-                        
-                        items.append(ContextMenuItem(strings().previewSenderSendAsSpoiler, handler: { [weak controller] in
-                            controller?.send(false, asSpoiler: true)
-                        }, itemImage: MenuAnimation.menu_send_spoiler.value))
-                        
-                    }
-                default:
-                    break
-                }
-                if !items.isEmpty {
-                   let menu = ContextMenu()
-                    for item in items {
-                        menu.addItem(item)
-                    }
-                    return menu
-                }
-            }
-            return nil
-        }
-        
         textView.setFrameSize(NSMakeSize(280, 34))
 
-        addSubview(tableView)
 
         
         textContainerView.addSubview(textView)
@@ -334,6 +319,10 @@ fileprivate class PreviewSenderView : Control {
         addSubview(textContainerView)
         addSubview(actionsContainerView)
         addSubview(separator)
+        
+        addSubview(tableView)
+
+        
         addSubview(draggingView)
         
         draggingView.isEventLess = true
@@ -398,25 +387,61 @@ fileprivate class PreviewSenderView : Control {
         self.archiveButton.isHidden = count < 2
         self.spoilerButton.isHidden = !canSpoiler
         self.collageButton.isHidden = !canCollage
-        separator.isHidden = false
+        self.sortButton.isHidden = state.state != .media
+        self.separator.isHidden = false
         needsLayout = true
     }
     
     var textWidth: CGFloat {
-        return frame.width - 10 - actionsContainerView.frame.width
+        return frame.width - 14 - actionsContainerView.frame.width
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        transition.updateFrame(view: actionsContainerView, frame: CGRect(origin: NSMakePoint(size.width - actionsContainerView.frame.width, size.height - actionsContainerView.frame.height), size: actionsContainerView.frame.size))
         
         transition.updateFrame(view: headerView, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, 50)))
+
+        
+        let actionPoint: NSPoint
+        
+        switch state.sortValue {
+        case .down:
+            actionPoint = NSMakePoint(size.width - actionsContainerView.frame.width + 5, size.height - actionsContainerView.frame.height)
+        case .up:
+            actionPoint = NSMakePoint(size.width - actionsContainerView.frame.width + 5, headerView.frame.maxY)
+        }
+        transition.updateFrame(view: actionsContainerView, frame: CGRect(origin: actionPoint, size: actionsContainerView.frame.size))
+        
+        let (textSize, textHeight) = textViewSize()
+        
+        let textContainerRect: NSRect
+        switch state.sortValue {
+        case .down:
+            textContainerRect = NSMakeRect(0, size.height - textSize.height, size.width, textSize.height)
+        case .up:
+            textContainerRect = NSMakeRect(0, headerView.frame.maxY, size.width, textSize.height)
+        }
+        transition.updateFrame(view: textContainerView, frame: textContainerRect)
+        
+        
+        transition.updateFrame(view: textView, frame: CGRect(origin: CGPoint(x: 14, y: 0), size: textSize))
+        textView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+
+        
         
         let height = size.height - additionHeight
         
         let listHeight = tableView.listHeight
         
-        let tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
+        let tableRect: NSRect
+        
+        switch state.sortValue {
+        case .down:
+            tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
+        case .up:
+            tableRect = NSMakeRect(0, textContainerRect.maxY - 6, frame.width, min(height, listHeight))
+        }
+        
         transition.updateFrame(view: tableView, frame: tableRect)
         transition.updateFrame(view: draggingView, frame: size.bounds)
         
@@ -427,54 +452,148 @@ fileprivate class PreviewSenderView : Control {
 
         var inset: CGFloat = 10
 
-        if !photoButton.isHidden {
-            transition.updateFrame(view: photoButton, frame: photoButton.centerFrameY(x: inset))
-            inset += photoButton.frame.width + 10
-        }
-        
-        if !fileButton.isHidden {
-            transition.updateFrame(view: fileButton, frame: fileButton.centerFrameY(x: inset))
-            inset += fileButton.frame.width + 10
-        }
-        
-        collageButton.centerY(x: closeButton.frame.minX - 10 - collageButton.frame.width)
+        let left = [photoButton, fileButton].filter { !$0.isHidden }
+        let right = [collageButton, archiveButton, spoilerButton, sortButton].filter { !$0.isHidden }
 
-
-        
-        if !archiveButton.isHidden {
-            transition.updateFrame(view: archiveButton, frame: archiveButton.centerFrameY(x: inset))
-            inset += archiveButton.frame.width + 10
+        for left in left {
+            transition.updateFrame(view: left, frame: left.centerFrameY(x: inset))
+            inset += left.frame.width + 10
         }
         
-        if !spoilerButton.isHidden {
-            if collageButton.isHidden {
-                transition.updateFrame(view: spoilerButton, frame: spoilerButton.centerFrameY(x: closeButton.frame.minX - 10 - spoilerButton.frame.width))
-            } else {
-                transition.updateFrame(view: spoilerButton, frame: spoilerButton.centerFrameY(x: collageButton.frame.minX - 10 - spoilerButton.frame.width))
-            }
+        inset = closeButton.frame.minX - 10
+        for view in right {
+            inset -= view.frame.width
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: inset))
+            inset -= 10
         }
-                
-        let (textSize, textHeight) = textViewSize()
-        
-        let textContainerRect = NSMakeRect(0, size.height - textSize.height, size.width, textSize.height)
-        transition.updateFrame(view: textContainerView, frame: textContainerRect)
-        
-        
-        transition.updateFrame(view: textView, frame: CGRect(origin: CGPoint(x: 10, y: 0), size: textSize))
-        textView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+          
         
         transition.updateFrame(view: separator, frame: NSMakeRect(0, textContainerView.frame.minY, size.width, .borderSize))
         
         transition.updateFrame(view: forHelperView, frame: NSMakeRect(0, textContainerView.frame.minY, 0, 0))
         
         self.textInputSuggestionsView?.updateRect(transition: transition)
+        
+        if let messageEffect {
+            transition.updateFrame(view: messageEffect, frame: messageEffect.centerFrameY(x: textContainerView.frame.width - actionsContainerView.frame.width - messageEffect.frame.width - 15))
+        }
     }
     
     override func layout() {
         super.layout()
         self.updateLayout(size: self.frame.size, transition: .immediate)
-
     }
+    
+    
+    func updateMessageEffect(_ messageEffect: ChatInterfaceMessageEffect?, interactions: ChatInteraction, animated: Bool) {
+        let context = interactions.context
+        if let messageEffect {
+            if self.messageEffect?.view.animateLayer.fileId != messageEffect.effect.effectSticker.fileId.id {
+                if let view = self.messageEffect {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                let current = InputMessageEffectView(account: interactions.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(30, 30))
+                current.userInteractionEnabled = true
+                current.centerY(x: textContainerView.frame.width - actionsContainerView.frame.width - current.frame.width - 15)
+                
+                let showMenu:(Control)->Void = { [weak interactions] control in
+                    if let event = NSApp.currentEvent, let interactions = interactions {
+                        let sendMenu = interactions.sendMessageMenu(true) |> deliverOnMainQueue
+                        _ = sendMenu.startStandalone(next: { menu in
+                            if let menu {
+                                AppMenu.show(menu: menu, event: event, for: control)
+                            }
+                        })
+                    }
+                }
+
+                current.set(handler: { control in
+                    showMenu(control)
+                }, for: .Down)
+                
+                current.set(handler: { control in
+                    showMenu(control)
+                }, for: .LongMouseDown)
+                
+ 
+                self.messageEffect = current
+                textContainerView.addSubview(current)
+                
+                if let fromRect = messageEffect.fromRect {
+                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker, emoji: ""), size: current.frame.size)
+                    
+                    let toRect = current.convert(current.frame.size.bounds, to: nil)
+                    
+                    let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                    let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                    
+                    let completed: (Bool)->Void = { [weak self] _ in
+                        DispatchQueue.main.async {
+                            if let container = self?.messageEffect {
+                                NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                                container.isHidden = false
+                            }
+                        }
+                    }
+                    current.isHidden = true
+                    parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+                    
+                    DispatchQueue.main.async {
+                        interactions.update {
+                            $0.updatedInterfaceState {
+                                $0.withRemovedEffectRect()
+                            }
+                        }
+                    }
+                    
+                    let messageEffect = messageEffect.effect
+                    let file = messageEffect.effectSticker
+                    let signal: Signal<(LottieAnimation, String)?, NoError>
+                    
+                    let animationSize = NSMakeSize(200, 200)
+                                        
+                    if let animation = messageEffect.effectAnimation {
+                        signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                            if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        if let effect = messageEffect.effectSticker.premiumEffect {
+                            signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                                if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                    return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
+                                } else {
+                                    return nil
+                                }
+                            }
+                        } else {
+                            signal = .single(nil)
+                        }
+                    }
+                    _ = (signal |> deliverOnMainQueue).startStandalone(next: { value in
+                        
+                        if let animation = value?.0 {
+                            let player = LottiePlayerView(frame: NSMakeRect(toRect.minX - animationSize.width / 2 - 50, toRect.minY - animationSize.height / 2 + 30, animationSize.width, animationSize.height))
+
+                            animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak player] in
+                                player?.removeFromSuperview()
+                            }, {})
+                            player.set(animation)
+                            context.window.contentView?.addSubview(player)
+                        }
+                    })
+                }
+            }
+        } else if let view = self.messageEffect {
+            performSubviewRemoval(view, animated: animated)
+            self.messageEffect = nil
+        }
+    }
+
+    
     
     
     required init?(coder: NSCoder) {
@@ -997,6 +1116,8 @@ class PreviewSenderController: ModalViewController, Notifable {
             break
         case .preview:
             break
+        case .searchHashtags:
+            break
         }
     }
     
@@ -1055,6 +1176,190 @@ class PreviewSenderController: ModalViewController, Notifable {
         self.genericView.textView.inputTheme = theme.inputTheme.withUpdatedQuote(colors)
         
         
+        let showMenu:(Control)->Void = { [weak self] control in
+            if let event = NSApp.currentEvent, let interactions = self?.contextChatInteraction {
+                let sendMenu = interactions.sendMessageMenu(false) |> deliverOnMainQueue
+                _ = sendMenu.startStandalone(next: { menu in
+                    if let menu {
+                        AppMenu.show(menu: menu, event: event, for: control)
+                    }
+                })
+            }
+        }
+
+        genericView.sendButton.set(handler: { control in
+            showMenu(control)
+        }, for: .RightDown)
+        
+        genericView.sendButton.set(handler: { control in
+            showMenu(control)
+        }, for: .LongMouseDown)
+        
+        contextChatInteraction.sendMessageMenu = { [weak self] fromEffect in
+            guard let self else {
+                return .single(nil)
+            }
+            let presentation = self.chatInteraction.presentation
+            let chatInteraction = self.chatInteraction
+            let peerId = chatInteraction.peerId
+            
+            guard let peer = presentation.peer else {
+                return .single(nil)
+            }
+            
+            let context = context
+            if let slowMode = presentation.slowMode, slowMode.hasLocked {
+                return .single(nil)
+            }
+            if presentation.state != .normal {
+                return .single(nil)
+            }
+            var items:[ContextMenuItem] = []
+            
+            if peer.id != context.account.peerId, !fromEffect {
+                items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
+                    self?.send(true)
+                }, itemImage: MenuAnimation.menu_mute.value))
+            }
+            switch chatInteraction.mode {
+            case .history, .thread:
+                if fromEffect {
+                    items.append(ContextMenuItem(strings().modalRemove, handler: { [weak self] in
+                        self?.contextChatInteraction.update {
+                            $0.updatedInterfaceState {
+                                $0.withUpdatedMessageEffect(nil)
+                            }
+                        }
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                } else {
+                    if !peer.isSecretChat {
+                        let text = peer.id == context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
+                        items.append(ContextMenuItem(text, handler: { [weak self] in
+                            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { date in
+                                self?.send(false, atDate: date)
+                            }), for: context.window)
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        
+                        if peer.id != context.peerId, presentation.canScheduleWhenOnline {
+                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak self] in
+                                self?.send(false, atDate: scheduleWhenOnlineDate)
+                            }, itemImage: MenuAnimation.menu_online.value))
+                        }
+                        
+                        items.append(ContextMenuItem(strings().previewSenderSendAsSpoiler, handler: { [weak self] in
+                            self?.send(false, asSpoiler: true)
+                        }, itemImage: MenuAnimation.menu_send_spoiler.value))
+                        
+                        
+                    }
+                }
+                
+                
+            default:
+                break
+            }
+                                    
+            let reactions:Signal<[AvailableMessageEffects.MessageEffect], NoError> = context.diceCache.availableMessageEffects |> map { view in
+                return view?.messageEffects ?? []
+            } |> deliverOnMainQueue |> take(1)
+                        
+            return reactions |> map { [weak self] reactions in
+                
+                let width = ContextAddReactionsListView.width(for: reactions.count, maxCount: 7, allowToAll: true)
+                let aboveText: String = strings().chatContextMessageEffectAdd
+                
+                let w_width = width + 20
+                let color = theme.colors.darkGrayText.withAlphaComponent(0.8)
+                let link = theme.colors.link.withAlphaComponent(0.8)
+                let attributed = parseMarkdownIntoAttributedString(aboveText, attributes: .init(body: .init(font: .normal(.text), textColor: color), bold: .init(font: .medium(.text), textColor: color), link: .init(font: .normal(.text), textColor: link), linkAttribute: { link in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                    }))
+                })).detectBold(with: .medium(.text))
+                let aboveLayout = TextViewLayout(attributed, maximumNumberOfLines: 2, alignment: .center)
+                aboveLayout.measure(width: w_width - 24)
+                aboveLayout.interactions = globalLinkExecutor
+                
+                let rect = NSMakeRect(0, 0, w_width, 40 + 20 + aboveLayout.layoutSize.height + 4)
+                
+                let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+                panel._canBecomeMain = false
+                panel._canBecomeKey = false
+                panel.level = .popUpMenu
+                panel.backgroundColor = .clear
+                panel.isOpaque = false
+                panel.hasShadow = false
+                
+
+                let reveal:((ContextAddReactionsListView & StickerFramesCollector)->Void)?
+                
+                
+                let current = self?.contextChatInteraction.presentation.interfaceState.messageEffect
+                
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+                
+                if let effect = current {
+                    selectedItems.append(.init(source: .custom(effect.effect.effectSticker.fileId.id), type: .transparent))
+                }
+                
+                let update:(Int64, NSRect?)->Void = { fileId, fromRect in
+                    let effect = reactions.first(where: {
+                        $0.effectSticker.fileId.id == fileId
+                    })
+                    let current = self?.contextChatInteraction.presentation.interfaceState.messageEffect
+                    let value: ChatInterfaceMessageEffect?
+                    if let effect, current?.effect != effect {
+                        value = ChatInterfaceMessageEffect(effect: effect, fromRect: fromRect)
+                    } else {
+                        value = nil
+                    }
+                    self?.contextChatInteraction.update {
+                        $0.updatedInterfaceState {
+                            $0.withUpdatedMessageEffect(value)
+                        }
+                    }
+                }
+                
+                reveal = { view in
+                    let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
+                        update(sticker.file.fileId.id, fromRect)
+                    }, moveTop: true, mode: .messageEffects)
+                    window.show(view)
+                }
+                
+                let available: [ContextReaction] = Array(reactions.map { value in
+                    return .custom(value: .custom(value.effectSticker.fileId.id), fileId: value.effectSticker.fileId.id, value.effectSticker, isSelected: current?.effect.effectSticker.fileId.id == value.effectSticker.fileId.id)
+                }.prefix(7))
+                
+                let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
+                    switch value {
+                    case let .custom(fileId):
+                        update(fileId, fromRect)
+                    default:
+                        break
+                    }
+                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout)
+                
+                
+                panel.contentView?.addSubview(view)
+                panel.contentView?.wantsLayer = true
+                view.autoresizingMask = [.width, .height]
+                
+                let menu = ContextMenu(bottomAnchor: true)
+                if peer.isUser, peer.id != context.peerId {
+                    menu.topWindow = panel
+                }
+                
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
+            }
+        }
+
+        
+        
+        
         self.genericView.textView.interactions.inputDidUpdate = { [weak self] state in
             guard let `self` = self else {
                 return
@@ -1088,9 +1393,24 @@ class PreviewSenderController: ModalViewController, Notifable {
             genericView.textView.set(.init(attributedText: stateAttributedStringForText(attributedString), selectionRange: attributedString.length ..< attributedString.length))
         } else {
             let input = chatInteraction.presentation.interfaceState.inputState
+            let messageEffect = chatInteraction.presentation.interfaceState.messageEffect
+            
             self.temporaryInputState = input
+            
+            self.contextChatInteraction.update {
+                $0.updatedInterfaceState {
+                    $0.withUpdatedMessageEffect(messageEffect)
+                }
+            }
+            
             genericView.textView.set(input)
-            chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(ChatTextInputState())})})
+            self.genericView.updateMessageEffect(messageEffect, interactions: contextChatInteraction, animated: false)
+            
+            chatInteraction.update({
+                $0.updatedInterfaceState({
+                    $0.withUpdatedInputState(ChatTextInputState()).withUpdatedMessageEffect(nil)
+                })
+            })
         }
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
@@ -1111,7 +1431,7 @@ class PreviewSenderController: ModalViewController, Notifable {
         self.disposable.set(actionsDisposable)
         
         
-        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true, isSpoiler: false), editedData: [:])
+        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true, isSpoiler: false, sort: .down), editedData: [:])
         
         let statePromise:ValuePromise<PreviewState> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1290,10 +1610,10 @@ class PreviewSenderController: ModalViewController, Notifable {
         default:
             break
         }
-        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage, isSpoiler: false)
+        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage, isSpoiler: false, sort: .down)
         if let _ = chatInteraction.presentation.slowMode {
             if state.state != .archive && self.urls.count > 1, !state.isCollage {
-                state = .init(state: .archive, isCollage: false, isSpoiler: false)
+                state = .init(state: .archive, isCollage: false, isSpoiler: false, sort: .down)
             }
         }
         
@@ -1403,15 +1723,17 @@ class PreviewSenderController: ModalViewController, Notifable {
                 self.emoji.popover?.hide()
                 self.closeModal()
                 
-                self.chatInteraction.sendMessage(silent, atDate)
+                let effect = self.contextChatInteraction.presentation.messageEffect
+                
+                self.chatInteraction.sendMessage(silent, atDate, effect)
                 if state.isCollage {
                     let collages = medias.chunks(10)
                     for collage in collages {
-                        self.chatInteraction.sendMedias(collage, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
+                        self.chatInteraction.sendMedias(collage, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
                         additionalMessage = nil
                     }
                 } else {
-                    self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
+                    self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
                 }
             }
             
@@ -1628,8 +1950,17 @@ class PreviewSenderController: ModalViewController, Notifable {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if !sent, let temp = temporaryInputState {
-             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(temp)})})
+        if !sent {
+            chatInteraction.update({
+                $0.updatedInterfaceState({ state in
+                    var state = state
+                    if let temp = temporaryInputState {
+                        state = state.withUpdatedInputState(temp)
+                    }
+                    state = state.withUpdatedMessageEffect(self.contextChatInteraction.presentation.interfaceState.messageEffect)
+                    return state
+                })
+            })
         }
         if !sent {
             for (_, cached) in cachedMedia {
@@ -1737,6 +2068,9 @@ class PreviewSenderController: ModalViewController, Notifable {
                 if value.effectiveInput != oldValue.effectiveInput {
                     updateInput(value, prevState: oldValue, animated)
                 }
+                if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
+                    self.genericView.updateMessageEffect(value.interfaceState.messageEffect, interactions: contextChatInteraction, animated: animated)
+                }
             } else if value === self.chatInteraction.presentation {
                 if value.slowMode != oldValue.slowMode {
                     let urls = self.urls
@@ -1748,6 +2082,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             }
         }
     }
+    
     
     private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         
@@ -1780,6 +2115,7 @@ class PreviewSenderController: ModalViewController, Notifable {
         
         self.updateContextQuery(NSMakeRange(input.selectionRange.lowerBound, input.selectionRange.upperBound - input.selectionRange.lowerBound))
     }
+
     
     func updateContextQuery(_ range: NSRange) {
         

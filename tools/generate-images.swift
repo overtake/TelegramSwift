@@ -263,6 +263,7 @@ func initialize() -> [String] {
     array.append("settingsProfile")
     array.append("settingsBusiness")
     array.append("settingsBusinessActive")
+    array.append("settingsStars")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")
@@ -606,7 +607,8 @@ func initialize() -> [String] {
     array.append("search_filter_downloads")
     array.append("search_filter_add_peer")
     array.append("search_filter_add_peer_active")
-
+    array.append("search_filter_hashtag")
+    array.append("search_hashtag_chevron")
     
     array.append("chat_reply_count_bubble_incoming")
     array.append("chat_reply_count_bubble_outgoing")
@@ -938,6 +940,9 @@ func initialize() -> [String] {
     
     array.append("bot_manager_settings")
     
+    array.append("preview_text_down")
+    array.append("preview_text_up")
+
 
     return array
 }

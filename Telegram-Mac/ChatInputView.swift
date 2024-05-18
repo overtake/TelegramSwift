@@ -20,7 +20,7 @@ protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
 }
 
-private final class InputMessageEffectView : Control {
+final class InputMessageEffectView : Control {
     
     
     class RadialGradientView: View {
@@ -41,7 +41,7 @@ private final class InputMessageEffectView : Control {
         }
     }
     
-    fileprivate let view: InlineStickerView
+    let view: InlineStickerView
     private let gradient: RadialGradientView = RadialGradientView(frame: NSMakeRect(0, 0, 40, 40))
     init(account: Account, file: TelegramMediaFile, size: NSSize) {
         self.view = .init(account: account, file: file, size: size, playPolicy: .onceEnd)
@@ -211,7 +211,7 @@ class ChatInputView: View, Notifable {
                 return true
             }
             if !text.isEmpty || !interaction.presentation.interfaceState.forwardMessageIds.isEmpty || interaction.presentation.state == .editing {
-                interaction.sendMessage(false, nil)
+                interaction.sendMessage(false, nil, interaction.presentation.messageEffect)
                 if interaction.peerIsAccountPeer {
                     interaction.context.account.updateLocalInputActivity(peerId: interaction.activitySpace, activity: .typingText, isPresent: false)
                 }
@@ -443,6 +443,7 @@ class ChatInputView: View, Notifable {
             }
             
             self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            
         }
     }
     

@@ -526,7 +526,9 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             }, addNew: openNewCard, addPaymentMethod: addPaymentMethod), for: context.window)
             
         } else if let paymentForm = stateValue.with({ $0.form }) {
-            addPaymentMethod(paymentForm.url, paymentForm)
+            if let url = paymentForm.url {
+                addPaymentMethod(url, paymentForm)
+            }
         }
     }, pay: { savedCredentialsToken in
         guard let paymentMethod = stateValue.with ({ $0.paymentMethod }) else {
@@ -586,21 +588,22 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                 return transaction.getPeer(form.paymentBotId)
             }
 
-            let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: form.paymentBotId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
-            
-            let _ = checkSignal.start(next: { value, botPeer, providerPeer in
-                if let botPeer = botPeer {
-                    if value {
-                        pay()
-                    } else {
-                        verifyAlert_button(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+            if let providerId = form.providerId {
+                let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: form.paymentBotId), botPeer, context.account.postbox.loadedPeerWithId(providerId))
+                
+                let _ = checkSignal.startStandalone(next: { value, botPeer, providerPeer in
+                    if let botPeer = botPeer {
+                        if value {
                             pay()
-                            _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
-                        })
+                        } else {
+                            verifyAlert_button(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+                                pay()
+                                _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
+                            })
+                        }
                     }
-                }
-            })
-           
+                })
+            }
         }
         
         switch paymentMethod {

@@ -41,8 +41,9 @@ class ChatRightView: View, ViewDisplayDelegate {
             var x: CGFloat = item.isStateOverlayLayout ? 4 : 0
             
             if let _ = item.messageEffect {
-                var rect = size.bounds.focus(NSMakeSize(12, 12))
+                var rect = size.bounds.focus(NSMakeSize(14, 14))
                 rect.origin.x = x + 2
+                rect.origin.y += 1
                 self.effect = rect
                 x = rect.maxX
             }
@@ -219,6 +220,7 @@ class ChatRightView: View, ViewDisplayDelegate {
     private var readImageView:ImageView?
     private var sendingView:SendingClockProgress?
     private(set) var effectView: InlineStickerView?
+    private(set) var effectTextView: TextView?
     private var replyCountView: TextView?
     private var replyCountImage: ImageView?
     private var viewsCountView: TextView?
@@ -267,21 +269,52 @@ class ChatRightView: View, ViewDisplayDelegate {
         }
         
         if let effect = item.messageEffect {
-            if self.effectView?.animateLayer.fileId != effect.effectSticker.fileId.id {
-                if let view = self.effectView {
-                    performSubviewRemoval(view, animated: animated)
+            if effect.effectAnimation != nil {
+                if let effectTextView {
+                    performSubviewRemoval(effectTextView, animated: animated)
+                    self.effectTextView = nil
                 }
-                let current = InlineStickerView(account: item.context.account, file: effect.effectSticker, size: NSMakeSize(12, 12), playPolicy: .onceEnd)
-                current.userInteractionEnabled = true
-                current.set(handler: { [weak self] _ in
-                    self?.item?.invokeMessageEffect()
-                }, for: .SingleClick)
-                self.effectView = current
-                addSubview(current)
+                if self.effectView?.animateLayer.fileId != effect.effectSticker.fileId.id {
+                    if let view = self.effectView {
+                        performSubviewRemoval(view, animated: animated)
+                    }
+                    let current = InlineStickerView(account: item.context.account, file: effect.effectSticker, size: NSMakeSize(12, 12), playPolicy: .onceEnd)
+                    current.userInteractionEnabled = true
+                    current.set(handler: { [weak self] _ in
+                        self?.item?.invokeMessageEffect()
+                    }, for: .SingleClick)
+                    self.effectView = current
+                    addSubview(current)
+                }
+            } else {
+                if let effectView {
+                    performSubviewRemoval(effectView, animated: animated)
+                    self.effectView = nil
+                }
+                let current: TextView
+                if let view = self.effectTextView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.userInteractionEnabled = false
+                    current.isSelectable = false
+                    self.effectTextView = current
+                    addSubview(current)
+                }
+                let layout = TextViewLayout(.initialize(string: effect.emoticon, font: .normal(10)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                current.update(layout)
             }
-        } else if let view = self.effectView {
-            self.effectView = nil
-            performSubviewRemoval(view, animated: animated, scale: true)
+            
+        } else {
+            if let view = self.effectView {
+                self.effectView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+            if let view = self.effectTextView {
+                self.effectTextView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
         }
         if let sendingRect = frames.sending {
             if self.sendingView == nil {
@@ -534,6 +567,9 @@ class ChatRightView: View, ViewDisplayDelegate {
         
         if let frame = frames.effect, let view = effectView {
             transition.updateFrame(view: view, frame: frame)
+        }
+        if let frame = frames.effect, let view = effectTextView {
+            transition.updateFrame(view: view, frame: frame.offsetBy(dx: -1, dy: 0))
         }
         if let frame = frames.pin, let view = pinView {
             transition.updateFrame(view: view, frame: frame)

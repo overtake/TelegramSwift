@@ -70,13 +70,14 @@ fileprivate final class AccountInfoArguments {
     let openUpdateApp:() -> Void
     let openPremium:(Bool)->Void
     let giftPremium:()->Void
+    let stars:()->Void
     let addAccount:([AccountWithInfo])->Void
     let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
     let openStory:(StoryInitialIndex?)->Void
     let openWebBot:(AttachMenuBot)->Void
-    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping(Bool)->Void, giftPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void) {
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping(Bool)->Void, giftPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void, stars:@escaping()->Void) {
         self.context = context
         self.storyList = storyList
         self.presentController = presentController
@@ -91,6 +92,7 @@ fileprivate final class AccountInfoArguments {
         self.set2Fa = set2Fa
         self.openStory = openStory
         self.openWebBot = openWebBot
+        self.stars = stars
     }
 }
 
@@ -144,6 +146,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case premium(index: Int, viewType: GeneralViewType)
     case business(index: Int, viewType: GeneralViewType)
     case giftPremium(index: Int, viewType: GeneralViewType)
+    case stars(index: Int, viewType: GeneralViewType)
     case about(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
     case ask(index: Int, viewType: GeneralViewType)
@@ -196,14 +199,16 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(19)
         case .giftPremium:
             return .index(20)
-        case .faq:
+        case .stars:
             return .index(21)
-        case .ask:
+        case .faq:
             return .index(22)
-        case .about:
+        case .ask:
             return .index(23)
+        case .about:
+            return .index(24)
         case let .attach(index, _, _):
-            return .index(24 + index)
+            return .index(25 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -256,6 +261,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .business(index, _):
             return index
         case let .giftPremium(index, _):
+            return index
+        case let .stars(index, _):
             return index
         case let .faq(index, _):
             return index
@@ -412,6 +419,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .giftPremium(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGiftPremium, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .stars(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStars, icon: theme.icons.settingsStars, activeIcon: theme.icons.settingsStars, type: .next, viewType: viewType, action: arguments.stars, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .faq(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .ask(_, viewType):
@@ -626,6 +635,9 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         index += 1
         
         entries.append(.giftPremium(index: index, viewType: .singleItem))
+        index += 1
+
+        entries.append(.stars(index: index, viewType: .singleItem))
         index += 1
 
         
@@ -965,6 +977,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
         }, openWebBot: { bot in
             openWebBot(bot, context: context)
+        }, stars: {
+            showModal(with: Star_ListScreen(context: context, source: .account), for: context.window)
         })
         
         self.arguments = arguments

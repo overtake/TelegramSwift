@@ -98,6 +98,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var psaButton: ImageButton? = nil
     
     private var hasBeenLayout: Bool = false
+    
+    private var factCheckView: FactCheckMessageView?
 
     let rowView: View
     
@@ -161,7 +163,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
       
     var selectableTextViews: [TextView] {
-        return captionViews.map { $0.view }
+        return (captionViews.map { $0.view } + [self.factCheckView?.textView.textView]).compactMap { $0 }
     }
     
     func clickInContent(point: NSPoint) -> Bool {
@@ -535,6 +537,18 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return rect
     }
     
+    func factCheckFrame(_ item: ChatRowItem) -> NSRect {
+        if let layout = item.factCheckLayout {
+            var rect = contentFrame(item)
+            rect.origin.y += (rect.size.height + item.defaultContentInnerInset)
+            rect.size = layout.size
+            rect.origin.x += item.elementsContentInset
+            return rect
+        } else {
+            return .zero
+        }
+    }
+    
     func avatarFrame(_ item: ChatRowItem) -> NSRect {
         var rect = NSMakeRect(item.leftInset, 6, 36, 36)
 
@@ -546,8 +560,17 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func captionFrame(_ item: ChatRowItem, caption: ChatRowItem.RowCaption) -> NSRect {
-        let contentFrame = self.contentFrame(item)
-        return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset + caption.offset.y, caption.layout.layoutSize.width, caption.layout.layoutSize.height)
+        var rect = self.contentFrame(item)
+        if item.invertMedia {
+            rect.origin.y -= rect.height
+            rect.origin.y -= (caption.invertedOffset)
+            if !item.isBubbled {
+                rect.origin.y -= caption.contentInset / 2
+            }
+        } else {
+            rect.origin.y += (caption.offset.y + item.defaultContentInnerInset)
+        }
+        return NSMakeRect(rect.minX + item.elementsContentInset, rect.maxY, caption.layout.layoutSize.width, caption.layout.layoutSize.height)
     }
     
     func replyMarkupFrame(_ item: ChatRowItem) -> NSRect {
@@ -812,11 +835,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if item.isBubbled && item.hasBubble {
             let bubbleFrame = self.bubbleFrame(item)
             point.x = bubbleFrame.minX + (item.isIncoming ? item.bubbleContentInset + item.additionBubbleInset : item.bubbleContentInset)
-            point.y -= 3
         } else if item.isBubbled, let forwardAccessory = forwardAccessory {
             let contentFrame = self.contentFrame(item)
             point.x = item.isIncoming ? contentFrame.maxX : contentFrame.minX - forwardAccessory.frame.width
             point.y += 2
+        }
+        
+        if item.authorText == nil {
+            point.y -= 3
         }
         
         return point
@@ -1092,6 +1118,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    func fillFactCheck(_ item: ChatRowItem, animated: Bool) -> Void {
+        if let layout = item.factCheckLayout {
+            let current: FactCheckMessageView
+            if let view = self.factCheckView {
+                current = view
+            } else {
+                current = FactCheckMessageView(frame: factCheckFrame(item))
+                rowView.addSubview(current)
+                self.factCheckView = current
+            }
+            current.update(layout: layout, animated: animated)
+        } else if let view = factCheckView {
+            performSubviewRemoval(view, animated: animated)
+            self.factCheckView = nil
+        }
+    }
+    
     
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
@@ -1124,7 +1167,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             var view = captionViews.first(where: { $0.isSame(to: layout) })
             if view == nil {
                 view = CaptionView(id: layout.id, shim: layout.isLoading, view: TextView())
-                rowView.addSubview(view!.view, positioned: .below, relativeTo: rightView)
+                rowView.addSubview(view!.view, positioned: .below, relativeTo: contentView)
                 view?.view.frame = captionFrame(item, caption: layout)
                 captionViews.append(view!)
                 if animated {
@@ -1283,7 +1326,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, reactionsLayout.size.width, reactionsLayout.size.height)
         
-        if let captionLayout = item.captionLayouts.first?.layout {
+        if let captionLayout = item.captionLayouts.first?.layout, !item.invertMedia {
             var ignore: Bool = false
             if let item = item as? ChatGroupedItem, !item.isBubbled {
                 if item.layoutType == .files {
@@ -1294,6 +1337,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
             }
         }
+        
         
         let bubbleFrame = self.bubbleFrame(item)
         
@@ -1333,6 +1377,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if let replyMarkupModel = item.replyMarkupModel {
                 frame.origin.y += replyMarkupModel.size.height + item.defaultContentInnerInset
             }
+        }
+        if let factCheckLayout = item.factCheckLayout {
+            frame.origin.y += factCheckLayout.size.height + item.defaultContentInnerInset
         }
         return frame
     }
@@ -1662,10 +1709,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func getScreenEffectView(_ mode: ScreenEffectMode) -> NSView? {
         switch mode {
         case .effect:
-            if let media = self as? ChatMediaView {
+            if let effectView = rightView.effectView {
+                return effectView
+            } else  if let media = self as? ChatMediaView {
                 return media.contentNode
-            } else {
-                return rightView.effectView
             }
         case let .reaction(value):
             if let reactionsView = reactionsView {
@@ -1830,6 +1877,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         fillReactions(item, animated: animated)
         fillReplyMarkup(item, animated: animated)
         fillCaption(item, animated: animated)
+        fillFactCheck(item, animated: animated)
         fillChannelComments(item, animated: animated)
         
         
@@ -1996,6 +2044,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let view = reactionsView {
             transition.updateFrame(view: view, frame: reactionsRect(item))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        
+        if let view = factCheckView {
+            transition.updateFrame(view: view, frame: factCheckFrame(item))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
 

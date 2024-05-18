@@ -287,6 +287,10 @@ enum LocalAnimatedSticker : String {
     case menu_search
     case menu_eye
     case menu_ban
+    case menu_adult_slash
+    case menu_adult
+    case menu_sort_up
+    case menu_sort_down
     
     case emoji_category_activities
     case emoji_category_angry
@@ -342,6 +346,9 @@ enum LocalAnimatedSticker : String {
     case chatlist_poll
     case chatlist_voice
     
+    case star_currency
+    case star_currency_part
+
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])

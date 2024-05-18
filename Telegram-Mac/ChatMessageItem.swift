@@ -266,9 +266,8 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
-    let wpPresentation: WPLayoutPresentation
     
-    var webpageLayout:WPLayout?
+    private(set) var webpageLayout:WPLayout?
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
@@ -339,7 +338,7 @@ class ChatMessageItem: ChatRowItem {
                     chatInteraction?.openInfo(peerId, toChat, postId, initialAction ?? .source(message.id))
                 }
                 
-                messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
+                messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
                 }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax).mutableCopy() as! NSMutableAttributedString
                 
@@ -461,57 +460,55 @@ class ChatMessageItem: ChatRowItem {
             if let game = media as? TelegramMediaGame {
                 media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
             }
-            
-             self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType, pattern: theme.chat.webPreviewPattern(entry.message))
-
-            
-            if let webpage = media as? TelegramMediaWebpage {
-                switch webpage.content {
-                case let .Loaded(content):
-                    var content = content
-                    var forceArticle: Bool = false
-                    if let instantPage = content.instantPage {
-                        if instantPage.blocks.count == 3 {
-                            switch instantPage.blocks[2] {
-                            case .collage, .slideshow:
-                                forceArticle = true
-                            default:
-                                break
-                            }
-                        }
-                    }
-                    if content.type == "telegram_background" {
-                        forceArticle = true
-                    }
-                    
-                    if let story = content.story, let media = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
-                        switch media {
-                        case let .item(story):
-                            if let image = story.media as? TelegramMediaImage {
-                                content = content.withUpdatedImage(image)
-                            } else if let file = story.media as? TelegramMediaFile {
-                                content = content.withUpdatedFile(file)
-                            }
-                        default:
-                            break
-                        }
-                    }
-                    
-                    if content.file == nil || forceArticle, content.story == nil {
-                        webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
-                    } else if content.file != nil || content.image != nil {
-                        webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
-                    }
-                default:
-                    break
-                }
-            } else if let adAttribute = message.adAttribute {
-                self.webpageLayout = WPArticleLayout(with: .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: message.media.first as? TelegramMediaImage, file: message.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil), context: context, chatInteraction: chatInteraction, parent: message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: true, entities: message.textEntities?.entities, adAttribute: adAttribute)
-            }
+                        
             
             super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)
             
             
+             if let webpage = media as? TelegramMediaWebpage {
+                 switch webpage.content {
+                 case let .Loaded(content):
+                     var content = content
+                     var forceArticle: Bool = false
+                     if let instantPage = content.instantPage {
+                         if instantPage.blocks.count == 3 {
+                             switch instantPage.blocks[2] {
+                             case .collage, .slideshow:
+                                 forceArticle = true
+                             default:
+                                 break
+                             }
+                         }
+                     }
+                     if content.type == "telegram_background" {
+                         forceArticle = true
+                     }
+                     
+                     if let story = content.story, let media = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+                         switch media {
+                         case let .item(story):
+                             if let image = story.media as? TelegramMediaImage {
+                                 content = content.withUpdatedImage(image)
+                             } else if let file = story.media as? TelegramMediaFile {
+                                 content = content.withUpdatedFile(file)
+                             }
+                         default:
+                             break
+                         }
+                     }
+                     
+                     if content.file == nil || forceArticle, content.story == nil {
+                         webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
+                     } else if content.file != nil || content.image != nil {
+                         webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
+                     }
+                 default:
+                     break
+                 }
+             } else if let adAttribute = message.adAttribute {
+                 self.webpageLayout = WPArticleLayout(with: .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: message.media.first as? TelegramMediaImage, file: message.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil), context: context, chatInteraction: chatInteraction, parent: message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: true, entities: message.textEntities?.entities, adAttribute: adAttribute)
+             }
+             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
                 if let webpage = message.media.first as? TelegramMediaWebpage {
                     switch webpage.content {
@@ -867,12 +864,7 @@ class ChatMessageItem: ChatRowItem {
                         }
                     }
                 }
-                
-//                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), { link in
-//                    copyToClipboard(link)
-//                    context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
-//                }), range: range)
-                
+
             case .Hashtag:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
@@ -993,34 +985,3 @@ class ChatMessageItem: ChatRowItem {
     }
 }
 
-
-/*
- if let color = NSColor(hexString: nsString!.substring(with: range)) {
-     
-     struct RunStruct {
-         let ascent: CGFloat
-         let descent: CGFloat
-         let width: CGFloat
-     }
-     
-     let dimensions = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
-     let extentBuffer = UnsafeMutablePointer<RunStruct>.allocate(capacity: 1)
-     extentBuffer.initialize(to: RunStruct(ascent: 0.0, descent: 0.0, width: dimensions.width))
-     var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateVersion1, dealloc: { (pointer) in
-     }, getAscent: { (pointer) -> CGFloat in
-         let d = pointer.assumingMemoryBound(to: RunStruct.self)
-         return d.pointee.ascent
-     }, getDescent: { (pointer) -> CGFloat in
-         let d = pointer.assumingMemoryBound(to: RunStruct.self)
-         return d.pointee.descent
-     }, getWidth: { (pointer) -> CGFloat in
-         let d = pointer.assumingMemoryBound(to: RunStruct.self)
-         return d.pointee.width
-     })
-     let delegate = CTRunDelegateCreate(&callbacks, extentBuffer)
-     let key = kCTRunDelegateAttributeName as String
-     let attrDictionaryDelegate:[NSAttributedString.Key : Any] = [NSAttributedString.Key(key): delegate as Any, .hexColorMark : color, .hexColorMarkDimensions: dimensions]
-     
-     string.addAttributes(attrDictionaryDelegate, range: NSMakeRange(range.upperBound - 1, 1))
- }
- */
