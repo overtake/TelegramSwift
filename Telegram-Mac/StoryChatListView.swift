@@ -258,7 +258,9 @@ private final class StoryListContainer : Control {
         }, for: .Click)
         
         NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
-            self?.updateScroll()
+            DispatchQueue.main.async {
+                self?.updateScroll()
+            }
         })
     }
     
@@ -309,6 +311,7 @@ private final class StoryListContainer : Control {
     }
     
     private func getFrame(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> NSRect {
+        
         
         let focusRange = self.focusRange
         
@@ -617,7 +620,7 @@ private final class StoryListContainer : Control {
         
 
         transition.updateFrame(view: scrollView, frame: size.bounds)
-        
+                
         let visibleRange = self.visibleRange
         for (i, view) in views.enumerated() {
             if let item = view.item {
@@ -627,7 +630,7 @@ private final class StoryListContainer : Control {
                 let frame = getFrame(item, index: i, progress: progress)
                 let alpha = getAlpha(item, index: i, progress: progress)
                 
-               
+
                 view.isHidden = !visibleRange.contains(i)
                 component.isHidden = !visibleRange.contains(i)
 
