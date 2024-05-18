@@ -607,14 +607,17 @@ struct SearchTags : Hashable {
     let messageTags:MessageTags?
     let peerTag: PeerId?
     let isChannels: Bool
-    
-    init(messageTags: MessageTags?, peerTag: PeerId?, isChannels: Bool = false) {
+    let text: String?
+    let publicPosts: Bool
+    init(messageTags: MessageTags?, peerTag: PeerId?, isChannels: Bool = false, text: String? = nil, publicPosts: Bool = false) {
         self.messageTags = messageTags
         self.peerTag = peerTag
         self.isChannels = isChannels
+        self.text = text
+        self.publicPosts = publicPosts
     }
     var isEmpty: Bool {
-        return messageTags == nil && peerTag == nil
+        return messageTags == nil && peerTag == nil && text == nil && !publicPosts
     }
     
     var location: SearchMessagesLocation {
@@ -827,10 +830,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     } else {
                         location = globalTags.location
                         if globalTags.isEmpty {
-                            
-                            
-                            
-                            foundRemotePeers = .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.isChannels ? .channels : .everywhere)
+                            foundRemotePeers = query.hasPrefix("#") || !options.contains(.chats) || !globalTags.isEmpty ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.isChannels ? .channels : .everywhere)
                                 |> delay(0.2, queue: prepareQueue)
                                 |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                     
@@ -959,7 +959,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let remoteSearch = searchMessagesState.get() |> mapToSignal { state -> Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
                     
-                    return context.engine.messages.searchMessages(location: location, query: query, state: state)
+                    let signal: Signal<(SearchMessagesResult, SearchMessagesState), NoError>
+                    if globalTags.publicPosts {
+                        let text = (globalTags.text ?? query)
+                        signal = context.engine.messages.searchHashtagPosts(hashtag: text.replacingOccurrences(of: "#", with: ""), state: state, limit: 100)
+                    } else {
+                        signal = context.engine.messages.searchMessages(location: location, query: globalTags.text ?? query, state: state)
+                    }
+                    
+                    return signal
                         |> delay(0.2, queue: prepareQueue)
                         |> map { result -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                             

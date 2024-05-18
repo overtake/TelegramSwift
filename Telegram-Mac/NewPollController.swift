@@ -551,7 +551,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         let state = stateValue.with { $0 }
     
         if state.isEnabled && !state.shouldShowTooltipForQuiz {
-            chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false, nil, false)
+            chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false, nil, false, nil, false)
             close?()
         } else if state.shouldShowTooltipForQuiz {
             showTooltipForQuiz?()

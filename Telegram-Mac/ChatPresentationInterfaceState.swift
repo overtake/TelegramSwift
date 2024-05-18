@@ -555,6 +555,10 @@ class ChatPresentationInterfaceState: Equatable {
         return inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
     }
     
+    var messageEffect: AvailableMessageEffects.MessageEffect? {
+        return self.interfaceState.messageEffect?.effect
+    }
+    
     var boostNeed: Int32 {
         if let cachedData = cachedData as? CachedChannelData, peer?.isAdmin == false {
             if let boostsToUnrestrict = cachedData.boostsToUnrestrict, slowMode?.timeout != nil {
@@ -663,6 +667,7 @@ class ChatPresentationInterfaceState: Equatable {
             if self.chatMode == .preview {
                 return .block("")
             }
+            
             
             if self.peer?.restrictionText(contentSettings) != nil {
                 return .action(strings().navigationClose, { chatInteraction in

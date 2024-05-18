@@ -165,6 +165,22 @@ class ChatInputAccessory: View {
                 self?.dismiss.send(event: .Click)
             }, for: .Click)
             
+            container.contextMenu = { [weak self] in
+                let menu = ContextMenu()
+                
+                menu.addItem(ContextMenuItem(editState.invertMedia ? strings().previewSenderMoveTextDown : strings().previewSenderMoveTextUp, handler: {
+                    self?.chatInteraction.update {
+                        $0.updatedInterfaceState {
+                            $0.updatedEditState {
+                                $0?.withUpdatedInvertMedia(!editState.invertMedia)
+                            }
+                        }
+                    }
+                }, itemImage: editState.invertMedia ? MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
+                
+                return menu
+            }
+            
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, context: context)
            

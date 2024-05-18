@@ -188,6 +188,8 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
         self.sceneView.delegate = self
         
         let _ = self.sceneView.snapshot()
+        
+        
     }
     
     private var didSetReady = false

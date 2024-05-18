@@ -520,7 +520,7 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, leadingText: Bool = false) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
@@ -546,8 +546,17 @@ class Sender: NSObject {
                 attributes.append(MediaSpoilerMessageAttribute())
             }
             
+            if leadingText {
+                attributes.append(InvertMediaMessageAttribute())
+            }
+
+            
             if path.isOneTime {
                 attributes.append(AutoremoveTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: 0))
+            }
+            
+            if let messageEffect {
+                attributes.append(EffectMessageAttribute(id: messageEffect.id))
             }
             
             senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
@@ -575,7 +584,7 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, threadId: threadId, replyStoryId: replyStoryId, silent: silent, atDate: atDate, query: query, collectionId: collectionId, customChatContents: customChatContents)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, leadingText: Bool = false) ->Signal<[MessageId?],NoError> {
         
         let dynamicEmojiOrder: Bool = context.stickerSettings.dynamicPackOrder
         
@@ -602,6 +611,13 @@ class Sender: NSObject {
         }
         if isSpoiler {
             attributes.append(MediaSpoilerMessageAttribute())
+        }
+        if let messageEffect {
+            attributes.append(EffectMessageAttribute(id: messageEffect.id))
+        }
+        
+        if leadingText {
+            attributes.append(InvertMediaMessageAttribute())
         }
                 
         let localGroupingKey = isCollage ? arc4random64() : nil

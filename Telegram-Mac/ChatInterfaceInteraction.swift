@@ -100,7 +100,7 @@ final class ChatInteraction : InterfaceObserver  {
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([Message]) -> Void = {_ in}
     var reportMessages:(ReportReasonValue, [MessageId]) -> Void = { _, _ in }
-    var sendMessage: (Bool, Date?) -> Void = { _, _ in }
+    var sendMessage: (Bool, Date?, AvailableMessageEffects.MessageEffect?) -> Void = { _, _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
     
     //
@@ -108,7 +108,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusPinnedMessageId: (MessageId) -> Void = { _ in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile, Bool, String?, Bool, ItemCollectionId?) -> Void = { _,_, _, _, _ in}
-    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?, Bool) -> Void = {_,_,_,_,_,_, _ in}
+    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?, Bool, AvailableMessageEffects.MessageEffect?, Bool) -> Void = {_,_,_,_,_,_,_,_, _ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -191,7 +191,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var showEmojiUseTooltip:()->Void = { }
     var restartTopic: ()->Void = { }
-    var revealMedia:(MessageId)->Void = { _ in }
+    var revealMedia:(Message)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
     var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?, ((Signal<Never, NoError>)->Void)?)->Void = { _, _ in }
@@ -205,6 +205,8 @@ final class ChatInteraction : InterfaceObserver  {
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
+    
+    var hashtag:(String)->Void = { _ in }
     
     var sendMessageMenu:(Bool)->Signal<ContextMenu?, NoError> = { _ in .single(nil) }
     
@@ -837,7 +839,11 @@ final class ChatInteraction : InterfaceObserver  {
                             if let receiptMessageId = receiptMessageId {
                                 showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, invoice: invoice), for: strongSelf.context.window)
                             } else {
-                                showModal(with: PaymentsCheckoutController(context: strongSelf.context, source: .message(keyboardMessage.id), invoice: invoice), for: strongSelf.context.window)
+                                if invoice.currency == XTR {
+                                    showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .message(keyboardMessage.id)), for: context.window)
+                                } else {
+                                    showModal(with: PaymentsCheckoutController(context: strongSelf.context, source: .message(keyboardMessage.id), invoice: invoice), for: strongSelf.context.window)
+                                }
                             }
                         }
                     case let .urlAuth(url, buttonId):

@@ -617,12 +617,12 @@ class MainViewController: TelegramViewController {
         }
     }
     
-    func globalSearch(_ query: String) {
+    func globalSearch(_ query: String, peerId: PeerId?) {
         let controller = navigation.empty
         if let controller = controller as? ChatListController {
-            controller.globalSearch(query)
+            controller.globalSearch(query, peerId: peerId)
         } else if let controller = controller as? TabBarController {
-            (controller.current as? ChatListController)?.globalSearch(query)
+            (controller.current as? ChatListController)?.globalSearch(query, peerId: peerId)
         }
     }
     

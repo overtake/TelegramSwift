@@ -1393,10 +1393,70 @@ class ChatListController : PeersListController {
     }
     
     
-    func globalSearch(_ query: String) {
+    func globalSearch(_ query: String, peerId: PeerId?) {
+        let context = self.context
+        
         let invoke = { [weak self] in
             self?.genericView.searchView.change(state: .Focus, false)
-            self?.genericView.searchView.setString(query)
+            
+            if let peerId {
+                
+                enum SearchMode : Equatable {
+                    case thisChat
+                    case myMessages
+                    case publicPosts
+                }
+                
+                var updateSearchView:(()->Void)? = nil
+                
+                var mode: SearchMode = .thisChat {
+                    didSet {
+                        updateSearchView?()
+                    }
+                }
+                
+                let contextMenu:()->[ContextMenuItem] = {
+                    
+                    var items: [ContextMenuItem] = []
+                    
+                    items.append(.init(strings().chatHashtagThisChat, handler: {
+                        mode = .thisChat
+                    }, state: mode == .thisChat ? .on : nil, itemImage: MenuAnimation.menu_read.value))
+                    
+                    items.append(.init(strings().chatHashtagMyMessages, handler: {
+                        mode = .myMessages
+                    }, state: mode == .myMessages ? .on : nil, itemImage: MenuAnimation.menu_folder_all_chats.value))
+                    
+                    items.append(.init(strings().chatHashtagPublicPosts, handler: {
+                        mode = .publicPosts
+                    }, state: mode == .publicPosts ? .on : nil, itemImage: MenuAnimation.menu_channel.value))
+                    
+                    return items
+                }
+                
+                updateSearchView = { [weak self] in
+                    let text: String
+                    let tags: SearchTags
+                    switch mode {
+                    case .thisChat:
+                        text = strings().chatHashtagThisChat
+                        tags = .init(messageTags: nil, peerTag: peerId, text: query)
+                    case .myMessages:
+                        text = strings().chatHashtagMyMessages
+                        tags = .init(messageTags: nil, peerTag: nil, text: query)
+                    case .publicPosts:
+                        text = strings().chatHashtagPublicPosts
+                        tags = .init(messageTags: nil, peerTag: nil, text: query, publicPosts: true)
+                    }
+                    self?.genericView.searchView.updateTags([.init(text: query.prefixWithDots(15), blockInput: true), .init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu)], theme.icons.search_filter_hashtag, animated: false)
+                    self?.searchController?.updateSearchTags(tags)
+                }
+                
+                updateSearchView?()
+
+            } else {
+                self?.genericView.searchView.setString(query)
+            }
         }
         
         switch context.layout {
@@ -1852,7 +1912,7 @@ class ChatListController : PeersListController {
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController, !(item.isForum && !item.isTopic) {
                 switch controller.mode {
-                case .history, .thread, .customChatContents, .customLink, .preview:
+                case .history, .thread, .customChatContents, .customLink, .preview, .searchHashtags:
                     if let modalAction = navigation.modalAction {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }

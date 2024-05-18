@@ -264,7 +264,7 @@ class ChatMediaItem: ChatRowItem {
         }
         
         parameters?.revealMedia = { [weak self] message in
-            self?.chatInteraction.revealMedia(message.id)
+            self?.chatInteraction.revealMedia(message)
         }
     }
     
@@ -477,7 +477,7 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             
-            var hasEntities: Bool = !entities.isEmpty
+            let hasEntities: Bool = !entities.isEmpty
             
           
             var mediaDuration: Double? = nil
@@ -486,7 +486,7 @@ class ChatMediaItem: ChatRowItem {
             }
             
             
-            caption = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
+            caption = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
                 self?.parameters?.set_timeCodeInitializer(timecode)
                 self?.parameters?.showMedia(message)
             }, openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax).mutableCopy() as! NSMutableAttributedString
@@ -507,7 +507,7 @@ class ChatMediaItem: ChatRowItem {
             }
             
             if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
-                caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
+                caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.hashtag, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             if !(self is ChatVideoMessageItem) {
                 
@@ -531,7 +531,7 @@ class ChatMediaItem: ChatRowItem {
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                }), isLoading: isLoading))
+                }), isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset))
                 
                 if let range = selectManager.find(entry.stableId) {
                     captionLayouts[0].layout.selectedRange.range = range
@@ -586,12 +586,12 @@ class ChatMediaItem: ChatRowItem {
         
         if isBubbleFullFilled  {
             var positionFlags: LayoutPositionFlags = []
-            if captionLayouts.isEmpty && commentsBubbleData == nil {
+            if (captionLayouts.isEmpty && commentsBubbleData == nil) || invertMedia {
                 positionFlags.insert(.bottom)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
             }
-            if !hasUpsideSomething {
+            if !hasUpsideSomething && !invertMedia {
                 positionFlags.insert(.top)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
@@ -785,6 +785,12 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
             rect.origin.x -= item.bubbleContentInset
             if item.hasBubble {
                 rect.origin.x += item.mediaBubbleCornerInset
+            }
+        }
+        
+        if item.invertMedia {
+            if let layout = item.captionLayouts.last {
+                rect.origin.y += layout.invertedSize
             }
         }
         

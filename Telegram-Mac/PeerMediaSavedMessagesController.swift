@@ -204,7 +204,7 @@ private final class TableDelegate : TableViewDelegate {
 
 
 private var nextId: Int32 = 0
-func getNextId() -> Int32 {
+private func getNextId() -> Int32 {
     return OSAtomicIncrement32(&nextId)
 }
 
@@ -336,10 +336,10 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
         pollOptionDisposable.set(context.engine.messages.requestClosePoll(messageId: messageId).start(), forKey: messageId)
     }
     
-    chatInteraction.revealMedia = { messageId in
+    chatInteraction.revealMedia = { message in
         updateState { current in
             var current = current
-            current.mediaRevealed.insert(messageId)
+            current.mediaRevealed.insert(message.id)
             return current
         }
     }

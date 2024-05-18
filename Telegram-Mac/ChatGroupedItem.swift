@@ -102,13 +102,13 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 if hasEntities {
                     
-                    caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax).mutableCopy() as! NSMutableAttributedString
+                    caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax).mutableCopy() as! NSMutableAttributedString
                     caption.removeWhitespaceFromQuoteAttribute()
 
                 }
                 
                 if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
-                    caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
+                    caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.hashtag, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
                 }
                 
                 var spoilers:[TextViewLayout.Spoiler] = []
@@ -156,7 +156,7 @@ class ChatGroupedItem: ChatRowItem {
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                }), isLoading: isLoading)
+                }), isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset)
                 layout.layout.interactions = globalLinkExecutor
                 
                 captionLayouts.append(layout)
@@ -235,7 +235,7 @@ class ChatGroupedItem: ChatRowItem {
                 return downloadSettings.isDownloable(message)
             }
             self.parameters[i].revealMedia = { message in
-                chatInteraction.revealMedia(message.id)
+                chatInteraction.revealMedia(message)
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
             self.parameters[i].chatMode = chatInteraction.mode
@@ -743,10 +743,10 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
-                if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil {
+                if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil, !item.invertMedia {
                     positionFlags.remove(.bottom)
                 }
-                if item.hasUpsideSomething {
+                if item.hasUpsideSomething || item.invertMedia {
                     positionFlags.remove(.top)
                 }
             }
@@ -1200,6 +1200,13 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             rect.origin.x -= item.bubbleContentInset
             if item.hasBubble {
                 rect.origin.x += item.mediaBubbleCornerInset
+            }
+        }
+        
+        
+        if item.invertMedia {
+            if let layout = item.captionLayouts.last {
+                rect.origin.y += layout.invertedSize
             }
         }
         

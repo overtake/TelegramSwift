@@ -597,6 +597,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var botPeer: Peer? = nil
     
+    var bot: Peer? {
+        return self.requestData?.bot ?? botPeer ?? data?.bot
+    }
+    
     private var biometryState: TelegramBotBiometricsState? {
         didSet {
             if let biometryState, let bot = requestData?.bot {
@@ -1384,7 +1388,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
     }
     fileprivate func shareAccountContact() {
-        guard let data = self.requestData else {
+        guard let botPeer = self.bot else {
             return
         }
         let context = self.context
@@ -1400,7 +1404,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         
         let isBlocked = context.engine.data.get(
-            TelegramEngine.EngineData.Item.Peer.IsBlocked(id: data.bot.id)
+            TelegramEngine.EngineData.Item.Peer.IsBlocked(id: botPeer.id)
         )
         |> deliverOnMainQueue
         |> map { $0.knownValue ?? false }
@@ -1409,9 +1413,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         _ = isBlocked.start(next: { isBlocked in
             let text: String
             if isBlocked {
-                text = strings().conversationShareBotContactConfirmationUnblock(data.bot.displayTitle)
+                text = strings().conversationShareBotContactConfirmationUnblock(botPeer.displayTitle)
             } else {
-                text = strings().conversationShareBotContactConfirmation(data.bot.displayTitle)
+                text = strings().conversationShareBotContactConfirmation(botPeer.displayTitle)
             }
             verifyAlert_button(for: context.window, header: strings().conversationShareBotContactConfirmationTitle, information: text, ok: strings().conversationShareBotContactConfirmationOK, successHandler: { _ in
                 
@@ -1420,13 +1424,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     if let peer = peer as? TelegramUser, let phone = peer.phone, !phone.isEmpty {
                         
                         let invoke:()->Void = {
-                            let _ = enqueueMessages(account: context.account, peerId: data.bot.id, messages: [
+                            let _ = enqueueMessages(account: context.account, peerId: botPeer.id, messages: [
                                 .message(text: "", attributes: [], inlineStickers: [:], mediaReference: .standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: phone, peerId: peer.id, vCardData: nil)), threadId: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
                             ]).start()
                             sendEvent(true)
                         }
                         if isBlocked {
-                            _ = (context.blockedPeersContext.remove(peerId: data.bot.id) |> deliverOnMainQueue).start(completed: invoke)
+                            _ = (context.blockedPeersContext.remove(peerId: botPeer.id) |> deliverOnMainQueue).start(completed: invoke)
                         } else {
                             invoke()
                         }
@@ -1442,7 +1446,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     fileprivate func sendBiometricInfo(biometryState: TelegramBotBiometricsState) {
         
-        guard let botPeer = self.requestData?.bot else {
+        guard let botPeer = self.bot else {
             return
         }
         let type: String = laContext.biometricTypeString
@@ -1466,7 +1470,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     fileprivate func invokeCustomMethod(requestId: String, method: String, params: String) {
         
-        let id = self.requestData?.bot.id ?? self.botPeer?.id
+        let id = self.bot?.id
         
         guard let peerId = id else {
             return

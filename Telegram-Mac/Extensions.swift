@@ -1780,6 +1780,9 @@ extension Array {
         if self.count == 0 || chunkSize == 0 {
             return [self]
         }
+        if chunkSize >= self.count {
+            return [self]
+        }
         return stride(from: 0, to: self.count, by: chunkSize).map {
             Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
         }

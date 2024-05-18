@@ -365,7 +365,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                                 self?.callback(sticker, self?.info, hour, lrect)
                             }))
                         }
-                        
+                        #if DEBUG
                         if #available(macOS 13, *) {
                             items.append(ContextSeparatorItem())
                             //TODO LANG
@@ -378,7 +378,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                                 showModalText(for: context.window, text: "This emoji will be used for system Focus Mode")
                             }))
                         }
-                       
+                        #endif
                     }
                 }
             }

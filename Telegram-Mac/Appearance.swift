@@ -2363,6 +2363,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsProfile: { generateSettingsIcon(NSImage(named: "Icon_SettingsProfile")!.precomposed(flipVertical: true)) },
                                                settingsBusiness: { generateSettingsIcon(NSImage(resource: .iconSettingsBusiness).precomposed(flipVertical: true)) },
                                                settingsBusinessActive: { generateSettingsActiveIcon(NSImage(resource: .iconSettingsBusiness).precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsStars: { generateSettingsIcon(NSImage(resource: .iconSettingsStars).precomposed(flipVertical: true)) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.accentIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.accentIcon) },
                                                settingsLogout: { #imageLiteral(resourceName: "Icon_SettingsLogout").precomposed(palette.redUI) },
@@ -2665,6 +2666,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                search_filter_downloads: { NSImage(named: "Icon_SearchFilter_Downloads")!.precomposed(palette.grayIcon) },
                                                search_filter_add_peer: { NSImage(named: "Icon_SearchFilter_AddPeer")!.precomposed(palette.grayIcon) },
                                                search_filter_add_peer_active: { NSImage(named: "Icon_SearchFilter_AddPeer")!.precomposed(palette.underSelectedColor) }, 
+                                               search_filter_hashtag: { NSImage(resource: .iconSearchFilterHashtag).precomposed(palette.grayIcon) },
+                                               search_hashtag_chevron: { NSImage(resource: .iconHorizontalChevron).precomposed(palette.underSelectedColor) },
                                                chat_reply_count_bubble_incoming: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_incoming) },
                                                chat_reply_count_bubble_outgoing: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_outgoing) },
                                                chat_reply_count: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIcon) },
@@ -2908,7 +2911,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) },
                               premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() },
                               create_new_message_general: { NSImage(resource: .iconNewMessage).precomposed(palette.accent, flipVertical: true) },
-                              bot_manager_settings: { NSImage(resource: .iconBotManagerSettings).precomposed(palette.grayIcon) }
+                              bot_manager_settings: { NSImage(resource: .iconBotManagerSettings).precomposed(palette.grayIcon) },
+                              preview_text_down: { NSImage(resource: .iconMoveCaptionDown).precomposed(palette.grayIcon) },
+                              preview_text_up: { NSImage(resource: .iconMoveCaptionUp).precomposed(palette.grayIcon) }
 
     )
 }

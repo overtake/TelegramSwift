@@ -826,15 +826,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
     }
     
-    for section in state.sections {
+    for (i, section) in state.sections.enumerated() {
         
-        if !section.info.title.isEmpty {
+        
+        if !section.info.title.isEmpty, i > 0  {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
                 return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
             }))
             index += 1
         }
-        
         
         struct Tuple : Equatable {
             let section: State.Section
@@ -848,13 +848,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         var tuples:[Tuple] = []
 
-        let chunks = section.items.chunks(section.isBig ? 20 : 24)
+        let chunks = section.items.chunks(1000)
         var string: String = "a"
         
         for items in chunks {
             tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: string, color: state.color))
             string += "a"
         }
+                
         for tuple in tuples {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, isBig: tuple.section.isBig, groupEmojiPack: tuple.section.groupEmojiPack, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
@@ -887,7 +888,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             $0.stableId != .custom(_id_search_empty)
         })
     }
-    
+
     // entries
     
 //    entries.append(.sectionId(sectionId, type: .normal))
@@ -2273,7 +2274,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         let searchCategories: Signal<EmojiSearchCategories?, NoError>
-        if mode == .emoji || mode == .reactions || mode == .quickReaction || mode == .stories {
+        if mode == .emoji || mode == .reactions || mode == .quickReaction || mode == .stories || mode == .messageEffects {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
         } else if mode == .status {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .status)
@@ -2305,21 +2306,43 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         switch mode {
         case .messageEffects:
             let messageEffects = context.engine.stickers.availableMessageEffects()
-            actionsDisposable.add(messageEffects.startStrict(next: { messageEffects in
+            actionsDisposable.add(combineLatest(queue: prepareQueue, messageEffects, search, searchCategories).startStrict(next: { messageEffects, search, searchCategories in
                 updateState { current in
                     var current = current
                     current.messageEffects = messageEffects?.messageEffects ?? []
-                    
+                    current.searchCategories = searchCategories
                     var sections: [State.Section] = []
                     
-                    
-                    let emojiItems: [StickerPackItem] = current.messageEffects.filter({ $0.effectAnimation != nil }).map {
+                   
+                    let emojiItems: [StickerPackItem] = current.messageEffects.filter({ value in
+                        if value.effectAnimation != nil {
+                            if let search {
+                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                return search.contains(emoji)
+                            } else {
+                                return true
+                            }
+                        }
+                        return false
+                    }).map {
                         .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
                     }
                     
-                    let stickerItems: [StickerPackItem] = current.messageEffects.filter({ $0.effectAnimation == nil }).map {
+                    let stickerItems: [StickerPackItem] = current.messageEffects.filter({ value in
+                        if value.effectAnimation == nil {
+                            if let search {
+                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                return search.contains(emoji)
+                            } else {
+                                return true
+                            }
+                        }
+                        return false
+                    }).map {
                         .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
                     }
+                    
+                    
                     
                     var stickerDict: [MediaId : StickerPackItem] = [:]
                     for item in stickerItems {
@@ -2337,11 +2360,15 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     
                     
                     if !stickerItems.isEmpty {
-                        //TODOLANG
-                        sections.append(.init(info: .init(id: .init(namespace: 0, id: 0), flags: .init(), accessHash: 0, title: "MESSAGE EFFECTS", shortName: "", thumbnail: nil, thumbnailFileId: nil, immediateThumbnailData: nil, hash: 0, count: 0), items: stickerItems, dict: stickerDict, installed: true, isBig: true))
+                        sections.append(.init(info: .init(id: .init(namespace: 0, id: 1), flags: .init(), accessHash: 0, title: strings().emojiesMessageEffectsTitle, shortName: "", thumbnail: nil, thumbnailFileId: nil, immediateThumbnailData: nil, hash: 0, count: 0), items: stickerItems, dict: stickerDict, installed: true, isBig: true))
                     }
-                    
+                    current.search = search
                     current.sections = sections
+                    
+                    if search != nil {
+                        var bp = 0
+                        bp += 1
+                    }
                     return current
                 }
                 DispatchQueue.main.async {

@@ -572,7 +572,7 @@ class ChatInputActionsView: View {
         }, for: .LongMouseDown)
                 
         send.set(handler: { [weak chatInteraction] control in
-             chatInteraction?.sendMessage(false, nil)
+            chatInteraction?.sendMessage(false, nil, chatInteraction?.presentation.messageEffect)
         }, for: .Click)
         
         slowModeTimeout.set(handler: { [weak chatInteraction] control in

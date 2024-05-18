@@ -1675,7 +1675,9 @@ enum UserInfoEntry: PeerInfoEntry {
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.bindings.globalSearch)
+            }, hashtag: { hashtag in
+                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+            })
         case let .bio(_, text, peer, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {

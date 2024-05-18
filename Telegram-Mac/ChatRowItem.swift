@@ -82,13 +82,22 @@ class ChatRowItem: TableRowItem {
         var isLoading: Bool
         var block: (NSPoint, CGImage?)
         var message: Message
-        init(message: Message, id: UInt32, offset: NSPoint, layout: TextViewLayout, isLoading: Bool, block: (NSPoint, CGImage?) = (.zero, nil)) {
+        var contentInset: CGFloat
+        init(message: Message, id: UInt32, offset: NSPoint, layout: TextViewLayout, isLoading: Bool, contentInset: CGFloat, block: (NSPoint, CGImage?) = (.zero, nil)) {
             self.id = id
             self.message = message
             self.offset = offset
             self.layout = layout
             self.isLoading = isLoading
+            self.contentInset = contentInset
             self.block = block
+        }
+        
+        var invertedSize: CGFloat {
+            return offset.y + layout.layoutSize.height + contentInset * 2
+        }
+        var invertedOffset: CGFloat {
+            return offset.y + layout.layoutSize.height + contentInset
         }
         
         func isSame(to other: RowCaption) -> Bool {
@@ -96,7 +105,15 @@ class ChatRowItem: TableRowItem {
         }
         
         func withUpdatedOffset(_ offset: CGFloat) -> RowCaption {
-            return RowCaption(message: self.message, id: self.id, offset: .init(x: 0, y: offset), layout: self.layout, isLoading: self.isLoading, block: block)
+            return RowCaption(message: self.message, id: self.id, offset: .init(x: 0, y: offset), layout: self.layout, isLoading: self.isLoading, contentInset: self.contentInset, block: block)
+        }
+    }
+    
+    var invertMedia: Bool {
+        if let media = self.message?.media.first as? TelegramMediaFile, !media.isInteractiveMedia {
+            return false
+        } else {
+            return (self.message?.invertMedia ?? false) && !captionLayouts.isEmpty
         }
     }
     
@@ -393,6 +410,11 @@ class ChatRowItem: TableRowItem {
             height += reactions.size.height
         }
         
+        if let factCheckLayout {
+            height += factCheckLayout.size.height
+            height += defaultContentInnerInset
+        }
+        
 //        if isBubbled, let _ = replyMarkupModel, replyModel != nil {
 //            height += 4
 //        }
@@ -433,6 +455,10 @@ class ChatRowItem: TableRowItem {
     }
     
     var defaultContentInnerInset: CGFloat {
+        return ChatRowItem.defaultContentInnerInset
+    }
+    
+    static var defaultContentInnerInset: CGFloat {
         return 7
     }
     
@@ -524,6 +550,7 @@ class ChatRowItem: TableRowItem {
                 return isBubbled
             }
             
+            
             if let media = message.media.first as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
                 switch story {
                 case let .item(item):
@@ -550,7 +577,7 @@ class ChatRowItem: TableRowItem {
                 }
                 return media.venue == nil
             }
-            return isBubbled && media.isInteractiveMedia && captionLayouts.isEmpty
+            return isBubbled && media.isInteractiveMedia && (captionLayouts.isEmpty || invertMedia)
         }
         return false
     }
@@ -1569,7 +1596,7 @@ class ChatRowItem: TableRowItem {
             let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, savedMessageTags: entry.additionalData.savedMessageTags, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, currentTag: currentTag, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, savedMessageTags: entry.additionalData.savedMessageTags, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, currentTag: currentTag, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && (self.captionLayouts.isEmpty || invertMedia), hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId, source: .reaction(message.id))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
@@ -1591,7 +1618,23 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    private var _factCheckLayout: FactCheckMessageLayout?
+    var factCheckLayout: FactCheckMessageLayout? {
+        if let factCheckLayout = _factCheckLayout {
+            return factCheckLayout
+        } else if let message = message, message.adAttribute == nil {
+//            let isMessage = self is ChatMessageItem || self is ChatMediaItem || self is ChatGroupedItem
+//            if isMessage {
+//                _factCheckLayout = .init(message, context: context, presentation: wpPresentation)
+//            }
+        }
+        return _factCheckLayout
+    }
+    
     var forceBackgroundColor: NSColor? = nil
+    let wpPresentation: WPLayoutPresentation
+
+    
     
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         self.entry = object
@@ -1602,6 +1645,20 @@ class ChatRowItem: TableRowItem {
         self._approximateSynchronousValue = Thread.isMainThread
         self._avatarSynchronousValue = Thread.isMainThread
         self.messageEffect = object.additionalData.messageEffect
+        
+        let activity: PeerNameColors.Colors
+        let pattern: Int64?
+        let isIncoming: Bool
+        if let message = object.message {
+            activity = theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble)
+            pattern = theme.chat.webPreviewPattern(message)
+            isIncoming = message.isIncoming(context.account, object.renderType == .bubble)
+        } else {
+            activity = .init(main: .clear)
+            pattern = nil
+            isIncoming = false
+        }
+        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: activity, link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType, pattern: pattern)
         
         var message: Message?
         var isRead: Bool = true
@@ -1753,8 +1810,8 @@ class ChatRowItem: TableRowItem {
             let isBubbled = renderType == .bubble
             let hasBubble = ChatRowItem.hasBubble(captionMessage ?? message, entry: entry, type: itemType, sharedContext: context.sharedContext)
             self.hasBubble = isBubbled && hasBubble
-            
             let isIncoming: Bool = message.isIncoming(context.account, renderType == .bubble)
+
             self.isIncoming = isIncoming
 
             
@@ -2387,6 +2444,7 @@ class ChatRowItem: TableRowItem {
         self.isForwardScam = false
         self._isFake = false
         self.isForwardFake = false
+        self.wpPresentation = .init(text: .clear, activity: .init(main: .clear), link: .clear, selectText: .clear, ivIcon: theme.icons.ivAudioPlay, renderType: entry.renderType, pattern: nil)
         super.init(initialSize)
     }
     
@@ -2543,6 +2601,8 @@ class ChatRowItem: TableRowItem {
             _contentSize = self.makeContentSize(widthForContent)
         }
         
+       
+        
         
         var maxContentWidth = _contentSize.width
         if hasBubble {
@@ -2553,6 +2613,14 @@ class ChatRowItem: TableRowItem {
             widthForContent = maxContentWidth
         } else if fixedContentSize {
             widthForContent = maxContentWidth
+        }
+        
+        if let factCheckLayout {
+            if isBubbled {
+                factCheckLayout.measure(for: widthForContent)
+            } else {
+                factCheckLayout.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+            }
         }
         
         if let reactions = reactionsLayout {
@@ -2576,6 +2644,7 @@ class ChatRowItem: TableRowItem {
                 reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
             }
         }
+    
        
        
         if !(self is ChatGroupedItem) {
@@ -2871,6 +2940,10 @@ class ChatRowItem: TableRowItem {
 
         if let reactions = reactionsLayout, !reactions.presentation.isOutOfBounds {
             rect.size.width = max(reactions.size.width + bubbleDefaultInnerInset, rect.width)
+        }
+        
+        if let factCheckLayout = factCheckLayout {
+            rect.size.width = max(factCheckLayout.size.width + bubbleDefaultInnerInset, rect.width)
         }
         
         if let commentsBubbleData = commentsBubbleData {
@@ -3568,6 +3641,9 @@ class ChatRowItem: TableRowItem {
             if !reactionsLayout.presentation.isOutOfBounds {
                 return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
             }
+        }
+        if let factCheckLayout {
+            return LastLineData(width: factCheckLayout.size.width, single: false)
         }
         if captionLayouts.count == 1 {
             if let item = self as? ChatGroupedItem {
