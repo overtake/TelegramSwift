@@ -671,6 +671,9 @@ class InputDataController: GenericViewController<InputDataView> {
                 if let item = item as? InputDataRowDataValue {
                     values[identifier] = item.value
                 }
+                if let item = item as? InputTextDataRowItem {
+                    values[identifier] = item.value
+                }
             }
             return true
         }

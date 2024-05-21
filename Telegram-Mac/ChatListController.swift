@@ -1440,23 +1440,21 @@ class ChatListController : PeersListController {
                     switch mode {
                     case .thisChat:
                         text = strings().chatHashtagThisChat
-                        tags = .init(messageTags: nil, peerTag: peerId, text: query)
+                        tags = .init(messageTags: nil, peerTag: peerId, text: nil)
                     case .myMessages:
                         text = strings().chatHashtagMyMessages
-                        tags = .init(messageTags: nil, peerTag: nil, text: query)
+                        tags = .init(messageTags: nil, peerTag: nil, text: nil)
                     case .publicPosts:
                         text = strings().chatHashtagPublicPosts
-                        tags = .init(messageTags: nil, peerTag: nil, text: query, publicPosts: true)
+                        tags = .init(messageTags: nil, peerTag: nil, text: nil, publicPosts: true)
                     }
-                    self?.genericView.searchView.updateTags([.init(text: query.prefixWithDots(15), blockInput: true), .init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu)], theme.icons.search_filter_hashtag, animated: false)
+                    self?.genericView.searchView.updateTags([.init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu)], theme.icons.search_filter_hashtag, animated: false)
                     self?.searchController?.updateSearchTags(tags)
                 }
                 
                 updateSearchView?()
-
-            } else {
-                self?.genericView.searchView.setString(query)
             }
+            self?.genericView.searchView.setString(query)
         }
         
         switch context.layout {

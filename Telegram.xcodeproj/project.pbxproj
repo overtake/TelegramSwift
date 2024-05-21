@@ -398,6 +398,8 @@
 		27803C0927A3E944007B0FA9 /* menu_folder_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */; };
 		2780B2952BF76CC100F75124 /* FactCheckController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780B2942BF76CC100F75124 /* FactCheckController.swift */; };
 		2780B2972BF7708E00F75124 /* FactCheckMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780B2962BF7708E00F75124 /* FactCheckMessageView.swift */; };
+		2780B29D2BFB427800F75124 /* menu_verification.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780B29C2BFB427700F75124 /* menu_verification.tgs */; };
+		2780B29F2BFCCC6A00F75124 /* Star_Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780B29E2BFCCC6A00F75124 /* Star_Transaction.swift */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
 		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
 		2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27841869285A05840010E0F1 /* StickersCarouselView.swift */; };
@@ -1965,6 +1967,8 @@
 		27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_unread.tgs; sourceTree = "<group>"; };
 		2780B2942BF76CC100F75124 /* FactCheckController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactCheckController.swift; sourceTree = "<group>"; };
 		2780B2962BF7708E00F75124 /* FactCheckMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactCheckMessageView.swift; sourceTree = "<group>"; };
+		2780B29C2BFB427700F75124 /* menu_verification.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_verification.tgs; sourceTree = "<group>"; };
+		2780B29E2BFCCC6A00F75124 /* Star_Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_Transaction.swift; sourceTree = "<group>"; };
 		2780DE3F271F0BB20092323F /* zoom.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom.tgs; sourceTree = "<group>"; };
 		2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemeListRowItem.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
@@ -3864,6 +3868,7 @@
 				276143292BD7E2900034338C /* menu_ban.tgs */,
 				2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */,
 				2787AD672BED0DCD0046578E /* menu_adult.tgs */,
+				2780B29C2BFB427700F75124 /* menu_verification.tgs */,
 				270595E32B6BDCF500E05493 /* menu_boost.tgs */,
 				27A01AD22B9AF40800C59661 /* menu_search.tgs */,
 				27B836482B6396E600E82683 /* menu_hd.tgs */,
@@ -4187,6 +4192,7 @@
 				27F9D2B72BEE5A7F0044949A /* Star_PurchaseInApp.swift */,
 				27F9D2BD2BF326D20044949A /* Star_ListScreen.swift */,
 				27F9D2BF2BF34F110044949A /* Star_GoldenStar.swift */,
+				2780B29E2BFCCC6A00F75124 /* Star_Transaction.swift */,
 			);
 			name = "star-currency";
 			sourceTree = "<group>";
@@ -6892,6 +6898,7 @@
 				2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */,
 				2747969228F5A5C500A891F3 /* anim_pause.json in Resources */,
 				270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */,
+				2780B29D2BFB427800F75124 /* menu_verification.tgs in Resources */,
 				278C720425E67C2700F1B315 /* emoji1016.txt in Resources */,
 				277E228228E5DC9D00001689 /* forum_topic.tgs in Resources */,
 				27CE1567297966D8001F8CE8 /* emoji_category_vacation.tgs in Resources */,
@@ -7683,6 +7690,7 @@
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */,
 				2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */,
+				2780B29F2BFCCC6A00F75124 /* Star_Transaction.swift in Sources */,
 				D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */,
 				2703406C2825434700D0156C /* PremiumLimitRowItem.swift in Sources */,
 				C295C65F1F75808600BA309D /* ChatAdditionController.swift in Sources */,

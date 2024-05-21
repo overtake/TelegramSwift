@@ -357,11 +357,17 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
 //                }
 //            }
            
-        } else if message.extendedMedia is TelegramMediaAction {
+        } else if let action = message.extendedMedia as? TelegramMediaAction {
             let service = serviceMessageText(message, account:account, isReplied: isReplied)
             _ = attributedText.append(string: service.0, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.detectBoldColorInString(with: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
+            
+            if case let .paymentSent(currency, _, _, _, _) = action.action {
+                if currency == XTR {
+                    attributedText.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: theme.chatList.grayTextColor, resize: false), for: XTR)
+                }
+            }
             
             InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
             

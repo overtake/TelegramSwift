@@ -586,7 +586,7 @@ class ChatMediaItem: ChatRowItem {
         
         if isBubbleFullFilled  {
             var positionFlags: LayoutPositionFlags = []
-            if (captionLayouts.isEmpty && commentsBubbleData == nil) || invertMedia {
+            if (captionLayouts.isEmpty && commentsBubbleData == nil) || invertMedia, factCheckLayout == nil {
                 positionFlags.insert(.bottom)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)

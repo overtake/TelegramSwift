@@ -459,12 +459,12 @@ private func entries(state: State, data: DataAndStorageData, proxy: ProxySetting
     entries.append(.autoplayVideos(sectionId, autoplayMedia.videos, viewType: .lastItem))
 
     
+    #if DEBUG
     entries.append(.sectionId(sectionId))
     sectionId += 1
-    
-    
     entries.append(.sensitiveContent(sectionId, false, viewType: .singleItem))
     entries.append(.sensitiveContentInfo(sectionId, viewType: .textBottomItem))
+    #endif
     
     entries.append(.sectionId(sectionId))
     sectionId += 1

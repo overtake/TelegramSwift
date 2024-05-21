@@ -631,15 +631,15 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     if !context.premiumIsBlocked {
         entries.append(.premium(index: index, viewType: .singleItem))
         index += 1
+        
+        entries.append(.stars(index: index, viewType: .singleItem))
+        index += 1
+
         entries.append(.business(index: index, viewType: .singleItem))
         index += 1
         
         entries.append(.giftPremium(index: index, viewType: .singleItem))
         index += 1
-
-        entries.append(.stars(index: index, viewType: .singleItem))
-        index += 1
-
         
         entries.append(.whiteSpace(index: index, height: 20))
         index += 1

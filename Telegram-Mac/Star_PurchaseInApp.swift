@@ -157,8 +157,6 @@ private final class HeaderItemView : GeneralContainableRowView {
             return
         }
         
-//        self.imageView?.setFrameSize(item.imageSize)
-
         
         if let photo = item.request.invoice.photo {
             if let view = self.avatar {
@@ -170,7 +168,10 @@ private final class HeaderItemView : GeneralContainableRowView {
                 current = view
             } else {
                 current = TransformImageView(frame: NSMakeRect(0, 0, 80, 80))
-                current.layer?.cornerRadius = current.frame.height / 2
+                current.layer?.cornerRadius = floor(current.frame.height / 2)
+                if #available(macOS 10.15, *) {
+                    current.layer?.cornerCurve = .continuous
+                } 
                 addSubview(current)
                 self.photo = current
             }

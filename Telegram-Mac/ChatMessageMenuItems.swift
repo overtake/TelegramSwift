@@ -999,6 +999,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 //        fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message))
 //        #endif
         
+        
+        if let peer = peer, peer.isChannel, !peer.isAdmin {
+            let userCanFactCheck = context.appConfiguration.getBoolValue("can_edit_factcheck", orElse: false)
+            
+            if canFactCheck(message), userCanFactCheck {
+                fifthBlock.append(ContextMenuItem(strings().factCheckContextEdit, handler: {
+                    showModal(with: FactCheckController(context: context, message: message), for: context.window)
+                }, itemImage: MenuAnimation.menu_verification.value))
+            }
+        }
+        
         if canReportMessage(data.message, context), data.chatMode != .pinned, !data.isLogInteraction {
             
             let report = ContextMenuItem(strings().messageContextReport, itemImage: MenuAnimation.menu_report.value)

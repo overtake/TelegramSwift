@@ -726,7 +726,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent), isDark: Bool, bubbled: Bool, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], loadCodeSyntax: @escaping(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent), isDark: Bool, bubbled: Bool, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], loadCodeSyntax: @escaping(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }, confirm: Bool = true) -> NSAttributedString {
         var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -779,7 +779,7 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, messageId: message?.id, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, messageId: message?.id, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: confirm ? nsString?.substring(with: range).trimmed != url : false), range: range)
                 if underlineLinks {
                     string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
                 }

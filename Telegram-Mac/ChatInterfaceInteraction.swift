@@ -205,6 +205,7 @@ final class ChatInteraction : InterfaceObserver  {
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
+    var revealFactCheck:(MessageId)->Void = { _ in }
     
     var hashtag:(String)->Void = { _ in }
     

@@ -86,7 +86,7 @@ final class TextView_Interactions : InterfaceObserver {
     var supports_continuity_camera: Bool = false
     var inputIsEnabled: Bool = true
     var canTransform: Bool = true
-    
+    var simpleTransform: Bool = false
     var emojiPlayPolicy: LottiePlayPolicy = .loop
     
     init(presentation: Updated_ChatTextInputState = .init()) {
@@ -242,6 +242,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     
     func inputTextCanTransform() -> Bool {
         return interactions.canTransform
+    }
+    
+    func inputTextSimpleTransform() -> Bool {
+        return interactions.simpleTransform
     }
     
     func inputViewRevealSpoilers() {

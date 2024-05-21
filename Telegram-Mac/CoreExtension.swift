@@ -1323,6 +1323,37 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
 }
 
 
+func canFactCheck(_ message: Message) -> Bool {
+    
+    if let media = message.anyMedia {
+        if let file = media as? TelegramMediaFile {
+            if file.isStaticSticker || file.isAnimatedSticker || file.isEmojiAnimatedSticker {
+                return false
+            }
+            if file.isInstantVideo {
+                return false
+            }
+        }
+        if media is TelegramMediaContact {
+            return false
+        }
+        if media is TelegramMediaAction {
+            return false
+        }
+        if media is TelegramMediaMap {
+            return false
+        }
+        if media is TelegramMediaPoll {
+            return false
+        }
+        if media is TelegramMediaDice {
+            return false
+        }
+    }
+    
+    
+    return true
+}
 
 
 func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
@@ -3737,11 +3768,12 @@ func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
 extension NSMutableAttributedString {
     func insertEmbedded(_ embedded: NSAttributedString, for symbol:String) {
         let range = self.string.nsstring.range(of: symbol)
-        self.beginEditing()
-        self.replaceCharacters(in: range, with: "")
-        self.insert(embedded, at: range.location)
-        self.endEditing()
-
+        if range.location != NSNotFound {
+            self.beginEditing()
+            self.replaceCharacters(in: range, with: "")
+            self.insert(embedded, at: range.location)
+            self.endEditing()
+        }
     }
 }
 

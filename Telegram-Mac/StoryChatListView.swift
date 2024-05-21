@@ -233,6 +233,8 @@ private final class StoryListContainer : Control {
 
     private let scrollView = HorizontalScrollView(frame: .zero)
     private var progress: CGFloat = 1.0
+    
+    private var documentOffset: NSPoint? = nil
 
     private var item: StoryListChatListRowItem?
     required init(frame frameRect: NSRect) {
@@ -258,8 +260,16 @@ private final class StoryListContainer : Control {
         }, for: .Click)
         
         NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.updateScroll()
+            guard let self else {
+                return
+            }
+            let current = NSMakePoint(floor(abs(self.scrollView.documentOffset.x)), floor(abs(self.scrollView.documentOffset.y)))
+                        
+            if current != self.documentOffset {
+                DispatchQueue.main.async { [weak self] in
+                    self?.updateScroll()
+                }
+                self.documentOffset = current
             }
         })
     }

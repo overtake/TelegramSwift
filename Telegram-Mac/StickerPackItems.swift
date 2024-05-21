@@ -350,10 +350,15 @@ private final class StickerPackRowView : HorizontalRowView {
         if let item = item as? StickerPackRowItem {
             
             var file: TelegramMediaFile?
+            var fileId: Int64?
             if let thumbnail = item.info.thumbnail {
                 file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: item.info.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                fileId = file?.fileId.id
+            } else if let fid = item.info.thumbnailFileId {
+                fileId = fid
             } else if let item = item.topItem {
                 file = item.file
+                fileId = item.file.fileId.id
             }
             
             
@@ -361,7 +366,7 @@ private final class StickerPackRowView : HorizontalRowView {
             let color = item.color ?? theme.colors.accent
             let animated = animated && previousColor == color
 
-            if let view = self.inlineSticker, view.file?.fileId == file?.fileId, view.textColor == color {
+            if let view = self.inlineSticker, view.file?.fileId.id == fileId, view.textColor == color {
                 current = view
             } else {
                 if let itemLayer = self.inlineSticker {
@@ -377,6 +382,10 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker = nil
                 if let file = file {
                     current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), playPolicy: item.isTopic ? .framesCount(1) : .loop, textColor: color)
+                    self.container.layer?.addSublayer(current!)
+                    self.inlineSticker = current
+                } else if let fileId = fileId {
+                    current = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: NSMakeSize(26, 26), playPolicy: item.isTopic ? .framesCount(1) : .loop, textColor: color)
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {
