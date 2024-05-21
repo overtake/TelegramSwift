@@ -536,6 +536,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
             }
         }
         if let layer = layer {
+            layer.superview = self
             layer.frame = focus(size)
             control.layer?.addSublayer(layer)
             layer.isPlayable = true

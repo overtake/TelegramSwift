@@ -371,6 +371,10 @@ class ChatRowItem: TableRowItem {
     override var height: CGFloat  {
         var height:CGFloat = self.contentSize.height + _defaultHeight
         
+        guard let message = self.message else {
+            return height
+        }
+        
         if !isBubbled, case .Full = self.itemType, self is ChatMessageItem {
             height += 2
         }
@@ -413,6 +417,9 @@ class ChatRowItem: TableRowItem {
         if let factCheckLayout {
             height += factCheckLayout.size.height
             height += defaultContentInnerInset
+            if captionLayouts.isEmpty && message.text.isEmpty, message.media.first?.isInteractiveMedia == true {
+                height += defaultContentInnerInset + 4
+            }
         }
         
 //        if isBubbled, let _ = replyMarkupModel, replyModel != nil {
@@ -548,6 +555,10 @@ class ChatRowItem: TableRowItem {
             }
             if media is TelegramMediaDice {
                 return isBubbled
+            }
+            
+            if let attr = message.factCheckAttribute, case .Loaded = attr.content {
+                return false
             }
             
             
@@ -1622,11 +1633,10 @@ class ChatRowItem: TableRowItem {
     var factCheckLayout: FactCheckMessageLayout? {
         if let factCheckLayout = _factCheckLayout {
             return factCheckLayout
-        } else if let message = message, message.adAttribute == nil {
-//            let isMessage = self is ChatMessageItem || self is ChatMediaItem || self is ChatGroupedItem
-//            if isMessage {
-//                _factCheckLayout = .init(message, context: context, presentation: wpPresentation)
-//            }
+        } else if let message = message, let factCheck = message.factCheckAttribute {
+            if case .Loaded = factCheck.content {
+                _factCheckLayout = .init(message, factCheck: factCheck, context: context, presentation: wpPresentation, chatInteraction: chatInteraction, revealed: entry.additionalData.factCheckRevealed)
+            }
         }
         return _factCheckLayout
     }
@@ -1738,6 +1748,10 @@ class ChatRowItem: TableRowItem {
                 }
                 if media is TelegramMediaDice {
                     return renderType == .bubble
+                }
+                
+                if let attr = message.factCheckAttribute, case .Loaded = attr.content {
+                    return false
                 }
                 
                 if let media = message.media.first as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
@@ -2617,7 +2631,15 @@ class ChatRowItem: TableRowItem {
         
         if let factCheckLayout {
             if isBubbled {
-                factCheckLayout.measure(for: widthForContent)
+                if isBubbleFullFilled {
+                    factCheckLayout.measure(for: widthForContent + defaultContentInnerInset)
+                } else {
+                    if let webpageLayout = (self as? ChatMessageItem)?.webpageLayout {
+                        factCheckLayout.measure(for: webpageLayout.size.width)
+                    } else {
+                        factCheckLayout.measure(for: widthForContent)
+                    }
+                }
             } else {
                 factCheckLayout.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
             }

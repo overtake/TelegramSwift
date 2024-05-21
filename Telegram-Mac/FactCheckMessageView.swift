@@ -12,23 +12,58 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+
+private func generateMaskImage(size: NSSize) -> CGImage? {
+    return generateImage(size, rotatedContext: { size, context in
+        context.clear(CGRect(origin: .zero, size: size))
+        
+        context.setFillColor(NSColor.white.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        
+        var locations: [CGFloat] = [0.0, 1.0]
+        let colors: [CGColor] = [NSColor.white.cgColor, NSColor.white.withAlphaComponent(0.0).cgColor]
+        
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+        
+        context.setBlendMode(.copy)
+        context.clip(to: CGRect(origin: CGPoint(x: 0, y: 37), size: CGSize(width: size.width, height: size.height)))
+        context.drawLinearGradient(gradient, start: CGPoint(x: size.width - 15, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
+    })
+}
+
 class FactCheckMessageLayout {
     let text: TextViewLayout
     let title: TextViewLayout
     let whatThisLayout: TextViewLayout
     let context: AccountContext
+    let chatInteraction: ChatInteraction
     let presentation: WPLayoutPresentation
+    let country: String
+    let revealed: Bool
+    let message: Message
+    fileprivate var isFullView: Bool = true
     private(set) var size: NSSize = .zero
     
     
-    init(_ message: Message, context: AccountContext, presentation: WPLayoutPresentation) {
+    init(_ message: Message, factCheck: FactCheckMessageAttribute, context: AccountContext, presentation: WPLayoutPresentation, chatInteraction: ChatInteraction, revealed: Bool) {
         
         self.context = context
+        self.message = message
         self.presentation = presentation
+        self.chatInteraction = chatInteraction
+        self.revealed = revealed
+        switch factCheck.content {
+        case .Pending:
+            fatalError()
+        case let .Loaded(text, entities, country):
+            let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: .text, openInfo: chatInteraction.openInfo, textColor: presentation.text, linkColor: presentation.link, isDark: theme.dark, bubbled: theme.bubbled, confirm: false).mutableCopy() as! NSMutableAttributedString
+            InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
+            self.text = .init(attr, alwaysStaticItems: true, mayItems: true)
+            self.text.interactions = globalLinkExecutor
+            self.country = country
+        }
         
-        let text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-        
-        self.text = .init(.initialize(string: text, color: presentation.text, font: .normal(.text)), alwaysStaticItems: true, mayItems: true)
         self.title = .init(.initialize(string: strings().factCheckTitle, color: presentation.activity.main, font: .medium(.text)))
         self.whatThisLayout = .init(.initialize(string: strings().factCheckWhatThis, color: presentation.activity.main, font: .normal(.small)), alignment: .center)
         
@@ -39,17 +74,89 @@ class FactCheckMessageLayout {
     
     func measure(for width: CGFloat) {
         self.text.measure(width: width - 20)
-        size = NSMakeSize(width, 2 + title.layoutSize.height + text.layoutSize.height + 2 + 4)
+        let textSize: CGFloat
+        if revealed || self.text.lines.count <= 2 {
+            textSize = self.text.layoutSize.height
+            self.isFullView = self.text.lines.count <= 2
+        } else {
+            textSize = self.text.lines[1].frame.maxY + 1
+            self.isFullView = false
+        }
+        size = NSMakeSize(width, 2 + title.layoutSize.height + textSize + 2 + 4)
     }
     
 }
 
 final class FactCheckMessageView : View {
     
+    private class RevealView: Control {
+        
+        private let imageView = ImageView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(imageView)
+            scaleOnClick = true
+            self.imageView.animates = true
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(layout: FactCheckMessageLayout, animated: Bool) {
+            let mainColor = layout.presentation.activity.main
+            
+            let image: CGImage?
+            if layout.revealed {
+                image = generateImage(CGSize(width: 15.0, height: 9.0), contextGenerator: { size, context in
+                    context.clear(CGRect(origin: CGPoint(), size: size))
+                    context.setStrokeColor(mainColor.cgColor)
+                    context.setLineWidth(2.0)
+                    context.setLineCap(.round)
+                    context.setLineJoin(.round)
+                    context.beginPath()
+                    context.move(to: CGPoint(x: 1.0, y: 1.0))
+                    context.addLine(to: CGPoint(x: size.width / 2.0, y: size.height - 2.0))
+                    context.addLine(to: CGPoint(x: size.width - 1.0, y: 1.0))
+                    context.strokePath()
+                })
+            } else {
+               image = generateImage(CGSize(width: 15.0, height: 9.0), rotatedContext: { size, context in
+                    context.clear(CGRect(origin: CGPoint(), size: size))
+                    context.setStrokeColor(mainColor.cgColor)
+                    context.setLineWidth(2.0)
+                    context.setLineCap(.round)
+                    context.setLineJoin(.round)
+                    context.beginPath()
+                    context.move(to: CGPoint(x: 1.0, y: 1.0))
+                    context.addLine(to: CGPoint(x: size.width / 2.0, y: size.height - 2.0))
+                    context.addLine(to: CGPoint(x: size.width - 1.0, y: 1.0))
+                    context.strokePath()
+                })
+            }
+            
+            self.imageView.image = image
+            self.imageView.sizeToFit()
+            
+            self.setFrameSize(NSMakeSize(15, 15))
+        }
+        
+        override func layout() {
+            super.layout()
+            imageView.center()
+        }
+    }
+    
     let textView = InteractiveTextView()
     private let titleView = TextView()
     private let whatThisView = TextView()
     private let dashLayer = DashLayer()
+    
+    private var revealView: RevealView?
+    
+    private var textMask: SimpleLayer = SimpleLayer()
+    
+    private var currentLayout: FactCheckMessageLayout?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -60,6 +167,8 @@ final class FactCheckMessageView : View {
         textView.textView.userInteractionEnabled = true
         textView.textView.isSelectable = true
         
+        
+        
         self.layer?.addSublayer(dashLayer)
         
         titleView.userInteractionEnabled = false
@@ -67,7 +176,7 @@ final class FactCheckMessageView : View {
         
         whatThisView.isSelectable = false
         whatThisView.scaleOnClick = true
-        
+        whatThisView.tooltipOnclick = true
         layer?.cornerRadius = 4
     }
     
@@ -76,6 +185,8 @@ final class FactCheckMessageView : View {
     }
     
     func update(layout: FactCheckMessageLayout, animated: Bool) {
+        self.currentLayout = layout
+        
         self.textView.set(text: layout.text, context: layout.context)
         self.titleView.update(layout.title)
         self.whatThisView.update(layout.whatThisLayout)
@@ -83,8 +194,45 @@ final class FactCheckMessageView : View {
         self.whatThisView.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.2)
         self.whatThisView.layer?.cornerRadius = self.whatThisView.frame.height / 2
         self.dashLayer.colors = layout.presentation.activity
-
+        self.whatThisView.appTooltip = strings().factCheckInfo(layout.country)
         self.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.1)
+        
+        
+        if !layout.isFullView {
+            let current: RevealView
+            if let view = self.revealView {
+                current = view
+            } else {
+                current = RevealView(frame: .zero)
+                self.revealView = current
+                addSubview(current)
+                
+                current.set(handler: { [weak self] _ in
+                    if let layout = self?.currentLayout {
+                        layout.chatInteraction.revealFactCheck(layout.message.id)
+                    }
+                }, for: .Click)
+            }
+            current.update(layout: layout, animated: animated)
+            
+            if !layout.revealed {
+                textView.textView.drawingLayer?.mask = textMask
+                textMask.contents = generateMaskImage(size: textView.textView.frame.size)
+                textMask.frame = textView.textView.bounds
+            } else {
+                textView.textView.drawingLayer?.mask = nil
+            }
+            
+        } else {
+            if let view = revealView {
+                performSubviewRemoval(view, animated: animated)
+                self.revealView = nil
+            }
+            textView.textView.drawingLayer?.mask = nil
+        }
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        self.updateLayout(size: layout.size, transition: transition)
     }
     
     
@@ -92,7 +240,11 @@ final class FactCheckMessageView : View {
         transition.updateFrame(view: titleView, frame: NSMakeRect(10, 2, titleView.frame.width, titleView.frame.height))
         transition.updateFrame(view: whatThisView, frame: NSMakeRect(titleView.frame.maxX + 6, 4, whatThisView.frame.width, whatThisView.frame.height))
         transition.updateFrame(view: textView, frame: NSMakeRect(10, titleView.frame.maxY, textView.frame.width, textView.frame.height))
-        transition.updateFrame(layer: dashLayer, frame: NSMakeRect(0, 0, 3, size.height))
+        transition.updateFrame(layer: dashLayer, frame: NSMakeRect(0, 0, 3, titleView.frame.height + textView.frame.height + 20))
+        if let view = revealView {
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, size.height - view.frame.height - 2, view.frame.width, view.frame.height))
+        }
+
     }
     
     override func layout() {

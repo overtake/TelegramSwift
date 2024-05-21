@@ -635,6 +635,8 @@ enum InputDataValue : Equatable {
         switch self {
         case let .string(value):
             return value
+        case let .attributedString(value):
+            return value?.string
         default:
             return nil
         }

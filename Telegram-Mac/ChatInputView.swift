@@ -480,7 +480,7 @@ class ChatInputView: View, Notifable {
                 
  
                 self.messageEffect = current
-                addSubview(current)
+                addSubview(current, positioned: .below, relativeTo: _ts)
                 
                 
                 if let fromRect = messageEffect.fromRect {
@@ -910,7 +910,7 @@ class ChatInputView: View, Notifable {
 
         
         if let view = messageEffect {
-            transition.updateFrame(view: view, frame: NSMakeRect(size.width - actionsSize.width - view.frame.width, 0, view.frame.width, view.frame.height))
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - actionsSize.width - view.frame.width - 5, 0, view.frame.width, view.frame.height))
         }
         
         if let view = botMenuView {
@@ -1084,6 +1084,9 @@ class ChatInputView: View, Notifable {
         }
         if let sendAsView = self.sendAsView {
             leftInset += sendAsView.frame.width
+        }
+        if let messageEffect {
+            leftInset += messageEffect.frame.width
         }
         let w = width - actionsView.size(chatInteraction.presentation).width - leftInset
         let height = self.textView.height(for: w)

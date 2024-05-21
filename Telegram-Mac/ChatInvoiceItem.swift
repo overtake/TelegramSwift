@@ -47,7 +47,9 @@ class ChatInvoiceItem: ChatRowItem {
             
         } else {
             _ = attr.append(string: media.title, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-            _ = attr.append(string: "\n")
+            if media.currency != XTR {
+                _ = attr.append(string: "\n")
+            }
             
             if media.receiptMessageId != nil {
                 var title = strings().checkoutReceiptTitle.uppercased()
@@ -56,15 +58,18 @@ class ChatInvoiceItem: ChatRowItem {
                 }
                 _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
             } else {
-                _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-                
-                _ = attr.append(string: " ")
-
-                var title = strings().messageInvoiceLabel.uppercased()
-                if media.flags.contains(.isTest) {
-                    title += " (Test)"
+                if media.currency != XTR {
+                    _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                    _ = attr.append(string: " ")
+                    
+                    var title = strings().messageInvoiceLabel.uppercased()
+                    if media.flags.contains(.isTest) {
+                        title += " (Test)"
+                    }
+                    
+                    _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                 }
-                _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                
             }
             
             _ = attr.append(string: "\n")

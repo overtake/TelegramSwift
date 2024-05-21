@@ -140,6 +140,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             tagView.set(background: presentation.colors.accent, for: .Normal)
             tagView.set(text: tag.text, for: .Normal)
             tagView.direction = .right
+            tagView.buttonImageInset = 0
             tagView.autohighlight = false
             tagView.scaleOnClick = true
             

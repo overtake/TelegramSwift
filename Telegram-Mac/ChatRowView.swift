@@ -540,9 +540,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func factCheckFrame(_ item: ChatRowItem) -> NSRect {
         if let layout = item.factCheckLayout {
             var rect = contentFrame(item)
-            rect.origin.y += (rect.size.height + item.defaultContentInnerInset)
             rect.size = layout.size
             rect.origin.x += item.elementsContentInset
+            
+            rect.origin.y = item.height - rect.size.height - item.defaultContentInnerInset - 4
+            if item.isBubbled {
+                rect.origin.y -= item.rightSize.height
+            }
             return rect
         } else {
             return .zero
@@ -916,7 +920,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     if let view = self.forwardPhoto {
                         current = view
                     } else {
-                        current = AvatarControl(font: .avatar(4))
+                        current = AvatarControl(font: .avatar(6))
                         current.setFrameSize(NSMakeSize(14, 14))
                         current.setFrameOrigin(forwardPhotoPoint(item))
                         rowView.addSubview(current)
@@ -1121,14 +1125,17 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillFactCheck(_ item: ChatRowItem, animated: Bool) -> Void {
         if let layout = item.factCheckLayout {
             let current: FactCheckMessageView
+            let isNew: Bool
             if let view = self.factCheckView {
                 current = view
+                isNew = false
             } else {
                 current = FactCheckMessageView(frame: factCheckFrame(item))
                 rowView.addSubview(current)
+                isNew = true
                 self.factCheckView = current
             }
-            current.update(layout: layout, animated: animated)
+            current.update(layout: layout, animated: animated && !isNew)
         } else if let view = factCheckView {
             performSubviewRemoval(view, animated: animated)
             self.factCheckView = nil

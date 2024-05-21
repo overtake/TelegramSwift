@@ -2356,7 +2356,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         
                         let line = lines[i].line
                  
-                        let penOffset = CGFloat( CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(frame.width)))
+                        let penOffset = CGFloat(CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(frame.width)))
                         
                         var rect:NSRect = lines[i].frame
                         let lineRange = lines[i].lineRange
@@ -2638,11 +2638,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         let under = line.embeddedItems.contains(where: { value in
                             return value.range == NSMakeRange(range.location, range.length)
                         })
-                        if glyphCount >= 2 {
-                            ctx.textPosition = textPosition.offsetBy(dx: 0, dy: 0)
-                        } else {
-                            ctx.textPosition = textPosition
-                        }
+                        ctx.textPosition = textPosition
                         
                         if !under {
                             CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))

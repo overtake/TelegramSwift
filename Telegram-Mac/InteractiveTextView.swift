@@ -17,6 +17,21 @@ final class InteractiveTextView : Control {
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
     
+    private var visualEffect: VisualEffect? = nil    
+    
+    var hasBackground: Bool {
+        return blurBackground != nil
+    }
+    
+    public var blurBackground: NSColor? = nil {
+        didSet {
+            updateBackgroundBlur()
+            if hasBackground {
+                self.backgroundColor = .clear
+            }
+        }
+    }
+    
     convenience override init() {
         self.init(frame: .zero)
     }
@@ -128,7 +143,11 @@ final class InteractiveTextView : Control {
         self.updateAnimatableContent()
     }
     
-    
+    override func layout() {
+        super.layout()
+        self.textView.center()
+        visualEffect?.frame = bounds
+    }
     
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
@@ -151,6 +170,24 @@ final class InteractiveTextView : Control {
         } else {
             center.removeObserver(self)
         }
+    }
+    
+    private func updateBackgroundBlur() {
+        
+        self.layer?.masksToBounds = blurBackground != nil
+        if let blurBackground = blurBackground {
+            if self.visualEffect == nil {
+                self.visualEffect = VisualEffect(frame: self.bounds)
+                addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
+            }
+            self.visualEffect?.bgColor = blurBackground
+            
+        }  else {
+            self.visualEffect?.removeFromSuperview()
+            self.visualEffect = nil
+        }
+        
+        needsLayout = true
     }
     
 }

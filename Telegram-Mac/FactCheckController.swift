@@ -10,16 +10,21 @@ import Foundation
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import TelegramCore
+import Postbox
+import InputView
 
 private final class Arguments {
     let context: AccountContext
-    init(context: AccountContext) {
+    let updateState:(Updated_ChatTextInputState)->Void
+    init(context: AccountContext, updateState: @escaping (Updated_ChatTextInputState) -> Void) {
         self.context = context
+        self.updateState = updateState
     }
 }
 
 private struct State : Equatable {
-    var string: NSAttributedString?
+    var textState:Updated_ChatTextInputState = .init(inputText: .init())
 }
 
 private let _id_input = InputDataIdentifier("_id_input")
@@ -33,9 +38,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .attributedString(state.string), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .singleItem, canMakeTransformations: true), placeholder: nil, inputPlaceholder: strings().factCheckPlaceholder, filter: { $0 }, limit: 1024))
-  
-    // entries
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
+        return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .singleItem, placeholder: nil, inputPlaceholder: strings().factCheckPlaceholder, canMakeTransformations: true, filter: { text in
+            return text
+        }, updateState: arguments.updateState, limit: 1024, hasEmoji: false)
+    }))
+    index += 1
+    
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -43,11 +53,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func FactCheckController(context: AccountContext) -> InputDataModalController {
+func FactCheckController(context: AccountContext, message: Message) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let inputState: Updated_ChatTextInputState
+    if let factCheck = message.factCheckAttribute {
+        switch factCheck.content {
+        case let .Loaded(text, entities, country):
+            inputState = ChatTextInputState(inputText: text, selectionRange: text.length ..< text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: entities), associatedMedia: message.associatedMedia)).textInputState()
+        default:
+            inputState = .init()
+        }
+    } else {
+        inputState = .init()
+    }
+    
+    let initialState = State(textState: inputState)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -55,7 +77,13 @@ func FactCheckController(context: AccountContext) -> InputDataModalController {
         statePromise.set(stateValue.modify (f))
     }
 
-    let arguments = Arguments(context: context)
+    let arguments = Arguments(context: context, updateState: { state in
+        updateState { current in
+            var current = current
+            current.textState = state
+            return current
+        }
+    })
     
     var close:(()->Void)? = nil
     
@@ -79,13 +107,40 @@ func FactCheckController(context: AccountContext) -> InputDataModalController {
         modalController?.close()
     })
     
-    controller.updateDatas = { data in
-        updateState { current in
-            var current = current
-            current.string = data[_id_input]?.attributedString
-            return current
+    controller.validateData = { _ in
+        let isEnabled = stateValue.with { $0.textState != inputState }
+        
+        if isEnabled {
+            let state = stateValue.with { $0.textState.textInputState() }
+            if state.inputText.isEmpty {
+                _ = context.engine.messages.deleteMessageFactCheck(messageId: message.id).startStandalone()
+                showModalText(for: context.window, text: strings().factCheckSaveDelete)
+            } else {
+                _ = context.engine.messages.editMessageFactCheck(messageId: message.id, text: state.inputText, entities: state.messageTextEntities()).startStandalone()
+                showModalText(for: context.window, text: strings().factCheckSaveUpdated)
+            }
+            close?()
+        } else {
+            return .fail(.fields([_id_input: .shake]))
         }
+        
+        
         return .none
+    }
+
+    controller.afterTransaction = { [weak modalInteractions] controller in
+        modalInteractions?.updateDone { button in
+            button.isEnabled = stateValue.with { $0.textState != inputState }
+            let isRemoved = stateValue.with { $0.textState.inputText.string.isEmpty } && !inputState.inputText.string.isEmpty
+            
+            if isRemoved {
+                button.set(background: theme.colors.redUI, for: .Normal)
+                button.set(text: strings().modalRemove, for: .Normal)
+            } else {
+                button.set(background: theme.colors.accent, for: .Normal)
+                button.set(text: strings().modalDone, for: .Normal)
+            }
+        }
     }
     
     close = { [weak modalController] in
@@ -94,11 +149,6 @@ func FactCheckController(context: AccountContext) -> InputDataModalController {
     
     return modalController
 }
-
-
-/*
-
- */
 
 
 

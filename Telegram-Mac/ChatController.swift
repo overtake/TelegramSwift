@@ -1946,6 +1946,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var presentation_genuie:TelegramPresentationTheme = theme
         var bespoke_wallpaper: ThemeWallpaper?
         var presentation_emoticon: String? = nil
+        var factCheck: Set<MessageId> = Set()
         
         var answersAndOnline: ChatTitleCounters = .init()
         
@@ -1966,7 +1967,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let extendedMediaProcessingManager = ChatMessageVisibleThrottledProcessingManager()
     private let seenLiveLocationProcessingManager = ChatMessageThrottledProcessingManager()
     private let refreshMediaProcessingManager = ChatMessageThrottledProcessingManager()
-
+    private let factCheckProcessingManager = ChatMessageThrottledProcessingManager(submitInterval: 1.0)
 
 
 
@@ -3080,7 +3081,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects, factCheckRevealed: uiState.factCheck).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -4487,7 +4488,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }
         
-        
+        chatInteraction.revealFactCheck = { [weak self] messageId in
+            self?.updateState { current in
+                var current = current
+                if current.factCheck.contains(messageId) {
+                    current.factCheck.remove(messageId)
+                } else {
+                    current.factCheck.insert(messageId)
+                }
+                return current
+            }
+        }
         
         
         chatInteraction.scrollToTheFirst = { [weak self] in
@@ -6574,7 +6585,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var messageIdsWithRefreshStories: [MessageId] = []
                 var messageIdsWithLiveLocation: [MessageId] = []
                 var messageIdsWithInactiveExtendedMedia = Set<MessageId>()
-
+                var messageIdsToFactCheck: [MessageId] = []
 
 
                 var messagesToTranslate: [Message] = []
@@ -6599,13 +6610,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             var contentRequiredValidation = false
                             var mediaRequiredValidation = false
                             var storiesRequiredValidation = false
-
+                            var factCheckRequired = false
                             
                             for attribute in message.attributes {
                                 if let _ = attribute as? ContentRequiresValidationMessageAttribute {
                                     contentRequiredValidation = true
                                 }  else if let _ = attribute as? ReplyStoryAttribute {
                                     storiesRequiredValidation = true
+                                } else if let attribute = attribute as? FactCheckMessageAttribute, case .Pending = attribute.content {
+                                    factCheckRequired = true
                                 }
                             }
                             
@@ -6656,7 +6669,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if storiesRequiredValidation {
                                 messageIdsWithRefreshStories.append(message.id)
                             }
-
+                            if factCheckRequired {
+                                messageIdsToFactCheck.append(message.id)
+                            }
                             
                             if message.tags.contains(.unseenPersonalMessage) {
                                 for attribute in message.attributes {
@@ -6765,6 +6780,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 if !messageIdsWithRefreshStories.isEmpty {
                     strongSelf.refreshStoriesProcessingManager.add(messageIdsWithRefreshStories)
+                }
+                if !messageIdsToFactCheck.isEmpty {
+                    strongSelf.factCheckProcessingManager.add(messageIdsToFactCheck)
                 }
 
                 if !messageIdsWithUnseenPersonalMention.isEmpty {
@@ -8578,6 +8596,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.messageProcessingManager.process = { messageIds in
             context.account.viewTracker.updateViewCountForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}), clientId: clientId)
+        }
+        self.factCheckProcessingManager.process = { messageIds in
+            _ = context.engine.messages.getMessagesFactCheck(messageIds: Array(messageIds)).startStandalone()
         }
 
         self.unsupportedMessageProcessingManager.process = { messageIds in

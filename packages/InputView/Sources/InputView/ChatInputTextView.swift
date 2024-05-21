@@ -57,6 +57,7 @@ public protocol ChatInputTextViewDelegate: AnyObject {
     func chatInputTextViewShouldPaste() -> Bool
     
     func inputTextCanTransform() -> Bool
+    func inputTextSimpleTransform() -> Bool
     func inputApplyTransform(_ reason: InputViewTransformReason)
     func inputMaximumHeight() -> CGFloat
     func inputMaximumLenght() -> Int
@@ -985,6 +986,10 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
 
     var transformItems: [NSMenuItem] {
+        
+        let simpleTransform = self.customDelegate?.inputTextSimpleTransform() == true
+        
+        
         let bold = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Bold"), action: #selector(makeBold(_:)), keyEquivalent: "b")
         bold.keyEquivalentModifierMask = .command
 
@@ -1007,12 +1012,29 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         let spoiler = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Spoiler"), action: #selector(makeSpoiler(_:)), keyEquivalent: "p")
         spoiler.keyEquivalentModifierMask = [.shift, .command]
 
+        
         let quote = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Quote"), action: #selector(makeQuote(_:)), keyEquivalent: "i")
         quote.keyEquivalentModifierMask = [.shift, .command]
 
         let removeAll = NSMenuItem(title: _NSLocalizedString("TextView.Transform.RemoveAll"), action: #selector(removeAll(_:)), keyEquivalent: "")
         
-        return [removeAll, NSMenuItem.separator(), strikethrough, underline, spoiler, code, italic, bold, url, quote]
+        var items: [NSMenuItem] = []
+        items.append(removeAll)
+        items.append(NSMenuItem.separator())
+        if !simpleTransform {
+            items.append(strikethrough)
+            items.append(underline)
+            items.append(spoiler)
+            items.append(code)
+        }
+        items.append(italic)
+        items.append(bold)
+        items.append(url)
+        if !simpleTransform {
+            items.append(quote)
+        }
+
+        return items
     }
     
     @objc private func makeBold(_ id: Any) {

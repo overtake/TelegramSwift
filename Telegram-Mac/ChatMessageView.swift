@@ -267,7 +267,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     override var selectableTextViews: [TextView] {
-        var views:[TextView] = [text].compactMap { $0 }
+        var views:[TextView] = super.selectableTextViews + [text].compactMap { $0 }
         if let webpage = webpageContent {
             views += webpage.selectableTextViews
         }

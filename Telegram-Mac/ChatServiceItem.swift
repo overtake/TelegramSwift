@@ -529,6 +529,10 @@ class ChatServiceItem: ChatRowItem {
                         }
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                     }
+                    
+                    if currency == XTR {
+                        attributedString.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: grayTextColor, resize: false), for: XTR)
+                    }
                 case let .botSentSecureValues(types):
                     let permissions = types.map({$0.rawValue}).joined(separator: ", ")
                      _ = attributedString.append(string: strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions), color: grayTextColor, font: NSFont.normal(theme.fontSize))

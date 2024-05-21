@@ -535,7 +535,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
 
-            showModal(with: FactCheckController(context: context), for: context.window)
+//            showModal(with: FactCheckController(context: context), for: context.window)
           //  showModal(with: Star_PurschaseInApp(context: context, peerId: context.peerId), for: context.window)
             
 //            context.bindings.rootNavigation().push(HashtagSearchController(context, hashtag: "#test", peerId: context.peerId))

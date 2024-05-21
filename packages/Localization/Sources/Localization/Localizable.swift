@@ -8305,12 +8305,24 @@ public final class L10n {
   }
   /// revoked
   public static var exportedInvitationStatusRevoked: String  { return L10n.tr("Localizable", "ExportedInvitation.Status.Revoked") }
-  /// Add Fack Check
+  /// This clarification was provided by a fact checking agency assigned by the department of the government of your country (%@) responsible for combatting misinformation.
+  public static func factCheckInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FactCheck.Info", p1)
+  }
+  /// Add Fact Check
   public static var factCheckPlaceholder: String  { return L10n.tr("Localizable", "FactCheck.Placeholder") }
-  /// Fack Check
+  /// show
+  public static var factCheckShowFull: String  { return L10n.tr("Localizable", "FactCheck.ShowFull") }
+  /// Fact Check
   public static var factCheckTitle: String  { return L10n.tr("Localizable", "FactCheck.Title") }
   /// what's this?
   public static var factCheckWhatThis: String  { return L10n.tr("Localizable", "FactCheck.WhatThis") }
+  /// Edit Fact Check
+  public static var factCheckContextEdit: String  { return L10n.tr("Localizable", "FactCheck.Context.Edit") }
+  /// Fact check is removed
+  public static var factCheckSaveDelete: String  { return L10n.tr("Localizable", "FactCheck.Save.Delete") }
+  /// Fact check is updated
+  public static var factCheckSaveUpdated: String  { return L10n.tr("Localizable", "FactCheck.Save.Updated") }
   /// Disable Dark Mode
   public static var fastSettingsDisableDarkMode: String  { return L10n.tr("Localizable", "FastSettings.DisableDarkMode") }
   /// Enable Dark Mode
