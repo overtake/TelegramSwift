@@ -139,7 +139,7 @@ public final class L10n {
   public static var accountSettingsSetProfilePhoto: String  { return L10n.tr("Localizable", "AccountSettings.SetProfilePhoto") }
   /// Set a Username
   public static var accountSettingsSetUsername: String  { return L10n.tr("Localizable", "AccountSettings.SetUsername") }
-  /// Telegram Stars
+  /// Your Stars
   public static var accountSettingsStars: String  { return L10n.tr("Localizable", "AccountSettings.Stars") }
   /// Stickers
   public static var accountSettingsStickers: String  { return L10n.tr("Localizable", "AccountSettings.Stickers") }
@@ -15459,6 +15459,158 @@ public final class L10n {
   public static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
   /// Slow mode is enabled. This text is too long to send as one message.
   public static var slowModeTooLongError: String  { return L10n.tr("Localizable", "SlowMode.TooLong.Error") }
+  /// Buy Stars and use them on **%@** and other miniapps.
+  public static func starListBuyAndUse(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.List.BuyAndUse", p1)
+  }
+  /// Buy More Stars
+  public static var starListBuyMoreStars: String  { return L10n.tr("Localizable", "Star.List.BuyMoreStars") }
+  /// Get Stars
+  public static var starListGetStars: String  { return L10n.tr("Localizable", "Star.List.GetStars") }
+  /// Choose how many Stars you'd like to buy.
+  public static var starListHowMany: String  { return L10n.tr("Localizable", "Star.List.HowMany") }
+  /// Balance\n%1$@**%2$@**
+  public static func starListMyBalance(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.List.MyBalance", p1, p2)
+  }
+  /// %d
+  public static func starListStarsNeededCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_countable", p1)
+  }
+  /// %d Stars Needed
+  public static func starListStarsNeededFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_few", p1)
+  }
+  /// %d Stars Needed
+  public static func starListStarsNeededMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_many", p1)
+  }
+  /// %d Star Needed
+  public static func starListStarsNeededOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_one", p1)
+  }
+  /// %d Stars Needed
+  public static func starListStarsNeededOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_other", p1)
+  }
+  /// %d Stars Needed
+  public static func starListStarsNeededTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_two", p1)
+  }
+  /// %d Stars Needed
+  public static func starListStarsNeededZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.StarsNeeded_zero", p1)
+  }
+  /// Telegram Stars
+  public static var starListTelegramStars: String  { return L10n.tr("Localizable", "Star.List.TelegramStars") }
+  /// By proceeding and purchasing Stars, you agree with the [Terms and Conditions](https://telegram.org).
+  public static var starListTos: String  { return L10n.tr("Localizable", "Star.List.Tos") }
+  /// your balance
+  public static var starListYourBalance: String  { return L10n.tr("Localizable", "Star.List.YourBalance") }
+  /// %d
+  public static func starListBuySuccessCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_countable", p1)
+  }
+  /// %d Stars Added to Your Balance
+  public static func starListBuySuccessFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_few", p1)
+  }
+  /// %d Stars Added to Your Balance
+  public static func starListBuySuccessMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_many", p1)
+  }
+  /// %d Star Added to Your Balance
+  public static func starListBuySuccessOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_one", p1)
+  }
+  /// %d Stars Added to Your Balance
+  public static func starListBuySuccessOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_other", p1)
+  }
+  /// %d Stars Added to Your Balance
+  public static func starListBuySuccessTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_two", p1)
+  }
+  /// %d Stars Added to Your Balance
+  public static func starListBuySuccessZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Buy.Success_zero", p1)
+  }
+  /// Buy Stars to unlock content and services in miniapps on Telegram.
+  public static var starListBuyAndUserNobot: String  { return L10n.tr("Localizable", "Star.List.BuyAndUser.Nobot") }
+  /// %d
+  public static func starListItemCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_countable", p1)
+  }
+  /// %d Stars
+  public static func starListItemCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_few", p1)
+  }
+  /// %d Stars
+  public static func starListItemCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_many", p1)
+  }
+  /// %d Star
+  public static func starListItemCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_one", p1)
+  }
+  /// %d Stars
+  public static func starListItemCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_other", p1)
+  }
+  /// %d Stars
+  public static func starListItemCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_two", p1)
+  }
+  /// %d Stars
+  public static func starListItemCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.List.Item.Count_zero", p1)
+  }
+  /// Show More Options
+  public static var starListItemShowMore: String  { return L10n.tr("Localizable", "Star.List.Item.ShowMore") }
+  /// App Store
+  public static var starListTransactionAppStore: String  { return L10n.tr("Localizable", "Star.List.Transaction.AppStore") }
+  /// Fragment
+  public static var starListTransactionFragment: String  { return L10n.tr("Localizable", "Star.List.Transaction.Fragment") }
+  /// Play Market
+  public static var starListTransactionPlayMarket: String  { return L10n.tr("Localizable", "Star.List.Transaction.PlayMarket") }
+  /// Premium Bot
+  public static var starListTransactionPremiumBot: String  { return L10n.tr("Localizable", "Star.List.Transaction.PremiumBot") }
+  /// Unknown
+  public static var starListTransactionUnknown: String  { return L10n.tr("Localizable", "Star.List.Transaction.Unknown") }
+  /// All Transactions
+  public static var starListTransactionsAll: String  { return L10n.tr("Localizable", "Star.List.Transactions.All") }
+  /// TRANSACTION HISTORY
+  public static var starListTransactionsHeader: String  { return L10n.tr("Localizable", "Star.List.Transactions.Header") }
+  /// Incoming
+  public static var starListTransactionsIncoming: String  { return L10n.tr("Localizable", "Star.List.Transactions.Incoming") }
+  /// Outgoing
+  public static var starListTransactionsOutgoing: String  { return L10n.tr("Localizable", "Star.List.Transactions.Outgoing") }
+  /// Show More
+  public static var starListTransactionsShowMore: String  { return L10n.tr("Localizable", "Star.List.Transactions.ShowMore") }
+  /// No Transactions
+  public static var starListTransactionsEmptyAll: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.All") }
+  /// No Incoming Transactions
+  public static var starListTransactionsEmptyIncoming: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Incoming") }
+  /// No Outgoing Transactions
+  public static var starListTransactionsEmptyOutgoing: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Outgoing") }
+  /// Balance\n%@
+  public static func starPurchaseBalance(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Balance", p1)
+  }
+  /// Confirm Your Purchase
+  public static var starPurchaseConfirm: String  { return L10n.tr("Localizable", "Star.Purchase.Confirm") }
+  /// Confirm And Pay %@
+  public static func starPurchasePay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Pay", p1)
+  }
+  /// You acquired "%1$@" in %2$@ for %3$@ Stars.
+  public static func starPurchaseSuccess(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Success", p1, p2, p3)
+  }
+  /// Do you want to buy **"%1$@"** in **%2$@** **for %3$@ Stars**?
+  public static func starPurchaseText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text", p1, p2, p3)
+  }
   /// Boosts
   public static var statsBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts") }
   /// ACTIONS

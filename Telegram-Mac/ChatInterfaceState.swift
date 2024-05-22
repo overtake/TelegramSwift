@@ -825,7 +825,7 @@ final class ChatTextInputState: Codable, Equatable {
             case let .animated(range, _, fileId, _, _):
                 entities.append(.init(range: range, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
             case let .quote(range):
-                entities.append(.init(range: range, type: .BlockQuote))
+                entities.append(.init(range: range, type: .BlockQuote(isCollapsed: false)))
             }
         }
 

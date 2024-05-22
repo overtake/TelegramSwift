@@ -35,15 +35,15 @@ private final class HeaderItem : GeneralRowItem {
         self.close = close
         
         let balanceAttr = NSMutableAttributedString()
-        balanceAttr.append(string: "Balance\n\(clown)\(myBalance)", color: theme.colors.text, font: .normal(.text))
+        balanceAttr.append(string: strings().starPurchaseBalance("\(clown)\(myBalance)"), color: theme.colors.text, font: .normal(.text))
         balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
         
         self.balanceLayout = .init(balanceAttr, alignment: .right)
         
-        self.headerLayout = .init(.initialize(string: "Confirm Your Purchase", color: theme.colors.text, font: .medium(.title)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: strings().starPurchaseConfirm, color: theme.colors.text, font: .medium(.title)), alignment: .center)
         
         let infoAttr = NSMutableAttributedString()
-        infoAttr.append(string: "Do you want to buy **\"\(request.info)\"** in **\(peer._asPeer().displayTitle)** **for \(request.count) Stars**?", color: theme.colors.text, font: .normal(.text))
+        infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, "\(request.count)"), color: theme.colors.text, font: .normal(.text))
         infoAttr.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(infoAttr, alignment: .center)
         
@@ -86,7 +86,7 @@ private final class AcceptView : Control {
     func update(_ item: HeaderItem, animated: Bool) {
         let attr = NSMutableAttributedString()
         
-        attr.append(string: "Confirm and Pay \(clown)\(item.request.count)", color: .white, font: .medium(.text))
+        attr.append(string: strings().starPurchasePay("\(clown)\(item.request.count)"), color: .white, font: .medium(.text))
         attr.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: NSColor.white, resize: false), for: clown)
         
         let layout = TextViewLayout(attr)
@@ -349,9 +349,9 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                 if let form = state.form {
                     _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: context.window).startStandalone(next: { result in
                         switch result {
-                        case let .done(receiptMessageId):
+                        case .done:
                             starsContext.add(balance: -state.request.count)
-                            showModalText(for: context.window, text: "You acquired \"\(state.request.info)\" in \(peer._asPeer().displayTitle) for \(state.request.count) Stars.")
+                            showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, "\(state.request.count)"))
                             PlayConfetti(for: context.window, stars: true)
                             close?()
                         default:

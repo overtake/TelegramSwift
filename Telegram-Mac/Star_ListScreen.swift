@@ -41,11 +41,12 @@ private final class FloatingHeaderView : Control {
         let text: String
         switch source {
         case .buy:
-            text = "Get Stars"
+            text = strings().starListGetStars
         case let .purchase(_, requested):
-            text = "\(requested - myBalance) Stars Needed"
+            let need = Int(requested - myBalance)
+            text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
         case .account:
-            text = "Telegram Stars";
+            text = strings().starListTelegramStars
         }
         
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.text)))
@@ -56,7 +57,7 @@ private final class FloatingHeaderView : Control {
     func update(myBalance: Int64, context: AccountContext) {
         
         let balance = NSMutableAttributedString()
-        balance.append(string: "Balance\n\(clown)**\(myBalance)**", color: theme.colors.text, font: .normal(.text))
+        balance.append(string: strings().starListMyBalance(clown, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
         balance.detectBoldColorInString(with: .medium(.text))
         balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
         
@@ -94,11 +95,11 @@ private final class BalanceItem : GeneralRowItem {
         self.buyMore = buyMore
         
         let attr = NSMutableAttributedString()
-        attr.append(string: "\(myBalance)", color: theme.colors.text, font: .medium(40))
+        attr.append(string: myBalance.formattedWithSeparator, color: theme.colors.text, font: .medium(40))
         self.myBalanceLayout = .init(attr)
         self.myBalanceLayout.measure(width: .greatestFiniteMagnitude)
         
-        self.infoLayout = .init(.initialize(string: "your balance", color: theme.colors.grayText, font: .normal(.header)))
+        self.infoLayout = .init(.initialize(string: strings().starListYourBalance, color: theme.colors.grayText, font: .normal(.header)))
         self.infoLayout.measure(width: .greatestFiniteMagnitude)
         
         
@@ -167,7 +168,7 @@ private final class BalanceView: GeneralContainableRowView {
         action.set(font: .medium(.text), for: .Normal)
         action.set(color: theme.colors.underSelectedColor, for: .Normal)
         action.set(background: theme.colors.accent, for: .Normal)
-        action.set(text: "Buy More Stars", for: .Normal)
+        action.set(text: strings().starListBuyMoreStars, for: .Normal)
         needsLayout = true
     }
     
@@ -197,7 +198,7 @@ private final class HeaderItem : GeneralRowItem {
         self.dismiss = dismiss
         self.source = source
         let balance = NSMutableAttributedString()
-        balance.append(string: "Balance\n\(clown)**\(myBalance)**", color: theme.colors.text, font: .normal(.text))
+        balance.append(string: strings().starListMyBalance(clown, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
         balance.detectBoldColorInString(with: .medium(.text))
         balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
         
@@ -209,14 +210,15 @@ private final class HeaderItem : GeneralRowItem {
         
         switch source {
         case .buy:
-            headerAttr.append(string: "Get Stars", color: theme.colors.text, font: .medium(.header))
-            headerInfo.append(string: "Choose how many Stars you'd like to buy.", color: theme.colors.text, font: .normal(.text))
+            headerAttr.append(string: strings().starListGetStars, color: theme.colors.text, font: .medium(.header))
+            headerInfo.append(string: strings().starListHowMany, color: theme.colors.text, font: .normal(.text))
         case let .purchase(peer, requested):
-            headerAttr.append(string: "\(requested - myBalance) Stars Needed", color: theme.colors.text, font: .medium(.header))
-            headerInfo.append(string: "Buy Stars and use them on **\(peer._asPeer().displayTitle)** and other miniapps.", color: theme.colors.text, font: .normal(.text))
+            let need = Int(requested - myBalance)
+            headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
+            headerInfo.append(string: strings().starListBuyAndUse(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
         case .account:
-            headerAttr.append(string: "Telegram Stars", color: theme.colors.text, font: .medium(.header))
-            headerInfo.append(string: "Buy Stars to unlock content and services in miniapps on Telegram.", color: theme.colors.text, font: .normal(.text))
+            headerAttr.append(string: strings().starListTelegramStars, color: theme.colors.text, font: .medium(.header))
+            headerInfo.append(string: strings().starListBuyAndUserNobot, color: theme.colors.text, font: .normal(.text))
         }
         headerAttr.detectBoldColorInString(with: .medium(.header))
         headerInfo.detectBoldColorInString(with: .medium(.text))
@@ -324,7 +326,7 @@ private final class Star_Item : GeneralRowItem {
         self.context = context
         self.option = option
         self.price = .init(.initialize(string: option.formattedPrice, color: theme.colors.grayText, font: .normal(.text)))
-        self.textLayout = .init(.initialize(string: "\(option.amount) Stars", color: theme.colors.text, font: .medium(.text)))
+        self.textLayout = .init(.initialize(string: strings().starListItemCountCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator), color: theme.colors.text, font: .medium(.text)))
         
         self.starsCount = min(5, (Int64(option.id) ?? 0) + 1)
         
@@ -447,9 +449,12 @@ private final class TransactionItem : GeneralRowItem {
     fileprivate let nameLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, transaction: State.Transaction) {
+    fileprivate let callback: (State.Transaction)->Void
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, transaction: State.Transaction, callback: @escaping(State.Transaction)->Void) {
         self.context = context
         self.transaction = transaction
+        self.callback = callback
         
         let amountAttr = NSMutableAttributedString()
         if transaction.amount < 0 {
@@ -466,13 +471,17 @@ private final class TransactionItem : GeneralRowItem {
         case .incoming(let source):
             switch source {
             case .appstore:
-                name = "App Store"
+                name = strings().starListTransactionAppStore
             case .fragment:
-                name = "Fragment"
+                name = strings().starListTransactionFragment
             case .playmarket:
-                name = "Play Market"
+                name = strings().starListTransactionPlayMarket
             case .bot:
                 name = transaction.peer?._asPeer().displayTitle ?? ""
+            case .premiumbot:
+                name = strings().starListTransactionPremiumBot
+            case .unknown:
+                name = strings().starListTransactionUnknown
             }
         case .outgoing:
             name = transaction.peer?._asPeer().displayTitle ?? ""
@@ -519,6 +528,34 @@ private final class TransactionView : GeneralContainableRowView {
         
         dateView.userInteractionEnabled = false
         dateView.isSelectable = false
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
+        
+        containerView.scaleOnClick = true
+        
+        containerView.set(handler: { [weak self] _ in
+            if let item = self?.item as? TransactionItem {
+                item.callback(item.transaction)
+            }
+        }, for: .Click)
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        if let item = item as? GeneralRowItem {
+            self.background = item.viewType.rowBackground
+            let highlighted = isSelect ? self.backdorColor : theme.colors.grayHighlight
+            containerView.set(background: self.backdorColor, for: .Normal)
+            containerView.set(background: highlighted, for: .Highlight)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -578,6 +615,10 @@ private final class TransactionView : GeneralContainableRowView {
                     current.image = NSImage(resource: .iconAndroidStarTopUp).precomposed()
                 case .bot:
                     break
+                case .premiumbot:
+                    current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
+                case .unknown:
+                    current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
                 }
             case .outgoing:
                 break
@@ -617,9 +658,9 @@ private final class TransactionTypesItem : GeneralRowItem {
         let theme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
         
         var items: [ScrollableSegmentItem] = []
-        items.append(.init(title: "All Transactions", index: 0, uniqueId: 0, selected: transactionMode == .all, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
-        items.append(.init(title: "Incoming", index: 1, uniqueId: 1, selected: transactionMode == .incoming, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
-        items.append(.init(title: "Outgoing", index: 2, uniqueId: 2, selected: transactionMode == .outgoing, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
+        items.append(.init(title: strings().starListTransactionsAll, index: 0, uniqueId: 0, selected: transactionMode == .all, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
+        items.append(.init(title: strings().starListTransactionsIncoming, index: 1, uniqueId: 1, selected: transactionMode == .incoming, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
+        items.append(.init(title: strings().starListTransactionsOutgoing, index: 2, uniqueId: 2, selected: transactionMode == .outgoing, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
 
         self.items = items
         super.init(initialSize, height: 50, stableId: stableId, viewType: viewType)
@@ -682,7 +723,8 @@ private final class Arguments {
     let toggleFilterMode:(State.TransactionMode)->Void
     let buy:(State.Option)->Void
     let loadMore:()->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void) {
+    let openTransaction:(State.Transaction)->Void
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(State.Transaction)->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
@@ -692,6 +734,7 @@ private final class Arguments {
         self.toggleFilterMode = toggleFilterMode
         self.buy = buy
         self.loadMore = loadMore
+        self.openTransaction = openTransaction
     }
 }
 
@@ -709,6 +752,10 @@ private struct State : Equatable {
         
         let storeProduct: InAppPurchaseManager.Product?
         
+        var native: StarsTopUpOption {
+            return .init(count: amount, storeProductId: storeProduct?.id, currency: currency, amount: price)
+        }
+        
         
         var formattedPrice: String {
             if let storeProduct {
@@ -724,6 +771,8 @@ private struct State : Equatable {
             case appstore
             case fragment
             case playmarket
+            case premiumbot
+            case unknown
         }
         case incoming(Source)
         case outgoing
@@ -735,6 +784,7 @@ private struct State : Equatable {
         let name: String
         let peer: EnginePeer?
         let type: TransactionType
+        let native: StarsContext.State.Transaction
     }
     var myBalance: Int64? = nil
     var options: [Option]? = nil
@@ -827,7 +877,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     entries.append(.sectionId(sectionId, type: .normal))
                     sectionId += 1
                     
-                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_more, data: .init(name: "Show More Options", color: theme.colors.accent, type: .image(NSImage(resource: .iconHorizontalChevron).precomposed(theme.colors.accent)), viewType: .singleItem, action: arguments.reveal)))
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_show_more, data: .init(name: strings().starListItemShowMore, color: theme.colors.accent, type: .image(NSImage(resource: .iconHorizontalChevron).precomposed(theme.colors.accent)), viewType: .singleItem, action: arguments.reveal)))
                 }
             } else {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -839,7 +889,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .customModern(10)))
             sectionId += 1
             
-            let text = "By proceeding and purchasing Stars, you agree with the [Terms and Conditions](https://telegram.org)."
+            let text = strings().starListTos
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { link in
                 arguments.openLink(link)
@@ -887,7 +937,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     tuples.append(.init(transaction: transaction, viewType: viewType))
                 }
                 
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain("TRANSACTION HISTORY"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starListTransactionsHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
                 index += 1
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction_mode, equatable: .init(state.transactionMode), comparable: nil, item: { initialSize, stableId in
@@ -897,7 +947,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 if !transactions.isEmpty {
                     for tuple in tuples {
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction(tuple.transaction), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                            return TransactionItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, transaction: tuple.transaction)
+                            return TransactionItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, transaction: tuple.transaction, callback: arguments.openTransaction)
                         }))
                     }
                     if state.starsState?.isLoading == true {
@@ -907,18 +957,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     } else if state.starsState?.canLoadMore == true {
                         
                         
-                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: "Show More", color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMore, iconTextInset: 42)))
+                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMore, iconTextInset: 42)))
                     }
                 } else {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_transactions, equatable: .init(state.transactionMode), comparable: nil, item: { initialSize, stableId in
                         let text: String
                         switch state.transactionMode {
                         case .all:
-                            text = "No Transactions"
+                            text = strings().starListTransactionsEmptyAll
                         case .incoming:
-                            text = "No Incoming Transactions"
+                            text = strings().starListTransactionsEmptyIncoming
                         case .outgoing:
-                            text = "No Outgoing Transactions"
+                            text = strings().starListTransactionsEmptyOutgoing
                         }
                         return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .lastItem, text: text, font: .normal(.text))
                     }))
@@ -1011,8 +1061,12 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                     type = .incoming(.fragment)
                 case .playMarket:
                     type = .incoming(.playmarket)
+                case .premiumBot:
+                    type = .incoming(.premiumbot)
+                case .unsupported:
+                    type = .incoming(.unknown)
                 }
-                return State.Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type)
+                return State.Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
             }
             current.starsState = state
             return current
@@ -1022,6 +1076,26 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     
     let buyNonStore:(State.Option)->Void = { option in
         
+        let source: BotPaymentInvoiceSource = .stars(option: option.native)
+        
+        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
+
+        _ = signal.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+                switch status {
+                case .paid:
+                    PlayConfetti(for: context.window, stars: true)
+                    showModalText(for: context.window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
+                    close?()
+                case .cancelled:
+                    break
+                case .failed:
+                    break
+                }
+            }), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        })
     }
     
     let buyAppStore:(State.Option)->Void = { option in
@@ -1054,7 +1128,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             
             delay(0.2, closure: {
                 PlayConfetti(for: context.window, stars: true)
-                showModalText(for: context.window, text: "\(option.amount) Stars Added to Your Balance")
+                showModalText(for: context.window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
             })
             
         }, error: { [weak lockModal] error in
@@ -1100,13 +1174,17 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             return current
         }
     }, buy: { option in
-        #if APP_STORE || DEBUG
+        #if APP_STORE
         buyAppStore(option)
         #else
         buyNonStore(option)
         #endif
     }, loadMore: {
         context.starsContext.loadMore()
+    }, openTransaction: { transaction in
+        if let peer = transaction.peer {
+            showModal(with: Star_Transaction(context: context, peer: peer, transaction: transaction.native), for: context.window)
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
