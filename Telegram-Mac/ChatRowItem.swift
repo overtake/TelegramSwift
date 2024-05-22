@@ -3094,44 +3094,56 @@ class ChatRowItem: TableRowItem {
                 return
             }
             if !ids.isEmpty {
-                let alert:NSAlert = NSAlert()
-                alert.window.appearance = theme.appearance
-                alert.alertStyle = .informational
-                alert.messageText = strings().alertSendErrorHeader
-                alert.informativeText = strings().alertSendErrorText
                 
-                
-                alert.addButton(withTitle: strings().alertSendErrorResend)
-                
-                if ids.count > 1 {
-                    alert.addButton(withTitle: strings().alertSendErrorResendItemsCountable(ids.count))
-                }
-                
-                alert.addButton(withTitle: strings().alertSendErrorDelete)
-                
-               
-                
-                alert.addButton(withTitle: strings().alertSendErrorIgnore)
-                
-                
-                alert.beginSheetModal(for: context.window, completionHandler: { response in
-                    switch response.rawValue {
-                    case 1000:
+                verifyAlert_button(for: context.window, header: strings().alertSendErrorHeader, information: strings().alertSendErrorText, ok: strings().alertSendErrorResend, option: strings().alertSendErrorDelete, successHandler: { result in
+                    switch result {
+                    case .basic:
                         self?.resendMessage([messageId])
-                    case 1001:
+                    case .thrid:
                         if ids.count > 1 {
                             self?.resendMessage(ids)
                         } else {
                             self?.deleteMessage()
                         }
-                    case 1002:
-                        if ids.count > 1 {
-                            self?.deleteMessage()
-                        }
-                    default:
-                        break
                     }
                 })
+                
+//                let alert:NSAlert = NSAlert()
+//                alert.window.appearance = theme.appearance
+//                alert.alertStyle = .informational
+//                alert.messageText = strings().alertSendErrorHeader
+//                alert.informativeText = strings().alertSendErrorText
+//                
+//                
+//                alert.addButton(withTitle: strings().alertSendErrorResend)
+//                
+//                if ids.count > 1 {
+//                    alert.addButton(withTitle: strings().alertSendErrorResendItemsCountable(ids.count))
+//                }
+//                
+//                alert.addButton(withTitle: strings().alertSendErrorDelete)
+//                
+//                alert.addButton(withTitle: strings().alertSendErrorIgnore)
+//                
+//                
+//                alert.beginSheetModal(for: context.window, completionHandler: { response in
+//                    switch response.rawValue {
+//                    case 1000:
+//                        self?.resendMessage([messageId])
+//                    case 1001:
+//                        if ids.count > 1 {
+//                            self?.resendMessage(ids)
+//                        } else {
+//                            self?.deleteMessage()
+//                        }
+//                    case 1002:
+//                        if ids.count > 1 {
+//                            self?.deleteMessage()
+//                        }
+//                    default:
+//                        break
+//                    }
+//                })
             }
         })
     }

@@ -38,10 +38,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
+    let length = arguments.context.appConfiguration.getGeneralValue("factcheck_length_limit", orElse: 1024)
+    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
         return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .singleItem, placeholder: nil, inputPlaceholder: strings().factCheckPlaceholder, canMakeTransformations: true, filter: { text in
             return text
-        }, updateState: arguments.updateState, limit: 1024, hasEmoji: false)
+        }, updateState: arguments.updateState, limit: length, hasEmoji: false)
     }))
     index += 1
     

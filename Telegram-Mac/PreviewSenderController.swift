@@ -393,7 +393,11 @@ fileprivate class PreviewSenderView : Control {
     }
     
     var textWidth: CGFloat {
-        return frame.width - 14 - actionsContainerView.frame.width
+        var width = frame.width - 14 - actionsContainerView.frame.width
+        if let messageEffect {
+            width -= messageEffect.frame.width
+        }
+        return width
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {

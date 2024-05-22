@@ -1889,6 +1889,32 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             return globalLinkExecutor.copyAttributedString(attributedString)
         }
         
+        contextChatInteraction.movePeerToInput = { [weak self] (peer) in
+            if let strongSelf = self {
+                let textInputState = strongSelf.contextChatInteraction.presentation.effectiveInput
+                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                    let inputText = textInputState.inputText
+                    
+                    let name:String = peer.addressName ?? peer.compactDisplayTitle
+                    
+                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                    let replacementText = name + " "
+                    
+                    let atLength = peer.addressName != nil ? 0 : 1
+                    
+                    let range = strongSelf.contextChatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                    
+                    if peer.addressName == nil {
+                        let state = strongSelf.contextChatInteraction.presentation.effectiveInput
+                        var attributes = state.attributes
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt64Value()))
+                        let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
+                        strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
+                    }
+                }
+            }
+        }
+        
         genericView.presentation = presentation
         
         
