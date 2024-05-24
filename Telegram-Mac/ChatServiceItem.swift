@@ -495,7 +495,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     _ = attributedString.append(string: strings().chatListServiceGameScored1Countable(Int(score), gameName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .paymentSent(currency, totalAmount, _, isRecurringInit, isRecurringUsed, chargeId):
+                case let .paymentSent(currency, totalAmount, _, isRecurringInit, isRecurringUsed):
                     var paymentMessage:Message?
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {
@@ -518,10 +518,13 @@ class ChatServiceItem: ChatRowItem {
                         
                         attributedString.add(link:inAppLink.callback("", { _ in
                             if currency == XTR {
-                                if let chargeId {
-                                    let transaction = StarsContext.State.Transaction(id: chargeId, count: media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo)
-                                    showModal(with: Star_Transaction(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
-                                }
+                                _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
+                                    if let transactionId = receipt.transactionId {
+                                        let transaction = StarsContext.State.Transaction(id: transactionId, count: media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo)
+                                        showModal(with: Star_Transaction(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
+                                    }
+                                })
+                                
                             } else {
                                 showModal(with: PaymentsReceiptController(context: context, messageId: message.id, invoice: media), for: context.window)
                             }
