@@ -239,19 +239,22 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     func checkState(animated: Bool) {
         
-        let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
-        if let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong {
-            if song.entry.isEqual(to: parent), case .playing = song.state {
-                progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:0), blendMode: presentation.blendingMode)
-                progressView.state = .Icon(image: presentation.pauseThumb)
+        if fetchStatus == nil || fetchStatus == .Local {
+            let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
+            if let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong {
+                if song.entry.isEqual(to: parent), case .playing = song.state {
+                    progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:0), blendMode: presentation.blendingMode)
+                    progressView.state = .Icon(image: presentation.pauseThumb)
+                } else {
+                    progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1), blendMode: presentation.blendingMode)
+                    progressView.state = .Icon(image: presentation.playThumb)
+                }
             } else {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1), blendMode: presentation.blendingMode)
                 progressView.state = .Icon(image: presentation.playThumb)
             }
-        } else {
-            progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1), blendMode: presentation.blendingMode)
-            progressView.state = .Icon(image: presentation.playThumb)
         }
+        
     }
     
     override func update(with media: Media, size:NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {

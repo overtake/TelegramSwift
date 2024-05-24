@@ -25,7 +25,7 @@ final class InputDataTableBasedItem : GeneralRowItem {
         }
         
         func measure(_ width: CGFloat) {
-            right.name.measure(width: width)
+            right.name.measure(width: width - 20)
         }
         func prepare() {
             left.measure(width: .greatestFiniteMagnitude)

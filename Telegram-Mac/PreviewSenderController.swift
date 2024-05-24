@@ -1120,8 +1120,6 @@ class PreviewSenderController: ModalViewController, Notifable {
             break
         case .preview:
             break
-        case .searchHashtags:
-            break
         }
     }
     

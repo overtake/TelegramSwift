@@ -100,21 +100,25 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     public private(set) var state:SearchFieldState = .None
     
+    private var tagsInfo: [TagInfo] = []
+    
     public struct TagInfo {
         let text: String
         let image: CGImage?
         let contextMenu:(()->[ContextMenuItem])?
         let blockInput: Bool
-        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false) {
+        let isTextTied: Bool
+        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false, isTextTied: Bool = false) {
             self.text = text
             self.image = image
             self.contextMenu = contextMenu
             self.blockInput = blockInput
+            self.isTextTied = isTextTied
         }
     }
     
     public func updateTags(_ tags: [TagInfo], _ image: CGImage, animated: Bool = true) {
-        
+        self.tagsInfo = tags
         for tag in self.tags {
             if animated {
                 tag.layer?.animateScaleSpring(from: 1.0, to: 0.3, duration: 0.2)
@@ -412,6 +416,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         } else {
             
             self.setString("")
+            
+            if let last = tagsInfo.last, last.isTextTied {
+                customSearchControl?.deleteTag(tags.count - 1)
+            }
         }
     }
     

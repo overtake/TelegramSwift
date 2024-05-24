@@ -441,14 +441,9 @@ class ChatMessageItem: ChatRowItem {
             textLayout.mayBlocked = true//entry.renderType = .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
-                let string = copy.string.lowercased()
-                let subranges = findSubstringRanges(in: string, query: highlightFoundText.query.lowercased())
-                
-                for subrange in subranges.0 {
-                    let range = NSRange(string: string, range: subrange)
-                    textLayout.additionalSelections.append(TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false))
+                if let range = rangeOfSearch(highlightFoundText.query, in: copy.string) {
+                    textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
                 }
-                
             }
             if let range = selectManager.find(entry.stableId) {
                 textLayout.selectedRange.range = range

@@ -1409,7 +1409,7 @@ class ChatListController : PeersListController {
                 
                 var updateSearchView:(()->Void)? = nil
                 
-                var mode: SearchMode = .thisChat {
+                var mode: SearchMode = peerId.namespace == Namespaces.Peer.CloudChannel ? .publicPosts : .thisChat {
                     didSet {
                         updateSearchView?()
                     }
@@ -1443,12 +1443,12 @@ class ChatListController : PeersListController {
                         tags = .init(messageTags: nil, peerTag: peerId, text: nil)
                     case .myMessages:
                         text = strings().chatHashtagMyMessages
-                        tags = .init(messageTags: nil, peerTag: nil, text: nil)
+                        tags = .init(messageTags: nil, peerTag: nil, text: nil, myMessages: true)
                     case .publicPosts:
                         text = strings().chatHashtagPublicPosts
                         tags = .init(messageTags: nil, peerTag: nil, text: nil, publicPosts: true)
                     }
-                    self?.genericView.searchView.updateTags([.init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu)], theme.icons.search_filter_hashtag, animated: false)
+                    self?.genericView.searchView.updateTags([.init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu, isTextTied: true)], theme.icons.search_filter_hashtag, animated: false)
                     self?.searchController?.updateSearchTags(tags)
                 }
                 
@@ -1910,7 +1910,7 @@ class ChatListController : PeersListController {
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController, !(item.isForum && !item.isTopic) {
                 switch controller.mode {
-                case .history, .thread, .customChatContents, .customLink, .preview, .searchHashtags:
+                case .history, .thread, .customChatContents, .customLink, .preview:
                     if let modalAction = navigation.modalAction {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }

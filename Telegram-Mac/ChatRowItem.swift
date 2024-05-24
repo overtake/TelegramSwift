@@ -649,8 +649,11 @@ class ChatRowItem: TableRowItem {
     }
     
     var hasPhoto: Bool {
-        if let adAttribute = message?.adAttribute {
+        if let _ = message?.adAttribute {
             return false
+        }
+        if case .searchHashtag = chatInteraction.mode.customChatContents?.kind {
+            return true
         }
         if !isBubbled {
             if case .Full = itemType {
@@ -789,6 +792,8 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.mode {
         case .pinned:
             return true
+        case let .customChatContents(contents):
+            return false
         default:
             if let message = message {
                 for attr in message.attributes {
@@ -1015,14 +1020,20 @@ class ChatRowItem: TableRowItem {
         }
         
         
+        
         if message.isCopyProtected() {
             return false
+        }
+        
+        if case .searchHashtag = chatInteraction.mode.customChatContents?.kind {
+            return true
         }
         
         if authorIsChannel {
             return false
         }
         
+
         
         if let info = message.forwardInfo {
             if let author = info.author {
@@ -2407,7 +2418,13 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     if message.restrictedText(context.contentSettings) == nil {
                         if !message.hasExtendedMedia {
-                            replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid)
+                            let xtrAmount: Int64?
+                            if let invoice = message.anyMedia as? TelegramMediaInvoice, invoice.currency == XTR {
+                                xtrAmount = invoice.totalAmount
+                            } else {
+                                xtrAmount = nil
+                            }
+                            replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid, xtrAmount: xtrAmount)
                         }
                     }
                 }
@@ -2637,7 +2654,7 @@ class ChatRowItem: TableRowItem {
                     if let webpageLayout = (self as? ChatMessageItem)?.webpageLayout {
                         factCheckLayout.measure(for: webpageLayout.size.width)
                     } else {
-                        factCheckLayout.measure(for: widthForContent)
+                        factCheckLayout.measure(for: max(_contentSize.width, 220))
                     }
                 }
             } else {
@@ -3058,13 +3075,18 @@ class ChatRowItem: TableRowItem {
                 let messageId: MessageId?
                 if chatInteraction.isGlobalSearchMessage {
                     messageId = self.message?.id
+                } else if case .searchHashtag = chatInteraction.mode.customChatContents?.kind {
+                    messageId = self.message?.id
                 } else {
                     messageId = nil
+                }
+                if let message = message {
+                    context.engine.messages.ensureMessagesAreLocallyAvailable(messages: [.init(message)])
                 }
                 if peer.id == self.message?.id.peerId, messageId == nil {
                     chatInteraction.openInfo(peer.id, false, nil, nil)
                 } else {
-                    chatInteraction.openInfo(peer.id, !(peer is TelegramUser), messageId, nil)
+                    chatInteraction.openInfo(peer.id, !(peer is TelegramUser) || messageId != nil, messageId, nil)
                 }
             }
         }

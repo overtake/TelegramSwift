@@ -13,6 +13,8 @@ import SwiftSignalKit
 
 
 final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtocol {
+    
+    
     private final class PendingMessageContext {
         let disposable = MetaDisposable()
         var message: Message?
@@ -178,6 +180,22 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
                 self.context.engine.accountData.editMessageShortcut(id: shortcutId, shortcut: value)
             }
         }
+        func messagesAtIds(_ ids: [MessageId], album: Bool) -> Signal<[Message], NoError> {
+            let messages = self.mergedHistoryView?.entries.map { $0.message } ?? []
+            
+            var filtered = messages.filter({ ids.contains($0.id) })
+            
+            if album {
+                let grouping = filtered.filter{ $0.groupingKey != nil }
+                for groupMessage in grouping {
+                    let additional = messages.filter { $0.groupingKey == groupMessage.groupingKey && $0.id != groupMessage.id }
+                    filtered.append(contentsOf: additional)
+                }
+            }
+            
+            return .single(filtered)
+        }
+        
     }
     
     var kind: ChatCustomContentsKind
@@ -209,6 +227,8 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
             initialShortcut = "hello"
         case let .quickReplyMessageInput(shortcut):
             initialShortcut = shortcut
+        case .searchHashtag:
+            fatalError()
         }
         
         let queue = Queue()
@@ -245,5 +265,22 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
             impl.quickReplyUpdateShortcut(value: value)
         }
     }
+    
+    func messagesAtIds(_ ids: [MessageId], album: Bool) -> Signal<[Message], NoError> {
+        return self.impl.signalWith({ impl, subscriber in
+            return impl.messagesAtIds(ids, album: album).startStandalone(next: { messages in
+                subscriber.putNext(messages)
+                subscriber.putCompletion()
+            })
+        })
+    }
+    
+    func hashtagSearchUpdate(query: String) {
+        
+    }
+    func loadMore() {
+        
+    }
+    var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }
 }
 

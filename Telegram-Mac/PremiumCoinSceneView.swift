@@ -173,7 +173,6 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
         self.sceneView.scene = scene
         self.sceneView.delegate = self
         
-        let _ = self.sceneView.snapshot()
     }
     
     private var didSetReady = false

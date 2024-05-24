@@ -363,7 +363,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             attributedText.detectBoldColorInString(with: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
             
-            if case let .paymentSent(currency, _, _, _, _) = action.action {
+            if case let .paymentSent(currency, _, _, _, _, _) = action.action {
                 if currency == XTR {
                     attributedText.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: theme.chatList.grayTextColor, resize: false), for: XTR)
                 }
@@ -661,7 +661,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = (message.author?.compactDisplayTitle ?? "") + " " + text
                 }
             }
-        case let .paymentSent(currency, totalAmount, _,  _, _):
+        case let .paymentSent(currency, totalAmount, _,  _, _, _):
             text = strings().chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
         case .unknown:
             break

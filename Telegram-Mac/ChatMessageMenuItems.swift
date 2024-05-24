@@ -725,7 +725,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             let forwardMenu = ContextMenu()
             
             
-            let forwardObject = ForwardMessagesObject(context, messages: [data.message], album: useGroupIfNeeded)
+            let forwardObject = ForwardMessagesObject(context, messages: [data.message], album: useGroupIfNeeded, getMessages: chatInteraction.getMessages)
             
             let recent = data.recentUsedPeers.filter {
                 $0.id != context.peerId && $0.canSendMessage(media: message.media.first) && !$0.isDeleted

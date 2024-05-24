@@ -20,15 +20,15 @@ private func generateMaskImage(size: NSSize) -> CGImage? {
         context.setFillColor(NSColor.white.cgColor)
         context.fill(CGRect(origin: .zero, size: size))
         
-        var locations: [CGFloat] = [0.0, 1.0]
-        let colors: [CGColor] = [NSColor.white.cgColor, NSColor.white.withAlphaComponent(0.0).cgColor]
+        var locations: [CGFloat] = [0.0, 0.7, 1.0]
+        let colors: [CGColor] = [NSColor.white.cgColor, NSColor.white.withAlphaComponent(0.0).cgColor, NSColor.white.withAlphaComponent(0.0).cgColor]
         
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
         
         context.setBlendMode(.copy)
-        context.clip(to: CGRect(origin: CGPoint(x: 0, y: 37), size: CGSize(width: size.width, height: size.height)))
-        context.drawLinearGradient(gradient, start: CGPoint(x: size.width - 15, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
+        context.clip(to: CGRect(origin: CGPoint(x: 0, y: 35), size: CGSize(width: size.width, height: size.height)))
+        context.drawLinearGradient(gradient, start: CGPoint(x: size.width - size.width / 3, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
     })
 }
 
@@ -36,6 +36,7 @@ class FactCheckMessageLayout {
     let text: TextViewLayout
     let title: TextViewLayout
     let whatThisLayout: TextViewLayout
+    let clarification: TextViewLayout?
     let context: AccountContext
     let chatInteraction: ChatInteraction
     let presentation: WPLayoutPresentation
@@ -62,7 +63,15 @@ class FactCheckMessageLayout {
             self.text = .init(attr, alwaysStaticItems: true, mayItems: true)
             self.text.interactions = globalLinkExecutor
             self.country = country
+            
+            if revealed {
+                self.clarification = .init(.initialize(string: strings().factCheckInfoSecond(country), color: presentation.activity.main, font: .normal(.small)))
+            } else {
+                self.clarification = nil
+            }
         }
+        
+       
         
         self.title = .init(.initialize(string: strings().factCheckTitle, color: presentation.activity.main, font: .medium(.text)))
         self.whatThisLayout = .init(.initialize(string: strings().factCheckWhatThis, color: presentation.activity.main, font: .normal(.small)), alignment: .center)
@@ -74,12 +83,16 @@ class FactCheckMessageLayout {
     
     func measure(for width: CGFloat) {
         self.text.measure(width: width - 20)
-        let textSize: CGFloat
+        var textSize: CGFloat
         if revealed || self.text.lines.count <= 2 {
             textSize = self.text.layoutSize.height
             self.isFullView = self.text.lines.count <= 2
+            if let clarification {
+                clarification.measure(width: text.layoutSize.width)
+                textSize += clarification.layoutSize.height + 8
+            }
         } else {
-            textSize = self.text.lines[1].frame.maxY + 1
+            textSize = self.text.lines[min(1, self.text.lines.count - 1)].frame.maxY + 1
             self.isFullView = false
         }
         size = NSMakeSize(width, 2 + title.layoutSize.height + textSize + 2 + 4)
@@ -157,6 +170,9 @@ final class FactCheckMessageView : View {
     private var textMask: SimpleLayer = SimpleLayer()
     
     private var currentLayout: FactCheckMessageLayout?
+    
+    private var clarification: TextView?
+    private var clarificationSeparator: View?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -178,6 +194,14 @@ final class FactCheckMessageView : View {
         whatThisView.scaleOnClick = true
         whatThisView.tooltipOnclick = true
         layer?.cornerRadius = 4
+        
+        self.textView.set(handler: { [weak self] _ in
+            if let layout = self?.currentLayout {
+                if !layout.isFullView {
+                    layout.chatInteraction.revealFactCheck(layout.message.id)
+                }
+            }
+        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -197,6 +221,11 @@ final class FactCheckMessageView : View {
         self.whatThisView.appTooltip = strings().factCheckInfo(layout.country)
         self.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.1)
         
+        let isFullView = layout.revealed || layout.isFullView
+        
+        self.textView.textView.isSelectable = isFullView
+        self.textView.textView.userInteractionEnabled = isFullView
+        self.textView.userInteractionEnabled = !isFullView
         
         if !layout.isFullView {
             let current: RevealView
@@ -231,6 +260,41 @@ final class FactCheckMessageView : View {
             textView.textView.drawingLayer?.mask = nil
         }
         
+        if let clarification = layout.clarification {
+            let current: TextView
+            if let view = self.clarification {
+                current = view
+            } else {
+                current = .init(frame: NSMakeRect(10, textView.frame.maxY + 10, clarification.layoutSize.width, clarification.layoutSize.height))
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                addSubview(current, positioned: .below, relativeTo: self.revealView)
+                self.clarification = current
+            }
+            current.update(clarification)
+            
+            let separator: View
+            if let view = self.clarificationSeparator {
+                separator = view
+            } else {
+                separator = .init(frame: NSMakeRect(10, textView.frame.maxY + 5, frame.width - 20, .borderSize))
+                addSubview(separator, positioned: .below, relativeTo: self.revealView)
+                self.clarificationSeparator = separator
+            }
+            separator.background = layout.presentation.activity.main.withAlphaComponent(0.2)
+            
+        } else {
+            if let view = self.clarificationSeparator {
+                performSubviewRemoval(view, animated: animated)
+                self.clarificationSeparator = nil
+            }
+            if let view = self.clarification {
+                performSubviewRemoval(view, animated: animated)
+                self.clarification = nil
+            }
+        }
+        
+        
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
         self.updateLayout(size: layout.size, transition: transition)
     }
@@ -240,11 +304,16 @@ final class FactCheckMessageView : View {
         transition.updateFrame(view: titleView, frame: NSMakeRect(10, 2, titleView.frame.width, titleView.frame.height))
         transition.updateFrame(view: whatThisView, frame: NSMakeRect(titleView.frame.maxX + 6, 4, whatThisView.frame.width, whatThisView.frame.height))
         transition.updateFrame(view: textView, frame: NSMakeRect(10, titleView.frame.maxY, textView.frame.width, textView.frame.height))
-        transition.updateFrame(layer: dashLayer, frame: NSMakeRect(0, 0, 3, titleView.frame.height + textView.frame.height + 20))
+        transition.updateFrame(layer: dashLayer, frame: NSMakeRect(0, 0, 3, titleView.frame.height + textView.frame.height + 200))
         if let view = revealView {
             transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, size.height - view.frame.height - 2, view.frame.width, view.frame.height))
         }
-
+        if let clarification {
+            transition.updateFrame(view: clarification, frame: NSMakeRect(10, textView.frame.maxY + 10, clarification.frame.width, clarification.frame.height))
+        }
+        if let clarificationSeparator {
+            transition.updateFrame(view: clarificationSeparator, frame: NSMakeRect(10, textView.frame.maxY + 5, size.width - 20, .borderSize))
+        }
     }
     
     override func layout() {

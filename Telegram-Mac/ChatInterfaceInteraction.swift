@@ -976,6 +976,23 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
+    func getMessages(_ messageIds: [MessageId], _ album: Bool) -> Signal<[Message], NoError> {
+        if let hashtags = self.mode.customChatContents {
+            return hashtags.messagesAtIds(messageIds, album: album)
+        } else {
+            return context.account.postbox.transaction { transaction in
+                var list:[Message] = []
+                for messageId in messageIds {
+                    if let messages = transaction.getMessageGroup(messageId), album {
+                        list.append(contentsOf: messages)
+                    } else if let message = transaction.getMessage(messageId) {
+                        list.append(message)
+                    }
+                }
+                return list
+            }
+        }
+    }
 
     
 }

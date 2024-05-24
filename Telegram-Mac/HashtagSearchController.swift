@@ -95,9 +95,9 @@ final class HashtagSearchController : SectionViewController {
         self.peerId = peerId
         self.context = context
         
-        self.thisChat = ChatController(context: context, chatLocation: .peer(peerId), mode: .searchHashtags(initial: hashtag))
-        self.myMessages = ChatController(context: context, chatLocation: .peer(peerId), mode: .searchHashtags(initial: hashtag))
-        self.publicPosts = ChatController(context: context, chatLocation: .peer(peerId), mode: .searchHashtags(initial: hashtag))
+        self.thisChat = ChatController(context: context, chatLocation: .peer(peerId), mode: .history)
+        self.myMessages = ChatController(context: context, chatLocation: .peer(peerId), mode: .history)
+        self.publicPosts = ChatController(context: context, chatLocation: .peer(peerId), mode: .history)
         
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title: { "" }, controller: thisChat))
