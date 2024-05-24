@@ -668,6 +668,12 @@ class ChatPresentationInterfaceState: Equatable {
                 return .block("")
             }
             
+            if case .searchHashtag = chatMode.customChatContents?.kind {
+                return .action(strings().navigationClose, { chatInteraction in
+                    chatInteraction.context.bindings.rootNavigation().back()
+                }, nil)
+            }
+            
             
             if self.peer?.restrictionText(contentSettings) != nil {
                 return .action(strings().navigationClose, { chatInteraction in

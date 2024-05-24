@@ -506,7 +506,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         topMessageIndex = topMessages.count - 1
     }
     
-    if let restrictionText = peer?.restrictionText(contentSettings) {
+    if let _ = peer?.restrictionText(contentSettings) {
         return []
     }
     

@@ -448,7 +448,7 @@ private final class TransactionItem : GeneralRowItem {
     fileprivate let amountLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
-    
+        
     fileprivate let callback: (State.Transaction)->Void
     
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, transaction: State.Transaction, callback: @escaping(State.Transaction)->Void) {
@@ -488,6 +488,8 @@ private final class TransactionItem : GeneralRowItem {
         }
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         self.dateLayout = .init(.initialize(string: stringForFullDate(timestamp: transaction.date), color: theme.colors.grayText, font: .normal(.text)))
+        
+                
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
@@ -573,7 +575,6 @@ private final class TransactionView : GeneralContainableRowView {
         dateView.update(item.dateLayout)
         nameView.update(item.nameLayout)
         
-        
         //
 
         if let peer = item.transaction.peer {
@@ -618,7 +619,7 @@ private final class TransactionView : GeneralContainableRowView {
                 case .premiumbot:
                     current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
                 case .unknown:
-                    current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
+                    current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
                 }
             case .outgoing:
                 break
@@ -1051,9 +1052,14 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             current.transactions = state?.transactions.map { value in
                 let type: State.TransactionType
                 var botPeer: EnginePeer?
+                let incoming: Bool = value.count > 0
                 switch value.peer {
                 case let .peer(peer):
-                    type = .outgoing
+                    if incoming {
+                        type = .incoming(.bot)
+                    } else {
+                        type = .outgoing
+                    }
                     botPeer = peer
                 case .appStore:
                     type = .incoming(.appstore)
@@ -1116,41 +1122,52 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             }
         })
         
-        paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, purpose: .stars(count: option.amount, currency: storeProduct.priceCurrencyAndAmount.currency, amount: storeProduct.priceCurrencyAndAmount.amount))
-        |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+        let purpose: AppStoreTransactionPurpose = .stars(count: option.amount, currency: storeProduct.priceCurrencyAndAmount.currency, amount: storeProduct.priceCurrencyAndAmount.amount)
+        let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
+                 |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+            if available {
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, purpose: purpose)
+                |> deliverOnMainQueue).start(next: { [weak lockModal] status in
 
-            lockModal?.close()
-            needToShow = false
-            close?()
-            inAppPurchaseManager.finishAllTransactions()
-            
-            starsContext.add(balance: option.amount)
-            
-            delay(0.2, closure: {
-                PlayConfetti(for: context.window, stars: true)
-                showModalText(for: context.window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
-            })
-            
-        }, error: { [weak lockModal] error in
-            let errorText: String
-            switch error {
-                case .generic:
-                    errorText = strings().premiumPurchaseErrorUnknown
-                case .network:
-                    errorText =  strings().premiumPurchaseErrorNetwork
-                case .notAllowed:
-                    errorText =  strings().premiumPurchaseErrorNotAllowed
-                case .cantMakePayments:
-                    errorText =  strings().premiumPurchaseErrorCantMakePayments
-                case .assignFailed:
-                    errorText =  strings().premiumPurchaseErrorUnknown
-                case .cancelled:
-                    errorText = strings().premiumBoardingAppStoreCancelled
+                    lockModal?.close()
+                    needToShow = false
+                    close?()
+                    inAppPurchaseManager.finishAllTransactions()
+                    
+                    starsContext.add(balance: option.amount)
+                    
+                    delay(0.2, closure: {
+                        PlayConfetti(for: context.window, stars: true)
+                        showModalText(for: context.window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
+                    })
+                    
+                }, error: { [weak lockModal] error in
+                    let errorText: String
+                    switch error {
+                        case .generic:
+                            errorText = strings().premiumPurchaseErrorUnknown
+                        case .network:
+                            errorText =  strings().premiumPurchaseErrorNetwork
+                        case .notAllowed:
+                            errorText =  strings().premiumPurchaseErrorNotAllowed
+                        case .cantMakePayments:
+                            errorText =  strings().premiumPurchaseErrorCantMakePayments
+                        case .assignFailed:
+                            errorText =  strings().premiumPurchaseErrorUnknown
+                        case .cancelled:
+                            errorText = strings().premiumBoardingAppStoreCancelled
+                    }
+                    lockModal?.close()
+                    showModalText(for: context.window, text: errorText)
+                    inAppPurchaseManager.finishAllTransactions()
+                }))
+            } else {
+                lockModal?.close()
+                needToShow = false
             }
-            lockModal?.close()
-            showModalText(for: context.window, text: errorText)
-            inAppPurchaseManager.finishAllTransactions()
-        }))
+        })
+        
+        
     }
 
     
@@ -1182,9 +1199,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, loadMore: {
         context.starsContext.loadMore()
     }, openTransaction: { transaction in
-        if let peer = transaction.peer {
-            showModal(with: Star_Transaction(context: context, peer: peer, transaction: transaction.native), for: context.window)
-        }
+        showModal(with: Star_Transaction(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

@@ -400,6 +400,7 @@
 		2780B2972BF7708E00F75124 /* FactCheckMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780B2962BF7708E00F75124 /* FactCheckMessageView.swift */; };
 		2780B29D2BFB427800F75124 /* menu_verification.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780B29C2BFB427700F75124 /* menu_verification.tgs */; };
 		2780B29F2BFCCC6A00F75124 /* Star_Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780B29E2BFCCC6A00F75124 /* Star_Transaction.swift */; };
+		2780B2A12BFF398800F75124 /* HashtagSearchGlobalChatContents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780B2A02BFF398800F75124 /* HashtagSearchGlobalChatContents.swift */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
 		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
 		2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27841869285A05840010E0F1 /* StickersCarouselView.swift */; };
@@ -1969,6 +1970,7 @@
 		2780B2962BF7708E00F75124 /* FactCheckMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactCheckMessageView.swift; sourceTree = "<group>"; };
 		2780B29C2BFB427700F75124 /* menu_verification.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_verification.tgs; sourceTree = "<group>"; };
 		2780B29E2BFCCC6A00F75124 /* Star_Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_Transaction.swift; sourceTree = "<group>"; };
+		2780B2A02BFF398800F75124 /* HashtagSearchGlobalChatContents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HashtagSearchGlobalChatContents.swift; sourceTree = "<group>"; };
 		2780DE3F271F0BB20092323F /* zoom.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom.tgs; sourceTree = "<group>"; };
 		2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemeListRowItem.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
@@ -4550,6 +4552,7 @@
 				D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */,
 				D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */,
 				27CFB0202B3FED7400221DE7 /* SingleTimeMediaViewer.swift */,
+				2780B2A02BFF398800F75124 /* HashtagSearchGlobalChatContents.swift */,
 			);
 			name = chat;
 			sourceTree = "<group>";
@@ -7993,6 +7996,7 @@
 				2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */,
 				D074A56724A1DF5200E92F8A /* VoipDerivedState.swift in Sources */,
 				277E228428EAFAEE00001689 /* ForumUIMethods.swift in Sources */,
+				2780B2A12BFF398800F75124 /* HashtagSearchGlobalChatContents.swift in Sources */,
 				C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,

@@ -3921,6 +3921,8 @@ public final class L10n {
   }
   /// No replies here yet
   public static var chatEmptyReplies: String  { return L10n.tr("Localizable", "Chat.Empty.Replies") }
+  /// No Messages Found
+  public static var chatEmptySearchHashtag: String  { return L10n.tr("Localizable", "Chat.Empty.searchHashtag") }
   /// New Away Message
   public static var chatEmptyBusinessAwayMessage: String  { return L10n.tr("Localizable", "Chat.Empty.Business.AwayMessage") }
   /// New Greeting Message
@@ -5049,6 +5051,10 @@ public final class L10n {
   public static var chatReplyExpiredStory: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory") }
   /// This story is no longer available.
   public static var chatReplyExpiredStoryError: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory.Error") }
+  /// Pay %@
+  public static func chatReplyMarkupPayXtr(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.ReplyMarkup.PayXtr", p1)
+  }
   /// Reminder
   public static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
   /// Scheduled Messages
@@ -8319,6 +8325,10 @@ public final class L10n {
   public static var factCheckWhatThis: String  { return L10n.tr("Localizable", "FactCheck.WhatThis") }
   /// Edit Fact Check
   public static var factCheckContextEdit: String  { return L10n.tr("Localizable", "FactCheck.Context.Edit") }
+  /// This clarification was provided by a fact checking agency assigned by the department of the government of your country (%@) responsible for combatting misinformation.
+  public static func factCheckInfoSecond(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FactCheck.Info.Second", p1)
+  }
   /// Fact check is removed
   public static var factCheckSaveDelete: String  { return L10n.tr("Localizable", "FactCheck.Save.Delete") }
   /// Fact check is updated
@@ -13801,6 +13811,8 @@ public final class L10n {
   public static var searchSeparatorRecent: String  { return L10n.tr("Localizable", "Search.Separator.Recent") }
   /// RECOMMENDED CHANNELS
   public static var searchSeparatorRecommended: String  { return L10n.tr("Localizable", "Search.Separator.Recommended") }
+  /// show as messages
+  public static var searchSeparatorShowAsMessages: String  { return L10n.tr("Localizable", "Search.Separator.ShowAsMessages") }
   /// Topics
   public static var searchSeparatorTopics: String  { return L10n.tr("Localizable", "Search.Separator.Topics") }
   /// Search

@@ -495,7 +495,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     _ = attributedString.append(string: strings().chatListServiceGameScored1Countable(Int(score), gameName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .paymentSent(currency, totalAmount, _, isRecurringInit, isRecurringUsed):
+                case let .paymentSent(currency, totalAmount, _, isRecurringInit, isRecurringUsed, chargeId):
                     var paymentMessage:Message?
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {
@@ -517,7 +517,14 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                         
                         attributedString.add(link:inAppLink.callback("", { _ in
-                            showModal(with: PaymentsReceiptController(context: context, messageId: message.id, invoice: media), for: context.window)
+                            if currency == XTR {
+                                if let chargeId {
+                                    let transaction = StarsContext.State.Transaction(id: chargeId, count: media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo)
+                                    showModal(with: Star_Transaction(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
+                                }
+                            } else {
+                                showModal(with: PaymentsReceiptController(context: context, messageId: message.id, invoice: media), for: context.window)
+                            }
                         }), for: attributedString.range, color: grayTextColor)
                     } else if let peer = coreMessageMainPeer(message) {
                         if isRecurringInit {

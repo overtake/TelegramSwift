@@ -548,7 +548,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 right = strings().separatorShowLess
             case .clear:
                 right = strings().separatorClear
-                
+            case let .custom(text, _):
+                right = text
             default:
                 right = nil
             }
@@ -609,15 +610,17 @@ struct SearchTags : Hashable {
     let isChannels: Bool
     let text: String?
     let publicPosts: Bool
-    init(messageTags: MessageTags?, peerTag: PeerId?, isChannels: Bool = false, text: String? = nil, publicPosts: Bool = false) {
+    let myMessages: Bool
+    init(messageTags: MessageTags?, peerTag: PeerId?, isChannels: Bool = false, text: String? = nil, publicPosts: Bool = false, myMessages: Bool = false) {
         self.messageTags = messageTags
         self.peerTag = peerTag
         self.isChannels = isChannels
         self.text = text
         self.publicPosts = publicPosts
+        self.myMessages = myMessages
     }
     var isEmpty: Bool {
-        return messageTags == nil && peerTag == nil && text == nil && !publicPosts
+        return messageTags == nil && peerTag == nil && text == nil && !publicPosts && !myMessages
     }
     
     var location: SearchMessagesLocation {
@@ -1044,7 +1047,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             }
                         }
                         if !remoteMessages.0.isEmpty {
-                            entries.append(.separator(text: strings().searchSeparatorMessages, index: 20000, state: .none))
+                            let blockState: SeparatorBlockState
+                            if globalTags.publicPosts || globalTags.myMessages {
+                                blockState = .custom(strings().searchSeparatorShowAsMessages, .showAsMessages(onlyMy: globalTags.myMessages))
+                            } else {
+                                blockState = .none
+                            }
+                            entries.append(.separator(text: strings().searchSeparatorMessages, index: 20000, state: blockState))
                             entries += remoteMessages.0
                         }
                         if entries.isEmpty && !remotePeers.2 && !remoteMessages.1 {
@@ -1326,7 +1335,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             self.scrollupOnNextTransition = false
             _ = searchMessagesStateValue.swap(searchMessagesState)
             
-            
+            if let searchMessagesState, let searchMessagesResult {
+                self.currentMessagesSearchState = (searchMessagesResult, searchMessagesState)
+            } else {
+                self.currentMessagesSearchState = nil
+            }
             
             self._messagesValue.set(.single((ExternalSearchMessages(messages: searchMessagesResult?.messages ?? [], count: searchMessagesResult?.totalCount ?? 0), searchMessagesResult != nil)))
             
@@ -1557,6 +1570,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     private var scrollupOnNextTransition: Bool = false
+    private var currentMessagesSearchState: (SearchMessagesResult, SearchMessagesState)?
     
     func request(with query:String?) -> Void {
         setHighlightEvents()
@@ -1579,6 +1593,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         var peer:Peer?
         var peerId:PeerId?
         var messageId:MessageId?
+        var message: Message?
         var isGlobal = false
         let context = self.context
         var id: UIChatListEntryId?
@@ -1588,6 +1603,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         } else if let item = item as? ChatListMessageRowItem {
             peer = item.peer
             messageId = item.message?.id
+            message = item.message
             peerId = item.peerId
             id = item.entryId
             
@@ -1635,6 +1651,25 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     self.isRevealed.set(true)
                 case .all:
                     self.isRevealed.set(false)
+                default:
+                    break
+                }
+            } else if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(20000)) {
+                switch item.state {
+                case let .custom(_, action):
+                    switch action {
+                    case let .showAsMessages(onlyMy):
+                        let query = (self.query ?? "").replacingOccurrences(of: "#", with: "")
+                        
+                        let customChatContents = HashtagSearchGlobalChatContents(context: context, kind: .searchHashtag(hashtag: query, onlyMy: onlyMy), query: query, onlyMy: onlyMy, initialState: self.currentMessagesSearchState)
+                        let current = context.bindings.rootNavigation().controller as? ChatController
+                        if case .searchHashtag(query, onlyMy) = current?.mode.customChatContents?.kind {
+                            current?.navigationController?.view.shake()
+                        } else {
+                            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId), mode: .customChatContents(contents: customChatContents)))
+                        }
+                        
+                    }
                 default:
                     break
                 }
@@ -1703,6 +1738,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let isChannels = searchTags?.isChannels == true
         let close = self.closeNext || (messageId == nil && !isGlobal && !isChannels)
 
+        if let message, let tags = self.searchTags {
+            let current = context.bindings.rootNavigation().controller as? ChatController
+            let query = (self.query ?? "").replacingOccurrences(of: "#", with: "")
+            
+            if case .searchHashtag(query, tags.myMessages) = current?.mode.customChatContents?.kind, tags.publicPosts || tags.myMessages {
+                current?.focusExistingMessage(message)
+                return
+            }
+        }
         
         if let id = id {
             self.open(id, messageId, close)

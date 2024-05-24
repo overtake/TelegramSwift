@@ -1157,10 +1157,13 @@ public final class TextViewLayout : Equatable {
                 var isRTL = false
                 let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
                 if glyphRuns.count != 0 {
-                    let run = glyphRuns[0] as! CTRun
-                    if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
-                        isRTL = true
+                    for glyphRun in glyphRuns {
+                        if CTRunGetStatus(glyphRun as! CTRun).contains(CTRunStatus.rightToLeft) {
+                            isRTL = true
+                            break
+                        }
                     }
+                    
                 }
                 
                 if isRTL {
@@ -1579,7 +1582,7 @@ public final class TextViewLayout : Equatable {
                             let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
                             
                             let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
-                            let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
+                            let rect = NSMakeRect(line.frame.minX + leftOffset + (line.isRTL ? layoutSize.width - line.frame.width : 0), line.frame.minY + 1, rightOffset - leftOffset, 1.0)
                             strokeRects.append((rect, color))
                             if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
                                 var leftOffset: CGFloat = 0.0
@@ -1588,7 +1591,7 @@ public final class TextViewLayout : Equatable {
                                 }
                                 let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
                                 
-                                toolTipRects.append(NSMakeRect(line.frame.minX + leftOffset, line.frame.minY - line.frame.height, rightOffset - leftOffset, line.frame.height))
+                                toolTipRects.append(NSMakeRect(rect.minX, line.frame.minY - line.frame.height, rightOffset - leftOffset, line.frame.height))
                             }
                         }
                     }
@@ -1776,19 +1779,19 @@ public final class TextViewLayout : Equatable {
     }
     
     func spoiler(at point: NSPoint) -> Spoiler? {
-        let index = self.findCharacterIndex(at: point)
-        for spoiler in spoilers {
-            if spoiler.range.contains(index) {
-                if !spoiler.isRevealed {
-                    return spoiler
+        let rects = spoilerRects()
+        for rect in rects {
+            if rect.0.contains(point) {
+                if !rect.1.isRevealed {
+                    return rect.1
                 }
             }
         }
         return nil
     }
     
-    func spoilerRects(_ checkRevealed: Bool = true) -> [CGRect] {
-        var rects:[CGRect] = []
+    func spoilerRects(_ checkRevealed: Bool = true) -> [(CGRect, Spoiler)] {
+        var rects:[(CGRect, Spoiler)] = []
         for i in 0 ..< lines.count {
             let line = lines[i]
             for spoiler in spoilers.filter({ !$0.isRevealed || !checkRevealed }) {
@@ -1819,7 +1822,11 @@ public final class TextViewLayout : Equatable {
                         rect.origin.y = rect.minY - rect.height + 2
                         rect.size.height += ceil(descent - leading)
                         
-                        rects.append(rect)
+                        if line.isRTL {
+                            rect.origin.x += layoutSize.width - line.frame.width
+                        }
+                        
+                        rects.append((rect, spoiler))
       
                     }
                 }
@@ -1921,7 +1928,7 @@ public final class TextViewLayout : Equatable {
         let index = findIndex(location: point)
         
         guard index != -1 else {
-            return -1
+            return index
         }
         
         let line = lines[index]
@@ -2304,7 +2311,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 let path = CGMutablePath()
                 
                 for spoiler in layout.spoilerRects(false) {
-                    path.addRect(spoiler)
+                    path.addRect(spoiler.0)
                 }
                 ctx.addPath(path)
                 ctx.clip()
@@ -2570,7 +2577,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
             
             
-            let spoilerRects = layout.spoilerRects(!inAnimation)
+            let spoilerRects = layout.spoilerRects(!inAnimation).map { $0.0 }
             if !spoilerRects.isEmpty {
                 ctx.beginPath()
                 ctx.addRects(spoilerRects)
@@ -2764,7 +2771,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func updateInks(_ layout: TextViewLayout?, animated: Bool = false) {
         if let layout = layout {
             let spoilers = layout.spoilers
-            let rects = layout.spoilerRects()
+            let rects = layout.spoilerRects().map { $0.0 }
             while rects.count > self.inkViews.count {
                 let inkView = InvisibleInkDustView()
                 self.inkViews.append(inkView)
@@ -3263,7 +3270,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public func checkEmbeddedUnderSpoiler() {
         if let layout = self.textLayout {
-            let rects = layout.spoilerRects()
+            let rects = layout.spoilerRects().map { $0.0 }
             let sublayers = embeddedContainer.sublayers ?? []
             for subview in sublayers {
                 var isHidden = false

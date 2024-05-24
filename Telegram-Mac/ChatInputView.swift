@@ -292,6 +292,8 @@ class ChatInputView: View, Notifable {
                 return strings().chatInputBusinessGreeting
             case .quickReplyMessageInput:
                 return strings().chatInputBusinessQuickReply
+            case .searchHashtag:
+                return ""
             }
         }
         if case .customLink = chatInteraction.mode {

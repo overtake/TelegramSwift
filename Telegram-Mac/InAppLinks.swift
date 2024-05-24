@@ -21,6 +21,7 @@ import InputView
 
 
 let XTR: String = "XTR"
+let XTRSTAR: String = "⭐️"
 
 extension ResolvePeerResult : Equatable {
     var result: EnginePeer? {

@@ -92,7 +92,7 @@ class ChatEmptyPeerItem: TableRowItem {
                     _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
                 }
             }
-        case .scheduled, .searchHashtags:
+        case .scheduled:
             lineSpacing = nil
             _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
         case let .thread(_, mode):
@@ -133,6 +133,8 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: strings().chatEmptyBusinessQuickReplyInfo2, color: theme.colors.text, font: .normal(.text))
                 self.standImage = (NSImage(resource: .iconBusinessChatQuickReply).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
                 attr.detectBoldColorInString(with: .medium(.text))
+            case .searchHashtag:
+                _ = attr.append(string: strings().chatEmptySearchHashtag, color: theme.colors.text, font: .medium(.text))
             }
             self._shouldBlurService = false
         case let .customLink(contents):

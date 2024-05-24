@@ -1000,6 +1000,10 @@ fileprivate let edit_limit_time:Int32 = 48*60*60
 
 func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
     
+    if case .searchHashtag = mode.customChatContents?.kind {
+        return false
+    }
+    
     if mode.customChatContents != nil {
         return true
     }
@@ -1047,8 +1051,11 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
         return false
     }
     
-    if chatInteraction.mode.customChatContents != nil {
-        return false
+    if let customChatContents = chatInteraction.mode.customChatContents {
+        if case .searchHashtag = customChatContents.kind {
+        } else {
+            return false
+        }
     }
     
     if message.isExpiredStory {
@@ -1206,8 +1213,6 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 return false
             case .preview:
                 return false
-            case .searchHashtags:
-                return false
             }
         }
     }
@@ -1215,6 +1220,11 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
 }
 
 func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
+    
+    
+    if case .searchHashtag = chatInteraction.mode.customChatContents?.kind {
+        return false
+    }
     
     if chatInteraction.mode.customChatContents != nil {
         return true
