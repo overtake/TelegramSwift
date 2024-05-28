@@ -34,7 +34,12 @@ class SelectManager : NSResponder {
     func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable, index: Int) {
         _ = ranges.modify { ranges in
             var ranges = ranges
-            ranges.append((stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, index: index, header: header)))
+            let value = (stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, index: index, header: header))
+            if let index = ranges.firstIndex(where: { $0.0 == stableId }) {
+                ranges.insert(value, at: index)
+            } else {
+                ranges.append(value)
+            }
             return ranges
         }
     }
@@ -66,8 +71,15 @@ class SelectManager : NSResponder {
     var selectedText: NSAttributedString {
         let string:NSMutableAttributedString = NSMutableAttributedString()
         ranges.with { ranges in
+            
+            var stableId: AnyHashable? = ranges.last?.0
             for i in stride(from: ranges.count - 1, to: -1, by: -1) {
                 let container = ranges[i].2
+                
+                if stableId != ranges[i].0 {
+                    _ = string.append(string: "\n\n", color: nil, font: .normal(.text))
+                }
+                
                 if let header = container.header, ranges.count > 1 {
                     _ = string.append(string: header + "\n", color: nil, font: .normal(.text))
                 }
@@ -82,9 +94,8 @@ class SelectManager : NSResponder {
                     }
                 }
                 
-                if i != 0 {
-                    _ = string.append(string: "\n\n", color: nil, font: .normal(.text))
-                }
+               
+                stableId = ranges[i].0
             }
         }
         return string

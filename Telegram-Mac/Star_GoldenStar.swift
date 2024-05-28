@@ -171,22 +171,22 @@ final class GoldenStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVie
     }
     
     private func setup() {
-        guard let url = Bundle.main.url(forResource: "star", withExtension: "") else {
+        guard let url = Bundle.main.url(forResource: "star2", withExtension: "scn") else {
             return
         }
-        let fileName = "star_\(sceneVersion).scn"
-        let tmpURL = URL(fileURLWithPath: NSTemporaryDirectory() + fileName)
         
-        guard let scene = try? SCNScene(url: tmpURL, options: nil) else {
+        guard let scene = try? SCNScene(url: url, options: nil) else {
             return
         }
         
         let colors = [
-          NSColor(rgb: 0xea8904),
-          NSColor(rgb: 0xf09903),
-          NSColor(rgb: 0xfec209),
-          NSColor(rgb: 0xfed31a)
+            NSColor(rgb: 0xe57d02),
+            NSColor(rgb: 0xf09903),
+            NSColor(rgb: 0xf9b004),
+            NSColor(rgb: 0xfdd219)
         ]
+        
+        let particleColor = NSColor(rgb: 0xf9b004)
         
         if let node = scene.rootNode.childNode(withName: "star", recursively: false), let color = colors.first {
             node.geometry?.materials.first?.diffuse.contents = generateDiffuseTexture(colors: colors)
@@ -199,10 +199,57 @@ final class GoldenStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVie
                 "particles_center"
             ]
             
+            let starNames: [String] = [
+                "coins_left",
+                "coins_right"
+            ]
+            
+            for name in starNames {
+                if let node = scene.rootNode.childNode(withName: name, recursively: false), let particleSystem = node.particleSystems?.first {
+                    particleSystem.particleIntensity = 1.0
+                    particleSystem.particleIntensityVariation = 0.05
+                    particleSystem.particleColor = particleColor
+                    particleSystem.particleColorVariation = SCNVector4Make(0.07, 0.0, 0.1, 0.0)
+                    node.isHidden = false
+                    
+                    if let propertyControllers = particleSystem.propertyControllers, let sizeController = propertyControllers[.size], let colorController = propertyControllers[.color] {
+                        let animation = CAKeyframeAnimation()
+                        if let existing = colorController.animation as? CAKeyframeAnimation {
+                            animation.keyTimes = existing.keyTimes
+                            animation.values = existing.values?.compactMap { ($0 as? NSColor)?.alpha } ?? []
+                        } else {
+                            animation.values = [ 0.0, 1.0, 1.0, 0.0 ]
+                        }
+                        let opacityController = SCNParticlePropertyController(animation: animation)
+                        particleSystem.propertyControllers = [
+                            .size: sizeController,
+                            .opacity: opacityController
+                        ]
+                    }
+                }
+            }
+            
             for name in names {
                 if let node = scene.rootNode.childNode(withName: name, recursively: false), let particleSystem = node.particleSystems?.first {
-                    particleSystem.particleColor = color
-                    particleSystem.particleColorVariation = SCNVector4Make(0, 0, 0, 0)
+                    particleSystem.particleIntensity = min(1.0, 2.0 * particleSystem.particleIntensity)
+                    particleSystem.particleIntensityVariation = 0.05
+                    particleSystem.particleColor = particleColor
+                    particleSystem.particleColorVariation = SCNVector4Make(0.1, 0.0, 0.12, 0.0)
+                                            
+                    if let propertyControllers = particleSystem.propertyControllers, let sizeController = propertyControllers[.size], let colorController = propertyControllers[.color] {
+                        let animation = CAKeyframeAnimation()
+                        if let existing = colorController.animation as? CAKeyframeAnimation {
+                            animation.keyTimes = existing.keyTimes
+                            animation.values = existing.values?.compactMap { ($0 as? NSColor)?.alpha } ?? []
+                        } else {
+                            animation.values = [ 0.0, 1.0, 1.0, 0.0 ]
+                        }
+                        let opacityController = SCNParticlePropertyController(animation: animation)
+                        particleSystem.propertyControllers = [
+                            .size: sizeController,
+                            .opacity: opacityController
+                        ]
+                    }
                 }
             }
         }
@@ -210,7 +257,7 @@ final class GoldenStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVie
         
         
 //        self.sceneView.col = .bgra8Unorm_srgb
-        self.sceneView.backgroundColor = .clear
+        self.sceneView.backgroundColor = theme.colors.listBackground
         self.sceneView.preferredFramesPerSecond = 60
         self.sceneView.isJitteringEnabled = true
 
