@@ -456,7 +456,7 @@ class GroupedLayout {
                     info.layoutFrame = info.layoutFrame.offsetBy(dx: 0, dy: offset)
                     if let index = index {
                         let caption = captions[index]
-                        offset += caption.layout.layoutSize.height + 6
+                        offset += caption.layout.size.height + 6
                     }
                 }
             }

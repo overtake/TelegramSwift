@@ -590,9 +590,10 @@ public extension CALayer {
         self.add(animation, forKey: "transform")
     }
     
-    func animatePath(duration: Double = 0.2) {
+    func animatePath(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) {
         let animation = makeSpringAnimation("path")
         animation.duration = duration
+        animation.timingFunction = .init(name: function)
         self.add(animation, forKey: "path")
     }
     func animateShadow() {

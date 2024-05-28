@@ -298,7 +298,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource) -> InputDataModalController {
+func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -339,6 +339,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
 
     let arguments = Arguments(context: context, dismiss: {
         close?()
+        completion(.cancelled)
     }, buy: {
         let state = stateValue.with { $0 }
         let myBalance = state.myBalance ?? 0
@@ -353,6 +354,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                             starsContext.add(balance: -state.request.count)
                             showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, "\(state.request.count)"))
                             PlayConfetti(for: context.window, stars: true)
+                            completion(.paid)
                             close?()
                         default:
                             break
@@ -370,6 +372,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                             text = strings().checkoutErrorPrecheckoutFailed
                         }
                         showModalText(for: context.window, text: text)
+                        completion(.failed)
                     })
                 }
             }
@@ -387,14 +390,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     }
     
     controller.contextObject = starsContext
-
-  
     
     let modalController = InputDataModalController(controller, modalInteractions: nil)
-    
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
-        modalController?.close()
-    })
     
     close = { [weak modalController] in
         modalController?.modal?.close()

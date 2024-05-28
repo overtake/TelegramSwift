@@ -73,15 +73,12 @@ class ChatMusicRowItem: ChatMediaItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             
-            
             let width = min(320, width - 80)
             
             for layout in captionLayouts {
-                if layout.layout.layoutSize == .zero {
-                    layout.layout.measure(width: width)
-                }
+                layout.layout.measure(width: width)
             }
-            let captionsWidth = captionLayouts.max(by: { $0.layout.layoutSize.width < $1.layout.layoutSize.width }).map { $0.layout.layoutSize.width }
+            let captionsWidth = captionLayouts.max(by: { $0.layout.size.width < $1.layout.size.width }).map { $0.layout.size.width }
             
             let labelsWidth = parameters.makeLabelsForWidth(width)
             return NSMakeSize(max(captionsWidth ?? 0, labelsWidth) + 50, 40)

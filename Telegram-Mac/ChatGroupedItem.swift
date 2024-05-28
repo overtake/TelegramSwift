@@ -137,33 +137,30 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
+                let spoilerColor: NSColor
+                if entry.renderType == .bubble {
+                    spoilerColor = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                } else {
+                    spoilerColor = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+                }
+                let isSpoilerRevealed = chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)
                 
-                caption.enumerateAttribute(TextInputAttributes.spoiler, in: caption.range, options: .init(), using: { value, range, stop in
-                    if let _ = value {
-                        let color: NSColor
-                        if entry.renderType == .bubble {
-                            color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
-                        } else {
-                            color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
-                        }
-                        spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
-                    }
-                })
                 
-                let layout: ChatRowItem.RowCaption = .init(message: message, id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
-                    chatInteraction?.update({
-                        $0.updatedInterfaceState({
-                            $0.withRevealedSpoiler(message.id)
+                let textLayout = FoldingTextLayout.make(caption, context: context, revealed: entry.additionalData.quoteRevealed, takeLayout: { string in
+                    let textLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
+                        chatInteraction?.update({
+                            $0.updatedInterfaceState({
+                                $0.withRevealedSpoiler(message.id)
+                            })
                         })
                     })
-                }), isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset)
-                layout.layout.interactions = globalLinkExecutor
+                    return textLayout
+                })
                 
+                let layout: ChatRowItem.RowCaption = .init(message: message, id: stableId, offset: .zero, layout: textLayout, isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset)
                 captionLayouts.append(layout)
-                
-                if let range = selectManager.find(stableId) {
-                    layout.layout.selectedRange.range = range
-                }
+                layout.layout.applyRanges(selectManager.findAll(stableId))
+
             }
             
         } else {
@@ -174,20 +171,25 @@ class ChatGroupedItem: ChatRowItem {
         
          self.captionLayouts = captionLayouts
         
+        
         for layout in captionLayouts {
-            layout.layout.interactions.topWindow = { [weak self] in
+            
+            let interactions = globalLinkExecutor
+
+            interactions.topWindow = { [weak self] in
                 if let strongSelf = self {
                     return strongSelf.menuAdditionView
                 } else {
                     return .single(nil)
                 }
             }
-            layout.layout.interactions.menuItems = { [weak self, weak layout] type in
+            interactions.menuItems = { [weak self, weak layout] type in
                 if let interactions = self?.chatInteraction, let entry = self?.entry, let layout {
-                    return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
+                    return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout.merged, type), chatInteraction: interactions)
                 }
                 return .complete()
             }
+            layout.layout.set(interactions)
         }
                 
         for (i, message) in layout.messages.enumerated() {
@@ -441,9 +443,6 @@ class ChatGroupedItem: ChatRowItem {
         }
         for layout in captionLayouts {
             layout.layout.measure(width: maxContentWidth)
-            if layout.isLoading {
-                layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
-            }
         }
         self.captionLayouts = layout.applyCaptions(captionLayouts)
         return layout.dimensions
@@ -488,7 +487,7 @@ class ChatGroupedItem: ChatRowItem {
 
 
         if let message = msg {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil || useGroupIfNeeded)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption?.merged, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil || useGroupIfNeeded)
         }
         return super.menuItems(in: location)
     }
@@ -1003,7 +1002,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 var caption: CGFloat = 0
                 
                 if let layout = item.captionLayouts.first(where: { $0.id == item.layout.messages[index].stableId })  {
-                    caption = layout.layout.layoutSize.height + 6
+                    caption = layout.layout.size.height + 6
                 }
                 
                 
@@ -1035,7 +1034,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 var caption: CGFloat = 0
                 
                 if let layout = item.captionLayouts.first(where: { $0.id == item.layout.messages[index].stableId })  {
-                    caption = layout.layout.layoutSize.height + 6
+                    caption = layout.layout.size.height + 6
                 }
                 
                 if index == 0 {

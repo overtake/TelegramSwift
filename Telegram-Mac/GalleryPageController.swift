@@ -262,7 +262,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     private var startIndex:Int = -1
     let view:GalleryPageView = GalleryPageView()
-    private let textView: InteractiveTextView = InteractiveTextView()
+    private let textView: FoldingTextView = FoldingTextView(frame: .zero)
     private var publicPhotoView: PublicPhotoView?
     private let textContainer = View()
     private let textScrollView = ScrollView()
@@ -335,8 +335,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }))
         
         cache.countLimit = 10
-        textView.textView.isSelectable = false
-        textView.textView.userInteractionEnabled = true
+        textView.textSelectable = false
+        textView.userInteractionEnabled = true
         
         var dragged: NSPoint? = nil
         
@@ -368,10 +368,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
 
-            if self.textScrollView.superview != nil, NSPointInRect(point, self.textScrollView.frame) {
-                self.textView.textView.mouseUp(with: event)
+            if let textView = hitTestView as? TextView {
+                textView.mouseUp(with: event)
                 return .invoked
-            } else if self.textView.textView.mouseInside() {
+            } else if self.textView.mouseInside() {
                 return .invoked
             } else if let view = self.publicPhotoView, NSPointInRect(point, view.frame) {
                 return .invokeNext
@@ -841,12 +841,14 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let item = self.item(at: pageController.selectedIndex)
         if let text = item.caption {
             text.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
-            textView.set(text: text, context: item.context)
-            textView.backgroundColor = .clear
-            
+            textView.update(layout: text, animated: false)
+            textView.setFrameSize(text.size)
+                  
+            textView.revealBlockAtIndex = { [weak self] index in
+                self?.toggleQuoteBlock(index)
+            }
             
             controller.view.addSubview(textScrollView)
-//            textScrollView.change(opacity: 1.0)
             textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height) + 10)
             textScrollView.centerX(y: 100)
             textScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
@@ -856,7 +858,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             textView.centerX(y: 5)
 
         } else {
-            textView.set(text: nil, context: nil)
             textScrollView.removeFromSuperview()
         }
         
@@ -883,6 +884,28 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
         
         configureTextAutohide()
+    }
+    
+    private func toggleQuoteBlock(_ index: Int) {
+        if let item = self.selectedItem, let caption = item.caption {
+            caption.toggle(index)
+            
+            let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeOut)
+            
+            let prevSize = self.textView.frame.size
+            let newSize = caption.size
+
+            self.textView.update(layout: caption, animated: transition.isAnimated)
+            
+            transition.updateFrame(view: self.textView, frame: CGRect(origin: self.textView.frame.origin, size: caption.size))
+            transition.updateFrame(view: textContainer, frame: CGRect(origin: textContainer.frame.origin, size: CGSize(width: textContainer.frame.width, height: caption.size.height + 10)))
+            
+            let dif = newSize.height - prevSize.height
+            
+            var rect = textScrollView.frame.offsetBy(dx: 0, dy: dif)
+            rect.size.height += dif
+            transition.updateFrame(view: textScrollView, frame: rect)
+        }
     }
     
     private func adjustTextWith(_ event: NSEvent) {

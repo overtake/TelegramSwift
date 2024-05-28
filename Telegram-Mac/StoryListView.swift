@@ -817,14 +817,7 @@ final class StoryListView : Control, Notifable {
             InlineStickerItem.apply(to: attributed, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
             
             
-            attributed.enumerateAttribute(TextInputAttributes.spoiler, in: attributed.range, options: .init(), using: { value, range, stop in
-                if let _ = value {
-                    let color: NSColor = darkAppearance.colors.text
-                    spoilers.append(.init(range: range, color: color, isRevealed: false))
-                }
-            })
-            
-            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: darkAppearance.colors.grayText, spoilers: spoilers)
+            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: darkAppearance.colors.grayText, spoilerColor: darkAppearance.colors.text)
             layout.measure(width: frame.width - 20)
             layout.interactions = globalLinkExecutor
             

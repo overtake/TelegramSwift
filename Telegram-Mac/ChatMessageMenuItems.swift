@@ -1105,6 +1105,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 showModalText(for: context.window, text: "Copied")
             }, itemMode: .normal, itemImage: MenuAnimation.menu_copy.value))
             
+            
+           
         }
         #endif
         

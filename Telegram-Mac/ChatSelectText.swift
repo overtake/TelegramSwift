@@ -15,6 +15,7 @@ import SwiftSignalKit
 struct SelectContainer {
     let text:NSAttributedString
     let range:NSRange
+    let index: Int
     let header:String?
 }
 
@@ -30,10 +31,10 @@ class SelectManager : NSResponder {
     
     private var ranges:Atomic<[(AnyHashable,WeakReference<TextView>, SelectContainer)]> = Atomic(value: [])
     
-    func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable) {
+    func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable, index: Int) {
         _ = ranges.modify { ranges in
             var ranges = ranges
-            ranges.append((stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, header: header)))
+            ranges.append((stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, index: index, header: header)))
             return ranges
         }
     }
@@ -42,6 +43,9 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             for selection in ranges {
                 if let value = selection.1.value {
+                    if value.textLayout?.selectedRange.range.location != NSNotFound {
+                        value.selectionWasCleared = true
+                    }
                     value.textLayout?.clearSelect()
                     value.canBeResponder = true
                     value.setNeedsDisplay()
@@ -147,7 +151,7 @@ class SelectManager : NSResponder {
                     range = NSMakeRange(location, length)
                     
                     layout.selectedRange.range = range
-                    ranges[ranges.count - 1] = (last.0, last.1, SelectContainer(text: last.2.text, range: range, header: last.2.header))
+                    ranges[ranges.count - 1] = (last.0, last.1, SelectContainer(text: last.2.text, range: range, index: last.2.index, header: last.2.header))
                     textView.needsDisplay = true
                     result = true
                     return ranges
@@ -188,7 +192,7 @@ class SelectManager : NSResponder {
                     let length = max(min(range.length, first.2.text.length - location), 0)
                     range = NSMakeRange(location, length)
                     layout.selectedRange.range = range
-                    ranges[0] = (first.0, first.1, SelectContainer(text: first.2.text, range: range, header: first.2.header))
+                    ranges[0] = (first.0, first.1, SelectContainer(text: first.2.text, range: range, index: first.2.index, header: first.2.header))
                     textView.needsDisplay = true
                     result = true
                     return ranges
@@ -208,6 +212,18 @@ class SelectManager : NSResponder {
                 }
             }
             return nil
+        }
+    }
+    
+    func findAll(_ stableId:AnyHashable) -> [(NSRange, Int)] {
+        return ranges.with { ranges -> [(NSRange, Int)] in
+            var list: [(NSRange, Int)] = []
+            for range in ranges {
+                if range.0 == stableId {
+                    list.append((range.2.range, range.2.index))
+                }
+            }
+            return list
         }
     }
     
@@ -497,7 +513,12 @@ class ChatSelectText : NSObject {
                     
                     inner: for j in 0 ..< views.count {
                         let selectableView = views[j]
-                        let viewRect = selectableView.convert(CGRect(origin: .zero, size: selectableView.frame.size), to: table.documentView)
+                        var viewRect: NSRect
+                        if let view = selectableView.superview, view.frame.height < selectableView.frame.height {
+                            viewRect = view.convert(CGRect(origin: .zero, size: view.frame.size), to: table.documentView)
+                        } else {
+                            viewRect = selectableView.convert(CGRect(origin: .zero, size: selectableView.frame.size), to: table.documentView)
+                        }
                         let rect = NSRect(x: viewRect.midX, y: min(beginInnerLocation.y, endInnerLocation.y), width: abs(endInnerLocation.x - beginInnerLocation.x), height: abs(endInnerLocation.y - beginInnerLocation.y))
                         
                         if rect.intersects(viewRect) {
@@ -603,7 +624,7 @@ class ChatSelectText : NSObject {
                             selectableView.canBeResponder = false
                             layout.selectedRange.range = layout.selectedRange(startPoint:startPoint, currentPoint:endPoint)
                             layout.selectedRange.cursorAlignment = startPoint.x > endPoint.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
-                            selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString, header: view?.header, stableId: table.item(at: i).stableId)
+                            selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString, header: view?.header, stableId: table.item(at: i).stableId, index: j)
                             selectableView.setNeedsDisplayLayer()
                             
                             

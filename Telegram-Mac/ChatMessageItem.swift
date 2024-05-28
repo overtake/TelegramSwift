@@ -121,13 +121,8 @@ final class InlineStickerItem : Hashable {
 
 class ChatMessageItem: ChatRowItem {
     public private(set) var messageText:NSAttributedString
-    public private(set) var textLayout:TextViewLayout
-    
-    private let youtubeExternalLoader = MetaDisposable()
-    
-    override var selectableLayout:[TextViewLayout] {
-        return [textLayout]
-    }
+    public private(set) var textLayout: FoldingTextLayout
+        
     
     var isFragmentAd: Bool {
         if let adAttribute = message?.adAttribute {
@@ -407,23 +402,18 @@ class ChatMessageItem: ChatRowItem {
              
              
              
-
-             copy.enumerateAttribute(TextInputAttributes.spoiler, in: copy.range, options: .init(), using: { value, range, stop in
-                 if let _ = value {
-                     let color: NSColor
-                     if entry.renderType == .bubble {
-                         color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
-                     } else {
-                         color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
-                     }
-                     spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
-                 }
-             })
+             let spoilerColor: NSColor
+             if entry.renderType == .bubble {
+                 spoilerColor = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+             } else {
+                 spoilerColor = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+             }
+             let isSpoilerRevealed = chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)
              
              copy.removeWhitespaceFromQuoteAttribute()
 
              
-             if let ad = message.adAttribute {
+             if let _ = message.adAttribute {
                  messageText = .init()
              } else  if let text = message.restrictedText(context.contentSettings) {
                  self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
@@ -431,25 +421,28 @@ class ChatMessageItem: ChatRowItem {
                  self.messageText = copy
              }
              
-             textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
-                 chatInteraction?.update({
-                     $0.updatedInterfaceState({
-                         $0.withRevealedSpoiler(message.id)
-                     })
-                 })
-             })
-            textLayout.mayBlocked = true//entry.renderType = .bubble
-            
-            if let highlightFoundText = entry.additionalData.highlightFoundText {
-                if let range = rangeOfSearch(highlightFoundText.query, in: copy.string) {
-                    textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
-                }
-            }
-            if let range = selectManager.find(entry.stableId) {
-                textLayout.selectedRange.range = range
-            }
              
-            
+             textLayout = FoldingTextLayout.make(self.messageText, context: context, revealed: entry.additionalData.quoteRevealed, takeLayout: { string in
+                 let textLayout = TextViewLayout(string, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
+                    chatInteraction?.update({
+                        $0.updatedInterfaceState({
+                            $0.withRevealedSpoiler(message.id)
+                        })
+                    })
+                 })
+                 textLayout.mayBlocked = true
+               
+                 if let highlightFoundText = entry.additionalData.highlightFoundText {
+                    if let range = rangeOfSearch(highlightFoundText.query, in: string.string) {
+                        textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+                    }
+                 }
+                
+                 return textLayout
+             })
+             
+             textLayout.applyRanges(selectManager.findAll(entry.stableId))
+
             
             var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
@@ -594,7 +587,7 @@ class ChatMessageItem: ChatRowItem {
             }
             interactions.menuItems = { [weak self] type in
                 if let strongSelf = self, let message = strongSelf.message {
-                    return chatMenuItems(for: message, entry: strongSelf.entry, textLayout: (strongSelf.textLayout, type), chatInteraction: strongSelf.chatInteraction)
+                    return chatMenuItems(for: message, entry: strongSelf.entry, textLayout: (strongSelf.textLayout.merged, type), chatInteraction: strongSelf.chatInteraction)
                 }
                 return .complete()
             }
@@ -603,7 +596,7 @@ class ChatMessageItem: ChatRowItem {
                 
             }
             
-            textLayout.interactions = interactions
+            textLayout.set(interactions)
             
             return
         }
@@ -640,26 +633,20 @@ class ChatMessageItem: ChatRowItem {
     
     
     private(set) var isTranslateLoading: Bool = false
-    private(set) var block: (NSPoint, CGImage?) = (.zero, nil)
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         let size:NSSize = super.makeContentSize(width)
      
         webpageLayout?.measure(width: width)
         
         
-        
         var textBlockWidth: CGFloat = isBubbled ? min(webpageLayout?.size.width ?? width, width) : width
-        if textLayout.hasBlockQuotes {
-            textBlockWidth -= 40
-        }
+       
         textLayout.measure(width: textBlockWidth, isBigEmoji: containsBigEmoji)
         if isTranslateLoading {
-            self.block = textLayout.generateBlock(backgroundColor: .blackTransparent)
-        } else {
-            self.block = (.zero, nil)
+            textLayout.makeImageBlock(backgroundColor: .blackTransparent)
         }
         
-        var contentSize = NSMakeSize(max(webpageLayout?.size.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
+        var contentSize = NSMakeSize(max(webpageLayout?.size.width ?? 0, textLayout.size.width), size.height + textLayout.size.height)
         
         if let webpageLayout = webpageLayout {
             contentSize.height += webpageLayout.size.height + defaultContentInnerInset
@@ -696,7 +683,7 @@ class ChatMessageItem: ChatRowItem {
             return frame
         }
         
-        if replyMarkupModel != nil, webpageLayout == nil, textLayout.layoutSize.width < 200 {
+        if replyMarkupModel != nil, webpageLayout == nil, textLayout.size.width < 200 {
             frame.size.width = max(blockWidth, frame.width)
         }
                 
@@ -707,14 +694,13 @@ class ChatMessageItem: ChatRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         if let message = message {
-            return chatMenuItems(for: message, entry: entry, textLayout: (self.textLayout, nil), chatInteraction: self.chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: (nil, nil), chatInteraction: self.chatInteraction)
         }
         return super.menuItems(in: location)
         
     }
     
     deinit {
-        youtubeExternalLoader.dispose()
     }
     
     override func viewClass() -> AnyClass {
@@ -883,8 +869,8 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(nsString!.substring(with: range), { bankCard in
                     openBank(bankCard)
                 }), range: range)
-            case .BlockQuote:
-                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, space: 4), range: range)
+            case let .BlockQuote(collapsable):
+                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, space: 4, collapsable: collapsable), range: range)
             case let .CustomEmoji(_, fileId: fileId):
                 string.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(fileId: fileId, file: nil, emoji: string.attributedSubstring(from: range).string), range: range)
             case let .Custom(type):

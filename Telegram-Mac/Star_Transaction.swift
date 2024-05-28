@@ -21,6 +21,9 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let infoLayout: TextViewLayout
     fileprivate let descLayout: TextViewLayout?
     fileprivate let incoming: Bool
+    
+    fileprivate var refund: TextViewLayout?
+    
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?) {
         self.context = context
         self.transaction = transaction
@@ -58,6 +61,13 @@ private final class HeaderItem : GeneralRowItem {
             self.descLayout = nil
         }
         
+        if transaction.flags.contains(.isRefund) {
+            self.refund = .init(.initialize(string: strings().starListRefund, color: theme.colors.greenUI, font: .medium(.text)), alignment: .center)
+            self.refund?.measure(width: .greatestFiniteMagnitude)
+        } else {
+            self.refund = nil
+        }
+        
         super.init(initialSize, stableId: stableId, viewType: .legacy, inset: .init())
     }
     
@@ -89,6 +99,8 @@ private final class HeaderView : GeneralContainableRowView {
     private let dismiss = ImageButton()
     private let headerView = TextView()
     private let infoView = InteractiveTextView()
+    private var refundView: TextView?
+    private let infoContainer: View = View()
     private var outgoingView: ImageView?
     private var descView: TextView?
     required init(frame frameRect: NSRect) {
@@ -97,7 +109,9 @@ private final class HeaderView : GeneralContainableRowView {
         addSubview(dismiss)
         addSubview(sceneView)
         addSubview(headerView)
-        addSubview(infoView)
+        infoContainer.addSubview(infoView)
+        
+        addSubview(infoContainer)
         
         sceneView.hideStar()
 
@@ -216,6 +230,26 @@ private final class HeaderView : GeneralContainableRowView {
             self.descView = nil
         }
         
+        if let refundLayout = item.refund {
+            let current: TextView
+            if let view = self.refundView {
+                current = view
+            } else {
+                current = TextView()
+                infoContainer.addSubview(current)
+                self.refundView = current
+            }
+            current.update(refundLayout)
+            current.setFrameSize(NSMakeSize(current.frame.width + 6, current.frame.height + 4))
+            current.layer?.cornerRadius = .cornerRadius
+            current.background = theme.colors.greenUI.withAlphaComponent(0.2)
+        } else if let view = self.refundView {
+            performSubviewRemoval(view, animated: animated)
+            self.refundView = nil
+        }
+        
+        infoContainer.setFrameSize(NSMakeSize(infoContainer.subviewsWidthSize.width + 4, infoContainer.subviewsWidthSize.height + 2))
+        
         needsLayout = true
     }
     
@@ -229,11 +263,15 @@ private final class HeaderView : GeneralContainableRowView {
         
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2) - 10))
         
-        headerView.centerX(y: 90 + 10)
-        infoView.centerX(y: headerView.frame.maxY + 5)
         
+        headerView.centerX(y: 90 + 10)
+        
+        infoContainer.centerX(y: headerView.frame.maxY + 5)
+        infoView.centerY(x: 0)
+        refundView?.centerY(x: infoView.frame.maxX + 4, addition: -1)
+
         if let descView {
-            descView.centerX(y: infoView.frame.maxY + 5)
+            descView.centerX(y: infoContainer.frame.maxY + 5)
         }
     }
     

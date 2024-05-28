@@ -1186,13 +1186,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     
                     let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
                     
-                    _ = signal.start(next: { invoice in
-                        showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: { [weak self] status in
-                            
+                    _ = signal.start(next: { [weak self] invoice in
+                        let completion:(PaymentCheckoutCompletionStatus)->Void = { [weak self] status in
                             let data = "{\"slug\": \"\(slug)\", \"status\": \"\(status.rawValue)\"}"
-                            
                             self?.sendEvent(name: "invoice_closed", data: data)
-                        }), for: context.window)
+                        }
+                        if invoice.currency == XTR {
+                            showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug), completion: completion), for: context.window)
+                        } else {
+                            showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: completion), for: context.window)
+                        }
+                        
                     }, error: { error in
                         showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
                     })

@@ -448,7 +448,7 @@ private final class TransactionItem : GeneralRowItem {
     fileprivate let amountLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
-        
+            
     fileprivate let callback: (State.Transaction)->Void
     
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, transaction: State.Transaction, callback: @escaping(State.Transaction)->Void) {
@@ -487,7 +487,12 @@ private final class TransactionItem : GeneralRowItem {
             name = transaction.peer?._asPeer().displayTitle ?? ""
         }
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.dateLayout = .init(.initialize(string: stringForFullDate(timestamp: transaction.date), color: theme.colors.grayText, font: .normal(.text)))
+        
+        var date = stringForFullDate(timestamp: transaction.date)
+        if transaction.native.flags.contains(.isRefund) {
+            date += " — \(strings().starListRefund)"
+        }
+        self.dateLayout = .init(.initialize(string: date, color: theme.colors.grayText, font: .normal(.text)))
         
                 
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -805,7 +810,7 @@ private func _id_option(_ option: State.Option) -> InputDataIdentifier {
     return .init("_id_\(option.id)")
 }
 private func _id_transaction(_ transaction: State.Transaction) -> InputDataIdentifier {
-    return .init("_id_\(transaction.id)")
+    return .init("_id_\(transaction.id)_\(transaction.type)")
 }
 private let _id_show_more = InputDataIdentifier("_id_show_more")
 private let _id_balance = InputDataIdentifier("_id_balance")
@@ -1215,7 +1220,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     controller.contextObject = starsContext
 
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil)
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(360, 300))
     
     
     close = { [weak modalController] in
