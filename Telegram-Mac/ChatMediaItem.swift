@@ -513,29 +513,34 @@ class ChatMediaItem: ChatRowItem {
                 
                 InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
                 
-                caption.enumerateAttribute(TextInputAttributes.spoiler, in: caption.range, options: .init(), using: { value, range, stop in
-                    if let _ = value {
-                        let color: NSColor
-                        if entry.renderType == .bubble {
-                            color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
-                        } else {
-                            color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
-                        }
-                        spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
-                    }
-                })
+                let spoilerColor: NSColor
+                if entry.renderType == .bubble {
+                    spoilerColor = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                } else {
+                    spoilerColor = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+                }
+                let isSpoilerRevealed = chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)
                 
-                captionLayouts.append(.init(message: message, id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
-                    chatInteraction?.update({
-                        $0.updatedInterfaceState({
-                            $0.withRevealedSpoiler(message.id)
+                let textLayout = FoldingTextLayout.make(caption, context: context, revealed: object.additionalData.quoteRevealed, takeLayout: { string in
+                    let textLayout = TextViewLayout(string, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
+                        chatInteraction?.update({
+                            $0.updatedInterfaceState({
+                                $0.withRevealedSpoiler(message.id)
+                            })
                         })
                     })
-                }), isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset))
+                    
+                    if let highlightFoundText = object.additionalData.highlightFoundText {
+                       if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
+                           textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+                       }
+                    }
+                    return textLayout
+                })
                 
-                if let range = selectManager.find(entry.stableId) {
-                    captionLayouts[0].layout.selectedRange.range = range
-                }
+                captionLayouts.append(.init(message: message, id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: textLayout, isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset))
+                captionLayouts[0].layout.applyRanges(selectManager.findAll(entry.stableId))
+
             }
             
             let interactions = globalLinkExecutor
@@ -550,37 +555,14 @@ class ChatMediaItem: ChatRowItem {
             if let layout = self.captionLayouts.first {
                 interactions.menuItems = { [weak self, weak layout] type in
                     if let interactions = self?.chatInteraction, let entry = self?.entry, let layout {
-                        return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
+                        return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout.merged, type), chatInteraction: interactions)
                     }
                     return .complete()
                 }
             }
             
             for textLayout in self.captionLayouts.map ({ $0.layout }) {
-                textLayout.interactions = interactions
-                if let highlightFoundText = entry.additionalData.highlightFoundText {
-                    if highlightFoundText.isMessage {
-                        if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
-                            textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
-                        }
-                    } else {
-                        var additionalSelections:[TextSelectedRange] = []
-                        let string = caption.string.lowercased().nsstring
-                        var searchRange = NSMakeRange(0, string.length)
-                        var foundRange:NSRange = NSMakeRange(NSNotFound, 0)
-                        while (searchRange.location < string.length) {
-                            searchRange.length = string.length - searchRange.location
-                            foundRange = string.range(of: highlightFoundText.query.lowercased(), options: [], range: searchRange)
-                            if (foundRange.location != NSNotFound) {
-                                additionalSelections.append(TextSelectedRange(range: foundRange, color: theme.colors.grayIcon.withAlphaComponent(0.5), def: false))
-                                searchRange.location = foundRange.location+foundRange.length;
-                            } else {
-                                break
-                            }
-                        }
-                        textLayout.additionalSelections = additionalSelections
-                    }
-                }
+                textLayout.set(interactions)
             }
         }
         
@@ -624,7 +606,7 @@ class ChatMediaItem: ChatRowItem {
         let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId })
         
         if let message = message {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption?.layout, nil), chatInteraction: chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption?.layout.merged, nil), chatInteraction: chatInteraction)
         }
         return super.menuItems(in: location)
     }

@@ -78,34 +78,32 @@ class ChatRowItem: TableRowItem {
     class RowCaption {
         var id: UInt32
         var offset: NSPoint
-        var layout: TextViewLayout
+        var layout: FoldingTextLayout
         var isLoading: Bool
-        var block: (NSPoint, CGImage?)
         var message: Message
         var contentInset: CGFloat
-        init(message: Message, id: UInt32, offset: NSPoint, layout: TextViewLayout, isLoading: Bool, contentInset: CGFloat, block: (NSPoint, CGImage?) = (.zero, nil)) {
+        init(message: Message, id: UInt32, offset: NSPoint, layout: FoldingTextLayout, isLoading: Bool, contentInset: CGFloat) {
             self.id = id
             self.message = message
             self.offset = offset
             self.layout = layout
             self.isLoading = isLoading
             self.contentInset = contentInset
-            self.block = block
         }
         
         var invertedSize: CGFloat {
-            return offset.y + layout.layoutSize.height + contentInset * 2
+            return offset.y + layout.size.height + contentInset * 2
         }
         var invertedOffset: CGFloat {
-            return offset.y + layout.layoutSize.height + contentInset
+            return offset.y + layout.size.height + contentInset
         }
         
         func isSame(to other: RowCaption) -> Bool {
-            return self.message.id == other.message.id && self.id == other.id && self.layout.attributedString.string == other.layout.attributedString.string
+            return self.message.id == other.message.id && self.id == other.id && self.layout.string == other.layout.string
         }
         
         func withUpdatedOffset(_ offset: CGFloat) -> RowCaption {
-            return RowCaption(message: self.message, id: self.id, offset: .init(x: 0, y: offset), layout: self.layout, isLoading: self.isLoading, contentInset: self.contentInset, block: block)
+            return RowCaption(message: self.message, id: self.id, offset: .init(x: 0, y: offset), layout: self.layout, isLoading: self.isLoading, contentInset: self.contentInset)
         }
     }
     
@@ -215,9 +213,6 @@ class ChatRowItem: TableRowItem {
         }
     }
     
-    var selectableLayout:[TextViewLayout] {
-        return self.captionLayouts.map { $0.layout }
-    }
     
     var sending: Bool {
         return message?.flags.contains(.Unsent) ?? false
@@ -380,7 +375,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if !captionLayouts.isEmpty {
-            let captionHeight: CGFloat = captionLayouts.reduce(0, { $0 + $1.layout.layoutSize.height }) + defaultContentInnerInset * CGFloat(captionLayouts.count)
+            let captionHeight: CGFloat = captionLayouts.reduce(0, { $0 + $1.layout.size.height }) + defaultContentInnerInset * CGFloat(captionLayouts.count)
             if let item = self as? ChatGroupedItem {
                 switch item.layoutType {
                 case .photoOrVideo:
@@ -2614,11 +2609,11 @@ class ChatRowItem: TableRowItem {
         
        
         
-        if !(self is ChatGroupedItem) {
-            for layout in captionLayouts {
-                layout.layout.dropLayoutSize()
-            }
-        }
+//        if !(self is ChatGroupedItem) {
+//            for layout in captionLayouts {
+//                layout.layout.dropLayoutSize()
+//            }
+//        }
         
         channelViews?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
         replyCount?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
@@ -2684,16 +2679,16 @@ class ChatRowItem: TableRowItem {
             }
         }
     
-       
-       
+        
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
-                if layout.layout.layoutSize == .zero {
-                    layout.layout.measure(width: maxContentWidth)
-                    if layout.isLoading {
-                        layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
-                    }
-                }
+                layout.layout.measure(width: maxContentWidth + defaultContentInnerInset)
+            }
+        }
+        
+        for layout in captionLayouts {
+            if layout.isLoading {
+                layout.layout.makeImageBlock(backgroundColor: .blackTransparent)
             }
         }
         
@@ -3706,21 +3701,21 @@ class ChatRowItem: TableRowItem {
                 switch item.layoutType {
                 case .files:
                     if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
-                        if let line = caption.lines.last {
-                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1)
+                        if let line = caption.lastLine {
+                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }
                     }
                 case .photoOrVideo:
                     if let caption = captionLayouts.first?.layout {
-                        if let line = caption.lines.last {
-                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
+                        if let line = caption.lastLine {
+                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1 && !isBubbleFullFilled)
                         }
                     }
                 }
             } else {
                 if let caption = captionLayouts.first?.layout {
-                    if let line = caption.lines.last {
-                        return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
+                    if let line = caption.lastLine {
+                        return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1 && !isBubbleFullFilled)
                     }
                 }
             }
@@ -3729,14 +3724,14 @@ class ChatRowItem: TableRowItem {
                 switch item.layoutType {
                 case .files:
                     if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
-                        if let line = caption.lines.last {
-                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1)
+                        if let line = caption.lastLine {
+                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }
                     }
                 case .photoOrVideo:
                     if let caption = captionLayouts.first?.layout {
-                        if let line = caption.lines.last {
-                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1)
+                        if let line = caption.lastLine {
+                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }
                     }
                 }
@@ -3751,13 +3746,13 @@ class ChatRowItem: TableRowItem {
                 return nil
             }
             if item.textLayout.lastLineIsBlock {
-                return LastLineData(width: item.textLayout.layoutSize.width, single: false)
+                return LastLineData(width: item.textLayout.size.width, single: false)
             }
             if let _ = item.webpageLayout, !item.webpageAboveContent {
                 return nil
             }
-            if let line = item.textLayout.lines.last {
-                return LastLineData(width: line.frame.width, single: item.textLayout.lines.count == 1)
+            if let line = item.textLayout.lastLine {
+                return LastLineData(width: line.frame.width, single: item.textLayout.linesCount == 1)
             }
         }
         return nil
@@ -3769,5 +3764,13 @@ class ChatRowItem: TableRowItem {
             chatInteraction.runPremiumScreenEffect(message, mirror, false)
         }
     }
+    
+    
+    func revealBlockAtIndex(_ index: Int, messageId: MessageId? = nil) {
+        if let messageId = messageId ?? self.message?.id {
+            chatInteraction.toggleQuote(QuoteMessageIndex(messageId: messageId, index: index))
+        }
+    }
+
 }
 

@@ -27,6 +27,10 @@ final class InlineAvatarLayer: SimpleLayer {
         })
         self.disposable = disposable
     }
+    
+    override init(layer: Any) {
+        super.init(layer: layer)
+    }
 
     deinit {
         disposable?.dispose()

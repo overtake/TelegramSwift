@@ -21,14 +21,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     class CaptionView {
         let id: UInt32
         let shim: Bool
-        let view: TextView
-        init(id: UInt32, shim: Bool, view: TextView) {
+        let view: FoldingTextView
+        init(id: UInt32, shim: Bool, view: FoldingTextView) {
             self.id = id
             self.shim = shim
             self.view = view
         }
         func isSame(to other: ChatRowItem.RowCaption) -> Bool {
-            return self.id == other.id && self.view.textLayout?.attributedString.string == other.layout.attributedString.string
+            return self.id == other.id && self.view.string == other.layout.string
         }
         
         deinit {
@@ -88,7 +88,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
     
-    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
     let bubbleView = ChatMessageBubbleBackdrop()
     
@@ -163,14 +162,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
       
     var selectableTextViews: [TextView] {
-        return (captionViews.map { $0.view } + [self.factCheckView?.textView.textView]).compactMap { $0 }
+        let textViews = captionViews.reduce([], {
+            $0 + $1.view.textViews
+        })
+        return (textViews + [self.factCheckView?.textView.textView]).compactMap { $0 }
     }
     
     func clickInContent(point: NSPoint) -> Bool {
         guard let item = item as? ChatRowItem, let layout = item.captionLayouts.first?.layout, let captionView = captionViews.first else {return true}
-        let point = captionView.view.convert(point, from: self)
-        let index = layout.findIndex(location: point)
-        return point.x < layout.lines[index].frame.maxX
+        return captionView.view.clickInContent(point: point)
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -574,7 +574,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         } else {
             rect.origin.y += (caption.offset.y + item.defaultContentInnerInset)
         }
-        return NSMakeRect(rect.minX + item.elementsContentInset, rect.maxY, caption.layout.layoutSize.width, caption.layout.layoutSize.height)
+        return NSMakeRect(rect.minX + item.elementsContentInset, rect.maxY, caption.layout.size.width, caption.layout.size.height)
     }
     
     func replyMarkupFrame(_ item: ChatRowItem) -> NSRect {
@@ -585,7 +585,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, replyMarkup.size.width, replyMarkup.size.height)
         
         if let captionLayout = item.captionLayouts.first?.layout {
-            frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
+            frame.origin.y += captionLayout.size.height + item.defaultContentInnerInset
         }
         
         let bubbleFrame = self.bubbleFrame(item)
@@ -1146,7 +1146,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
         var removeIndexes:[Int] = []
-        var removeShimmer:[Int] = []
         for (i, view) in captionViews.enumerated() {
             if !item.captionLayouts.contains(where: { view.isSame(to: $0) }) {
                 let captionView = view.view
@@ -1154,26 +1153,20 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 removeIndexes.append(i)
             }
         }
-        for (i, view) in captionShimmerViews.enumerated() {
-            let layout = item.captionLayouts.first(where: { view.id == $0.id })
-            if layout == nil || !layout!.isLoading {
-                let shimmerView = view.view
-                performSubviewRemoval(shimmerView, animated: animated)
-                removeShimmer.append(i)
-            }
-        }
         
         for index in removeIndexes.reversed() {
             _ = captionViews.remove(at: index)
         }
-        for index in removeShimmer {
-            _ = captionShimmerViews.remove(at: index)
-        }
-        
         for (i, layout) in item.captionLayouts.enumerated() {
             var view = captionViews.first(where: { $0.isSame(to: layout) })
+            let messageId = layout.message.id
             if view == nil {
-                view = CaptionView(id: layout.id, shim: layout.isLoading, view: TextView())
+                view = CaptionView(id: layout.id, shim: layout.isLoading, view: FoldingTextView(frame: .zero))
+                view?.view.revealBlockAtIndex = { [weak self] index in
+                    if let item = self?.item as? ChatRowItem {
+                        item.revealBlockAtIndex(index, messageId: messageId)
+                    }
+                }
                 rowView.addSubview(view!.view, positioned: .below, relativeTo: contentView)
                 view?.view.frame = captionFrame(item, caption: layout)
                 captionViews.append(view!)
@@ -1184,66 +1177,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if let index = captionViews.firstIndex(where: { $0.isSame(to: layout) }), index != i {
                 captionViews.move(at: index, to: i)
             }
-            if let blockImage = layout.block.1 {
-                var view = captionShimmerViews.first(where: { $0.id == layout.id })
-                let size = blockImage.size
-                let current: ShimmerView
-                if let view = view?.view {
-                    current = view
-                } else {
-                    current = ShimmerView()
-                    
-                    let mask = SimpleLayer()
-                    var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
-                    fr = CATransform3DScale(fr, 1, -1, 1)
-                    fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
-                    
-                    mask.transform = fr
-                    mask.contentsScale = 2.0
-                    mask.contents = blockImage
-                    mask.frame = CGRect(origin: .zero, size: blockImage.backingSize)
-                    current.layer?.mask = mask
-                    
-                    view = .init(id: layout.id, view: current, mask: mask)
-                    self.rowView.addSubview(current, positioned: .below, relativeTo: contentView)
-                    
-                    if animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                    captionShimmerViews.append(view!)
-                }
-                current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
-                current.updateAbsoluteRect(size.bounds, within: size)
-                let frame = captionFrame(item, caption: layout)
-                current.frame = blockImage.backingSize.bounds.offsetBy(dx: frame.minX - 5, dy: frame.minY - 1)
-                
-            }
-            
-            view?.view.update(layout.layout)
+            view?.view.update(layout: layout.layout, animated: animated)
         }
-        updateInlineStickers(context: item.context, view: self.captionViews.map { $0.view })
     }
 
     
     
     override func updateAnimatableContent() -> Void {
-        for (_, value) in inlineStickerItemViews {
-            if let superview = value.superview {
-                var isKeyWindow: Bool = false
-                if let window = self.window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
-                    }
-                }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
-            }
-        }
-        for view in captionShimmerViews {
-            view.view.reloadAnimation()
-        }
         topicLinkView?.updateAnimatableContent()
     }
     
@@ -1254,76 +1194,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return super.isEmojiLite
     }
     
-    func updateInlineStickers(context: AccountContext, view textViews: [TextView]) {
-        
-        guard let item = self.item as? ChatRowItem else {
-            return
-        }
-        let textColor = item.presentation.chat.textColor(item.isIncoming, item.renderType == .bubble)
-        
-        var validIds: [InlineStickerItemLayer.Key] = []
-        var index: Int = 0
-
-        for textView in textViews {
-            if let textLayout = textView.textLayout {
-                for item in textLayout.embeddedItems {
-                    if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
-                        
-                        let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index + textView.hashValue, color: textColor)
-                        validIds.append(id)
-                        
-                        
-                        let rect: NSRect
-                        if textLayout.isBigEmoji {
-                            rect = item.rect
-                        } else {
-                            rect = item.rect.insetBy(dx: -2, dy: -2)
-                        }
-                        
-                        let view: InlineStickerItemLayer
-                        if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, textColor == current.textColor {
-                            view = current
-                        } else {
-                            self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
-                            self.inlineStickerItemViews[id] = view
-                            view.superview = textView
-                            textView.addEmbeddedLayer(view)
-                        }
-                        
-                        if view.superview != textView {
-                            textView.addEmbeddedLayer(view)
-                        }
-                        
-                        index += 1
-                        var isKeyWindow: Bool = false
-                        if let window = window {
-                            if !window.canBecomeKey {
-                                isKeyWindow = true
-                            } else {
-                                isKeyWindow = window.isKeyWindow
-                            }
-                        }
-                        view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
-                        view.frame = rect
-                    }
-                }
-            }
-        }
-       
-        
-        var removeKeys: [InlineStickerItemLayer.Key] = []
-        for (key, itemLayer) in self.inlineStickerItemViews {
-            if !validIds.contains(key) {
-                removeKeys.append(key)
-                itemLayer.removeFromSuperlayer()
-            }
-        }
-        for key in removeKeys {
-            self.inlineStickerItemViews.removeValue(forKey: key)
-        }
-    }
-
     
     func reactionsRect(_ item: ChatRowItem) -> CGRect {
         guard let reactionsLayout = item.reactionsLayout else {
@@ -1341,7 +1211,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
             if !ignore {
-                frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
+                frame.origin.y += captionLayout.size.height + item.defaultContentInnerInset
             }
         }
         

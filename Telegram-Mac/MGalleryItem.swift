@@ -368,11 +368,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             captionSeized = true
         }
         if let caption = caption {
-            pagerSize.height -= min(200, (caption.layoutSize.height + 120))
+            pagerSize.height -= min(200, (caption.size.height + 120))
         }
         return pagerSize
     }
-    let caption: TextViewLayout?
+    let caption: FoldingTextLayout?
     
     struct PublicPhoto {
         let image: TelegramMediaImage
@@ -478,41 +478,30 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             
             InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
 
-            var spoilers:[TextViewLayout.Spoiler] = []
-            for attr in message.attributes {
-                if let attr = attr as? TextEntitiesMessageAttribute {
-                    for entity in attr.entities {
-                        switch entity.type {
-                        case .Spoiler:
-                            let color: NSColor = NSColor.white
-                            spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: false))
-                        default:
-                            break
-                        }
-                    }
-                }
-            }
-            
-            self.caption = TextViewLayout(attr, alignment: .left, spoilers: spoilers, onSpoilerReveal: {
-                
+
+            self.caption = FoldingTextLayout.make(attr, context: context, revealed: Set(), takeLayout: { attr in
+                return TextViewLayout(attr, alignment: .left, spoilerColor: NSColor.white, isSpoilerRevealed: false)
             })
-            self.caption?.interactions = TextViewInteractions(processURL: { link in
+            let interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
                     execute(inapp: link, afterComplete: { value in
                         if value {
                             viewer?.close()
                         }
                     })
-                    
                 }
             })
+            self.caption?.set(interactions)
+            
         } else {
             switch entry {
             case let .photo(_, _, _, _, _, _, _, caption, _):
                 if let caption = caption, !caption.isEmpty {
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: caption, color: .white, font: .normal(.text))
-                    self.caption = TextViewLayout(attr, alignment: .left)
+                    self.caption = .make(attr, context: context, revealed: Set(), takeLayout: { attr in
+                        return TextViewLayout(attr, alignment: .left)
+                    })
                 } else {
                     self.caption = nil
                 }

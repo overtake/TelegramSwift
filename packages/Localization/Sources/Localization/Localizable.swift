@@ -15485,6 +15485,8 @@ public final class L10n {
   public static func starListMyBalance(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Star.List.MyBalance", p1, p2)
   }
+  /// Refund
+  public static var starListRefund: String  { return L10n.tr("Localizable", "Star.List.Refund") }
   /// %d
   public static func starListStarsNeededCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.List.StarsNeeded_countable", p1)

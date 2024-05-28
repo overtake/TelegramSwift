@@ -304,6 +304,7 @@
 		276790BD2B06919500E9975C /* PeerInfoSpawnEmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */; };
 		276885032770D7BE0021C891 /* AddReactionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276885022770D7BE0021C891 /* AddReactionManager.swift */; };
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
+		2769768F2C04C9B80016BACB /* FoldingTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2769768E2C04C9B80016BACB /* FoldingTextView.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
 		276E767B2B3BEA9B00440A4F /* ChannelWallpapersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */; };
 		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
@@ -1865,6 +1866,7 @@
 		276790BC2B06919500E9975C /* PeerInfoSpawnEmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoSpawnEmojiView.swift; sourceTree = "<group>"; };
 		276885022770D7BE0021C891 /* AddReactionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReactionManager.swift; sourceTree = "<group>"; };
 		276957A82746C07400297991 /* SessionModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionModalController.swift; sourceTree = "<group>"; };
+		2769768E2C04C9B80016BACB /* FoldingTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FoldingTextView.swift; sourceTree = "<group>"; };
 		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
 		276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackTrendingItem.swift; sourceTree = "<group>"; };
 		276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallMainVideoContainer.swift; sourceTree = "<group>"; };
@@ -5643,6 +5645,7 @@
 		C2AC9C161E1E68490085C7DE /* controls */ = {
 			isa = PBXGroup;
 			children = (
+				2769768E2C04C9B80016BACB /* FoldingTextView.swift */,
 				C2AC9C171E1E687E0085C7DE /* GlobalBadgeNode.swift */,
 				27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */,
 			);
@@ -7764,6 +7767,7 @@
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
 				9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */,
 				D0276B7D22BD6511003155D8 /* DisplayLink.swift in Sources */,
+				2769768F2C04C9B80016BACB /* FoldingTextView.swift in Sources */,
 				9F0B8F171FFB7F1A00073D3F /* AccentColorRowItem.swift in Sources */,
 				C2DE5D301F3CA7C00081EC1E /* InstantPageLinkSelectionView.swift in Sources */,
 				A742CE45241A517800C6B69B /* ChannelRecentPostRowItem.swift in Sources */,

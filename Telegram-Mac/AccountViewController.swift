@@ -632,8 +632,13 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         entries.append(.premium(index: index, viewType: .singleItem))
         index += 1
         
-        entries.append(.stars(index: index, count: stars?.balance ?? 0, viewType: .singleItem))
-        index += 1
+        
+        let stars_purchase_blocked = context.appConfiguration.getBoolValue("stars_purchase_blocked", orElse: true)
+        
+        if !stars_purchase_blocked, let stars, stars.balance > 0 || !stars.transactions.isEmpty  {
+            entries.append(.stars(index: index, count: stars.balance, viewType: .singleItem))
+            index += 1
+        }
 
         entries.append(.business(index: index, viewType: .singleItem))
         index += 1
