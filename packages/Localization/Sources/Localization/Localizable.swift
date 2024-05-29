@@ -7463,8 +7463,6 @@ public final class L10n {
   public static var dataAndStorageDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.DownloadFolder") }
   /// Network Usage
   public static var dataAndStorageNetworkUsage: String  { return L10n.tr("Localizable", "DataAndStorage.NetworkUsage") }
-  /// Show 18+ Content
-  public static var dataAndStorageSensitiveContent: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent") }
   /// Storage Usage
   public static var dataAndStorageStorageUsage: String  { return L10n.tr("Localizable", "DataAndStorage.StorageUsage") }
   /// AUTOMATIC AUDIO DOWNLOAD
@@ -7519,14 +7517,6 @@ public final class L10n {
   public static var dataAndStorageCateroryFileSizeLimitHeader: String  { return L10n.tr("Localizable", "DataAndStorage.CateroryFileSizeLimit.Header") }
   /// Undo all custom auto-download settings.
   public static var dataAndStorageConfirmResetSettings: String  { return L10n.tr("Localizable", "DataAndStorage.Confirm.ResetSettings") }
-  /// Do not hide media that contain content suitable only for adults.
-  public static var dataAndStorageSensitiveContentInfo: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Info") }
-  /// 18+ Content
-  public static var dataAndStorageSensitiveContentConfirmHeader: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Header") }
-  /// Confirm
-  public static var dataAndStorageSensitiveContentConfirmOk: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Ok") }
-  /// Confirm that you are over 18 years old and update your settings to see potentially explicit and sensitive content.
-  public static var dataAndStorageSensitiveContentConfirmText: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Text") }
   /// Today
   public static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
   /// Delete for all members
@@ -15625,6 +15615,16 @@ public final class L10n {
   public static func starPurchaseText(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Text", p1, p2, p3)
   }
+  /// Transaction ID copied to clipboard.
+  public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }
+  /// Date
+  public static var starTransactionDate: String  { return L10n.tr("Localizable", "Star.Transaction.Date") }
+  /// Transaction ID
+  public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
+  /// To
+  public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
+  /// Review the [Terms of Services](https://telegram.org) for Stars.
+  public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
   /// Boosts
   public static var statsBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts") }
   /// ACTIONS

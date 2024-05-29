@@ -37,7 +37,9 @@ public final class TextInputTextUrlAttribute: NSObject {
 }
 
 public final class TextInputTextQuoteAttribute: NSObject {
-    override public init() {
+    public let collapsed: Bool
+    public init(collapsed: Bool) {
+        self.collapsed = collapsed
         super.init()
     }
     
@@ -221,7 +223,6 @@ public func textAttributedStringForStateText(_ stateText: NSAttributedString, fo
             
         if !fontAttributes.isEmpty {
             var font: NSFont?
-            var fontSize = fontSize
             if fontAttributes == [.bold, .italic, .monospace] {
                 font = NSFont.semiboldItalicMonospace(fontSize)
             } else if fontAttributes == [.bold, .monospace] {
@@ -553,6 +554,33 @@ private func quoteRangesEqual(_ lhs: [(NSRange, TextInputTextQuoteAttribute)], _
     return true
 }
 
+
+func mergeQuoteRanges(_ quoteRanges: [(NSRange, TextInputTextQuoteAttribute)]) -> [(NSRange, TextInputTextQuoteAttribute)] {
+    guard !quoteRanges.isEmpty else { return [] }
+    
+    var sortedRanges = quoteRanges.sorted { $0.0.location < $1.0.location }
+    var mergedRanges: [(NSRange, TextInputTextQuoteAttribute)] = []
+    
+    var currentRange = sortedRanges[0]
+    
+    for i in 1..<sortedRanges.count {
+        let nextRange = sortedRanges[i]
+        
+        if currentRange.0.intersection(nextRange.0) != nil || currentRange.0.upperBound == nextRange.0.location {
+            // Merge ranges
+            let newLocation = min(currentRange.0.location, nextRange.0.location)
+            let newLength = max(currentRange.0.upperBound, nextRange.0.upperBound) - newLocation
+            currentRange.0 = NSRange(location: newLocation, length: newLength)
+        } else {
+            mergedRanges.append(currentRange)
+            currentRange = nextRange
+        }
+    }
+    mergedRanges.append(currentRange)
+    
+    return mergedRanges
+}
+
 private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttributedString, attributedText: NSMutableAttributedString, fullRange: NSRange) {
     var quoteRanges: [(NSRange, TextInputTextQuoteAttribute)] = []
     initialAttributedText.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: [], using: { value, range, _ in
@@ -661,13 +689,12 @@ private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttribu
         }
     }
     
-    if !quoteRangesEqual(quoteRanges, initialQuoteRanges) {
-        attributedText.removeAttribute(TextInputAttributes.quote, range: fullRange)
-        for (range, attribute) in quoteRanges {
-            let _ = attribute
-            attributedText.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(), range: range)
-        }
+    attributedText.removeAttribute(TextInputAttributes.quote, range: fullRange)
+        
+    for (range, attribute) in mergeQuoteRanges(quoteRanges) {
+        attributedText.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: attribute.collapsed), range: range)
     }
+    
 }
 
 public func refreshTextInputAttributes(_ textView: NSTextView, theme: InputViewTheme, spoilersRevealed: Bool, availableEmojis: Set<String>) {

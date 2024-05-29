@@ -635,20 +635,6 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
     
     public func updateTextContainerInset() {
-        
-        var result = self.defaultTextContainerInset
-        if self.customTextStorage.length != 0 {
-            let topAttributes = self.customTextStorage.attributes(at: 0, effectiveRange: nil)
-            let bottomAttributes = self.customTextStorage.attributes(at: self.customTextStorage.length - 1, effectiveRange: nil)
-            
-            if topAttributes[TextInputAttributes.quote] != nil {
-                result.bottom += 8.0
-            }
-            if bottomAttributes[TextInputAttributes.quote] != nil {
-                result.bottom += 8.0
-            }
-        }
-        
         self.customLayoutManager.ensureLayout(for: self.customTextContainer)
         self.display()
         self.updateTextElements()
@@ -859,8 +845,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
 
         
         textStorage.enumerateAttribute(TextInputAttributes.quote, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
-            if let value = value {
-                let _ = value
+            if let value = value as? TextInputTextQuoteAttribute {
                 
                 let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
                 if self.customLayoutManager.isValidGlyphIndex(glyphRange.location) && self.customLayoutManager.isValidGlyphIndex(glyphRange.location + glyphRange.length - 1) {
@@ -908,9 +893,13 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 boundingRect.size.height += 8.0
                 
                 blockQuote.frame = boundingRect.offsetBy(dx: 0, dy: frame.minY)
+
+
+                let lineRect = highlightRect(forRange: NSMakeRange(range.location, 1), whole: true)
+                blockQuote.collapsable = lineRect.height * 3 + 8 < boundingRect.height
+                blockQuote.collapsed = value.collapsed
+                
                 blockQuote.update(size: boundingRect.size, theme: theme.quote)
-
-
                 
                 validBlockQuotes.append(blockQuoteIndex)
                 blockQuoteIndex += 1
@@ -1306,10 +1295,6 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
 }
 
-private let quoteIcon: CGImage = {
-    return NSImage(named: "Icon_Quote")!.precomposed(flipVertical: false)
-}()
-
 private final class QuoteBackgroundView: View {
     
     private final class Background : View {
@@ -1433,6 +1418,9 @@ private final class QuoteBackgroundView: View {
     }
     private let backgroundView = Background(frame: .zero)
     
+    var collapsable: Bool = false
+    var collapsed: Bool = false
+
     required init(frame: CGRect) {
 //        self.lineLayer = SimpleLayer()
         self.iconView = ImageView()
@@ -1461,7 +1449,15 @@ private final class QuoteBackgroundView: View {
             backgroundView.colors = theme.foreground
             
 //            self.lineLayer.backgroundColor = theme.foreground.cgColor
-            self.iconView.image = theme.icon.precomposed(theme.foreground.main)
+            if collapsable {
+                if collapsed {
+                    self.iconView.image = theme.expand.precomposed(theme.foreground.main)
+                } else {
+                    self.iconView.image = theme.collapse.precomposed(theme.foreground.main)
+                }
+            } else {
+                self.iconView.image = theme.icon.precomposed(theme.foreground.main)
+            }
             self.iconView.sizeToFit()
         }
         

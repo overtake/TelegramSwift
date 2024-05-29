@@ -2025,7 +2025,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if !Thread.isMainThread && generated {
             self._backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize, emoticonThemes: emoticonThemes)
         }
-        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(foreground: .init(main: colors.accent), icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
+        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(foreground: .init(main: colors.accent), icon: NSImage(resource: .iconQuote), collapse: NSImage(resource: .iconQuoteCollapse), expand: NSImage(resource: .iconQuoteExpand)), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
     }
     
     var dark: Bool {

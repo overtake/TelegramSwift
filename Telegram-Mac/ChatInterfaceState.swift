@@ -75,7 +75,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
     case animated(Range<Int>, String, Int64, TelegramMediaFile?, ItemCollectionId?)
-    case quote(Range<Int>)
+    case quote(Range<Int>, Bool)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
@@ -106,7 +106,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 9:
             self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(Int64.self, forKey: "fileId"), try container.decodeIfPresent(TelegramMediaFile.self, forKey: "file"), try container.decodeIfPresent(ItemCollectionId.self, forKey: "info"))
         case 10:
-            self = .quote(range)
+            self = .quote(range, try container.decodeIfPresent(Bool.self, forKey: "collapsed") ?? false)
         default:
             self = .bold(range)
             //fatalError("input attribute not supported")
@@ -184,8 +184,9 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             if let info = info {
                 try container.encode(info, forKey: "info")
             }
-        case .quote:
+        case let .quote(_, collapsed):
             try container.encode(Int32(10), forKey: "_rawValue")
+            try container.encode(collapsed, forKey: "collapsed")
         }
     }
 
@@ -226,7 +227,7 @@ extension ChatTextInputAttribute {
             default:
                 return false
             }
-        case .animated(_, let string, let id, let file, let itemCollectionId):
+        case .animated:
             return false
         }
     }
@@ -252,7 +253,7 @@ extension ChatTextInputAttribute {
             return range
         case let .animated(range, _, _, _, _):
             return range
-        case let .quote(range):
+        case let .quote(range, _):
             return range
         }
     }
@@ -279,8 +280,8 @@ extension ChatTextInputAttribute {
             return .url(range, url)
         case let .animated(_, id, fileId, file, info):
             return .animated(range, id, fileId, file, info)
-        case .quote:
-            return .quote(range)
+        case let .quote(_, collapsed):
+            return .quote(range, collapsed)
         }
     }
 }
@@ -310,8 +311,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute, associatedMe
             inputAttributes.append(.underline(entity.range))
         case let .CustomEmoji(_, fileId):
             inputAttributes.append(.animated(entity.range, "\(arc4random())", fileId, nil, nil))
-        case .BlockQuote:
-            inputAttributes.append(.quote(entity.range))
+        case let .BlockQuote(collapsed):
+            inputAttributes.append(.quote(entity.range, collapsed))
         default:
             break
         }
@@ -346,8 +347,8 @@ func chatTextAttributes(from attributedText: NSAttributedString) -> [ChatTextInp
                 parsedAttributes.append(.underline(range))
             } else if key == TextInputAttributes.spoiler {
                 parsedAttributes.append(.spoiler(range))
-            } else if key == TextInputAttributes.quote {
-                parsedAttributes.append(.quote(range))
+            } else if key == TextInputAttributes.quote, let value = value as? TextInputTextQuoteAttribute {
+                parsedAttributes.append(.quote(range, value.collapsed))
             }
         }
     })
@@ -536,8 +537,8 @@ final class ChatTextInputState: Codable, Equatable {
                 result.addAttribute(TextInputAttributes.underline, value: true as NSNumber, range: range)
             case .spoiler:
                 result.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-            case .quote:
-                result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(), range: range)
+            case let .quote(_, collapsed):
+                result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: collapsed), range: range)
             }
         }
         return .init(inputText: result, selectionRange: self.selectionRange)
@@ -745,8 +746,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
                     attributes.append(.url(newRange.min ..< newRange.max, url))
-                case .quote:
-                    attributes.append(.quote(newRange.min ..< newRange.max))
+                case let .quote(_, collapsed):
+                    attributes.append(.quote(newRange.min ..< newRange.max, collapsed))
                 case let .animated(_, id, fileId, file, itemId):
                     attributes.append(.animated(newRange.min ..< newRange.max, id, fileId, file, itemId))
                 }
@@ -824,8 +825,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
             case let .animated(range, _, fileId, _, _):
                 entities.append(.init(range: range, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
-            case let .quote(range):
-                entities.append(.init(range: range, type: .BlockQuote(isCollapsed: false)))
+            case let .quote(range, collapsed):
+                entities.append(.init(range: range, type: .BlockQuote(isCollapsed: collapsed)))
             }
         }
 

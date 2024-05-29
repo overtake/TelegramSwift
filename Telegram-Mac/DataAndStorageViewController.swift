@@ -385,11 +385,11 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
         case let .soundOnHoverDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageAutoplaySoundOnHoverDesc, viewType: viewType)
         case let .sensitiveContent(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageSensitiveContent, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "strings().dataAndStorageSensitiveContent", type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleSensitiveContent(!value)
             }, autoswitch: false)
         case let .sensitiveContentInfo(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageSensitiveContentInfo, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: "strings().dataAndStorageSensitiveContentInfo", viewType: viewType)
         case .proxyHeader:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsProxyHeader, viewType: .textTopItem)
         case let .proxySettings(_, text, viewType):
@@ -621,9 +621,9 @@ class DataAndStorageViewController: TableViewController {
             pushControllerImpl(controller)
         }, toggleSensitiveContent: { value in
             if value {
-                verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
-                    
-                })
+//                verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
+//                    
+//                })
             }
             
         })

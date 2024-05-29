@@ -351,9 +351,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                     _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: context.window).startStandalone(next: { result in
                         switch result {
                         case .done:
-                            starsContext.add(balance: -state.request.count)
+//                            starsContext.add(balance: -state.request.count)
                             showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, "\(state.request.count)"))
-                            PlayConfetti(for: context.window, stars: true)
                             completion(.paid)
                             close?()
                         default:
