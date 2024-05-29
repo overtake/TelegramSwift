@@ -825,7 +825,7 @@ final class StoryInputView : Control, StoryInput {
             }
         }
         textView.context = arguments?.context
-        textView.inputTheme = .init(quote: .init(foreground: colors, icon: NSImage(named: "Icon_Quote")!), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
+        textView.inputTheme = .init(quote: .init(foreground: colors, icon: NSImage(resource: .iconQuote), collapse: NSImage(resource: .iconQuoteCollapse), expand: NSImage(resource: .iconQuoteExpand)), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
         self.updateInputState()
         
         let input = arguments?.interaction.presentation.findInput(groupId)

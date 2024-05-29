@@ -55,7 +55,7 @@ public func chatTextInputAddFormattingAttribute(_ state: Updated_ChatTextInputSt
         }
         if addAttribute {
             if attribute == TextInputAttributes.quote {
-                result.addAttribute(attribute, value: TextInputTextQuoteAttribute(), range: nsRange)
+                result.addAttribute(attribute, value: TextInputTextQuoteAttribute(collapsed: false), range: nsRange)
                 if nsRange.upperBound != result.length && (result.string as NSString).character(at: nsRange.upperBound) != 0x0a {
                     result.insert(NSAttributedString(string: "\n"), at: nsRange.upperBound)
                 }
@@ -190,7 +190,7 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
     for (attribute, range) in attributesToRemove {
         result.removeAttribute(attribute, range: range)
     }
-    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(), range: nsRange)
+    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: false), range: nsRange)
     return Updated_ChatTextInputState(inputText: result, selectionRange: selectionRange)
 }
 

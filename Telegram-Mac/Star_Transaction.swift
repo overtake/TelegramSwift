@@ -328,7 +328,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.openPeer(peer.id)
         }
         
-        rows.append(.init(left: .init(.initialize(string: "To", color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionTo, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
             let control: AvatarControl
             if let previous = previous as? AvatarControl {
                 control = previous
@@ -352,9 +352,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
 
     
-    rows.append(.init(left: .init(.initialize(string: "Transaction ID", color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+    rows.append(.init(left: .init(.initialize(string: strings().starTransactionId, color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
     
-    rows.append(.init(left: .init(.initialize(string: "Date", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.transaction.date), color: theme.colors.text, font: .normal(.text))))))
+    rows.append(.init(left: .init(.initialize(string: strings().starTransactionDate, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.transaction.date), color: theme.colors.text, font: .normal(.text))))))
 
 
     
@@ -365,7 +365,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
   
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("Review the [Terms of Services](https://telegram.org) for Stars.", linkHandler: arguments.openLink), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionTos, linkHandler: arguments.openLink), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, centerViewAlignment: true, alignment: .center)))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
@@ -392,7 +392,7 @@ func Star_Transaction(context: AccountContext, peer: EnginePeer?, transaction: S
         close?()
     }, copyTransaction: { string in
         copyToClipboard(string)
-        showModalText(for: context.window, text: "Transaction ID copied to clipboard.")
+        showModalText(for: context.window, text: strings().starTransactionCopied)
     }, openLink: { link in
         execute(inapp: .external(link: link, false))
     })

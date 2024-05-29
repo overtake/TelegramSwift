@@ -694,7 +694,7 @@ class ChatMessageItem: ChatRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         if let message = message {
-            return chatMenuItems(for: message, entry: entry, textLayout: (nil, nil), chatInteraction: self.chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: (self.textLayout.merged, nil), chatInteraction: self.chatInteraction)
         }
         return super.menuItems(in: location)
         
