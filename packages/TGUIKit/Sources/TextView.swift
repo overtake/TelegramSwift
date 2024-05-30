@@ -1995,10 +1995,7 @@ public final class TextViewLayout : Equatable {
             
             let firstSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(firstIndex, 1))
             let lastSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(lastIndex, 1))
-            
-            var blockRange = NSMakeRange(NSNotFound, 0)
-            
-            
+                        
             
             firstFound = firstSymbol == "\n"
             lastFound = lastSymbol == "\n"
@@ -2011,7 +2008,7 @@ public final class TextViewLayout : Equatable {
             }
         }
         if lastFound {
-           lastIndex = max(lastIndex - 1, 0)
+           lastIndex = max(min(lastIndex, self.attributedString.length - 1) - 1, 0)
         }
         if firstFound {
            firstIndex = min(firstIndex + 1, self.attributedString.length - 1)

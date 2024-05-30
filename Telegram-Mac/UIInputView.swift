@@ -297,6 +297,13 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
             self.interactions.update({ current in
                 return chatTextInputClearFormattingAttributes(current)
             })
+        case let .toggleQuote(quote, range):
+            self.interactions.update({ current in
+                return chatTextInputAddQuoteAttribute(current, selectionRange: range.min ..< range.max, collapsed: !quote.collapsed, doNotUpdateSelection: true)
+            })
+            if let window = self._window {
+                showModalText(for: window, text: !quote.collapsed ? strings().inputQuoteCollapsed : strings().inputQuoteExpanded)
+            }
         }
     }
     

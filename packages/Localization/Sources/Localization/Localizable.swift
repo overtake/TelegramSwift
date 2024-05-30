@@ -9291,6 +9291,10 @@ public final class L10n {
   }
   /// Share bot content
   public static var inlineModalActionTitle: String  { return L10n.tr("Localizable", "InlineModalAction.Title") }
+  /// Quote shortened
+  public static var inputQuoteCollapsed: String  { return L10n.tr("Localizable", "Input.Quote.Collapsed") }
+  /// Quote fully visible
+  public static var inputQuoteExpanded: String  { return L10n.tr("Localizable", "Input.Quote.Expanded") }
   /// File
   public static var inputAttachPopoverFile: String  { return L10n.tr("Localizable", "InputAttach.Popover.File") }
   /// Gift Premium

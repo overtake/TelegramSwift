@@ -43,6 +43,7 @@ public enum InputViewTransformReason {
     case attribute(NSAttributedString.Key)
     case url
     case clear
+    case toggleQuote(TextInputTextQuoteAttribute, NSRange)
 }
 
 public protocol ChatInputTextViewDelegate: AnyObject {
@@ -507,6 +508,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     private let measurementLayoutManager: NSLayoutManager
     
     private var blockQuotes: [Int: QuoteBackgroundView] = [:]
+    private var collapseQuotes: [Int : Control] = [:]
     private var spoilers: [Int: SpoilerView] = [:]
     
     fileprivate var updateEmojies:(([(CGRect, TextInputTextCustomEmojiAttribute)], InputViewTheme)->Void)?
@@ -864,6 +866,21 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                     self.superview?.subviews.insert(blockQuote, at: 0)
                 }
                 
+                let collapseQuote: Control
+                if let current = self.collapseQuotes[id] {
+                    collapseQuote = current
+                } else {
+                    collapseQuote = Control(frame: NSMakeRect(0, 0, 25, 20))
+                    self.collapseQuotes[id] = collapseQuote
+                    self.addSubview(collapseQuote)
+                }
+                
+                collapseQuote.removeAllHandlers()
+                collapseQuote.set(handler: { [weak self] _ in
+                    self?.customDelegate?.inputApplyTransform(.toggleQuote(value, range))
+                }, for: .Click)
+                
+                
                 var boundingRect = CGRect()
                 var startIndex = glyphRange.lowerBound
                 while startIndex < glyphRange.upperBound {
@@ -901,8 +918,12 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 
                 blockQuote.update(size: boundingRect.size, theme: theme.quote)
                 
+                collapseQuote.setFrameOrigin(NSMakePoint(boundingRect.maxX - collapseQuote.frame.width, boundingRect.minY))
+                
+                
                 validBlockQuotes.append(blockQuoteIndex)
                 blockQuoteIndex += 1
+                
             }
         })
         
@@ -1411,6 +1432,7 @@ private final class QuoteBackgroundView: View {
 //    private let lineLayer: SimpleLayer
     private let iconView: ImageView
     
+    
     private var theme: InputViewTheme.Quote?
     
     var destination: InputViewSubviewDestination  {
@@ -1441,16 +1463,11 @@ private final class QuoteBackgroundView: View {
     }
     
     func update(size: CGSize, theme: InputViewTheme.Quote) {
-        if self.theme != theme {
+        if self.theme != theme || collapsable {
             self.theme = theme
-            
-          //  self.backgroundColor = theme.background
-            
             backgroundView.colors = theme.foreground
-            
-//            self.lineLayer.backgroundColor = theme.foreground.cgColor
             if collapsable {
-                if collapsed {
+                if !collapsed {
                     self.iconView.image = theme.expand.precomposed(theme.foreground.main)
                 } else {
                     self.iconView.image = theme.collapse.precomposed(theme.foreground.main)
@@ -1461,8 +1478,7 @@ private final class QuoteBackgroundView: View {
             self.iconView.sizeToFit()
         }
         
-        
-            
+
 //        self.lineLayer.frame = CGRect(origin: CGPoint(x: 0.0, y: 0), size: CGSize(width: 3.0, height: size.height))
         self.iconView.frame = CGRect(origin: CGPoint(x: size.width - 4.0 - self.iconView.frame.width, y: 4.0), size: self.iconView.frame.size)
         
