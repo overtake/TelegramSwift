@@ -315,12 +315,12 @@ fileprivate class PreviewSenderView : Control {
         textContainerView.addSubview(textView)
         
         addSubview(headerView)
+        addSubview(tableView)
         addSubview(forHelperView)
         addSubview(textContainerView)
         addSubview(actionsContainerView)
         addSubview(separator)
         
-        addSubview(tableView)
 
         
         addSubview(draggingView)
@@ -408,23 +408,23 @@ fileprivate class PreviewSenderView : Control {
         
         let actionPoint: NSPoint
         
-        switch state.sortValue {
-        case .down:
+//        switch state.sortValue {
+//        case .down:
             actionPoint = NSMakePoint(size.width - actionsContainerView.frame.width + 5, size.height - actionsContainerView.frame.height)
-        case .up:
-            actionPoint = NSMakePoint(size.width - actionsContainerView.frame.width + 5, headerView.frame.maxY)
-        }
+//        case .up:
+//            actionPoint = NSMakePoint(size.width - actionsContainerView.frame.width + 5, headerView.frame.maxY)
+//        }
         transition.updateFrame(view: actionsContainerView, frame: CGRect(origin: actionPoint, size: actionsContainerView.frame.size))
         
         let (textSize, textHeight) = textViewSize()
         
         let textContainerRect: NSRect
-        switch state.sortValue {
-        case .down:
+//        switch state.sortValue {
+//        case .down:
             textContainerRect = NSMakeRect(0, size.height - textSize.height, size.width, textSize.height)
-        case .up:
-            textContainerRect = NSMakeRect(0, headerView.frame.maxY, size.width, textSize.height)
-        }
+//        case .up:
+//            textContainerRect = NSMakeRect(0, headerView.frame.maxY, size.width, textSize.height)
+//        }
         transition.updateFrame(view: textContainerView, frame: textContainerRect)
         
         
@@ -439,12 +439,12 @@ fileprivate class PreviewSenderView : Control {
         
         let tableRect: NSRect
         
-        switch state.sortValue {
-        case .down:
+//        switch state.sortValue {
+//        case .down:
             tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
-        case .up:
-            tableRect = NSMakeRect(0, textContainerRect.maxY - 6, frame.width, min(height, listHeight))
-        }
+//        case .up:
+//            tableRect = NSMakeRect(0, textContainerRect.maxY - 6, frame.width, min(height, listHeight))
+//        }
         
         transition.updateFrame(view: tableView, frame: tableRect)
         transition.updateFrame(view: draggingView, frame: size.bounds)
