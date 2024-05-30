@@ -260,6 +260,9 @@ private final class HeaderView : GeneralContainableRowView {
         addSubview(header)
         addSubview(headerInfo)
         
+        self.sceneView.sceneBackground = theme.colors.listBackground
+
+        
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         dismiss.sizeToFit()
         dismiss.autohighlight = false

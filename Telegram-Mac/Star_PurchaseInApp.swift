@@ -126,6 +126,8 @@ private final class HeaderItemView : GeneralContainableRowView {
         addSubview(header)
         addSubview(info)
         
+        self.sceneView.sceneBackground = theme.colors.background
+        
         addSubview(accept)
         
         sceneView.hideStar()

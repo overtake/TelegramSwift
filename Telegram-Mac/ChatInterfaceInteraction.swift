@@ -13,6 +13,7 @@ import CodeSyntax
 import TGUIKit
 import SwiftSignalKit
 import MapKit
+import InputView
 
 
 final class ReplyMarkupInteractions {
@@ -402,6 +403,8 @@ final class ChatInteraction : InterfaceObserver  {
     }
     @discardableResult func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
         
+        let text = text.mutableCopy() as! NSMutableAttributedString
+        
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
         let inputText = presentation.effectiveInput.attributedString().mutableCopy() as! NSMutableAttributedString
         
@@ -409,13 +412,19 @@ final class ChatInteraction : InterfaceObserver  {
             return selectedRange.lowerBound ..< selectedRange.lowerBound
         }
         
+        if selectedRange.lowerBound - 1 >= 0 {
+            let attributes = inputText.attributes(at: selectedRange.lowerBound - 1, effectiveRange: nil)
+                .filter { (key, value) in
+                    if value is TextInputTextCustomEmojiAttribute {
+                        return false
+                    } else {
+                        return true
+                    }
+                }
+            text.addAttributes(attributes, range: text.range)
+        }
+        
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
-            // let minUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: selectedRange.lowerBound)
-            // let maxUtfIndex = inputText.utf16.index(minUtfIndex, offsetBy: selectedRange.upperBound - selectedRange.lowerBound)
-            
-            
-            
-            // inputText.removeSubrange(minUtfIndex.samePosition(in: inputText)! ..< maxUtfIndex.samePosition(in: inputText)!)
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: text)
             selectedRange = selectedRange.lowerBound ..< selectedRange.lowerBound
         } else {

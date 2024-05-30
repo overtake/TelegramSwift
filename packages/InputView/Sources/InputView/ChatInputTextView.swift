@@ -875,10 +875,6 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                     self.addSubview(collapseQuote)
                 }
                 
-                collapseQuote.removeAllHandlers()
-                collapseQuote.set(handler: { [weak self] _ in
-                    self?.customDelegate?.inputApplyTransform(.toggleQuote(value, range))
-                }, for: .Click)
                 
                 
                 var boundingRect = CGRect()
@@ -920,6 +916,13 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 
                 collapseQuote.setFrameOrigin(NSMakePoint(boundingRect.maxX - collapseQuote.frame.width, boundingRect.minY))
                 
+                collapseQuote.userInteractionEnabled = blockQuote.collapsable
+                
+                collapseQuote.removeAllHandlers()
+                collapseQuote.set(handler: { [weak self] _ in
+                    self?.customDelegate?.inputApplyTransform(.toggleQuote(value, range))
+                }, for: .Click)
+                
                 
                 validBlockQuotes.append(blockQuoteIndex)
                 blockQuoteIndex += 1
@@ -928,15 +931,26 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         })
         
         var removedBlockQuotes: [Int] = []
+        var removedCollapseQuotes: [Int] = []
         for (id, blockQuote) in self.blockQuotes {
             if !validBlockQuotes.contains(id) {
                 removedBlockQuotes.append(id)
                 blockQuote.removeFromSuperview()
             }
         }
+        for (id, collapseQuote) in self.collapseQuotes {
+            if !validBlockQuotes.contains(id) {
+                removedCollapseQuotes.append(id)
+                collapseQuote.removeFromSuperview()
+            }
+        }
         for id in removedBlockQuotes {
             self.blockQuotes.removeValue(forKey: id)
         }
+        for id in removedCollapseQuotes {
+            self.collapseQuotes.removeValue(forKey: id)
+        }
+
     }
     
     

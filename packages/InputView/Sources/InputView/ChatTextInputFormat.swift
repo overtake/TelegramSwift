@@ -180,8 +180,6 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
             if key == TextInputAttributes.quote {
                 attributesToRemove.append((key, range))
                 quoteRange = quoteRange.union(range)
-            } else {
-                attributesToRemove.append((key, nsRange))
             }
         }
     }

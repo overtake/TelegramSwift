@@ -32,6 +32,12 @@ final class GoldenStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVie
    
     private let sceneView: SCNView
     
+    var sceneBackground: NSColor = .clear {
+        didSet {
+            sceneView.backgroundColor = sceneBackground
+        }
+    }
+    
     private let tapDelay = MetaDisposable()
     private let appearanceDelay = MetaDisposable()
     
@@ -257,7 +263,6 @@ final class GoldenStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVie
         
         
 //        self.sceneView.col = .bgra8Unorm_srgb
-        self.sceneView.backgroundColor = theme.colors.listBackground
         self.sceneView.preferredFramesPerSecond = 60
         self.sceneView.isJitteringEnabled = true
 
