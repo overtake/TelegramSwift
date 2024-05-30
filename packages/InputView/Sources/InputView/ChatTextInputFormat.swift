@@ -168,7 +168,7 @@ public func chatTextInputAddMentionAttribute(_ state: Updated_ChatTextInputState
     }
 }
 
-public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, selectionRange: Range<Int>) -> Updated_ChatTextInputState {
+public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, selectionRange: Range<Int>, collapsed: Bool = false, doNotUpdateSelection: Bool = false) -> Updated_ChatTextInputState {
     if selectionRange.isEmpty {
         return state
     }
@@ -190,7 +190,7 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
     for (attribute, range) in attributesToRemove {
         result.removeAttribute(attribute, range: range)
     }
-    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: false), range: nsRange)
-    return Updated_ChatTextInputState(inputText: result, selectionRange: selectionRange)
+    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: collapsed), range: nsRange)
+    return Updated_ChatTextInputState(inputText: result, selectionRange: doNotUpdateSelection ? state.selectionRange : selectionRange)
 }
 

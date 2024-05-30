@@ -50,7 +50,7 @@ public final class TextInputTextQuoteAttribute: NSObject {
         
         let _ = other
         
-        return true
+        return self.collapsed == other.collapsed
     }
 }
 

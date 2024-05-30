@@ -2682,7 +2682,7 @@ class ChatRowItem: TableRowItem {
         
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
-                layout.layout.measure(width: maxContentWidth + defaultContentInnerInset)
+                layout.layout.measure(width: maxContentWidth - defaultContentInnerInset)
             }
         }
         
