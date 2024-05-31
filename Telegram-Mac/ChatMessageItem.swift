@@ -424,11 +424,11 @@ class ChatMessageItem: ChatRowItem {
              
              textLayout = FoldingTextLayout.make(self.messageText, context: context, revealed: entry.additionalData.quoteRevealed, takeLayout: { string in
                  let textLayout = TextViewLayout(string, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
-                    chatInteraction?.update({
-                        $0.updatedInterfaceState({
-                            $0.withRevealedSpoiler(message.id)
-                        })
-                    })
+                     chatInteraction?.update({
+                         $0.updatedInterfaceState({
+                             $0.withRevealedSpoiler(message.id)
+                         })
+                     })
                  })
                  textLayout.mayBlocked = true
                
