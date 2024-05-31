@@ -3332,7 +3332,15 @@ extension MessageForwardInfo {
 
 func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) -> Bool {
     let text = message.text.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "\n", with: "")
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji
+    let entities = message.entities.filter {
+        switch $0.type {
+        case .CustomEmoji:
+            return true
+        default:
+            return false
+        }
+    }
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji && entities.count == message.entities.count
 }
 
 
