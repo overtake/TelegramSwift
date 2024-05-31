@@ -94,7 +94,7 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
                 })
             }
             if !accept {
-                showModalText(for: mainWindow, text: strings().factCheckLinkOnlyAllowed(hosts.joined(separator: ", ")))
+                showModalText(for: mainWindow, text: strings().urlLinkOnlyAllowed(hosts.joined(separator: ", ")))
                 return .fail(.fields([_id_input_url : .shake]))
             }
         }
