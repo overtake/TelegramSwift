@@ -620,9 +620,21 @@ class MainViewController: TelegramViewController {
     func globalSearch(_ query: String, peerId: PeerId?) {
         let controller = navigation.empty
         if let controller = controller as? ChatListController {
-            controller.globalSearch(query, peerId: peerId)
-        } else if let controller = controller as? TabBarController {
-            (controller.current as? ChatListController)?.globalSearch(query, peerId: peerId)
+            if let peerId {
+                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
+                    controller?.globalSearch(query, peer: value)
+                })
+            } else {
+                controller.globalSearch(query, peer: nil)
+            }
+        } else if let tabbar = controller as? TabBarController, let controller = tabbar.current as? ChatListController {
+            if let peerId {
+                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
+                    controller?.globalSearch(query, peer: value)
+                })
+            } else {
+                controller.globalSearch(query, peer: nil)
+            }
         }
     }
     

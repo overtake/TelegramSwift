@@ -3994,10 +3994,6 @@ extension MessageTextEntity {
             return 6
         case .Italic:
             return 7
-        case .Code:
-            return 8
-        case .Pre:
-            return 9
         case .TextUrl:
             return 10
         case .TextMention:
@@ -4006,8 +4002,6 @@ extension MessageTextEntity {
             return 12
         case .Strikethrough:
             return 13
-        case .BlockQuote:
-            return 14
         case .Underline:
             return 15
         case .BankCard:
@@ -4018,6 +4012,12 @@ extension MessageTextEntity {
             return 18
         case .Custom:
             return 19
+        case .Code:
+            return 20
+        case .Pre:
+            return 21
+        case .BlockQuote:
+            return 22
         }
     }
 }

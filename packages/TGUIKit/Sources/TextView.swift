@@ -1982,7 +1982,14 @@ public final class TextViewLayout : Equatable {
         var firstFound: Bool = false
         var lastFound: Bool = false
         
-        let block = attributedString.attribute(TextInputAttributes.quote, at: firstIndex, effectiveRange: &blockRange)
+        let block = attributedString.attribute(TextInputAttributes.quote, at: firstIndex, effectiveRange: &blockRange) as? TextViewBlockQuoteData
+        
+        attributedString.enumerateAttribute(TextInputAttributes.quote, in: attributedString.range, using: { value, range, _ in
+            if value as? TextViewBlockQuoteData === block {
+                blockRange.location = min(range.location, blockRange.location)
+                blockRange.length += range.length
+            }
+        })
 
         if blockRange.location != NSNotFound, block != nil {
             firstIndex = blockRange.min - 1
@@ -2047,7 +2054,15 @@ public final class TextViewLayout : Equatable {
         let valid:Bool = tidyChar == "" || tidyChar == "_" || tidyChar == "\u{FFFD}"
         
         var inBlockRange: NSRange = NSMakeRange(0, 0)
-        let inBlock = attributedString.attribute(.init("Attribute__Blockquote"), at: startIndex, effectiveRange: &inBlockRange)
+        let inBlock = attributedString.attribute(TextInputAttributes.quote, at: startIndex, effectiveRange: &inBlockRange) as? TextViewBlockQuoteData
+        
+        attributedString.enumerateAttribute(TextInputAttributes.quote, in: attributedString.range, using: { value, range, _ in
+            if value as? TextViewBlockQuoteData === inBlock {
+                inBlockRange.location = min(range.location, inBlockRange.location)
+                inBlockRange.length += range.length
+            }
+        })
+        
         
         if let _ = inBlock {
             range = inBlockRange

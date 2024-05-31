@@ -727,6 +727,7 @@ class ChatMessageItem: ChatRowItem {
         entities = entities + (new ?? [])
         
         entities = concatMessageAttributes(entities)
+    
         
         for entity in entities {
             let r = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
