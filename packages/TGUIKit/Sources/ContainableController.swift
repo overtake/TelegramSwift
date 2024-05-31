@@ -170,7 +170,7 @@ public extension ContainedViewLayoutTransition {
                 layer.animateBounds(from: presentBounds, to: frame.size.bounds, duration: duration, timingFunction: timingFunction, completion: completion)
             }
             func animatePos(_ layer: CALayer) -> Void {
-                var presentRect:NSPoint = layer.frame.origin
+                var presentRect:NSPoint = layer.position
                 let presentation = layer.presentation()
                 if let presentation = presentation, layer.animation(forKey:"position") != nil {
                     presentRect.x = presentation.position.x
