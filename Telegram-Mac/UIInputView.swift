@@ -89,6 +89,8 @@ final class TextView_Interactions : InterfaceObserver {
     var simpleTransform: Bool = false
     var emojiPlayPolicy: LottiePlayPolicy = .loop
     
+    var allowedLinkHosts: [String] = []
+    
     init(presentation: Updated_ChatTextInputState = .init()) {
         self.presentation = presentation
     }
@@ -291,7 +293,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
                     }
                     return current
                 }
-            }), for: window)
+            }, hosts: self.interactions.allowedLinkHosts), for: window)
             
         case .clear:
             self.interactions.update({ current in

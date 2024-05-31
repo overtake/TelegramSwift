@@ -8319,6 +8319,10 @@ public final class L10n {
   public static func factCheckInfoSecond(_ p1: String) -> String {
     return L10n.tr("Localizable", "FactCheck.Info.Second", p1)
   }
+  /// Only %@ links are allowed
+  public static func factCheckLinkOnlyAllowed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FactCheck.Link.OnlyAllowed", p1)
+  }
   /// Fact check is removed
   public static var factCheckSaveDelete: String  { return L10n.tr("Localizable", "FactCheck.Save.Delete") }
   /// Fact check is updated
