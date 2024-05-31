@@ -1393,13 +1393,15 @@ class ChatListController : PeersListController {
     }
     
     
-    func globalSearch(_ query: String, peerId: PeerId?) {
+    func globalSearch(_ query: String, peer: EnginePeer?) {
         let context = self.context
         
         let invoke = { [weak self] in
             self?.genericView.searchView.change(state: .Focus, false)
             
-            if let peerId {
+            if let peer {
+                
+                let peerId = peer.id
                 
                 enum SearchMode : Equatable {
                     case thisChat
@@ -1409,7 +1411,7 @@ class ChatListController : PeersListController {
                 
                 var updateSearchView:(()->Void)? = nil
                 
-                var mode: SearchMode = peerId.namespace == Namespaces.Peer.CloudChannel ? .publicPosts : .thisChat {
+                var mode: SearchMode = peer._asPeer().isChannel ? .publicPosts : .thisChat {
                     didSet {
                         updateSearchView?()
                     }

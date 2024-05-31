@@ -327,11 +327,11 @@ public extension TableScrollState {
     func focus(action: @escaping(NSView)->Void) -> TableScrollState {
         switch self {
         case let .top(id, innerId, animated, focus, inset):
-            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, action: action), inset: inset)
+            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
         case let .bottom(id, innerId, animated, focus, inset):
-            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, action: action), inset: inset)
+            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
         case let .center(id, innerId, animated, focus, inset):
-            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, action: action), inset: inset)
+            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
         default:
             return self
         }

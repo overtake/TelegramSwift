@@ -661,7 +661,6 @@ class FoldingTextView : View {
     
     override var userInteractionEnabled: Bool {
         didSet {
-            self.updateLayouts()
         }
     }
     
