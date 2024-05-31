@@ -43,7 +43,7 @@ private final class HeaderItem : GeneralRowItem {
         self.headerLayout = .init(.initialize(string: strings().starPurchaseConfirm, color: theme.colors.text, font: .medium(.title)), alignment: .center)
         
         let infoAttr = NSMutableAttributedString()
-        infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, "\(request.count)"), color: theme.colors.text, font: .normal(.text))
+        infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
         infoAttr.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(infoAttr, alignment: .center)
         
@@ -354,7 +354,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                         switch result {
                         case .done:
 //                            starsContext.add(balance: -state.request.count)
-                            showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, "\(state.request.count)"))
+                            showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count))))
                             completion(.paid)
                             close?()
                         default:

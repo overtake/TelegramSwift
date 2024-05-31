@@ -493,18 +493,6 @@ class ChatMediaItem: ChatRowItem {
             
             caption.removeWhitespaceFromQuoteAttribute()
             
-            var spoilers:[TextViewLayout.Spoiler] = []
-            for entity in entities {
-                switch entity.type {
-                case .Spoiler:
-                    let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                    if let range = caption.range.intersection(range) {
-                        caption.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                    }
-                default:
-                    break
-                }
-            }
             
             if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.hashtag, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)

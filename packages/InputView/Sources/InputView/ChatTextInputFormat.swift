@@ -40,7 +40,8 @@ public func chatTextInputAddFormattingAttribute(_ state: Updated_ChatTextInputSt
         let nsRange = NSRange(location: selectionRange.lowerBound, length: selectionRange.count)
         var addAttribute = true
         var attributesToRemove: [NSAttributedString.Key] = []
-        state.inputText.enumerateAttributes(in: nsRange, options: .longestEffectiveRangeNotRequired) { attributes, range, stop in
+        
+        state.inputText.enumerateAttributes(in: nsRange, options: []) { attributes, range, stop in
             for (key, _) in attributes {
                 if key == attribute && range == nsRange {
                     addAttribute = false

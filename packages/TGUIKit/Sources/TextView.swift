@@ -791,6 +791,14 @@ public final class TextViewLayout : Equatable {
         return self.attributedString.containsAttribute(attributeName: TextInputAttributes.quote) is TextViewBlockQuoteData
     }
     
+    public var lastLineIsQuote: Bool {
+        if let lineRange = self.lines.last?.lineRange {
+            return self.attributedString.attributedSubstring(from: lineRange).containsAttribute(attributeName: TextInputAttributes.quote) is TextViewBlockQuoteData
+        } else {
+            return false
+        }
+    }
+    
     public var blockCollapsable: Bool {
         return (self.attributedString.containsAttribute(attributeName: TextInputAttributes.quote) as? TextViewBlockQuoteData)?.collapsable ?? false
     }
@@ -2307,6 +2315,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public func set(mask: CALayer?) {
         self.drawLayer.mask = mask
+        
         if let mask {
             let copy = SimpleLayer()
             copy.contentsGravity = mask.contentsGravity
