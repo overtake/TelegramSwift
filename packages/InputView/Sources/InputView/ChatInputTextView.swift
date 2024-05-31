@@ -468,6 +468,7 @@ private final class ChatInputTextContainer: NSTextContainer {
                     }
                     
                     if (isFirstLine) {
+                        
                         result.size.width -= 18.0
                     }
                 }

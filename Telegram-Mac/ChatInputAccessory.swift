@@ -28,6 +28,8 @@ class ChatInputAccessory: View {
     private var progress: Control?
     let container:ChatAccessoryView = ChatAccessoryView()
     
+    private let disposable = MetaDisposable()
+    
     var dismissForward:(()->Void)!
     var dismissReply:(()->Void)!
     var dismissEdit:(()->Void)!
@@ -293,13 +295,15 @@ class ChatInputAccessory: View {
         }
         
         if let displayNode = displayNode {
-            nodeReady.set(displayNode.nodeReady.get() |> map { _ in return animated})
+            nodeReady.set(displayNode.nodeReady.get() |> map { _ in return animated })
         } else {
             nodeReady.set(.single(animated))
         }
         iconView.contextMenu = container.contextMenu
         iconView.sizeToFit()
-        displayNode?.view = container
+        disposable.set(nodeReady.get().startStandalone(next: { [weak self, container] value in
+            self?.displayNode?.view = container
+        }))
     }
     
     private func updateProgress(_ loadingState: EditStateLoading) {
@@ -351,6 +355,7 @@ class ChatInputAccessory: View {
     
     
     deinit {
+        disposable.dispose()
     }
     
     var size: NSSize = .zero

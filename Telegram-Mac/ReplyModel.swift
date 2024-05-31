@@ -355,7 +355,7 @@ class ReplyModel: ChatAccessoryModel {
         }
         if display {
             self.view?.setFrameSize(self.size)
-            self.setNeedDisplay()
+            //self.setNeedDisplay()
         }
     }
     
