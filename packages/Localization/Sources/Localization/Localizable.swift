@@ -8319,10 +8319,6 @@ public final class L10n {
   public static func factCheckInfoSecond(_ p1: String) -> String {
     return L10n.tr("Localizable", "FactCheck.Info.Second", p1)
   }
-  /// Only %@ links are allowed
-  public static func factCheckLinkOnlyAllowed(_ p1: String) -> String {
-    return L10n.tr("Localizable", "FactCheck.Link.OnlyAllowed", p1)
-  }
   /// Fact check is removed
   public static var factCheckSaveDelete: String  { return L10n.tr("Localizable", "FactCheck.Save.Delete") }
   /// Fact check is updated
@@ -18051,6 +18047,10 @@ public final class L10n {
   public static var twoStepAuthResetSuccessHeader: String  { return L10n.tr("Localizable", "TwoStepAuth.ResetSuccess.Header") }
   /// Capitalize
   public static var uezBsLqGTitle: String  { return L10n.tr("Localizable", "UEZ-Bs-lqG.title") }
+  /// Only %@ links are allowed
+  public static func urlLinkOnlyAllowed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "URL.Link.OnlyAllowed", p1)
+  }
   /// Update Telegram
   public static var updateUpdateTelegram: String  { return L10n.tr("Localizable", "Update.UpdateTelegram") }
   /// Telegram Update
