@@ -43,7 +43,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
         return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .singleItem, placeholder: nil, inputPlaceholder: strings().factCheckPlaceholder, canMakeTransformations: true, filter: { text in
             return text
-        }, updateState: arguments.updateState, limit: length, hasEmoji: false)
+        }, updateState: arguments.updateState, limit: length, hasEmoji: false, allowedLinkHosts: ["t.me"])
     }))
     index += 1
     

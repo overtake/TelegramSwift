@@ -50,12 +50,14 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let rightItem: InputDataRightItem?
     fileprivate let canMakeTransformations: Bool
     fileprivate let simpleTransform: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false) {
+    fileprivate let allowedLinkHosts: [String]
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = []) {
         self.filter = filter
         self.limit = limit
         self.context = context
         self.placeholder = placeholder
         self.hasEmoji = hasEmoji
+        self.allowedLinkHosts = allowedLinkHosts
         self.canMakeTransformations = canMakeTransformations
         self.simpleTransform = simpleTransform
         self.rightItem = rightItem
@@ -508,6 +510,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         textView.context = item.context
         textView.interactions.max_height = 500
         textView.interactions.min_height = 20
+        textView.interactions.allowedLinkHosts = item.allowedLinkHosts
         textView.interactions.canTransform = item.canMakeTransformations
         textView.interactions.simpleTransform = item.simpleTransform
 
