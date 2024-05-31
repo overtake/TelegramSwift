@@ -3696,26 +3696,26 @@ class ChatRowItem: TableRowItem {
         if let factCheckLayout {
             return LastLineData(width: factCheckLayout.size.width, single: false)
         }
-        if captionLayouts.count == 1 {
+        if captionLayouts.count == 1, !invertMedia {
             if let item = self as? ChatGroupedItem {
                 switch item.layoutType {
                 case .files:
                     if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
                         if let line = caption.lastLine {
-                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1)
+                            return LastLineData(width: line.isRTL || caption.lastLineIsQuote ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }
                     }
                 case .photoOrVideo:
                     if let caption = captionLayouts.first?.layout {
                         if let line = caption.lastLine {
-                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1 && !isBubbleFullFilled)
+                            return LastLineData(width: line.isRTL || caption.lastLineIsQuote ? blockWidth : line.frame.width, single: caption.linesCount == 1 && !isBubbleFullFilled)
                         }
                     }
                 }
             } else {
                 if let caption = captionLayouts.first?.layout {
                     if let line = caption.lastLine {
-                        return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1 && !isBubbleFullFilled)
+                        return LastLineData(width: line.isRTL || caption.lastLineIsQuote ? blockWidth : line.frame.width, single: caption.linesCount == 1 && !isBubbleFullFilled)
                     }
                 }
             }
@@ -3725,13 +3725,13 @@ class ChatRowItem: TableRowItem {
                 case .files:
                     if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
                         if let line = caption.lastLine {
-                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1)
+                            return LastLineData(width: line.isRTL || caption.lastLineIsQuote ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }
                     }
                 case .photoOrVideo:
                     if let caption = captionLayouts.first?.layout {
                         if let line = caption.lastLine {
-                            return LastLineData(width: line.isRTL || caption.hasBlockQuotes ? blockWidth : line.frame.width, single: caption.linesCount == 1)
+                            return LastLineData(width: line.isRTL || caption.lastLineIsQuote ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }
                     }
                 }

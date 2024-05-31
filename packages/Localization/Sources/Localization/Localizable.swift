@@ -9291,9 +9291,9 @@ public final class L10n {
   }
   /// Share bot content
   public static var inlineModalActionTitle: String  { return L10n.tr("Localizable", "InlineModalAction.Title") }
-  /// Quote shortened
+  /// Quote text will be collapsed
   public static var inputQuoteCollapsed: String  { return L10n.tr("Localizable", "Input.Quote.Collapsed") }
-  /// Quote fully visible
+  /// Quote text will be fully visible
   public static var inputQuoteExpanded: String  { return L10n.tr("Localizable", "Input.Quote.Expanded") }
   /// File
   public static var inputAttachPopoverFile: String  { return L10n.tr("Localizable", "InputAttach.Popover.File") }
@@ -15611,13 +15611,41 @@ public final class L10n {
   public static func starPurchasePay(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Pay", p1)
   }
-  /// You acquired "%1$@" in %2$@ for %3$@ Stars.
+  /// You acquired "%1$@" in %2$@ %3$@.
   public static func starPurchaseSuccess(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Success", p1, p2, p3)
   }
-  /// Do you want to buy **"%1$@"** in **%2$@** **for %3$@ Stars**?
+  /// Do you want to buy **"%1$@"** in **%2$@** **%3$@**?
   public static func starPurchaseText(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Text", p1, p2, p3)
+  }
+  /// %d
+  public static func starPurchaseTextInCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_countable", p1)
+  }
+  /// for %d Stars
+  public static func starPurchaseTextInFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_few", p1)
+  }
+  /// for %d Stars
+  public static func starPurchaseTextInMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_many", p1)
+  }
+  /// for %d Star
+  public static func starPurchaseTextInOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_one", p1)
+  }
+  /// for %d Stars
+  public static func starPurchaseTextInOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_other", p1)
+  }
+  /// for %d Stars
+  public static func starPurchaseTextInTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_two", p1)
+  }
+  /// for %d Stars
+  public static func starPurchaseTextInZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.Text.In_zero", p1)
   }
   /// Transaction ID copied to clipboard.
   public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }

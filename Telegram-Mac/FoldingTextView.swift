@@ -165,6 +165,10 @@ public class FoldingTextLayout {
         return blocks.contains(where: { $0.text.hasBlockQuotes })
     }
     
+    var lastLineIsQuote: Bool {
+        return blocks.last?.text.lastLineIsQuote ?? false
+    }
+    
     func makeImageBlock(backgroundColor: NSColor) {
         for i in 0 ..< blocks.count {
             blocks[i].makeImageBlock(backgroundColor: backgroundColor)
@@ -229,7 +233,7 @@ public class FoldingTextLayout {
         var insideBlockquote = false
 
         string.enumerateAttributes(in: NSRange(location: 0, length: length), options: []) { (attributes, range, _) in
-            if attributes[.init("Attribute__Blockquote")] != nil {
+            if attributes[TextInputAttributes.quote] != nil {
                 if !insideBlockquote {
                     if rangeStart < range.location {
                         let textRange = NSRange(location: rangeStart, length: range.location - rangeStart)
@@ -259,7 +263,11 @@ public class FoldingTextLayout {
 
         if rangeStart < length {
             let finalRange = NSRange(location: rangeStart, length: length - rangeStart)
-            let finalText = string.attributedSubstring(from: finalRange)
+            var finalText = string.attributedSubstring(from: finalRange)
+            
+            if finalText.string.hasPrefix("\n") {
+                finalText = finalText.attributedSubstring(from: NSRange(location: 1, length: finalText.length - 1))
+            }
             if !finalText.string.isEmpty {
                 results.append(finalText)
             }
