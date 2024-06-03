@@ -430,7 +430,7 @@ private final class WrapperView : View {
         super.init(frame: frameRect)
         addSubview(textView)
         self.layer?.mask = mask
-        
+        self.layer?.masksToBounds = false
     }
     
     func update(_ layout: FoldingTextLayout.ViewLayout, isRevealed: Bool, context: AccountContext, transition: ContainedViewLayoutTransition) {
@@ -676,7 +676,7 @@ class FoldingTextView : View {
         super.init(frame: frameRect)
         
         layer?.masksToBounds = false
-        
+                
         self.revealBlockAtIndex = { [weak self] index in
             if let layout = self?.layouts {
                 layout.toggle(index)

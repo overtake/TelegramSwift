@@ -102,11 +102,11 @@ final class EmojiScreenEffect {
                             
                             if isPremium {
                                 if !animation.mirror {
-                                    point.x += 18
+                                    point.x += 50
                                 } else {
-                                    point.x -= 18
+                                    point.x -= 50
                                 }
-                                point.y -= 2
+                                point.y -= 10
                                 
                             }
                         case .reaction:

@@ -648,46 +648,37 @@ private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttribu
     
     quoteRanges = quoteRanges.filter({ $0.0.length > 0 })
     
-    while quoteRanges.count > 1 {
-        var hadReductions = false
-        outer: for i in 0 ..< quoteRanges.count - 1 {
-            if quoteRanges[i].1 === quoteRanges[i + 1].1 {
-                var combine = true
-                inner: for j in quoteRanges[i].0.upperBound ..< quoteRanges[i + 1].0.lowerBound {
-                    if let c = UnicodeScalar(text.character(at: j)) {
-                        if textUrlCharacters.contains(c) {
-                        } else {
-                            combine = false
-                            break inner
-                        }
-                    } else {
-                        combine = false
-                        break inner
-                    }
-                }
-                if combine {
-                    hadReductions = true
-                    quoteRanges[i] = (NSRange(location: quoteRanges[i].0.lowerBound, length: quoteRanges[i + 1].0.upperBound - quoteRanges[i].0.lowerBound), quoteRanges[i].1)
-                    quoteRanges.remove(at: i + 1)
-                    break outer
-                }
-            }
-        }
-        if !hadReductions {
-            break
-        }
-    }
+//    while quoteRanges.count > 1 {
+//        var hadReductions = false
+//        outer: for i in 0 ..< quoteRanges.count - 1 {
+//            if quoteRanges[i].1 === quoteRanges[i + 1].1 {
+//                var combine = true
+//                inner: for j in quoteRanges[i].0.upperBound ..< quoteRanges[i + 1].0.lowerBound {
+//                    if let c = UnicodeScalar(text.character(at: j)) {
+//                        if textUrlCharacters.contains(c) {
+//                        } else {
+//                            combine = false
+//                            break inner
+//                        }
+//                    } else {
+//                        combine = false
+//                        break inner
+//                    }
+//                }
+//                if combine {
+//                    hadReductions = true
+//                    quoteRanges[i] = (NSRange(location: quoteRanges[i].0.lowerBound, length: quoteRanges[i + 1].0.upperBound - quoteRanges[i].0.lowerBound), quoteRanges[i].1)
+//                    quoteRanges.remove(at: i + 1)
+//                    break outer
+//                }
+//            }
+//        }
+//        if !hadReductions {
+//            break
+//        }
+//    }
     
-    if quoteRanges.count > 1 {
-        outer: for i in (1 ..< quoteRanges.count).reversed() {
-            for j in 0 ..< i {
-                if quoteRanges[j].1 === quoteRanges[i].1 {
-                    quoteRanges.remove(at: i)
-                    continue outer
-                }
-            }
-        }
-    }
+    
     
     attributedText.removeAttribute(TextInputAttributes.quote, range: fullRange)
         

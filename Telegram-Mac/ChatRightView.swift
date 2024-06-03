@@ -296,9 +296,14 @@ class ChatRightView: View, ViewDisplayDelegate {
                     current = view
                 } else {
                     current = TextView()
-                    current.userInteractionEnabled = false
+                    current.userInteractionEnabled = true
                     current.isSelectable = false
                     self.effectTextView = current
+                    
+                    current.set(handler: { [weak self] _ in
+                        self?.item?.invokeMessageEffect()
+                    }, for: .SingleClick)
+                    
                     addSubview(current)
                 }
                 let layout = TextViewLayout(.initialize(string: effect.emoticon, font: .normal(10)))

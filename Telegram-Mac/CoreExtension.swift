@@ -475,6 +475,18 @@ public extension Message {
         return nil
     }
     
+    var hasComments: Bool {
+        if let peer = self.peers[self.id.peerId] as? TelegramChannel {
+            switch peer.info {
+            case let .broadcast(info):
+                return info.flags.contains(.hasDiscussionGroup)
+            default:
+                break
+            }
+        }
+        return false
+    }
+    
     var isExpiredStory: Bool {
         if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId] {
             return data.get(Stories.StoredItem.self) == nil

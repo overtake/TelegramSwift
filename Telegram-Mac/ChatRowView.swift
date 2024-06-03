@@ -1588,6 +1588,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         case .effect:
             if let effectView = rightView.effectView {
                 return effectView
+            } else if let effectView = rightView.effectTextView {
+                return effectView
             } else  if let media = self as? ChatMediaView {
                 return media.contentNode
             }
