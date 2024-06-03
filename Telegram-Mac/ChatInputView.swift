@@ -556,6 +556,17 @@ class ChatInputView: View, Notifable {
         } else if let view = self.messageEffect {
             performSubviewRemoval(view, animated: animated)
             self.messageEffect = nil
+            
+            let players = context.window.contentView?.subviews.compactMap {
+                $0 as? LottiePlayerView
+            }
+            
+            if let players {
+                for view in players {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                }
+            }
+            
         }
     }
     

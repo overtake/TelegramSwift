@@ -407,6 +407,10 @@ class ChatRowItem: TableRowItem {
         if let reactions = self.reactionsLayout {
             height += defaultReactionsInset
             height += reactions.size.height
+            
+            if invertMedia, commentsBubbleData != nil {
+                height += defaultContentInnerInset
+            }
         }
         
         if let factCheckLayout {
@@ -556,6 +560,10 @@ class ChatRowItem: TableRowItem {
                 return false
             }
             
+            
+            if let message = effectiveCommentMessage, message.hasComments && message.hasReactions && message.invertMedia {
+                return false
+            }
             
             if let media = message.media.first as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
                 switch story {
@@ -1613,7 +1621,7 @@ class ChatRowItem: TableRowItem {
             let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, savedMessageTags: entry.additionalData.savedMessageTags, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, currentTag: currentTag, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && (self.captionLayouts.isEmpty || invertMedia), hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, savedMessageTags: entry.additionalData.savedMessageTags, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, currentTag: currentTag, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && (self.captionLayouts.isEmpty || invertMedia) && commentsBubbleData == nil, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId, source: .reaction(message.id))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
@@ -1757,6 +1765,10 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 if let attr = message.factCheckAttribute, case .Loaded = attr.content {
+                    return false
+                }
+                
+                if message.hasComments && message.hasReactions && message.invertMedia {
                     return false
                 }
                 
@@ -3723,7 +3735,7 @@ class ChatRowItem: TableRowItem {
             if let item = self as? ChatGroupedItem {
                 switch item.layoutType {
                 case .files:
-                    if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
+                    if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId })?.layout {
                         if let line = caption.lastLine {
                             return LastLineData(width: line.isRTL || caption.lastLineIsQuote ? blockWidth : line.frame.width, single: caption.linesCount == 1)
                         }

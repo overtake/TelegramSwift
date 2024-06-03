@@ -184,6 +184,15 @@ class WPArticleLayout: WPLayout {
     var isFullImageSize: Bool {
         
         
+        for attr in content.attributes {
+            switch attr {
+            case .stickerPack:
+                return false
+            default:
+                break
+            }
+        }
+        
         if let attr = parent.webpagePreviewAttribute {
             if let forceLargeMedia = attr.forceLargeMedia {
                 return forceLargeMedia

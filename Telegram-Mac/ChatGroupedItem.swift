@@ -48,6 +48,7 @@ class ChatGroupedItem: ChatRowItem {
                     }
                     if !message.text.isEmpty {
                         captionMessages.append(message)
+                        break
                     }
                 }
             case .files:
@@ -111,23 +112,6 @@ class ChatGroupedItem: ChatRowItem {
                     caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.hashtag, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
                 }
                 
-                var spoilers:[TextViewLayout.Spoiler] = []
-                for attr in attributes {
-                    if let attr = attr as? TextEntitiesMessageAttribute {
-                        for entity in attr.entities {
-                            switch entity.type {
-                            case .Spoiler:
-                                let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                                if let range = caption.range.intersection(range) {
-                                    caption.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                                }
-                            default:
-                                break
-                            }
-                        }
-                    }
-                }
-                
                 var stableId = message.stableId
                 switch layout.type {
                 case .files:
@@ -147,7 +131,7 @@ class ChatGroupedItem: ChatRowItem {
                 
                 
                 let textLayout = FoldingTextLayout.make(caption, context: context, revealed: entry.additionalData.quoteRevealed, takeLayout: { string in
-                    let textLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
+                    let textLayout = TextViewLayout(string, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
                         chatInteraction?.update({
                             $0.updatedInterfaceState({
                                 $0.withRevealedSpoiler(message.id)
