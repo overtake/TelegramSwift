@@ -107,7 +107,9 @@ final class EmojiScreenEffect {
                                     point.x -= 50
                                 }
                                 point.y -= 10
-                                
+                            } else {
+                                point.x -= 10
+                                point.y -= 5
                             }
                         case .reaction:
                             point.x-=subSize.width/2
