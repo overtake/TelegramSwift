@@ -42,10 +42,10 @@ final class InputMessageEffectView : Control {
     }
     
     let view: InlineStickerView
-    private let gradient: RadialGradientView = RadialGradientView(frame: NSMakeRect(0, 0, 40, 40))
+    private let gradient: RadialGradientView = RadialGradientView(frame: NSMakeRect(0, 0, 20, 20))
     init(account: Account, file: TelegramMediaFile, size: NSSize) {
         self.view = .init(account: account, file: file, size: size, playPolicy: .onceEnd)
-        super.init(frame: NSMakeSize(size.width, 50).bounds)
+        super.init(frame: NSMakeSize(size.width, 20).bounds)
         self.layer?.masksToBounds = false
         addSubview(gradient)
         addSubview(view)
@@ -456,9 +456,9 @@ class ChatInputView: View, Notifable {
                 if let view = self.messageEffect {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(30, 30))
+                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
                 current.userInteractionEnabled = true
-                current.centerY(x: frame.width - actionsView.frame.width - current.frame.width)
+                current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, 5))
                 
                 
                 let showMenu:(Control)->Void = { [weak self] control in
@@ -923,7 +923,7 @@ class ChatInputView: View, Notifable {
 
         
         if let view = messageEffect {
-            transition.updateFrame(view: view, frame: NSMakeRect(size.width - actionsSize.width - view.frame.width - 5, 0, view.frame.width, view.frame.height))
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, 5, view.frame.width, view.frame.height))
         }
         
         if let view = botMenuView {
@@ -1097,9 +1097,6 @@ class ChatInputView: View, Notifable {
         }
         if let sendAsView = self.sendAsView {
             leftInset += sendAsView.frame.width
-        }
-        if let messageEffect {
-            leftInset += messageEffect.frame.width
         }
         let w = width - actionsView.size(chatInteraction.presentation).width - leftInset
         let height = self.textView.height(for: w)

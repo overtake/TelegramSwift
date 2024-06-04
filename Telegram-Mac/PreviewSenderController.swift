@@ -394,9 +394,6 @@ fileprivate class PreviewSenderView : Control {
     
     var textWidth: CGFloat {
         var width = frame.width - 14 - actionsContainerView.frame.width
-        if let messageEffect {
-            width -= messageEffect.frame.width
-        }
         return width
     }
     
@@ -479,7 +476,7 @@ fileprivate class PreviewSenderView : Control {
         self.textInputSuggestionsView?.updateRect(transition: transition)
         
         if let messageEffect {
-            transition.updateFrame(view: messageEffect, frame: messageEffect.centerFrameY(x: textContainerView.frame.width - actionsContainerView.frame.width - messageEffect.frame.width - 15))
+            transition.updateFrame(view: messageEffect, frame: CGRect(origin: NSMakePoint(textContainerView.frame.width - messageEffect.frame.width - 10, textContainerView.frame.height - messageEffect.frame.height - 5), size: messageEffect.frame.size))
         }
     }
     
@@ -496,9 +493,9 @@ fileprivate class PreviewSenderView : Control {
                 if let view = self.messageEffect {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current = InputMessageEffectView(account: interactions.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(30, 30))
+                let current = InputMessageEffectView(account: interactions.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
                 current.userInteractionEnabled = true
-                current.centerY(x: textContainerView.frame.width - actionsContainerView.frame.width - current.frame.width - 15)
+                current.setFrameOrigin(NSMakePoint(textContainerView.frame.width - current.frame.width - 10, textContainerView.frame.height - current.frame.height - 5))
                 
                 let showMenu:(Control)->Void = { [weak interactions] control in
                     if let event = NSApp.currentEvent, let interactions = interactions {
