@@ -95,7 +95,7 @@ class FactCheckMessageLayout {
             textSize = self.text.lines[min(1, self.text.lines.count - 1)].frame.maxY + 1
             self.isFullView = false
         }
-        size = NSMakeSize(width, 2 + title.layoutSize.height + textSize + 2 + 4)
+        size = NSMakeSize(max(width, self.title.layoutSize.width + whatThisLayout.layoutSize.width + 30), 2 + title.layoutSize.height + textSize + 2 + 4)
     }
     
 }
