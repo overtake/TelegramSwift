@@ -269,16 +269,20 @@ class ChatRightView: View, ViewDisplayDelegate {
         }
         
         if let effect = item.messageEffect {
-            if effect.effectAnimation != nil {
+            let found = item.context.reactions.available?.enabled.first(where: { $0.value.string == effect.emoticon })?.staticIcon
+            if effect.effectAnimation != nil || (found != nil && effect.effectAnimation == nil) {
                 if let effectTextView {
                     performSubviewRemoval(effectTextView, animated: animated)
                     self.effectTextView = nil
                 }
-                if self.effectView?.animateLayer.fileId != effect.effectSticker.fileId.id {
+                
+                let file = found ?? effect.effectSticker
+                
+                if self.effectView?.animateLayer.fileId != file.fileId.id {
                     if let view = self.effectView {
                         performSubviewRemoval(view, animated: animated)
                     }
-                    let current = InlineStickerView(account: item.context.account, file: effect.effectSticker, size: NSMakeSize(12, 12), playPolicy: .onceEnd)
+                    let current = InlineStickerView(account: item.context.account, file: file, size: NSMakeSize(12, 12), playPolicy: .framesCount(1))
                     current.userInteractionEnabled = true
                     current.set(handler: { [weak self] _ in
                         self?.item?.invokeMessageEffect()

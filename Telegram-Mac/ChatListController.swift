@@ -1411,7 +1411,7 @@ class ChatListController : PeersListController {
                 
                 var updateSearchView:(()->Void)? = nil
                 
-                var mode: SearchMode = peer._asPeer().isChannel ? .publicPosts : .thisChat {
+                var mode: SearchMode = peer._asPeer().isChannel ? .publicPosts : .myMessages {
                     didSet {
                         updateSearchView?()
                     }
