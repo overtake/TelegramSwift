@@ -506,7 +506,7 @@ private final class TransactionItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 50
+        return max(50, 7 + nameLayout.layoutSize.height + 4 + dateLayout.layoutSize.height + 7)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {

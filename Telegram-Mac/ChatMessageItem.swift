@@ -379,22 +379,7 @@ class ChatMessageItem: ChatRowItem {
             }
            
            
-             var spoilers:[TextViewLayout.Spoiler] = []
-             for attr in attributes {
-                 if let attr = attr as? TextEntitiesMessageAttribute {
-                     for entity in attr.entities {
-                         switch entity.type {
-                         case .Spoiler:
-                             let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                             if let range = copy.range.intersection(range) {
-                                 copy.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                             }
-                         default:
-                             break
-                         }
-                     }
-                 }
-             }
+             
              InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
 //             copy.fixUndefinedEmojies()
@@ -728,6 +713,22 @@ class ChatMessageItem: ChatRowItem {
         
         entities = concatMessageAttributes(entities)
     
+        
+        for attr in attributes {
+            if let attr = attr as? TextEntitiesMessageAttribute {
+                for entity in attr.entities {
+                    switch entity.type {
+                    case .Spoiler:
+                        let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                        if let range = string.range.intersection(range) {
+                            string.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
+                        }
+                    default:
+                        break
+                    }
+                }
+            }
+        }
         
         for entity in entities {
             let r = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
