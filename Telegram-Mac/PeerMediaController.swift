@@ -919,8 +919,7 @@ protocol PeerMediaSearchable : AnyObject {
                 return (exist: true, loaded: true)
             } else if let cachedData = view.cachedData as? CachedChannelData {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup {
-                    let visible = !(cachedData.membersHidden.knownValue?.value ?? false) || peer.isAdmin
-                    return (exist: visible, loaded: true)
+                    return (exist: true, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }

@@ -1304,10 +1304,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
-        if !self.interactions.presentation.selected.isEmpty {
-            return super.returnKeyAction()
-        }
-        return .rejected
+        return super.returnKeyAction()
     }
 
     override func viewDidLoad() {

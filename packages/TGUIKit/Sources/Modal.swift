@@ -1074,7 +1074,6 @@ public class Modal: NSObject {
                     } else {
                         strongSelf.controller?.viewDidAppear(false)
                     }
-                    
                 }
             }))
         }
@@ -1082,6 +1081,7 @@ public class Modal: NSObject {
     }
     
 }
+
 
 public func hasModals() -> Bool {
     

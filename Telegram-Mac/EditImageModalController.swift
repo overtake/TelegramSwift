@@ -647,6 +647,94 @@ enum EditControllerSettings {
     case plain
 }
 
+private func deg2rad(_ number: CGFloat) -> CGFloat {
+    return number * .pi / 180
+}
+
+func transformPoints(points: [NSPoint], originalCanvasSize: NSSize, newCanvasSize: NSSize, angle: CGFloat, isHorizontalFlipped: Bool) -> [NSPoint] {
+    let theta = deg2rad(angle)
+    let originalCenterX = originalCanvasSize.width / 2
+    let originalCenterY = originalCanvasSize.height / 2
+    let newCenterX = newCanvasSize.width / 2
+    let newCenterY = newCanvasSize.height / 2
+    
+    return points.map { point in
+        var x = point.x
+        var y = point.y
+        
+        // Flip horizontally if needed
+        if (isHorizontalFlipped) {
+            x = originalCanvasSize.width - x
+        }
+        
+        // Translate point to original canvas center
+        let tempX = x - originalCenterX
+        let tempY = y - originalCenterY
+        
+        // Apply rotation
+        let rotatedX = tempX * cos(theta) - tempY * sin(theta)
+        let rotatedY = tempX * sin(theta) + tempY * cos(theta)
+        
+        // Translate to new canvas center
+        x = rotatedX + newCenterX
+        y = rotatedY + newCenterY
+        
+        return NSMakePoint(x, y)
+    }
+}
+
+private func rotatedCanvasSize(canvasSize: NSSize, angle: CGFloat) -> NSSize {
+    let theta = deg2rad(angle)
+    let width = canvasSize.width
+    let height = canvasSize.height
+    
+    let newWidth = abs(width * cos(theta)) + abs(height * sin(theta))
+    let newHeight = abs(width * sin(theta)) + abs(height * cos(theta))
+    
+    return NSSize(width: newWidth, height: newHeight)
+}
+
+
+extension EditImageDrawTouch {
+    func transform(_ data: EditedImageData, restore: Bool = false) -> EditImageDrawTouch {
+        var lines = self.lines
+        var canvasSize = self.canvasSize
+        
+        let originalCanvasSize = canvasSize
+        var angle: CGFloat = 0
+        if let orientation = data.orientation {
+            switch orientation {
+            case .up:
+                angle = 0
+            case .down:
+                angle = restore ? -180 : 180
+            case .left:
+                if restore {
+                    angle = data.isHorizontalFlipped ? 270 : 90
+                } else {
+                    angle = -90
+                }
+            case .right:
+                if restore {
+                    angle = data.isHorizontalFlipped ? -270 : -90
+                } else {
+                    angle = 90
+                }
+            default:
+                break
+            }
+        }
+        
+        let flip = restore ? data.isHorizontalFlipped : data.isHorizontalFlipped
+        
+        canvasSize = rotatedCanvasSize(canvasSize: originalCanvasSize, angle: angle)
+        lines = transformPoints(points: lines, originalCanvasSize: originalCanvasSize, newCanvasSize: canvasSize, angle: angle, isHorizontalFlipped: flip)
+
+        
+        return .init(action: action, lines: lines, canvasSize: canvasSize, color: color, width: width)
+    }
+}
+
 class EditImageModalController: ModalViewController {
     private let path: URL
     private let editValue: ValuePromise<EditedImageData> = ValuePromise(ignoreRepeated: true)
@@ -805,15 +893,41 @@ class EditImageModalController: ModalViewController {
             return
         }
         genericView.hideElements(true)
-        showModal(with: EditImageCanvasController(image: self.image, actions: editState.with { $0.paintings }, updatedImage: { [weak self] paintings in
-            self?.updateValue { current in
-                var current = current
-                current.paintings = paintings
-                return current
+        
+        _ = (self.editValue.get() |> take(1)).startStandalone(next: { [weak self] data in
+            guard let self else {
+                return
             }
-        }, closeHandler: { [weak self] in
-            self?.genericView.hideElements(false)
-        }), for: window, animated: false, animationType: .alpha)
+            let main = self.image
+            let image = data.makeImage(main, interface: true, applyPainting: false)
+            
+            var paintings = editState.with { $0.paintings }
+            
+            paintings = paintings.map {
+                $0.transform(data, restore: true)
+            }
+            
+            showModal(with: EditImageCanvasController(image: image, actions: paintings, updatedImage: { [weak self] paintings in
+                
+                guard let self else {
+                    return
+                }
+                
+                let paintings = paintings.map {
+                    $0.transform(data)
+                }
+                
+                self.updateValue { current in
+                    var current = current
+                    current.paintings = paintings
+                    return current
+                }
+            }, closeHandler: { [weak self] in
+                self?.genericView.hideElements(false)
+            }), for: window, animated: false, animationType: .alpha)
+        })
+        
+        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -954,8 +1068,6 @@ class EditImageModalController: ModalViewController {
     private func rotate() {
         var rect = NSZeroRect
         let imageSize = genericView.imageView.frame.size
-        var isFlipped: Bool = false
-        var newRotation: ImageOrientation?
         self.updateValue { current in
             var current = current
             rect = current.selectedRect
@@ -972,18 +1084,10 @@ class EditImageModalController: ModalViewController {
             } else {
                 orientation = .right
             }
-            newRotation = orientation
-            isFlipped = current.isHorizontalFlipped
             current.orientation = orientation
             return current
         }
-        
-//        if isFlipped, let newRotation = newRotation, newRotation == .right {
-//            rect.origin.x = imageSize.width - rect.maxX
-//        } else if isFlipped, newRotation == nil {
-//            rect.origin.x = imageSize.width - rect.maxX
-//        }
-        
+
         let newSize = genericView.imageView.frame.size
         let multiplierWidth = newSize.height / imageSize.width
         let multiplierHeight = newSize.width / imageSize.height

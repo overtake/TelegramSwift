@@ -302,7 +302,13 @@ private final class WrapperView : View {
                 let tertiaryTintColor = blockQuote.colors.tertiary
                 
                 
-                ctx.setFillColor(blockColor.withAlphaComponent(blockQuote.isCode ? 0.25 : 0.1).cgColor)
+                var bg = blockColor
+                if blockQuote.isCode {
+                    bg = bg.darker(amount: 0.5).withAlphaComponent(0.5)
+                } else {
+                    bg = bg.withAlphaComponent(0.1)
+                }
+                ctx.setFillColor(bg.cgColor)
                 ctx.addPath(CGPath(roundedRect: blockFrame, cornerWidth: radius, cornerHeight: radius, transform: nil))
                 ctx.fillPath()
                 
@@ -430,7 +436,7 @@ private final class WrapperView : View {
         super.init(frame: frameRect)
         addSubview(textView)
         self.layer?.mask = mask
-        self.layer?.masksToBounds = false
+//        self.layer?.masksToBounds = false
     }
     
     func update(_ layout: FoldingTextLayout.ViewLayout, isRevealed: Bool, context: AccountContext, transition: ContainedViewLayoutTransition) {
@@ -449,8 +455,16 @@ private final class WrapperView : View {
         
         let size = layout.size
  
+        
+        
         let path = CGMutablePath()
-        path.addRoundedRect(in: size.bounds, cornerWidth: min(size.width / 2, 4), cornerHeight: min(size.height / 2, 4))
+        
+        if layout.canReveal {
+            path.addRoundedRect(in: size.bounds, cornerWidth: min(size.width / 2, 4), cornerHeight: min(size.height / 2, 4))
+        } else {
+            path.addRoundedRect(in: size.bounds, cornerWidth: 0, cornerHeight: 0)
+        }
+        
         
         let animation = mask.makeAnimation(from: self.mask.path ?? CGMutablePath(), to: path, keyPath: "path", timingFunction: transition.timingFunction, duration: transition.duration)
         if transition.isAnimated {
@@ -675,7 +689,7 @@ class FoldingTextView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        layer?.masksToBounds = false
+//        layer?.masksToBounds = false
                 
         self.revealBlockAtIndex = { [weak self] index in
             if let layout = self?.layouts {

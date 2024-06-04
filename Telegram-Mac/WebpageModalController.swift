@@ -1152,6 +1152,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     
                     var openInfo = chatInteraction?.openInfo
                     
+                    let previous = context.bindings.rootNavigation().controller
+                    
                     if openInfo == nil {
                         openInfo = { peerId, toChat, messageId, initialAction in
                             if toChat || initialAction != nil {
@@ -1164,8 +1166,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     
                     let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                    
-                    execute(inapp: link)
-                    self.close()
+                    execute(inapp: link, afterComplete: { [weak self, weak previous] _ in
+                        let current = context.bindings.rootNavigation().controller
+                        if current != previous {
+                            self?.close()
+                        }
+                    })
+                    
                 }
             }
         case "web_app_setup_back_button":
@@ -1615,6 +1622,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private func closeAnyway() {
         super.close()
+    }
+    
+    override var shouldCloseAllTheSameModals: Bool {
+        return false
     }
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {

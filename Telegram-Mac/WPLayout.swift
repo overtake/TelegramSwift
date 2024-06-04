@@ -370,6 +370,8 @@ class WPLayout: Equatable {
                 return strings().chatMessageOpenStory
             case .boost:
                 return strings().chatMessageBoostChannel
+            case .comments:
+                return strings().chatMessageActionShowMessage
             default:
                 break
             }
