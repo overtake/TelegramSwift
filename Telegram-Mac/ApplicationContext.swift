@@ -534,11 +534,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
+            
+            showModal(with: StoryLocationListController(context: context, presentation: theme), for: context.window)
+            
            // showModal(with: Star_Transaction(context: context, peer: .init(context.myPeer!), transaction: StarsContext.State.Transaction.init(id: "kqwjeflklqwkejflqwkejflqkwejflqkwejf", count: 1000, date: Int32(Date().timeIntervalSince1970), peer: StarsContext.State.Transaction.Peer.appStore)), for: context.window)
 //            showModal(with: FactCheckController(context: context), for: context.window)
           //  showModal(with: Star_PurschaseInApp(context: context, peerId: context.peerId), for: context.window)
             
-            context.bindings.rootNavigation().push(HashtagSearchController(context, hashtag: "#test", peerId: context.peerId))
+           // context.bindings.rootNavigation().push(HashtagSearchController(context, hashtag: "#test", peerId: context.peerId))
             
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
