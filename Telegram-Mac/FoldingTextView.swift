@@ -472,7 +472,9 @@ private final class WrapperView : View {
         }
         mask.path = path
         
-        
+        self.layer?.masksToBounds = layout.text.hasBlockQuotes
+        self.layer?.mask = layout.text.hasBlockQuotes ? mask : nil
+
 
         if layout.canReveal {
             let current: BlockLayer
@@ -689,7 +691,7 @@ class FoldingTextView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-//        layer?.masksToBounds = false
+        layer?.masksToBounds = false
                 
         self.revealBlockAtIndex = { [weak self] index in
             if let layout = self?.layouts {
