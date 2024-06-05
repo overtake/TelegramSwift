@@ -259,7 +259,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var sixBlock:[ContextMenuItem] = []
         
         
-        if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, mode != .pinned, mode != .scheduled, !mode.isSavedMode {
+        if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, mode != .pinned, mode != .scheduled, !mode.isSavedMode, mode.customChatContents == nil {
             firstBlock.append(ContextMenuItem(strings().chatMessageContextQuote, handler: {
                 
                 let quote_length_max = context.appConfiguration.getGeneralValue("quote_length_max", orElse: 1024)
