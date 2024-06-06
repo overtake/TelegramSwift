@@ -18,6 +18,32 @@ import ThemeSettings
 import DustLayer
 import CodeSyntax
 
+private func calculateAdjustedPoint(for point: CGPoint,
+                            floatingPhotosView: NSView,
+                            tableView: TableView) -> CGPoint? {
+    // Ensure both views have superviews and that tableView has a documentView
+    guard let tableViewDocumentView = tableView.documentView else {
+        return nil // Return nil if the conditions are not met
+    }
+    
+    
+
+    // Get the frames relative to their superviews
+    let floatingPhotosFrameInSuperview = floatingPhotosView.frame
+    let tableViewDocumentFrameInSuperview = tableViewDocumentView.frame
+
+    // Calculate the offset between the frames, considering the scroll view's content offset
+    let contentOffset = tableView.contentView.bounds.origin
+    let offsetX = floatingPhotosFrameInSuperview.origin.x - tableViewDocumentFrameInSuperview.origin.x + contentOffset.x
+    let offsetY = floatingPhotosFrameInSuperview.origin.y - tableViewDocumentFrameInSuperview.origin.y + contentOffset.y
+
+    // Adjust the point based on the offset
+    let adjustedPoint = CGPoint(x: point.x + offsetX, y: point.y + offsetY)
+
+    // Return the adjusted point
+    return adjustedPoint
+}
+
 struct QuoteMessageIndex : Hashable {
     let messageId: MessageId
     let index: Int
@@ -848,7 +874,7 @@ class ChatControllerView : View, ChatInputDelegate {
         }
         
         self.textInputSuggestionsView?.updateRect(transition: transition)
-//        self.updateFloatingPhotos?(self.scroll, transition.isAnimated)
+      //  self.updateFloatingPhotos?(self.scroll, transition.isAnimated)
         //self.chatInteraction.updateFrame(frame, transition)
     }
 
@@ -1120,7 +1146,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     mentions.frame = mentionsRect
                     mentions.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     addSubview(mentions, positioned: .below, relativeTo: inputView)
-                }             
+                }
             }
             self.mentions?.updateCount(mentionsCount)
         } else {
@@ -1308,7 +1334,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         let firstTransition = Queue.mainQueue().isCurrent()
         let cancelled = Atomic(value: false)
         
-        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true 
+        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true
         
         if firstTransition, let state = scrollToItem, prevIsLoading {
                         
@@ -1573,7 +1599,7 @@ private func maxIncomingMessageIndexForEntries(_ entries: [ChatHistoryEntry], in
 enum ChatHistoryViewTransitionReason {
     case Initial(fadeIn: Bool)
     case InteractiveChanges
-    case HoleReload    
+    case HoleReload
     case Reload
 }
 
@@ -1715,7 +1741,7 @@ private final class ChatAdData {
                     flags: initialMessage.flags,
                     tags: initialMessage.tags,
                     globalTags: initialMessage.globalTags,
-                    localTags: initialMessage.localTags, 
+                    localTags: initialMessage.localTags,
                     customTags: initialMessage.customTags,
                     forwardInfo: initialMessage.forwardInfo,
                     author: initialMessage.author,
@@ -2093,7 +2119,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let offset = genericView.tableView.clipView.bounds.origin
         
         var floating: [ChatFloatingPhoto] = []
-        for groupped in grouppedFloatingPhotos {
+        for (i, groupped) in grouppedFloatingPhotos.enumerated() {
             let photoView = groupped.1
             
             let items = groupped.0
@@ -2114,6 +2140,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             let lastMax: CGFloat = items[items.count - 1].frame.maxY - inset
             let firstMin: CGFloat = items[0].frame.minY + inset
+            
+
             
             if offset.y >= lastMax - ph - gap {
                 point.y = lastMax - offset.y - ph
@@ -2143,11 +2171,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
 
             }
+            let prev: NSPoint = point
             if !isAnchor {
-                point = self.genericView.tableView.documentView!.convert(point, from: self.genericView.floatingPhotosView)
+                point = calculateAdjustedPoint(for: point, floatingPhotosView: self.genericView.floatingPhotosView, tableView: self.genericView.tableView)!// self.genericView.tableView.documentView!.convert(point, from: self.genericView.floatingPhotosView)
             }
-
             
+
             let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView, isAnchor: isAnchor)
             floating.append(value)
         }
@@ -2729,7 +2758,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         enum WallpaperResult : Equatable {
             case result(Wallpaper?)
-            case loading 
+            case loading
         }
         
         
@@ -4442,7 +4471,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             default:
                                                 return .fail(.generic)
                                             }
-                                    } 
+                                    }
                                 }), for: context.window)
                             case .authSessionTooFresh:
                                 errorText = strings().botTransferOwnerErrorText
@@ -4798,7 +4827,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.mediaRevealed.insert(message.id)
                 return current
             }
-//            
+//
 //            #if DEBUG
 //            verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: strings().chatSensitiveContentConfirmThird, successHandler: { result in
 //                self?.updateState { current in
@@ -4808,7 +4837,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //                }
 //            })
 //            #else
-//            
+//
 //            #endif
             
             
@@ -5275,7 +5304,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if activeCall != currentActiveCall {
                 currentActiveCall = activeCall
-            } 
+            }
             if let activeCall = currentActiveCall {
                 let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                     _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info, joinHash: joinHash), for: context.window).start(next: { result in
@@ -7470,7 +7499,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         back.addSubview(editButton)
         
         self.editButton = editButton
-//        
+//
         let doneButton = TextButton()
       //  doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
@@ -8431,11 +8460,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //                self.reactionManager?.update()
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController
-                guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
+                guard let view = (controller.item.view as? RevealTableView) else { return .nothing }
                 
                 view.completeReveal(direction: direction)
                 self.updateFloatingPhotos(self.genericView.scroll, animated: true)
-                
+
              //   self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
 
             }
@@ -8681,11 +8710,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         self.notify(with: value, oldValue: oldValue, animated: animated && self.didSetReady, force: false)
-        DispatchQueue.main.async { [weak self] in
-            if let self {
-                self.updateFloatingPhotos(self.genericView.scroll, animated: animated)
-            }
-        }
+//        DispatchQueue.main.async { [weak self] in
+//            if let self {
+//                self.updateFloatingPhotos(self.genericView.scroll, animated: animated)
+//            }
+//        }
     }
     
     private var isPausedGlobalPlayer: Bool = false
@@ -9143,7 +9172,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     if asMedia {
                         items.append(asMediaItem)
-                    } 
+                    }
     
                 }
 
