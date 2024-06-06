@@ -296,6 +296,8 @@ extension MediaArea {
             return ""
         case .channelMessage:
             return strings().storyViewMediaAreaViewMessage
+        case .url:
+            return strings().storyViewMediaAreaOpenUrl
         }
     }
     var menu: MenuAnimation {
@@ -306,6 +308,8 @@ extension MediaArea {
             return MenuAnimation.menu_reactions
         case .channelMessage:
             return MenuAnimation.menu_show_message
+        case .url:
+            return MenuAnimation.menu_copy_link
         }
     }
     var canDraw: Bool {
@@ -316,6 +320,8 @@ extension MediaArea {
             return false
         case .reaction:
             return true
+        case .url:
+            return false
         }
     }
     var reaction: MessageReaction.Reaction? {
@@ -326,6 +332,8 @@ extension MediaArea {
             return reaction
         case .channelMessage:
             return nil
+        case .url:
+            return nil
         }
     }
     var isDark: Bool {
@@ -335,6 +343,8 @@ extension MediaArea {
         case let .reaction(_, _, flags):
             return flags.contains(.isDark)
         case .channelMessage:
+            return false
+        case .url:
             return false
         }
     }
@@ -801,19 +811,6 @@ final class StoryListView : Control, Notifable {
             }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true, isDark: true, bubbled: false).mutableCopy() as! NSMutableAttributedString
             
             
-            
-            var spoilers:[TextViewLayout.Spoiler] = []
-            for entity in entities {
-                switch entity.type {
-                case .Spoiler:
-                    let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                    if let range = attributed.range.intersection(range) {
-                        attributed.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                    }
-                default:
-                    break
-                }
-            }
             InlineStickerItem.apply(to: attributed, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
             
             
@@ -1813,15 +1810,11 @@ final class StoryListView : Control, Notifable {
         for media in medias {
             switch media {
             case let .reaction(_, reaction, _):
-                let rect = mediaRect(media)
                 let entryViews = self.entry?.item.storyItem.views
-                var count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
+                let count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
                 interactiveMedias_values[index].apply(area: media, count: count, arguments: arguments, animated: animated)
-                
                 index += 1
-            case .venue:
-                break
-            case .channelMessage:
+            default:
                 break
             }
         }
@@ -1838,14 +1831,12 @@ final class StoryListView : Control, Notifable {
         
         for media in medias {
             switch media {
-            case let .reaction(_, reaction, _):
+            case .reaction:
                 let rect = mediaRect(media)
                 let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
                 interactiveMedias.addSubview(view)
                 interactiveMedias_values.append(view)
-            case .venue:
-                break
-            case .channelMessage:
+            default:
                 break
             }
         }

@@ -258,7 +258,7 @@ final class StoryControlsView : Control {
         self.story = story
         self.groupId = groupId
         self.arguments = arguments
-        avatar.setPeer(account: context.account, peer: peer)
+        avatar.setPeer(account: context.account, peer: story.itemPeer?._asPeer())
         
         privacy.isHidden = !story.storyItem.isCloseFriends && !story.storyItem.isSelectedContacts && !story.storyItem.isContacts
         
@@ -375,7 +375,11 @@ final class StoryControlsView : Control {
         
         
         let authorName = NSMutableAttributedString()
-        authorName.append(string: context.peerId == groupId ? strings().storyControlsYourStory : peer.displayTitle, color: .white, font: .medium(.title))
+        if let itemPeer = story.itemPeer {
+            authorName.append(string: itemPeer._asPeer().displayTitle, color: .white, font: .medium(.title))
+        } else {
+            authorName.append(string: context.peerId == groupId ? strings().storyControlsYourStory : peer.displayTitle, color: .white, font: .medium(.title))
+        }
         
         if story.dayCounters != nil, let position = story.position {
             authorName.append(string: " \(strings().bullet) \(position + 1)/\(slice.totalCount)", color: color, font: .normal(.small))

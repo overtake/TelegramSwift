@@ -263,7 +263,7 @@
 		2761439B2BDBABF70034338C /* TelegramCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2761439A2BDBABF70034338C /* TelegramCore */; };
 		2761439D2BDBABFB0034338C /* Postbox in Frameworks */ = {isa = PBXBuildFile; productRef = 2761439C2BDBABFB0034338C /* Postbox */; };
 		2761439F2BDBAC100034338C /* InAppSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 2761439E2BDBAC100034338C /* InAppSettings */; };
-		276154702C10A9F70090BFFC /* StoryLocationListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761546F2C10A9F70090BFFC /* StoryLocationListController.swift */; };
+		276154702C10A9F70090BFFC /* StoryFoundListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761546F2C10A9F70090BFFC /* StoryFoundListController.swift */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
@@ -1826,7 +1826,7 @@
 		2761435D2BDA57350034338C /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		276143762BDA66770034338C /* AppIntentDataModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppIntentDataModel.swift; sourceTree = "<group>"; };
 		276143782BDA66790034338C /* AppIntentsData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppIntentsData.swift; sourceTree = "<group>"; };
-		2761546F2C10A9F70090BFFC /* StoryLocationListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryLocationListController.swift; sourceTree = "<group>"; };
+		2761546F2C10A9F70090BFFC /* StoryFoundListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFoundListController.swift; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
@@ -3340,7 +3340,7 @@
 				279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */,
 				27D48B422A72721200721995 /* StoryStealthModeController.swift */,
 				27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */,
-				2761546F2C10A9F70090BFFC /* StoryLocationListController.swift */,
+				2761546F2C10A9F70090BFFC /* StoryFoundListController.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -7356,7 +7356,7 @@
 				9F72973420B878B00067F815 /* MapResources.swift in Sources */,
 				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,
 				D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */,
-				276154702C10A9F70090BFFC /* StoryLocationListController.swift in Sources */,
+				276154702C10A9F70090BFFC /* StoryFoundListController.swift in Sources */,
 				C23044831F98F8B400977C51 /* MediaPreviewRowItem.swift in Sources */,
 				D014193C22AE939F008667CB /* ModalOptionSetController.swift in Sources */,
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
