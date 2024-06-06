@@ -1670,36 +1670,16 @@ class ChatRowItem: TableRowItem {
         self._avatarSynchronousValue = Thread.isMainThread
         self.messageEffect = object.additionalData.messageEffect
         
-        let activity: PeerNameColors.Colors
-        let pattern: Int64?
-        let isIncoming: Bool
-        if let message = object.message {
-            activity = theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble)
-            pattern = theme.chat.webPreviewPattern(message)
-            isIncoming = message.isIncoming(context.account, object.renderType == .bubble)
-        } else {
-            activity = .init(main: .clear)
-            pattern = nil
-            isIncoming = false
-        }
-        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: activity, link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType, pattern: pattern)
         
+        var captionMessage: Message? = nil
         var message: Message?
         var isRead: Bool = true
         var itemType: ChatItemType = .Full(rank: nil, header: .normal)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
+        
         var object = object
-        
-        if let adAttribute = object.message?.adAttribute {
-            var bp = 0
-            bp += 1
-        }
-        
-        var hiddenFwdTooltip:(()->Void)? = nil
-        
-        var captionMessage: Message? = object.message
-        
+
         var hasGroupCaption: Bool = object.message?.text.isEmpty == false
         if case let .groupedPhotos(entries, _) = object {
             object = entries.filter({!$0.message!.media.isEmpty}).first!
@@ -1733,6 +1713,27 @@ class ChatRowItem: TableRowItem {
             renderType = _renderType
         }
         
+        let activity: PeerNameColors.Colors
+        let pattern: Int64?
+        let isIncoming: Bool
+        if let message = object.message {
+            activity = theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble)
+            pattern = theme.chat.webPreviewPattern(message)
+            isIncoming = message.isIncoming(context.account, object.renderType == .bubble)
+        } else {
+            activity = .init(main: .clear)
+            pattern = nil
+            isIncoming = false
+        }
+        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: activity, link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType, pattern: pattern)
+        
+       
+        
+        
+        var hiddenFwdTooltip:(()->Void)? = nil
+        
+       
+        
         var stateOverlayTextColor: NSColor {
             if let media = message?.anyMedia, media.isInteractiveMedia || media is TelegramMediaMap {
                  return NSColor(0xffffff)
@@ -1742,6 +1743,7 @@ class ChatRowItem: TableRowItem {
         }
         
         var isStateOverlayLayout: Bool {
+            
             if renderType == .bubble, let message = captionMessage, let media = message.anyMedia {
                 if let file = media as? TelegramMediaFile {
                     if file.isStaticSticker || file.isAnimatedSticker || file.isVideoSticker  {
