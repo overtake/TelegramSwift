@@ -2641,9 +2641,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 
                 self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile(peer._asPeer()) : .addedToProfile(peer._asPeer()))
             }
-        }, hashtag: { [weak self] string in
-            self?.close()
-            self?.context.bindings.globalSearch(string, self?.stories.stateValue?.slice?.peer.id)
+        }, hashtag: { string in
+            showModal(with: StoryFoundListController(context: context, source: .hashtag(string), presentation: darkAppearance), for: context.window)
         }, report: report,
         toggleHide: toggleHide,
         showFriendsTooltip: { [weak self] _, story in
@@ -3591,7 +3590,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
     }
-    static func ShowPeerStory(context: AccountContext, listContext: PeerStoryListContext, peerId: PeerId, initialId: StoryInitialIndex?) {
+    static func ShowListStory(context: AccountContext, listContext: StoryListContext, peerId: PeerId, initialId: StoryInitialIndex?) {
         let storyContent = PeerStoryListContentContextImpl(context: context, peerId: peerId, listContext: listContext, initialId: initialId?.id)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }

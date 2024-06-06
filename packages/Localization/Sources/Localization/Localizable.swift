@@ -16451,6 +16451,8 @@ public final class L10n {
   public static var storyInputPlaceholder: String  { return L10n.tr("Localizable", "Story.Input.Placeholder") }
   /// Comment Story...
   public static var storyInputGroupPlaceholder: String  { return L10n.tr("Localizable", "Story.Input.Group.Placeholder") }
+  /// Location
+  public static var storyLocationTitle: String  { return L10n.tr("Localizable", "Story.Location.Title") }
   /// This story is not supported by your version of Telegram. Please update the app to the latest version.
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
   /// Copy Link
@@ -16905,6 +16907,8 @@ public final class L10n {
   }
   /// Unblock
   public static var storyViewContextMenuUnblock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Unblock") }
+  /// Open Link
+  public static var storyViewMediaAreaOpenUrl: String  { return L10n.tr("Localizable", "StoryView.MediaArea.OpenUrl") }
   /// View Location
   public static var storyViewMediaAreaViewLocation: String  { return L10n.tr("Localizable", "StoryView.MediaArea.ViewLocation") }
   /// View Message

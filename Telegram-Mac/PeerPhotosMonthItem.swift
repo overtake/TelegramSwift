@@ -375,6 +375,47 @@ private final class StoryPrivacyView: ShadowView {
     }
 }
 
+private final class StoryHeaderView: View {
+    private let avatar = AvatarControl(font: .avatar(5))
+    private let nameView = TextView()
+    private let shadowView = ShadowView(frame: .zero)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(shadowView)
+        shadowView.direction = .vertical(false)
+        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.6)
+        addSubview(self.avatar)
+        addSubview(self.nameView)
+        
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        
+        self.avatar.userInteractionEnabled = false
+        
+        self.avatar.setFrameSize(NSMakeSize(15, 15))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(_ peer: EnginePeer, context: AccountContext) {
+        self.avatar.setPeer(account: context.account, peer: peer._asPeer())
+        
+        let layout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: NSColor.white, font: .medium(.small)), maximumNumberOfLines: 1)
+        layout.measure(width: frame.width - (10 + 15 + 5))
+        
+        self.nameView.update(layout)
+    }
+    
+    override func layout() {
+        super.layout()
+        shadowView.frame = bounds
+        self.avatar.centerY(x: 5)
+        self.nameView.centerY(x: avatar.frame.maxX + 5)
+    }
+}
+
 
 class MediaCell : Control {
     
@@ -391,6 +432,7 @@ class MediaCell : Control {
     private var unsupported: TextView?
     
     private var inkView: MediaInkView?
+    
 
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
@@ -400,6 +442,9 @@ class MediaCell : Control {
     }
     private var storyViews: StoryViewsView?
     private var storyPrivacy: StoryPrivacyView?
+    
+    
+    private var storyHeaderView: StoryHeaderView?
 
     override func mouseMoved(with event: NSEvent) {
         superview?.superview?.mouseMoved(with: event)
@@ -509,7 +554,25 @@ class MediaCell : Control {
             }
         }
         
-        if let layout = layout as? StoryCellLayoutItem, let seenCount = layout.item.views?.seenCount {
+        if let layout = layout as? StoryCellLayoutItem, let itemPeer = layout.item.peer {
+            let current: StoryHeaderView
+            if let view = self.storyHeaderView {
+                current = view
+            } else {
+                current = StoryHeaderView(frame: NSMakeRect(0, 0, frame.width, 25))
+                addSubview(current)
+                self.storyHeaderView = current
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.set(itemPeer, context: layout.context)
+        } else if let view = self.storyHeaderView {
+            performSubviewRemoval(view, animated: animated)
+            self.storyHeaderView = nil
+        }
+        
+        if let layout = layout as? StoryCellLayoutItem, let seenCount = layout.item.storyItem.views?.seenCount {
             let current: StoryViewsView
             if let view = self.storyViews {
                 current = view
@@ -528,7 +591,7 @@ class MediaCell : Control {
         }
         
         
-        if let layout = layout as? StoryCellLayoutItem, let privacy = layout.item.privacy, context.peerId == layout.peerId, selected == nil {
+        if let layout = layout as? StoryCellLayoutItem, let privacy = layout.item.storyItem.privacy, context.peerId == layout.peerId, selected == nil {
             let current: StoryPrivacyView
             if let view = self.storyPrivacy {
                 current = view

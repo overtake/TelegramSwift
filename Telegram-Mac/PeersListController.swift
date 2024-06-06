@@ -3062,6 +3062,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return
         }
         
+        if searchController != nil {
+            return
+        }
+        
         let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
         guard let item = optional, storyInterfaceState != .empty else {
             return
