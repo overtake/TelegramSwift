@@ -3921,7 +3921,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendLocation = { [weak self] coordinate, venue in
-            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
+            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, venue: venue, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
             self?.chatInteraction.sendMedias([media], ChatTextInputState(), false, nil, false, nil, false, nil, false)
         }
         

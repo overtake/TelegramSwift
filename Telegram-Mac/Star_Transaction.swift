@@ -376,7 +376,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Star_Transaction(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction) -> InputDataModalController {
+func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil

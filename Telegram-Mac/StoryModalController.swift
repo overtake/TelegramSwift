@@ -2850,16 +2850,14 @@ final class StoryModalController : ModalViewController, Notifable {
             activateMediaArea(area)
         }, deactivateMediaArea: { area in
             deactivateMediaArea(area)
-        }, invokeMediaArea: { [weak self] area in
+        }, invokeMediaArea: { area in
             switch area {
             case let .venue(_, venue):
-                if #available(macOS 10.13, *) {
-                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: darkAppearance), for: context.window)
-                } else {
-                    execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
-                }
+                showModal(with: StoryFoundListController(context: context, source: .mediaArea(area), presentation: darkAppearance), for: context.window)
             case let .channelMessage(_, messageId):
                 openChat(messageId.peerId, messageId, nil)
+            case let .link(_, url):
+                execute(inapp: .external(link: url, false))
             default:
                 break
             }

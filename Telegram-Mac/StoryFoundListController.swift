@@ -172,7 +172,6 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
     
     
     private let mapView: MKMapView = MKMapView()
-    private let overlay = Control()
     
     
     private let venueView: VenueView = .init(frame: .zero)
@@ -183,22 +182,16 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
         mapView.register(AnnotationView.self, forAnnotationViewWithReuseIdentifier: AnnotationView.reuseIdentifier)
         mapView.delegate = self
         
-        mapView.showsZoomControls = false
-        mapView.showsUserLocation = false
+        mapView.showsZoomControls = true
+        mapView.showsUserLocation = true
         
-        mapView.isZoomEnabled = false
-        mapView.isScrollEnabled = false
+        mapView.isZoomEnabled = true
+        mapView.isScrollEnabled = true
         
         mapView.showsBuildings = false
-        addSubview(overlay)
         
         addSubview(venueView)
         
-        overlay.set(handler: { [weak self] _ in
-            if let item = self?.item as? GeneralRowItem {
-                item.action()
-            }
-        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -212,7 +205,6 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
     override func layout() {
         super.layout()
         mapView.frame = CGRect(origin: .zero, size: NSMakeSize(containerView.frame.width, containerView.frame.height - 60))
-        overlay.frame = mapView.frame
         venueView.frame = NSMakeRect(0, mapView.frame.maxY, mapView.frame.width, 60)
     }
 
@@ -341,12 +333,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         if listState.totalCount == 0 {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return SearchEmptyRowItem(initialSize, stableId: stableId, height: 200, text: "No Stories Found")
+                return SearchEmptyRowItem(initialSize, stableId: stableId, height: 160, text: "No Stories Found")
             }))
         } else {
             let items = listState.items
             let chunks = items.chunks(3)
-            for (i, chunk) in chunks.enumerated() {
+            for chunk in chunks {
                 let item = chunk[0]
                 
                 let peerReference = PeerReference(arguments.context.myPeer!)!
@@ -370,7 +362,7 @@ private extension SearchStoryListContext.Source {
         switch self {
         case .hashtag(let string):
             return string
-        case .venue:
+        case .mediaArea:
             return strings().storyLocationTitle
         }
     }
@@ -379,8 +371,13 @@ private extension SearchStoryListContext.Source {
         switch self {
         case .hashtag:
             return nil
-        case .venue:
-            return CLLocationCoordinate2D(latitude: 0.1, longitude: 0.1)
+        case let .mediaArea(area):
+            switch area {
+            case .venue(_, let venue):
+                return .init(latitude: venue.latitude, longitude: venue.longitude)
+            default:
+                return nil
+            }
         }
     }
 }
@@ -471,6 +468,27 @@ func StoryFoundListController(context: AccountContext, source: SearchStoryListCo
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    
+    switch source {
+    case let .mediaArea(area):
+        switch area {
+        case let .venue(_, venue):
+            
+            let shareImage = NSImage(resource: .iconStoryShare).precomposed(presentation.colors.accent)
+            
+            controller.rightModalHeader = ModalHeaderData(image: shareImage, handler: {
+                verifyAlert(for: context.window, information: strings().locationPreviewOpenInMaps, ok: strings().inAppLinksConfirmOpenExternalOK, successHandler: { _ in
+                    execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
+                }, presentation: presentation)
+            })
+        default:
+            break
+        }
+        
+    default:
+        break
+    }
     
     close = { [weak modalController] in
         modalController?.modal?.close()

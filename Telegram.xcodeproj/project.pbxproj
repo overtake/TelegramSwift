@@ -264,6 +264,11 @@
 		2761439D2BDBABFB0034338C /* Postbox in Frameworks */ = {isa = PBXBuildFile; productRef = 2761439C2BDBABFB0034338C /* Postbox */; };
 		2761439F2BDBAC100034338C /* InAppSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 2761439E2BDBAC100034338C /* InAppSettings */; };
 		276154702C10A9F70090BFFC /* StoryFoundListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761546F2C10A9F70090BFFC /* StoryFoundListController.swift */; };
+		2761547E2C12D5990090BFFC /* FragmentBotMonetizationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761547D2C12D5990090BFFC /* FragmentBotMonetizationController.swift */; };
+		276154812C12DBAF0090BFFC /* Fragment_OverviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154802C12DBAF0090BFFC /* Fragment_OverviewRowItem.swift */; };
+		276154832C12E2E60090BFFC /* Fragment_BalanceRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154822C12E2E60090BFFC /* Fragment_BalanceRowItem.swift */; };
+		276154852C12EF620090BFFC /* Star_TransactionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154842C12EF620090BFFC /* Star_TransactionRowItem.swift */; };
+		276154872C12FDFB0090BFFC /* SearchStoryFoundItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154862C12FDFB0090BFFC /* SearchStoryFoundItem.swift */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
@@ -1827,6 +1832,11 @@
 		276143762BDA66770034338C /* AppIntentDataModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppIntentDataModel.swift; sourceTree = "<group>"; };
 		276143782BDA66790034338C /* AppIntentsData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppIntentsData.swift; sourceTree = "<group>"; };
 		2761546F2C10A9F70090BFFC /* StoryFoundListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFoundListController.swift; sourceTree = "<group>"; };
+		2761547D2C12D5990090BFFC /* FragmentBotMonetizationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentBotMonetizationController.swift; sourceTree = "<group>"; };
+		276154802C12DBAF0090BFFC /* Fragment_OverviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fragment_OverviewRowItem.swift; sourceTree = "<group>"; };
+		276154822C12E2E60090BFFC /* Fragment_BalanceRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fragment_BalanceRowItem.swift; sourceTree = "<group>"; };
+		276154842C12EF620090BFFC /* Star_TransactionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_TransactionRowItem.swift; sourceTree = "<group>"; };
+		276154862C12FDFB0090BFFC /* SearchStoryFoundItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchStoryFoundItem.swift; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
@@ -3527,6 +3537,15 @@
 			name = AppIntents;
 			sourceTree = "<group>";
 		};
+		2761547F2C12DB8F0090BFFC /* items */ = {
+			isa = PBXGroup;
+			children = (
+				276154802C12DBAF0090BFFC /* Fragment_OverviewRowItem.swift */,
+				276154822C12E2E60090BFFC /* Fragment_BalanceRowItem.swift */,
+			);
+			name = items;
+			sourceTree = "<group>";
+		};
 		2765535E2B68BAA70007F2FB /* profile-color */ = {
 			isa = PBXGroup;
 			children = (
@@ -3710,10 +3729,12 @@
 		27A01AD42B9AF75200C59661 /* fragment */ = {
 			isa = PBXGroup;
 			children = (
+				2761547F2C12DB8F0090BFFC /* items */,
 				279DF45A2B999D7D00E644A7 /* FragmentUsernameController.swift */,
 				279DF45E2B99FF5F00E644A7 /* FragmentMonetizationController.swift */,
 				279DF4602B9A010C00E644A7 /* FragmentMonetizationPromoController.swift */,
 				277840A22BAC5EEC0026CC3A /* FragmentAdsInfoController.swift */,
+				2761547D2C12D5990090BFFC /* FragmentBotMonetizationController.swift */,
 			);
 			name = fragment;
 			sourceTree = "<group>";
@@ -4201,6 +4222,7 @@
 				27F9D2BD2BF326D20044949A /* Star_ListScreen.swift */,
 				27F9D2BF2BF34F110044949A /* Star_GoldenStar.swift */,
 				2780B29E2BFCCC6A00F75124 /* Star_Transaction.swift */,
+				276154842C12EF620090BFFC /* Star_TransactionRowItem.swift */,
 			);
 			name = "star-currency";
 			sourceTree = "<group>";
@@ -4767,6 +4789,7 @@
 				C2271D9F1DACC7F7001792B6 /* ChatListMessageRowView.swift */,
 				9FDA713E20EE2D49001ED8ED /* PopularPeersRowItem.swift */,
 				2747969728F9645900A891F3 /* SearchTopicRowItem.swift */,
+				276154862C12FDFB0090BFFC /* SearchStoryFoundItem.swift */,
 			);
 			name = search;
 			sourceTree = "<group>";
@@ -7256,6 +7279,7 @@
 				27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */,
 				9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */,
 				275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */,
+				2761547E2C12D5990090BFFC /* FragmentBotMonetizationController.swift in Sources */,
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
@@ -7308,6 +7332,7 @@
 				9FDA713F20EE2D49001ED8ED /* PopularPeersRowItem.swift in Sources */,
 				27EFF4BB27BAF19600006834 /* Auth_CodeEntry.swift in Sources */,
 				9F77B3A6221C1DAC003B65B8 /* LogoutViewController.swift in Sources */,
+				276154812C12DBAF0090BFFC /* Fragment_OverviewRowItem.swift in Sources */,
 				27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */,
 				C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */,
 				A7F28337239A808500742C20 /* TemplateController.swift in Sources */,
@@ -7490,6 +7515,7 @@
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				27E7E4A5270F0F9A00CF3A24 /* NetworkStatusManager.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
+				276154832C12E2E60090BFFC /* Fragment_BalanceRowItem.swift in Sources */,
 				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,
 				2719D8122A166BC100081079 /* StoryMyEmptyRowItem.swift in Sources */,
 				276957A92746C07400297991 /* SessionModalController.swift in Sources */,
@@ -7748,6 +7774,7 @@
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
 				C2167E571DC221E600F98E03 /* PeerMediaRowContent.swift in Sources */,
 				D0DD91FE246A8A380039D83D /* PeerMediaGifsController.swift in Sources */,
+				276154872C12FDFB0090BFFC /* SearchStoryFoundItem.swift in Sources */,
 				D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */,
 				C248BD261E706A05004B9106 /* RecentSessionsController.swift in Sources */,
 				9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */,
@@ -8067,6 +8094,7 @@
 				9FC4DA9821DD0B86003E2A62 /* ChannelMemberCategoryListContext.swift in Sources */,
 				9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */,
 				C253E2311DE34FBB0022A29F /* AudioPlayerController.swift in Sources */,
+				276154852C12EF620090BFFC /* Star_TransactionRowItem.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
