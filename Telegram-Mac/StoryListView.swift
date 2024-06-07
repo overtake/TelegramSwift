@@ -296,7 +296,7 @@ extension MediaArea {
             return ""
         case .channelMessage:
             return strings().storyViewMediaAreaViewMessage
-        case .url:
+        case .link:
             return strings().storyViewMediaAreaOpenUrl
         }
     }
@@ -308,7 +308,7 @@ extension MediaArea {
             return MenuAnimation.menu_reactions
         case .channelMessage:
             return MenuAnimation.menu_show_message
-        case .url:
+        case .link:
             return MenuAnimation.menu_copy_link
         }
     }
@@ -320,7 +320,7 @@ extension MediaArea {
             return false
         case .reaction:
             return true
-        case .url:
+        case .link:
             return false
         }
     }
@@ -332,7 +332,7 @@ extension MediaArea {
             return reaction
         case .channelMessage:
             return nil
-        case .url:
+        case .link:
             return nil
         }
     }
@@ -344,7 +344,7 @@ extension MediaArea {
             return flags.contains(.isDark)
         case .channelMessage:
             return false
-        case .url:
+        case .link:
             return false
         }
     }
@@ -1298,6 +1298,16 @@ final class StoryListView : Control, Notifable {
         items.append(ContextMenuItem(mediaArea.title, handler: { [weak self] in
             self?.arguments?.invokeMediaArea(mediaArea)
         }, itemImage: mediaArea.menu.value))
+        
+        switch mediaArea {
+        case .link(let coordinates, let url):
+            items.append(ContextSeparatorItem())
+            let item = ContextMenuItem(url, itemMode: .normal)
+            item.isEnabled = false
+            items.append(item)
+        default:
+            break
+        }
 
         ContextMenu.show(items: items, view: view, event: event, onClose: { [weak self] in
             self?.arguments?.deactivateMediaArea(mediaArea)

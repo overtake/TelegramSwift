@@ -17,11 +17,35 @@ import MtProtoKit
 import ThemeSettings
 import Translate
 import InputView
-//import WalletCore
+import TelegramMedia
 
-
-let XTR: String = "XTR"
+let XTR: String = TelegramCurrency.xtr.rawValue
 let XTRSTAR: String = "⭐️"
+
+let TON: String = TelegramCurrency.ton.rawValue
+
+enum TelegramCurrency : String {
+    case xtr = "XTR"
+    case ton = "TON"
+    
+    var logo: LocalAnimatedSticker {
+        switch self {
+        case .xtr:
+            return .star_currency
+        case .ton:
+            return .ton_logo
+        }
+    }
+    
+    func colored(_ color: NSColor) -> [LottieColor] {
+        switch self {
+        case .xtr:
+            return []
+        case .ton:
+            return [.init(keyPath: "", color: color)]
+        }
+    }
+}
 
 extension ResolvePeerResult : Equatable {
     var result: EnginePeer? {

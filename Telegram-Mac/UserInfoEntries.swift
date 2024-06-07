@@ -323,7 +323,7 @@ class UserInfoArguments : PeerInfoArguments {
     
     func openLocation(_ peer: Peer, _ location: TelegramBusinessLocation) {
         if let coordinates = location.coordinates {
-            showModal(with: LocationModalPreview(context, map: .init(latitude: coordinates.latitude, longitude: coordinates.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil), peer: peer, messageId: nil), for: context.window)
+            showModal(with: LocationModalPreview(context, map: .init(latitude: coordinates.latitude, longitude: coordinates.longitude, heading: nil, accuracyRadius: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil), peer: peer, messageId: nil), for: context.window)
         }
     }
     func openHours(_ peer: Peer, _ businessHours: TelegramBusinessHours) {

@@ -258,7 +258,7 @@ final class StoryControlsView : Control {
         self.story = story
         self.groupId = groupId
         self.arguments = arguments
-        avatar.setPeer(account: context.account, peer: story.itemPeer?._asPeer())
+        avatar.setPeer(account: context.account, peer: story.itemPeer?._asPeer() ?? peer)
         
         privacy.isHidden = !story.storyItem.isCloseFriends && !story.storyItem.isSelectedContacts && !story.storyItem.isContacts
         

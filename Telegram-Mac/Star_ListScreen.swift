@@ -15,6 +15,28 @@ import SwiftSignalKit
 import CurrencyFormat
 import InAppPurchaseManager
 
+enum Star_TransactionType : Equatable {
+    enum Source : Equatable {
+        case bot
+        case appstore
+        case fragment
+        case playmarket
+        case premiumbot
+        case unknown
+    }
+    case incoming(Source)
+    case outgoing
+}
+struct Star_Transaction : Equatable {
+    let id: String
+    let amount: Int64
+    let date: Int32
+    let name: String
+    let peer: EnginePeer?
+    let type: Star_TransactionType
+    let native: StarsContext.State.Transaction
+}
+
 
 private final class FloatingHeaderView : Control {
     private let textView = TextView()
@@ -444,218 +466,6 @@ private final class Star_ItemView : GeneralContainableRowView {
     }
 }
 
-private final class TransactionItem : GeneralRowItem {
-    fileprivate let context:AccountContext
-    fileprivate let transaction: State.Transaction
-    
-    fileprivate let amountLayout: TextViewLayout
-    fileprivate let nameLayout: TextViewLayout
-    fileprivate let dateLayout: TextViewLayout
-            
-    fileprivate let callback: (State.Transaction)->Void
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, transaction: State.Transaction, callback: @escaping(State.Transaction)->Void) {
-        self.context = context
-        self.transaction = transaction
-        self.callback = callback
-        
-        let amountAttr = NSMutableAttributedString()
-        if transaction.amount < 0 {
-            amountAttr.append(string: "\(transaction.amount) \(clown)", color: theme.colors.redUI, font: .medium(.text))
-        } else {
-            amountAttr.append(string: "+\(transaction.amount) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
-        }
-        amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
-        
-        self.amountLayout = .init(amountAttr)
-        
-        let name: String
-        switch transaction.type {
-        case .incoming(let source):
-            switch source {
-            case .appstore:
-                name = strings().starListTransactionAppStore
-            case .fragment:
-                name = strings().starListTransactionFragment
-            case .playmarket:
-                name = strings().starListTransactionPlayMarket
-            case .bot:
-                name = transaction.peer?._asPeer().displayTitle ?? ""
-            case .premiumbot:
-                name = strings().starListTransactionPremiumBot
-            case .unknown:
-                name = strings().starListTransactionUnknown
-            }
-        case .outgoing:
-            name = transaction.peer?._asPeer().displayTitle ?? ""
-        }
-        self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        
-        var date = stringForFullDate(timestamp: transaction.date)
-        if transaction.native.flags.contains(.isRefund) {
-            date += " — \(strings().starListRefund)"
-        }
-        self.dateLayout = .init(.initialize(string: date, color: theme.colors.grayText, font: .normal(.text)))
-        
-                
-        super.init(initialSize, stableId: stableId, viewType: viewType)
-    }
-    
-    override func viewClass() -> AnyClass {
-        return TransactionView.self
-    }
-    
-    override var height: CGFloat {
-        return max(50, 7 + nameLayout.layoutSize.height + 4 + dateLayout.layoutSize.height + 7)
-    }
-    
-    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
-        _ = super.makeSize(width, oldWidth: oldWidth)
-        
-        amountLayout.measure(width: .greatestFiniteMagnitude)
-        nameLayout.measure(width: blockWidth - 20 - amountLayout.layoutSize.width - 10 - 40)
-        dateLayout.measure(width: blockWidth - 20 - amountLayout.layoutSize.width - 10 - 40)
-
-        return true
-    }
-}
-
-private final class TransactionView : GeneralContainableRowView {
-    private let amountView = InteractiveTextView()
-    private let nameView = TextView()
-    private let dateView = TextView()
-    private var avatarView: AvatarControl?
-    private var avatarImage: ImageView?
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        addSubview(amountView)
-        addSubview(nameView)
-        addSubview(dateView)
-        
-        amountView.userInteractionEnabled = false
-        nameView.userInteractionEnabled = false
-        nameView.isSelectable = false
-        
-        dateView.userInteractionEnabled = false
-        dateView.isSelectable = false
-        
-        containerView.set(handler: { [weak self] _ in
-            self?.updateColors()
-        }, for: .Highlight)
-        containerView.set(handler: { [weak self] _ in
-            self?.updateColors()
-        }, for: .Normal)
-        containerView.set(handler: { [weak self] _ in
-            self?.updateColors()
-        }, for: .Hover)
-        
-        containerView.scaleOnClick = true
-        
-        containerView.set(handler: { [weak self] _ in
-            if let item = self?.item as? TransactionItem {
-                item.callback(item.transaction)
-            }
-        }, for: .Click)
-    }
-    
-    override func updateColors() {
-        super.updateColors()
-        if let item = item as? GeneralRowItem {
-            self.background = item.viewType.rowBackground
-            let highlighted = isSelect ? self.backdorColor : theme.colors.grayHighlight
-            containerView.set(background: self.backdorColor, for: .Normal)
-            containerView.set(background: highlighted, for: .Highlight)
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func set(item: TableRowItem, animated: Bool = false) {
-        super.set(item: item, animated: animated)
-        
-        guard let item = item as? TransactionItem else {
-            return
-        }
-        
-        amountView.set(text: item.amountLayout, context: item.context)
-        dateView.update(item.dateLayout)
-        nameView.update(item.nameLayout)
-        
-        //
-
-        if let peer = item.transaction.peer {
-            if let avatarImage {
-                performSubviewRemoval(avatarImage, animated: animated)
-                self.avatarImage = nil
-            }
-            let current: AvatarControl
-            if let view = self.avatarView {
-                current = view
-            } else {
-                current = AvatarControl(font: .avatar(12))
-                current.setFrameSize(NSMakeSize(36, 36))
-                self.avatarView = current
-                addSubview(current)
-            }
-            current.setPeer(account: item.context.account, peer: peer._asPeer())
-        } else {
-            if let view = avatarView {
-                performSubviewRemoval(view, animated: animated)
-                self.avatarView = nil
-            }
-            let current: ImageView
-            if let view = self.avatarImage {
-                current = view
-            } else {
-                current = ImageView(frame: NSMakeRect(0, 0, 36, 36))
-                self.avatarImage = current
-                addSubview(current)
-            }
-            switch item.transaction.type {
-            case .incoming(let source):
-                switch source {
-                case .appstore:
-                    current.image = NSImage(resource: .iconAppStoreStarTopUp).precomposed()
-                case .fragment:
-                    current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
-                case .playmarket:
-                    current.image = NSImage(resource: .iconAndroidStarTopUp).precomposed()
-                case .bot:
-                    break
-                case .premiumbot:
-                    current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
-                case .unknown:
-                    current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
-                }
-            case .outgoing:
-                break
-            }
-        }
-        
-        
-        
-        
-        needsLayout = true
-    }
-    
-    override func layout() {
-        super.layout()
-        
-        amountView.centerY(x: containerView.frame.width - amountView.frame.width - 10)
-        avatarView?.centerY(x: 10)
-        avatarImage?.centerY(x: 10)
-        nameView.setFrameOrigin(NSMakePoint(10 + 36 + 10, 7))
-        dateView.setFrameOrigin(NSMakePoint(10 + 36 + 10, containerView.frame.height - dateView.frame.height - 7))
-
-    }
-    
-    override var additionBorderInset: CGFloat {
-        return 36 + 6
-    }
-}
-
 private final class TransactionTypesItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let items: [ScrollableSegmentItem]
@@ -732,8 +542,8 @@ private final class Arguments {
     let toggleFilterMode:(State.TransactionMode)->Void
     let buy:(State.Option)->Void
     let loadMore:()->Void
-    let openTransaction:(State.Transaction)->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(State.Transaction)->Void) {
+    let openTransaction:(Star_Transaction)->Void
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
@@ -774,30 +584,10 @@ private struct State : Equatable {
             }
         }
     }
-    enum TransactionType : Equatable {
-        enum Source : Equatable {
-            case bot
-            case appstore
-            case fragment
-            case playmarket
-            case premiumbot
-            case unknown
-        }
-        case incoming(Source)
-        case outgoing
-    }
-    struct Transaction : Equatable {
-        let id: String
-        let amount: Int64
-        let date: Int32
-        let name: String
-        let peer: EnginePeer?
-        let type: TransactionType
-        let native: StarsContext.State.Transaction
-    }
+    
     var myBalance: Int64? = nil
     var options: [Option]? = nil
-    var transactions: [Transaction]? = nil
+    var transactions: [Star_Transaction]? = nil
     var revealed: Bool = false
     var transactionMode: TransactionMode = .all
     
@@ -812,7 +602,7 @@ private let _id_header = InputDataIdentifier("_id_header")
 private func _id_option(_ option: State.Option) -> InputDataIdentifier {
     return .init("_id_\(option.id)")
 }
-private func _id_transaction(_ transaction: State.Transaction) -> InputDataIdentifier {
+private func _id_transaction(_ transaction: Star_Transaction) -> InputDataIdentifier {
     return .init("_id_\(transaction.id)_\(transaction.type)")
 }
 private let _id_show_more = InputDataIdentifier("_id_show_more")
@@ -914,7 +704,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 sectionId += 1
                 
                 struct Tuple : Equatable {
-                    let transaction: State.Transaction
+                    let transaction: Star_Transaction
                     let viewType: GeneralViewType
                 }
                 
@@ -956,7 +746,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 if !transactions.isEmpty {
                     for tuple in tuples {
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction(tuple.transaction), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                            return TransactionItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, transaction: tuple.transaction, callback: arguments.openTransaction)
+                            return Star_TransactionItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, transaction: tuple.transaction, callback: arguments.openTransaction)
                         }))
                     }
                     if state.starsState?.isLoading == true {
@@ -1058,7 +848,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             var current = current
             current.myBalance = state?.balance
             current.transactions = state?.transactions.map { value in
-                let type: State.TransactionType
+                let type: Star_TransactionType
                 var botPeer: EnginePeer?
                 let incoming: Bool = value.count > 0
                 switch value.peer {
@@ -1080,7 +870,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                 case .unsupported:
                     type = .incoming(.unknown)
                 }
-                return State.Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
+                return Star_Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
             }
             current.starsState = state
             return current
@@ -1207,7 +997,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, loadMore: {
         context.starsContext.loadMore()
     }, openTransaction: { transaction in
-        showModal(with: Star_Transaction(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
+        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
