@@ -27,12 +27,8 @@ class ReplyMarkupButtonLayout {
         
         let color = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text
         
-        if let xtrAmount {
-            attr.append(string: strings().chatReplyMarkupPayXtr("\(XTRSTAR)\(xtrAmount.formattedWithSeparator)"), color: color, font: .semibold(.short))
-            attr.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: color, resize: false), for: XTRSTAR)
-        } else {
-            attr.append(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: color, font: .semibold(.short))
-        }
+        attr.append(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: color, font: .semibold(.short))
+
         
         self.text = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }

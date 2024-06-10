@@ -118,7 +118,7 @@ class ChatInvoiceItem: ChatRowItem {
             }
         }
         
-        if let _ = media.photo {
+        if let _ = arguments {
             return true
         } else {
             return super.isBubbleFullFilled
