@@ -462,7 +462,7 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
     for (i, section) in state.sections.enumerated() {
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji }) && arguments.mode != .channelReactions
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, allItems: section.items, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
         }))
         index += 1
     }

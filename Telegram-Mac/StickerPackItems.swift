@@ -36,10 +36,12 @@ class StickerPackRowItem: TableRowItem {
     let installed: Bool?
     let color: NSColor?
     let isTopic: Bool
-    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?, isTopic: Bool = false) {
+    let allItems: [StickerPackItem]
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?, allItems: [StickerPackItem] = [], isTopic: Bool = false) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
+        self.allItems = allItems
         self.info = info
         self.color = color
         self.topItem = topItem
@@ -61,6 +63,7 @@ class StickerPackRowItem: TableRowItem {
         let animation: MenuAnimation
         let packInfo = self.info
         let topItem = self.topItem?.file
+        let allItems = self.allItems
         
         if info.namespace == Namespaces.ItemCollection.CloudEmojiPacks {
             text = strings().emojiContextRemove
@@ -107,6 +110,43 @@ class StickerPackRowItem: TableRowItem {
                     }
                 })
             }, itemImage: MenuAnimation.menu_copy_media.value))
+            
+            items.append(ContextMenuItem("Save all (Dev.)", handler: {
+                
+                filePanel(with: [], canChooseDirectories: true, for: context.window, completion: { paths in
+                    let dataSignal: Signal<[String?], NoError> = combineLatest(allItems.map {
+                        return context.account.postbox.mediaBox.resourceData($0.file.resource) |> mapToSignal { resource in
+                            if let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
+                                return getAnimatedStickerThumb(data: data)
+                            } else {
+                                return .single(nil)
+                            }
+                        }
+                    }) |> deliverOnMainQueue
+                    
+                    _ = showModalProgress(signal: dataSignal, for: context.window).startStandalone(next: { items in
+                        if let directory = paths?.first {
+                            for (i, file) in items.enumerated() {
+                                if let file {
+                                    if let data = try? Data(contentsOf: URL(fileURLWithPath: file)) {
+                                        let path = directory + "/" + "\(i + 1).png"
+                                        try? FileManager.default.moveItem(atPath: file, toPath: path)
+                                    }
+                                }
+                            }
+                        }
+                    })
+                })
+                
+                
+                
+                /*
+                
+                 */
+                
+                
+            }, itemImage: MenuAnimation.menu_copy_media.value))
+
         }
         
         return .single(items)
