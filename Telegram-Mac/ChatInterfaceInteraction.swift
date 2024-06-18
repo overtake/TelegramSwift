@@ -227,6 +227,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var enqueueCodeSyntax:(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }
     
+    var openPhoneNumberContextMenu: (String)->Void = { _ in }
+    
     var toggleQuote: (QuoteMessageIndex)->Void = { _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
@@ -424,12 +426,12 @@ final class ChatInteraction : InterfaceObserver  {
             text.addAttributes(attributes, range: text.range)
         }
         
-        if selectedRange.lowerBound == 0 {
-            let attributes = inputText.attributes(at: selectedRange.lowerBound, effectiveRange: nil).filter {
-                $0.key == TextInputAttributes.quote
-            }
-            text.addAttributes(attributes, range: text.range)
-        }
+//        if selectedRange.lowerBound == 0 {
+//            let attributes = inputText.attributes(at: selectedRange.lowerBound, effectiveRange: nil).filter {
+//                $0.key == TextInputAttributes.quote
+//            }
+//            text.addAttributes(attributes, range: text.range)
+//        }
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: text)

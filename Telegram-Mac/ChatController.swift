@@ -5522,10 +5522,45 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                 }), forKey: key)
             }
+        }
+        
+        chatInteraction.openPhoneNumberContextMenu = { [weak self] phoneNumber in
+            let point = context.window.mouseLocationOutsideOfEventStream
+            let view = context.window.contentView?.hitTest(point)
+            
+            if let view, let event = NSApp.currentEvent {
+                
+                let signal = context.engine.peers.resolvePeerByPhone(phone: phoneNumber) |> deliverOnMainQueue
+                
+                _ = signal.startStandalone(next: { [weak view] peer in
+                    
+                    if let view = view {
+                        let menu = ContextMenu()
+                        
+                        menu.addItem(ContextMenuItem(strings().contextCopyToClipboard, handler: {
+                            copyToClipboard(phoneNumber)
+                            showModalText(for: context.window, text: strings().shareLinkCopied)
+                        }, itemImage: MenuAnimation.menu_copy.value))
+                        
+                        menu.addItem(ContextSeparatorItem())
 
-            
-            
-           
+                        let item: ContextMenuItem
+                        if let peer {
+                            item = ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: { [weak self] in
+                                self?.chatInteraction.openInfo(peer.id, true, nil, nil)
+                            }, peer: peer._asPeer(), context: context, reaction: nil, message: nil)
+                        } else {
+                            item = ContextMenuItem(strings().chatContextPhoneNotTelegram)
+                            item.isEnabled = false
+                        }
+                        menu.addItem(item)
+                        
+                        AppMenu.show(menu: menu, event: event, for: view)
+                    }
+                })
+                
+                
+            }
         }
         
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in
