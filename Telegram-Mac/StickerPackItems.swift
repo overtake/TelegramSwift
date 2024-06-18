@@ -59,6 +59,9 @@ class StickerPackRowItem: TableRowItem {
         let text: String
         let option: RemoveStickerPackOption
         let animation: MenuAnimation
+        let packInfo = self.info
+        let topItem = self.topItem?.file
+        
         if info.namespace == Namespaces.ItemCollection.CloudEmojiPacks {
             text = strings().emojiContextRemove
             option = .delete
@@ -73,20 +76,37 @@ class StickerPackRowItem: TableRowItem {
             _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: option).start()
         }, itemImage: animation.value))
         
-        if let file = self.topItem?.file {
-            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
-                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
-                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
-                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+        if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+            items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                
+                let file: Signal<TelegramMediaFile?, NoError>
+                if let thumbnailId = packInfo.thumbnailFileId {
+                    file = context.inlinePacksContext.load(fileId: thumbnailId)
+                } else {
+                    file = .single(topItem)
+                }
+                let dataSignal: Signal<Data?, NoError> = file |> mapToSignal { file in
+                    if let file = file {
+                        return context.account.postbox.mediaBox.resourceData(file.resource) |> map {
+                            try? Data(contentsOf: URL(fileURLWithPath: $0.path))
+                        }
+                    } else {
+                        return .single(nil)
+                    }
+                } |> deliverOnMainQueue
+                
+                _ = dataSignal.startStandalone(next: { data in
+                    if let data = data {
+                        _ = getAnimatedStickerThumb(data: data).start(next: { path in
                             if let path = path {
                                 let pb = NSPasteboard.general
                                 pb.clearContents()
                                 pb.writeObjects([NSURL(fileURLWithPath: path)])
                             }
                         })
-                    }, itemImage: MenuAnimation.menu_copy_media.value))
-                }
-            }
+                    }
+                })
+            }, itemImage: MenuAnimation.menu_copy_media.value))
         }
         
         return .single(items)

@@ -3821,6 +3821,8 @@ public final class L10n {
   public static var chatContextPeerOpenStory: String  { return L10n.tr("Localizable", "Chat.Context.Peer.OpenStory") }
   /// Send Message
   public static var chatContextPeerSendMessage: String  { return L10n.tr("Localizable", "Chat.Context.Peer.SendMessage") }
+  /// This number is not on Telegram
+  public static var chatContextPhoneNotTelegram: String  { return L10n.tr("Localizable", "Chat.Context.Phone.NotTelegram") }
   /// Hide pinned message
   public static var chatContextPinnedHide: String  { return L10n.tr("Localizable", "Chat.Context.Pinned.Hide") }
   /// Set As Quick
@@ -7231,6 +7233,8 @@ public final class L10n {
   public static var contactsPhoneNumberPlaceholder: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.Placeholder") }
   /// Copy
   public static var contextCopy: String  { return L10n.tr("Localizable", "Context.Copy") }
+  /// Copy to Clipboard
+  public static var contextCopyToClipboard: String  { return L10n.tr("Localizable", "Context.CopyToClipboard") }
   /// Open in Quick Look
   public static var contextOpenInQuickLook: String  { return L10n.tr("Localizable", "Context.OpenInQuickLook") }
   /// Remove
@@ -11027,16 +11031,6 @@ public final class L10n {
   public static var oy7WFPoVTitle: String  { return L10n.tr("Localizable", "OY7-WF-poV.title") }
   /// Hide
   public static var olwNPBQNTitle: String  { return L10n.tr("Localizable", "Olw-nP-bQN.title") }
-  /// ENTER UNLOCK COST
-  public static var paidMediaHeader: String  { return L10n.tr("Localizable", "PaidMedia.Header") }
-  /// Users will have to transfer this amount of Stars to your channel in order to view this media. [More about stars >](https://telegram.org)
-  public static var paidMediaInfo: String  { return L10n.tr("Localizable", "PaidMedia.Info") }
-  /// Make This Media Paid
-  public static var paidMediaOk: String  { return L10n.tr("Localizable", "PaidMedia.Ok") }
-  /// Stars to Unlock
-  public static var paidMediaPlaceholder: String  { return L10n.tr("Localizable", "PaidMedia.Placeholder") }
-  /// Paid Content
-  public static var paidMediaTitle: String  { return L10n.tr("Localizable", "PaidMedia.Title") }
   /// Auto-Lock
   public static var passcodeAutolock: String  { return L10n.tr("Localizable", "Passcode.Autolock") }
   /// Change passcode
@@ -13015,16 +13009,12 @@ public final class L10n {
   public static var previewSenderFileTooltip: String  { return L10n.tr("Localizable", "PreviewSender.FileTooltip") }
   /// Grouped
   public static var previewSenderGrouped: String  { return L10n.tr("Localizable", "PreviewSender.Grouped") }
-  /// Make This Content Paid
-  public static var previewSenderMakePaid: String  { return L10n.tr("Localizable", "PreviewSender.MakePaid") }
   /// Send in a quick way
   public static var previewSenderMediaTooltip: String  { return L10n.tr("Localizable", "PreviewSender.MediaTooltip") }
   /// Move Caption Down
   public static var previewSenderMoveTextDown: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextDown") }
   /// Move Caption Up
   public static var previewSenderMoveTextUp: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextUp") }
-  /// Remove Paid Content
-  public static var previewSenderRemovePaid: String  { return L10n.tr("Localizable", "PreviewSender.RemovePaid") }
   /// With Compression
   public static var previewSenderSendAsFile: String  { return L10n.tr("Localizable", "PreviewSender.SendAsFile") }
   /// Without Compression
