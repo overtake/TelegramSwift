@@ -15,6 +15,70 @@ import CurrencyFormat
 import InputView
 import GraphCore
 
+
+private final class TransactionTypesItem : GeneralRowItem {
+    fileprivate let context: AccountContext
+    fileprivate let items: [ScrollableSegmentItem]
+    fileprivate let callback:(State.TransactionMode)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, modes: [State.TransactionMode], transactionMode: State.TransactionMode, viewType: GeneralViewType, callback:@escaping(State.TransactionMode)->Void) {
+        self.context = context
+        self.callback = callback
+        
+        let theme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
+        
+        var items: [ScrollableSegmentItem] = []
+        
+        for mode in modes {
+            items.append(.init(title: mode.text, index: mode.rawValue, uniqueId: Int32(mode.rawValue), selected: transactionMode == mode, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(mode)))
+        }
+        
+        self.items = items
+        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return TransactionTypesView.self
+    }
+}
+
+private final class TransactionTypesView: GeneralContainableRowView {
+    fileprivate let segmentControl: ScrollableSegmentView
+    required init(frame frameRect: NSRect) {
+        self.segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        super.init(frame: frameRect)
+        addSubview(segmentControl)
+        
+        segmentControl.didChangeSelectedItem = { [weak self] selected in
+            if let item = self?.item as? TransactionTypesItem {
+                if selected.uniqueId == 0 {
+                    item.callback(.ton)
+                } else if selected.uniqueId == 1 {
+                    item.callback(.xtr)
+                }
+            }
+        }
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? TransactionTypesItem else {
+            return
+        }
+        segmentControl.updateItems(item.items, animated: animated)
+        needsLayout = true
+    }
+    
+    override func layout() {
+        segmentControl.frame = containerView.bounds
+    }
+}
+
 private final class TransactionPreviewRowItem : GeneralRowItem {
     
     let amountLayout: TextViewLayout
@@ -27,9 +91,9 @@ private final class TransactionPreviewRowItem : GeneralRowItem {
         self.peer = peer
         self.context = context
         let amountAttr = NSMutableAttributedString()
-        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(25)).smallDecemial
+        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: TON).prettyCurrencyNumber, color: theme.colors.text, font: .medium(25)).smallDecemial
         amountAttr.append(justAmount)
-        amountAttr.append(string: " TON", color: theme.colors.text, font: .medium(25))
+        amountAttr.append(string: " \(TON)", color: theme.colors.text, font: .medium(25))
         switch transaction.source {
         case .incoming, .refund:
             amountAttr.insert(.initialize(string: "+", font: .medium(25)), at: 0)
@@ -236,6 +300,7 @@ private func insertSymbolIntoMiddle(of string: String, with symbol: Character) -
 }
 
 
+
 extension String {
     var prettyCurrencyNumber: String {
         let nsString = self as NSString
@@ -271,6 +336,19 @@ extension String {
     }
 }
 
+
+extension StarsContext.State {
+    var usdRate: Double {
+        return 0.01
+    }
+    var fractional: Double {
+        return currencyToFractionalAmount(value: balance, currency: XTR) ?? 0
+    }
+    var usdAmount: String {
+        return "$" + "\(self.fractional * self.usdRate)".prettyCurrencyNumberUsd
+    }
+    
+}
 
 
 private final class TransactionRowItem : GeneralRowItem {
@@ -494,7 +572,9 @@ private final class Arguments {
     let transaction:(State.Transaction)->Void
     let toggleAds:()->Void
     let loadMore:()->Void
-    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping()->Void) {
+    let toggleTransactionType:(State.TransactionMode)->Void
+    let openStarsTransaction:(Star_Transaction)->Void
+    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping()->Void, toggleTransactionType:@escaping(State.TransactionMode)->Void, openStarsTransaction:@escaping(Star_Transaction)->Void) {
         self.context = context
         self.interactions = interactions
         self.updateState = updateState
@@ -505,12 +585,28 @@ private final class Arguments {
         self.transaction = transaction
         self.toggleAds = toggleAds
         self.loadMore = loadMore
+        self.toggleTransactionType = toggleTransactionType
+        self.openStarsTransaction = openStarsTransaction
     }
 }
 
 
 private struct State : Equatable {
 
+    enum TransactionMode : Int {
+        case ton = 0
+        case xtr = 1
+        
+        var text: String {
+            switch self {
+            case .xtr:
+                return strings().monetizationTransactionsStars
+            case .ton:
+                return strings().monetizationTransactionsTON
+            }
+        }
+    }
+    
     struct Transaction : Equatable {
         enum Source : Equatable {
             case incoming(fromDate: Int32, toDate: Int32)
@@ -570,6 +666,8 @@ private struct State : Equatable {
     
     var adsRestricted: Bool = false
     
+    var transactionMode: TransactionMode = .ton
+    
 }
 
 private func _id_overview(_ index: Int) -> InputDataIdentifier {
@@ -578,6 +676,11 @@ private func _id_overview(_ index: Int) -> InputDataIdentifier {
 private func _id_transaction(_ index: Int) -> InputDataIdentifier {
     return InputDataIdentifier("_id_transaction\(index)")
 }
+
+private func _id_transaction(_ transaction: Star_Transaction) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_transaction_\(transaction.id)_\(transaction.type)")
+}
+
 
 private let _id_balance = InputDataIdentifier("_id_balance")
 
@@ -588,6 +691,9 @@ private let _id_switch_ad = InputDataIdentifier("_id_switch_ad")
 
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_load_more = InputDataIdentifier("_id_load_more")
+
+private let _id_transaction_mode = InputDataIdentifier("_id_transaction_mode")
+
 
 private func entries(_ state: State, arguments: Arguments, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -622,7 +728,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
             }))
         }
         if let graph = state.revenueGraph, !graph.isEmpty {
-            graphs.append(Graph(graph: graph, title: strings().monetizationAdRevenueTitle, identifier: _id_revenue_graph, type: .currency, rate: state.balance.usdRate, load: { identifier in
+            graphs.append(Graph(graph: graph, title: strings().monetizationAdRevenueTitle, identifier: _id_revenue_graph, type: .currency(TON), rate: state.balance.usdRate, load: { identifier in
                 
             }))
         }
@@ -638,7 +744,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
             case let .Loaded(_, string):
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
-                        return StatisticRowItem(initialSize, stableId: stableId, context: arguments.context, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
+                        return StatisticRowItem(initialSize, stableId: stableId, context: arguments.context, collection: collection, viewType: .singleItem, type: graph.type, rate: graph.rate, getDetailsData: { date, completion in
                             detailedDisposable.set(arguments.loadDetailedGraph(graph.graph, Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
                                 if let graph = graph, case let .Loaded(_, data) = graph {
                                     completion(data)
@@ -683,9 +789,10 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
             let viewType: GeneralViewType
         }
         
-        let tuples: [Tuple] = [.init(overview: .init(amount: state.overview.balance.ton, usdAmount: state.overview.balance.usd, info: strings().monetizationOverviewAvailable), viewType: .firstItem),
-                               .init(overview: .init(amount: state.overview.last.ton, usdAmount: state.overview.last.usd, info: strings().monetizationOverviewCurrent), viewType: .innerItem),
-                               .init(overview: .init(amount: state.overview.all.ton, usdAmount: state.overview.all.usd, info: strings().monetizationOverviewTotal), viewType: .lastItem)]
+        let tuples: [Tuple] = [
+            .init(overview: .init(amount: state.overview.balance.ton, usdAmount: state.overview.balance.usd, info: strings().monetizationOverviewAvailable, stars: nil), viewType: .firstItem),
+                               .init(overview: .init(amount: state.overview.all.ton, usdAmount: state.overview.all.usd, info: strings().monetizationOverviewTotal, stars: nil), viewType: .lastItem)
+        ]
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationOverviewTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
@@ -698,7 +805,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     }
     
     
-    do {
+    if state.balance.ton > 0 {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
@@ -717,24 +824,24 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { link in
             arguments.executeLink(link)
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        
+        index += 1
     }
-
     
-       
+
     if !state.transactions.isEmpty, let transactionsState = state.transactionsState {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationTransactionsTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+
         struct Tuple : Equatable {
             let transaction: State.Transaction
             let viewType: GeneralViewType
         }
         var tuples: [Tuple] = []
         for (i, transaction) in state.transactions.enumerated() {
-            var viewType = bestGeneralViewType(state.transactions, for: i)
+            var viewType = bestGeneralViewTypeAfterFirst(state.transactions, for: i)
             if transactionsState.count > state.transactions.count || transactionsState.isLoadingMore {
                 if i == state.transactions.count - 1 {
                     viewType = .innerItem
@@ -788,7 +895,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
     
     let detailedDisposable: DisposableDict<InputDataIdentifier> = DisposableDict()
     actionsDisposable.add(detailedDisposable)
-
+    
 
     let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("channel_revenue_withdrawal_enabled", orElse: false))
     
@@ -828,7 +935,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 
                 current.revenueGraph = stats.revenueGraph
                 current.topHoursGraph = stats.topHoursGraph
-                
+                                
                 var list: [State.Transaction] = []
                 
                 for transaction in transactions.transactions {
@@ -973,6 +1080,14 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         }
     }, loadMore: { [weak contextObject] in
         contextObject?.transactions.loadMore()
+    }, toggleTransactionType: { mode in
+        updateState { current in
+            var current = current
+            current.transactionMode = mode
+            return current
+        }
+    }, openStarsTransaction: { transaction in
+        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

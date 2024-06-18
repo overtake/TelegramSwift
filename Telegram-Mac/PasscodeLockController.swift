@@ -24,7 +24,7 @@ private class TouchIdContainerView : View {
         
         button.scaleOnClick = true
         button.autohighlight = false
-        button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.accent, highlightColor: theme.colors.accent)
+        button.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.underSelectedColor, backgroundColor: theme.colors.accent, highlightColor: theme.colors.accent)
         button.set(font: .medium(.title), for: .Normal)
         button.set(color: .white, for: .Normal)
 

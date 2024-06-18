@@ -23,7 +23,8 @@ class ChatMediaLayoutParameters : Equatable {
     
     let isRevealed: Bool
     var forceSpoiler: Bool = false
-    
+    var payAmount: Int64? = nil
+
     var revealMedia:(Message)->Void = { _ in }
     
     var chatLocationInput:(Message)->ChatLocationInput = { _ in fatalError() }

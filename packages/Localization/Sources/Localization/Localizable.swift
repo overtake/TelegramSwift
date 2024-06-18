@@ -8449,6 +8449,28 @@ public final class L10n {
   public static var fragmentAdsInfoOption3Info: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Info") }
   /// Can Be Removed
   public static var fragmentAdsInfoOption3Title: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Title") }
+  /// Available Balance
+  public static var fragmentStarsAvailableBalance: String  { return L10n.tr("Localizable", "Fragment.Stars.AvailableBalance") }
+  /// AVAILABLE BALANCE
+  public static var fragmentStarsBalanceTitle: String  { return L10n.tr("Localizable", "Fragment.Stars.BalanceTitle") }
+  /// You cannot withdraw less than %d Stars.
+  public static func fragmentStarsMinWithdraw(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Fragment.Stars.MinWithdraw", p1)
+  }
+  /// PROCEEDS OVERVIEW
+  public static var fragmentStarsOvervew: String  { return L10n.tr("Localizable", "Fragment.Stars.Overvew") }
+  /// REVENUE
+  public static var fragmentStarsRevenueTitle: String  { return L10n.tr("Localizable", "Fragment.Stars.RevenueTitle") }
+  /// Show More
+  public static var fragmentStarsShowMore: String  { return L10n.tr("Localizable", "Fragment.Stars.ShowMore") }
+  /// Stars Balance
+  public static var fragmentStarsTitle: String  { return L10n.tr("Localizable", "Fragment.Stars.Title") }
+  /// Total Balance
+  public static var fragmentStarsTotalCurrent: String  { return L10n.tr("Localizable", "Fragment.Stars.TotalCurrent") }
+  /// Lifetime Proceeds
+  public static var fragmentStarsTotalLifetime: String  { return L10n.tr("Localizable", "Fragment.Stars.TotalLifetime") }
+  /// You can withdraw Stars using Fragment, or use Stars to advertise your bot. [Learn More >](https://telegram.org)
+  public static var fragmentStarsWithdrawInfo: String  { return L10n.tr("Localizable", "Fragment.Stars.WithdrawInfo") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
   /// public photo
@@ -9181,6 +9203,38 @@ public final class L10n {
   public static var hfqgknfaTitle: String  { return L10n.tr("Localizable", "HFQ-gK-NFA.title") }
   /// Show Spelling and Grammar
   public static var hFoCyZxITitle: String  { return L10n.tr("Localizable", "HFo-cy-zxI.title") }
+  /// %d
+  public static func hashtagSearchStoriesFoundCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_countable", p1)
+  }
+  /// %d Stories Found
+  public static func hashtagSearchStoriesFoundFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_few", p1)
+  }
+  /// %d Stories Found
+  public static func hashtagSearchStoriesFoundMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_many", p1)
+  }
+  /// %d Story Found
+  public static func hashtagSearchStoriesFoundOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_one", p1)
+  }
+  /// %d Stories Found
+  public static func hashtagSearchStoriesFoundOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_other", p1)
+  }
+  /// %d Stories Found
+  public static func hashtagSearchStoriesFoundTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_two", p1)
+  }
+  /// %d Stories Found
+  public static func hashtagSearchStoriesFoundZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFound_zero", p1)
+  }
+  /// View stories with %@
+  public static func hashtagSearchStoriesFoundInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "HashtagSearch.StoriesFoundInfo", p1)
+  }
   /// View
   public static var hyVFhRgOTitle: String  { return L10n.tr("Localizable", "HyV-fh-RgO.title") }
   /// Join
@@ -10455,6 +10509,10 @@ public final class L10n {
   public static var monetizationTransactionsTitle: String  { return L10n.tr("Localizable", "Monetization.TransactionsTitle") }
   /// In the coming weeks, you will be able to collect rewards using Fragment, a third-party platform used by advertisers to pay for ads. [Learn More >](telegram.org)
   public static var monetizationBalanceComingLaterInfo: String  { return L10n.tr("Localizable", "Monetization.Balance.ComingLaterInfo") }
+  /// Withdraw via Fragment
+  public static var monetizationBalanceWithdrawStars: String  { return L10n.tr("Localizable", "Monetization.BalanceWithdraw.Stars") }
+  /// Withdraw via Fragment
+  public static var monetizationBalanceWithdrawTon: String  { return L10n.tr("Localizable", "Monetization.BalanceWithdraw.Ton") }
   /// Earn From Your Channel
   public static var monetizationIntroTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Title") }
   /// Understood
@@ -10485,6 +10543,10 @@ public final class L10n {
   public static var monetizationOverviewCurrent: String  { return L10n.tr("Localizable", "Monetization.Overview.Current") }
   /// Total Lifetime Proceeds
   public static var monetizationOverviewTotal: String  { return L10n.tr("Localizable", "Monetization.Overview.Total") }
+  /// You can withdraw Stars using Fragment, or use Stars to advertise your bot. [Learn More >](https://telegram.org)
+  public static var monetizationStarsWithdrawInfo: String  { return L10n.tr("Localizable", "Monetization.Stars.WithdrawInfo") }
+  /// STARS BALANCE
+  public static var monetizationStarsWithdrawTitle: String  { return L10n.tr("Localizable", "Monetization.Stars.WithdrawTitle") }
   /// Not Completed
   public static var monetizationTransactionFailed: String  { return L10n.tr("Localizable", "Monetization.Transaction.Failed") }
   /// Pending
@@ -10539,6 +10601,10 @@ public final class L10n {
   public static func monetizationTransactionInfoWithdrawal(_ p1: String) -> String {
     return L10n.tr("Localizable", "Monetization.TransactionInfo.Withdrawal", p1)
   }
+  /// Stars Transactions
+  public static var monetizationTransactionsStars: String  { return L10n.tr("Localizable", "Monetization.Transactions.Stars") }
+  /// TON Transactions
+  public static var monetizationTransactionsTON: String  { return L10n.tr("Localizable", "Monetization.Transactions.TON") }
   /// Proceed
   public static var monetizationWithdrawEnterPasswordDone: String  { return L10n.tr("Localizable", "Monetization.Withdraw.EnterPassword.Done") }
   /// Please enter your Two-Step Verification password to complete this action.
@@ -10961,6 +11027,16 @@ public final class L10n {
   public static var oy7WFPoVTitle: String  { return L10n.tr("Localizable", "OY7-WF-poV.title") }
   /// Hide
   public static var olwNPBQNTitle: String  { return L10n.tr("Localizable", "Olw-nP-bQN.title") }
+  /// ENTER UNLOCK COST
+  public static var paidMediaHeader: String  { return L10n.tr("Localizable", "PaidMedia.Header") }
+  /// Users will have to transfer this amount of Stars to your channel in order to view this media. [More about stars >](https://telegram.org)
+  public static var paidMediaInfo: String  { return L10n.tr("Localizable", "PaidMedia.Info") }
+  /// Make This Media Paid
+  public static var paidMediaOk: String  { return L10n.tr("Localizable", "PaidMedia.Ok") }
+  /// Stars to Unlock
+  public static var paidMediaPlaceholder: String  { return L10n.tr("Localizable", "PaidMedia.Placeholder") }
+  /// Paid Content
+  public static var paidMediaTitle: String  { return L10n.tr("Localizable", "PaidMedia.Title") }
   /// Auto-Lock
   public static var passcodeAutolock: String  { return L10n.tr("Localizable", "Passcode.Autolock") }
   /// Change passcode
@@ -11721,6 +11797,8 @@ public final class L10n {
   public static var peerInfoBotShare: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Share") }
   /// This bot is able to manage group or channel
   public static var peerInfoBotAddToInfo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo.Info") }
+  /// Balance
+  public static var peerInfoBotEditBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Balance") }
   /// Edit Commands
   public static var peerInfoBotEditCommands: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Commands") }
   /// Use [@BotFather]() to manage this bot.
@@ -11729,6 +11807,36 @@ public final class L10n {
   public static var peerInfoBotEditIntro: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Intro") }
   /// Change Bot Settings
   public static var peerInfoBotEditSettings: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Settings") }
+  /// Balance
+  public static var peerInfoBotEditStarsBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsBalance") }
+  /// %d
+  public static func peerInfoBotEditStarsCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_countable", p1)
+  }
+  /// %d Stars
+  public static func peerInfoBotEditStarsCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_few", p1)
+  }
+  /// %d Stars
+  public static func peerInfoBotEditStarsCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_many", p1)
+  }
+  /// %d Star
+  public static func peerInfoBotEditStarsCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_one", p1)
+  }
+  /// %d Stars
+  public static func peerInfoBotEditStarsCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_other", p1)
+  }
+  /// %d Stars
+  public static func peerInfoBotEditStarsCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_two", p1)
+  }
+  /// %d Stars
+  public static func peerInfoBotEditStarsCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_zero", p1)
+  }
   /// Username
   public static var peerInfoBotEditUsername: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Username") }
   /// has access to messages
@@ -12891,6 +12999,8 @@ public final class L10n {
   public static var previewDraggingAddItemsTwo: String  { return L10n.tr("Localizable", "Preview.Dragging.AddItems_two") }
   /// Add Items
   public static var previewDraggingAddItemsZero: String  { return L10n.tr("Localizable", "Preview.Dragging.AddItems_zero") }
+  /// Send as ZIP Archive
+  public static var previewSenderArchive: String  { return L10n.tr("Localizable", "PreviewSender.Archive") }
   /// Archive all media in one zip file
   public static var previewSenderArchiveTooltip: String  { return L10n.tr("Localizable", "PreviewSender.ArchiveTooltip") }
   /// Add a caption...
@@ -12903,12 +13013,22 @@ public final class L10n {
   public static var previewSenderCompressFile: String  { return L10n.tr("Localizable", "PreviewSender.CompressFile") }
   /// Send without compression
   public static var previewSenderFileTooltip: String  { return L10n.tr("Localizable", "PreviewSender.FileTooltip") }
+  /// Grouped
+  public static var previewSenderGrouped: String  { return L10n.tr("Localizable", "PreviewSender.Grouped") }
+  /// Make This Content Paid
+  public static var previewSenderMakePaid: String  { return L10n.tr("Localizable", "PreviewSender.MakePaid") }
   /// Send in a quick way
   public static var previewSenderMediaTooltip: String  { return L10n.tr("Localizable", "PreviewSender.MediaTooltip") }
   /// Move Caption Down
   public static var previewSenderMoveTextDown: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextDown") }
   /// Move Caption Up
   public static var previewSenderMoveTextUp: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextUp") }
+  /// Remove Paid Content
+  public static var previewSenderRemovePaid: String  { return L10n.tr("Localizable", "PreviewSender.RemovePaid") }
+  /// With Compression
+  public static var previewSenderSendAsFile: String  { return L10n.tr("Localizable", "PreviewSender.SendAsFile") }
+  /// Without Compression
+  public static var previewSenderSendAsMedia: String  { return L10n.tr("Localizable", "PreviewSender.SendAsMedia") }
   /// Send With Spoiler
   public static var previewSenderSendAsSpoiler: String  { return L10n.tr("Localizable", "PreviewSender.SendAsSpoiler") }
   /// %d
@@ -13067,10 +13187,14 @@ public final class L10n {
   public static func previewSenderSendVideoZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PreviewSender.SendVideo_zero", p1)
   }
+  /// Ungrouped
+  public static var previewSenderUngrouped: String  { return L10n.tr("Localizable", "PreviewSender.Ungrouped") }
   /// Disable Spoiler
   public static var previewSenderSpoilerTooltipDisable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Disable") }
   /// Hide with Spoiler
   public static var previewSenderSpoilerTooltipEnable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Enable") }
+  /// ZIP Archive
+  public static var previewSenderTitleArchive: String  { return L10n.tr("Localizable", "PreviewSender.Title.Archive") }
   /// Sorry, you cannot add %@ to channels because of %@'s privacy settings.
   public static func privacyGroupsAndChannelsInviteToChannelError(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelError", p1, p2)
@@ -15901,6 +16025,8 @@ public final class L10n {
   public static func statsShowMoreZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.ShowMore_zero", p1)
   }
+  /// Stars
+  public static var statsStars: String  { return L10n.tr("Localizable", "Stats.Stars") }
   /// Statistics
   public static var statsStatistics: String  { return L10n.tr("Localizable", "Stats.Statistics") }
   /// %d
@@ -16389,6 +16515,38 @@ public final class L10n {
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
   }
+  /// %d
+  public static func storiesFoundListFromLocationCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_countable", p1)
+  }
+  /// %d STORIES FROM THIS LOCATION
+  public static func storiesFoundListFromLocationFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_few", p1)
+  }
+  /// %d STORIES FROM THIS LOCATION
+  public static func storiesFoundListFromLocationMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_many", p1)
+  }
+  /// %d STORY FROM THIS LOCATION
+  public static func storiesFoundListFromLocationOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_one", p1)
+  }
+  /// %d STORIES FROM THIS LOCATION
+  public static func storiesFoundListFromLocationOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_other", p1)
+  }
+  /// %d STORIES FROM THIS LOCATION
+  public static func storiesFoundListFromLocationTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_two", p1)
+  }
+  /// %d STORIES FROM THIS LOCATION
+  public static func storiesFoundListFromLocationZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stories.FoundList.FromLocation_zero", p1)
+  }
+  /// NO STORIES FROM THIS LOCATION
+  public static var storiesFoundListFromLocationZeroValueHolder: String  { return L10n.tr("Localizable", "Stories.FoundList.FromLocation_ZeroValueHolder") }
+  /// No Stories Found
+  public static var storiesFoundListNotFound: String  { return L10n.tr("Localizable", "Stories.FoundList.NotFound") }
   /// repost to my stories
   public static var storyRepostToMy: String  { return L10n.tr("Localizable", "Story.RepostToMy") }
   /// Nobody has viewed your story yet.
@@ -16893,6 +17051,36 @@ public final class L10n {
   public static var storyPrivacyTitlePrivacy: String  { return L10n.tr("Localizable", "StoryPrivacy.Title.Privacy") }
   /// Share Story
   public static var storyPrivacyTitleRepost: String  { return L10n.tr("Localizable", "StoryPrivacy.Title.Repost") }
+  /// %d
+  public static func storySearchSubtitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_countable", p1)
+  }
+  /// %d stories
+  public static func storySearchSubtitleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_few", p1)
+  }
+  /// %d stories
+  public static func storySearchSubtitleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_many", p1)
+  }
+  /// %d story
+  public static func storySearchSubtitleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_one", p1)
+  }
+  /// %d stories
+  public static func storySearchSubtitleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_other", p1)
+  }
+  /// %d stories
+  public static func storySearchSubtitleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_two", p1)
+  }
+  /// %d stories
+  public static func storySearchSubtitleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorySearch.Subtitle_zero", p1)
+  }
+  /// no stories
+  public static var storySearchSubtitleZeroValueHolder: String  { return L10n.tr("Localizable", "StorySearch.Subtitle_ZeroValueHolder") }
   /// Block User
   public static var storyViewContextMenuBlock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Block") }
   /// Delete Contact
@@ -18711,6 +18899,8 @@ public final class L10n {
   public static func webAppAddToAttachmentAllowMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.AddToAttachmentAllowMessages", p1)
   }
+  /// Close
+  public static var webAppClose: String  { return L10n.tr("Localizable", "WebApp.Close") }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
   /// QR Codes for bots are not supported on Desktop. Please use one of Telegram’s mobile apps.

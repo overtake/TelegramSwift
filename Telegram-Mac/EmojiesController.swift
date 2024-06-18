@@ -391,7 +391,7 @@ private func _id_emoji_segment(_ segment:Int64) -> InputDataIdentifier {
     return .init("_id_emoji_segment_\(segment)")
 }
 private func _id_aemoji_block(_ segment:Int64) -> InputDataIdentifier {
-    return .init("_id_aemoji_block\(segment)")
+    return .init("_id_aemoji_block_\(segment)")
 }
 private func _id_emoji_block(_ segment: Int64) -> InputDataIdentifier {
     return .init("_id_emoji_block_\(segment)")
@@ -459,7 +459,7 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         }
     }
     
-    for section in state.sections {
+    for (i, section) in state.sections.enumerated() {
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji }) && arguments.mode != .channelReactions
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
             return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
@@ -1750,7 +1750,12 @@ final class AnimatedEmojiesView : Control {
             } else if identifier.identifier.hasPrefix("_id_pack_") {
                 let collectionId = identifier.identifier.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890").inverted)
                 if let collectionId = Int64(collectionId) {
-                    let stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
+                    var stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
+                    
+                    if tableView.item(stableId: stableId) == nil {
+                        stableId = InputDataEntryId.custom(_id_section(collectionId, "a"))
+                    }
+                    
                     tableView.scroll(to: .top(id: stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
                     
                     let packStableId = InputDataEntryId.custom(_id_pack(collectionId))

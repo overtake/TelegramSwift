@@ -399,7 +399,18 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                 usersBlock.append(GroupInfoEntry.member(section: Int(sectionId), index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], stories: memberListState.peerStoryStats[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
             }
             
-            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
+            let membersHidden: ()->Bool = {
+                let membersHidden = cachedGroupData.membersHidden.knownValue?.value ?? false
+                if channel.isAdmin {
+                    return false
+                } else {
+                    return membersHidden
+                }
+            }
+            
+           
+            
+            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100, !membersHidden()  {
                 usersBlock.append(.showMore(section: GroupInfoSection.members.rawValue, index: sortedParticipants.count + 1, viewType: .singleItem))
             }
         }

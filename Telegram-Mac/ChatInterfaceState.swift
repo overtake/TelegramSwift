@@ -1196,7 +1196,7 @@ struct ChatInterfaceState: Codable, Equatable {
         if self.inputState.inputText.isEmpty && self.replyMessageId == nil {
             return nil
         } else {
-            return SynchronizeableChatInputState(replySubject: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp, textSelection: self.inputState.selectionRange)
+            return SynchronizeableChatInputState(replySubject: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp, textSelection: self.inputState.selectionRange, messageEffectId: self.messageEffect?.effect.id)
         }
     }
 

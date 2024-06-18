@@ -17,7 +17,7 @@ import InAppPurchaseManager
 
 enum Star_TransactionType : Equatable {
     enum Source : Equatable {
-        case bot
+        case peer
         case appstore
         case fragment
         case playmarket
@@ -25,7 +25,17 @@ enum Star_TransactionType : Equatable {
         case unknown
     }
     case incoming(Source)
-    case outgoing
+    case outgoing(Source)
+    
+    var source: Source {
+        switch self {
+        case .incoming(let source):
+            return source
+        case .outgoing(let source):
+            return source
+        }
+    }
+    
 }
 struct Star_Transaction : Equatable {
     let id: String
@@ -754,8 +764,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
                         }))
                     } else if state.starsState?.canLoadMore == true {
-                        
-                        
                         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMore, iconTextInset: 42)))
                     }
                 } else {
@@ -800,6 +808,8 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     let inAppPurchaseManager = context.inAppPurchaseManager
     
     let starsContext = context.starsContext
+    
+    starsContext.load(force: true)
 
     var canMakePayment: Bool = true
     #if APP_STORE || DEBUG
@@ -851,24 +861,26 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                 let type: Star_TransactionType
                 var botPeer: EnginePeer?
                 let incoming: Bool = value.count > 0
+                let source: Star_TransactionType.Source
                 switch value.peer {
                 case let .peer(peer):
-                    if incoming {
-                        type = .incoming(.bot)
-                    } else {
-                        type = .outgoing
-                    }
+                    source = .peer
                     botPeer = peer
                 case .appStore:
-                    type = .incoming(.appstore)
+                    source = .appstore
                 case .fragment:
-                    type = .incoming(.fragment)
+                    source = .fragment
                 case .playMarket:
-                    type = .incoming(.playmarket)
+                    source = .playmarket
                 case .premiumBot:
-                    type = .incoming(.premiumbot)
+                    source = .premiumbot
                 case .unsupported:
-                    type = .incoming(.unknown)
+                    source = .unknown
+                }
+                if incoming {
+                    type = .incoming(source)
+                } else {
+                    type = .outgoing(source)
                 }
                 return Star_Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
             }

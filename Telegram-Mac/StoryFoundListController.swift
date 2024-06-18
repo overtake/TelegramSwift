@@ -125,8 +125,6 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
             textView.userInteractionEnabled = false
             textView.isSelectable = false
             
-            imageView.image = theme.icons.locationPin
-            imageView.sizeToFit()
         }
         
         override func layout() {
@@ -137,6 +135,10 @@ private final class MapRowItemView : GeneralContainableRowView, MKMapViewDelegat
         }
         
         func update(item: MapRowItem, animated: Bool) {
+            
+            self.backgroundColor = item.presentation.colors.background
+            imageView.image = item.presentation.icons.locationPin
+            imageView.sizeToFit()
             
             let name = TextViewLayout(.initialize(string: item.geocodedPlacemark?.city ?? strings().locationPreviewLocation, color: item.presentation.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
             
@@ -327,13 +329,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let listState = state.listState {
         if state.location != nil {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_separator, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return SeparatorRowItem(initialSize, stableId, string: "\(listState.totalCount) STORIES FROM THIS LOCATION", customTheme: .initialize(arguments.presentaiton))
+                return SeparatorRowItem(initialSize, stableId, string: strings().storiesFoundListFromLocationCountable(listState.totalCount), customTheme: .initialize(arguments.presentaiton))
             }))
         }
         
         if listState.totalCount == 0 {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return SearchEmptyRowItem(initialSize, stableId: stableId, height: 160, text: "No Stories Found")
+                return SearchEmptyRowItem(initialSize, stableId: stableId, height: 160, isLoading: listState.isLoading, text: strings().storiesFoundListNotFound, customTheme: .initialize(arguments.presentaiton))
             }))
         } else {
             let items = listState.items
@@ -345,7 +347,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 let viewType: GeneralViewType = .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_block(item), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                    return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: false, peerId: arguments.context.peerId, peerReference: peerReference, items: chunk, selected: nil, pinnedIds: Set(), viewType: viewType, openStory: arguments.openStory, toggleSelected: { _ in }, menuItems: { _ in return [] })
+                    return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: false, peerId: arguments.context.peerId, peerReference: peerReference, items: chunk, selected: nil, pinnedIds: Set(), viewType: viewType, openStory: arguments.openStory, toggleSelected: { _ in }, menuItems: { _ in return [] }, presentation: arguments.presentaiton)
                 }))
             }
         }
@@ -382,7 +384,7 @@ private extension SearchStoryListContext.Source {
     }
 }
 
-func StoryFoundListController(context: AccountContext, source: SearchStoryListContext.Source, presentation: TelegramPresentationTheme) -> InputDataModalController {
+func StoryFoundListController(context: AccountContext, source: SearchStoryListContext.Source, presentation: TelegramPresentationTheme, existingsContext: SearchStoryListContext? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -424,7 +426,7 @@ func StoryFoundListController(context: AccountContext, source: SearchStoryListCo
         }))
     }
     
-    let contextObject = SearchStoryListContext(account: context.account, source: source)
+    let contextObject = existingsContext ?? SearchStoryListContext(account: context.account, source: source)
 
 
     let arguments = Arguments(context: context, presentaiton: presentation, openStory: { [weak contextObject] initialId in
@@ -456,10 +458,15 @@ func StoryFoundListController(context: AccountContext, source: SearchStoryListCo
             return current
         }
     }))
+    
+    controller.getBackgroundColor = {
+        presentation.colors.background
+    }
 
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(350, 300))
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(350, 300), presentation: presentation)
     
+   
     
     modalController.getModalTheme = {
         .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: presentation.colors.background, border: .clear, activeBorder: presentation.colors.border)
@@ -468,6 +475,9 @@ func StoryFoundListController(context: AccountContext, source: SearchStoryListCo
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    
+    controller.centerModalHeader = ModalHeaderData(title: source.title, subtitle: "")
     
     
     switch source {
@@ -503,6 +513,11 @@ func StoryFoundListController(context: AccountContext, source: SearchStoryListCo
                 break
             }
         }
+    }
+    
+    controller.afterTransaction = { [weak modalController] controller in
+        controller.centerModalHeader = ModalHeaderData(title: source.title, subtitle: strings().storySearchSubtitleCountable(stateValue.with { $0.listState?.totalCount ?? 0 }))
+        modalController?.updateLocalizationAndTheme(theme: presentation)
     }
     
     return modalController

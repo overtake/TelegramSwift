@@ -543,7 +543,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 //            showModal(with: FactCheckController(context: context), for: context.window)
           //  showModal(with: Star_PurschaseInApp(context: context, peerId: context.peerId), for: context.window)
             
-            context.bindings.rootNavigation().push(FragmentBotMonetizationController(context: context, peerId: context.peerId))
             
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
