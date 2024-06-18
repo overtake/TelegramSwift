@@ -544,7 +544,7 @@ class MediaCell : Control {
                 fatalError()
             }
             let imageReference = layout.makeImageReference(image)
-            current.update(isRevealed: false, updated: isUpdated, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false, isSensitive: false)
+            current.update(isRevealed: false, updated: isUpdated, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false, isSensitive: false, payAmount: nil)
             current.frame = layout.frame.size.bounds
         } else {
             if let view = self.inkView {

@@ -605,8 +605,8 @@ final class AccountContext {
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
-        self.starsContext = engine.payments.peerStarsContext(peerId: account.peerId)
-        #endif
+        self.starsContext = engine.payments.peerStarsContext()
+#endif
         
         
         giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)

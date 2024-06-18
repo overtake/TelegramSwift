@@ -4705,11 +4705,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let scroll = state
                                     .swap(to: ChatHistoryEntryId.message(message)).text(string: focusTarget.string)
-                                    .focus(action: { [weak strongSelf] _ in
+                                    .focus(action: { [weak strongSelf] view in
                                         if let strongSelf {
                                             let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: .none(nil), count: requestCount, animated: state.animated)
                                             strongSelf.setLocation(.init(content: content, tag: strongSelf.locationValue?.tag, id: strongSelf.nextHistoryLocationId))
                                         }
+                                        state.action?(view)
                                     })
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: scroll, count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()

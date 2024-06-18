@@ -350,6 +350,19 @@ public extension TableScrollState {
         }
     }
     
+    var action: ((NSView)->Void)? {
+        switch self {
+        case let .top(_, _, _, focus, _):
+            return focus.action
+        case let .bottom(_, _, _, focus, _):
+            return focus.action
+        case let .center(_, _, _, focus, _):
+            return focus.action
+        default:
+            return nil
+        }
+    }
+    
     func text(string: String?) -> TableScrollState {
         switch self {
         case let .top(stableId, innerId, animated, focus, inset):

@@ -94,7 +94,8 @@ final class StoryMonthRowItem : GeneralRowItem {
     fileprivate let toggleSelected: (StoryId)->Void
     fileprivate let menuItems: (EngineStoryItem)->[ContextMenuItem]
     fileprivate let pinnedIds:Set<Int32>
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds:Set<Int32>, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem]) {
+    fileprivate let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds:Set<Int32>, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem], presentation: TelegramPresentationTheme = theme) {
         self.items = items
         self.selected = selected
         self.standalone = standalone
@@ -105,6 +106,7 @@ final class StoryMonthRowItem : GeneralRowItem {
         self.toggleSelected = toggleSelected
         self.menuItems = menuItems
         self.pinnedIds = pinnedIds
+        self.presentation = presentation
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsets())
     }
     
@@ -367,7 +369,10 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        guard let item = item as? StoryMonthRowItem else {
+            return theme.colors.background
+        }
+        return item.presentation.colors.background
     }
     
     override func updateColors() {

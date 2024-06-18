@@ -38,25 +38,22 @@ final class Star_TransactionItem : GeneralRowItem {
         self.amountLayout = .init(amountAttr)
         
         let name: String
-        switch transaction.type {
-        case .incoming(let source):
-            switch source {
-            case .appstore:
-                name = strings().starListTransactionAppStore
-            case .fragment:
-                name = strings().starListTransactionFragment
-            case .playmarket:
-                name = strings().starListTransactionPlayMarket
-            case .bot:
-                name = transaction.peer?._asPeer().displayTitle ?? ""
-            case .premiumbot:
-                name = strings().starListTransactionPremiumBot
-            case .unknown:
-                name = strings().starListTransactionUnknown
-            }
-        case .outgoing:
+        
+        switch transaction.type.source {
+        case .appstore:
+            name = strings().starListTransactionAppStore
+        case .fragment:
+            name = strings().starListTransactionFragment
+        case .playmarket:
+            name = strings().starListTransactionPlayMarket
+        case .peer:
             name = transaction.peer?._asPeer().displayTitle ?? ""
+        case .premiumbot:
+            name = strings().starListTransactionPremiumBot
+        case .unknown:
+            name = strings().starListTransactionUnknown
         }
+        
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         
         var date = stringForFullDate(timestamp: transaction.date)
@@ -181,24 +178,19 @@ private final class TransactionView : GeneralContainableRowView {
                 self.avatarImage = current
                 addSubview(current)
             }
-            switch item.transaction.type {
-            case .incoming(let source):
-                switch source {
-                case .appstore:
-                    current.image = NSImage(resource: .iconAppStoreStarTopUp).precomposed()
-                case .fragment:
-                    current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
-                case .playmarket:
-                    current.image = NSImage(resource: .iconAndroidStarTopUp).precomposed()
-                case .bot:
-                    break
-                case .premiumbot:
-                    current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
-                case .unknown:
-                    current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
-                }
-            case .outgoing:
+            switch item.transaction.type.source {
+            case .appstore:
+                current.image = NSImage(resource: .iconAppStoreStarTopUp).precomposed()
+            case .fragment:
+                current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
+            case .playmarket:
+                current.image = NSImage(resource: .iconAndroidStarTopUp).precomposed()
+            case .peer:
                 break
+            case .premiumbot:
+                current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
+            case .unknown:
+                current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
             }
         }
         

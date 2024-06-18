@@ -44,7 +44,7 @@ final class DateSelectorModalView : View {
         self.backgroundColor = theme.colors.listBackground
         
         self.sendOn.set(font: .medium(.text), for: .Normal)
-        self.sendOn.set(color: .white, for: .Normal)
+        self.sendOn.set(color: theme.colors.underSelectedColor, for: .Normal)
         self.sendOn.set(background: theme.colors.accent, for: .Normal)
         self.sendOn.set(background: theme.colors.accent.highlighted, for: .Highlight)
 

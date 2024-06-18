@@ -312,6 +312,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
         statePromise.set(stateValue.modify (f))
     }
     
+    var procced = false
+    
     let starsContext = context.starsContext
     
     let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil)
@@ -341,7 +343,6 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
 
     let arguments = Arguments(context: context, dismiss: {
         close?()
-        completion(.cancelled)
     }, buy: {
         let state = stateValue.with { $0 }
         let myBalance = state.myBalance ?? 0
@@ -356,6 +357,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
 //                            starsContext.add(balance: -state.request.count)
                             showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count))))
                             completion(.paid)
+                            procced = true
                             close?()
                         default:
                             break
@@ -396,6 +398,9 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     
     close = { [weak modalController] in
         modalController?.modal?.close()
+        if procced {
+            completion(.cancelled)
+        }
     }
     
     return modalController

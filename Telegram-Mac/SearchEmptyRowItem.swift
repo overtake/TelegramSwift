@@ -108,7 +108,7 @@ class SearchEmptyRowView : TableRowView {
         super.set(item: item)
         
         if let item = item as? SearchEmptyRowItem {
-          //  indicator.color = theme.colors.indicatorColor
+            indicator.progressColor = item.customTheme?.textColor ?? theme.colors.text
             super.border = item.border
             imageView.image = item.icon
             imageView.sizeToFit()

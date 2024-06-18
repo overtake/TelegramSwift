@@ -1,5 +1,5 @@
 //
-//  FragmentBotMonetizationController.swift
+//  FragmentStarMonetizationController.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 07.06.2024.
@@ -13,6 +13,7 @@ import TelegramCore
 import Postbox
 import CurrencyFormat
 import InputView
+import GraphCore
 
 private final class Arguments {
     let context: AccountContext
@@ -20,12 +21,14 @@ private final class Arguments {
     let executeLink:(String)->Void
     let loadMore:()->Void
     let openTransaction:(Star_Transaction)->Void
-    init(context: AccountContext, withdraw:@escaping()->Void, executeLink:@escaping(String)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void) {
+    let loadDetailedGraph:(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>
+    init(context: AccountContext, withdraw:@escaping()->Void, executeLink:@escaping(String)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>) {
         self.context = context
         self.withdraw = withdraw
         self.executeLink = executeLink
         self.loadMore = loadMore
         self.openTransaction = openTransaction
+        self.loadDetailedGraph = loadDetailedGraph
     }
 }
 
@@ -69,32 +72,37 @@ private struct State : Equatable {
     }
     struct Overview : Equatable {
         var balance: Balance
-        var last: Balance
+        var current: Balance
         var all: Balance
     }
     
     var config_withdraw: Bool
-    
-    
-    var overview: Overview = .init(balance: .init(stars: 0, usdRate: 0), last: .init(stars: 0, usdRate: 0), all: .init(stars: 0, usdRate: 0))
+        
+    var nextWithdrawalTimestamp: Int32? = nil
+
+    var overview: Overview = .init(balance: .init(stars: 0, usdRate: 0), current: .init(stars: 0, usdRate: 0), all: .init(stars: 0, usdRate: 0))
     var balance: Balance = .init(stars: 0, usdRate: 0)
     var transactions: [Star_Transaction] = []
-    
-    var starsState: StarsContext.State?
+        
+    var transactionsState: StarsTransactionsContext.State?
     
     var inputState: Updated_ChatTextInputState = .init()
     
     
-    var withdrawError: RequestRevenueWithdrawalError? = nil
+    var withdrawError: RequestStarsRevenueWithdrawalError? = nil
     
     var peer: EnginePeer? = nil
     
     var canWithdraw: Bool {
+        if let nextWithdrawalTimestamp {
+            if nextWithdrawalTimestamp < Int32(Date().timeIntervalSince1970) {
+                return config_withdraw
+            }
+        }
         return config_withdraw
     }
     
     var revenueGraph: StatsGraph?
-    var topHoursGraph: StatsGraph?
     
 }
 
@@ -108,21 +116,80 @@ private func _id_transaction(_ id: String, type: Star_TransactionType) -> InputD
 
 private let _id_balance = InputDataIdentifier("_id_balance")
 
-private let _id_top_hours_graph = InputDataIdentifier("_id_top_hours_graph")
 private let _id_revenue_graph = InputDataIdentifier("_id_revenue_graph")
 
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_load_more = InputDataIdentifier("_id_load_more")
 
 
-private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, arguments: Arguments, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+    
+    
+    do {
+        
+        struct Graph {
+            let graph: StatsGraph
+            let title: String
+            let identifier: InputDataIdentifier
+            let type: ChartItemType
+            let rate: Double
+            let load:(InputDataIdentifier)->Void
+        }
+        
+        var graphs: [Graph] = []
+        if let graph = state.revenueGraph, !graph.isEmpty {
+            graphs.append(Graph(graph: graph, title: strings().fragmentStarsRevenueTitle, identifier: _id_revenue_graph, type: .currency(XTR), rate: state.balance.usdRate, load: { identifier in
+                
+            }))
+        }
+        
+        
+        for graph in graphs {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(graph.title), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            switch graph.graph {
+            case let .Loaded(_, string):
+                ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
+                        return StatisticRowItem(initialSize, stableId: stableId, context: arguments.context, collection: collection, viewType: .singleItem, type: graph.type, rate: graph.rate, getDetailsData: { date, completion in
+                            detailedDisposable.set(arguments.loadDetailedGraph(graph.graph, Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
+                                if let graph = graph, case let .Loaded(_, data) = graph {
+                                    completion(data)
+                                }
+                            }), forKey: graph.identifier)
+                        })
+                    }))
+                }, failure: { error in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
+                        return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error.localizedDescription)
+                    }))
+                })
+                                
+                index += 1
+            case .OnDemand:
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
+                    return StatisticLoadingRowItem(initialSize, stableId: stableId, error: nil)
+                }))
+                index += 1
+            case let .Failed(error):
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
+                    return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error)
+                }))
+                index += 1
+            case .Empty:
+                break
+            }
+        }
+        
+    }
   
     do {
         entries.append(.sectionId(sectionId, type: .normal))
@@ -133,11 +200,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let viewType: GeneralViewType
         }
         
-        let tuples: [Tuple] = [.init(overview: .init(amount: state.overview.balance.stars, usdAmount: state.overview.balance.usd, info: strings().monetizationOverviewAvailable), viewType: .firstItem),
-                               .init(overview: .init(amount: state.overview.last.stars, usdAmount: state.overview.last.usd, info: strings().monetizationOverviewCurrent), viewType: .innerItem),
-                               .init(overview: .init(amount: state.overview.all.stars, usdAmount: state.overview.all.usd, info: strings().monetizationOverviewTotal), viewType: .lastItem)]
+        var tuples: [Tuple] = []
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationOverviewTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        tuples.append(.init(overview: .init(amount: state.overview.balance.stars, usdAmount: state.overview.balance.usd, info: strings().fragmentStarsAvailableBalance, stars: nil), viewType: .firstItem))
+        
+        tuples.append(.init(overview: .init(amount: state.overview.current.stars, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .innerItem))
+
+        
+        //tuples.append(.init(overview: .init(amount: state.overview.all.stars, usdAmount: state.overview.all.usd, info: strings().fragmentStarsTotalLifetime, stars: nil), viewType: .lastItem))
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsOvervew), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         for (i, tuple) in tuples.enumerated() {
@@ -151,26 +223,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, viewType: .singleItem, transfer: arguments.withdraw)
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
         let text: String
-        if state.config_withdraw {
-            text = strings().monetizationBalanceInfo
-        } else {
-            text = strings().monetizationBalanceComingLaterInfo
-        }
+        text = strings().fragmentStarsWithdrawInfo
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { link in
             arguments.executeLink(link)
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
         
     }
-    
-    
-    if !state.transactions.isEmpty, let starsState = state.starsState {
+//    
+//    
+    if !state.transactions.isEmpty, let transactionsState = state.transactionsState {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
@@ -183,7 +252,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         var tuples: [Tuple] = []
         for (i, transaction) in state.transactions.enumerated() {
             var viewType = bestGeneralViewType(state.transactions, for: i)
-            if starsState.canLoadMore || starsState.isLoading {
+            if transactionsState.canLoadMore || transactionsState.isLoading {
                 if i == state.transactions.count - 1 {
                     viewType = .innerItem
                 }
@@ -197,12 +266,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
         }
         
-        if starsState.isLoading {
+        if transactionsState.isLoading {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
                 return LoadingTableItem(initialSize, height: 40, stableId: stableId, viewType: .lastItem)
             }))
-        } else if starsState.canLoadMore {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: "Show More", color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
+        } else if transactionsState.canLoadMore {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().fragmentStarsShowMore, color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
         }
     }
     
@@ -214,11 +283,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func FragmentBotMonetizationController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId, revenueContext: StarsRevenueStatsContext?) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
+    
+    let detailedDisposable: DisposableDict<InputDataIdentifier> = DisposableDict()
+    actionsDisposable.add(detailedDisposable)
 
-    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("bot_revenue_withdrawal_enabled", orElse: true))
+
+    let initialState = State(config_withdraw: false)
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -226,48 +299,65 @@ func FragmentBotMonetizationController(context: AccountContext, peerId: PeerId) 
         statePromise.set(stateValue.modify (f))
     }
     
+    
+    let revenueContext = revenueContext ?? StarsRevenueStatsContext(account: context.account, peerId: peerId)
+    
+    revenueContext.reload()
+    
     class ContextObject {
-        let stars: StarsContext
-        init(stars: StarsContext) {
-            self.stars = stars
+        let revenue: StarsRevenueStatsContext
+        let transactions: StarsTransactionsContext
+        init(revenue: StarsRevenueStatsContext, transactions: StarsTransactionsContext) {
+            self.revenue = revenue
+            self.transactions = transactions
         }
     }
     
-    let stars = context.engine.payments.peerStarsContext(peerId: peerId)
-
-    let contextObject = ContextObject(stars: stars)
     
+    let contextObject = ContextObject(revenue: revenueContext, transactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .all))
     
-    actionsDisposable.add(contextObject.stars.state.startStrict(next: { state in
-        if let state = state {
+    contextObject.transactions.loadMore()
+    
+    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.transactions.state).startStrict(next: { revenue, transactions in
+        if let revenue = revenue.stats {
             updateState { current in
                 var current = current
-                current.balance = .init(stars: 120432, usdRate: 0.01)
-                current.overview = .init(balance: .init(stars: 100, usdRate: 0.01), last: .init(stars: 150, usdRate: 0.01), all: .init(stars: 1234, usdRate: 0.01))
-                current.starsState = state
-                current.transactions = state.transactions.map { value in
+                
+                current.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
+                current.overview.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
+                current.overview.all = .init(stars: revenue.balances.overallRevenue, usdRate: revenue.usdRate)
+                current.overview.current = .init(stars: revenue.balances.currentBalance, usdRate: revenue.usdRate)
+                current.config_withdraw = revenue.balances.withdrawEnabled
+                current.nextWithdrawalTimestamp = revenue.balances.nextWithdrawalTimestamp
+                current.transactionsState = transactions
+                
+                current.revenueGraph = revenue.revenueGraph
+                current.transactions = transactions.transactions.map { value in
                     let type: Star_TransactionType
                     var botPeer: EnginePeer?
                     let incoming: Bool = value.count > 0
+                    let source: Star_TransactionType.Source
                     switch value.peer {
                     case let .peer(peer):
-                        if incoming {
-                            type = .incoming(.bot)
-                        } else {
-                            type = .outgoing
-                        }
+                        source = .peer
                         botPeer = peer
                     case .appStore:
-                        type = .incoming(.appstore)
+                        source = .appstore
                     case .fragment:
-                        type = .incoming(.fragment)
+                        source = .fragment
                     case .playMarket:
-                        type = .incoming(.playmarket)
+                        source = .playmarket
                     case .premiumBot:
-                        type = .incoming(.premiumbot)
+                        source = .premiumbot
                     case .unsupported:
-                        type = .incoming(.unknown)
+                        source = .unknown
                     }
+                    if incoming {
+                        type = .incoming(source)
+                    } else {
+                        type = .outgoing(source)
+                    }
+                    
                     return Star_Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
                 }
                 return current
@@ -275,21 +365,56 @@ func FragmentBotMonetizationController(context: AccountContext, peerId: PeerId) 
         }
     }))
 
+    let processWithdraw:(Int64)->Void = { amount in
+        
+        _ = showModalProgress(signal: context.engine.peers.checkStarsRevenueWithdrawalAvailability(), for: context.window).startStandalone(error: { error in
+            switch error {
+            case .authSessionTooFresh, .twoStepAuthTooFresh, .twoStepAuthMissing:
+                alert(for: context.window, info: strings().monetizationWithdrawErrorText)
+            case .requestPassword:
+                showModal(with: InputPasswordController(context: context, title: strings().monetizationWithdrawEnterPasswordTitle, desc: strings().monetizationWithdrawEnterPasswordText, checker: { value in
+                    return context.engine.peers.requestStarsRevenueWithdrawalUrl(peerId: peerId, amount: amount, password: value)
+                    |> deliverOnMainQueue
+                    |> afterNext { url in
+                        execute(inapp: .external(link: url, false))
+                    }
+                    |> ignoreValues
+                    |> mapError { error in
+                        switch error {
+                        case .invalidPassword:
+                            return .wrong
+                        case .limitExceeded:
+                            return .custom(strings().loginFloodWait)
+                        case .generic:
+                            return .generic
+                        default:
+                            return .custom(strings().monetizationWithdrawErrorText)
+                        }
+                    }
+                }), for: context.window)
+            default:
+                break
+            }
+        })
+    }
+    
     let arguments = Arguments(context: context, withdraw: {
-        showModal(with: withdraw(context: context, state: stateValue.with { $0 }, stateValue: statePromise.get(), updateState: updateState), for: context.window)
+        showModal(with: withdraw(context: context, state: stateValue.with { $0 }, stateValue: statePromise.get(), updateState: updateState, callback: processWithdraw), for: context.window)
     }, executeLink: { link in
         execute(inapp: .external(link: link, false))
     }, loadMore: { [weak contextObject] in
-        contextObject?.stars.loadMore()
+        contextObject?.transactions.loadMore()
     }, openTransaction: { transaction in
         showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
+    }, loadDetailedGraph: { [weak contextObject] graph, x in
+        return contextObject?.revenue.loadDetailedGraph(graph, x: x) ?? .complete()
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        return InputDataSignalValue(entries: entries(state, arguments: arguments, detailedDisposable: detailedDisposable))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Stars Balance", hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().fragmentStarsTitle, hasDone: false)
     
     controller.contextObject = contextObject
     
@@ -461,8 +586,10 @@ private final class WithdrawInputView : GeneralRowView {
         
         func update(_ item: WithdrawInputItem, animated: Bool) {
             let attr = NSMutableAttributedString()
+                        
+            let min_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_min", orElse: 1000)
             
-            attr.append(string: "You cannot withdraw less than 1000 Stars.", color: theme.colors.text, font: .medium(.text))
+            attr.append(string: strings().fragmentStarsMinWithdraw(Int(min_withdraw)), color: theme.colors.text, font: .medium(.text))
             let layout = TextViewLayout(attr)
             layout.measure(width: frame.width - 70)
             
@@ -540,7 +667,10 @@ private final class WithdrawInputView : GeneralRowView {
             
             let value = Int64(item.inputState.string) ?? 0
             
-            inputView.inputTheme = inputView.inputTheme.withUpdatedTextColor(value < 1000 ? theme.colors.redUI : theme.colors.text)
+            let min_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_min", orElse: 1000)
+
+            
+            inputView.inputTheme = inputView.inputTheme.withUpdatedTextColor(value < min_withdraw ? theme.colors.redUI : theme.colors.text)
             
             
             item.interactions.filterEvent = { event in
@@ -624,9 +754,10 @@ private final class WithdrawInputView : GeneralRowView {
         
         self.inputView.update(item: item, animated: animated)
         
-        
+        let min_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_min", orElse: 1000)
+
         let value = Int64(item.inputState.string) ?? 0
-        if value < 1000 {
+        if value < min_withdraw {
             if let acceptView {
                 performSubviewRemoval(acceptView, animated: animated)
                 self.acceptView = nil
@@ -692,7 +823,9 @@ private final class WithdrawInputView : GeneralRowView {
             transition.updateFrame(view: limitView, frame: NSMakeRect(20, inputView.frame.maxY + 20, frame.width - 40, 40))
         }
     }
-    
+    override var firstResponder: NSResponder? {
+        return inputView.inputView.inputView
+    }
 }
 
 
@@ -738,7 +871,7 @@ private func withdrawEntries(_ state: State, arguments: WithdrawArguments) -> [I
     return entries
 }
 
-private func withdraw(context: AccountContext, state: State, stateValue: Signal<State, NoError>, updateState:@escaping((State)->State)->Void) -> InputDataModalController {
+private func withdraw(context: AccountContext, state: State, stateValue: Signal<State, NoError>, updateState:@escaping((State)->State)->Void, callback:@escaping(Int64)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -775,7 +908,7 @@ private func withdraw(context: AccountContext, state: State, stateValue: Signal<
             return current
         }
     }, withdraw: {
-        
+        _ = getController?()?.returnKeyAction()
     }, close: {
         close?()
     })
@@ -785,6 +918,14 @@ private func withdraw(context: AccountContext, state: State, stateValue: Signal<
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    controller.validateData = { _ in
+        if let value = Int64(interactions.presentation.string) {
+            callback(value)
+        }
+        close?()
+        return .none
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -808,3 +949,17 @@ private func withdraw(context: AccountContext, state: State, stateValue: Signal<
     return modalController
 }
 
+
+
+func withdrawStarBalance(context: AccountContext, stars: StarsContext, state: StarsContext.State) -> InputDataModalController {
+    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("bot_revenue_withdrawal_enabled", orElse: true), balance: .init(stars: state.balance, usdRate: state.usdRate))
+
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((State) -> State) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+
+    return withdraw(context: context, state: initialState, stateValue: statePromise.get(), updateState: updateState, callback: { _ in })
+    
+}
