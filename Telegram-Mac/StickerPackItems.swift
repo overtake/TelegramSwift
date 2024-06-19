@@ -62,7 +62,13 @@ class StickerPackRowItem: TableRowItem {
         let option: RemoveStickerPackOption
         let animation: MenuAnimation
         let packInfo = self.info
-        let topItem = self.topItem?.file
+        let topItem: TelegramMediaFile?
+        if let thumbnail = packInfo.thumbnail {
+            topItem = TelegramMediaFile(fileId: MediaId(namespace: 0, id: packInfo.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: packInfo.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: packInfo.id.id, accessHash: packInfo.accessHash), maskData: nil)])
+        } else {
+            topItem = self.topItem?.file
+        }
+        
         let allItems = self.allItems
         
         if info.namespace == Namespaces.ItemCollection.CloudEmojiPacks {

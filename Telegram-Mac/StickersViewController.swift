@@ -69,7 +69,7 @@ struct SpecificPackData : Equatable {
 }
 
 enum PackEntry: Comparable, Identifiable {
-    case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?)
+    case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?, allItems: [StickerPackItem])
     case recent
     case premium
     case saved
@@ -105,7 +105,7 @@ enum PackEntry: Comparable, Identifiable {
             return 3
         case .specificPack:
             return 4
-        case let .stickerPack(index, _, _, _):
+        case let .stickerPack(index, _, _, _, _):
             return 5 + index
         }
     }
@@ -627,8 +627,19 @@ private func packEntries(view: ItemCollectionsView?, context: AccountContext, sp
         }
         
         for (_, info, item) in view.collectionInfos {
+            var files: [StickerPackItem] = []
             if let info = info as? StickerPackCollectionInfo {
-                entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem))
+                let items = view.entries.enumerated()
+                for (i, entry) in items {
+                    if entry.index.collectionId == info.id {
+                        if let item = entry.item as? StickerPackItem {
+                            files.append(item)
+                        }
+                    }
+                }
+            }
+            if let info = info as? StickerPackCollectionInfo {
+                entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem, allItems: files))
                 index += 1
             }
         }
@@ -671,8 +682,8 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
     
     let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { (entry) -> TableRowItem in
         switch entry.entry {
-        case let .stickerPack(index, stableId, info, topItem):
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: index, isPremium: false, context: context, info: info, topItem: topItem)
+        case let .stickerPack(index, stableId, info, topItem, allItems):
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: index, isPremium: false, context: context, info: info, topItem: topItem, allItems: allItems)
         case .recent:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .premium:
@@ -1618,7 +1629,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     
                     let fromEntry = entries[fromIndex]
                     
-                    guard case let .stickerPack(_, _, fromPackInfo, _) = fromEntry else {
+                    guard case let .stickerPack(_, _, fromPackInfo, _, _) = fromEntry else {
                         return
                     }
                     
@@ -1627,7 +1638,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     var afterAll = false
                     if toIndex < entries.count {
                         switch entries[toIndex] {
-                        case let .stickerPack(_, _, toPackInfo, _):
+                        case let .stickerPack(_, _, toPackInfo, _, _):
                             referenceId = toPackInfo.id
                         default:
                             if entries[toIndex] < fromEntry {
