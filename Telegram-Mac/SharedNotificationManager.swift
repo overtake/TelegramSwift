@@ -134,7 +134,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsUnlocked), name: NSNotification.Name(rawValue: "com.apple.screenIsUnlocked"), object: nil)
 
         
-        _ = (_passlock.get() |> mapToSignal { show in additionalSettings(accountManager: accountManager) |> map { (show, $0) }} |> deliverOnMainQueue |> mapToSignal { show, settings -> Signal<Bool, NoError> in
+        _ = (_passlock.get() |> mapToSignal { show in additionalSettings(accountManager: accountManager) |> take(1) |> map { (show, $0) }} |> deliverOnMainQueue |> mapToSignal { show, settings -> Signal<Bool, NoError> in
             if show {
                 closeInstantView()
                 closeGalleryViewer(false)

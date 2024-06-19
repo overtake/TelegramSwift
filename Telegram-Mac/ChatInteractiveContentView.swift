@@ -167,14 +167,61 @@ final class MediaInkView : Control {
         }
     }
     
+    private final class PaidContentView: NSVisualEffectView {
+        private let textView = InteractiveTextView()
+        required override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.wantsLayer = true
+            self.material = .ultraDark
+            self.blendingMode = .withinWindow
+            self.state = .active
+            
+            addSubview(textView)
+            
+            textView.userInteractionEnabled = false
+            textView.textView.isSelectable = false
+            
+        }
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(amount: Int64, context: AccountContext, short: Bool) {
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: "\(clown)", color: .white, font: .medium(.text))
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.append(string: " \(amount)", color: .white, font: .medium(.text))
+            
+            let textLayout = TextViewLayout(attr)
+            textLayout.measure(width: .greatestFiniteMagnitude)
+
+            self.textView.set(text: textLayout, context: context)
+            
+            self.setFrameSize(NSMakeSize(textView.frame.width + 20, 30))
+
+        }
+        
+        override func layout() {
+            super.layout()
+            self.textView.centerY(x: 10)
+        }
+    }
+
+    
     private let inkView: MediaDustView = MediaDustView()
     private var inkMaskView: CornerMaskLayer?
 
     private let preview: TransformImageView = TransformImageView()
     
     private var sensitiveView: SensitiveView?
-    
+    private var paidView: PaidContentView?
+
     private var isSensitive: Bool = false
+    private var payAmount: Int64? = nil
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(preview)
@@ -189,10 +236,11 @@ final class MediaInkView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool, isSensitive: Bool) {
+    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool, isSensitive: Bool, payAmount: Int64?) {
         
         
         self.isSensitive = isSensitive
+        self.payAmount = payAmount
         
         if isSensitive {
             let current: SensitiveView
@@ -207,6 +255,22 @@ final class MediaInkView : Control {
         } else if let view = self.sensitiveView {
             performSubviewRemoval(view, animated: false)
             self.sensitiveView = nil
+        }
+        
+        if let payAmount {
+            let current: PaidContentView
+            if let view = self.paidView {
+                current = view
+            } else {
+                current = PaidContentView(frame: NSMakeRect(0, 0, 100, 30))
+                self.paidView = current
+                addSubview(current)
+            }
+            current.update(amount: payAmount, context: context, short: true)
+            current.layer?.cornerRadius = current.frame.height / 2
+        } else if let view = self.paidView {
+            performSubviewRemoval(view, animated: false)
+            self.paidView = nil
         }
                 
         
@@ -267,6 +331,11 @@ final class MediaInkView : Control {
             let buttonRect = view.frame
             buttonPath.addRoundedRect(in: buttonRect, cornerWidth: buttonRect.height / 2, cornerHeight: buttonRect.height / 2)
         }
+        
+        if let view = self.paidView {
+            let buttonRect = view.frame
+            buttonPath.addRoundedRect(in: buttonRect, cornerWidth: buttonRect.height / 2, cornerHeight: buttonRect.height / 2)
+        }
                     
         return buttonPath
     }
@@ -277,6 +346,7 @@ final class MediaInkView : Control {
         inkMaskView?.frame = bounds
         inkView.frame = bounds.insetBy(dx: -20, dy: -20)
         sensitiveView?.center()
+        paidView?.center()
     }
 }
 
@@ -907,7 +977,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
 
                 
-                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: false)
+                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: false, payAmount: parameters?.payAmount)
                 current.frame = size.bounds
             } else {
                 if let view = self.inkView {

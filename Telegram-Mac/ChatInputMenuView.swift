@@ -78,7 +78,7 @@ final class ChatInputMenuView : View {
         }
         
         if let data = sticker.data {
-            animationView.set(.init(compressed: data, key: .init(key: .bundle(sticker.rawValue + theme.colors.name), size: NSMakeSize(30, 30)), cachePurpose: .none, playPolicy: playPolicy, runOnQueue: .mainQueue()))
+            animationView.set(.init(compressed: data, key: .init(key: .bundle(sticker.rawValue + theme.colors.name), size: NSMakeSize(30, 30)), cachePurpose: .none, playPolicy: playPolicy, colors: [.init(keyPath: "", color: theme.colors.underSelectedColor)], runOnQueue: .mainQueue()))
         }
         
         switch botMenu.menuButton {
@@ -108,7 +108,10 @@ final class ChatInputMenuView : View {
             }
             self.change(size: NSMakeSize(60, frame.height), animated: animated)
         }
-        
+        button.set(background: theme.colors.accent, for: .Normal)
+        button.set(background: theme.colors.accent, for: .Hover)
+        button.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+
         
         needsLayout = true
     }

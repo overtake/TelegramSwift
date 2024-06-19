@@ -17,11 +17,37 @@ import MtProtoKit
 import ThemeSettings
 import Translate
 import InputView
-//import WalletCore
+import TelegramMedia
 
+let itunesAppLink = "https://apps.apple.com/us/app/telegram/id747648890"
 
-let XTR: String = "XTR"
+let XTR: String = TelegramCurrency.xtr.rawValue
 let XTRSTAR: String = "⭐️"
+
+let TON: String = TelegramCurrency.ton.rawValue
+
+enum TelegramCurrency : String {
+    case xtr = "XTR"
+    case ton = "TON"
+    
+    var logo: LocalAnimatedSticker {
+        switch self {
+        case .xtr:
+            return .star_currency
+        case .ton:
+            return .ton_logo
+        }
+    }
+    
+    func colored(_ color: NSColor) -> [LottieColor] {
+        switch self {
+        case .xtr:
+            return []
+        case .ton:
+            return [.init(keyPath: "", color: color)]
+        }
+    }
+}
 
 extension ResolvePeerResult : Equatable {
     var result: EnginePeer? {
@@ -775,40 +801,42 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                         return makeRequestAppWebView(botApp, false)
                                     }
                                 }
-                                signal = showModalProgress(signal: signal, for: context.window)
-                                _ = signal.start(next: { botApp, url in
-                                    
-                                    if let url = url {
-                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                    } else {
+                                if !WebappWindow.focus(botId: peer.id) {
+                                    signal = showModalProgress(signal: signal, for: context.window)
+                                    _ = signal.start(next: { botApp, url in
                                         
-                                        var options: [ModalAlertData.Option] = []
-                                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
-                                        
-                                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
-                                        showModalAlert(for: context.window, data: data, completion: { result in
-                                            FastSettings.markWebAppAsConfirmed(peer.id)
+                                        if let url = url {
+                                            openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                        } else {
                                             
-                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: context.window)
+                                            var options: [ModalAlertData.Option] = []
+                                            options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
                                             
-                                            _ = signal.start(next: { botApp, url in
-                                                if let url = url {
-                                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                                }
-                                            }, error: { error in
-                                                switch error {
-                                                case .generic:
-                                                    invokeCallback(peer, messageId, nil)
-                                                }
+                                            let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                            showModalAlert(for: context.window, data: data, completion: { result in
+                                                FastSettings.markWebAppAsConfirmed(peer.id)
+                                                
+                                                let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: context.window)
+                                                
+                                                _ = signal.start(next: { botApp, url in
+                                                    if let url = url {
+                                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                                    }
+                                                }, error: { error in
+                                                    switch error {
+                                                    case .generic:
+                                                        invokeCallback(peer, messageId, nil)
+                                                    }
+                                                })
                                             })
-                                        })
-                                    }
-                                }, error: { error in
-                                    switch error {
-                                    case .generic:
-                                        invokeCallback(peer, messageId, nil)
-                                    }
-                                })
+                                        }
+                                    }, error: { error in
+                                        switch error {
+                                        case .generic:
+                                            invokeCallback(peer, messageId, nil)
+                                        }
+                                    })
+                                }
                             default:
                                 invokeCallback(peer, messageId, action)
                             }
@@ -1290,7 +1318,7 @@ private func updateAppAsYouWish(text: String, updateApp: Bool) {
         verifyAlert_button(for: mainWindow, header: appName, information: text, ok: strings().alertButtonOKUpdateApp, cancel: strings().modalCancel, option: nil, successHandler: { _ in
             if updateApp {
                 #if APP_STORE
-                execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
+                execute(inapp: inAppLink.external(link: itunesAppLink, false))
                 #else
                 (NSApp.delegate as? AppDelegate)?.checkForUpdates(updateApp)
                 #endif
@@ -1957,7 +1985,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if Int(timemark) < Int32.max {
                                     action = .openMedia(Int32(timemark))
                                 }
-                            } else if userAndPost.count == 2, post == nil {
+                            } else if (userAndPost.count == 2 && post == nil) || (userAndPost.count == 3 && params[keyURLStartapp] != nil) {
                                 var appname = userAndPost[1]
                                 if let range = userAndPost[1].range(of: "?") {
                                     appname = String(userAndPost[1][..<range.lowerBound])

@@ -254,7 +254,7 @@ class ChatMessageItem: ChatRowItem {
             execute(inapp: link)
         } else if unsupported {
             #if APP_STORE
-            execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
+            execute(inapp: inAppLink.external(link: itunesAppLink, false))
             #else
             (NSApp.delegate as? AppDelegate)?.checkForUpdates("")
             #endif
@@ -335,7 +335,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
-                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax).mutableCopy() as! NSMutableAttributedString
+                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu).mutableCopy() as! NSMutableAttributedString
                 
              }
              
@@ -487,7 +487,7 @@ class ChatMessageItem: ChatRowItem {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
-                            showModal(with: WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction), for: context.window)
+                            WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction))
                             return
                         }
                         if let story = content.story {
@@ -692,7 +692,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent), isDark: Bool, bubbled: Bool, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], loadCodeSyntax: @escaping(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }, confirm: Bool = true) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent), isDark: Bool, bubbled: Bool, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], loadCodeSyntax: @escaping(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }, openPhoneNumber: ((String)->Void)? = nil, confirm: Bool = true) -> NSAttributedString {
         var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -870,6 +870,14 @@ class ChatMessageItem: ChatRowItem {
                  string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(nsString!.substring(with: range), { bankCard in
                     openBank(bankCard)
+                }), range: range)
+            case .PhoneNumber:
+                if nsString == nil {
+                    nsString = text as NSString
+                }
+                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(nsString!.substring(with: range), { phoneNumber in
+                    openPhoneNumber?(phoneNumber)
                 }), range: range)
             case let .BlockQuote(collapsable):
                 string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, space: 4, collapsable: collapsable), range: range)

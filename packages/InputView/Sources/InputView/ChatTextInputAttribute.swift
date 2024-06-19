@@ -558,7 +558,7 @@ private func quoteRangesEqual(_ lhs: [(NSRange, TextInputTextQuoteAttribute)], _
 func mergeQuoteRanges(_ quoteRanges: [(NSRange, TextInputTextQuoteAttribute)]) -> [(NSRange, TextInputTextQuoteAttribute)] {
     guard !quoteRanges.isEmpty else { return [] }
     
-    var sortedRanges = quoteRanges.sorted { $0.0.location < $1.0.location }
+    let sortedRanges = quoteRanges.sorted { $0.0.location < $1.0.location }
     var mergedRanges: [(NSRange, TextInputTextQuoteAttribute)] = []
     
     var currentRange = sortedRanges[0]
@@ -589,6 +589,17 @@ private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttribu
         }
     })
     quoteRanges.sort(by: { $0.0.location < $1.0.location })
+    
+    var i = 0
+    while i < quoteRanges.count - 1 {
+        if quoteRanges[i].1 === quoteRanges[i + 1].1 {
+            quoteRanges[i].0.length = quoteRanges[i + 1].0.max - quoteRanges[i].0.min
+            quoteRanges.remove(at: i + 1)
+        } else {
+            i += 1
+        }
+    }
+    
     let initialQuoteRanges = quoteRanges
     
     for i in 0 ..< quoteRanges.count {
