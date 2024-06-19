@@ -2904,3 +2904,22 @@ public func deg2rad(_ number: Float) -> Float {
 public func rad2deg(_ number: Float) -> Float {
     return number * 180.0 / .pi
 }
+
+
+public extension NSAttributedString {
+    var smallDecemial: NSAttributedString {
+        let range = self.string.nsstring.range(of: ".")
+        if range.location != NSNotFound {
+            let attr = self.mutableCopy() as! NSMutableAttributedString
+            
+            let font = attr.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+            if let font = font, let updated = NSFont(name: font.fontName, size: font.pointSize / 1.5) {
+                attr.addAttribute(.font, value: updated, range: NSMakeRange(range.location, attr.range.length - range.lowerBound))
+            }
+            return attr
+
+        } else {
+            return self
+        }
+    }
+}

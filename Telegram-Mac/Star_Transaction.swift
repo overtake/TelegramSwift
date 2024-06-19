@@ -43,7 +43,7 @@ private final class HeaderItem : GeneralRowItem {
             header = strings().starListTransactionPremiumBot
         case .unsupported:
             header = strings().starListTransactionUnknown
-        case .peer(let enginePeer):
+        case .peer:
             header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
         }
         
@@ -86,10 +86,11 @@ private final class HeaderItem : GeneralRowItem {
     override var height: CGFloat {
         var height = 10 + 80 + 10 + headerLayout.layoutSize.height + 5 + infoLayout.layoutSize.height
         if let descLayout {
-            height += descLayout.layoutSize.height + 5
+            height += descLayout.layoutSize.height + 5 + 2
         }
         return height
     }
+    
 }
 
 private final class HeaderView : GeneralContainableRowView {
@@ -188,7 +189,7 @@ private final class HeaderView : GeneralContainableRowView {
         self.dismiss.autohighlight = false
         
         
-        if item.incoming {
+        if item.peer == nil {
             let current: ImageView
             if let view = self.outgoingView {
                 current = view
@@ -376,7 +377,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Star_Transaction(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction) -> InputDataModalController {
+func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil

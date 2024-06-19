@@ -129,7 +129,8 @@ final class SearchControllerArguments {
     let openTopPeer:(PopularItemType)->Void
     let setPeerAsTag:(Peer)->Void
     let openStory:(StoryInitialIndex?)->Void
-    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
+    let openStorySearch:(SearchStoryListContext.State)->Void
+    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openStorySearch:@escaping(SearchStoryListContext.State)->Void) {
         self.context = context
         self.target = target
         self.removeRecentPeerId = removeRecentPeerId
@@ -137,6 +138,7 @@ final class SearchControllerArguments {
         self.openTopPeer = openTopPeer
         self.setPeerAsTag = setPeerAsTag
         self.openStory = openStory
+        self.openStorySearch = openStorySearch
     }
     
 }
@@ -152,6 +154,7 @@ enum ChatListSearchEntryStableId: Hashable {
     case topPeers
     case separator(Int)
     case emptySearch
+    case foundStories
     
     func hash(into hasher: inout Hasher) {
         switch self {
@@ -190,6 +193,8 @@ enum ChatListSearchEntryStableId: Hashable {
         case .topPeers:
             hasher.combine("topPeers")
             hasher.combine(-1)
+        case .foundStories:
+            hasher.combine("foundStories")
         }
     }
 }
@@ -208,6 +213,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case message(Message, String, CombinedPeerReadState?, MessageHistoryThreadData?, Int)
     case separator(text: String, index:Int, state:SeparatorBlockState)
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
+    case foundStories(StoryListContext.State, index: Int, query: String)
     case emptySearch
     case emptyChannels
     var stableId: ChatListSearchEntryStableId {
@@ -238,6 +244,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .emptySearch
         case .emptyChannels:
             return .emptySearch
+        case .foundStories:
+            return .foundStories
         }
     }
     
@@ -262,6 +270,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
         case .emptySearch:
             return 0
         case .emptyChannels:
+            return 0
+        case .foundStories:
             return 0
         }
     }
@@ -353,6 +363,12 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
                     }
                     return true
                 }
+            } else {
+                return false
+            }
+        case let .foundStories(state, index, query):
+            if case .foundStories(state, index, query) = rhs {
+                return true
             } else {
                 return false
             }
@@ -566,6 +582,10 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             return PopularPeersRowItem(initialSize, stableId: entry.stableId, context: arguments.context, selfPeer: selfPeer, articlesEnabled: articlesEnabled, unreadArticles: unreadArticles, peers: peers, unread: unread, online: online, action: { type in
                 arguments.openTopPeer(type)
             })
+        case let .foundStories(state, _, query):
+            return SearchStoryFoundItem(initialSize, stableId: entry.stableId, list: state, context: arguments.context, query: query, action: {
+                arguments.openStorySearch(state)
+            })
         }
     })
     
@@ -644,7 +664,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     private let context:AccountContext
     private var marked: Bool = false
-    private let arguments:SearchControllerArguments
+    private var arguments:SearchControllerArguments!
     private var open:(UIChatListEntryId?, MessageId?, Bool) -> Void = {_,_,_  in}
     private let target: Target
     private let searchQuery:Promise = Promise<String?>()
@@ -659,6 +679,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
     private let globalTagsValue: ValuePromise<SearchTags> = ValuePromise(ignoreRepeated: true)
 
+    
+    private var globalStorySearchContext: SearchStoryListContext?
+    private let globalStorySearchState:Promise<StoryListContext.State?> = Promise(nil)
     
     var setPeerAsTag: ((Peer?)->Void)? = nil
     
@@ -710,10 +733,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
         let cachedData: Atomic<SearchCacheData> = Atomic(value: SearchCacheData())
         
-        let arguments = self.arguments
+        let arguments = self.arguments!
         let statePromise = self.statePromise.get()
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
+        let globalStorySearchState = self.globalStorySearchState.get()
+        
+        
         let searchItems = combineLatest(globalTagsValue.get(), searchQuery.get()) |> mapToSignal { globalTags, query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
             let query = query ?? ""
             if !query.isEmpty || !globalTags.isEmpty {
@@ -999,8 +1025,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
                 
-                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed)
-                    |> map { localPeers, remotePeers, remoteMessages, isRevealed -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
+                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState)
+                    |> map { localPeers, remotePeers, remoteMessages, isRevealed, storySearchState -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                         
                         cachedData.with { value -> Void in
                             value.cacheMessages(remoteMessages.0, for: .key(query: query, tags: globalTags))
@@ -1008,7 +1034,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             value.cacheRemotePeers(remotePeers.1, for: query)
                         }
                         
+                       
                         var entries:[ChatListSearchEntry] = []
+                        
+                        if let storySearchState, !storySearchState.items.isEmpty, globalTags.publicPosts {
+                            entries.append(.foundStories(storySearchState, index: 0, query: query))
+                        }
+                        
+                        
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
                             
                             let peers = (localPeers + remotePeers.0)
@@ -1528,8 +1561,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self.open = open
         self.options = options
         self.target = target
-        self.globalTagsValue.set(tags)
+        
+        super.init(frame:frame)
+        self.bar = .init(height: 0)
+        
         var setPeerAsTag:((Peer?)->Void)? = nil
+
         
         self.arguments = SearchControllerArguments(context: context, target: target, removeRecentPeerId: { peerId in
             _ = context.engine.peers.removeRecentlySearchedPeer(peerId: peerId).start()
@@ -1554,9 +1591,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             setPeerAsTag?(peer)
         }, openStory: { index in
             StoryModalController.ShowStories(context: context, isHidden: false, initialId: index, singlePeer: true)
+        }, openStorySearch: { [weak self] state in
+            if let query = self?.query {
+                showModal(with: StoryFoundListController(context: context, source: .hashtag(query), presentation: theme, existingsContext: self?.globalStorySearchContext), for: context.window)
+            }
         })
-        super.init(frame:frame)
-        self.bar = .init(height: 0)
         
         setPeerAsTag = { [weak self] peer in
             self?.setPeerAsTag?(peer)
@@ -1567,6 +1606,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 self?.genericView.cancelSelection()
             }
         }))
+        
+        self.globalTagsValue.set(tags)
+
     }
     
     private var scrollupOnNextTransition: Bool = false
@@ -1576,10 +1618,21 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         setHighlightEvents()
         self.query = query
         self.scrollupOnNextTransition = true
+        
         if let query = query, !query.isEmpty {
             searchQuery.set(.single(query))
         } else {
             searchQuery.set(.single(nil))
+        }
+        
+        if let query, query.hasPrefix("#"), query.length > 1 {
+            let globalStorySearchContext = SearchStoryListContext(account: context.account, source: .hashtag(query))
+            
+            self.globalStorySearchContext = globalStorySearchContext
+            self.globalStorySearchState.set(globalStorySearchContext.state |> map(Optional.init))
+        } else {
+            self.globalStorySearchState.set(.single(nil))
+            self.globalStorySearchContext = nil
         }
     }
     

@@ -795,6 +795,14 @@ func getAnimatedStickerThumb(data: Data, size: NSSize = NSMakeSize(512, 512)) ->
                 try? data?.write(to: URL(fileURLWithPath: path))
                 return path
             }
+        } else {
+            if let image = convertFromWebP(dataValue)?._cgImage {
+                let rep = NSBitmapImageRep(cgImage: image)
+                let data = rep.representation(using: .png, properties: [:])
+                let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"
+                try? data?.write(to: URL(fileURLWithPath: path))
+                return path
+            }
         }
         return nil
     } |> deliverOnMainQueue

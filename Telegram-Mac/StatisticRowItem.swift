@@ -22,9 +22,47 @@ public enum ChartItemType {
     case hourlyStep
     case twoAxisHourlyStep
     case twoAxis5MinStep
-    case currency
+    case currency(String)
 }
 
+private func drawTonSymbol(context: CGContext, color: UIColor, at point: CGPoint) {
+    let width: CGFloat = 8.0
+    let height: CGFloat = 7.5
+    let cornerRadius: CGFloat = 0.5
+    
+    let topPoint = CGPoint(x: point.x + width / 2, y: point.y)
+    let bottomPoint = CGPoint(x: point.x + width / 2, y: point.y + height)
+    let leftTopPoint = CGPoint(x: point.x, y: point.y)
+    let rightTopPoint = CGPoint(x: point.x + width, y: point.y)
+    
+    context.saveGState()
+    
+    context.beginPath()
+    context.move(to: CGPoint(x: leftTopPoint.x + cornerRadius, y: leftTopPoint.y))
+    
+    context.addArc(tangent1End: leftTopPoint, tangent2End: bottomPoint, radius: cornerRadius)
+    context.addLine(to: CGPoint(x: bottomPoint.x, y: bottomPoint.y - cornerRadius + GView.oneDevicePixel))
+    
+    context.move(to: CGPoint(x: rightTopPoint.x - cornerRadius, y: rightTopPoint.y))
+    context.addArc(tangent1End: rightTopPoint, tangent2End: bottomPoint, radius: cornerRadius)
+    context.addLine(to: CGPoint(x: bottomPoint.x, y: bottomPoint.y - cornerRadius + GView.oneDevicePixel))
+                      
+    context.move(to: CGPoint(x: leftTopPoint.x + cornerRadius, y: leftTopPoint.y))
+    context.addLine(to: CGPoint(x: rightTopPoint.x - cornerRadius, y: rightTopPoint.y))
+    
+    context.move(to: topPoint)
+    context.addLine(to: CGPoint(x: bottomPoint.x, y: bottomPoint.y - 1.0))
+    
+    context.setLineWidth(1.0)
+    context.setLineCap(.round)
+    context.setFillColor(UIColor.clear.cgColor)
+    context.setStrokeColor(color.withAlphaComponent(1.0).cgColor)
+    
+    context.setAlpha(color.alphaValue)
+    context.strokePath()
+    
+    context.restoreGState()
+}
 
 
 class StatisticRowItem: GeneralRowItem {
@@ -48,8 +86,28 @@ class StatisticRowItem: GeneralRowItem {
         case .bars:
             controller = StackedBarsChartController(chartsCollection: collection)
             controller.isZoomable = false
-        case .currency:
-            controller = StackedBarsChartController(chartsCollection: collection, isCrypto: true, rate: rate)
+        case let .currency(value):
+            let graphCurrency = GraphCurrency(rawValue: value)!
+            controller = StackedBarsChartController(chartsCollection: collection, currency: graphCurrency, drawCurrency: { context, color, point in
+                switch graphCurrency {
+                case .xtr:
+                    let image = NSImage(resource: .iconStarCurrency).precomposed()
+                    let size = image.backingSize
+                    let point = point
+                        
+                    context.saveGState()
+                    context.resetClip()
+                    context.translateBy(x: point.x, y: point.y)
+                    let angle: CGFloat = -35 * (.pi / 180)
+                    context.rotate(by: angle)
+                    context.translateBy(x: -point.x, y: -point.y)
+                    context.concatenate(CGAffineTransform.identity)
+                    context.draw(image, in: CGRect(origin: point.offsetBy(dx: -size.width/2, dy: -size.height/2 + 2), size: size))
+                    context.restoreGState()
+                case .ton:
+                    drawTonSymbol(context: context, color: color, at: point)
+                }
+            }, rate: rate)
             controller.isZoomable = false
         case .step:
             controller = StepBarsChartController(chartsCollection: collection)
@@ -149,7 +207,7 @@ class StatisticRowView: TableRowView {
     
     private var chartTheme: ChartTheme {
         let chartTheme = (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme)
-        return ChartTheme(chartTitleColor: theme.colors.text, actionButtonColor: theme.colors.accent, chartBackgroundColor: theme.colors.background, chartLabelsColor: theme.colors.grayText, chartHelperLinesColor: chartTheme.chartHelperLinesColor, chartStrongLinesColor: chartTheme.chartStrongLinesColor, barChartStrongLinesColor: chartTheme.barChartStrongLinesColor, chartDetailsTextColor: theme.colors.grayText, chartDetailsArrowColor: theme.colors.grayText, chartDetailsViewColor: theme.colors.grayBackground, rangeViewFrameColor: chartTheme.rangeViewFrameColor, rangeViewTintColor: theme.colors.grayForeground.withAlphaComponent(0.4), rangeViewMarkerColor: chartTheme.rangeViewTintColor, rangeCropImage: chartTheme.rangeCropImage)
+        return ChartTheme(chartTitleColor: theme.colors.text, actionButtonColor: theme.colors.accent, chartBackgroundColor: theme.colors.background, chartLabelsColor: theme.colors.grayText, chartHelperLinesColor: chartTheme.chartHelperLinesColor, chartStrongLinesColor: .random, barChartStrongLinesColor: chartTheme.barChartStrongLinesColor, chartDetailsTextColor: theme.colors.grayText, chartDetailsArrowColor: theme.colors.grayText, chartDetailsViewColor: theme.colors.grayBackground, rangeViewFrameColor: chartTheme.rangeViewFrameColor, rangeViewTintColor: theme.colors.grayForeground.withAlphaComponent(0.4), rangeViewMarkerColor: chartTheme.rangeViewTintColor, rangeCropImage: chartTheme.rangeCropImage)
     }
     
     override var backdorColor: NSColor {

@@ -828,7 +828,7 @@ private final class ChatListMediaPreviewView: View {
             
             let imageReference = ImageMediaReference.message(message: MessageReference(message), media: image)
             
-            current.update(isRevealed: false, updated: true, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false, isSensitive: false)
+            current.update(isRevealed: false, updated: true, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false, isSensitive: false, payAmount: nil)
             current.frame = frame
         } else if let view = self.inkView {
             performSubviewRemoval(view, animated: false)
@@ -1767,8 +1767,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      let size = NSMakeSize(value, value)
                      let current: InlineStickerItemLayer
                      let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor, isGeneral: item.mode.isGeneralTopic)
+                     let textColor = isSelect ? theme.colors.underSelectedColor : theme.colors.accent
                      let checkFileId = data.info.icon ?? forumIconFile.fileId.id
-                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size {
+                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size, layer.textColor == textColor {
                          current = layer
                      } else {
                          if let layer = inlineTopicPhotoLayer {
@@ -1776,7 +1777,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                              self.inlineTopicPhotoLayer = nil
                          }
                          if let fileId = data.info.icon {
-                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
+                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1), textColor: textColor)
                          } else {
                              current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .framesCount(1))
                          }

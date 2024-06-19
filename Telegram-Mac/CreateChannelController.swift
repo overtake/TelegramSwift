@@ -283,13 +283,13 @@ func CreateChannelController(context: AccountContext, requires: CreateChannelReq
     
     let create:(String, String?, String?, String?)->Void = { name, about, picture, username in
         let signal: Signal<(PeerId, Bool)?, CreateChannelError> = showModalProgress(signal: context.engine.peers.createChannel(title: name, description: about), for: context.window, disposeAfterComplete: false) |> mapToSignal { peerId -> Signal<PeerId, CreateChannelError> in
-            if let username = username {
+            if let username = username, !username.isEmpty {
                 return context.engine.peers.updateAddressName(domain: .peer(peerId), name: username)
-                |> mapError { error in
-                    return .generic
-                }
                 |> map { _ in
                     return peerId
+                }
+                |> `catch` { _ in
+                    return .single(peerId)
                 }
             } else {
                 return .single(peerId)
