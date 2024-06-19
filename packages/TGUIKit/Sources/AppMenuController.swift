@@ -666,6 +666,9 @@ final class AppMenuController : NSObject  {
             .clear
         }
         
+        view.tableView.verticalScrollElasticity = .none
+
+        
         panel.setFrame(view.frame.insetBy(dx: -20, dy: -20), display: false)
         panel.contentView?.addSubview(view)
         
