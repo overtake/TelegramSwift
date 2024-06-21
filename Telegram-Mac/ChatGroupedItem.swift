@@ -28,7 +28,7 @@ class ChatGroupedItem: ChatRowItem {
     }
    
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         var captionLayouts: [ChatRowItem.RowCaption] = []
         
@@ -77,22 +77,6 @@ class ChatGroupedItem: ChatRowItem {
                 var caption:NSMutableAttributedString = NSMutableAttributedString()
                 NSAttributedString.initialize()
                 _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
-                var types:ParsingType = [.Links, .Mentions, .Hashtags]
-                
-                if let peer = coreMessageMainPeer(message) as? TelegramUser {
-                    if peer.botInfo != nil {
-                        types.insert(.Commands)
-                    }
-                } else if let peer = coreMessageMainPeer(message) as? TelegramChannel {
-                    switch peer.info {
-                    case .group:
-                        types.insert(.Commands)
-                    default:
-                        break
-                    }
-                } else {
-                    types.insert(.Commands)
-                }
                 
                 var hasEntities: Bool = false
                 for attr in attributes {
@@ -106,10 +90,6 @@ class ChatGroupedItem: ChatRowItem {
                     caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu).mutableCopy() as! NSMutableAttributedString
                     caption.removeWhitespaceFromQuoteAttribute()
 
-                }
-                
-                if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
-                    caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.hashtag, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
                 }
                 
                 var stableId = message.stableId
@@ -151,7 +131,7 @@ class ChatGroupedItem: ChatRowItem {
             fatalError("")
         }
         
-        super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, entry, theme: theme)
         
          self.captionLayouts = captionLayouts
         
@@ -218,7 +198,7 @@ class ChatGroupedItem: ChatRowItem {
                     }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.anyMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
             }
             self.parameters[i].automaticDownloadFunc = { message in
-                return downloadSettings.isDownloable(message)
+                return entry.additionalData.automaticDownload.isDownloable(message)
             }
             self.parameters[i].revealMedia = { message in
                 chatInteraction.revealMedia(message)

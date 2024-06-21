@@ -204,7 +204,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         
         tuples.append(.init(overview: .init(amount: state.overview.balance.stars, usdAmount: state.overview.balance.usd, info: strings().fragmentStarsAvailableBalance, stars: nil), viewType: .firstItem))
         
-        tuples.append(.init(overview: .init(amount: state.overview.current.stars, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .innerItem))
+        tuples.append(.init(overview: .init(amount: state.overview.current.stars, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .lastItem))
 
         
         //tuples.append(.init(overview: .init(amount: state.overview.all.stars, usdAmount: state.overview.all.usd, info: strings().fragmentStarsTotalLifetime, stars: nil), viewType: .lastItem))
@@ -433,9 +433,9 @@ private final class WithdrawHeaderItem : GeneralRowItem {
     fileprivate let arguments: WithdrawArguments
     init(_ initialSize: NSSize, stableId: AnyHashable, balance: Int64, arguments: WithdrawArguments) {
         self.arguments = arguments
-        self.titleLayout = .init(.initialize(string: "Withdraw", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.titleLayout = .init(.initialize(string: strings().fragmentStarWithdraw, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         let attr = NSMutableAttributedString()
-        attr.append(string: "Balance:\n\(clown)\(balance)", color: theme.colors.text, font: .normal(.text))
+        attr.append(string: strings().starPurchaseBalance("\(clown)\(balance)"), color: theme.colors.text, font: .normal(.text))
         attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
         
         self.balance = .init(attr)
@@ -547,7 +547,7 @@ private final class WithdrawInputView : GeneralRowView {
         func update(_ item: WithdrawInputItem, animated: Bool) {
             let attr = NSMutableAttributedString()
             
-            attr.append(string: "Withdraw \("\(clown)\(item.inputState.inputText.string)")", color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.append(string: strings().fragmentStarWithdrawInput("\(clown)\(item.inputState.inputText.string)") , color: theme.colors.underSelectedColor, font: .medium(.text))
             attr.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: theme.colors.underSelectedColor, resize: false), for: clown)
             
             let layout = TextViewLayout(attr)
@@ -857,7 +857,7 @@ private func withdrawEntries(_ state: State, arguments: WithdrawArguments) -> [I
         return WithdrawHeaderItem(initialSize, stableId: stableId, balance: state.balance.stars, arguments: arguments)
     }))
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ENTER AMOUNT TO WITHDRAW"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarWithdrawPlaceholder), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in

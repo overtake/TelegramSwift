@@ -731,7 +731,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
         
         self.image.set(arguments: arguments)
-        
         if self.image.isFullyLoaded {
             
         }
@@ -766,6 +765,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         
         super.update(with: media, size: size, context: context, parent:parent, table: table, parameters:parameters, positionFlags: positionFlags)
+        
+        self.image.preventsCapture = parameters?.isProtected ?? false
 
         
         var topLeftRadius: CGFloat = .cornerRadius
@@ -798,21 +799,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         
 
-        
-
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         var updatedStatusSignal: Signal<(MediaResourceStatus, MediaResourceStatus), NoError>?
         
         if mediaUpdated /*mediaUpdated*/ {
-            
-            
-            var dimensions: NSSize = size
-            
-            if let image = media as? TelegramMediaImage {
-                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
-            } else if let file = media as? TelegramMediaFile {
-                dimensions = file.dimensions?.size ?? size
-            }
+        
             
             let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
 
@@ -823,7 +814,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView = nil
                 videoAccessory?.removeFromSuperview()
                 videoAccessory = nil
-                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
                 
                 if let parent = parent, parent.containsSecretMedia || isSpoiler {
                     updateImageSignal = chatSecretPhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
@@ -867,9 +857,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
-                dimensions = file.dimensions?.size ?? size
-                
-
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                     updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
@@ -908,12 +895,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal {
-                self.image.ignoreFullyLoad = mediaUpdated
                 self.image.setSignal(updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
-                })
+                }, isProtected: parameters?.isProtected ?? false)
             }
             
             if let signal = updatedStatusSignal, let parent = parent, let parameters = parameters {
@@ -936,6 +922,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView?.view.positionFlags = nil
                 autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
             }
+            
+
             
             if isSpoiler {
                 let current: MediaInkView
@@ -961,6 +949,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         self?.parameters?.revealMedia(parent)
                     }
                 }, for: .Click)
+                
+                current.userInteractionEnabled = parameters?.canReveal ?? true
                 
                // self.image.layer?.opacity = 0
                 self.autoplayVideoView?.view.layer?.opacity = 0
@@ -1041,6 +1031,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
                                 autoplay.mediaPlayer.attachPlayerView(autoplay.view)
                                 autoplay.view.center()
+                                autoplay.view.preventsCapture = parameters?.isProtected ?? false
                             }
                             
                         } else {

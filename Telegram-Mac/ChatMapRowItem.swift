@@ -56,8 +56,8 @@ func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> B
 class ChatMapRowItem: ChatMediaItem {
     fileprivate var liveText: TextViewLayout?
     fileprivate var updatedText: TextViewLayout?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         let map = media as! TelegramMediaMap
       //  let isVenue = map.venue != nil
         let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2, zoom: 15)

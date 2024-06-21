@@ -22,7 +22,7 @@ class ChatContactRowItem: ChatRowItem {
     let phoneLayout:TextViewLayout
     let nameLayout: TextViewLayout
     let contact: TelegramMediaContact
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
@@ -61,7 +61,7 @@ class ChatContactRowItem: ChatRowItem {
             fatalError("contact not found for item")
         }
         
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     }
     
     var color: PeerNameColors.Colors {

@@ -769,6 +769,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             
             if items.count > 1, hasInited {
                 items[min(max(self.controller.selectedIndex - 1, 0), items.count - 1)].request()
+                items[index].request()
                 items[min(max(self.controller.selectedIndex + 1, 0), items.count - 1)].request()
             }
         } 
@@ -983,7 +984,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let controller = NSViewController()
             let item = identifiers[identifier]!
             let view = item.singleView()
-            view.wantsLayer = true
             
             let magnify = GMagnifyView(view, contentSize:item.sizeValue, prev: _prev, next: _next, fillFrame: { [weak self] view in
                 guard let `self` = self else {return NSZeroRect}

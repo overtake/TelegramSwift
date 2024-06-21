@@ -346,11 +346,14 @@ class GalleryViewer: NSResponder {
         interactions.fastSave = { [weak self] in
             self?.saveAs(true)
         }
-        interactions.canShare = {
-            if let chatMode = chatMode {
+        interactions.canShare = { [weak self] in
+            let isProtected = self?.pager.selectedItem?.entry.message?.isCopyProtected() ?? false
+            if isProtected {
+                return false
+            } else if let chatMode = chatMode {
                 return !chatMode.isSavedMode && chatMode.customChatContents == nil
             } else {
-                return true
+                return false
             }
         }
         window.set(handler: { [weak self] event in
@@ -512,6 +515,44 @@ class GalleryViewer: NSResponder {
             _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
             
             //self?.controls.index.set(.single((firstIndex + 1, totalCount)))
+            self.pager.set(index: firstIndex, animated: false)
+            self.controls.update(self.pager.selectedItem)
+            return true
+            
+        })
+        
+        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
+            guard let `self` = self else {return}
+            self.controls.update(self.pager.selectedItem)
+        }))
+    }
+    
+    fileprivate convenience init(context: AccountContext, media:[Media], firstIndex: Int, firstStableId: AnyHashable? = nil, parent: Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
+        self.init(context: context, delegate, contentInteractions, type: .history, reversed: false, chatMode: nil)
+        self.firstStableId = firstStableId
+        let pagerSize = self.pagerSize
+        
+
+        
+        ready.set(.single(true) |> map { [weak self] _ -> Bool in
+            
+            guard let `self` = self else {return false}
+            
+            var inserted: [(Int, MGalleryItem)] = []
+            for i in 0 ..< media.count {
+                let media = media[i]
+                if media is TelegramMediaImage {
+                    inserted.append((i, MGalleryPhotoItem(context, .media(media, i, parent), pagerSize)))
+                } else if let file = media as? TelegramMediaFile {
+                    if file.isVideo && file.isAnimated {
+                        inserted.append((i, MGalleryGIFItem(context, .media(media, i, parent), pagerSize)))
+                    } else if file.isVideo {
+                        inserted.append((i, MGalleryVideoItem(context, .media(media, i, parent), pagerSize)))
+                    }
+                }
+            }
+            _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
+            
             self.pager.set(index: firstIndex, animated: false)
             self.controls.update(self.pager.selectedItem)
             return true
@@ -829,7 +870,7 @@ class GalleryViewer: NSResponder {
         
         var items:[ContextMenuItem] = []
         
-        let isProtected = pager.selectedItem?.entry.message?.containsSecretMedia == true || pager.selectedItem?.entry.message?.isCopyProtected() == true
+        let isProtected = pager.selectedItem?.entry.isProtected == true
         
         if !isProtected {
             items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
@@ -893,6 +934,7 @@ class GalleryViewer: NSResponder {
             acceptInteractions = true
         }
         
+        let paidMedia = pager.selectedItem?.entry.paidMedia ?? false
         
         if let contentInteractions = self.contentInteractions, acceptInteractions {
             if let message = pager.selectedItem?.entry.message, let pageItem = pager.selectedItem {
@@ -938,7 +980,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 
-                if canDeleteMessage(message, account: context.account, mode: chatMode) {
+                if canDeleteMessage(message, account: context.account, mode: chatMode), !paidMedia {
                     if !items.isEmpty {
                         items.append(ContextSeparatorItem())
                     }
@@ -1198,7 +1240,9 @@ class GalleryViewer: NSResponder {
     
     func saveAs(_ fast: Bool = false) -> Void {
         if let item = self.pager.selectedItem {
-            if !(item is MGalleryExternalVideoItem) {
+            let isProtected = item.entry.isProtected
+
+            if !(item is MGalleryExternalVideoItem), !isProtected {
                 let isPhoto = item is MGalleryPhotoItem || item is MGalleryPeerPhotoItem
                 operationDisposable.set((item.realStatus |> take(1) |> deliverOnMainQueue).start(next: { [weak self] status in
                     guard let `self` = self else {return}
@@ -1286,6 +1330,7 @@ class GalleryViewer: NSResponder {
     
     func openInfo(_ peerId: PeerId) {
         close()
+        closeAllModals()
         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }
     
@@ -1505,6 +1550,14 @@ func showInstantViewGallery(context: AccountContext, medias:[InstantPageMedia], 
     if viewer == nil {
         viewer?.clean()
         let gallery = GalleryViewer(context: context, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
+        gallery.show()
+    }
+}
+
+func showPaidMedia(context: AccountContext, medias:[Media], parent: Message, firstIndex: Int, firstStableId:AnyHashable? = nil, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
+    if viewer == nil {
+        viewer?.clean()
+        let gallery = GalleryViewer(context: context, media: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
         gallery.show()
     }
 }

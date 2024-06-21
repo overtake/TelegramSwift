@@ -24,6 +24,8 @@ class ChatMediaLayoutParameters : Equatable {
     let isRevealed: Bool
     var forceSpoiler: Bool = false
     var payAmount: Int64? = nil
+    var isProtected: Bool = false
+    var canReveal: Bool = true
 
     var revealMedia:(Message)->Void = { _ in }
     
@@ -357,12 +359,15 @@ class ChatMediaItem: ChatRowItem {
     
 
     override var isBubbleFullFilled: Bool {
+        if media is TelegramMediaPaidContent {
+            return isBubbled
+        }
         return (media.isInteractiveMedia || isSticker) && isBubbled
     }
     
     var positionFlags: LayoutPositionFlags? = nil
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let message = object.message!
         
@@ -391,7 +396,7 @@ class ChatMediaItem: ChatRowItem {
         }
         
         
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
         var canAddCaption: Bool = true
         if let media = media as? TelegramMediaFile, media.isAnimatedSticker || media.isStaticSticker {
@@ -448,22 +453,7 @@ class ChatMediaItem: ChatRowItem {
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()
             _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
-            var types:ParsingType = [.Links, .Mentions, .Hashtags]
-            
-            if let peer = coreMessageMainPeer(message) as? TelegramUser {
-                if peer.botInfo != nil {
-                    types.insert(.Commands)
-                }
-            } else if let peer = coreMessageMainPeer(message) as? TelegramChannel {
-                switch peer.info {
-                case .group:
-                    types.insert(.Commands)
-                default:
-                    break
-                }
-            } else {
-                types.insert(.Commands)
-            }
+
                        
             var isLoading: Bool = false
             if let translate = entry.additionalData.translate {
@@ -495,9 +485,6 @@ class ChatMediaItem: ChatRowItem {
             caption.removeWhitespaceFromQuoteAttribute()
             
             
-            if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
-                caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: chatInteraction.hashtag, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
-            }
             if !(self is ChatVideoMessageItem) {
                 
                 InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
@@ -536,7 +523,7 @@ class ChatMediaItem: ChatRowItem {
             
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
-                context.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
+                showModalText(for: context.window, text: strings().shareLinkCopied)
             }
             interactions.topWindow = { [weak self] in
                 return self?.menuAdditionView ?? .single(nil)

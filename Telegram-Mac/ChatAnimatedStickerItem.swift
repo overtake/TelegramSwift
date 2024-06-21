@@ -38,8 +38,8 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
 }
 
 class ChatAnimatedStickerItem: ChatMediaItem {
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
         let file = (object.message!.anyMedia as! TelegramMediaFile)
         

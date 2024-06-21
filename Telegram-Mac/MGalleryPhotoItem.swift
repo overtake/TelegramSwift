@@ -51,6 +51,9 @@ class MGalleryPhotoItem: MGalleryItem {
         case let .secureIdDocument(document, _):
             self.media = document.image
             self.secureIdAccessContext = document.context
+        case .media(let media, _, _):
+            self.media = media as! TelegramMediaImage
+            secureIdAccessContext = nil
         default:
             fatalError("photo item not supported entry type")
         }

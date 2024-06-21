@@ -308,16 +308,18 @@ fileprivate class PreviewSenderView : Control {
                     }
                 }, itemImage: MenuAnimation.menu_send_spoiler.value))
             }
-            if state.state == .media {
+            if state.state == .media, let peer = self.controller?.chatInteraction.peer {
                 menu.addItem(ContextMenuItem(newValue.sortValue == .up ? strings().previewSenderMoveTextUp : strings().previewSenderMoveTextDown, handler: {
                     updateValue {
                         $0.withUpdatedSort($0.sort == .down ? .up : .down)
                     }
                 }, itemImage: newValue.sortValue == .up ?  MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
                 
-//                menu.addItem(ContextMenuItem(newValue.payAmount != nil ? strings().previewSenderRemovePaid : strings().previewSenderMakePaid, handler: { [weak self] in
-//                    self?.controller?.togglePaidContent()
-//                }, itemImage: MenuAnimation.menu_paid.value))
+                if peer.isChannel {
+                    menu.addItem(ContextMenuItem(newValue.payAmount != nil ? strings().previewSenderRemovePaid : strings().previewSenderMakePaid, handler: { [weak self] in
+                        self?.controller?.togglePaidContent()
+                    }, itemImage: MenuAnimation.menu_paid.value))
+                }
             }
             
             
@@ -1711,17 +1713,33 @@ class PreviewSenderController: ModalViewController, Notifable {
                 self.emoji.popover?.hide()
                 self.closeModal()
                 
+                let amount = state.payAmount
+                
+                let makeMedia:([Media], Bool)->[Media] = { media, collage in
+                    if let amount {
+                        if collage {
+                            return [TelegramMediaPaidContent(amount: amount, extendedMedia: media.map { .full(media: $0) })]
+                        } else {
+                            return media.map {
+                                return TelegramMediaPaidContent(amount: amount, extendedMedia: [.full(media: $0)])
+                            }
+                        }
+                    } else {
+                        return media
+                    }
+                }
+                
                 let effect = self.contextChatInteraction.presentation.messageEffect
                 
                 self.chatInteraction.sendMessage(silent, atDate, effect)
                 if state.isCollage {
                     let collages = medias.chunks(10)
                     for collage in collages {
-                        self.chatInteraction.sendMedias(collage, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
+                        self.chatInteraction.sendMedias(makeMedia(collage, true), input, state.isCollage && state.payAmount == nil, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
                         additionalMessage = nil
                     }
                 } else {
-                    self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
+                    self.chatInteraction.sendMedias(makeMedia(medias, false), input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
                 }
             }
             
@@ -1925,13 +1943,13 @@ class PreviewSenderController: ModalViewController, Notifable {
     
     func togglePaidContent() {
         if self.genericView.state.payAmount == nil {
-//            showModal(with: MediaPaidSetterController(context: context, callback: { [weak self] amount in
-//                guard let self else {
-//                    return
-//                }
-//                let state = self.genericView.state.withUpdatedPayAmount(amount).withUpdatedIsSpoiler(false)
-//                self.genericView.stateValueInteractiveUpdate?(state)
-//            }), for: context.window)
+            showModal(with: MediaPaidSetterController(context: context, callback: { [weak self] amount in
+                guard let self else {
+                    return
+                }
+                let state = self.genericView.state.withUpdatedPayAmount(amount).withUpdatedIsSpoiler(false)
+                self.genericView.stateValueInteractiveUpdate?(state)
+            }), for: context.window)
         } else {
             let state = self.genericView.state.withUpdatedPayAmount(nil).withUpdatedIsSpoiler(false)
             self.genericView.stateValueInteractiveUpdate?(state)

@@ -91,6 +91,11 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             } else {
                 messageText = strings().messageGiveawayStarted
             }
+        case let media as TelegramMediaPaidContent:
+            //TODOLANG
+            if message.text.isEmpty {
+                messageText = "Paid Media"
+            } 
         case _ as TelegramMediaGiveawayResults:
             messageText = strings().messageGiveawayResult
         case let fileMedia as TelegramMediaFile:

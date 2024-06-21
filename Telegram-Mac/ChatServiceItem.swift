@@ -140,7 +140,7 @@ class ChatServiceItem: ChatRowItem {
     private(set) var storydata: StoryData? = nil
     private(set) var suggestChannelsData: ChannelSuggestData? = nil
 
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
                 
         
@@ -520,7 +520,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, media: [])
                                         showModal(with: Star_TransactionScreen(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -1227,7 +1227,7 @@ class ChatServiceItem: ChatRowItem {
         text = TextViewLayout(attributedString, truncationType: .end, cutout: nil, alignment: .center)
         text.mayItems = false
         text.interactions = globalLinkExecutor
-        super.init(initialSize, chatInteraction, entry, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, entry, theme: theme)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
