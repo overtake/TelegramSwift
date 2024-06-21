@@ -55,19 +55,19 @@ final class WebappWindow {
     
     static func makeAndOrderFront(_ controller: WebpageModalController) {
         
-        var found: WebpageModalController?
-        enumerateWebpages { current in
-            if controller.bot?.id == current.bot?.id {
-                found = current
-                return true
-            }
-            return false
-        }
-        
-        if let found {
-            found.window?.makeKeyAndOrderFront(nil)
-            return
-        }
+//        var found: WebpageModalController?
+//        enumerateWebpages { current in
+//            if controller.bot?.id == current.bot?.id {
+//                found = current
+//                return true
+//            }
+//            return false
+//        }
+//        
+//        if let found {
+//            found.window?.makeKeyAndOrderFront(nil)
+//            return
+//        }
         
         let w = WebappWindow(controller: controller)
         
@@ -88,19 +88,19 @@ final class WebappWindow {
     }
     
     static func focus(botId: PeerId) -> Bool {
-        var found: WebpageModalController?
-        enumerateWebpages { current in
-            if current.bot?.id == botId {
-                found = current
-                return true
-            }
-            return false
-        }
-        
-        if let found {
-            found.window?.makeKeyAndOrderFront(nil)
-            return true
-        }
+//        var found: WebpageModalController?
+//        enumerateWebpages { current in
+//            if current.bot?.id == botId {
+//                found = current
+//                return true
+//            }
+//            return false
+//        }
+//        
+//        if let found {
+//            found.window?.makeKeyAndOrderFront(nil)
+//            return true
+//        }
         
         return false
     }

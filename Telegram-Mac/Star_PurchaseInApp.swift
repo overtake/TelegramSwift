@@ -43,7 +43,12 @@ private final class HeaderItem : GeneralRowItem {
         self.headerLayout = .init(.initialize(string: strings().starPurchaseConfirm, color: theme.colors.text, font: .medium(.title)), alignment: .center)
         
         let infoAttr = NSMutableAttributedString()
-        infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
+        switch request.type {
+        case .bot:
+            infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
+        case .paidMedia(let telegramMediaImage):
+            infoAttr.append(string: strings().starPurchasePaidMediaText(strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
+        }
         infoAttr.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(infoAttr, alignment: .center)
         
@@ -63,7 +68,7 @@ private final class HeaderItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 10 + 80 + 10 + headerLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10 + 40 + 10
+        return 10 + 80 + 10 + headerLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10 + 40 + 10 + 10
     }
     
     override func viewClass() -> AnyClass {
@@ -105,15 +110,103 @@ private final class AcceptView : Control {
     }
 }
 
+
+private class PreviewMediaView: Control {
+    
+    private let imageView = TransformImageView()
+    private let dustView: MediaDustView2
+    private let maskLayer = SimpleShapeLayer()
+    private var textView: TextView?
+            
+    required init(frame frameRect: NSRect) {
+        self.dustView = MediaDustView2(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        addSubview(dustView)
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        imageView.frame = bounds
+        dustView.frame = bounds
+        maskLayer.frame = bounds
+    }
+    
+    private func buttonPath(_ basic: CGPath) -> CGPath {
+        let buttonPath = CGMutablePath()
+
+        buttonPath.addPath(basic)
+        
+        return buttonPath
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(image: TelegramMediaImage, count: Int, context: AccountContext) {
+                
+        let size = image.representationForDisplayAtSize(PixelDimensions.init(100, 100))?.dimensions.size ?? NSMakeSize(100, 100)
+        
+        let arguments = TransformImageArguments(corners: .init(radius: 10), imageSize: size, boundingSize: self.frame.size, intrinsicInsets: .init())
+        
+        self.imageView.setSignal(chatMessagePhoto(account: context.account, imageReference: .standalone(media: image), scale: System.backingScale))
+        self.imageView.set(arguments: arguments)
+        
+        let path = CGMutablePath()
+        
+        let minx:CGFloat = 0, midx = arguments.boundingSize.width/2.0, maxx = arguments.boundingSize.width
+        let miny:CGFloat = 0, midy = arguments.boundingSize.height/2.0, maxy = arguments.boundingSize.height
+        
+        path.move(to: NSMakePoint(minx, midy))
+        
+        path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: 10)
+        path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: 10)
+        path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: 10)
+        path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: 10)
+        
+        maskLayer.frame = bounds
+        maskLayer.path = path
+        layer?.mask = maskLayer
+        
+        self.layout()
+        self.dustView.update(size: frame.size, color: .white, mask: buttonPath(path))
+        
+        
+        if count > 1 {
+            let current: TextView
+            if let view = self.textView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                addSubview(current)
+                self.textView = current
+            }
+            let layout = TextViewLayout(.initialize(string: "\(count)", color: NSColor.white, font: .avatar(30)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            current.update(layout)
+            current.center()
+        } else if let textView {
+            performSubviewRemoval(textView, animated: false)
+            self.textView = nil
+        }
+    }
+}
+
 private final class HeaderItemView : GeneralContainableRowView {
     
     private let dismiss = ImageButton()
     private let balance = InteractiveTextView()
     private var photo: TransformImageView?
     private var avatar: AvatarControl?
+    private var paidPreview: PreviewMediaView?
     private let header = InteractiveTextView()
     private let info = InteractiveTextView()
     private let sceneView: GoldenStarSceneView
+    
     
     private let accept: AcceptView = AcceptView(frame: .zero)
     
@@ -160,10 +253,33 @@ private final class HeaderItemView : GeneralContainableRowView {
         }
         
         
-        if let photo = item.request.invoice.photo {
+        if case let .paidMedia(image, count) = item.request.type {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
+            }
+            if let view = self.photo {
+                performSubviewRemoval(view, animated: animated)
+                self.photo = nil
+            }
+            
+            let current: PreviewMediaView
+            if let view = self.paidPreview {
+                current = view
+            } else {
+                current = PreviewMediaView(frame: NSMakeRect(0, 0, 80, 80))
+                addSubview(current)
+                self.paidPreview = current
+            }
+            current.update(image: image, count: count, context: item.context)
+        } else if let photo = item.request.invoice.photo {
+            if let view = self.avatar {
+                performSubviewRemoval(view, animated: animated)
+                self.avatar = nil
+            }
+            if let view = self.paidPreview {
+                performSubviewRemoval(view, animated: animated)
+                self.paidPreview = nil
             }
             let current: TransformImageView
             if let view = self.photo {
@@ -190,12 +306,15 @@ private final class HeaderItemView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.photo = nil
             }
-            
+            if let view = self.paidPreview {
+                performSubviewRemoval(view, animated: animated)
+                self.paidPreview = nil
+            }
             let current: AvatarControl
             if let view = self.avatar {
                 current = view
             } else {
-                current = AvatarControl(font: .avatar(14))
+                current = AvatarControl(font: .avatar(20))
                 current.setFrameSize(NSMakeSize(80, 80))
                 self.avatar = current
                 addSubview(current)
@@ -233,14 +352,17 @@ private final class HeaderItemView : GeneralContainableRowView {
         if let avatar {
             avatar.centerX(y: 10)
         }
+        if let paidPreview {
+            paidPreview.centerX(y: 10)
+        }
         sceneView.centerX(y: -10)
         balance.setFrameOrigin(NSMakePoint(frame.width - 12 - balance.frame.width, floorToScreenPixels((50 - balance.frame.height) / 2) - 10))
         
-        let headerY = photo?.frame.maxY ?? avatar?.frame.maxY ?? 0
+        let headerY = photo?.frame.maxY ?? avatar?.frame.maxY ?? paidPreview?.frame.maxY ?? 0
         
         header.centerX(y: headerY + 10)
         info.centerX(y: header.frame.maxY + 10)
-        accept.centerX(y: frame.height - accept.frame.height)
+        accept.centerX(y: frame.height - accept.frame.height - 10)
     }
 }
 
@@ -260,12 +382,12 @@ private struct State : Equatable {
         let count: Int64
         let info: String
         let invoice: TelegramMediaInvoice
+        let type: StarPurchaseType
     }
     var request: Request
     var peer: EnginePeer?
     var myBalance: Int64?
     var starsState: StarsContext.State?
-    
     var form: BotPaymentForm?
 }
 
@@ -293,18 +415,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("h2"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return GeneralRowItem(initialSize, height: 20, stableId: stableId, backgroundColor: theme.colors.background)
+        return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: theme.colors.background)
     }))
     sectionId += 1
     
     return entries
 }
 
-func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
+enum StarPurchaseType : Equatable {
+    case bot
+    case paidMedia(TelegramMediaImage, Int)
+}
+
+func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(request: .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice), myBalance: nil)
+    let initialState = State(request: .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice, type: type), myBalance: nil)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -355,7 +482,14 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                         switch result {
                         case .done:
 //                            starsContext.add(balance: -state.request.count)
-                            showModalText(for: context.window, text: strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count))))
+                            let text: String
+                            switch type {
+                            case .bot:
+                                text = strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count)))
+                            case .paidMedia:
+                                text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
+                            }
+                            showModalText(for: context.window, text: text)
                             completion(.paid)
                             procced = true
                             close?()

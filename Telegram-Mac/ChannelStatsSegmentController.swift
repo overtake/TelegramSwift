@@ -31,9 +31,9 @@ private final class CenterView : TitledBarView {
                 self?.select?(2)
             }))
 //            
-//            segment.add(segment: .init(title: strings().statsStars, handler: { [weak self] in
-//                self?.select?(3)
-//            }))
+            segment.add(segment: .init(title: strings().statsStars, handler: { [weak self] in
+                self?.select?(3)
+            }))
         }
         
         
@@ -77,7 +77,7 @@ final class ChannelStatsSegmentController : SectionViewController {
             self.stats = ChannelStatsViewController(context, peerId: peerId)
             if monetization {
                 self.monetization = FragmentMonetizationController(context: context, peerId: peerId)
-                self.stars = nil//FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: nil)
+                self.stars = FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: nil)
             } else {
                 self.monetization = nil
                 self.stars = nil

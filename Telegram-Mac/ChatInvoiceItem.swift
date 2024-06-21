@@ -19,7 +19,7 @@ class ChatInvoiceItem: ChatRowItem {
     fileprivate let textLayout:TextViewLayout
     fileprivate var arguments:TransformImageArguments?
     fileprivate let paymentText:String?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         let message = object.message!
         
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
@@ -80,7 +80,7 @@ class ChatInvoiceItem: ChatRowItem {
         
         textLayout = TextViewLayout(attr)
         textLayout.interactions = globalLinkExecutor
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
     }
     

@@ -88,6 +88,12 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
+    case let .media(_, lhsIndex, _):
+        if case let .media(_, rhsIndex, _) = rhs {
+            return lhsIndex < rhsIndex
+        } else {
+            return false
+        }
     }
 }
 
@@ -111,9 +117,15 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let  .instantMedia(lhsMedia, _):
+    case let .instantMedia(lhsMedia, _):
         if case let .instantMedia(rhsMedia, _) = rhs {
             return lhsMedia == rhsMedia
+        } else {
+            return false
+        }
+    case let .media(lhsMedia, lhsIndex, _):
+        if case let .media(rhsMedia, rhsIndex, _) = rhs {
+            return lhsMedia.isEqual(to: rhsMedia) && lhsIndex == rhsIndex
         } else {
             return false
         }
@@ -122,6 +134,7 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
 enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
     case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval, caption: String?, publicPhoto: TelegramMediaImage?)
+    case media(Media, Int, Message)
     case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
     var stableId: AnyHashable {
@@ -132,6 +145,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return stableId
         case let .instantMedia(media, _):
             return media.index
+        case  let .media(media, index, message):
+            return ChatHistoryEntryId.mediaId(index, message)
         case let .secureIdDocument(document, _):
             return document.stableId
         }
@@ -147,6 +162,8 @@ enum GalleryEntry : Comparable, Identifiable {
             if let peerId = entry.message!.effectiveAuthor?.id {
                 return (peerId, TimeInterval(entry.message!.timestamp))
             }
+        case let .media(_, _, message):
+            return (message.id.peerId, TimeInterval(message.timestamp))
         case let .instantMedia(_, message):
             if let message = message, let peerId = message.effectiveAuthor?.id {
                 return (peerId, TimeInterval(message.timestamp))
@@ -202,6 +219,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return ImageMediaReference.standalone(media: image)
         case .photo:
             return ImageMediaReference.standalone(media: image)
+        case let .media(_, _, message):
+            return ImageMediaReference.message(message: MessageReference(message), media: image)
         }
     }
     
@@ -244,6 +263,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return FileMediaReference.standalone(media: file)
         case .photo:
             return FileMediaReference.standalone(media: file)
+        case let .media(_, _, message):
+            return FileMediaReference.message(message: MessageReference(message), media: file)
         }
     }
     
@@ -256,6 +277,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return "\(stableId)"
         case .instantMedia:
             return "\(stableId)"
+        case let .media(media, _, _):
+            return "media_\(media.id?.id ?? 0)"
         case let .secureIdDocument(document, _):
             return "secureId: \(document.document.id.hashValue)"
         }
@@ -276,6 +299,42 @@ enum GalleryEntry : Comparable, Identifiable {
             return entry.message
         case let .instantMedia(_, message):
             return message
+        case let .media(_, _, message):
+            return message
+        default:
+            return nil
+        }
+    }
+    
+    var media:Media? {
+        switch self {
+        case let .message(entry):
+            return entry.message?.anyMedia
+        case let .instantMedia(media, _):
+            return media.media
+        case let .media(media, _, _):
+            return media
+        default:
+            return nil
+        }
+    }
+    
+    var isProtected: Bool {
+        return self.message?.containsSecretMedia == true || self.message?.isCopyProtected() == true || paidMedia
+    }
+    
+    var paidMedia: Bool {
+        return self.message?.media.first is TelegramMediaPaidContent
+    }
+    
+    var mediaId:MediaId? {
+        switch self {
+        case let .message(entry):
+            return entry.message?.anyMedia?.id
+        case let .instantMedia(media, _):
+            return media.media.id
+        case let .media(media, _, _):
+            return media.id
         default:
             return nil
         }

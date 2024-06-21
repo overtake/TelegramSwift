@@ -337,7 +337,7 @@ class ChatPollItem: ChatRowItem {
     
     let isTranslateLoading: Bool
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         
         var poll = object.message!.media[0] as! TelegramMediaPoll
@@ -357,7 +357,7 @@ class ChatPollItem: ChatRowItem {
         }
         self.poll = poll
         self.isTranslateLoading = isTranslateLoading
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     
         
         

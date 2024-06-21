@@ -80,7 +80,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
 
     
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
@@ -181,7 +181,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
             }
         }
         self.channels = channels
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     }
     override var isForceRightLine: Bool {
         return true

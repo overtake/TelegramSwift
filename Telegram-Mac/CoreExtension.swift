@@ -276,9 +276,12 @@ extension Media {
             return map.venue == nil
         } else if self is TelegramMediaDice {
             return false
+        } else if self is TelegramMediaPaidContent {
+            return true
         }
         return false
     }
+    
     
     var canHaveCaption: Bool {
         if supposeToBeSticker {
@@ -2916,7 +2919,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
 
 extension AutomaticMediaDownloadSettings {
     
-    func isDownloable(_ message: Message) -> Bool {
+    func isDownloable(_ message: Message, index: Int? = nil) -> Bool {
         
         if !automaticDownload {
             return false
@@ -2981,6 +2984,18 @@ extension AutomaticMediaDownloadSettings {
                 } else if let _ = media.image {
                     return ability(categories.photo, peer)
                 }
+            } else if let media = message.anyMedia as? TelegramMediaPaidContent, let index = index {
+                switch media.extendedMedia[index] {
+                case let .full(media):
+                    if let file = media as? TelegramMediaFile {
+                        return checkFile(file, peer, categories)
+                    } else if let _ = media as? TelegramMediaImage {
+                        return ability(categories.photo, peer)
+                    }
+                default:
+                    return false
+                }
+                
             }
         }
         

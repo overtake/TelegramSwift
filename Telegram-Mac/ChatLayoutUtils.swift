@@ -13,7 +13,7 @@ import Postbox
 
 class ChatLayoutUtils: NSObject {
 
-    static func contentSize(for media:Media, with width: CGFloat, hasText: Bool = false, webpIsFile: Bool = false) -> NSSize {
+    static func contentSize(for media:Media, with width: CGFloat, hasText: Bool = false, webpIsFile: Bool = false, groupedLayout: GroupedLayout? = nil, spacing: CGFloat = 4.0) -> NSSize {
         
         var size:NSSize = NSMakeSize(width, 40.0)
         
@@ -126,6 +126,29 @@ class ChatLayoutUtils: NSObject {
             }
         } else if media is TelegramMediaDice {
             size = NSMakeSize(128, 128)
+        } else if let media = media as? TelegramMediaPaidContent {
+            if media.extendedMedia.count == 1 {
+                switch media.extendedMedia[0] {
+                case let .preview(dimensions, _, _):
+                    size = dimensions?.size.fitted(maxSize) ?? maxSize
+                    
+                    if size.width < 100 && size.height < 100 {
+                        size = size.aspectFitted(NSMakeSize(200, 200))
+                    }
+                    if hasText {
+                        size.width = max(maxSize.width, size.width)
+                    }
+                    size.width = max(size.width, 100)
+                    size = NSMakeSize(max(46, size.width), max(46, size.height))
+                    
+                case let .full(media):
+                    size = ChatLayoutUtils.contentSize(for: media, with: width)
+                }
+            } else if let groupedLayout {
+                groupedLayout.measure(maxSize, spacing: spacing)
+                size = groupedLayout.dimensions
+            }
+            
         }
         
         return size

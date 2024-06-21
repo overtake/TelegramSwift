@@ -1327,7 +1327,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             
             let presentation: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
             
-            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.entry.additionalData.automaticDownload, theme: presentation)
+            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, theme: presentation)
             _ = item.makeSize(initialSize.width)
             return item;
         }
@@ -2014,7 +2014,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let seenLiveLocationProcessingManager = ChatMessageThrottledProcessingManager()
     private let refreshMediaProcessingManager = ChatMessageThrottledProcessingManager()
     private let factCheckProcessingManager = ChatMessageThrottledProcessingManager(submitInterval: 1.0)
-
 
 
 
@@ -6749,6 +6748,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     if invoice.version != TelegramMediaInvoice.lastVersion {
                                         contentRequiredValidation = true
                                     }
+                                } else if let paidContent = media as? TelegramMediaPaidContent, let extendedMedia = paidContent.extendedMedia.first, case .preview = extendedMedia {
+                                    messageIdsWithInactiveExtendedMedia.insert(message.id)
                                 } else if let _ = media as? TelegramMediaStory {
                                     storiesRequiredValidation = true
                                 } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content, let _ = content.story {
@@ -6879,6 +6880,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 if !messageIdsToFactCheck.isEmpty {
                     strongSelf.factCheckProcessingManager.add(messageIdsToFactCheck)
+                }
+                if !messageIdsWithInactiveExtendedMedia.isEmpty {
+                    strongSelf.extendedMediaProcessingManager.update(messageIdsWithInactiveExtendedMedia)
                 }
 
                 if !messageIdsWithUnseenPersonalMention.isEmpty {
@@ -8696,6 +8700,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.factCheckProcessingManager.process = { messageIds in
             _ = context.engine.messages.getMessagesFactCheck(messageIds: Array(messageIds)).startStandalone()
         }
+        
+        self.extendedMediaProcessingManager.process = { messageIds in
+            context.account.viewTracker.updatedExtendedMediaForMessageIds(messageIds: messageIds)
+        }
 
         self.unsupportedMessageProcessingManager.process = { messageIds in
             let msgIds = messageIds.filter { $0.namespace == Namespaces.Message.Cloud }.map { MessageAndThreadId(messageId: $0, threadId: mode.threadId64) }
@@ -9420,6 +9428,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             break s
                         }
                     }
+                case let .mediaId(_, message):
+                    return ChatHistoryEntryId.message(message)
                 default:
                     break
                 }

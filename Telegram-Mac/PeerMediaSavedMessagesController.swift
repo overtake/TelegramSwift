@@ -145,7 +145,7 @@ private func entries(_ view: HistoryView, arguments: Arguments) -> [InputDataEnt
     
     func makeItem(_ entry: ChatWrappedEntry, initialSize: NSSize) -> TableRowItem {
         let presentation: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
-        let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: arguments.chatInteraction, downloadSettings: entry.entry.additionalData.automaticDownload, theme: presentation)
+        let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: arguments.chatInteraction, theme: presentation)
         _ = item.makeSize(initialSize.width)
         return item;
     }

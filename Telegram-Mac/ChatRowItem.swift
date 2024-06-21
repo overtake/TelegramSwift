@@ -556,6 +556,7 @@ class ChatRowItem: TableRowItem {
                 return isBubbled
             }
             
+            
             if let attr = message.factCheckAttribute, case .Loaded = attr.content {
                 return false
             }
@@ -564,6 +565,7 @@ class ChatRowItem: TableRowItem {
             if let message = effectiveCommentMessage, message.hasComments && message.hasReactions && message.invertMedia {
                 return false
             }
+            
             
             if let media = message.media.first as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
                 switch story {
@@ -939,7 +941,7 @@ class ChatRowItem: TableRowItem {
     override func copyAndUpdate(animated: Bool) {
         DispatchQueue.main.async {
             if let table = self.table, self.index != -1 {
-                let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
+                let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, theme: self.presentation)
                 _ = item.makeSize(table.frame.width, oldWidth: 0)
                 let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
                 table.merge(with: transaction)
@@ -1660,12 +1662,12 @@ class ChatRowItem: TableRowItem {
 
     
     
-    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         self.entry = object
         self.context = chatInteraction.context
         self.presentation = theme
         self.chatInteraction = chatInteraction
-        self.downloadSettings = downloadSettings
+        self.downloadSettings = object.additionalData.automaticDownload
         self._approximateSynchronousValue = Thread.isMainThread
         self._avatarSynchronousValue = Thread.isMainThread
         self.messageEffect = object.additionalData.messageEffect
@@ -1798,7 +1800,7 @@ class ChatRowItem: TableRowItem {
                     }
                     return media.venue == nil
                 }
-                return media.isInteractiveMedia && !hasGroupCaption
+                return media.isInteractiveMedia && (!hasGroupCaption || message.invertMedia)
             } else if let message = message, bigEmojiMessage(context.sharedContext, message: message), renderType == .bubble {
                 return true
             }
@@ -2468,13 +2470,13 @@ class ChatRowItem: TableRowItem {
         self.updateCountDownTimer = nil
     }
     
-    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.context = chatInteraction.context
         self.message = entry.message
         self.chatInteraction = chatInteraction
         self.renderType = entry.renderType
-        self.downloadSettings = downloadSettings
+        self.downloadSettings = .defaultSettings
         self.presentation = theme
         self.isIncoming = false
         self.hasBubble = false
@@ -2486,13 +2488,13 @@ class ChatRowItem: TableRowItem {
         super.init(initialSize)
     }
     
-    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, interaction:ChatInteraction, downloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings, theme: TelegramPresentationTheme) -> TableRowItem {
+    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, interaction:ChatInteraction, theme: TelegramPresentationTheme) -> TableRowItem {
         
         switch entry {
         case .UnreadEntry:
-            return ChatUnreadRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+            return ChatUnreadRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
         case .groupedPhotos:
-            return ChatGroupedItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+            return ChatGroupedItem(initialSize, interaction, interaction.context, entry, theme: theme)
         case .DateEntry:
             return ChatDateStickItem(initialSize, entry, interaction: interaction, theme: theme)
         case let .bottom(theme):
@@ -2511,96 +2513,98 @@ class ChatRowItem: TableRowItem {
         
         if let message = entry.message {
             if message.adAttribute != nil {
-                return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                return ChatMessageItem(initialSize, interaction, interaction.context, entry, theme: theme)
             } else if message.media.count == 0 || message.anyMedia is TelegramMediaWebpage {
-                return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                return ChatMessageItem(initialSize, interaction, interaction.context, entry, theme: theme)
             } else {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
                     if let media = message.media.first, media is TelegramMediaImage || (media.isVideoFile && !media.isInstantVideo) {
-                        return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatServiceItem(initialSize, interaction,interaction.context, entry, theme: theme)
                     }
                 }
                 if message.media.first is TelegramMediaGiveawayResults {
-                    return ChatGiveawayResultRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatGiveawayResultRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.media.first is TelegramMediaGiveaway {
-                    return ChatGiveawayRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatGiveawayRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 }
                 if let action = message.media[0] as? TelegramMediaAction {
                    switch action.action {
                    case .giftCode:
-                       return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                       return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    case .phoneCall:
-                       return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                       return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    default:
-                       return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                       return ChatServiceItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    }
                } else if let file = message.media[0] as? TelegramMediaFile {
                     if file.isVideoSticker {
-                        return ChatGIFMediaItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
+                        return ChatGIFMediaItem(initialSize, interaction, interaction.context,entry, theme: theme)
                     } else if file.isInstantVideo {
                         if let data = entry.additionalData.transribeState {
                             switch data {
                             case .loading, .revealed:
-                                return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
+                                return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, theme: theme)
                             default:
                                 break
                             }
                         }
-                        return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
+                        return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
                     } else if file.isStaticSticker {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
                     } else if file.isVoice {
-                        return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
+                        return ChatVoiceRowItem(initialSize,interaction, interaction.context, entry, theme: theme)
                     } else if file.isVideo && file.isAnimated {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
                     } else if !file.isVideo && (file.isAnimated && !file.mimeType.hasSuffix("gif")) {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
                     } else if file.isMusic {
-                        return ChatMusicRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatMusicRowItem(initialSize,interaction, interaction.context, entry, theme: theme)
                     } else if file.isAnimatedSticker {
-                        return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, theme: theme)
                     }
-                    return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, theme: theme)
                 } else if let story = message.media[0] as? TelegramMediaStory {
                     if message.isExpiredStory && !story.isMention {
-                        return ChatRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                     } else {
                         if story.isMention {
-                            return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                            return ChatServiceItem(initialSize, interaction,interaction.context, entry, theme: theme)
                         } else {
-                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
                         }
                     }
                 } else if message.media[0] is TelegramMediaMap {
-                    return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatMapRowItem(initialSize,interaction, interaction.context, entry, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
-                    return ChatContactRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatContactRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if let media = message.media[0] as? TelegramMediaInvoice {
                     if let extendedMedia = media.extendedMedia {
                         switch extendedMedia {
                         case .preview:
-                            return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                            return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, theme: theme)
                         case .full:
-                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
                         }
                     } else {
-                        return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, theme: theme)
                     }
                 } else if message.media[0] is TelegramMediaExpiredContent {
-                    return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatServiceItem(initialSize, interaction,interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaGame {
-                    return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatMessageItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaPoll {
-                    return ChatPollItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatPollItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaUnsupported {
-                    return ChatMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
+                    return ChatMessageItem(initialSize, interaction, interaction.context,entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaDice {
-                    return ChatMediaDice(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    return ChatMediaDice(initialSize, interaction, interaction.context, entry, theme: theme)
+                } else if message.anyMedia is TelegramMediaPaidContent {
+                    return ChatMediaPaidContentItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 }
                 
-                return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                return ChatMediaItem(initialSize, interaction, interaction.context, entry, theme: theme)
             }
             
         }

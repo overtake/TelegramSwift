@@ -13,6 +13,34 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+
+private final class GallerySupplyment : InteractionContentViewProtocol {
+    private weak var tableView: TableView?
+    init(tableView: TableView) {
+        self.tableView = tableView
+    }
+    
+    func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
+        if let tableView = tableView {
+            let item = tableView.item(stableId: InputDataEntryId.custom(_id_header))
+            return item?.view?.interactionContentView(for: stableId, animateIn: animateIn)
+        }
+        return nil
+    }
+    func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable) {
+        
+    }
+    func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        
+    }
+    func videoTimebase(for stableId: AnyHashable) -> CMTimebase? {
+        return nil
+    }
+    func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
+        
+    }
+}
+
 private final class HeaderItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let transaction: StarsContext.State.Transaction
@@ -23,11 +51,13 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let incoming: Bool
     
     fileprivate var refund: TextViewLayout?
+    fileprivate let arguments: Arguments
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?, arguments: Arguments) {
         self.context = context
         self.transaction = transaction
         self.peer = peer
+        self.arguments = arguments
         
         let header: String
         let incoming: Bool = transaction.count > 0
@@ -96,6 +126,7 @@ private final class HeaderItem : GeneralRowItem {
 private final class HeaderView : GeneralContainableRowView {
     private var photo: TransformImageView?
     private var avatar: AvatarControl?
+    private let control = Control(frame: NSMakeRect(0, 0, 80, 80))
     private let sceneView: GoldenStarSceneView
     private let dismiss = ImageButton()
     private let headerView = TextView()
@@ -110,6 +141,7 @@ private final class HeaderView : GeneralContainableRowView {
         addSubview(dismiss)
         addSubview(sceneView)
         addSubview(headerView)
+        addSubview(control)
         infoContainer.addSubview(infoView)
         
         self.sceneView.sceneBackground = theme.colors.listBackground
@@ -117,7 +149,19 @@ private final class HeaderView : GeneralContainableRowView {
         addSubview(infoContainer)
         
         sceneView.hideStar()
+        
+        control.scaleOnClick = true
+        
+        control.set(handler: { [weak self] _ in
+            if let item = self?.item as? HeaderItem {
+                item.arguments.previewMedia()
+            }
+        }, for: .Click)
 
+    }
+    
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
+        return photo ?? self.control
     }
     
     override var backdorColor: NSColor {
@@ -136,8 +180,48 @@ private final class HeaderView : GeneralContainableRowView {
             return
         }
         
+        if let media = item.transaction.media.first {
+            if let view = self.avatar {
+                performSubviewRemoval(view, animated: animated)
+                self.avatar = nil
+            }
+            let current: TransformImageView
+            
+            if let view = self.photo {
+                current = view
+            } else {
+                current = TransformImageView(frame: NSMakeRect(0, 0, 80, 80))
+                if #available(macOS 10.15, *) {
+                    current.layer?.cornerCurve = .continuous
+                }
+                control.addSubview(current)
+                self.photo = current
+            }
+            current.layer?.cornerRadius = 10
+            
+            var updateImageSignal: Signal<ImageDataTransformation, NoError>?
+            
+            if let image = media as? TelegramMediaImage {
+                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: false)
+            } else if let file = media as? TelegramMediaFile {
+                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .standalone(media: file), scale: backingScaleFactor)
+            }
+
+            if let updateImageSignal {
+                current.setSignal(updateImageSignal)
+            }
+            
+            var dimensions: NSSize = current.frame.size
+            
+            if let image = media as? TelegramMediaImage {
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(current.frame.size))?.dimensions.size ?? current.frame.size
+            } else if let file = media as? TelegramMediaFile {
+                dimensions = file.dimensions?.size ?? current.frame.size
+            }
         
-        if let photo = item.transaction.photo {
+            current.set(arguments: TransformImageArguments(corners: .init(radius: 10), imageSize: dimensions, boundingSize: current.frame.size, intrinsicInsets: .init()))
+            
+        } else if let photo = item.transaction.photo {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
@@ -147,19 +231,19 @@ private final class HeaderView : GeneralContainableRowView {
                 current = view
             } else {
                 current = TransformImageView(frame: NSMakeRect(0, 0, 80, 80))
-                current.layer?.cornerRadius = floor(current.frame.height / 2)
                 if #available(macOS 10.15, *) {
                     current.layer?.cornerCurve = .continuous
                 }
-                addSubview(current)
+                control.addSubview(current)
                 self.photo = current
             }
-            
+            current.layer?.cornerRadius = floor(current.frame.height / 2)
+
             current.setSignal(chatMessageWebFilePhoto(account: item.context.account, photo: photo, scale: backingScaleFactor))
     
             _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
     
-            current.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: photo.dimensions?.size ?? NSMakeSize(80, 80), boundingSize: current.frame.size, intrinsicInsets: .init()))
+            current.set(arguments: TransformImageArguments(corners: .init(radius: 10), imageSize: photo.dimensions?.size ?? NSMakeSize(80, 80), boundingSize: current.frame.size, intrinsicInsets: .init()))
 
             
         } else {
@@ -172,10 +256,10 @@ private final class HeaderView : GeneralContainableRowView {
             if let view = self.avatar {
                 current = view
             } else {
-                current = AvatarControl(font: .avatar(14))
+                current = AvatarControl(font: .avatar(20))
                 current.setFrameSize(NSMakeSize(80, 80))
                 self.avatar = current
-                addSubview(current)
+                control.addSubview(current)
             }
             current.setPeer(account: item.context.account, peer: item.peer?._asPeer())
         }
@@ -260,9 +344,11 @@ private final class HeaderView : GeneralContainableRowView {
         super.layout()
         sceneView.centerX(y: -10)
         
-        avatar?.centerX(y: 10)
-        photo?.centerX(y: 10)
-        outgoingView?.centerX(y: 10)
+        control.centerX(y: 10)
+        
+        avatar?.center()
+        photo?.center()
+        outgoingView?.center()
         
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2) - 10))
         
@@ -286,11 +372,13 @@ private final class Arguments {
     let openPeer:(PeerId)->Void
     let copyTransaction:(String)->Void
     let openLink:(String)->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void) {
+    let previewMedia:()->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
         self.openLink = openLink
+        self.previewMedia = previewMedia
     }
 }
 
@@ -312,7 +400,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, transaction: state.transaction, peer: state.peer)
+        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, transaction: state.transaction, peer: state.peer, arguments: arguments)
     }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -342,6 +430,29 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             control.setPeer(account: arguments.context.account, peer: peer._asPeer())
             return control
         })))
+        
+        if let messageId = state.transaction.paidMessageId {
+            
+            let link: String
+            if let address = peer.addressName {
+                link = "t.me/\(address)/\(messageId.id)"
+            } else {
+                link = "t.me/\(peer.id.id)/\(messageId.id)"
+            }
+            
+            let messageIdText: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(link)](\(link))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })), alwaysStaticItems: true)
+
+            messageIdText.interactions.processURL = { inapplink in
+                if let inapplink = inapplink as? String {
+                    arguments.openLink(inapplink)
+                }
+            }
+            
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionMessageId, color: theme.colors.text, font: .normal(.text))), right: .init(name: messageIdText)))
+
+        }
     }
     
     let transactionId: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(state.transaction.id)](\(state.transaction.id))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), linkAttribute: { contents in
@@ -382,6 +493,10 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
     
+    var gallery: GallerySupplyment? = nil
+    var getTableView:(()->TableView?)? = nil
+
+    
     let initialState = State(transaction: transaction, peer: peer)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -397,7 +512,40 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         copyToClipboard(string)
         showModalText(for: context.window, text: strings().starTransactionCopied)
     }, openLink: { link in
-        execute(inapp: .external(link: link, false))
+        execute(inapp: inApp(for: link.nsstring, context: context, openInfo: { peerId, _, messageId, _ in
+            close?()
+            if let messageId = messageId {
+                let signal = context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .cloud(skipLocal: false)) |> filter {
+                    switch $0 {
+                    case .progress:
+                        return false
+                    default:
+                        return true
+                    }
+                } |> take(1)
+                _ = showModalProgress(signal: signal, for: context.window).startStandalone(next: { result in
+                    switch result {
+                    case let .result(messages):
+                        if let _ = messages.first {
+                            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
+                             closeAllModals()
+                        } else {
+                            showModalText(for: context.window, text: strings().chatOpenMessageNotExist)
+                        }
+                    default:
+                        break
+                    }
+                })
+            }
+        }))
+    }, previewMedia: {
+        let medias = stateValue.with { $0.transaction.media }
+        let amount = stateValue.with { $0.transaction.count }
+        let peer = stateValue.with { $0.peer?._asPeer() }
+        if !medias.isEmpty, let peer {
+            let message = Message(TelegramMediaPaidContent(amount: amount, extendedMedia: medias.map { .full(media: $0) }), stableId: 0, messageId: .init(peerId: peer.id, namespace: 0, id: 0))
+            showPaidMedia(context: context, medias: medias, parent: message, firstIndex: 0, firstStableId: ChatHistoryEntryId.mediaId(0, message), getTableView?(), nil)
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -405,6 +553,14 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    controller.didLoad = { controller, _ in
+        gallery = .init(tableView: controller.tableView)
+        controller.tableView.supplyment = gallery
+        getTableView = { [weak controller] in
+            return controller?.tableView
+        }
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

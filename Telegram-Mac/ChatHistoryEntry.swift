@@ -20,6 +20,7 @@ enum ChatHistoryEntryId : Hashable {
     case undefined
     case empty(MessageIndex)
     case maybeId(AnyHashable)
+    case mediaId(AnyHashable, Message)
     case commentsHeader
     case repliesHeader
     case topThreadInset
@@ -37,6 +38,12 @@ enum ChatHistoryEntryId : Hashable {
             }
         case let .groupedPhotos(groupingKey):
             if case .groupedPhotos(groupingKey) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .mediaId(id, entryId):
+            if case .mediaId(id, entryId) = rhs {
                 return true
             } else {
                 return false
@@ -114,6 +121,8 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(9) << 40
         case .empty:
             return UInt64(10) << 40
+        case .mediaId:
+            return UInt64(11) << 40
         }
     }
 

@@ -249,7 +249,7 @@ class DateSelectorModalController: ModalViewController {
             genericView.sendOn.set(text: strings().scheduleSendToday(formatted), for: .Normal)
         } else {
             let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
-            genericView.sendOn.set(text: strings().scheduleSendDate(formatted, formatted), for: .Normal)
+            genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), formatted), for: .Normal)
         }
     }
     

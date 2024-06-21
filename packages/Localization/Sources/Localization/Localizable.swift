@@ -8453,6 +8453,14 @@ public final class L10n {
   public static var fragmentAdsInfoOption3Info: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Info") }
   /// Can Be Removed
   public static var fragmentAdsInfoOption3Title: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Title") }
+  /// Withdraw
+  public static var fragmentStarWithdraw: String  { return L10n.tr("Localizable", "Fragment.Star.Withdraw") }
+  /// Withdraw %@
+  public static func fragmentStarWithdrawInput(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Fragment.Star.WithdrawInput", p1)
+  }
+  /// ENTER AMOUNT TO WITHDRAW
+  public static var fragmentStarWithdrawPlaceholder: String  { return L10n.tr("Localizable", "Fragment.Star.WithdrawPlaceholder") }
   /// Available Balance
   public static var fragmentStarsAvailableBalance: String  { return L10n.tr("Localizable", "Fragment.Stars.AvailableBalance") }
   /// AVAILABLE BALANCE
@@ -8473,7 +8481,7 @@ public final class L10n {
   public static var fragmentStarsTotalCurrent: String  { return L10n.tr("Localizable", "Fragment.Stars.TotalCurrent") }
   /// Lifetime Proceeds
   public static var fragmentStarsTotalLifetime: String  { return L10n.tr("Localizable", "Fragment.Stars.TotalLifetime") }
-  /// You can withdraw Stars using Fragment, or use Stars to advertise your bot. [Learn More >](https://telegram.org)
+  /// Stars from your total balance become avallable for spending on ads and rewards 21 days after they are earned
   public static var fragmentStarsWithdrawInfo: String  { return L10n.tr("Localizable", "Fragment.Stars.WithdrawInfo") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
@@ -11031,6 +11039,44 @@ public final class L10n {
   public static var oy7WFPoVTitle: String  { return L10n.tr("Localizable", "OY7-WF-poV.title") }
   /// Hide
   public static var olwNPBQNTitle: String  { return L10n.tr("Localizable", "Olw-nP-bQN.title") }
+  /// ENTER UNLOCK COST
+  public static var paidMediaHeader: String  { return L10n.tr("Localizable", "PaidMedia.Header") }
+  /// Users will have to transfer this amount of Stars to your channel in order to view this media. [More about stars >](https://telegram.org)
+  public static var paidMediaInfo: String  { return L10n.tr("Localizable", "PaidMedia.Info") }
+  /// Make This Media Paid
+  public static var paidMediaOk: String  { return L10n.tr("Localizable", "PaidMedia.Ok") }
+  /// Stars to Unlock
+  public static var paidMediaPlaceholder: String  { return L10n.tr("Localizable", "PaidMedia.Placeholder") }
+  /// Paid Content
+  public static var paidMediaTitle: String  { return L10n.tr("Localizable", "PaidMedia.Title") }
+  /// %d
+  public static func paidMediaUnlockForCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_countable", p1)
+  }
+  /// Unlock for # %d
+  public static func paidMediaUnlockForFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_few", p1)
+  }
+  /// Unlock for # %d
+  public static func paidMediaUnlockForMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_many", p1)
+  }
+  /// Unlock for # %d
+  public static func paidMediaUnlockForOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_one", p1)
+  }
+  /// Unlock for # %d
+  public static func paidMediaUnlockForOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_other", p1)
+  }
+  /// Unlock for # %d
+  public static func paidMediaUnlockForTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_two", p1)
+  }
+  /// Unlock for # %d
+  public static func paidMediaUnlockForZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PaidMedia.UnlockFor_zero", p1)
+  }
   /// Auto-Lock
   public static var passcodeAutolock: String  { return L10n.tr("Localizable", "Passcode.Autolock") }
   /// Change passcode
@@ -13009,15 +13055,19 @@ public final class L10n {
   public static var previewSenderFileTooltip: String  { return L10n.tr("Localizable", "PreviewSender.FileTooltip") }
   /// Grouped
   public static var previewSenderGrouped: String  { return L10n.tr("Localizable", "PreviewSender.Grouped") }
+  /// Make This Content Paid
+  public static var previewSenderMakePaid: String  { return L10n.tr("Localizable", "PreviewSender.MakePaid") }
   /// Send in a quick way
   public static var previewSenderMediaTooltip: String  { return L10n.tr("Localizable", "PreviewSender.MediaTooltip") }
   /// Move Caption Down
   public static var previewSenderMoveTextDown: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextDown") }
   /// Move Caption Up
   public static var previewSenderMoveTextUp: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextUp") }
-  /// With Compression
-  public static var previewSenderSendAsFile: String  { return L10n.tr("Localizable", "PreviewSender.SendAsFile") }
+  /// Remove Paid Content
+  public static var previewSenderRemovePaid: String  { return L10n.tr("Localizable", "PreviewSender.RemovePaid") }
   /// Without Compression
+  public static var previewSenderSendAsFile: String  { return L10n.tr("Localizable", "PreviewSender.SendAsFile") }
+  /// With Compression
   public static var previewSenderSendAsMedia: String  { return L10n.tr("Localizable", "PreviewSender.SendAsMedia") }
   /// Send With Spoiler
   public static var previewSenderSendAsSpoiler: String  { return L10n.tr("Localizable", "PreviewSender.SendAsSpoiler") }
@@ -15733,6 +15783,14 @@ public final class L10n {
   public static func starPurchaseText(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Text", p1, p2, p3)
   }
+  /// You unlocked media for %3$@.
+  public static func starPurchasePaidMediaSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.PaidMedia.Success", p1)
+  }
+  /// Do you want to unlock media for **%3$@**?
+  public static func starPurchasePaidMediaText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.PaidMedia.Text", p1)
+  }
   /// %d
   public static func starPurchaseTextInCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Text.In_countable", p1)
@@ -15767,6 +15825,8 @@ public final class L10n {
   public static var starTransactionDate: String  { return L10n.tr("Localizable", "Star.Transaction.Date") }
   /// Transaction ID
   public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
+  /// Media
+  public static var starTransactionMessageId: String  { return L10n.tr("Localizable", "Star.Transaction.MessageId") }
   /// To
   public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
   /// Review the [Terms of Services](https://telegram.org) for Stars.

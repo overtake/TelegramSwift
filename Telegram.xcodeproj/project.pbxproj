@@ -273,6 +273,7 @@
 		276154992C1B221A0090BFFC /* MediaPaidSetterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154982C1B221A0090BFFC /* MediaPaidSetterController.swift */; };
 		2761549B2C2060D70090BFFC /* CheckAppStoreUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761549A2C2060D70090BFFC /* CheckAppStoreUpdate.swift */; };
 		2761549E2C2081DF0090BFFC /* WebappWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761549D2C2081DF0090BFFC /* WebappWindow.swift */; };
+		276154A82C234CD50090BFFC /* ChatMediaPaidContentItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154A72C234CD50090BFFC /* ChatMediaPaidContentItem.swift */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
@@ -1844,6 +1845,7 @@
 		276154982C1B221A0090BFFC /* MediaPaidSetterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPaidSetterController.swift; sourceTree = "<group>"; };
 		2761549A2C2060D70090BFFC /* CheckAppStoreUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckAppStoreUpdate.swift; sourceTree = "<group>"; };
 		2761549D2C2081DF0090BFFC /* WebappWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebappWindow.swift; sourceTree = "<group>"; };
+		276154A72C234CD50090BFFC /* ChatMediaPaidContentItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaPaidContentItem.swift; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
@@ -4712,6 +4714,7 @@
 				275E85552B285A22007A72CA /* ChatGiveawayResultRowItem.swift */,
 				275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */,
 				276790AC2AFE02E100E9975C /* ChatChannelSuggestView.swift */,
+				276154A72C234CD50090BFFC /* ChatMediaPaidContentItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -7497,6 +7500,7 @@
 				C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */,
 				2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
+				276154A82C234CD50090BFFC /* ChatMediaPaidContentItem.swift in Sources */,
 				27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
 				C225524D1F7BE8E40007944D /* VideoRecorderModalView.swift in Sources */,
