@@ -16,6 +16,8 @@ import KeyboardKey
 
 #if !APP_STORE
 import Sparkle
+#endif
+
 enum UpdateButtonState {
     case common
     case important
@@ -152,6 +154,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     }
     private var parentSize: NSSize = .zero
     private let stateDisposable = MetaDisposable()
+    #if !APP_STORE
     private var appcastItem: SUAppcastItem? {
         didSet {
             
@@ -184,7 +187,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
 //            self.updateLayout(self.context.layout, parentSize: parentSize, isChatList: true)
         }
     }
-    
+    #endif
     init(_ context: SharedAccountContext) {
         self.context = context
         super.init()
@@ -199,7 +202,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         genericView.set(background: theme.colors.grayForeground, for: .Normal)
         genericView.isHidden = true
         
-        #if true
+        #if APP_STORE
         
         let signal = Signal<Void, NoError>.single(Void()) |> then(.single(Void()) |> delay(24 * 60 * 60, queue: .mainQueue()) |> restart)
 
@@ -274,7 +277,6 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     }
 }
 
-#endif
 
 class MainViewController: TelegramViewController {
 
