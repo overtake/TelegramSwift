@@ -241,8 +241,11 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        #if !APP_STORE
         let item = self.appcastItem
         self.appcastItem = item
+        #endif
+    
     }
     
     func updateLayout(_ layout: SplitViewState, parentSize: NSSize, isChatList: Bool) {
@@ -330,9 +333,9 @@ class MainViewController: TelegramViewController {
         addSubview(self.tabController.view)
         
         if !context.isSupport {
-        #if !APP_STORE
+        //#if !APP_STORE
             addSubview(updateController.view)
-        #endif
+        //#endif
         }
                 
         tabController.add(tab: TabItem(image: theme.icons.tab_contacts, selectedImage: theme.icons.tab_contacts_active, controller: contacts))
@@ -359,9 +362,9 @@ class MainViewController: TelegramViewController {
                 return
             }
             self.tabController.hideTabView(state == .minimisize)
-            #if !APP_STORE
+            //#if !APP_STORE
             self.updateController.updateLayout(state, parentSize: self.frame.size, isChatList: true)
-            #endif
+            //#endif
         }))
         
         tabController.didChangedIndex = { [weak self] index in
@@ -546,9 +549,9 @@ class MainViewController: TelegramViewController {
 
         
         let theme = (theme as! TelegramPresentationTheme)
-        #if !APP_STORE
+        //#if !APP_STORE
         updateController.updateLocalizationAndTheme(theme: theme)
-        #endif
+        //#endif
         
         updateTabsIfNeeded()
         self.tabController.view.needsLayout = true
@@ -740,9 +743,9 @@ class MainViewController: TelegramViewController {
         self.phoneCalls = RecentCallsViewController(context)
         self.navigation = NavigationViewController(self.chatList, context.window)
         
-        #if !APP_STORE
+        //#if !APP_STORE
             updateController = UpdateTabController(context.sharedContext)
-        #endif
+        //#endif
         super.init(context)
     }
 
