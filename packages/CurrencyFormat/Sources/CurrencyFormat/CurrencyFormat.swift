@@ -49,7 +49,8 @@ private func loadCurrencyFormatterEntries() -> [String: CurrencyFormatterEntry] 
     }
     
     result["TON"] = .init(symbol: "", thousandsSeparator: ",", decimalSeparator: ".", symbolOnLeft: true, spaceBetweenAmountAndSymbol: false, decimalDigits: 9)
-    
+    result["XTR"] = .init(symbol: "", thousandsSeparator: ",", decimalSeparator: ".", symbolOnLeft: true, spaceBetweenAmountAndSymbol: false, decimalDigits: 0)
+
     return result
 }
 

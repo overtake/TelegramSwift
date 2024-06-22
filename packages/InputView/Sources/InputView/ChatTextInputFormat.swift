@@ -88,7 +88,9 @@ public func chatTextInputClearFormattingAttributes(_ state: Updated_ChatTextInpu
                             attributesToRemove.append((key, range))
                         }
                     } else {
-                        attributesToRemove.append((key, range))
+                        if key != TextInputAttributes.customEmoji {
+                            attributesToRemove.append((key, range))
+                        }
                     }
                 }
             }

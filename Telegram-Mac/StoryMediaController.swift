@@ -15,7 +15,7 @@ import Postbox
 
 private enum Entry : TableItemListNodeEntry {
     case headerText(index: MessageIndex, stableId: MessageIndex, text: String, viewType: GeneralViewType)
-    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, pinnedIds: Set<Int32>, viewType: GeneralViewType)
+    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: Set<Int32>, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
     case emptySelf(index: MessageIndex, viewType: GeneralViewType)
@@ -183,7 +183,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             let chunks = items.chunks(state.perRowCount)
             for (i, chunk) in chunks.enumerated() {
                 let item = chunk[0]
-                let stableId = MessageIndex(id: MessageId(peerId: index.id.peerId, namespace: 0, id: item.id), timestamp: item.timestamp)
+                let stableId = MessageIndex(id: MessageId(peerId: index.id.peerId, namespace: 0, id: item.storyItem.id), timestamp: item.storyItem.timestamp)
 
                 var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
                 if i == 0 && j == 0, !standalone {
@@ -534,7 +534,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         
         let arguments = Arguments(context: context, standalone: standalone, isArchive: isArchived, isMy: peerId == context.peerId, openStory: { [weak self] initialId in
             if let list = self?.listContext {
-                StoryModalController.ShowPeerStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
+                StoryModalController.ShowListStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
             }
         }, toggleSelected: { [weak self] storyId in
             
@@ -564,8 +564,8 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             let list = self?.stateValue.with { $0.state?.items } ?? []
             var stories: [Int32 : EngineStoryItem] = [:]
             for selected in selected {
-                if let story = list.first(where: { $0.id == selected.id }) {
-                    stories[story.id] = story
+                if let story = list.first(where: { $0.storyItem.id == selected.id }) {
+                    stories[story.storyItem.id] = story.storyItem
                 }
             }
             _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: stories, isPinned: isArchived).start()

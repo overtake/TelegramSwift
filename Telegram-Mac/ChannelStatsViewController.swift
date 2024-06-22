@@ -398,8 +398,8 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }
         if let stories = stories {
             for story in stories.items {
-                if let interactions = interactions?[.story(peerId: peer.id, id: story.id)] {
-                    posts.append(.story(story, .init(peer), interactions))
+                if let interactions = interactions?[.story(peerId: peer.id, id: story.storyItem.id)] {
+                    posts.append(.story(story.storyItem, .init(peer), interactions))
                 }
             }
         }

@@ -30,6 +30,10 @@ private final class CenterView : TitledBarView {
             segment.add(segment: .init(title: strings().statsMonetization, handler: { [weak self] in
                 self?.select?(2)
             }))
+//            
+//            segment.add(segment: .init(title: strings().statsStars, handler: { [weak self] in
+//                self?.select?(3)
+//            }))
         }
         
         
@@ -63,6 +67,7 @@ final class ChannelStatsSegmentController : SectionViewController {
     private let stats: ViewController
     private let boosts: ViewController
     private let monetization: ViewController?
+    private let stars: ViewController?
     private let context: AccountContext
     private let peerId: PeerId
     init(_ context: AccountContext, peerId: PeerId, isChannel: Bool, monetization: Bool = false) {
@@ -72,12 +77,15 @@ final class ChannelStatsSegmentController : SectionViewController {
             self.stats = ChannelStatsViewController(context, peerId: peerId)
             if monetization {
                 self.monetization = FragmentMonetizationController(context: context, peerId: peerId)
+                self.stars = nil//FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: nil)
             } else {
                 self.monetization = nil
+                self.stars = nil
             }
         } else {
             self.stats = GroupStatsViewController(context, peerId: peerId)
             self.monetization = nil
+            self.stars = nil
         }
         self.boosts = ChannelBoostStatsController(context: context, peerId: peerId)
 
@@ -87,6 +95,9 @@ final class ChannelStatsSegmentController : SectionViewController {
 
         if let monetization = self.monetization {
             items.append(SectionControllerItem(title: { "" }, controller: monetization))
+        }
+        if let stars = self.stars {
+            items.append(SectionControllerItem(title: { "" }, controller: stars))
         }
         super.init(sections: items, selected: 0, hasHeaderView: false, hasBar: true)
 

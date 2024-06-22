@@ -44,11 +44,15 @@ fileprivate struct PreviewSendingState : Hashable {
     let isCollage: Bool
     let isSpoiler: Bool
     let sort: Sort
+    let payAmount: Int64?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(state)
         hasher.combine(isCollage)
         hasher.combine(isSpoiler)
+        if let payAmount {
+            hasher.combine(payAmount)
+        }
     }
     
     var sortValue: Sort {
@@ -60,16 +64,19 @@ fileprivate struct PreviewSendingState : Hashable {
     }
     
     func withUpdatedState(_ state: State) -> PreviewSendingState {
-        return .init(state: state, isCollage: self.isCollage, isSpoiler: self.isSpoiler, sort: self.sort)
+        return .init(state: state, isCollage: self.isCollage, isSpoiler: self.isSpoiler, sort: self.sort, payAmount: self.payAmount)
     }
     func withUpdatedIsCollage(_ isCollage: Bool) -> PreviewSendingState {
-        return .init(state: self.state, isCollage: isCollage, isSpoiler: self.isSpoiler, sort: self.sort)
+        return .init(state: self.state, isCollage: isCollage, isSpoiler: self.isSpoiler, sort: self.sort, payAmount: self.payAmount)
     }
     func withUpdatedIsSpoiler(_ isSpoiler: Bool) -> PreviewSendingState {
-        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: self.sort)
+        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: self.sort, payAmount: self.payAmount)
     }
     func withUpdatedSort(_ sort: Sort) -> PreviewSendingState {
-        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: sort)
+        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: sort, payAmount: self.payAmount)
+    }
+    func withUpdatedPayAmount(_ payAmount: Int64?) -> PreviewSendingState {
+        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler, sort: sort, payAmount: payAmount)
     }
 }
 
@@ -111,12 +118,10 @@ fileprivate class PreviewSenderView : Control {
     fileprivate let headerView: View = View()
     fileprivate let draggingView = DraggingView(frame: NSZeroRect)
     fileprivate let closeButton = ImageButton()
-    fileprivate let photoButton = ImageButton()
-    fileprivate let fileButton = ImageButton()
-    fileprivate let collageButton = ImageButton()
-    fileprivate let archiveButton = ImageButton()
-    fileprivate let spoilerButton = ImageButton()
-    fileprivate let sortButton = ImageButton()
+    fileprivate let actions = ImageButton()
+
+    fileprivate let titleView = TextView()
+    
     fileprivate let textContainerView: View = View()
     fileprivate let separator: View = View()
     fileprivate let forHelperView: View = View()
@@ -124,34 +129,17 @@ fileprivate class PreviewSenderView : Control {
     fileprivate var messageEffect: InputMessageEffectView?
     fileprivate var stateValueInteractiveUpdate: ((PreviewSendingState)->Void)?
     
-    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true, isSpoiler: false, sort: .down)
+    fileprivate var canCollage: Bool = false
+    fileprivate var canSpoiler: Bool = false
+    fileprivate var options:[PreviewOptions] = []
+    fileprivate var totalCount: Int = 0
+    fileprivate var slowMode: SlowMode? = nil
+    
+    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true, isSpoiler: false, sort: .down, payAmount: nil)
+    
     var state: PreviewSendingState {
         set {
-            let previous = _state
             _state = newValue
-            self.fileButton.isSelected = newValue.state == .file
-            self.photoButton.isSelected = newValue.state == .media
-            self.collageButton.isSelected = newValue.isCollage
-            self.archiveButton.isSelected = newValue.state == .archive
-            
-            self.spoilerButton.isSelected = newValue.isSpoiler
-            self.spoilerButton.appTooltip = newValue.isSpoiler ? strings().previewSenderSpoilerTooltipDisable : strings().previewSenderSpoilerTooltipEnable
-
-            self.sortButton.isSelected = false
-            self.sortButton.set(image: newValue.sort == .down ? theme.icons.preview_text_up : theme.icons.preview_text_down, for: .Normal)
-            self.sortButton.appTooltip = newValue.sort == .down ? strings().previewSenderMoveTextUp : strings().previewSenderMoveTextDown
-            
-            DispatchQueue.main.async {
-                if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self._window {
-                    removeAllTooltips(window)
-                }
-                self.fileButton.controlState = .Normal
-                self.photoButton.controlState = .Normal
-                self.collageButton.controlState = .Normal
-                self.archiveButton.controlState = .Normal
-                self.spoilerButton.controlState = .Normal
-                self.sortButton.controlState = .Normal
-            }
         }
         get {
             return self._state
@@ -159,17 +147,7 @@ fileprivate class PreviewSenderView : Control {
     }
     
     fileprivate func updateWithSlowMode(_ slowMode: SlowMode?, urlsCount: Int) {
-        if urlsCount > 1, let _ = slowMode  {
-            self.fileButton.isEnabled = false
-            self.photoButton.isEnabled = false
-            self.photoButton.appTooltip = strings().slowModePreviewSenderFileTooltip
-            self.fileButton.appTooltip = strings().slowModePreviewSenderFileTooltip
-        } else {
-            self.fileButton.isEnabled = true
-            self.photoButton.isEnabled = true
-            self.photoButton.appTooltip = strings().previewSenderMediaTooltip
-            self.fileButton.appTooltip = strings().previewSenderFileTooltip
-        }
+        self.slowMode = slowMode
     }
     
     
@@ -185,23 +163,23 @@ fileprivate class PreviewSenderView : Control {
         backgroundColor = theme.colors.background
         separator.backgroundColor = theme.colors.border
         textContainerView.backgroundColor = theme.colors.background
+        
         closeButton.set(image: theme.icons.modalClose, for: .Normal)
         _ = closeButton.sizeToFit()
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
+        actions.isSelected = false
+        actions.set(image: theme.icons.chatActions, for: .Normal)
+        actions.autohighlight = false
+        actions.scaleOnClick = true
+        actions.sizeToFit()
         
         tableView.getBackgroundColor = {
             .clear
         }
         
-        photoButton.appTooltip = strings().previewSenderMediaTooltip
-        fileButton.appTooltip = strings().previewSenderFileTooltip
-        collageButton.appTooltip = strings().previewSenderCollageTooltip
-        archiveButton.appTooltip = strings().previewSenderArchiveTooltip
-
-
-        
-        
-        photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderPhoto), for: .Normal)
-        _ = photoButton.sizeToFit()
         
         let updateValue:((PreviewSendingState)->PreviewSendingState)->Void = { [weak self] f in
             guard let `self` = self else {
@@ -210,71 +188,15 @@ fileprivate class PreviewSenderView : Control {
             self.stateValueInteractiveUpdate?(f(self.state))
         }
         
-        photoButton.set(handler: { _ in
-            updateValue {
-                $0.withUpdatedState(.media)
-            }
-        }, for: .Click)
-        
-        
-        archiveButton.set(handler: {  _ in
-            updateValue {
-                $0.withUpdatedState($0.state == .archive ? .media : .archive)
-            }
-        }, for: .Click)
-        
-        spoilerButton.set(handler: { _ in
-            updateValue {
-                $0.withUpdatedIsSpoiler(!$0.isSpoiler)
-            }
-        }, for: .Click)
-        
-        sortButton.set(handler: { _ in
-            updateValue {
-                $0.withUpdatedSort($0.sort == .down ? .up : .down)
-            }
-        }, for: .Click)
-        
-        collageButton.set(handler: { _ in
-            updateValue {
-                $0.withUpdatedIsCollage(!$0.isCollage)
-            }
-        }, for: .Click)
-        
-        fileButton.set(handler: { _ in
-            updateValue {
-                $0.withUpdatedState(.file)
-            }
-        }, for: .Click)
-        
+      
         closeButton.set(handler: { [weak self] _ in
             self?.controller?.closeModal()
         }, for: .Click)
         
-        fileButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderFile), for: .Normal)
-        _ = fileButton.sizeToFit()
-        
-        collageButton.set(image: theme.icons.previewSenderCollage, for: .Normal)
-        _ = collageButton.sizeToFit()
-        
-        archiveButton.set(image: theme.icons.previewSenderArchive, for: .Normal)
-        _ = archiveButton.sizeToFit()
-
-        
-        spoilerButton.set(image: theme.icons.send_media_spoiler, for: .Normal)
-        _ = spoilerButton.sizeToFit()
-        
-        sortButton.set(image: theme.icons.preview_text_up, for: .Normal)
-        _ = sortButton.sizeToFit()
-
 
         headerView.addSubview(closeButton)
-        headerView.addSubview(fileButton)
-        headerView.addSubview(photoButton)
-        headerView.addSubview(collageButton)
-        headerView.addSubview(archiveButton)
-        headerView.addSubview(spoilerButton)
-        headerView.addSubview(sortButton)
+        headerView.addSubview(actions)
+        headerView.addSubview(titleView)
 
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false
@@ -326,6 +248,82 @@ fileprivate class PreviewSenderView : Control {
         addSubview(draggingView)
         
         draggingView.isEventLess = true
+        
+        
+        actions.contextMenu = { [weak self] in
+            guard let self else {
+                return nil
+            }
+            
+            let canCollage = self.canCollage
+            let canSpoiler = self.canSpoiler
+            let optons = self.options
+            let totalCount = self.totalCount
+            let newValue = self.state
+                            
+            let menu = ContextMenu()
+            
+            if options.contains(.media) {
+                menu.addItem(ContextMenuItem(strings().previewSenderSendAsMedia, handler: {
+                    updateValue {
+                        $0.withUpdatedState(.media)
+                    }
+                }, itemImage: newValue.state == .media ? MenuAnimation.menu_check_selected.value : nil))
+            }
+           
+            menu.addItem(ContextMenuItem(strings().previewSenderSendAsFile, handler: {
+                updateValue {
+                    $0.withUpdatedState(.file)
+                }
+            }, itemImage: newValue.state == .file ? MenuAnimation.menu_check_selected.value : nil))
+            if totalCount > 1 {
+                menu.addItem(ContextMenuItem(strings().previewSenderArchive, handler: {
+                    updateValue {
+                        $0.withUpdatedState(.archive)
+                    }
+                }, itemImage: newValue.state == .archive ? MenuAnimation.menu_check_selected.value : nil))
+            }
+            if canCollage {
+                menu.addItem(ContextSeparatorItem())
+
+                menu.addItem(ContextMenuItem(strings().previewSenderGrouped, handler: {
+                    updateValue {
+                        $0.withUpdatedIsCollage(true)
+                    }
+                }, itemImage: newValue.isCollage ? MenuAnimation.menu_check_selected.value : nil))
+                menu.addItem(ContextMenuItem(strings().previewSenderUngrouped, handler: {
+                    updateValue {
+                        $0.withUpdatedIsCollage(false)
+                    }
+                }, itemImage: !newValue.isCollage ? MenuAnimation.menu_check_selected.value : nil))
+            }
+            if canSpoiler || state.state == .media {
+                menu.addItem(ContextSeparatorItem())
+            }
+
+            if canSpoiler {
+                menu.addItem(ContextMenuItem(!newValue.isSpoiler ? strings().previewSenderSpoilerTooltipEnable : strings().previewSenderSpoilerTooltipDisable, handler: {
+                    updateValue {
+                        $0.withUpdatedIsSpoiler(!$0.isSpoiler)
+                    }
+                }, itemImage: MenuAnimation.menu_send_spoiler.value))
+            }
+            if state.state == .media {
+                menu.addItem(ContextMenuItem(newValue.sortValue == .up ? strings().previewSenderMoveTextUp : strings().previewSenderMoveTextDown, handler: {
+                    updateValue {
+                        $0.withUpdatedSort($0.sort == .down ? .up : .down)
+                    }
+                }, itemImage: newValue.sortValue == .up ?  MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
+                
+//                menu.addItem(ContextMenuItem(newValue.payAmount != nil ? strings().previewSenderRemovePaid : strings().previewSenderMakePaid, handler: { [weak self] in
+//                    self?.controller?.togglePaidContent()
+//                }, itemImage: MenuAnimation.menu_paid.value))
+            }
+            
+            
+            return menu
+        }
+        
         layout()
     }
     
@@ -382,18 +380,30 @@ fileprivate class PreviewSenderView : Control {
     }
     
     func applyOptions(_ options:[PreviewOptions], count: Int, canCollage: Bool, canSpoiler: Bool) {
-        self.fileButton.isHidden = false//!options.contains(.media)
-        self.photoButton.isHidden = !options.contains(.media)
-        self.archiveButton.isHidden = count < 2
-        self.spoilerButton.isHidden = !canSpoiler
-        self.collageButton.isHidden = !canCollage
-        self.sortButton.isHidden = state.state != .media
+        
+        self.canCollage = canCollage
+        self.canSpoiler = canSpoiler
+        self.options = options
+        self.totalCount = count
+        
+        let title: String
+        if self.state.state == .file {
+            title = strings().peerMediaTitleSearchFilesCountable(count)
+        } else if self.state.state == .archive {
+            title = strings().previewSenderTitleArchive
+        } else {
+            title = strings().peerMediaTitleSearchMediaCountable(count)
+        }
+        
+        let layout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.text)))
+        self.titleView.update(layout)
+        
         self.separator.isHidden = false
         needsLayout = true
     }
     
     var textWidth: CGFloat {
-        var width = frame.width - 14 - actionsContainerView.frame.width
+        let width = frame.width - 14 - actionsContainerView.frame.width
         return width
     }
     
@@ -402,6 +412,9 @@ fileprivate class PreviewSenderView : Control {
         
         transition.updateFrame(view: headerView, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, 50)))
 
+        titleView.resize(size.width - closeButton.frame.width - actions.frame.width - 40)
+        
+        transition.updateFrame(view: titleView, frame: titleView.centerFrame())
         
         let actionPoint: NSPoint
         
@@ -436,38 +449,14 @@ fileprivate class PreviewSenderView : Control {
         
         let tableRect: NSRect
         
-//        switch state.sortValue {
-//        case .down:
-            tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
-//        case .up:
-//            tableRect = NSMakeRect(0, textContainerRect.maxY - 6, frame.width, min(height, listHeight))
-//        }
+        tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
         
         transition.updateFrame(view: tableView, frame: tableRect)
         transition.updateFrame(view: draggingView, frame: size.bounds)
         
-        transition.updateFrame(view: closeButton, frame: closeButton.centerFrameY(x: headerView.frame.width - closeButton.frame.width - 10))
+        transition.updateFrame(view: closeButton, frame: closeButton.centerFrameY(x: 10))
         
-        transition.updateFrame(view: collageButton, frame: collageButton.centerFrameY(x: closeButton.frame.minX - 10 - collageButton.frame.width))
-
-
-        var inset: CGFloat = 10
-
-        let left = [photoButton, fileButton].filter { !$0.isHidden }
-        let right = [collageButton, archiveButton, spoilerButton, sortButton].filter { !$0.isHidden }
-
-        for left in left {
-            transition.updateFrame(view: left, frame: left.centerFrameY(x: inset))
-            inset += left.frame.width + 10
-        }
-        
-        inset = closeButton.frame.minX - 10
-        for view in right {
-            inset -= view.frame.width
-            transition.updateFrame(view: view, frame: view.centerFrameY(x: inset))
-            inset -= 10
-        }
-          
+        transition.updateFrame(view: actions, frame: closeButton.centerFrameY(x: size.width - actions.frame.width - 10))
         
         transition.updateFrame(view: separator, frame: NSMakeRect(0, textContainerView.frame.minY, size.width, .borderSize))
         
@@ -709,16 +698,16 @@ private enum PreviewEntryId : Hashable {
 
 private enum PreviewEntry : Comparable, Identifiable {
     case section(Int)
-    case media(index: Int, sectionId: Int, url: URL, media: Media, isSpoiler: Bool)
-    case mediaGroup(index: Int, sectionId: Int, urls: [URL], messages: [Message], isSpoiler: Bool)
+    case media(index: Int, sectionId: Int, url: URL, media: Media, isSpoiler: Bool, payAmount: Int64?)
+    case mediaGroup(index: Int, sectionId: Int, urls: [URL], messages: [Message], isSpoiler: Bool, payAmount: Int64?)
     case archive(index: Int, sectionId: Int, urls: [URL], media: Media)
     var stableId: PreviewEntryId {
         switch self {
         case let .section(sectionId):
             return .section(sectionId)
-        case let .media(_, _, _, media, _):
+        case let .media(_, _, _, media, _, _):
             return .media(media)
-        case let .mediaGroup(index, _, _, _, _):
+        case let .mediaGroup(index, _, _, _, _, _):
             return .mediaGroup(index)
         case .archive:
             return .archive
@@ -729,9 +718,9 @@ private enum PreviewEntry : Comparable, Identifiable {
         switch self {
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
-        case let .media(index, sectionId, _, _, _):
+        case let .media(index, sectionId, _, _, _, _):
             return (sectionId * 1000) + index
-        case let .mediaGroup(index, sectionId, _, _, _):
+        case let .mediaGroup(index, sectionId, _, _, _, _):
             return (sectionId * 1000) + index
         case let .archive(index, sectionId, _, _):
             return (sectionId * 1000) + index
@@ -742,8 +731,8 @@ private enum PreviewEntry : Comparable, Identifiable {
         switch self {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .media(_, _, url, media, isSpoiler):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, theme: arguments.theme, editedData: state.editedData[url], isSpoiler: isSpoiler, edit: {
+        case let .media(_, _, url, media, isSpoiler, payAmount):
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, theme: arguments.theme, editedData: state.editedData[url], isSpoiler: isSpoiler, payAmount: payAmount, edit: {
                 arguments.edit(url)
             }, paint: {
                 arguments.paint(url)
@@ -751,13 +740,13 @@ private enum PreviewEntry : Comparable, Identifiable {
                 arguments.delete(url)
             })
         case let .archive(_, _, _, media):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, theme: arguments.theme, editedData: nil, isSpoiler: false, edit: {
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, theme: arguments.theme, editedData: nil, isSpoiler: false, payAmount: nil, edit: {
               //  arguments.edit(url)
             }, delete: {
               // arguments.delete(url)
             })
-        case let .mediaGroup(_, _, urls, messages, isSpoiler):
-            return MediaGroupPreviewRowItem(initialSize, messages: messages, urls: urls, editedData: state.editedData, isSpoiler: isSpoiler, edit: { url in
+        case let .mediaGroup(_, _, urls, messages, isSpoiler, payAmount):
+            return MediaGroupPreviewRowItem(initialSize, messages: messages, urls: urls, editedData: state.editedData, isSpoiler: isSpoiler, payAmount: payAmount, edit: { url in
                 arguments.edit(url)
             }, paint: { url in
                 arguments.paint(url)
@@ -772,8 +761,8 @@ private enum PreviewEntry : Comparable, Identifiable {
 }
 private func == (lhs: PreviewEntry, rhs: PreviewEntry) -> Bool {
     switch lhs {
-    case let .media(index, sectionId, url, lhsMedia, spoiler):
-        if case .media(index, sectionId, url, let rhsMedia, spoiler) = rhs {
+    case let .media(index, sectionId, url, lhsMedia, spoiler, payAmount):
+        if case .media(index, sectionId, url, let rhsMedia, spoiler, payAmount) = rhs {
             return lhsMedia.isEqual(to: rhsMedia)
         } else {
             return false
@@ -784,8 +773,8 @@ private func == (lhs: PreviewEntry, rhs: PreviewEntry) -> Bool {
         } else {
             return false
         }
-    case let .mediaGroup(index, sectionId, url, lhsMessages, spoiler):
-        if case .mediaGroup(index, sectionId, url, let rhsMessages, spoiler) = rhs {
+    case let .mediaGroup(index, sectionId, url, lhsMessages, spoiler, payAmount):
+        if case .mediaGroup(index, sectionId, url, let rhsMessages, spoiler, payAmount) = rhs {
             if lhsMessages.count != rhsMessages.count {
                 return false
             } else {
@@ -830,18 +819,18 @@ private func previewMediaEntries( _ state: PreviewState) -> [PreviewEntry] {
             }
             let collages = messages.chunks(10)
             for collage in collages {
-                entries.append(.mediaGroup(index: index, sectionId: sectionId, urls: state.urls, messages: collage, isSpoiler: state.currentState.isSpoiler))
+                entries.append(.mediaGroup(index: index, sectionId: sectionId, urls: state.urls, messages: collage, isSpoiler: state.currentState.isSpoiler, payAmount: state.currentState.payAmount))
                 index += 1
             }
         } else {
             for (i, media) in state.medias.enumerated() {
-                entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media, isSpoiler: state.currentState.isSpoiler))
+                entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media, isSpoiler: state.currentState.isSpoiler, payAmount: state.currentState.payAmount))
                 index += 1
             }
         }
     case .file:
         for (i, media) in state.medias.enumerated() {
-            entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media, isSpoiler: false))
+            entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media, isSpoiler: false, payAmount: state.currentState.payAmount))
             index += 1
         }
     }
@@ -1430,7 +1419,7 @@ class PreviewSenderController: ModalViewController, Notifable {
         self.disposable.set(actionsDisposable)
         
         
-        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true, isSpoiler: false, sort: .down), editedData: [:])
+        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true, isSpoiler: false, sort: .down, payAmount: nil), editedData: [:])
         
         let statePromise:ValuePromise<PreviewState> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1557,7 +1546,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             }
             
             let canSpoiler: Bool
-            canSpoiler = options.contains(.media) && state.state == .media && !isSecretChat
+            canSpoiler = options.contains(.media) && state.state == .media && !isSecretChat && state.payAmount == nil
 
             
             self.genericView.applyOptions(options, count: self.urls.count, canCollage: canCollage, canSpoiler: canSpoiler)
@@ -1609,10 +1598,10 @@ class PreviewSenderController: ModalViewController, Notifable {
         default:
             break
         }
-        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage, isSpoiler: false, sort: .down)
+        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage, isSpoiler: false, sort: .down, payAmount: nil)
         if let _ = chatInteraction.presentation.slowMode {
             if state.state != .archive && self.urls.count > 1, !state.isCollage {
-                state = .init(state: .archive, isCollage: false, isSpoiler: false, sort: .down)
+                state = .init(state: .archive, isCollage: false, isSpoiler: false, sort: .down, payAmount: nil)
             }
         }
         
@@ -1932,6 +1921,22 @@ class PreviewSenderController: ModalViewController, Notifable {
     
     func runDrawer() {
         self.runEditor?(self.urls[0], false)
+    }
+    
+    func togglePaidContent() {
+        if self.genericView.state.payAmount == nil {
+//            showModal(with: MediaPaidSetterController(context: context, callback: { [weak self] amount in
+//                guard let self else {
+//                    return
+//                }
+//                let state = self.genericView.state.withUpdatedPayAmount(amount).withUpdatedIsSpoiler(false)
+//                self.genericView.stateValueInteractiveUpdate?(state)
+//            }), for: context.window)
+        } else {
+            let state = self.genericView.state.withUpdatedPayAmount(nil).withUpdatedIsSpoiler(false)
+            self.genericView.stateValueInteractiveUpdate?(state)
+        }
+        
     }
     
     deinit {

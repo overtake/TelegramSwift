@@ -22,7 +22,8 @@ private func calculateAdjustedPoint(for point: CGPoint,
                             floatingPhotosView: NSView,
                             tableView: TableView) -> CGPoint? {
     // Ensure both views have superviews and that tableView has a documentView
-    guard let tableViewDocumentView = tableView.documentView else {
+    guard let floatingPhotosSuperview = floatingPhotosView.superview,
+          let tableViewDocumentView = tableView.documentView else {
         return nil // Return nil if the conditions are not met
     }
     
@@ -1146,7 +1147,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     mentions.frame = mentionsRect
                     mentions.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     addSubview(mentions, positioned: .below, relativeTo: inputView)
-                }
+                }             
             }
             self.mentions?.updateCount(mentionsCount)
         } else {
@@ -1334,7 +1335,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         let firstTransition = Queue.mainQueue().isCurrent()
         let cancelled = Atomic(value: false)
         
-        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true
+        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true 
         
         if firstTransition, let state = scrollToItem, prevIsLoading {
                         
@@ -1599,7 +1600,7 @@ private func maxIncomingMessageIndexForEntries(_ entries: [ChatHistoryEntry], in
 enum ChatHistoryViewTransitionReason {
     case Initial(fadeIn: Bool)
     case InteractiveChanges
-    case HoleReload
+    case HoleReload    
     case Reload
 }
 
@@ -1741,7 +1742,7 @@ private final class ChatAdData {
                     flags: initialMessage.flags,
                     tags: initialMessage.tags,
                     globalTags: initialMessage.globalTags,
-                    localTags: initialMessage.localTags,
+                    localTags: initialMessage.localTags, 
                     customTags: initialMessage.customTags,
                     forwardInfo: initialMessage.forwardInfo,
                     author: initialMessage.author,
@@ -2758,7 +2759,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         enum WallpaperResult : Equatable {
             case result(Wallpaper?)
-            case loading
+            case loading 
         }
         
         
@@ -3920,7 +3921,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendLocation = { [weak self] coordinate, venue in
-            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
+            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, venue: venue, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
             self?.chatInteraction.sendMedias([media], ChatTextInputState(), false, nil, false, nil, false, nil, false)
         }
         
@@ -4471,7 +4472,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             default:
                                                 return .fail(.generic)
                                             }
-                                    }
+                                    } 
                                 }), for: context.window)
                             case .authSessionTooFresh:
                                 errorText = strings().botTransferOwnerErrorText
@@ -4704,11 +4705,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let scroll = state
                                     .swap(to: ChatHistoryEntryId.message(message)).text(string: focusTarget.string)
-                                    .focus(action: { [weak strongSelf] _ in
+                                    .focus(action: { [weak strongSelf] view in
                                         if let strongSelf {
                                             let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: .none(nil), count: requestCount, animated: state.animated)
                                             strongSelf.setLocation(.init(content: content, tag: strongSelf.locationValue?.tag, id: strongSelf.nextHistoryLocationId))
                                         }
+                                        state.action?(view)
                                     })
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: scroll, count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
@@ -4827,7 +4829,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.mediaRevealed.insert(message.id)
                 return current
             }
-//
+//            
 //            #if DEBUG
 //            verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: strings().chatSensitiveContentConfirmThird, successHandler: { result in
 //                self?.updateState { current in
@@ -4837,7 +4839,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //                }
 //            })
 //            #else
-//
+//            
 //            #endif
             
             
@@ -5304,7 +5306,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if activeCall != currentActiveCall {
                 currentActiveCall = activeCall
-            }
+            } 
             if let activeCall = currentActiveCall {
                 let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                     _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info, joinHash: joinHash), for: context.window).start(next: { result in
@@ -5520,10 +5522,45 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                 }), forKey: key)
             }
+        }
+        
+        chatInteraction.openPhoneNumberContextMenu = { [weak self] phoneNumber in
+            let point = context.window.mouseLocationOutsideOfEventStream
+            let view = context.window.contentView?.hitTest(point)
+            
+            if let view, let event = NSApp.currentEvent {
+                
+                let signal = context.engine.peers.resolvePeerByPhone(phone: phoneNumber) |> deliverOnMainQueue
+                
+                _ = signal.startStandalone(next: { [weak view] peer in
+                    
+                    if let view = view {
+                        let menu = ContextMenu()
+                        
+                        menu.addItem(ContextMenuItem(strings().contextCopyToClipboard, handler: {
+                            copyToClipboard(phoneNumber)
+                            showModalText(for: context.window, text: strings().shareLinkCopied)
+                        }, itemImage: MenuAnimation.menu_copy.value))
+                        
+                        menu.addItem(ContextSeparatorItem())
 
-            
-            
-           
+                        let item: ContextMenuItem
+                        if let peer {
+                            item = ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: { [weak self] in
+                                self?.chatInteraction.openInfo(peer.id, true, nil, nil)
+                            }, peer: peer._asPeer(), context: context, reaction: nil, message: nil)
+                        } else {
+                            item = ContextMenuItem(strings().chatContextPhoneNotTelegram)
+                            item.isEnabled = false
+                        }
+                        menu.addItem(item)
+                        
+                        AppMenu.show(menu: menu, event: event, for: view)
+                    }
+                })
+                
+                
+            }
         }
         
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in
@@ -7499,7 +7536,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         back.addSubview(editButton)
         
         self.editButton = editButton
-//
+//        
         let doneButton = TextButton()
       //  doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
@@ -9172,7 +9209,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     if asMedia {
                         items.append(asMediaItem)
-                    }
+                    } 
     
                 }
 

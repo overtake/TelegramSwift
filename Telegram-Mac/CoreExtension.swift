@@ -3762,9 +3762,12 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
         let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-            showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file), for: context.window)
-        })
+        if !WebappWindow.focus(botId: bot.peer.id) {
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
+                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file))
+            })
+        }
+       
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
