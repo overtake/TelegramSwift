@@ -24,7 +24,7 @@ class MediaGroupPreviewRowItem: TableRowItem {
     fileprivate let paint:(URL)->Void
     fileprivate let delete:(URL)->Void
     fileprivate let parameters:[ChatMediaLayoutParameters]
-    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], isSpoiler: Bool, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
+    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], isSpoiler: Bool, payAmount: Int64?, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
         self.editedData = editedData
         self.edit = edit
@@ -35,7 +35,8 @@ class MediaGroupPreviewRowItem: TableRowItem {
         self.context = context
         self.parameters = messages.map {
             let param = ChatMediaLayoutParameters(presentation: .empty, media: $0.media[0])
-            param.forceSpoiler = isSpoiler
+            param.forceSpoiler = isSpoiler || payAmount != nil
+            param.payAmount = payAmount
             return param
         }
         super.init(initialSize)

@@ -199,6 +199,21 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         genericView.set(background: theme.colors.grayForeground, for: .Normal)
         genericView.isHidden = true
         
+        #if true
+        
+        let signal = Signal<Void, NoError>.single(Void()) |> then(.single(Void()) |> delay(24 * 60 * 60, queue: .mainQueue()) |> restart)
+
+        disposable.set(signal.start(next: { [weak self] in
+            checkForAppstoreUpdate(completion: { needToUpdate in
+                self?.genericView.isHidden = !needToUpdate
+                self?.state = .common
+            })
+        }))
+        genericView.set(handler: { control in
+            execute(inapp: inAppLink.external(link: itunesAppLink, false))
+            control.isHidden = true
+        }, for: .Click)
+        #else
         disposable.set((appUpdateStateSignal |> deliverOnMainQueue).start(next: { [weak self] state in
             switch state.loadingState {
             case let .readyToInstall(item):
@@ -215,6 +230,10 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         genericView.set(handler: { _ in
             updateApplication(sharedContext: context)
         }, for: .Click)
+        #endif
+        
+        
+        
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -268,9 +287,7 @@ class MainViewController: TelegramViewController {
     private let layoutDisposable:MetaDisposable = MetaDisposable()
     private let badgeCountDisposable: MetaDisposable = MetaDisposable()
     private let tooltipDisposable = MetaDisposable()
-    #if !APP_STORE
     private let updateController: UpdateTabController
-    #endif
     
     
     override func viewDidResized(_ size: NSSize) {
@@ -278,9 +295,7 @@ class MainViewController: TelegramViewController {
         tabController.view.frame = bounds
         self.navigation.frame = bounds
         self.contacts.frame = bounds
-        #if !APP_STORE
         updateController.updateLayout(context.layout, parentSize: size, isChatList: true)
-        #endif
     }
     
     override func loadView() {

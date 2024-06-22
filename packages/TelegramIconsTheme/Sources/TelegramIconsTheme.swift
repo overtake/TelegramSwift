@@ -4958,6 +4958,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var peerInfoStarsBalance: CGImage {
+      if let image = cached.with({ $0["peerInfoStarsBalance"] }) {
+          return image
+      } else {
+          let image = _peerInfoStarsBalance()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoStarsBalance"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var peerInfoBotUsername: CGImage {
+      if let image = cached.with({ $0["peerInfoBotUsername"] }) {
+          return image
+      } else {
+          let image = _peerInfoBotUsername()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoBotUsername"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chatUndoAction: CGImage {
       if let image = cached.with({ $0["chatUndoAction"] }) {
           return image
@@ -10852,6 +10878,8 @@ public final class TelegramIconsTheme {
   private let _peerInfoPermissions: ()->CGImage
   private let _peerInfoBanned: ()->CGImage
   private let _peerInfoMembers: ()->CGImage
+  private let _peerInfoStarsBalance: ()->CGImage
+  private let _peerInfoBotUsername: ()->CGImage
   private let _chatUndoAction: ()->CGImage
   private let _appUpdate: ()->CGImage
   private let _inlineVideoSoundOff: ()->CGImage
@@ -11659,6 +11687,8 @@ public final class TelegramIconsTheme {
       peerInfoPermissions: @escaping()->CGImage,
       peerInfoBanned: @escaping()->CGImage,
       peerInfoMembers: @escaping()->CGImage,
+      peerInfoStarsBalance: @escaping()->CGImage,
+      peerInfoBotUsername: @escaping()->CGImage,
       chatUndoAction: @escaping()->CGImage,
       appUpdate: @escaping()->CGImage,
       inlineVideoSoundOff: @escaping()->CGImage,
@@ -12465,6 +12495,8 @@ public final class TelegramIconsTheme {
       self._peerInfoPermissions = peerInfoPermissions
       self._peerInfoBanned = peerInfoBanned
       self._peerInfoMembers = peerInfoMembers
+      self._peerInfoStarsBalance = peerInfoStarsBalance
+      self._peerInfoBotUsername = peerInfoBotUsername
       self._chatUndoAction = chatUndoAction
       self._appUpdate = appUpdate
       self._inlineVideoSoundOff = inlineVideoSoundOff

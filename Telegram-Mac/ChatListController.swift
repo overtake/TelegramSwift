@@ -768,22 +768,18 @@ class ChatListController : PeersListController {
         
         let suspiciousSession: Signal<[NewSessionReview], NoError> = newSessionReviews(postbox: context.account.postbox)
 
-        
-        
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
                 
         
-
         let suggestions = context.engine.notices.getServerProvidedSuggestions()
-        let birthdays: Signal<[UIChatListBirthday], NoError> = combineLatest(ApplicationSpecificNotice.dismissedBirthdayPremiumGifts(accountManager: context.sharedContext.accountManager), context.account.stateManager.contactBirthdays) |> map { dismissed, list in
+        let birthdays: Signal<[UIChatListBirthday], NoError> = combineLatest(context.engine.notices.getServerDismissedSuggestions(), context.account.stateManager.contactBirthdays) |> map { dismissed, list in
             return (list.filter {
                 $0.value.isToday
-            }, dismissed ?? [])
+            }, dismissed)
         } |> mapToSignal { values, dismissed in
             return context.account.postbox.transaction { transaction in
                 var birthdays:[UIChatListBirthday] = []
-                let allDismissed = values.allSatisfy { dismissed.contains($0.key.id._internalGetInt64Value()) }
-                if !allDismissed {
+                if !dismissed.contains(.todayBirthdays) {
                     for (key, value) in values {
                         if let peer = transaction.getPeer(key) {
                             birthdays.append(.init(birthday: value, peer: .init(peer)))
