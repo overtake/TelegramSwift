@@ -8453,6 +8453,8 @@ public final class L10n {
   public static var fragmentAdsInfoOption3Info: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Info") }
   /// Can Be Removed
   public static var fragmentAdsInfoOption3Title: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Title") }
+  /// Stars Amount
+  public static var fragmentStarAmountPlaceholder: String  { return L10n.tr("Localizable", "Fragment.Star.AmountPlaceholder") }
   /// Withdraw
   public static var fragmentStarWithdraw: String  { return L10n.tr("Localizable", "Fragment.Star.Withdraw") }
   /// Withdraw %@
