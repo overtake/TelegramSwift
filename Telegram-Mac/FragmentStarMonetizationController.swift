@@ -652,7 +652,7 @@ private final class WithdrawInputView : GeneralRowView {
             self.starView.set(text: layout, context: item.arguments.context)
 
             
-            inputView.placeholder = "Stars Amount"
+            inputView.placeholder = strings().fragmentStarAmountPlaceholder
             
             inputView.context = item.arguments.context
             inputView.interactions.max_height = 500
