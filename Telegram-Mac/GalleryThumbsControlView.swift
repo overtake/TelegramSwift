@@ -106,12 +106,14 @@ class GalleryThumbContainer : Control {
             if let media = media {
                 imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale), clearInstantly: true)
             }
+            
+            imageView.preventsCapture = item.item.entry.isProtected
 
             imageView.setSignal(signal, cacheImage: { result in
                 if let media = media {
                     cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
                 }
-            })
+            }, isProtected: item.item.entry.isProtected)
             imageView.set(arguments: arguments)
         }
         overlay.layer?.opacity = 0.35

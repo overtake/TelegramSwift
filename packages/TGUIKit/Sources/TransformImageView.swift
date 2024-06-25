@@ -12,8 +12,8 @@ import SwiftSignalKit
 
 private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
-private class CaptureProtectedContentLayer: AVSampleBufferDisplayLayer {
-    override func action(forKey event: String) -> CAAction? {
+public class CaptureProtectedContentLayer: AVSampleBufferDisplayLayer {
+    public override func action(forKey event: String) -> CAAction? {
         return nullAction
     }
 }
@@ -60,12 +60,13 @@ open class TransformImageView: NSView {
             if _image != newValue {
                 imageUpdated?(newValue)
                 _image = newValue
-                if let sampleBuffer = self.sampleBuffer {
-                    self.captureProtectedContentLayer?.enqueue(sampleBuffer)
-                }
-                let preventsCapture = self.preventsCapture
-                self.preventsCapture = preventsCapture
             }
+            
+           
+            
+            let preventsCapture = self.preventsCapture
+            self.preventsCapture = preventsCapture
+  
         }
         get {
             return _image
@@ -91,16 +92,13 @@ open class TransformImageView: NSView {
 
     
     private var captureProtectedContentLayer: CaptureProtectedContentLayer?
-    private var protectedOverlay: SimpleLayer?
 
     
     public var preventsCapture: Bool = false {
         didSet {
             if self.preventsCapture {
-                if self.captureProtectedContentLayer == nil, let cmSampleBuffer = self.sampleBuffer {
+                if self.captureProtectedContentLayer == nil {
                     let captureProtectedContentLayer = CaptureProtectedContentLayer()
-                    captureProtectedContentLayer.enqueue(cmSampleBuffer)
-                    self.layer?.contents = nil
 
                     captureProtectedContentLayer.frame = self.bounds
                     
@@ -112,9 +110,15 @@ open class TransformImageView: NSView {
                     
                     self.captureProtectedContentLayer = captureProtectedContentLayer
                 }
-            } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
-                self.captureProtectedContentLayer = nil
-                captureProtectedContentLayer.removeFromSuperlayer()
+                self.layer?.contents = nil
+                if let sampleBuffer = self.sampleBuffer {
+                    self.captureProtectedContentLayer?.enqueue(sampleBuffer)
+                }
+            } else {
+                if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                    self.captureProtectedContentLayer = nil
+                    captureProtectedContentLayer.removeFromSuperlayer()
+                }
                 self.layer?.contents = self.image
             }
         }
@@ -169,6 +173,11 @@ open class TransformImageView: NSView {
     public func setSignal(_ signal: Signal<ImageDataTransformation, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(TransformImageResult) -> Void = { _ in }, isProtected: Bool = false) {
         if clearInstantly {
             self.image = nil
+        }
+        
+        if !isProtected {
+            var bp = 0
+            bp += 1
         }
         
         if isFullyLoaded && !ignoreFullyLoad {

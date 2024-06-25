@@ -244,7 +244,8 @@ func MediaPaidSetterController(context: AccountContext, callback:@escaping(Int64
     let initialState = State()
     
     var close:(()->Void)? = nil
-    
+    var getController:(()->InputDataController?)? = nil
+
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
@@ -252,10 +253,19 @@ func MediaPaidSetterController(context: AccountContext, callback:@escaping(Int64
     }
     
     let interactions = TextView_Interactions(presentation: .init())
+    let limit = context.appConfiguration.getGeneralValue("stars_paid_post_amount_max", orElse: 10000)
     
     let arguments = Arguments(context: context, interactions: interactions, executeLink: { link in
         execute(inapp: .external(link: link, false))
     }, updateState: { [weak interactions] value in
+        var value = value
+        
+        let number = Int64(value.string) ?? 0
+        if number > limit {
+            let string = "\(limit)"
+            value = .init(inputText: .initialize(string: string), selectionRange: string.length..<string.length)
+            getController?()?.proccessValidation(.fail(.fields([_id_input : .shake])))
+        }
         interactions?.update { _ in
             return value
         }
@@ -270,7 +280,6 @@ func MediaPaidSetterController(context: AccountContext, callback:@escaping(Int64
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let limit = context.appConfiguration.getGeneralValue("stars_paid_post_amount_max", orElse: 10000)
 
     let controller = InputDataController(dataSignal: signal, title: strings().paidMediaTitle)
     
@@ -289,6 +298,10 @@ func MediaPaidSetterController(context: AccountContext, callback:@escaping(Int64
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+    }
+    
+    getController = { [weak controller] in
+        return controller
     }
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().paidMediaOk, accept: { [weak controller] in

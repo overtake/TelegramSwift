@@ -155,6 +155,7 @@ enum GalleryEntry : Comparable, Identifiable {
     var canShare: Bool {
         return message != nil && !message!.isScheduledMessage && !message!.containsSecretMedia && !message!.isCopyProtected()
     }
+
     
     var interfaceState:(PeerId, TimeInterval)? {
         switch self {
@@ -191,6 +192,8 @@ enum GalleryEntry : Comparable, Identifiable {
             }
         case .instantMedia(let media, _):
             return media.media as? TelegramMediaFile
+        case let .media(media, _, _):
+            return media as? TelegramMediaFile
         default:
             return nil
         }
@@ -379,11 +382,45 @@ func <(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
     return lhs.entry < rhs.entry
 }
 
+private class Layer: SimpleLayer {
+    var contentsDidChange: ((NSImage?)->Void)?
+    override var contents: Any? {
+        didSet {
+            let oldValue = oldValue as? NSImage
+            let newValue = contents as? NSImage
+            if oldValue != newValue {
+                contentsDidChange?(newValue)
+            }
+        }
+    }
+}
+
 private final class MGalleryItemView : NSView {
+    private var image: NSImage?
     init() {
         super.init(frame: NSZeroRect)
         self.wantsLayer = true
         self.layerContentsRedrawPolicy = .never
+        
+        let layer = Layer()
+        
+        self.layer = layer
+        
+        
+        layer.contentsDidChange = { [weak self] any in
+            guard let self else {
+                return
+            }
+            self.image = any
+            if self.sampleBuffer == nil, let cmBuffer = any?._cgImage?.cmSampleBuffer {
+                self.sampleBuffer = cmBuffer
+            }
+            if let sampleBuffer = self.sampleBuffer {
+                self.captureProtectedContentLayer?.enqueue(sampleBuffer)
+            }
+            let preventsCapture = self.preventsCapture
+            self.preventsCapture = preventsCapture
+        }
     }
     
     required init?(coder decoder: NSCoder) {
@@ -393,10 +430,45 @@ private final class MGalleryItemView : NSView {
         return true
     }
     
+    override func layout() {
+        super.layout()
+        captureProtectedContentLayer?.frame = bounds
+    }
+    
     deinit {
         var bp:Int = 0
         bp += 1
     }
+        
+    private var captureProtectedContentLayer: CaptureProtectedContentLayer?
+    private var sampleBuffer: CMSampleBuffer?
+
+    public var preventsCapture: Bool = false {
+        didSet {
+            if self.preventsCapture {
+                if self.captureProtectedContentLayer == nil, let cmSampleBuffer = self.sampleBuffer {
+                    let captureProtectedContentLayer = CaptureProtectedContentLayer()
+                    captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                    self.layer?.contents = nil
+
+                    captureProtectedContentLayer.frame = self.bounds
+                    if #available(macOS 10.15, *) {
+                        captureProtectedContentLayer.preventsCapture = true
+                    }
+                    
+                    self.layer?.addSublayer(captureProtectedContentLayer)
+                    
+                    self.captureProtectedContentLayer = captureProtectedContentLayer
+                }
+            } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                self.captureProtectedContentLayer = nil
+                captureProtectedContentLayer.removeFromSuperlayer()
+                self.layer?.contents = self.image
+            }
+        }
+    }
+
+    
 }
 
 class MGalleryItem: NSObject, Comparable, Identifiable {
@@ -575,6 +647,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
         let image = combineLatest(self.image.get() |> map { $0.value }, view.get()) |> map { [weak self] value, view  in
             guard let `self` = self else {return}
+            
+            if let view = view as? MGalleryItemView {
+                view.preventsCapture = entry.isProtected
+            }
             view.layer?.contents = value.image
             
             if !first && !self.disableAnimations {

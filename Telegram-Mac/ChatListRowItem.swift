@@ -939,31 +939,52 @@ class ChatListRowItem: TableRowItem {
                     }
                 }
                 
-                let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
-                _ = contentImageFillSize
                 let isSecret: Bool
                 isSecret = renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
                 
+                var contentImageSpecs = self.contentImageSpecs
+                let contentImageSize = self.contentImageSize
+                
                 if draft == nil, !isSecret, forumTopicItems.isEmpty {
+                    var index: Int32 = 0
+                    let insert:(Message, Media, Bool)->Void = { message, media, increment in
+                        var message = message
+                        if increment {
+                            message = message.withUpdatedId(.init(peerId: message.id.peerId, namespace: message.id.namespace, id: message.id.id + index))
+                        }
+                        if let image = media as? TelegramMediaImage {
+                            if let _ = largestImageRepresentation(image.representations) {
+                                let fitSize = contentImageSize
+                                contentImageSpecs.append((message, image, fitSize))
+                            }
+                        } else if let file = media as? TelegramMediaFile {
+                            if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
+                                let fitSize = contentImageSize
+                                contentImageSpecs.append((message, file, fitSize))
+                            }
+                        }
+                        index += 1
+                    }
+                    
                     for message in messages {
                         inner: for media in message.media {
-                            if !message.containsSecretMedia && !message.isMediaSpoilered {
-                                if let image = media as? TelegramMediaImage {
-                                    if let _ = largestImageRepresentation(image.representations) {
-                                        let fitSize = contentImageSize
-                                        contentImageSpecs.append((message, image, fitSize))
+                            if let media = media as? TelegramMediaPaidContent {
+                                for extended in media.extendedMedia {
+                                    switch extended {
+                                    case let .preview(dimensions, immediateThumbnailData, _):
+                                        if let immediateThumbnailData, let dimensions {
+                                            insert(message, TelegramMediaImage(dimension: dimensions, immediateThumbnailData: immediateThumbnailData), true)
+                                        }
+                                    case let .full(media):
+                                        insert(message, media, true)
                                     }
-                                    break inner
-                                } else if let file = media as? TelegramMediaFile {
-                                    if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
-                                        let fitSize = contentImageSize
-                                        contentImageSpecs.append((message, file, fitSize))
-                                    }
-                                    break inner
                                 }
+                            } else if !message.containsSecretMedia && !message.isMediaSpoilered {
+                                insert(message, media, false)
                             }
                         }
                     }
+                    self.contentImageSpecs = contentImageSpecs
                 }
             }
         }

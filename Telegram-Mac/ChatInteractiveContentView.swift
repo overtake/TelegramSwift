@@ -766,7 +766,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         super.update(with: media, size: size, context: context, parent:parent, table: table, parameters:parameters, positionFlags: positionFlags)
         
-        self.image.preventsCapture = parameters?.isProtected ?? false
+        let isProtected = !isSpoiler && (parameters?.isProtected ?? false)
+        
+        
+        self.image.preventsCapture = isProtected
 
         
         var topLeftRadius: CGFloat = .cornerRadius
@@ -825,7 +828,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     updatedStatusSignal = combineLatest(chatMessagePhotoStatus(account: context.account, photo: image), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
                             if let pendingStatus = pendingStatus.0, parent.forwardInfo == nil || resourceStatus != .Local {
-                                return (.Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)), .Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)))
+                                let progress: Float
+                                progress = pendingStatus.progress.mediaProgress[image.imageId] ?? pendingStatus.progress.progress
+                                return (.Fetching(isActive: true, progress: min(progress, progress * 85 / 100)), .Fetching(isActive: true, progress: min(progress, progress * 85 / 100)))
                             } else {
                                 return (resourceStatus, resourceStatus)
                             }
@@ -862,7 +867,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
                             if let pendingStatus = pendingStatus.0 {
-                                return (.Fetching(isActive: true, progress: pendingStatus.progress), .Fetching(isActive: true, progress: pendingStatus.progress))
+                                let progress: Float
+                                progress = pendingStatus.progress.mediaProgress[file.fileId] ?? pendingStatus.progress.progress
+                                return (.Fetching(isActive: true, progress: progress), .Fetching(isActive: true, progress: progress))
                             } else {
                                 if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
                                     return (.Local, resourceStatus)
@@ -895,11 +902,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal {
+                self.image.ignoreFullyLoad = mediaUpdated
+
                 self.image.setSignal(updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
-                }, isProtected: parameters?.isProtected ?? false)
+                }, isProtected: isProtected)
             }
             
             if let signal = updatedStatusSignal, let parent = parent, let parameters = parameters {
@@ -1031,7 +1040,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
                                 autoplay.mediaPlayer.attachPlayerView(autoplay.view)
                                 autoplay.view.center()
-                                autoplay.view.preventsCapture = parameters?.isProtected ?? false
+                                autoplay.view.preventsCapture = isProtected
                             }
                             
                         } else {

@@ -240,9 +240,8 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                
-                
             }
+            self.parameters[i].isProtected = message.containsSecretMedia || message.isCopyProtected()
         }
         
         if isBubbleFullFilled, layout.messages.count == 1  {

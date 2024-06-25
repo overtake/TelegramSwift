@@ -386,7 +386,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                             if let pendingStatus = pendingStatus.0 {
-                                return .Fetching(isActive: true, progress: pendingStatus.progress)
+                                return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                             } else {
                                 return resourceStatus
                             }

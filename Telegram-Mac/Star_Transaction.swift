@@ -71,10 +71,16 @@ private final class HeaderItem : GeneralRowItem {
             header = strings().starListTransactionPlayMarket
         case .premiumBot:
             header = strings().starListTransactionPremiumBot
+        case .ads:
+            header = strings().starListTransactionAds
         case .unsupported:
             header = strings().starListTransactionUnknown
         case .peer:
-            header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
+            if !transaction.media.isEmpty {
+                header = strings().starsTransactionMediaPurchase
+            } else {
+                header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
+            }
         }
         
         self.headerLayout = .init(.initialize(string: header, color: theme.colors.text, font: .medium(18)), alignment: .center)
@@ -85,7 +91,33 @@ private final class HeaderItem : GeneralRowItem {
         
         self.infoLayout = .init(attr)
         
-        if let desc = transaction.description {
+        
+        if !transaction.media.isEmpty {
+            
+            var description: String = ""
+            
+            let videoCount = transaction.media.filter {
+                $0 is TelegramMediaFile
+            }.count
+            let photoCount = Int(transaction.media.count - videoCount)
+            
+            if photoCount > 0 && videoCount > 0 {
+                description = strings().starsTransferMediaAnd(strings().starsTransferPhotosCountable(photoCount), strings().starsTransferVideosCountable(videoCount))
+            } else if photoCount > 0 {
+                if photoCount > 1 {
+                    description += strings().starsTransferPhotosCountable(photoCount)
+                } else {
+                    description += strings().starsTransferSinglePhoto
+                }
+            } else if videoCount > 0 {
+                if videoCount > 1 {
+                    description += strings().starsTransferVideosCountable(videoCount)
+                } else {
+                    description += strings().starsTransferSingleVideo
+                }
+            }
+            self.descLayout = .init(.initialize(string: description, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        } else if let desc = transaction.description {
             self.descLayout = .init(.initialize(string: desc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         } else {
             self.descLayout = nil
@@ -191,6 +223,7 @@ private final class HeaderView : GeneralContainableRowView {
                 current = view
             } else {
                 current = TransformImageView(frame: NSMakeRect(0, 0, 80, 80))
+                current.preventsCapture = true
                 if #available(macOS 10.15, *) {
                     current.layer?.cornerCurve = .continuous
                 }
@@ -208,7 +241,7 @@ private final class HeaderView : GeneralContainableRowView {
             }
 
             if let updateImageSignal {
-                current.setSignal(updateImageSignal)
+                current.setSignal(updateImageSignal, isProtected: true)
             }
             
             var dimensions: NSSize = current.frame.size
@@ -295,6 +328,8 @@ private final class HeaderView : GeneralContainableRowView {
                 current.image = NSImage(resource: .iconStarTransactionPreviewPremiumBot).precomposed()
             case .unsupported:
                 current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
+            case .ads:
+                current.image = NSImage(resource: .iconStarTransactionPreviewFragment).precomposed()
             }
             current.setFrameSize(NSMakeSize(80, 80))
         } else if let view = self.outgoingView {
@@ -419,7 +454,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.openPeer(peer.id)
         }
         
-        rows.append(.init(left: .init(.initialize(string: strings().starTransactionTo, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+        let fromText: String
+        if peer._asPeer().isUser {
+            fromText = strings().starTransactionFrom
+        } else {
+            fromText = strings().starTransactionTo
+        }
+        
+        rows.append(.init(left: .init(.initialize(string: fromText, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
             let control: AvatarControl
             if let previous = previous as? AvatarControl {
                 control = previous

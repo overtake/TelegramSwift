@@ -46,8 +46,30 @@ private final class HeaderItem : GeneralRowItem {
         switch request.type {
         case .bot:
             infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
-        case .paidMedia(let telegramMediaImage):
-            infoAttr.append(string: strings().starPurchasePaidMediaText(strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
+        case let .paidMedia(_, count):
+            
+            var description: String = ""
+            
+            let photoCount = Int(count.photoCount)
+            let videoCount = Int(count.videoCount)
+            
+            if photoCount > 0 && videoCount > 0 {
+                description = strings().starsTransferMediaAnd("**\(strings().starsTransferPhotosCountable(photoCount))**", "**\(strings().starsTransferVideosCountable(videoCount))**")
+            } else if photoCount > 0 {
+                if photoCount > 1 {
+                    description += "**\(strings().starsTransferPhotosCountable(photoCount))**"
+                } else {
+                    description += "**\(strings().starsTransferSinglePhoto)**"
+                }
+            } else if videoCount > 0 {
+                if videoCount > 1 {
+                    description += "**\(strings().starsTransferVideosCountable(videoCount))**"
+                } else {
+                    description += "**\(strings().starsTransferSingleVideo)**"
+                }
+            }
+            
+            infoAttr.append(string: strings().starPurchasePaidMediaText(description, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
         }
         infoAttr.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(infoAttr, alignment: .center)
@@ -92,7 +114,7 @@ private final class AcceptView : Control {
         let attr = NSMutableAttributedString()
         
         attr.append(string: strings().starPurchasePay("\(clown)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
-        attr.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: theme.colors.underSelectedColor, resize: false), for: clown)
+        attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: clown)
         
         let layout = TextViewLayout(attr)
         layout.measure(width: item.width - 60)
@@ -271,7 +293,7 @@ private final class HeaderItemView : GeneralContainableRowView {
                 addSubview(current)
                 self.paidPreview = current
             }
-            current.update(image: image, count: count, context: item.context)
+            current.update(image: image, count: Int(count.total), context: item.context)
         } else if let photo = item.request.invoice.photo {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
@@ -423,8 +445,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 }
 
 enum StarPurchaseType : Equatable {
+    
+    struct PaidMediaCount: Equatable {
+        let photoCount: Int
+        let videoCount: Int
+        
+        var total: Int {
+            return photoCount + videoCount
+        }
+    }
+    
     case bot
-    case paidMedia(TelegramMediaImage, Int)
+    case paidMedia(TelegramMediaImage, PaidMediaCount)
 }
 
 func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
