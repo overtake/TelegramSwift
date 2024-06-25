@@ -541,7 +541,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     if currency == XTR {
-                        attributedString.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: grayTextColor, resize: false), for: XTR)
+                        attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: XTR)
                     }
                 case let .botSentSecureValues(types):
                     let permissions = types.map({$0.rawValue}).joined(separator: ", ")

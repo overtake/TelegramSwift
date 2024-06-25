@@ -38,12 +38,13 @@ final class Fragment_BalanceRowItem : GeneralRowItem {
     
     let canWithdraw: Bool
     let nextWithdrawalTimestamp: Int32?
-
+    let buyAds: (()->Void)?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, balance: Balance, canWithdraw: Bool, nextWithdrawalTimestamp: Int32? = nil, viewType: GeneralViewType, transfer:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, balance: Balance, canWithdraw: Bool, buyAds: (()->Void)? = nil, nextWithdrawalTimestamp: Int32? = nil, viewType: GeneralViewType, transfer:@escaping()->Void) {
         self.context = context
         self.balance = balance
         self.transfer = transfer
+        self.buyAds = buyAds
         self.canWithdraw = canWithdraw
         self.nextWithdrawalTimestamp = nextWithdrawalTimestamp
         let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.amount, currency: balance.currency.rawValue).prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
@@ -105,6 +106,7 @@ private final class BalanceRowView : GeneralContainableRowView {
     private let tonBalanceContainer = View()
     private let tonView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 46, 46))
     private let usdBalanceView = TextView()
+    
     
     private final class WithdrawAction: Control {
         
@@ -225,6 +227,7 @@ private final class BalanceRowView : GeneralContainableRowView {
     }
     
     private var withdrawAction: WithdrawAction?
+    private var adsAction: WithdrawAction?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -256,10 +259,17 @@ private final class BalanceRowView : GeneralContainableRowView {
         
         var withdrawY: CGFloat = containerView.frame.height - item.viewType.innerInset.left
         
+        var actionX: CGFloat = item.viewType.innerInset.left
+        
         if let withdrawAction {
             withdrawY -= withdrawAction.frame.height
-            transition.updateFrame(view: withdrawAction, frame: CGRect(origin: NSMakePoint(item.viewType.innerInset.left, withdrawY), size: withdrawAction.frame.size))
-            withdrawY -= item.viewType.innerInset.left
+            transition.updateFrame(view: withdrawAction, frame: CGRect(origin: NSMakePoint(actionX, withdrawY), size: withdrawAction.frame.size))
+            
+            actionX += withdrawAction.frame.width + 10
+        }
+        
+        if let adsAction {
+            transition.updateFrame(view: adsAction, frame: CGRect(origin: NSMakePoint(actionX, withdrawY), size: adsAction.frame.size))
         }
     }
     
@@ -290,16 +300,46 @@ private final class BalanceRowView : GeneralContainableRowView {
             self.withdrawAction = currentAction
         }
         
-        let blockWidth = item.blockWidth - item.viewType.innerInset.left - item.viewType.innerInset.right
+        if item.buyAds != nil {
+            let currentAction: WithdrawAction
+            if let adsAction {
+                currentAction = adsAction
+            } else {
+                currentAction = WithdrawAction(frame: .zero)
+                currentAction.scaleOnClick = true
+                addSubview(currentAction)
+                self.adsAction = currentAction
+            }
+        } else if let view = self.adsAction {
+            performSubviewRemoval(view, animated: animated)
+            self.adsAction = nil
+        }
+        
+        var blockWidth = item.blockWidth - item.viewType.innerInset.left - item.viewType.innerInset.right
+        
+        if adsAction != nil {
+            blockWidth = (blockWidth - 10) / 2
+        }
         
         currentAction.setFrameSize(NSMakeSize(blockWidth, 40))
-        
+        adsAction?.setFrameSize(NSMakeSize(blockWidth, 40))
+
         currentAction.set(targetTime: item.nextWithdrawalTimestamp, text: item.withdrawText, width: blockWidth, context: item.context, animated: animated)
         currentAction.isEnabled = item.canWithdraw && item.balance.amount > 0
+        
+        
+        if let adsAction {
+            adsAction.set(targetTime: nil, text: strings().starsBalanceBuyAds, width: blockWidth, context: item.context, animated: animated)
+        }
 
         currentAction.removeAllHandlers()
         currentAction.set(handler: { [weak item] _ in
             item?.transfer()
+        }, for: .Click)
+        
+        adsAction?.removeAllHandlers()
+        adsAction?.set(handler: { [weak item] _ in
+            item?.buyAds?()
         }, for: .Click)
         
         updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)

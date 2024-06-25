@@ -8453,6 +8453,8 @@ public final class L10n {
   public static var fragmentAdsInfoOption3Info: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Info") }
   /// Can Be Removed
   public static var fragmentAdsInfoOption3Title: String  { return L10n.tr("Localizable", "Fragment.AdsInfo.Option3.Title") }
+  /// Stars Amount
+  public static var fragmentStarAmountPlaceholder: String  { return L10n.tr("Localizable", "Fragment.Star.AmountPlaceholder") }
   /// Withdraw
   public static var fragmentStarWithdraw: String  { return L10n.tr("Localizable", "Fragment.Star.Withdraw") }
   /// Withdraw %@
@@ -11077,6 +11079,8 @@ public final class L10n {
   public static func paidMediaUnlockForZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PaidMedia.UnlockFor_zero", p1)
   }
+  /// Purchased
+  public static var paidMediaStatusPurchased: String  { return L10n.tr("Localizable", "PaidMedia.Status.Purchased") }
   /// Auto-Lock
   public static var passcodeAutolock: String  { return L10n.tr("Localizable", "Passcode.Autolock") }
   /// Change passcode
@@ -15739,6 +15743,8 @@ public final class L10n {
   }
   /// Show More Options
   public static var starListItemShowMore: String  { return L10n.tr("Localizable", "Star.List.Item.ShowMore") }
+  /// Ads Platform
+  public static var starListTransactionAds: String  { return L10n.tr("Localizable", "Star.List.Transaction.Ads") }
   /// App Store
   public static var starListTransactionAppStore: String  { return L10n.tr("Localizable", "Star.List.Transaction.AppStore") }
   /// Fragment
@@ -15787,9 +15793,9 @@ public final class L10n {
   public static func starPurchasePaidMediaSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.PaidMedia.Success", p1)
   }
-  /// Do you want to unlock media for **%3$@**?
-  public static func starPurchasePaidMediaText(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Star.Purchase.PaidMedia.Text", p1)
+  /// Do you want to unlock %1$@ in **%2$@** **%3$@**?
+  public static func starPurchasePaidMediaText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Purchase.PaidMedia.Text", p1, p2, p3)
   }
   /// %d
   public static func starPurchaseTextInCountable(_ p1: Int) -> String {
@@ -15823,6 +15829,8 @@ public final class L10n {
   public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }
   /// Date
   public static var starTransactionDate: String  { return L10n.tr("Localizable", "Star.Transaction.Date") }
+  /// From
+  public static var starTransactionFrom: String  { return L10n.tr("Localizable", "Star.Transaction.From") }
   /// Transaction ID
   public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
   /// Media
@@ -15831,6 +15839,76 @@ public final class L10n {
   public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
   /// Review the [Terms of Services](https://telegram.org) for Stars.
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
+  /// Buy Ads
+  public static var starsBalanceBuyAds: String  { return L10n.tr("Localizable", "Stars.Balance.BuyAds") }
+  /// Media Purchase
+  public static var starsTransactionMediaPurchase: String  { return L10n.tr("Localizable", "Stars.Transaction.MediaPurchase") }
+  /// Stars Top-Up
+  public static var starsTransactionTopUp: String  { return L10n.tr("Localizable", "Stars.Transaction.TopUp") }
+  /// %1$@ and %2$@
+  public static func starsTransferMediaAnd(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.MediaAnd", p1, p2)
+  }
+  /// %d
+  public static func starsTransferPhotosCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_countable", p1)
+  }
+  /// %d photos
+  public static func starsTransferPhotosFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_few", p1)
+  }
+  /// %d photos
+  public static func starsTransferPhotosMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_many", p1)
+  }
+  /// %d photo
+  public static func starsTransferPhotosOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_one", p1)
+  }
+  /// %d photos
+  public static func starsTransferPhotosOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_other", p1)
+  }
+  /// %d photos
+  public static func starsTransferPhotosTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_two", p1)
+  }
+  /// %d photos
+  public static func starsTransferPhotosZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Photos_zero", p1)
+  }
+  /// photo
+  public static var starsTransferSinglePhoto: String  { return L10n.tr("Localizable", "Stars.Transfer.SinglePhoto") }
+  /// video
+  public static var starsTransferSingleVideo: String  { return L10n.tr("Localizable", "Stars.Transfer.SingleVideo") }
+  /// %d
+  public static func starsTransferVideosCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_countable", p1)
+  }
+  /// %d videos
+  public static func starsTransferVideosFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_few", p1)
+  }
+  /// %d videos
+  public static func starsTransferVideosMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_many", p1)
+  }
+  /// %d video
+  public static func starsTransferVideosOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_one", p1)
+  }
+  /// %d videos
+  public static func starsTransferVideosOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_other", p1)
+  }
+  /// %d videos
+  public static func starsTransferVideosTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_two", p1)
+  }
+  /// %d videos
+  public static func starsTransferVideosZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transfer.Videos_zero", p1)
+  }
   /// Boosts
   public static var statsBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts") }
   /// ACTIONS

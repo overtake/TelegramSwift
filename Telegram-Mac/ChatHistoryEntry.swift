@@ -223,8 +223,21 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .MessageEntry(message,_, _,_,_,_,_):
             return message
+        case let .groupedPhotos(entries, _):
+            return nil
         default:
-          return nil
+            return nil
+        }
+    }
+    
+    var firstMessage:Message? {
+        switch self {
+        case let .MessageEntry(message,_, _,_,_,_,_):
+            return message
+        case let .groupedPhotos(entries, _):
+            return entries.first?.message
+        default:
+            return nil
         }
     }
     

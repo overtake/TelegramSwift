@@ -23,6 +23,7 @@ enum Star_TransactionType : Equatable {
         case playmarket
         case premiumbot
         case unknown
+        case ads
     }
     case incoming(Source)
     case outgoing(Source)
@@ -874,6 +875,8 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                     source = .playmarket
                 case .premiumBot:
                     source = .premiumbot
+                case .ads:
+                    source = .ads
                 case .unsupported:
                     source = .unknown
                 }

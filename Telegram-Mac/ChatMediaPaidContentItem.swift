@@ -93,6 +93,7 @@ final class ChatMediaPaidContentItem : ChatRowItem {
     fileprivate let unlockText: TextViewLayout?
     
     fileprivate var parameters:[ChatMediaLayoutParameters] = []
+    fileprivate let badgeLayout: TextViewLayout?
     
     
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
@@ -104,6 +105,20 @@ final class ChatMediaPaidContentItem : ChatRowItem {
             self.isPreview = true
         case .full:
             self.isPreview = false
+        }
+        
+        if !isPreview {
+            let text = NSMutableAttributedString()
+            if messageMainPeer(.init(message))?._asPeer().isAdmin == true {
+                text.append(string: "\(clown) \(media.amount)", color: NSColor(0xffffff), font: .normal(.text))
+                text.insertEmbedded(.embedded(name: XTR_ICON, color: NSColor(0xffffff), resize: false), for: clown)
+            } else {
+                text.append(string: strings().paidMediaStatusPurchased, color: NSColor(0xffffff), font: .normal(.text))
+            }
+            self.badgeLayout = .init(text)
+            self.badgeLayout?.measure(width: .greatestFiniteMagnitude)
+        } else {
+            self.badgeLayout = nil
         }
         
         if isPreview {
@@ -125,7 +140,7 @@ final class ChatMediaPaidContentItem : ChatRowItem {
                 let media: Media
                 switch value {
                 case let .preview(dimensions, immediateThumbnailData, _):
-                    media = TelegramMediaImage(imageId: .init(namespace: 0, id: 0), representations: [.init(dimensions: dimensions ?? .init(maxSize), resource: CloudFileMediaResource(datacenterId: 0, volumeId: 0, localId: 0, secret: 0, size: nil, fileReference: nil), progressiveSizes: [], immediateThumbnailData: immediateThumbnailData)], immediateThumbnailData: immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
+                    media = TelegramMediaImage(dimension: dimensions ?? .init(maxSize), immediateThumbnailData: immediateThumbnailData) 
                 case let .full(_media):
                     media = _media
                 }
@@ -387,7 +402,20 @@ final class ChatMediaPaidContentItem : ChatRowItem {
             return
         }
         let context = self.context
-        let count = self.data.items.count
+        
+        let videoCount = media.extendedMedia.filter {
+            switch $0 {
+            case let .full(media):
+                return media is TelegramMediaFile
+            case let .preview(_, _, videoDuration):
+                return videoDuration != nil
+            }
+        }.count
+        let photosCount = self.data.items.count - videoCount
+        
+        let count = StarPurchaseType.PaidMediaCount(photoCount: photosCount, videoCount: videoCount)
+
+        
         let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .message(messageId)), for: context.window)
 
         _ = signal.startStandalone(next: { invoice in
@@ -495,6 +523,8 @@ private final class Button: Control {
         
         self.scaleOnClick = true
         
+        self.isDynamicColorUpdateLocked = true
+        
         self.textView.userInteractionEnabled = false
         self.textView.textView.isSelectable = false
         self.layer?.cornerRadius = 15
@@ -528,6 +558,31 @@ private final class Button: Control {
     }
 }
 
+private final class BadgeView : VisualEffect {
+    fileprivate let textView = InteractiveTextView()
+    required override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        
+
+        textView.userInteractionEnabled = false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(textLayout: TextViewLayout, context: AccountContext) {
+        self.textView.set(text: textLayout, context: context)
+        setFrameSize(NSMakeSize(textLayout.layoutSize.width + 12, textLayout.layoutSize.height + 4))
+        self.layer?.cornerRadius = frame.height / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        self.textView.center()
+    }
+}
 
 private final class ChatPaidMediaView: ChatRowView {
     
@@ -535,6 +590,7 @@ private final class ChatPaidMediaView: ChatRowView {
     private var contents: [ChatMediaContentView] = []
     
     private var unlockView: Button?
+    private var badgeView: BadgeView?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -651,6 +707,25 @@ private final class ChatPaidMediaView: ChatRowView {
             }
         }
         
+        if let layout = item.badgeLayout {
+            let current: BadgeView
+            if let view = self.badgeView {
+                current = view
+            } else {
+                current = .init(frame: .zero)
+                self.badgeView = current
+            }
+            current.update(textLayout: layout, context: item.context)
+            current.setFrameOrigin(NSMakePoint(item.contentSize.width - current.frame.width - 5, 5))
+            addSubview(current)
+            
+            current.bgColor = item.presentation.blurServiceColor
+
+
+        } else if let view = self.badgeView {
+            performSubviewRemoval(view, animated: animated)
+            self.badgeView = nil
+        }
     }
     
     override func contentFrame(_ item: ChatRowItem) -> NSRect {
@@ -720,6 +795,16 @@ private final class ChatPaidMediaView: ChatRowView {
                 view.addSubview(rightView)
             }
             
+            if let badgeView, let textLayout = badgeView.textView.textView.textLayout {
+                let newBadge = BadgeView(frame: NSZeroRect)
+                newBadge.update(textLayout: textLayout, context: item.context)
+                
+                var rect = badgeView.convert(badgeView.bounds, to: contentNode)
+                rect.origin.y = contentNode.frame.height - rect.maxY
+                newBadge.frame = rect
+                
+                view.addSubview(newBadge)
+            }
             
             contentNode.addAccesoryOnCopiedView(view: view)
         default:

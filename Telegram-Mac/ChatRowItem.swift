@@ -1306,15 +1306,15 @@ class ChatRowItem: TableRowItem {
                 }
             }
             
-            if message.groupInfo != nil {
-                switch entry {
-                case .groupedPhotos(let entries, _):
-                    let prettyCount = entries.filter { $0.message?.anyMedia?.isInteractiveMedia ?? false }.count
-                    return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1 || prettyCount != entries.count
-                default:
-                    return true
-                }
-            }
+//            if message.groupInfo != nil {
+//                switch entry {
+//                case .groupedPhotos(let entries, _):
+//                    let prettyCount = entries.filter { $0.message?.anyMedia?.isInteractiveMedia ?? false }.count
+//                    return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1 || prettyCount != entries.count
+//                default:
+//                    return true
+//                }
+//            }
         
         } else if let message = message {
             if entry.additionalData.eventLog != nil {
@@ -1672,36 +1672,16 @@ class ChatRowItem: TableRowItem {
         self._avatarSynchronousValue = Thread.isMainThread
         self.messageEffect = object.additionalData.messageEffect
         
-        let activity: PeerNameColors.Colors
-        let pattern: Int64?
-        let isIncoming: Bool
-        if let message = object.message {
-            activity = theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble)
-            pattern = theme.chat.webPreviewPattern(message)
-            isIncoming = message.isIncoming(context.account, object.renderType == .bubble)
-        } else {
-            activity = .init(main: .clear)
-            pattern = nil
-            isIncoming = false
-        }
-        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: activity, link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType, pattern: pattern)
         
         var message: Message?
         var isRead: Bool = true
         var itemType: ChatItemType = .Full(rank: nil, header: .normal)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
+        
         var object = object
-        
-        if let adAttribute = object.message?.adAttribute {
-            var bp = 0
-            bp += 1
-        }
-        
-        var hiddenFwdTooltip:(()->Void)? = nil
-        
         var captionMessage: Message? = object.message
-        
+
         var hasGroupCaption: Bool = object.message?.text.isEmpty == false
         if case let .groupedPhotos(entries, _) = object {
             object = entries.filter({!$0.message!.media.isEmpty}).first!
@@ -1715,12 +1695,14 @@ class ChatRowItem: TableRowItem {
                 if !entry.message!.text.isEmpty {
                     captionMessage = entry.message!
                     hasGroupCaption = true
+                    break loop
                 }
             }
             if captionMessage == nil {
                 captionMessage = object.message!
             }
         }
+
         
         if case let .MessageEntry(_message, _, _isRead, _renderType, _itemType, _fwdType, _) = object {
             message = _message
@@ -1735,15 +1717,31 @@ class ChatRowItem: TableRowItem {
             renderType = _renderType
         }
         
-        var stateOverlayTextColor: NSColor {
-            if let media = message?.anyMedia, media.isInteractiveMedia || media is TelegramMediaMap {
-                 return NSColor(0xffffff)
-            } else {
-                return theme.chatServiceItemTextColor
-            }
+        let activity: PeerNameColors.Colors
+        let pattern: Int64?
+        let isIncoming: Bool
+        if let message = object.firstMessage {
+            activity = theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble)
+            pattern = theme.chat.webPreviewPattern(message)
+            isIncoming = message.isIncoming(context.account, object.renderType == .bubble)
+        } else {
+            activity = .init(main: .clear)
+            pattern = nil
+            isIncoming = false
         }
+        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: activity, link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType, pattern: pattern)
+        
+       
+        
+        
+        var hiddenFwdTooltip:(()->Void)? = nil
+        
+       
+        
+        
         
         var isStateOverlayLayout: Bool {
+            
             if renderType == .bubble, let message = captionMessage, let media = message.anyMedia {
                 if let file = media as? TelegramMediaFile {
                     if file.isStaticSticker || file.isAnimatedSticker || file.isVideoSticker  {
@@ -1805,6 +1803,14 @@ class ChatRowItem: TableRowItem {
                 return true
             }
             return false
+        }
+        
+        var stateOverlayTextColor: NSColor {
+            if let media = message?.anyMedia, media.isInteractiveMedia || media is TelegramMediaMap {
+                 return NSColor(0xffffff)
+            } else {
+                return theme.chatServiceItemTextColor
+            }
         }
         
         if message?.id.peerId == context.peerId {

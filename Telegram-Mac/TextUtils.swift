@@ -92,10 +92,21 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 messageText = strings().messageGiveawayStarted
             }
         case let media as TelegramMediaPaidContent:
-            //TODOLANG
             if message.text.isEmpty {
-                messageText = "Paid Media"
-            } 
+                let hasVideo = media.extendedMedia.contains {
+                    switch $0 {
+                    case let .full(media):
+                        return media is TelegramMediaFile
+                    case let .preview(_, _, videoDuration):
+                        return videoDuration != nil
+                    }
+                }
+                if hasVideo {
+                    messageText = strings().chatListVideo1Countable(media.extendedMedia.count)
+                } else {
+                    messageText = strings().chatListPhoto1Countable(media.extendedMedia.count)
+                }
+            }
         case _ as TelegramMediaGiveawayResults:
             messageText = strings().messageGiveawayResult
         case let fileMedia as TelegramMediaFile:
@@ -370,7 +381,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             
             if case let .paymentSent(currency, _, _, _, _) = action.action {
                 if currency == XTR {
-                    attributedText.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: theme.chatList.grayTextColor, resize: false), for: XTR)
+                    attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
                 }
             }
             

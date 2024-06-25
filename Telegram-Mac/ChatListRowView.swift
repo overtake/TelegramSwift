@@ -741,6 +741,11 @@ private final class ChatListMediaPreviewView: View {
     func updateLayout(size: CGSize) {
         let frame = CGRect(origin: CGPoint(), size: size)
         let media = self.media
+        
+        let isProtected = self.message.containsSecretMedia || self.message.isCopyProtected() || self.message.paidContent != nil
+        
+        self.imageView.preventsCapture = isProtected
+        
         var dimensions = CGSize(width: 100.0, height: 100.0)
         var signal: Signal<ImageDataTransformation, NoError>? = nil
         if let image = self.media as? TelegramMediaImage {
@@ -792,7 +797,7 @@ private final class ChatListMediaPreviewView: View {
                     self?.shimmer?.removeFromSuperlayer()
                     self?.shimmer = nil
                 }
-            })
+            }, isProtected: isProtected)
         }
         
         

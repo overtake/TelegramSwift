@@ -1102,6 +1102,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         var oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
                         oldRect.origin = oldRect.origin.offsetBy(dx: -oldScreen.frame.minX, dy: -oldScreen.frame.minY)
                         selectedView?.contentSize = item.sizeValue.fitted(contentFrame.size)
+                        
+                        var value = value
+                        
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false

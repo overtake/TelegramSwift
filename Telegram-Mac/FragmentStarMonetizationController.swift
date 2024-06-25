@@ -85,7 +85,7 @@ private struct State : Equatable {
     var transactions: [Star_Transaction] = []
         
     var transactionsState: StarsTransactionsContext.State?
-    
+    var adsUrl: String?
     var inputState: Updated_ChatTextInputState = .init()
     
     
@@ -226,7 +226,11 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
+                if let url = state.adsUrl {
+                    arguments.executeLink(url)
+                }
+            }, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
         let text: String
@@ -237,8 +241,8 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         index += 1
         
     }
-//    
-//    
+//
+//
     if !state.transactions.isEmpty, let transactionsState = state.transactionsState {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -318,7 +322,9 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
     
     contextObject.transactions.loadMore()
     
-    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.transactions.state).startStrict(next: { revenue, transactions in
+    let adsUrl: Signal<String?, NoError> = .single(nil) |> then(context.engine.peers.requestStarsRevenueAdsAccountlUrl(peerId: peerId))
+    
+    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.transactions.state, adsUrl).startStrict(next: { revenue, transactions, adsUrl in
         if let revenue = revenue.stats {
             updateState { current in
                 var current = current
@@ -330,6 +336,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                 current.config_withdraw = revenue.balances.withdrawEnabled
                 current.nextWithdrawalTimestamp = revenue.balances.nextWithdrawalTimestamp
                 current.transactionsState = transactions
+                current.adsUrl = adsUrl
                 
                 current.revenueGraph = revenue.revenueGraph
                 current.transactions = transactions.transactions.map { value in
@@ -351,6 +358,8 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                         source = .premiumbot
                     case .unsupported:
                         source = .unknown
+                    case .ads:
+                        source = .ads
                     }
                     if incoming {
                         type = .incoming(source)
@@ -548,7 +557,7 @@ private final class WithdrawInputView : GeneralRowView {
             let attr = NSMutableAttributedString()
             
             attr.append(string: strings().fragmentStarWithdrawInput("\(clown)\(item.inputState.inputText.string)") , color: theme.colors.underSelectedColor, font: .medium(.text))
-            attr.insertEmbedded(.embedded(name: "Icon_Peer_Premium", color: theme.colors.underSelectedColor, resize: false), for: clown)
+            attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: clown)
             
             let layout = TextViewLayout(attr)
             layout.measure(width: item.width - 60)
@@ -652,7 +661,7 @@ private final class WithdrawInputView : GeneralRowView {
             self.starView.set(text: layout, context: item.arguments.context)
 
             
-            inputView.placeholder = "Stars Amount"
+            inputView.placeholder = strings().fragmentStarAmountPlaceholder
             
             inputView.context = item.arguments.context
             inputView.interactions.max_height = 500
