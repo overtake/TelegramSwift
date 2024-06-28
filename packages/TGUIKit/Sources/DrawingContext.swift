@@ -31,7 +31,7 @@ public final class ImageRenderData {
 }
 
 
-public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
+public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = System.backingScale) -> CGImage? {
     if size.width.isZero || size.height.isZero {
         return nil
     }
@@ -43,7 +43,7 @@ public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) 
 
 }
 
-public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, scale: CGFloat = 2.0) -> CGImage? {
+public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, scale: CGFloat = System.backingScale) -> CGImage? {
     let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
     let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
     let length = bytesPerRow * Int(scaledSize.height)
@@ -75,7 +75,7 @@ public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGConte
     return image
 }
 
-public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = 2.0, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
+public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = System.backingScale, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
     if size.width.isZero || size.height.isZero {
         return nil
     }

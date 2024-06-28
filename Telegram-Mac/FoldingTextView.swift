@@ -585,7 +585,7 @@ private final class WrapperView : View {
                     let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: emoji.color ?? textColor)
                     validIds.append(id)
                     
-                    let rect = item.rect.insetBy(dx: -2, dy: -2)
+                    let rect = item.rect.insetBy(dx: 0, dy: 0)
                     
                     let view: InlineStickerItemLayer
                     if let current = itemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size && current.textColor == id.color {

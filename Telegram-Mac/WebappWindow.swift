@@ -15,27 +15,58 @@ private final class Webapp : Window {
     fileprivate let controller: WebpageModalController
     init(controller: WebpageModalController) {
         self.controller = controller
-        super.init(contentRect: .zero, styleMask: [.fullSizeContentView, .utilityWindow, .borderless], backing: .buffered, defer: true)
-        self.contentView?.autoresizesSubviews = false
-        self.contentView?.addSubview(controller.view)
-        self.isOpaque = false
-        self.backgroundColor = .clear
+        let screen = NSScreen.main!
+        
+        self.controller.viewWillAppear(true)
+        self.controller.measure(size: screen.frame.size)
+        
+        let rect = screen.frame.focus(controller.view.frame.insetBy(dx: -10, dy: -10).size)
+        
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless], backing: .buffered, defer: true)
+        
         self.contentView?.wantsLayer = true
-        self.contentView?.layer?.cornerRadius = 10
+        self.contentView?.autoresizesSubviews = false
+        
+        
+        
+        controller.view.layer?.cornerRadius = 10
+        
+       
+        self.contentView?.addSubview(controller.view)
+        
+        self.isOpaque = false
+        self.hasShadow = false
+        self.backgroundColor = NSColor.clear
+       // self.contentView?.layer?.cornerRadius = 10
         self.isMovableByWindowBackground = true
+        
+        self.titlebarAppearsTransparent = true
+        self.titleVisibility = .hidden
+
     }
     
     func show() {
-        guard let screen = NSScreen.main else {
-            return
-        }
+
+        let shadow = SimpleShapeLayer()
+        shadow.cornerRadius = 10
+        shadow.masksToBounds = false
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.4).cgColor
+        shadow.shadowOffset = CGSize(width: 0.0, height: 1)
+        shadow.shadowRadius = 5
+        shadow.shadowOpacity = 0.7
+        shadow.fillColor = controller.view.background.cgColor
+        shadow.path = CGPath(roundedRect: controller.view.bounds, cornerWidth: 10, cornerHeight: 10, transform: nil)
+        shadow.frame = self.controller.frame
         
-        self.controller.measure(size: screen.frame.size)
-        self.setFrame(screen.frame.focus(controller.view.frame.size), display: true)
+        self.contentView?.layer?.addSublayer(shadow)
+        
         self.makeKeyAndOrderFront(nil)
         
-        self.controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-        self.controller.view.layer?.animateScaleSpring(from: 0.8, to: 1.0, duration: 0.2)
+        self.contentView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, removeOnCompletion: false)
+        self.contentView?.layer?.animateScaleSpring(from: 0.8, to: 1.0, duration: 0.2)
+        
+        
+        self.controller.viewDidAppear(true)
     }
     
     deinit {

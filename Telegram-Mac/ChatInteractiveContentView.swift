@@ -13,7 +13,7 @@ import TelegramCore
 import TextRecognizing
 import TGUIKit
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 extension AutoremoveTimeoutMessageAttribute : Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {

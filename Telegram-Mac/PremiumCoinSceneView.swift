@@ -22,6 +22,12 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
     private let tapDelay = MetaDisposable()
     private let appearanceDelay = MetaDisposable()
     
+    var sceneBackground: NSColor = .clear {
+        didSet {
+            sceneView.backgroundColor = sceneBackground
+        }
+    }
+    
     deinit {
         appearanceDelay.dispose()
         tapDelay.dispose()

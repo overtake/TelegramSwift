@@ -303,7 +303,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
             if let textInset = thumb.textInset {
                 textXAdditional = textInset
             } else {
-                textXAdditional = thumb.thumb.backingSize.width + 10
+                textXAdditional = thumb.thumb.systemSize.width + 10
             }
         }
         if let _ = self.selectLeftControl {
@@ -321,7 +321,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 super.draw(layer, in: ctx)
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
-                    var f = focus(thumb.thumb.backingSize)
+                    var f = focus(thumb.thumb.systemSize)
                     if item.descLayout != nil {
                         f.origin.y = 11
                     }
@@ -342,7 +342,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
             case let .modern(position, insets):
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
-                    var f = focus(thumb.thumb.backingSize)
+                    var f = focus(thumb.thumb.systemSize)
                     
                     let icon = thumb.thumb
                     var x: CGFloat = insets.left + (thumb.thumbInset ?? 0)
@@ -372,7 +372,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 }
                                 
                 if let afterNameImage = item.afterNameImage {
-                    ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.backingSize.width, height: afterNameImage.backingSize.height))
+                    ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.systemSize.width, height: afterNameImage.systemSize.height))
                 }
                 
                

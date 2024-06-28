@@ -129,7 +129,9 @@ let emojiesInstance:[EmojiSegment:[String]] = {
     var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
     
     let resource:URL?
-    if #available(OSX 14.0, *) {
+    if #available(OSX 14.4, *) {
+        resource = Bundle.main.url(forResource:"emoji144", withExtension:"txt")
+    } else if #available(OSX 14.0, *) {
         resource = Bundle.main.url(forResource:"emoji14", withExtension:"txt")
     } else if #available(OSX 11.1, *) {
         resource = Bundle.main.url(forResource:"emoji1016", withExtension:"txt")
@@ -1825,6 +1827,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
     
+    private let onStage = ValuePromise<Bool>(ignoreRepeated: true)
+    
     private var groupEmojiPack: Signal<(StickerPackCollectionInfo, [StickerPackItem])?, NoError> = .single(nil)
 
     
@@ -2381,7 +2385,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
             }))
         default:
-            actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions in
+            let signal = combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue, onStage.get()) |> filter { $0.12 }
+            actionsDisposable.add(signal.start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions, _ in
                 
                             
                 var featuredStatusEmoji: OrderedItemListView?
@@ -2599,6 +2604,12 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.scrollOnAppear?()
+        onStage.set(true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        onStage.set(false)
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {

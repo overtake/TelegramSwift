@@ -3,7 +3,7 @@ import SwiftSignalKit
 import Postbox
 import CoreMedia
 import TelegramCore
-import MediaPlayer
+import TelegramMediaPlayer
 import Postbox
 import AppKit
 

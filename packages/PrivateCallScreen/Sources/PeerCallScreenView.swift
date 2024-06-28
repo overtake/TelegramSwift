@@ -734,7 +734,14 @@ final class PeerCallScreenView : Control {
             for view in self.tooltipsViews {
                 view.removeFromSuperview()
             }
-            self.subviews.append(contentsOf: self.tooltipsViews)
+            let modal = subviews.firstIndex(where: {
+                $0.className.hasSuffix("ModalBackground")
+            })
+            if let modal = modal {
+                self.subviews.insert(contentsOf: self.tooltipsViews, at: modal)
+            } else {
+                self.subviews.append(contentsOf: self.tooltipsViews)
+            }
             CATransaction.commit()
             
             self.tooltips = tooltips
@@ -850,7 +857,18 @@ final class PeerCallScreenView : Control {
                 isNew = false
             } else {
                 current = SecretKeyView(frame: NSMakeRect(0, 0, 100, 25))
-                self.addSubview(current, positioned: .above, relativeTo: revealedKey)
+                if let revealedKey {
+                    self.addSubview(current, positioned: .above, relativeTo: revealedKey)
+                } else {
+                    let modal = subviews.firstIndex(where: {
+                        $0.className.hasSuffix("ModalBackground")
+                    })
+                    if let modal = modal {
+                        self.subviews.insert(current, at: modal)
+                    } else {
+                        self.addSubview(current)
+                    }
+                }
                 self.secretView = current
                 isNew = true
             }

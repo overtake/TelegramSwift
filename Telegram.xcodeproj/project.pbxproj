@@ -148,6 +148,8 @@
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
 		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
+		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
+		273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273C04042C2B75E900AF2751 /* MediaPlayer.framework */; };
 		2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */ = {isa = PBXBuildFile; fileRef = 2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */; };
 		2744018526E6344E0035C55D /* WidgetRecentPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */; };
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
@@ -562,6 +564,7 @@
 		27ABFD302858C838006C3301 /* badge.scn in Resources */ = {isa = PBXBuildFile; fileRef = 27ABFD2E2858C838006C3301 /* badge.scn */; };
 		27ABFD312858C838006C3301 /* badgestar.png in Resources */ = {isa = PBXBuildFile; fileRef = 27ABFD2F2858C838006C3301 /* badgestar.png */; };
 		27ABFD332858DF9E006C3301 /* PremiumStickersDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */; };
+		27B4A8F12C2DA0340000F3DF /* emoji144.txt in Resources */ = {isa = PBXBuildFile; fileRef = 27B4A8F02C2DA0340000F3DF /* emoji144.txt */; };
 		27B6AF8E2B4D6E0B001D0983 /* MessagesPrivacyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */; };
 		27B6AFA72B4FB317001D0983 /* menu_tag_filter.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */; };
 		27B6AFA82B4FB317001D0983 /* menu_tag_remove.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B6AFA62B4FB317001D0983 /* menu_tag_remove.tgs */; };
@@ -732,7 +735,6 @@
 		27D48B612A78F6E800721995 /* StoryViewMediaAreaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */; };
 		27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B622A790BA900721995 /* LocationPreviewController.swift */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
-		27D500EB2B4805BE00587233 /* MediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 27D500EA2B4805BE00587233 /* MediaPlayer */; };
 		27D604292948A2DD00588C21 /* menu_send_spoiler.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */; };
 		27D6042B294B756700588C21 /* DataStorageExceptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042A294B756700588C21 /* DataStorageExceptions.swift */; };
 		27D6042F29530E8B00588C21 /* StoragePieChartItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042E29530E8B00588C21 /* StoragePieChartItem.swift */; };
@@ -1729,6 +1731,7 @@
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
 		2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRequestJoinRowItem.swift; sourceTree = "<group>"; };
+		273C04042C2B75E900AF2751 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
 		2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRecentPeersController.swift; sourceTree = "<group>"; };
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
@@ -2117,6 +2120,7 @@
 		27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStickersDemoView.swift; sourceTree = "<group>"; };
 		27B15D2E259B2DA700C7F280 /* DesktopCaptureListUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListUI.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
+		27B4A8F02C2DA0340000F3DF /* emoji144.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji144.txt; sourceTree = "<group>"; };
 		27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesPrivacyController.swift; sourceTree = "<group>"; };
 		27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_tag_filter.tgs; sourceTree = "<group>"; };
 		27B6AFA62B4FB317001D0983 /* menu_tag_remove.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_tag_remove.tgs; sourceTree = "<group>"; };
@@ -2459,8 +2463,6 @@
 		9F4EEF8521D4FA68002C3B33 /* InstantPageArticleItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageArticleItem.swift; sourceTree = "<group>"; };
 		9F4EEF8721D515C5002C3B33 /* InstantPageStoredState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPageStoredState.swift; sourceTree = "<group>"; };
 		9F52E74E2074C12B0048791C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		9F52E7502074C16D0048791C /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/MainMenu.strings; sourceTree = "<group>"; };
-		9F52E7522074C1710048791C /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		9F52F5192130286E006FC0B5 /* LocationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationRequest.swift; sourceTree = "<group>"; };
 		9F580BE420A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatRecorderOverlayWindow.swift; sourceTree = "<group>"; };
 		9F62AE82202D8759007FB557 /* FetchMediaUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchMediaUtils.swift; sourceTree = "<group>"; };
@@ -2602,11 +2604,6 @@
 		C21656CC1EE1CC760041A6BA /* it */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C21656CD1EE1CC7C0041A6BA /* de */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C21656CE1EE1CC830041A6BA /* es */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
-		C21656D31EE4A83C0041A6BA /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/MainMenu.strings; sourceTree = "<group>"; };
-		C21656D51EE4A8400041A6BA /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/MainMenu.strings; sourceTree = "<group>"; };
-		C21656D61EE4A8430041A6BA /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/MainMenu.strings; sourceTree = "<group>"; };
-		C21656D81EE4A8470041A6BA /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/MainMenu.strings; sourceTree = "<group>"; };
-		C21656DA1EE4A8490041A6BA /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/MainMenu.strings"; sourceTree = "<group>"; };
 		C2167E4E1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaWebpageRowContent.swift; sourceTree = "<group>"; };
 		C2167E501DC220E900F98E03 /* PeerMediaMusicRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaMusicRowContent.swift; sourceTree = "<group>"; };
 		C2167E521DC220F600F98E03 /* PeerMediaFileRowContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaFileRowContent.swift; sourceTree = "<group>"; };
@@ -3150,6 +3147,7 @@
 				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
 				2700B222273ADC94003E4018 /* HotKey in Frameworks */,
 				277D281A2AD02F1800CC6420 /* InputView in Frameworks */,
+				273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */,
 				27B6D05327393A3600C785C7 /* Postbox in Frameworks */,
 				27B6D04F27393A2A00C785C7 /* TelegramApi in Frameworks */,
 				279FD2A7273C1251004F08A1 /* Zip in Frameworks */,
@@ -3160,7 +3158,6 @@
 				27B6D05D27393A5500C785C7 /* MergeLists in Frameworks */,
 				27B6AFB42B557BEE001D0983 /* CallVideoLayer in Frameworks */,
 				275E851F2B20C79E007A72CA /* MetalEngine in Frameworks */,
-				27D500EB2B4805BE00587233 /* MediaPlayer in Frameworks */,
 				D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */,
 				27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */,
 				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
@@ -3257,6 +3254,7 @@
 				2796FEF827423F5300DA653C /* TGPassportMRZ in Frameworks */,
 				278B89A62791939700ECF71C /* libwebp in Frameworks */,
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
+				273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */,
 				27D696F4274F8451008A723E /* Colors in Frameworks */,
 				2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */,
 				27D696FA274F8462008A723E /* InAppSettings in Frameworks */,
@@ -3844,6 +3842,7 @@
 		27B836172B5FC11F00E82683 /* emoji */ = {
 			isa = PBXGroup;
 			children = (
+				27B4A8F02C2DA0340000F3DF /* emoji144.txt */,
 				27B836182B5FC1AE00E82683 /* emoji14.txt */,
 				278C720325E67C2700F1B315 /* emoji1016.txt */,
 				9FDE0A8E21AD41C2001546D7 /* emoji1014.txt */,
@@ -6275,6 +6274,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				273C04042C2B75E900AF2751 /* MediaPlayer.framework */,
 				2761435D2BDA57350034338C /* AppIntents.framework */,
 				276E76422B373E1B00440A4F /* libswiftAppKit.tbd */,
 				270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */,
@@ -6573,11 +6573,11 @@
 				275E851B2B20C4EC007A72CA /* ShelfPack */,
 				275E851E2B20C79E007A72CA /* MetalEngine */,
 				27CFB01E2B3E986100221DE7 /* DustLayer */,
-				27D500EA2B4805BE00587233 /* MediaPlayer */,
 				27F3BB762B48375800BC37C2 /* TelegramMedia */,
 				27B6AFB32B557BEE001D0983 /* CallVideoLayer */,
 				27B8361B2B5FCD0300E82683 /* Dock */,
 				27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */,
+				273C04022C2B75E400AF2751 /* TelegramMediaPlayer */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7038,6 +7038,7 @@
 				27916F2F287D77660046DB44 /* animals.tgs in Resources */,
 				27803BF427A3E944007B0FA9 /* menu_folder_telegram.tgs in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
+				27B4A8F12C2DA0340000F3DF /* emoji144.txt in Resources */,
 				27CE376A2760960A007E6F1B /* menu_delete.tgs in Resources */,
 				274BB570264013B900620D03 /* cameraoff.tgs in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
@@ -8170,14 +8171,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				C25692971EDD85FB009EE421 /* en */,
-				C21656D31EE4A83C0041A6BA /* es */,
-				C21656D51EE4A8400041A6BA /* de */,
-				C21656D61EE4A8430041A6BA /* it */,
-				C21656D81EE4A8470041A6BA /* nl */,
-				C21656DA1EE4A8490041A6BA /* pt-BR */,
 				9F52E74E2074C12B0048791C /* Base */,
-				9F52E7502074C16D0048791C /* ru */,
-				9F52E7522074C1710048791C /* uk */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -8691,6 +8685,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = CurrencyFormat;
 		};
+		273C04022C2B75E400AF2751 /* TelegramMediaPlayer */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TelegramMediaPlayer;
+		};
 		2745FECA274F947000546B05 /* BuildConfig */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = BuildConfig;
@@ -9006,10 +9004,6 @@
 		27D43DC4279191B0006968A6 /* OpenSSLEncryption */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OpenSSLEncryption;
-		};
-		27D500EA2B4805BE00587233 /* MediaPlayer */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = MediaPlayer;
 		};
 		27D696EF274F8449008A723E /* KeyboardKey */ = {
 			isa = XCSwiftPackageProductDependency;

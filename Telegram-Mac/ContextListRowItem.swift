@@ -87,7 +87,7 @@ class ContextListRowItem: TableRowItem {
         
         if let representation = representation {
             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-            iconSignal = chatWebpageSnippetPhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
+            iconSignal = chatWebpageSnippetPhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: System.backingScale, small:true)
             
             let iconSize = representation.dimensions.size.aspectFilled(CGSize(width: 50, height: 50))
             

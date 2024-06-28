@@ -1226,9 +1226,9 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
@@ -1277,7 +1277,7 @@ public extension NSImage {
     }
     
     
-    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0, zoom: CGFloat = 1) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale, zoom: CGFloat = 1) -> CGImage {
         
         let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(size.width * zoom, size.height * zoom), scale: scale, clear: true)
         
@@ -1392,7 +1392,11 @@ public enum ImageOrientation {
 public extension CGImage {
     
     var backingSize:NSSize {
-        return NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
+        return systemSize// NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
+    }
+    
+    var halfSize:NSSize {
+        return  NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
     }
     
     var size:NSSize {
@@ -1408,7 +1412,7 @@ public extension CGImage {
     }
     
     var scale:CGFloat {
-        return 2.0
+        return System.backingScale
     }
     
     var _NSImage: NSImage {
@@ -1417,7 +1421,7 @@ public extension CGImage {
 
     func highlight(color: NSColor) -> CGImage {
         let image = self
-        let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
+        let context = DrawingContext(size:image.backingSize, scale: System.backingScale, clear:true)
         context.withContext { ctx in
             ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
             let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
@@ -2563,7 +2567,7 @@ extension CGSize {
 }
 
 
-extension CGRect {
+public extension CGRect {
     static var identity: CGRect {
         return CGRect(x: 0, y: 0, width: 1, height: 1)
     }
@@ -2573,6 +2577,13 @@ extension CGRect {
                       y: origin.y.rounded(),
                       width: width.rounded(.up),
                       height: height.rounded(.up))
+    }
+    
+    var toScreenPixel: CGRect {
+        return CGRect(x: floorToScreenPixels(origin.x),
+                      y: floorToScreenPixels(origin.y),
+                      width: floorToScreenPixels(width),
+                      height: floorToScreenPixels(height))
     }
     
     var mirroredVertically: CGRect {

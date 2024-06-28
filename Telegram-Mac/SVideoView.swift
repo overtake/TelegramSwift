@@ -12,7 +12,7 @@ import SwiftSignalKit
 import ColorPalette
 import RangeSet
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 private final class SVideoPipControls : Control {
     

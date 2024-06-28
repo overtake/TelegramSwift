@@ -1393,7 +1393,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
                     validIds.append(id)
                     
-                    let rect = item.rect.insetBy(dx: -2, dy: -2)
+                    let rect = item.rect.insetBy(dx: 0, dy: 0)
                     
                     let textColor = stickerItem.playPolicy == nil && self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
                     

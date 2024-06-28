@@ -411,7 +411,7 @@ class PasscodeLockController: ModalViewController {
         super.windowDidBecomeKey()
 
         if NSApp.isActive {
-          //  callTouchId()
+            callTouchId()
         }
     }
     

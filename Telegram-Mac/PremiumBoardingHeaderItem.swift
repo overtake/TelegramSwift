@@ -253,7 +253,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.statusView = nil
             }
-            let current: (PremiumSceneView & NSView)
+            var current: (PremiumSceneView & NSView)
             if let view = self.premiumView {
                 current = view
             } else {
@@ -266,6 +266,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 addSubview(current)
                 self.premiumView = current
             }
+            current.sceneBackground = backdorColor
             current.updateLayout(size: current.frame.size, transition: .immediate)
 
         }

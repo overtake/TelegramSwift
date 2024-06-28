@@ -342,12 +342,12 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 let linked = link(path: iconPath, ext: "png")!
                 
                 if let image = NSImage(contentsOf: .init(fileURLWithPath: linked)) {
-                    icon = generateSettingsIcon(image.precomposed(flipVertical: true, scale: 1.0))
+                    icon = generateSettingsIcon(image.precomposed(flipVertical: true, scale: System.backingScale))
                 }
             }
             
             if icon == nil {
-                icon = NSImage(named: "Icon_Settings_BotCap")!.precomposed(flipVertical: true, scale: 1.0)
+                icon = NSImage(named: "Icon_Settings_BotCap")!.precomposed(flipVertical: true, scale: System.backingScale)
             }
             let type: GeneralInteractedType
             if bot.flags.contains(.notActivated) || bot.flags.contains(.showInSettingsDisclaimer) {
