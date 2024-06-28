@@ -15,7 +15,7 @@ import Postbox
 
 private enum Entry : TableItemListNodeEntry {
     case headerText(index: MessageIndex, stableId: MessageIndex, text: String, viewType: GeneralViewType)
-    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: Set<Int32>, viewType: GeneralViewType)
+    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: Set<Int32>, rowCount: Int, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
     case emptySelf(index: MessageIndex, viewType: GeneralViewType)
@@ -27,8 +27,8 @@ private enum Entry : TableItemListNodeEntry {
         switch self {
         case let .headerText(_, stableId, text, viewType):
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: viewType, text: text, font: .normal(.text))
-        case let .month(_, stableId, peerId, peerReference, items, selected, pinnedIds, viewType):
-            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: pinnedIds, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
+        case let .month(_, stableId, peerId, peerReference, items, selected, pinnedIds, rowCount, viewType):
+            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
                 if selected == nil, arguments.isMy {
                    
@@ -69,7 +69,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var stableId: MessageIndex {
         switch self {
-        case let .month(_, stableId, _, _, _, _, _, _):
+        case let .month(_, stableId, _, _, _, _, _, _, _):
             return stableId
         default:
             return self.index
@@ -78,7 +78,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _, _, _, _, _, _):
+        case let .month(index, _, _, _, _, _, _, _, _):
             return index
         case let .headerText(index, _, _, _):
             return index
@@ -140,12 +140,14 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     let standalone = arguments.standalone
 
     let selected = state.selected
+    
+    let perRowCount = state.perRowCount
 
     if let state = state.state, !state.items.isEmpty, let peerReference = state.peerReference {
         let items = state.items.uniqueElements
         let peerId = peerReference.id
         let viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-        entries.append(.month(index: MessageIndex.absoluteUpperBound(), stableId: MessageIndex.absoluteUpperBound(), peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: state.pinnedIds, viewType: viewType))
+        entries.append(.month(index: MessageIndex.absoluteUpperBound(), stableId: MessageIndex.absoluteUpperBound(), peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: state.pinnedIds, rowCount: perRowCount, viewType: viewType))
 
         if standalone {
             var index = MessageIndex.absoluteUpperBound()
@@ -179,7 +181,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     var j: Int = 0
     for entry in entries {
         switch entry {
-        case let .month(index, _, peerId, peerReference, items, _, pinnedIds, _):
+        case let .month(index, _, peerId, peerReference, items, _, pinnedIds, rowCount, _):
             let chunks = items.chunks(state.perRowCount)
             for (i, chunk) in chunks.enumerated() {
                 let item = chunk[0]
@@ -190,7 +192,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
                     viewType = chunks.count > 1 ? .innerItem : .lastItem
                 }
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, pinnedIds: pinnedIds, viewType: updatedViewType))
+                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: updatedViewType))
             }
             j += 1
         case .date:

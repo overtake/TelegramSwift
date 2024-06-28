@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import AVFoundation
-import MediaPlayer
+import TelegramMediaPlayer
 
 private func findContentsLayer(_ sublayers: [CALayer]) -> CALayer? {
     for sublayer in sublayers {

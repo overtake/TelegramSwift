@@ -315,7 +315,9 @@ fileprivate class PreviewSenderView : Control {
                     }
                 }, itemImage: newValue.sortValue == .up ?  MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
                 
-                if peer.isChannel {
+                let cachedData = self.controller?.chatInteraction.presentation.cachedData as? CachedChannelData
+                
+                if peer.isChannel, cachedData?.flags.contains(.paidMediaAllowed) == true {
                     menu.addItem(ContextMenuItem(newValue.payAmount != nil ? strings().previewSenderRemovePaid : strings().previewSenderMakePaid, handler: { [weak self] in
                         self?.controller?.togglePaidContent()
                     }, itemImage: MenuAnimation.menu_paid.value))

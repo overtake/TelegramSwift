@@ -7,7 +7,7 @@ import GZIP
 import libwebp
 import Accelerate
 import QuartzCore
-import MediaPlayer
+import TelegramMediaPlayer
 import CoreMedia
 
 public protocol R_LottieBridge: NSObject {
@@ -63,7 +63,7 @@ final class RenderAtomic<T> {
 }
 
 
-public let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 10, threadPriority: 1.0)
+public let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 1, threadPriority: 1.0)
 public let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .utility)
 
 

@@ -7484,8 +7484,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 }
             }
-            
-            _ = ApplicationSpecificNotice.addPlayedMessageEffects(accountManager: context.sharedContext.accountManager, values: playedIds).startStandalone()
+            if !playedIds.isEmpty {
+                _ = ApplicationSpecificNotice.addPlayedMessageEffects(accountManager: context.sharedContext.accountManager, values: playedIds).startStandalone()
+            }
         }
         
         if !didSetReady {

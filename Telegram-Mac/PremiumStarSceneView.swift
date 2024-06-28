@@ -19,6 +19,8 @@ private let sceneVersion: Int = 2
 protocol PremiumSceneView {
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
     func playAgain()
+    
+    var sceneBackground: NSColor { get set }
 }
 
 final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneView {
@@ -31,6 +33,12 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
     deinit {
         appearanceDelay.dispose()
         tapDelay.dispose()
+    }
+    
+    var sceneBackground: NSColor = .clear {
+        didSet {
+            sceneView.backgroundColor = sceneBackground
+        }
     }
 
     required init(frame: CGRect) {

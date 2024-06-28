@@ -1075,12 +1075,12 @@ private func generateChatFailed(backgroundColor: NSColor, border: NSColor, foreg
 
 
 func generateSettingsIcon(_ icon: CGImage) -> CGImage {
-    return generateImage(icon.backingSize, contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.setFillColor(.white)
-        ctx.fill(CGRect(origin: CGPoint(x: 2, y: 2), size: NSMakeSize(size.width - 4, size.height - 4)))
+        ctx.fill(size.bounds.insetBy(dx: 3, dy: 3))
         ctx.draw(icon, in: CGRect(origin: CGPoint(), size: size))
-    })!
+    }, scale: System.backingScale)!
 }
 
 func generateEmptySettingsIcon() -> CGImage {
@@ -1091,12 +1091,12 @@ func generateEmptySettingsIcon() -> CGImage {
 
 
 private func generateSettingsActiveIcon(_ icon: CGImage, background: NSColor) -> CGImage {
-    return generateImage(icon.backingSize, contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.setFillColor(background.cgColor)
-        ctx.fill(CGRect(origin: CGPoint(x: 2, y: 2), size: NSMakeSize(size.width - 4, size.height - 4)))
+        ctx.fill(size.bounds.insetBy(dx: 3, dy: 3))
         ctx.draw(icon, in: CGRect(origin: CGPoint(), size: size))
-    })!
+    }, scale: System.backingScale)!
 }
 
 private func generatePremiumIcon(_ icon: CGImage) -> CGImage {
@@ -1243,7 +1243,7 @@ func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: 
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
-    }, scale: 2)!
+    })!
 }
 
 func generateCheckSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
@@ -1253,7 +1253,7 @@ func generateCheckSelected(foregroundColor: NSColor, backgroundColor: NSColor) -
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fillEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
         ctx.draw(icon, in: size.bounds)
-    }, scale: 2)!
+    })!
 }
 
 
@@ -1266,7 +1266,7 @@ private func generateChatGroupToggleSelectionForeground(foregroundColor: NSColor
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
-    }, scale: 2)!
+    })!
 }
 
 func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
@@ -1278,7 +1278,7 @@ func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
         let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
-    }, scale: 2)!
+    })!
 }
 
 func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1) -> CGImage {
@@ -1291,7 +1291,7 @@ func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRad
         }
         ctx.setFillColor(foregroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-    }, scale: 1.0)!
+    })!
 }
 
 private func deleteItemIcon(_ color: NSColor) -> CGImage {
@@ -2329,7 +2329,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsAskQuestion: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)) },
                                                settingsFaq: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)) },
                                                settingsStories: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(flipVertical: true)) },
-                                               settingsGeneral: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(flipVertical: true)) },
+                                                settingsGeneral: { NSImage(resource: .iconSettingsGeneral).precomposed(flipVertical: true) },
                                                settingsLanguage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)) },
                                                settingsNotifications: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)) },
                                                settingsSecurity: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
@@ -2360,7 +2360,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsWalletActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFiltersActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
-                                               settingsProfile: { generateSettingsIcon(NSImage(named: "Icon_SettingsProfile")!.precomposed(flipVertical: true)) },
+                                               settingsProfile: { generateSettingsIcon(NSImage(resource: .iconSettingsProfile).precomposed(flipVertical: true)) },
                                                settingsBusiness: { generateSettingsIcon(NSImage(resource: .iconSettingsBusiness).precomposed(flipVertical: true)) },
                                                settingsBusinessActive: { generateSettingsActiveIcon(NSImage(resource: .iconSettingsBusiness).precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsStars: { generateSettingsIcon(NSImage(resource: .iconSettingsStars).precomposed(flipVertical: true)) },
@@ -2528,7 +2528,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 return generateImage(image.backingSize, contextGenerator: { size, ctx in
                                                     ctx.clear(NSMakeRect(0, 0, size.width, size.height))
                                                     ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
-                                                }, scale: System.backingScale)! },
+                                                })! },
                                                wallet_close: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                wallet_qr: { NSImage(named: "Icon_WalletQR")!.precomposed(palette.accentIcon) },
                                                wallet_receive: { NSImage(named: "Icon_WalletReceive")!.precomposed(palette.underSelectedColor) },

@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import MediaPlayer
+import TelegramMediaPlayer
 import TGUIKit
 import Postbox
 import SwiftSignalKit

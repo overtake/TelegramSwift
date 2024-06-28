@@ -70,6 +70,9 @@ class SelectManager : NSResponder {
     
     var selectedText: NSAttributedString {
         let string:NSMutableAttributedString = NSMutableAttributedString()
+        
+        var addHeaders: Bool = ranges.with { $0.map { $0.0 } }.uniqueElements.count > 1
+        
         ranges.with { ranges in
             
             var stableId: AnyHashable? = ranges.last?.0
@@ -80,20 +83,22 @@ class SelectManager : NSResponder {
                     _ = string.append(string: "\n\n", color: nil, font: .normal(.text))
                 }
                 
-                if let header = container.header, ranges.count > 1 {
+                if let header = container.header, ranges.count > 1, addHeaders {
                     _ = string.append(string: header + "\n", color: nil, font: .normal(.text))
                 }
                 
                 if container.range.location != NSNotFound {
-                    if container.range.location != 0, ranges.count > 1 {
+                    if container.range.location != 0, ranges.count > 1, addHeaders {
                         _ = string.append(string: "...", color: nil, font: .normal(.text))
                     }
                     string.append(container.text.attributedSubstring(from: container.range))
-                    if container.range.location + container.range.length != container.text.length, ranges.count > 1 {
+                    if container.range.location + container.range.length != container.text.length, ranges.count > 1, addHeaders {
                         _ = string.append(string: "...", color: nil, font: .normal(.text))
                     }
                 }
-                
+                if i != 0, string.string.last != "\n" {
+                    string.append(string: "\n")
+                }
                
                 stableId = ranges[i].0
             }
@@ -609,7 +614,9 @@ class ChatSelectText : NSObject {
                                 }
                             }
                             
-                            if let start_j = start_j, let end_j = end_j, i == endIndex || i == startIndex {
+                            
+                            if let start_j, let end_j, i == endIndex || i == startIndex {
+
                                 if j < start_j || j > end_j {
                                     continue
                                 } else {
@@ -619,10 +626,16 @@ class ChatSelectText : NSObject {
                                                 endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
                                             } else {
                                                 startPoint = .zero
+                                                if j < end_j {
+                                                    endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                                }
                                             }
                                         } else if beginInnerLocation.y < endInnerLocation.y {
                                             if j > start_j {
                                                 endPoint = .zero
+                                                if j < end_j {
+                                                    startPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                                }
                                             } else {
                                                 startPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
                                             }
@@ -632,10 +645,11 @@ class ChatSelectText : NSObject {
                                 }
                             }
                             
+                            
                             selectableView.canBeResponder = false
                             layout.selectedRange.range = layout.selectedRange(startPoint:startPoint, currentPoint:endPoint)
                             layout.selectedRange.cursorAlignment = startPoint.x > endPoint.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
-                            selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString, header: view?.header, stableId: table.item(at: i).stableId, index: j)
+                            selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString, header: j == 0 ? view?.header : nil, stableId: table.item(at: i).stableId, index: j)
                             selectableView.setNeedsDisplayLayer()
                             
                             

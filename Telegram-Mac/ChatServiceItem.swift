@@ -16,7 +16,7 @@ import InAppSettings
 import CurrencyFormat
 import ThemeSettings
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 class ChatServiceItem: ChatRowItem {
     
@@ -2453,7 +2453,7 @@ class ChatServiceRowView: TableRowView {
                 } else if case let .avatar(peer) = stickerItem.source {
                     let id = InlineStickerItemLayer.Key(id: peer.id.toInt64(), index: index)
                     validIds.append(id)
-                    var rect = NSMakeRect(item.rect.minX, item.rect.minY, item.rect.width, item.rect.width)
+                    var rect = NSMakeRect(item.rect.minX, item.rect.minY, item.rect.width - 3, item.rect.width - 3)
                    
                     if textView.textLayout?.hasBlock == true {
                         rect.origin.x += 7

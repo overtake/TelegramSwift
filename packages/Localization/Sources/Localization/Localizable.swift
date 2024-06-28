@@ -9975,6 +9975,10 @@ public final class L10n {
   public static func loginNewCodeCodeInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Login.New.Code.CodeInfo", p1)
   }
+  /// We’ve sent an e-mail with an activation code\non **%@**
+  public static func loginNewCodeEmail(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Code.Email", p1)
+  }
   /// Check your Telegram messages
   public static var loginNewCodeEnterCode: String  { return L10n.tr("Localizable", "Login.New.Code.EnterCode") }
   /// Enter Code

@@ -17,7 +17,7 @@ import libwebp
 import GZIP
 import Svg
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 

@@ -39,8 +39,8 @@ import ColorPalette
 private class NoScrollWebView: WKWebView {
     override func scrollWheel(with theEvent: NSEvent) {
         super.scrollWheel(with: theEvent)
-        
     }
+
 }
 
 private let durgerKingBotIds: [Int64] = [5104055776, 2200339955]
@@ -181,6 +181,10 @@ private final class HeaderView : Control {
         }
     }
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
     override func layout() {
         super.layout()
         var additionalSize: CGFloat = 0
@@ -217,6 +221,10 @@ private final class WebpageView : View {
             return fakeHolder
         }
         return _holder
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
     }
     
     private var placeholderIcon: (CGImage, Bool)?
@@ -323,6 +331,7 @@ private final class WebpageView : View {
         super.updateLocalizationAndTheme(theme: theme)
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
         self.backgroundColor = _backgroundColor ?? theme.colors.background
+        
         
         if let key = _headerColorKey {
             if key == "bg_color" {
@@ -437,6 +446,7 @@ private final class WebpageView : View {
         super.layout()
         self.updateLayout(frame.size, transition: .immediate)
     }
+
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: self.headerView, frame: NSMakeRect(0, 0, size.width, 50))
@@ -708,6 +718,15 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             })
             return .rejected
         }, with: self, for: .leftMouseDown, priority: .supreme)
+        
+        window?.set(escape: { [weak self] _ -> KeyHandlerResult in
+            if self?.escapeKeyAction() == .rejected {
+                if self?.closable == true {
+                    self?.close()
+                }
+            }
+            return .invoked
+        }, with: self, priority: responderPriority)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -929,7 +948,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             default:
                 self.close()
             }
-            execute(inapp: link)
+            execute(inapp: link, window: self.window)
         }
         return nil
     }
@@ -954,7 +973,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 default:
                     self.close()
                 }
-                execute(inapp: link)
+                execute(inapp: link, window: self.window)
                 decisionHandler(.cancel)
             } else {
                 decisionHandler(.allow)
@@ -965,9 +984,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     override func measure(size: NSSize) {
-        let size = NSMakeSize(420, min(420 + 420 * 0.6, size.height - 80))
-        self.genericView.setFrameSize(size)
-        self.genericView.updateLayout(size, transition: .immediate)
+        let s = NSMakeSize(size.width + 20, size.height + 20)
+        let size = NSMakeSize(420, min(420 + 420 * 0.6, s.height - 80))
+        let rect = size.bounds.insetBy(dx: 10, dy: 10)
+        self.genericView.frame = rect
+        self.genericView.updateLayout(rect.size, transition: .immediate)
     }
     
     
@@ -1159,11 +1180,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                                 case let .instantView(_, webPage, _):
                                     showInstantPage(InstantPageViewController(strongSelf.context, webPage: webPage, message: nil, saveToRecent: false))
                                 default:
-                                    execute(inapp: link)
+                                    execute(inapp: link, window: self?.window)
                                 }
                             })
                         } else {
-                            execute(inapp: link)
+                            execute(inapp: link, window: self.window)
                         }
                     }
                 }
@@ -1178,18 +1199,22 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     let previous = context.bindings.rootNavigation().controller
                     
                     if openInfo == nil {
-                        openInfo = { peerId, toChat, messageId, initialAction in
+                        openInfo = { [weak self] peerId, toChat, messageId, initialAction in
                             if toChat || initialAction != nil {
                                 context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
                             } else {
                                 PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                             }
+                            if initialAction != nil {
+                                self?.closeAnyway()
+                            }
+                            context.window.makeKeyAndOrderFront(nil)
                         }
                     }
                     
                     let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                    
-                    execute(inapp: link, afterComplete: { [weak self, weak previous] _ in
+                    execute(inapp: link, window: self.window, afterComplete: { [weak self, weak previous] _ in
                         let current = context.bindings.rootNavigation().controller
                         if current != previous {
                             self?.close()
@@ -1659,7 +1684,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     private func closeAnyway() {
-        self.view.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
+        self.window?.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
             self?._window?.orderOut(nil)
             self?._window = nil
         })
@@ -1763,6 +1788,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     override var hasBorder: Bool {
         return false
+    }
+    
+    
+    
+    override var containerBackground: NSColor {
+        return .clear
     }
 
 }

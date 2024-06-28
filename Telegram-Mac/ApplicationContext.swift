@@ -537,7 +537,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             
             //showModal(with: StoryFoundListController(context: context, source: .hashtag("#telegram"), presentation: theme), for: context.window)
             
-            
+            showModal(with: CallSettingsModalController(context.sharedContext), for: context.window)
             
            // showModal(with: Star_TransactionScreen(context: context, peer: .init(context.myPeer!), transaction: StarsContext.State.Transaction.init(id: "kqwjeflklqwkejflqwkejflqkwejflqkwejf", count: 1000, date: Int32(Date().timeIntervalSince1970), peer: StarsContext.State.Transaction.Peer.appStore)), for: context.window)
 //            showModal(with: FactCheckController(context: context), for: context.window)

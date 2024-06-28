@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import MediaPlayer
+import TelegramMediaPlayer
 import AppKit
 import TGUIKit
 import Accelerate

@@ -516,6 +516,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
     }
 }
 
+private var index = 0
 
 func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLocation? = nil, maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil, storyState: PeerExpiringStoryListContext.State? = nil, peerStoryStats: [PeerId : PeerStoryStats] = [:], cachedData: CachedPeerData? = nil, peer: Peer? = nil, holeLater: Bool = false, holeEarlier: Bool = false, recommendedChannels: RecommendedChannels? = nil, includeJoin: Bool = false, earlierId: MessageIndex? = nil, laterId: MessageIndex? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, savedMessageTags: SavedMessageTags? = nil, contentSettings: ContentSettings? = nil, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], messageEffects: AvailableMessageEffects? = nil, factCheckRevealed: Set<MessageId> = Set(), quoteRevealed: Set<QuoteMessageIndex> = Set()) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
@@ -944,7 +945,12 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             }
         }
         
-        let messageEffect = messageEffects?.messageEffects.first(where: { $0.id == message.effectAttribute?.id })
+        let messageEffect: AvailableMessageEffects.MessageEffect?
+        if let effectAttribute = message.effectAttribute {
+            messageEffect = messageEffects?.messageEffects.first(where: { $0.id == effectAttribute.id })
+        } else {
+            messageEffect = nil
+        }
         
         let quoteRevealed = Set(quoteRevealed.filter( { $0.messageId == message.id }).map { $0.index })
         

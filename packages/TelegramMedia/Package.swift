@@ -29,7 +29,7 @@ let package = Package(
         .package(name: "libwebp", path: "../../submodules/libwebp"),
         .package(name: "ApiCredentials", path: "../ApiCredentials"),
         .package(name: "ObjcUtils", path: "../ObjcUtils"),
-        .package(name: "MediaPlayer", path: "../../submodules/telegram-ios/submodules/MediaPlayer"),
+        .package(name: "TelegramMediaPlayer", path: "../../submodules/telegram-ios/submodules/MediaPlayer"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -48,7 +48,7 @@ let package = Package(
                            .product(name: "libwebp", package: "libwebp", condition: nil),
                            .product(name: "ApiCredentials", package: "ApiCredentials", condition: nil),
                            .product(name: "ObjcUtils", package: "ObjcUtils", condition: nil),
-                           .product(name: "MediaPlayer", package: "MediaPlayer", condition: nil),
+                           .product(name: "TelegramMediaPlayer", package: "TelegramMediaPlayer", condition: nil),
                            .product(name: "OpusBinding", package: "OpusBinding", condition: nil),
                            .product(name: "TelegramVoip", package: "TelegramVoip", condition: nil),
                           ],

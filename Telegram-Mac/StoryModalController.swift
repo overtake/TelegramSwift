@@ -921,6 +921,7 @@ private final class StoryViewController: Control, Notifable {
                 }
             })
             mediaLayer.isPlayable = true
+            mediaLayer.superview = self.media
             
             self.media.layer?.addSublayer(mediaLayer)
             

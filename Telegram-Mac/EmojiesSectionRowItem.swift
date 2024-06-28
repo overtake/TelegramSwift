@@ -121,7 +121,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let mode: Mode
     let color: NSColor?
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], isBig: Bool = false, groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
-        self.itemSize = isBig ? NSMakeSize(66, 59) : NSMakeSize(41, 34)
+        self.itemSize = isBig ? NSMakeSize(66, 60) : NSMakeSize(40, 34)
         self.info = info
         self.mode = mode
         self.color = color
@@ -954,7 +954,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     } else {
                         current = SimpleLayer()
                         current.masksToBounds = true
-                        current.frame = NSMakeRect(rect.minX - 4.5, rect.minY - 4.5, 34, 33)
+                        current.frame = NSMakeRect(rect.minX - floorToScreenPixels(4.5), rect.minY - floorToScreenPixels(4.5), 34, 33)
                         current.cornerRadius = 10
                         if #available(macOS 10.15, *) {
                             current.cornerCurve = .continuous

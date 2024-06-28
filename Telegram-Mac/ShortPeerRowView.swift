@@ -391,7 +391,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 if let status = (isRowSelected ? item.statusSelected : item.status) {
                     let t = title.0.size.height + status.0.size.height + 1.0
-                    tY = (self.frame.height - t) / 2.0
+                    tY = floorToScreenPixels((self.frame.height - t) / 2.0)
                 }
 
                 statusControl.setFrameOrigin(NSMakePoint(item.textInset + title.0.size.width + 2, tY + 1))

@@ -82,7 +82,7 @@ final class InteractiveTextView : Control {
                     let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: emoji.color ?? textColor)
                     validIds.append(id)
                     
-                    let rect = item.rect.insetBy(dx: -2, dy: -2)
+                    let rect = item.rect.insetBy(dx: 0, dy: 0)
                     
                     let view: InlineStickerItemLayer
                     if let current = itemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size && current.textColor == id.color {
@@ -100,7 +100,7 @@ final class InteractiveTextView : Control {
                 } else if case let .avatar(peer) = stickerItem.source {
                     let id = InlineStickerItemLayer.Key(id: peer.id.toInt64(), index: index)
                     validIds.append(id)
-                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 2, item.rect.width, item.rect.width)
+                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 2, item.rect.width - 3, item.rect.width - 3)
                    
                     let view: InlineAvatarLayer
                     if let current = itemViews[id] as? InlineAvatarLayer {
