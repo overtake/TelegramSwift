@@ -3141,7 +3141,9 @@ enum FaqDestination {
 func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    _ = showModalProgress(signal: webpagePreview(account: context.account, urls: [dest.url]) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
+    let url = dest.url + language
+    
+    _ = showModalProgress(signal: webpagePreview(account: context.account, urls: [url]) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
         switch result {
         case let .result(webpage):
             if let webpage = webpage {
