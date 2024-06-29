@@ -1400,7 +1400,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 
 func showCallWindow(_ session:PCallSession) {
     
-    #if arch(arm64) && (BETA || DEBUG)
+    #if arch(arm64)
     callScreen(session.accountContext, .success(session))
     return
     #endif
