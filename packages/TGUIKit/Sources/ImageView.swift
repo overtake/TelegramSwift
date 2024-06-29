@@ -102,6 +102,7 @@ open class ImageView: NSView {
         layer?.masksToBounds = true
     }
     
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -114,7 +115,6 @@ open class ImageView: NSView {
 
     override open func viewDidChangeBackingProperties() {
         if let window = self.window {
-            self.layer?.contentsScale = window.backingScaleFactor
         }
     }
     

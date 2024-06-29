@@ -189,7 +189,7 @@ open class ImageButton: Button {
         self.layer?.disableActions()
         layer?.removeAllAnimations()
         imageView.animates = false
-        imageView.layer?.disableActions()
+      //  imageView.layer?.disableActions()
     }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
@@ -211,6 +211,11 @@ open class ImageButton: Button {
             self.setFrameSize(size)
         }
         return true
+    }
+    
+    open override func layout() {
+        super.layout()
+        updateLayout()
     }
     
     public override func updateLayout() {

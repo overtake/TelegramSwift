@@ -1228,7 +1228,7 @@ public extension NSImage {
     
     func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: scale, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(self.size.width, self.size.height), scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
@@ -1404,7 +1404,7 @@ public extension CGImage {
     }
     
     var systemSize:NSSize {
-        return NSMakeSize(CGFloat(width) / System.backingScale, CGFloat(height) / System.backingScale)
+        return NSMakeSize(CGFloat(width) / scale, CGFloat(height) / scale)
     }
     
     var backingBounds: NSRect {

@@ -103,14 +103,9 @@ open class Button: Control {
         return true
     }
     
-    open override func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-        updateLayout()
-    }
-    
+
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        updateLayout()
     }
     
     public func updateLayout() -> Void {
