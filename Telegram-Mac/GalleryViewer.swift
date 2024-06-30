@@ -1223,7 +1223,7 @@ class GalleryViewer: NSResponder {
                     self?.showMessage()
                 }, itemImage: MenuAnimation.menu_show_message.value))
             }
-            if item.entry.message?.isCopyProtected() == true {
+            if item.entry.isProtected == true {
                 
             } else {
                 menu.addItem(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
@@ -1388,7 +1388,7 @@ class GalleryViewer: NSResponder {
     @objc func copy(_ sender:Any? = nil) -> Void {
         
         if let item = self.pager.selectedItem, !self.pager.copySelectedText() {
-            if let message = item.entry.message, message.isCopyProtected() {
+            if let message = item.entry.message, item.entry.isProtected {
                 showProtectedCopyAlert(message, for: self.window)
             } else  if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {
                 operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { path in

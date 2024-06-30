@@ -145,7 +145,7 @@ class MGalleryPhotoItem: MGalleryItem {
             let result = combineLatest(signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { [weak self] data, magnify -> Signal<Data, NoError> in
                 
                 let (size, orientation) = data
-                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
+                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true, drawChessboard: false)
                     |> map { [weak self] transform in
                         
                         var size = NSMakeSize(ceil(size.width * magnify), ceil(size.height * magnify))
@@ -192,7 +192,11 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override var backgroundColor: NSColor {
-        return theme.colors.transparentBackground
+        if self.entry.isProtected {
+            return .clear
+        } else {
+            return theme.colors.transparentBackground
+        }
     }
     
     override func fetch() -> Void {

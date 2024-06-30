@@ -312,7 +312,7 @@ private final class HeaderView : GeneralContainableRowView {
                 current = view
             } else {
                 current = ImageView()
-                self.addSubview(current)
+                control.addSubview(current)
                 self.outgoingView = current
             }
             switch item.transaction.peer {

@@ -471,7 +471,7 @@ private func chatMessageFileDatas(account: Account, fileReference: FileMediaRefe
 }
 
 
-func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, secureIdAccessContext: SecureIdAccessContext? = nil, synchronousLoad: Bool = false) -> Signal<(TransformImageArguments) -> CGImage?, NoError> {
+func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, secureIdAccessContext: SecureIdAccessContext? = nil, synchronousLoad: Bool = false, drawChessboard: Bool = true) -> Signal<(TransformImageArguments) -> CGImage?, NoError> {
     let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize:toRepresentationSize, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext, peer: peer)
     
     return signal |> map { data in
@@ -496,8 +496,11 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                 if data.fullSizeData != nil {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         return generateImage(image.size, contextGenerator: { (size, ctx) in
-                            ctx.setFillColor(theme.colors.transparentBackground.cgColor)
-                            ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            ctx.clear(size.bounds)
+                            if drawChessboard {
+                                ctx.setFillColor(theme.colors.transparentBackground.cgColor)
+                                ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            }
                             ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
                         })
                         
