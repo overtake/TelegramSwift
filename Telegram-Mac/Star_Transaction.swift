@@ -420,6 +420,7 @@ private final class Arguments {
 private struct State : Equatable {
     var transaction: StarsContext.State.Transaction
     var peer: EnginePeer?
+    var paidPeer: EnginePeer?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -455,7 +456,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         let fromText: String
-        if peer._asPeer().isUser {
+        if peer._asPeer().isUser && state.transaction.count > 0 {
             fromText = strings().starTransactionFrom
         } else {
             fromText = strings().starTransactionTo
@@ -473,13 +474,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return control
         })))
         
-        if let messageId = state.transaction.paidMessageId {
+        if let messageId = state.transaction.paidMessageId, let peer = state.paidPeer {
             
             let link: String
             if let address = peer.addressName {
                 link = "t.me/\(address)/\(messageId.id)"
             } else {
-                link = "t.me/\(peer.id.id)/\(messageId.id)"
+                link = "t.me/c/\(peer.id.id._internalGetInt64Value())/\(messageId.id)"
             }
             
             let messageIdText: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(link)](\(link))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
@@ -546,6 +547,16 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    if let paidMessageId = transaction.paidMessageId {
+        actionsDisposable.add(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: paidMessageId.peerId)).start(next: { peer in
+            updateState { current in
+                var current = current
+                current.paidPeer = peer
+                return current
+            }
+        }))
+    }
 
     let arguments = Arguments(context: context, openPeer: { peerId in
         context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
@@ -555,7 +566,6 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         showModalText(for: context.window, text: strings().starTransactionCopied)
     }, openLink: { link in
         execute(inapp: inApp(for: link.nsstring, context: context, openInfo: { peerId, _, messageId, _ in
-            close?()
             if let messageId = messageId {
                 let signal = context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .cloud(skipLocal: false)) |> filter {
                     switch $0 {

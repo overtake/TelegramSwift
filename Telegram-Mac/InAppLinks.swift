@@ -780,7 +780,9 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     if chat == nil {
                                         switch action {
                                         case let .openWebview(botPeer, botApp, url):
-                                            showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer), for: getWindow(context))
+                                            if !WebappWindow.focus(botId: botPeer.id) {
+                                                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer))
+                                            }
                                         default:
                                             break
                                         }

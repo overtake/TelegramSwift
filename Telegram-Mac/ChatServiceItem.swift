@@ -520,7 +520,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, media: [])
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, media: [])
                                         showModal(with: Star_TransactionScreen(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
