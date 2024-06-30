@@ -45,6 +45,10 @@ final class Fragment_BalanceRowItem : GeneralRowItem {
         self.balance = balance
         self.transfer = transfer
         self.buyAds = buyAds
+        var canWithdraw = canWithdraw
+        if let nextWithdrawalTimestamp, nextWithdrawalTimestamp - context.timestamp >= 0 {
+            canWithdraw = false
+        }
         self.canWithdraw = canWithdraw
         self.nextWithdrawalTimestamp = nextWithdrawalTimestamp
         let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.amount, currency: balance.currency.rawValue).prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
