@@ -594,14 +594,6 @@ private final class ControlCenter {
             }
         }
         
-        togglePlayPauseCommand = commandCenter.togglePlayPauseCommand.addTarget { [unowned self] event in
-            if self.togglePlayPause() {
-                return .success
-            } else {
-                return .commandFailed
-            }
-        }
-        
         playbackPositionCommand = commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
             guard let event = event as? MPChangePlaybackPositionCommandEvent else {
                 return .commandFailed

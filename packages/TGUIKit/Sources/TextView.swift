@@ -1022,9 +1022,12 @@ public final class TextViewLayout : Equatable {
                                         
                 if abs(rightOffset - leftOffset) < 150, abs(rightOffset - leftOffset) > 8 {
                     let x = floor(min(leftOffset, rightOffset))
-                    let width = floor(abs(rightOffset - leftOffset) + rightInset)
+                    var width = floor(abs(rightOffset - leftOffset) + rightInset)
+                    if Int(width) % 2 != 0 {
+                        width -= 1
+                    }
                     let height = ceil(ascent + descent)
-                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: x, y: floor(descent - (ascent + descent)), width: max(width, height), height: max(width, height)), item: item))
+                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: x, y: floor(descent - (ascent + descent)), width: width, height: height), item: item))
                 }
             }
             

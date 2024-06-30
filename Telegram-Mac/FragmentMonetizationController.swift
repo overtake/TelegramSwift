@@ -1073,7 +1073,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         
         if let status, let myBoost, let peer {
             if status.level >= needLevel {
-                _ = context.engine.peers.updateChannelRestrictAdMessages(peerId: peerId, restricted: restricted).startStandalone()
+                _ = context.engine.peers.updateChannelRestrictAdMessages(peerId: peerId, restricted: !restricted).startStandalone()
             } else {
                 showModal(with: BoostChannelModalController(context: context, peer: peer._asPeer(), boosts: status, myStatus: myBoost, infoOnly: true, source: .noAds(needLevel)), for: context.window)
             }
