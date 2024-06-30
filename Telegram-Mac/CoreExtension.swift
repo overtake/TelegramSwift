@@ -3684,7 +3684,9 @@ func coreMessageMainPeer(_ message: Message) -> Peer? {
 func showProtectedCopyAlert(_ message: Message, for window: Window) {
     if let peer = message.peers[message.id.peerId] {
         let text: String
-        if peer.isGroup || peer.isSupergroup {
+        if message.paidContent != nil {
+            text = strings().contextCopyPaidMediaRestricted
+        } else if peer.isGroup || peer.isSupergroup {
             text = strings().copyRestrictedGroup
         } else {
             text = strings().copyRestrictedChannel

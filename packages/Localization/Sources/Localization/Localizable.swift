@@ -7255,6 +7255,8 @@ public final class L10n {
   public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
   /// This link will only work for members of this chat
   public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
+  /// Sorry, you can't copy paid media
+  public static var contextCopyPaidMediaRestricted: String  { return L10n.tr("Localizable", "Context.CopyPaidMedia.Restricted") }
   /// Search
   public static var contextMenuSearch: String  { return L10n.tr("Localizable", "Context.Menu.Search") }
   /// %d
@@ -9975,7 +9977,7 @@ public final class L10n {
   public static func loginNewCodeCodeInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Login.New.Code.CodeInfo", p1)
   }
-  /// We’ve sent an e-mail with an activation code\non **%@**
+  /// We’ve sent an e-mail with an activation code\nto %@
   public static func loginNewCodeEmail(_ p1: String) -> String {
     return L10n.tr("Localizable", "Login.New.Code.Email", p1)
   }

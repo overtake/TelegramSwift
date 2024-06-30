@@ -1697,12 +1697,14 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
             })
         case let .bio(_, text, peer, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
+            }, hashtag: { value in
+                arguments.context.bindings.globalSearch(value, nil)
             })
         case let .birthday(_, text, canBirth, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)

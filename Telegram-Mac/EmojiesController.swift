@@ -2004,6 +2004,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         super.viewDidLoad()
         
         
+        onStage.set(true)
+        
         genericView.presentation = self.presentation
         genericView.packsView.delegate = self
         
