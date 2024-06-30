@@ -1667,7 +1667,7 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.updateEditingNames(firstName: state.editingState?.editingFirstName, lastName: $0)
             }, limit: 255)
         case let .botEditUsername(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext(text), viewType: viewType, action: arguments.openEditBotUsername)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
         case let .botStarsBalance(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoStarsBalance, type: .nextContext(text), viewType: viewType, action: arguments.openStarsBalance)
         case let .botEditIntro(_, viewType):
