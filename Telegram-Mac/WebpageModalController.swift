@@ -484,11 +484,11 @@ private final class WebpageView : View {
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate {
     
     struct BotData {
-        let queryId: Int64
+        let queryId: Int64?
         let bot: Peer
         let peerId: PeerId
         let buttonText: String
-        let keepAliveSignal: Signal<Never, KeepWebViewError>
+        let keepAliveSignal: Signal<Never, KeepWebViewError>?
     }
     
     enum RequestData {
@@ -759,8 +759,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, source: source, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
-                    self?.url = url
-                    self?.genericView.load(url: url, preload: self?.preloadData, animated: true)
+                    self?.url = url.url
+                    self?.genericView.load(url: url.url, preload: self?.preloadData, animated: true)
                 }, error: { [weak self] error in
                     switch error {
                     case .generic:
@@ -781,13 +781,16 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     
                     self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
                     self?.genericView.load(url: result.url, preload: self?.preloadData, animated: true)
-                    self?.keepAliveDisposable = (result.keepAliveSignal
-                                                 |> deliverOnMainQueue).start(error: { [weak self] _ in
-                        self?.close()
-                    }, completed: { [weak self] in
-                        self?.close()
-                        complete?()
-                    })
+                    if let keepAliveSignal = result.keepAliveSignal {
+                        self?.keepAliveDisposable = (keepAliveSignal
+                                                     |> deliverOnMainQueue).start(error: { [weak self] _ in
+                            self?.close()
+                        }, completed: { [weak self] in
+                            self?.close()
+                            complete?()
+                        })
+                    }
+                    
                     self?.url = result.url
                 }, error: { [weak self] error in
                     switch error {

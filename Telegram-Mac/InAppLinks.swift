@@ -790,13 +790,13 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                 }
                                 
                                 
-                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestAppWebViewError> = { botApp, allowWrite in
-                                    return context.engine.messages.requestAppWebView(peerId: peerId ?? peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
-                                        return (botApp, $0)
+                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestWebViewError> = { botApp, allowWrite in
+                                    return context.engine.messages.requestAppWebView(peerId: peerId ?? peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
+                                        return (botApp, $0.url)
                                     }
                                 }
 
-                                var signal: Signal<(BotApp, String?), RequestAppWebViewError> = botApp
+                                var signal: Signal<(BotApp, String?), RequestWebViewError> = botApp
                                 |> mapError { _ in
                                     .generic
                                 } |> mapToSignal { botApp in
