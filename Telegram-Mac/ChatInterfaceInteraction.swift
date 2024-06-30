@@ -796,7 +796,7 @@ final class ChatInteraction : InterfaceObserver  {
             if simple {
                 let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
                 _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic, hasSettings: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file))
+                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url.url, title: title ?? bot.displayTitle, requestData: .simple(url: url.url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic, hasSettings: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file))
                 })
             } else {
                 _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in

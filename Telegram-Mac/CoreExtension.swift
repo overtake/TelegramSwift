@@ -3780,8 +3780,8 @@ func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
         let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
         if !WebappWindow.focus(botId: bot.peer.id) {
-            _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file))
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
+                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: result.url, title: bot.shortName, requestData: .simple(url: result.url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file))
             })
         }
        
