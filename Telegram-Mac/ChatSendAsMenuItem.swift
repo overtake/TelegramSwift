@@ -63,7 +63,7 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
         
         let peer = self.peer.peer
         
-        signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(25 * System.backingScale, 25 * System.backingScale), font: .avatar(20), genCap: true, synchronousLoad: false, disableForum: true) |> deliverOnMainQueue
+        signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(25 * System.backingScale, 25 * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false, disableForum: true) |> deliverOnMainQueue
         disposable.set(signal.start(next: { [weak item] image, _ in
             if let image = image {
                 item?.image = NSImage(cgImage: image, size: NSMakeSize(25, 25))
