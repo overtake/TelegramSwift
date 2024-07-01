@@ -24,6 +24,7 @@ let itunesAppLink = "https://apps.apple.com/us/app/telegram/id747648890"
 let XTR: String = TelegramCurrency.xtr.rawValue
 let XTRSTAR: String = "⭐️"
 let XTR_ICON = "Icon_Peer_Premium"
+let TINY_SPACE = "\u{2009}\u{2009}"
 
 let TON: String = TelegramCurrency.ton.rawValue
 
