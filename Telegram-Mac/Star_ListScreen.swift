@@ -831,7 +831,13 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     #endif
     
     var close:(()->Void)? = nil
-
+    var getController:(()->ViewController?)? = nil
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -897,23 +903,23 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         
         let source: BotPaymentInvoiceSource = .stars(option: option.native)
         
-        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
+        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: window)
 
         _ = signal.start(next: { invoice in
             showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
                 switch status {
                 case .paid:
-                    PlayConfetti(for: context.window, stars: true)
-                    showModalText(for: context.window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
+                    PlayConfetti(for: window, stars: true)
+                    showModalText(for: window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
                     close?()
                 case .cancelled:
                     break
                 case .failed:
                     break
                 }
-            }), for: context.window)
+            }), for: window)
         }, error: { error in
-            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+            showModalText(for: window, text: strings().paymentsInvoiceNotExists)
         })
     }
     
@@ -931,7 +937,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         var needToShow = true
         delay(0.2, closure: {
             if needToShow {
-                showModal(with: lockModal, for: context.window)
+                showModal(with: lockModal, for: window)
             }
         })
         
@@ -950,8 +956,8 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                     starsContext.add(balance: option.amount)
                     
                     delay(0.2, closure: {
-                        PlayConfetti(for: context.window, stars: true)
-                        showModalText(for: context.window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
+                        PlayConfetti(for: window, stars: true)
+                        showModalText(for: window, text: strings().starListBuySuccessCountable(Int(option.amount)).replacingOccurrences(of: "\(option.amount)", with: option.amount.formattedWithSeparator))
                     })
                     
                 }, error: { [weak lockModal] error in
@@ -971,7 +977,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                             errorText = strings().premiumBoardingAppStoreCancelled
                     }
                     lockModal?.close()
-                    showModalText(for: context.window, text: errorText)
+                    showModalText(for: window, text: errorText)
                     inAppPurchaseManager.finishAllTransactions()
                 }))
             } else {
@@ -996,7 +1002,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, dismiss: {
         close?()
     }, buyMore: {
-        showModal(with: Star_ListScreen(context: context, source: .buy), for: context.window)
+        showModal(with: Star_ListScreen(context: context, source: .buy), for: window)
     }, toggleFilterMode: { mode in
         updateState { current in
             var current = current
@@ -1012,7 +1018,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, loadMore: {
         context.starsContext.loadMore()
     }, openTransaction: { transaction in
-        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
+        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -1020,6 +1026,10 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

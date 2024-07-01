@@ -255,6 +255,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             effectiveFile = FileMediaReference.savedSticker(media: media)
                         case .recentSticker(media: let media):
                             effectiveFile = FileMediaReference.recentSticker(media: media)
+                        case let .starsTransaction(transaction, media):
+                            effectiveFile = FileMediaReference.starsTransaction(transaction: transaction, media: media)
                         }
                         
                     }

@@ -15,7 +15,7 @@ import TGUIKit
 private final class CenterView : TitledBarView {
     let segment: CatalinaStyledSegmentController
     var select:((Int)->Void)? = nil
-    init(controller: ViewController, monetization: Bool) {
+    init(controller: ViewController, monetization: Bool, stars: Bool) {
         self.segment = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(controller: controller)
         
@@ -30,12 +30,13 @@ private final class CenterView : TitledBarView {
             segment.add(segment: .init(title: strings().statsMonetization, handler: { [weak self] in
                 self?.select?(2)
             }))
-//            
+        }
+        
+        if stars {
             segment.add(segment: .init(title: strings().statsStars, handler: { [weak self] in
                 self?.select?(3)
             }))
         }
-        
         
         self.addSubview(segment.view)
         
@@ -70,16 +71,19 @@ final class ChannelStatsSegmentController : SectionViewController {
     private let stars: ViewController?
     private let context: AccountContext
     private let peerId: PeerId
-    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool, monetization: Bool = false) {
+    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool, monetization: Bool = false, stars: Bool = false) {
         self.context = context
         self.peerId = peerId
         if isChannel {
             self.stats = ChannelStatsViewController(context, peerId: peerId)
             if monetization {
                 self.monetization = FragmentMonetizationController(context: context, peerId: peerId)
-                self.stars = FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: nil)
             } else {
                 self.monetization = nil
+            }
+            if stars {
+                self.stars = FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: nil)
+            } else {
                 self.stars = nil
             }
         } else {
@@ -104,7 +108,7 @@ final class ChannelStatsSegmentController : SectionViewController {
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
-        return CenterView(controller: self, monetization: self.monetization != nil)
+        return CenterView(controller: self, monetization: self.monetization != nil, stars: self.stars != nil)
     }
     
     override func getRightBarViewOnce() -> BarView {

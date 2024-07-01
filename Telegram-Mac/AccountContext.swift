@@ -25,6 +25,11 @@ let clown: String = "🤡"
 let focusIntentEmoji = "⛔️"
 
 
+
+func bestWindow(_ accountContext: AccountContext, _ controller: ViewController?) -> Window {
+    return controller?.window ?? accountContext.window
+}
+
 public struct PremiumConfiguration {
     public static var defaultValue: PremiumConfiguration {
         return PremiumConfiguration(

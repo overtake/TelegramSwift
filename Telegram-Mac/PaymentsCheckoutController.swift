@@ -440,6 +440,13 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         completion = nil
     }
     
+    var getController:(()->ViewController?)? = nil
+    
+    
+    let window:()->Window = {
+        return bestWindow(context, getController?())
+    }
+    
     var close:(()->Void)? = nil
     let actionsDisposable = DisposableSet()
 
@@ -456,7 +463,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
            
             let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
             if canSave {
-                verifyAlert_button(for: context.window, information: strings().checkoutInfoSaveInfoHelp, ok: strings().modalYes, cancel: strings().modalNotNow, successHandler: { _ in
+                verifyAlert_button(for: window(), information: strings().checkoutInfoSaveInfoHelp, ok: strings().modalYes, cancel: strings().modalNotNow, successHandler: { _ in
                     updateState { current in
                         var current = current
                         current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
@@ -477,7 +484,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                 }
             }
 
-        })), for: context.window)
+        })), for: window())
     }
 
     let arguments = Arguments(context: context, openForm: { focus in
@@ -490,7 +497,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                     current.validatedInfo = validatedInfo
                     return current
                 }
-            }), for: context.window)
+            }), for: window())
         }
     }, openShippingMethod: {
         let state = stateValue.with({ $0 })
@@ -501,7 +508,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                     current.shippingOptionId = id
                     return current
                 }
-            }), for: context.window)
+            }), for: window())
         }
     }, openPaymentMethod: {
         if let form = stateValue.with({ $0.form }), let value = parseRequestedPaymentMethod(paymentForm: form) {
@@ -513,7 +520,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                         current.paymentMethod = method
                         return current
                     }
-                }), for: context.window)
+                }), for: window())
             }
             
             let methods = availablePaymentMethods(form: form, current: nil)
@@ -523,7 +530,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                     current.paymentMethod = .savedCredentials(selected)
                     return current
                 }
-            }, addNew: openNewCard, addPaymentMethod: addPaymentMethod), for: context.window)
+            }, addNew: openNewCard, addPaymentMethod: addPaymentMethod), for: window())
             
         } else if let paymentForm = stateValue.with({ $0.form }) {
             if let url = paymentForm.url {
@@ -546,7 +553,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                 
                 let paySignal = context.engine.payments.sendBotPaymentForm(source: source, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
                 
-                _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
+                _ = showModalProgress(signal: paySignal, for: window()).start(next: { result in
                     
                     let success:(Bool)->Void = { value in
                         if value {
@@ -557,14 +564,14 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                             
                             let total = formatCurrencyAmount(totalValue, currency: form.invoice.currency)
                             
-                            showModalText(for: context.window, text: strings().paymentsPaid(total, invoice.title))
+                            showModalText(for: window(), text: strings().paymentsPaid(total, invoice.title))
                         }
                     }
                     switch result {
                     case .done:
                         success(true)
                     case let .externalVerificationRequired(url: url):
-                        showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .externalVerification(success)), for: context.window)
+                        showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .externalVerification(success)), for: window())
                     }
                 }, error: { error in
                     let text: String
@@ -578,7 +585,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                     case .precheckoutFailed:
                         text = strings().checkoutErrorPrecheckoutFailed
                     }
-                    alert(for: context.window, info: text)
+                    alert(for: window(), info: text)
                     invokeCompletion(.failed)
                     close?()
                 })
@@ -596,7 +603,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                         if value {
                             pay()
                         } else {
-                            verifyAlert_button(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+                            verifyAlert_button(for: window(), header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
                                 pay()
                                 _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
                             })
@@ -634,7 +641,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                                         }
                                     })
                                 }
-                            }), for: context.window)
+                            }), for: window())
                         }
                     })
                 }
@@ -642,7 +649,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         case let .webToken(token):
             pay(.generic(data: token.data, saveOnServer: token.saveOnServer))
         default:
-            alert(for: context.window, info: "Unsupported")
+            alert(for: window(), info: "Unsupported")
             return
         }
     }, selectTip: { value in
@@ -733,9 +740,13 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         close?()
         switch error {
         case .generic:
-            alert(for: context.window, info: strings().unknownError)
+            alert(for: window(), info: strings().unknownError)
         }
     }))
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     
     controller.onDeinit = {

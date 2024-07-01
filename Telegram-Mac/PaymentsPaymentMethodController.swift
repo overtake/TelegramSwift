@@ -441,6 +441,14 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    var getController:(()->ViewController?)? = nil
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
 
     let arguments = Arguments(context: context, toggleSaveInfo: {
         updateState { current in
@@ -485,13 +493,13 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
         case let .smartglocal(customTokenizeUrl):
             tokenSignal = validateSmartGlobal(publishableKey, isTesting: isTesting, state: stateValue.with { $0 }, customTokenizeUrl: customTokenizeUrl) |> map(Optional.init)
         }
-        _ = showModalProgress(signal: tokenSignal, for: context.window).start(next: { token in
+        _ = showModalProgress(signal: tokenSignal, for: window).start(next: { token in
             if let token = token {
                 completion(token)
                 close?()
             }
         }, error: { error in
-            alert(for: context.window, info: error.localizedDescription)
+            alert(for: window, info: error.localizedDescription)
         })
 
     }, passwordMissing: passwordMissing)
@@ -501,6 +509,10 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
     }
     
     let controller = InputDataController(dataSignal: signal, title: strings().checkoutNewCardTitle)
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

@@ -189,7 +189,7 @@ private final class TransactionView : GeneralContainableRowView {
         dateView.update(item.dateLayout)
         nameView.update(item.nameLayout)
         
-        if let media = item.transaction.native.media.first {
+        if let media = item.transaction.native.media.first, let messageId = item.transaction.native.paidMessageId {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
@@ -213,14 +213,17 @@ private final class TransactionView : GeneralContainableRowView {
                 self.photo = current
             }
             current.layer?.cornerRadius = 10
+                        
+            let reference = StarsTransactionReference(peerId: messageId.peerId, id: item.transaction.id, isRefund: item.transaction.native.flags.contains(.isRefund))
             
             var updateImageSignal: Signal<ImageDataTransformation, NoError>?
             
             if let image = media as? TelegramMediaImage {
-                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
+                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.starsTransaction(transaction: reference, media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             } else if let file = media as? TelegramMediaFile {
-                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .standalone(media: file), scale: backingScaleFactor)
+                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .starsTransaction(transaction: reference, media: file), scale: backingScaleFactor)
             }
+
 
             if let updateImageSignal {
                 current.setSignal(updateImageSignal, isProtected: true)

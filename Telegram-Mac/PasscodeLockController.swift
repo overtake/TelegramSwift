@@ -410,15 +410,15 @@ class PasscodeLockController: ModalViewController {
     override func windowDidBecomeKey() {
         super.windowDidBecomeKey()
 
-        if NSApp.isActive {
+        if NSApp.isActive, useTouchId {
             callTouchId()
         }
     }
     
     override func windowDidResignKey() {
         super.windowDidResignKey()
-        if !NSApp.isActive {
-           // invalidateTouchId()
+        if !NSApp.isActive, useTouchId {
+            invalidateTouchId()
         }
     }
     

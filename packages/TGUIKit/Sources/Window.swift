@@ -629,6 +629,7 @@ open class Window: NSWindow {
             return
         }
         if isReleasedWhenClosed {
+            closeAllModals(window: self)
             super.close()
         } else {
             super.close()

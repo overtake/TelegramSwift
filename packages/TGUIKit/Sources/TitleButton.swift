@@ -134,6 +134,8 @@ open class TextButton: ImageButton {
         }
         let attributedString = NSAttributedString.initialize(string: text, color: color, font: font)
         self.text.attributedString = attributedString
+        
+        needsLayout = true
     }
     
     public var isEmpty: Bool {
@@ -202,6 +204,7 @@ open class TextButton: ImageButton {
         
         
         self.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: maxWidth, height: max(size.height,maxSize.height) + addition.height)
+        updateLayout()
         return frame.width >= maxWidth
     }
     
