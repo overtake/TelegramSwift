@@ -69,16 +69,23 @@ private final class HeaderView : Control {
         case dismiss
     }
     
+    private let titleContainer = View()
+    
     private let titleView: TextView = TextView()
+    private var statusView: PremiumStatusControl?
+    
     private let subtitleView: TextView = TextView()
     private var leftButton: Control?
     private let rightButton: ImageButton = ImageButton()
     private var leftCallback:(()->Void)?
     private var rightCallback:(()->ContextMenu?)?
+    private var context: AccountContext?
+    private var bot: Peer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        addSubview(titleView)
+        addSubview(titleContainer)
+        titleContainer.addSubview(titleView)
         addSubview(subtitleView)
         addSubview(rightButton)
                 
@@ -109,10 +116,12 @@ private final class HeaderView : Control {
     private var title: String = ""
     private var subtitle: String = ""
     
-    func update(title: String, subtitle: String, left: Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?) {
+    func update(title: String, subtitle: String, left: Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?, context: AccountContext, bot: Peer?) {
         
         self.subtitle = subtitle
         self.title = title
+        self.context = context
+        self.bot = bot
         
         let prevLeft = self.prevLeft
         self.prevLeft = left
@@ -126,11 +135,22 @@ private final class HeaderView : Control {
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
+        
+        if let peer = bot, let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusView, animated: false) {
+            
+            self.titleContainer.addSubview(control)
+            self.statusView = control
+        } else if let view = self.statusView {
+            performSubviewRemoval(view, animated: animated)
+            self.statusView = nil
+        }
+        
+        
         let secondColor = self.backgroundColor.lightness > 0.8 ? darkPalette.grayText : dayClassicPalette.grayText
                 
         subtitleView.update(TextViewLayout(.initialize(string: subtitle, color: secondColor, font: .normal(.text)), maximumNumberOfLines: 1))
         
-        rightButton.set(image: NSImage(named: "Icon_ChatActionsActive")!.precomposed(color), for: .Normal)
+        rightButton.set(image: NSImage(resource: .iconChatActionsActive).precomposed(color), for: .Normal)
         rightButton.sizeToFit()
         
         if prevLeft != left || prevLeft == nil || !animated {
@@ -142,14 +162,14 @@ private final class HeaderView : Control {
                 let btn = ImageButton()
                 btn.autohighlight = false
                 btn.animates = false
-                btn.set(image: NSImage(named: "Icon_ChatSearchCancel")!.precomposed(color), for: .Normal)
+                btn.set(image: NSImage(resource: .iconChatSearchCancel).precomposed(color), for: .Normal)
                 btn.sizeToFit()
                 button = btn
             case .back:
                 let btn = TextButton()
                 btn.autohighlight = false
                 btn.animates = false
-                btn.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(color), for: .Normal)
+                btn.set(image: NSImage(resource: .iconChatNavigationBack).precomposed(color), for: .Normal)
                 btn.set(text: strings().navigationBack, for: .Normal)
                 btn.set(font: .normal(.title), for: .Normal)
                 btn.set(color: color, for: .Normal)
@@ -175,8 +195,8 @@ private final class HeaderView : Control {
     
     override var backgroundColor: NSColor {
         didSet {
-            if let prevLeft = prevLeft, let leftCallback = leftCallback, let rightCallback = rightCallback {
-                self.update(title: self.title, subtitle: self.subtitle, left: prevLeft, animated: false, leftCallback: leftCallback, contextMenu: rightCallback)
+            if let prevLeft = prevLeft, let leftCallback = leftCallback, let rightCallback = rightCallback, let context = self.context {
+                self.update(title: self.title, subtitle: self.subtitle, left: prevLeft, animated: false, leftCallback: leftCallback, contextMenu: rightCallback, context: context, bot: self.bot)
             }
         }
     }
@@ -199,9 +219,22 @@ private final class HeaderView : Control {
         titleView.resize(frame.width - 40 - additionalSize)
         subtitleView.resize(frame.width - 40 - additionalSize)
         
+        var titleSize: NSSize = titleView.frame.size
+
+        
+        if let statusView {
+            titleSize.width += (statusView.frame.width + 2)
+        }
+        titleContainer.setFrameSize(titleSize)
+        
         let center = frame.midY
-        titleView.centerX(y: center - titleView.frame.height - 1)
+        titleContainer.centerX(y: center - titleContainer.frame.height - 1)
         subtitleView.centerX(y: center + 1)
+        
+        
+        titleView.centerY(x: 0)
+        statusView?.centerY(x: titleView.frame.maxX + 2)
+        
         
     }
     
@@ -438,8 +471,8 @@ private final class WebpageView : View {
     }
     
     
-    func updateHeader(title: String, subtitle: String, left: HeaderView.Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?) {
-        self.headerView.update(title: title, subtitle: subtitle, left: left, animated: animated, leftCallback: leftCallback, contextMenu: contextMenu)
+    func updateHeader(title: String, subtitle: String, left: HeaderView.Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?, context: AccountContext, bot: Peer?) {
+        self.headerView.update(title: title, subtitle: subtitle, left: left, animated: animated, leftCallback: leftCallback, contextMenu: contextMenu, context: context, bot: bot)
     }
     
     override func layout() {
@@ -1653,7 +1686,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 menu.addItem(item)
             }
             return menu
-        })
+        }, context: context, bot: self.bot)
 
     }
     
