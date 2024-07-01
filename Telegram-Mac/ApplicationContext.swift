@@ -547,16 +547,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-        self.context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: Star_ListScreen(context: context, source: .buy), for: context.window)
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
-        
-        self.context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: Star_ListScreen(context: context, source: .account), for: context.window)
-            return .invoked
-        }, with: self, for: .R, priority: .supreme, modifierFlags: [.command])
-
         #endif
         
         

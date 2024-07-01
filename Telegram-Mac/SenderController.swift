@@ -341,11 +341,14 @@ class Sender: NSObject {
                             if size.width / 10 > size.height || size.height < 40 {
                                 makeFileMedia(true)
                             } else {
-                                let data = compressImageToJPEG(image, quality: 0.83)
+                                let data = compressImageToJPEG(image, quality: 0.73)
                                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
                                 if let data = data {
                                     try? data.write(to: URL(fileURLWithPath: path))
                                 }
+                                
+
+
                                 
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)

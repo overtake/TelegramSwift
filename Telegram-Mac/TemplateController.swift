@@ -43,6 +43,14 @@ func template(context: AccountContext) -> InputDataController {
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    var getController:(()->ViewController?)? = nil
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
 
     let arguments = Arguments(context: context)
     
@@ -51,6 +59,10 @@ func template(context: AccountContext) -> InputDataController {
     }
     
     let controller = InputDataController(dataSignal: signal, title: " ")
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

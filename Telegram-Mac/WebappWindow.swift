@@ -67,10 +67,16 @@ private final class Webapp : Window {
         
         
         self.controller.viewDidAppear(true)
+        
+    }
+    
+    override func close() {
+        super.close()
     }
     
     deinit {
-        
+        var bp = 0
+        bp += 1
     }
 }
 

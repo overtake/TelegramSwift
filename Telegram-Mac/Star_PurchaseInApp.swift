@@ -499,6 +499,13 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     
     
     var close:(()->Void)? = nil
+    var getController:(()->ViewController?)? = nil
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
 
     let arguments = Arguments(context: context, dismiss: {
         close?()
@@ -507,10 +514,10 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
         let myBalance = state.myBalance ?? 0
         if let peer = state.peer {
             if state.request.count > myBalance {
-                showModal(with: Star_ListScreen(context: context, source: .purchase(peer, state.request.count)), for: context.window)
+                showModal(with: Star_ListScreen(context: context, source: .purchase(peer, state.request.count)), for: window)
             } else {
                 if let form = state.form {
-                    _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: context.window).startStandalone(next: { result in
+                    _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: window).startStandalone(next: { result in
                         switch result {
                         case .done:
 //                            starsContext.add(balance: -state.request.count)
@@ -521,7 +528,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                             case .paidMedia:
                                 text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
                             }
-                            showModalText(for: context.window, text: text)
+                            showModalText(for: window, text: text)
                             completion(.paid)
                             procced = true
                             close?()
@@ -540,7 +547,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                         case .precheckoutFailed:
                             text = strings().checkoutErrorPrecheckoutFailed
                         }
-                        showModalText(for: context.window, text: text)
+                        showModalText(for: window, text: text)
                         completion(.failed)
                     })
                 }
@@ -553,6 +560,10 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

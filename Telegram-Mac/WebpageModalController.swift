@@ -760,6 +760,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
             return .invoked
         }, with: self, priority: responderPriority)
+        
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.close()
+            return .invoked
+        }, with: self, for: .W, priority: responderPriority, modifierFlags: [.command])
     }
     
     override func viewWillDisappear(_ animated: Bool) {

@@ -212,7 +212,7 @@ private final class HeaderView : GeneralContainableRowView {
             return
         }
         
-        if let media = item.transaction.media.first {
+        if let media = item.transaction.media.first, let messageId = item.transaction.paidMessageId {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
@@ -232,12 +232,14 @@ private final class HeaderView : GeneralContainableRowView {
             }
             current.layer?.cornerRadius = 10
             
+            let reference = StarsTransactionReference(peerId: messageId.peerId, id: item.transaction.id, isRefund: item.transaction.flags.contains(.isRefund))
+            
             var updateImageSignal: Signal<ImageDataTransformation, NoError>?
             
             if let image = media as? TelegramMediaImage {
-                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
+                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.starsTransaction(transaction: reference, media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             } else if let file = media as? TelegramMediaFile {
-                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .standalone(media: file), scale: backingScaleFactor)
+                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .starsTransaction(transaction: reference, media: file), scale: backingScaleFactor)
             }
 
             if let updateImageSignal {
@@ -557,13 +559,21 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
             }
         }))
     }
+    
+    var getController:(()->ViewController?)? = nil
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
 
     let arguments = Arguments(context: context, openPeer: { peerId in
         context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
         close?()
     }, copyTransaction: { string in
         copyToClipboard(string)
-        showModalText(for: context.window, text: strings().starTransactionCopied)
+        showModalText(for: window, text: strings().starTransactionCopied)
     }, openLink: { link in
         execute(inapp: inApp(for: link.nsstring, context: context, openInfo: { peerId, _, messageId, _ in
             if let messageId = messageId {
@@ -575,14 +585,14 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
                         return true
                     }
                 } |> take(1)
-                _ = showModalProgress(signal: signal, for: context.window).startStandalone(next: { result in
+                _ = showModalProgress(signal: signal, for: window).startStandalone(next: { result in
                     switch result {
                     case let .result(messages):
                         if let _ = messages.first {
                             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), focusTarget: .init(messageId: messageId)))
                              closeAllModals()
                         } else {
-                            showModalText(for: context.window, text: strings().chatOpenMessageNotExist)
+                            showModalText(for: window, text: strings().chatOpenMessageNotExist)
                         }
                     default:
                         break
@@ -605,6 +615,10 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     controller.didLoad = { controller, _ in
         gallery = .init(tableView: controller.tableView)
