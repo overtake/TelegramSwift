@@ -113,8 +113,8 @@ private final class AcceptView : Control {
     func update(_ item: HeaderItem, animated: Bool) {
         let attr = NSMutableAttributedString()
         
-        attr.append(string: strings().starPurchasePay("\(clown)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
-        attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: clown)
+        attr.append(string: strings().starPurchasePay("\(XTRSTAR)\(TINY_SPACE)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
+        attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
         
         let layout = TextViewLayout(attr)
         layout.measure(width: item.width - 60)
