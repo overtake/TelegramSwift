@@ -382,7 +382,7 @@ func <(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
     return lhs.entry < rhs.entry
 }
 
-private class Layer: SimpleLayer {
+private class Layer: CALayer {
     var contentsDidChange: ((NSImage?)->Void)?
     override var contents: Any? {
         didSet {
@@ -420,6 +420,9 @@ private final class MGalleryItemView : NSView {
             }
             let preventsCapture = self.preventsCapture
             self.preventsCapture = preventsCapture
+            if preventsCapture {
+                self.layer?.disableActions()
+            }
         }
     }
     
