@@ -235,7 +235,7 @@ private final class HeaderView : GeneralContainableRowView {
             var updateImageSignal: Signal<ImageDataTransformation, NoError>?
             
             if let image = media as? TelegramMediaImage {
-                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: false)
+                updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             } else if let file = media as? TelegramMediaFile {
                 updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .standalone(media: file), scale: backingScaleFactor)
             }
