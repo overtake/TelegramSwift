@@ -100,7 +100,7 @@ final class InteractiveTextView : Control {
                 } else if case let .avatar(peer) = stickerItem.source {
                     let id = InlineStickerItemLayer.Key(id: peer.id.toInt64(), index: index)
                     validIds.append(id)
-                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 2, item.rect.width - 3, item.rect.width - 3)
+                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 3, item.rect.width - 3, item.rect.width - 3)
                    
                     let view: InlineAvatarLayer
                     if let current = itemViews[id] as? InlineAvatarLayer {
