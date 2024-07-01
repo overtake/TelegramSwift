@@ -543,8 +543,8 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var backgroundMode: TableBackgroundMode?
     
-    func updateBackground(_ mode: TableBackgroundMode, navigationView: NSView?) {
-        if mode != theme.controllerBackgroundMode {
+    func updateBackground(_ mode: TableBackgroundMode, navigationView: NSView?, isStandalone: Bool) {
+        if mode != theme.controllerBackgroundMode || isStandalone {
             if let navigationView = navigationView, backgroundMode != mode, self.backgroundView == nil {
                 let point = NSMakePoint(0, -frame.minY)
                 let backgroundView = BackgroundView(frame: CGRect.init(origin: point, size: navigationView.bounds.size))
@@ -7149,7 +7149,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var checkPremiumStickers: Bool = true
     override func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         super.updateBackgroundColor(backgroundMode)
-        genericView.updateBackground(backgroundMode, navigationView: self.navigationController?.view)
+        genericView.updateBackground(backgroundMode, navigationView: self.navigationController?.view, isStandalone: self.navigationController?.modal != nil)
     }
     
     private var currentDeleteAnimationCorrelationIds = Set<AnyHashable>()
