@@ -307,7 +307,7 @@ class WPArticleContentView: WPContentView {
                 progressIndicator = nil
             }
             
-            var image = layout.content.image
+            var image = layout.groupLayout == nil ? layout.content.image : nil
             if layout.content.image == nil, let file = layout.content.file, let dimension = layout.imageSize {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)

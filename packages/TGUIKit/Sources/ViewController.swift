@@ -1337,6 +1337,9 @@ open class ModalController : ModalViewController {
         return controller.controller.escapeKeyAction()
     }
 
+    open override var hasBorder: Bool {
+        return false
+    }
     
     open override var hasNextResponder: Bool {
         return true
