@@ -524,7 +524,7 @@ private final class TopicNameAndTextView : View {
                         
                         
                         var rect: NSRect
-                        rect = item.rect.insetBy(dx: -2, dy: -2)
+                        rect = item.rect.insetBy(dx: 1, dy: 1)
 
                         if textLayout.hasBlock {
                             rect = rect.offsetBy(dx: 6, dy: 1)
