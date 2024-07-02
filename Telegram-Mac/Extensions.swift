@@ -1849,7 +1849,11 @@ func copyToClipboard(_ input: ChatTextInputState) -> Void {
 
 extension LAPolicy {
     static var applicationPolicy: LAPolicy {
-        return .deviceOwnerAuthentication
+        if #available(macOS 10.15, *) {
+            return .deviceOwnerAuthenticationWithBiometricsOrWatch
+        } else {
+            return .deviceOwnerAuthentication
+        }
     }
 }
 
