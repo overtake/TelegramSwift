@@ -529,6 +529,14 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                                 text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
                             }
                             showModalText(for: window, text: text)
+                            
+                            switch type {
+                            case .paidMedia:
+                                PlayConfetti(for: window, stars: true)
+                            default:
+                                break
+                            }
+                            
                             completion(.paid)
                             procced = true
                             close?()
