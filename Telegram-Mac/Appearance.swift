@@ -91,6 +91,127 @@ public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImag
 }
 #endif
 
+
+import Cocoa
+
+func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFloat? = nil, tailSize: CGSize = CGSize(width: 20.0, height: 9.0), tailRadius: CGFloat = 4.0, tailPosition: CGFloat? = 0.5, transformTail: Bool = true) -> NSBezierPath {
+    let cornerRadius: CGFloat = cornerRadius ?? rectSize.height / 2.0
+    let tailWidth: CGFloat = tailSize.width
+    let tailHeight: CGFloat = tailSize.height
+
+    let rect = CGRect(origin: CGPoint(x: 0.0, y: tailHeight), size: rectSize)
+    
+    guard let tailPosition else {
+        let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
+        return path
+    }
+
+    let cutoff: CGFloat = 0.27
+    
+    let path = NSBezierPath()
+    path.move(to: CGPoint(x: rect.minX, y: rect.minY + cornerRadius))
+
+    var leftArcEndAngle: CGFloat = .pi / 2.0
+    var leftConnectionArcRadius = tailRadius
+    var tailLeftHalfWidth: CGFloat = tailWidth / 2.0
+    var tailLeftArcStartAngle: CGFloat = -.pi / 4.0
+    var tailLeftHalfRadius = tailRadius
+    
+    var rightArcStartAngle: CGFloat = -.pi / 2.0
+    var rightConnectionArcRadius = tailRadius
+    var tailRightHalfWidth: CGFloat = tailWidth / 2.0
+    var tailRightArcStartAngle: CGFloat = .pi / 4.0
+    var tailRightHalfRadius = tailRadius
+    
+    if transformTail {
+        if tailPosition < 0.5 {
+            let fraction = max(0.0, tailPosition - 0.15) / 0.35
+            leftArcEndAngle *= fraction
+            
+            let connectionFraction = max(0.0, tailPosition - 0.35) / 0.15
+            leftConnectionArcRadius *= connectionFraction
+            
+            if tailPosition < cutoff {
+                let fraction = tailPosition / cutoff
+                tailLeftHalfWidth *= fraction
+                tailLeftArcStartAngle *= fraction
+                tailLeftHalfRadius *= fraction
+            }
+        } else if tailPosition > 0.5 {
+            let tailPosition = 1.0 - tailPosition
+            let fraction = max(0.0, tailPosition - 0.15) / 0.35
+            rightArcStartAngle *= fraction
+            
+            let connectionFraction = max(0.0, tailPosition - 0.35) / 0.15
+            rightConnectionArcRadius *= connectionFraction
+            
+            if tailPosition < cutoff {
+                let fraction = tailPosition / cutoff
+                tailRightHalfWidth *= fraction
+                tailRightArcStartAngle *= fraction
+                tailRightHalfRadius *= fraction
+            }
+        }
+    }
+    
+    path.appendArc(withCenter: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + cornerRadius),
+                   radius: cornerRadius,
+                   startAngle: 180,
+                   endAngle: 180 + max(0.0001, leftArcEndAngle * 180 / .pi),
+                   clockwise: false)
+
+    let leftArrowStart = max(rect.minX, rect.minX + rectSize.width * tailPosition - tailLeftHalfWidth - leftConnectionArcRadius)
+    path.appendArc(withCenter: CGPoint(x: leftArrowStart, y: rect.minY - leftConnectionArcRadius),
+                   radius: leftConnectionArcRadius,
+                   startAngle: 90,
+                   endAngle: 45,
+                   clockwise: true)
+
+    path.line(to: CGPoint(x: max(rect.minX, rect.minX + rectSize.width * tailPosition - tailLeftHalfRadius), y: rect.minY - tailHeight))
+
+    path.appendArc(withCenter: CGPoint(x: rect.minX + rectSize.width * tailPosition, y: rect.minY - tailHeight + tailRadius / 2.0),
+                   radius: tailRadius,
+                   startAngle: -90 + tailLeftArcStartAngle * 180 / .pi,
+                   endAngle: -90 + tailRightArcStartAngle * 180 / .pi,
+                   clockwise: false)
+    
+    path.line(to: CGPoint(x: min(rect.maxX, rect.minX + rectSize.width * tailPosition + tailRightHalfRadius), y: rect.minY - tailHeight))
+
+    let rightArrowStart = min(rect.maxX, rect.minX + rectSize.width * tailPosition + tailRightHalfWidth + rightConnectionArcRadius)
+    path.appendArc(withCenter: CGPoint(x: rightArrowStart, y: rect.minY - rightConnectionArcRadius),
+                   radius: rightConnectionArcRadius,
+                   startAngle: 180 - 45,
+                   endAngle: 90,
+                   clockwise: true)
+
+    path.appendArc(withCenter: CGPoint(x: rect.minX + rectSize.width - cornerRadius, y: rect.minY + cornerRadius),
+                   radius: cornerRadius,
+                   startAngle: min(-0.0001, rightArcStartAngle * 180 / .pi),
+                   endAngle: 0,
+                   clockwise: false)
+
+    path.line(to: CGPoint(x: rect.minX + rectSize.width, y: rect.minY + rectSize.height - cornerRadius))
+
+    path.appendArc(withCenter: CGPoint(x: rect.minX + rectSize.width - cornerRadius, y: rect.minY + rectSize.height - cornerRadius),
+                   radius: cornerRadius,
+                   startAngle: 0,
+                   endAngle: 90,
+                   clockwise: false)
+
+    path.line(to: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + rectSize.height))
+
+    path.appendArc(withCenter: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + rectSize.height - cornerRadius),
+                   radius: cornerRadius,
+                   startAngle: 90,
+                   endAngle: 180,
+                   clockwise: false)
+    
+    return path
+}
+
+
+
+
 func chatReplyLineDashTemplateImage(_ colors: PeerNameColors.Colors, flipped: Bool) -> CGImage? {
     let radius: CGFloat = 3.0
     var offset: CGFloat = 5.0

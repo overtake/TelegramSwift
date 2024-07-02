@@ -791,6 +791,7 @@
 		27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */; };
 		27EBC7B227579A7200C6A820 /* Reactions in Frameworks */ = {isa = PBXBuildFile; productRef = 27EBC7B127579A7200C6A820 /* Reactions */; };
 		27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27ED5A6C2750CDE100BA55A7 /* FoundationUtils */; };
+		27EE1E022C3365150002BAF8 /* Star_ReactionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE1E012C3365150002BAF8 /* Star_ReactionsController.swift */; };
 		27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC91DAED681001792B6 /* PresenceStrings.swift */; };
 		27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444B297FD91B0077AA0F /* DateUtils */; };
 		27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444D297FD9950077AA0F /* CalendarUtils */; };
@@ -2331,6 +2332,7 @@
 		27EBC7AD275789BC00C6A820 /* Reactions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Reactions; path = packages/Reactions; sourceTree = "<group>"; };
 		27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatReactionsView.swift; sourceTree = "<group>"; };
 		27ED5A692750CD4000BA55A7 /* FoundationUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FoundationUtils; path = packages/FoundationUtils; sourceTree = "<group>"; };
+		27EE1E012C3365150002BAF8 /* Star_ReactionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_ReactionsController.swift; sourceTree = "<group>"; };
 		27EE444F2981AD000077AA0F /* HelloView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloView.swift; sourceTree = "<group>"; };
 		27EF749429C3161E009FA57B /* SharedFolderClosureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedFolderClosureController.swift; sourceTree = "<group>"; };
 		27EF749629C44077009FA57B /* ShareCloudFolderController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCloudFolderController.swift; sourceTree = "<group>"; };
@@ -4135,6 +4137,7 @@
 				27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */,
 				2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */,
 				27B836212B5FF6E100E82683 /* EditTagLabelController.swift */,
+				27EE1E012C3365150002BAF8 /* Star_ReactionsController.swift */,
 			);
 			name = reactions;
 			sourceTree = "<group>";
@@ -7967,6 +7970,7 @@
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */,
 				27296B392B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift in Sources */,
+				27EE1E022C3365150002BAF8 /* Star_ReactionsController.swift in Sources */,
 				27F4F18E284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift in Sources */,
 				270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
