@@ -20,10 +20,17 @@ class ReplyMarkupButtonLayout {
     let text:TextViewLayout
     let button:ReplyMarkupButton
     let presentation: TelegramPresentationTheme
-    init(button:ReplyMarkupButton, theme: TelegramPresentationTheme, isInput: Bool, paid: Bool) {
+    init(button:ReplyMarkupButton, theme: TelegramPresentationTheme, isInput: Bool, paid: Bool, xtrAmount: Int64?) {
         self.button = button
         self.presentation = theme
-        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .semibold(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
+        let attr = NSMutableAttributedString()
+        
+        let color = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text
+        
+        attr.append(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: color, font: .semibold(.short))
+
+        
+        self.text = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }
     
     func measure(_ width:CGFloat) {
@@ -53,15 +60,17 @@ class ReplyMarkupNode: Node {
     private let interactions:ReplyMarkupInteractions
     private let isInput: Bool
     private let theme: TelegramPresentationTheme
-    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false) {
+    private let xtr: Bool
+    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false, xtrAmount: Int64? = nil) {
         self.flags = flags
         self.isInput = isInput
+        self.xtr = xtrAmount != nil
         self.interactions = interactions
         self.theme = theme
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
-                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, theme: theme, isInput: isInput, paid: paid))
+                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, theme: theme, isInput: isInput, paid: paid, xtrAmount: xtrAmount))
             }
         }
         self.markup = layoutRows
@@ -86,9 +95,11 @@ class ReplyMarkupNode: Node {
                         urlView?.sizeToFit()
                     }
                 case .payment:
-                    urlView = ImageView()
-                    urlView?.image = theme.chat.chatInvoiceAction(theme: theme)
-                    urlView?.sizeToFit()
+                    if !xtr {
+                        urlView = ImageView()
+                        urlView?.image = theme.chat.chatInvoiceAction(theme: theme)
+                        urlView?.sizeToFit()
+                    }
                 case .switchInline:
                     urlView = ImageView()
                     urlView?.image = theme.chat.chatActionUrl(theme: theme)
@@ -101,7 +112,7 @@ class ReplyMarkupNode: Node {
                     break
                 }
                 
-                let btnView = TextView()
+                let btnView = InteractiveTextView()
                 btnView.set(handler: { [weak self, weak button] control in
                     if let button = button {
                         self?.proccess(control, button.button)
@@ -111,8 +122,7 @@ class ReplyMarkupNode: Node {
                 btnView.scaleOnClick = true
     
                 btnView.layer?.cornerRadius = .cornerRadius
-                btnView.isSelectable = false
-                btnView.disableBackgroundDrawing = true
+                btnView.textView.isSelectable = false
                 
                 if !self.isInput && shouldBlurService {
                     btnView.blurBackground = button.presentation.blurServiceColor
@@ -125,7 +135,7 @@ class ReplyMarkupNode: Node {
                         btnView.backgroundColor = button.presentation.colors.grayForeground
                     }
                 }
-                btnView.set(layout:button.text)
+                btnView.set(text: button.text, context: self.interactions.context)
                 
                 if let urlView = urlView {
                     btnView.addSubview(urlView)
@@ -155,7 +165,7 @@ class ReplyMarkupNode: Node {
                     w = self.width - rect.minX
                 }
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
-                let btnView:TextView? = view?.subviews[i] as? TextView
+                let btnView:InteractiveTextView? = view?.subviews[i] as? InteractiveTextView
                 
                 if !self.isInput && self.shouldBlurService {
                     btnView?.blurBackground = button.presentation.blurServiceColor
@@ -170,7 +180,7 @@ class ReplyMarkupNode: Node {
                 }
                 if let btnView = btnView {
                     transition.updateFrame(view: btnView, frame: rect)
-                    btnView.setNeedsDisplayLayer()
+                    btnView.textView.setNeedsDisplayLayer()
                     if !btnView.subviews.isEmpty, let urlView = btnView.subviews.first(where: { $0 is ImageView }) {
                         transition.updateFrame(view: urlView, frame: NSMakeRect(rect.width - urlView.frame.width - 5, 5, urlView.frame.width, urlView.frame.height))
                     }

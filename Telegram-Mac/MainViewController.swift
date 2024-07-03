@@ -16,6 +16,8 @@ import KeyboardKey
 
 #if !APP_STORE
 import Sparkle
+#endif
+
 enum UpdateButtonState {
     case common
     case important
@@ -152,6 +154,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     }
     private var parentSize: NSSize = .zero
     private let stateDisposable = MetaDisposable()
+    #if !APP_STORE
     private var appcastItem: SUAppcastItem? {
         didSet {
             
@@ -184,7 +187,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
 //            self.updateLayout(self.context.layout, parentSize: parentSize, isChatList: true)
         }
     }
-    
+    #endif
     init(_ context: SharedAccountContext) {
         self.context = context
         super.init()
@@ -199,6 +202,21 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         genericView.set(background: theme.colors.grayForeground, for: .Normal)
         genericView.isHidden = true
         
+        #if APP_STORE
+        
+        let signal = Signal<Void, NoError>.single(Void()) |> then(.single(Void()) |> delay(24 * 60 * 60, queue: .mainQueue()) |> restart)
+
+        disposable.set(signal.start(next: { [weak self] in
+            checkForAppstoreUpdate(completion: { needToUpdate in
+                self?.genericView.isHidden = !needToUpdate
+                self?.state = .common
+            })
+        }))
+        genericView.set(handler: { control in
+            execute(inapp: inAppLink.external(link: itunesAppLink, false))
+            control.isHidden = true
+        }, for: .Click)
+        #else
         disposable.set((appUpdateStateSignal |> deliverOnMainQueue).start(next: { [weak self] state in
             switch state.loadingState {
             case let .readyToInstall(item):
@@ -215,12 +233,19 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         genericView.set(handler: { _ in
             updateApplication(sharedContext: context)
         }, for: .Click)
+        #endif
+        
+        
+        
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        #if !APP_STORE
         let item = self.appcastItem
         self.appcastItem = item
+        #endif
+    
     }
     
     func updateLayout(_ layout: SplitViewState, parentSize: NSSize, isChatList: Bool) {
@@ -255,7 +280,6 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     }
 }
 
-#endif
 
 class MainViewController: TelegramViewController {
 
@@ -268,9 +292,7 @@ class MainViewController: TelegramViewController {
     private let layoutDisposable:MetaDisposable = MetaDisposable()
     private let badgeCountDisposable: MetaDisposable = MetaDisposable()
     private let tooltipDisposable = MetaDisposable()
-    #if !APP_STORE
     private let updateController: UpdateTabController
-    #endif
     
     
     override func viewDidResized(_ size: NSSize) {
@@ -278,9 +300,7 @@ class MainViewController: TelegramViewController {
         tabController.view.frame = bounds
         self.navigation.frame = bounds
         self.contacts.frame = bounds
-        #if !APP_STORE
         updateController.updateLayout(context.layout, parentSize: size, isChatList: true)
-        #endif
     }
     
     override func loadView() {
@@ -313,9 +333,9 @@ class MainViewController: TelegramViewController {
         addSubview(self.tabController.view)
         
         if !context.isSupport {
-        #if !APP_STORE
+        //#if !APP_STORE
             addSubview(updateController.view)
-        #endif
+        //#endif
         }
                 
         tabController.add(tab: TabItem(image: theme.icons.tab_contacts, selectedImage: theme.icons.tab_contacts_active, controller: contacts))
@@ -342,9 +362,9 @@ class MainViewController: TelegramViewController {
                 return
             }
             self.tabController.hideTabView(state == .minimisize)
-            #if !APP_STORE
+            //#if !APP_STORE
             self.updateController.updateLayout(state, parentSize: self.frame.size, isChatList: true)
-            #endif
+            //#endif
         }))
         
         tabController.didChangedIndex = { [weak self] index in
@@ -529,9 +549,9 @@ class MainViewController: TelegramViewController {
 
         
         let theme = (theme as! TelegramPresentationTheme)
-        #if !APP_STORE
+        //#if !APP_STORE
         updateController.updateLocalizationAndTheme(theme: theme)
-        #endif
+        //#endif
         
         updateTabsIfNeeded()
         self.tabController.view.needsLayout = true
@@ -617,12 +637,24 @@ class MainViewController: TelegramViewController {
         }
     }
     
-    func globalSearch(_ query: String) {
+    func globalSearch(_ query: String, peerId: PeerId?) {
         let controller = navigation.empty
         if let controller = controller as? ChatListController {
-            controller.globalSearch(query)
-        } else if let controller = controller as? TabBarController {
-            (controller.current as? ChatListController)?.globalSearch(query)
+            if let peerId {
+                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
+                    controller?.globalSearch(query, peer: value)
+                })
+            } else {
+                controller.globalSearch(query, peer: nil)
+            }
+        } else if let tabbar = controller as? TabBarController, let controller = tabbar.current as? ChatListController {
+            if let peerId {
+                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
+                    controller?.globalSearch(query, peer: value)
+                })
+            } else {
+                controller.globalSearch(query, peer: nil)
+            }
         }
     }
     
@@ -711,9 +743,9 @@ class MainViewController: TelegramViewController {
         self.phoneCalls = RecentCallsViewController(context)
         self.navigation = NavigationViewController(self.chatList, context.window)
         
-        #if !APP_STORE
+        //#if !APP_STORE
             updateController = UpdateTabController(context.sharedContext)
-        #endif
+        //#endif
         super.init(context)
     }
 

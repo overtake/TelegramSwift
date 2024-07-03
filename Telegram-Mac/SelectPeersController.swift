@@ -29,7 +29,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
     case searchEmpty(GeneralRowItem.Theme, CGImage)
     case empty(GeneralRowItem.Theme, InputDataEquatable?, (NSSize, AnyHashable)->TableRowItem)
     case separator(Int32, GeneralRowItem.Theme, String)
-    case actionButton(String, CGImage, Int, GeneralRowItem.Theme, (Int)->Void)
+    case actionButton(String, CGImage, Int, GeneralRowItem.Theme, (Int)->Void, Bool)
     case requirements(NSAttributedString)
     var stableId: SelectPeerEntryStableId {
         switch self {
@@ -43,7 +43,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
             return .separator(index)
         case let .peer(peer, index, _):
             return .peerId(peer.peer.id, index)
-        case let .actionButton(_, _, index, _, _):
+        case let .actionButton(_, _, index, _, _, _):
             return .inviteLink(index)
         }
     }
@@ -74,8 +74,8 @@ enum SelectPeerEntry : Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .actionButton(text, image, index, customTheme, _):
-            if case .actionButton(text, image, index, customTheme, _) = rhs {
+        case let .actionButton(text, image, index, customTheme, _, _):
+            if case .actionButton(text, image, index, customTheme, _, _) = rhs {
                 return true
             } else {
                 return false
@@ -237,6 +237,10 @@ struct SelectPeerValue : Equatable {
         }
         if peer.isBot {
             string = strings().presenceBot.lowercased()
+            if let addressName = peer.addressName {
+                color = customTheme?.accentColor ?? theme.colors.accent
+                string = "@\(addressName)" + " (\(string))"
+            }
         }
         if ignoreStatus {
             return (nil, customTheme?.grayTextColor ?? theme.colors.grayText)
@@ -245,12 +249,17 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme, additionTopItem: SelectPeers_AdditionTopItem? = nil) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     
     if let linkInvation = linkInvation {
         let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.accentColor, flipVertical: true)
-        entries.append(SelectPeerEntry.actionButton(strings().peerSelectInviteViaLink, icon, 0, theme, linkInvation))
+        entries.append(SelectPeerEntry.actionButton(strings().peerSelectInviteViaLink, icon, 0, theme, linkInvation, true))
+    }
+    if let item = additionTopItem {
+        entries.append(SelectPeerEntry.actionButton(item.title, item.icon, 0, theme, { _ in
+            item.callback()
+        }, false))
     }
         
     var index:Int32 = 0
@@ -430,11 +439,13 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                 return callback(initialSize, entry.stableId)
             case let .separator(_, customTheme, text):
                 return SeparatorRowItem(initialSize, entry.stableId, string: text.uppercased(), customTheme: customTheme)
-            case let .actionButton(text, image, index, customTheme, action):
+            case let .actionButton(text, image, index, customTheme, action, close):
                 let style = ControlStyle(font: .normal(.title), foregroundColor: customTheme.accentColor)
                 return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: text, nameStyle: style, type: .none, action: {
                     action(index)
-                    interactions.close()
+                    if close {
+                        interactions.close()
+                    }
                 }, thumb: GeneralThumbAdditional(thumb: image, textInset: 39), inset: NSEdgeInsetsMake(0, 10, 0, 0), customTheme: customTheme)
             case let .requirements(string):
                 return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: string, border: [.Top], inset: NSEdgeInsets(left: 10, right: 10, top: 0, bottom: 4))
@@ -973,16 +984,28 @@ struct SelectPeersBlock {
     let peerIds: [PeerId]
 }
 
+struct SelectPeers_AdditionTopItem {
+    var title: String
+    var color: NSColor
+    var icon: CGImage
+    var callback:()->Void
+}
+
 class SelectContactsBehavior : SelectPeersBehavior {
+    
+  
+    
     fileprivate let index: PeerNameIndex = .lastNameFirst
     private var previousGlobal:Atomic<[SelectPeerValue]> = Atomic(value: [])
    
     var defaultSelected: [PeerId] = []
     var blocks: [SelectPeersBlock] = []
+    var additionTopItem:SelectPeers_AdditionTopItem?
     
-    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
+    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, blocks: [SelectPeersBlock] = [], additionTopItem: SelectPeers_AdditionTopItem? = nil, defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
         self.defaultSelected = defaultSelected
         self.blocks = blocks
+        self.additionTopItem = additionTopItem
         super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
     }
     
@@ -1001,6 +1024,7 @@ class SelectContactsBehavior : SelectPeersBehavior {
         let excludePeerIds = self.excludePeerIds
         let defaultSelected = self.defaultSelected
         let blocks = self.blocks
+        let additionTopItem = self.additionTopItem
         
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
@@ -1016,7 +1040,7 @@ class SelectContactsBehavior : SelectPeersBehavior {
                     |> deliverOn(prepareQueue)
                     |> map { view, searchView, accountPeer, recentPeers -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, blocks: blocks, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, blocks: blocks, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme, additionTopItem: additionTopItem), updatedSearch)
                 }
                 
             } else  {
@@ -1280,10 +1304,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
-        if !self.interactions.presentation.selected.isEmpty {
-            return super.returnKeyAction()
-        }
-        return .rejected
+        return super.returnKeyAction()
     }
 
     override func viewDidLoad() {

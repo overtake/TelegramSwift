@@ -263,6 +263,7 @@ func initialize() -> [String] {
     array.append("settingsProfile")
     array.append("settingsBusiness")
     array.append("settingsBusinessActive")
+    array.append("settingsStars")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")
@@ -378,9 +379,12 @@ func initialize() -> [String] {
     array.append("chatPollVoteUnselectedBubble_incoming")
     array.append("chatPollVoteUnselectedBubble_outgoing")
     array.append("peerInfoAdmins")
+    array.append("peerInfoRecentActions")
     array.append("peerInfoPermissions")
     array.append("peerInfoBanned")
     array.append("peerInfoMembers")
+    array.append("peerInfoStarsBalance")
+    array.append("peerInfoBotUsername")
     array.append("chatUndoAction")
     array.append("appUpdate")
     array.append("inlineVideoSoundOff")
@@ -605,7 +609,8 @@ func initialize() -> [String] {
     array.append("search_filter_downloads")
     array.append("search_filter_add_peer")
     array.append("search_filter_add_peer_active")
-
+    array.append("search_filter_hashtag")
+    array.append("search_hashtag_chevron")
     
     array.append("chat_reply_count_bubble_incoming")
     array.append("chat_reply_count_bubble_outgoing")
@@ -694,6 +699,7 @@ func initialize() -> [String] {
     array.append("audioplayer_volume_off")
     array.append("audioplayer_speed_x1")
     array.append("audioplayer_speed_x2")
+    array.append("audioplayer_list")
 
     array.append("chat_info_voice_chat")
     
@@ -854,7 +860,7 @@ func initialize() -> [String] {
     array.append("msg_emoji_vacation")
     array.append("msg_emoji_what")
     array.append("msg_emoji_work")
-
+    array.append("msg_emoji_premium")
     
     array.append("installed_stickers_archive")
     array.append("installed_stickers_custom_emoji")
@@ -935,6 +941,10 @@ func initialize() -> [String] {
     array.append("create_new_message_general")
     
     array.append("bot_manager_settings")
+    
+    array.append("preview_text_down")
+    array.append("preview_text_up")
+
 
     return array
 }

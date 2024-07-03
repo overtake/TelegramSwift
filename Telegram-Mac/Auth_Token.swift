@@ -280,7 +280,7 @@ final class Auth_TokenController : GenericViewController<Auth_TokenView> {
                 guard let strongSelf = self else {
                     return
                 }
-                let context = generate(TransformImageArguments(corners: ImageCorners(radius: 10), imageSize: Auth_Insets.qrSize, boundingSize: Auth_Insets.qrSize, intrinsicInsets: NSEdgeInsets(), scale: 2.0))
+            let context = generate(TransformImageArguments(corners: ImageCorners(radius: 10), imageSize: Auth_Insets.qrSize, boundingSize: Auth_Insets.qrSize, intrinsicInsets: NSEdgeInsets(), scale: System.backingScale))
                 if let image = context?.generateImage() {
                     strongSelf.genericView.update(state: .qr(image), isLoading: token == nil)
                 }

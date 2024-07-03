@@ -13,7 +13,7 @@ import TelegramCore
 import Postbox
 import InAppPurchaseManager
 import CurrencyFormat
-import MediaPlayer
+import TelegramMediaPlayer
 
 struct PremiumEmojiStatusInfo : Equatable {
     let status: PeerEmojiStatus
@@ -69,6 +69,7 @@ enum PremiumLogEventsSource : Equatable {
     case business_standalone
     case folder_tags
     case upload_limit
+    case grace_period
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -127,6 +128,8 @@ enum PremiumLogEventsSource : Equatable {
             return "upload_limit"
         case .business_intro:
             return "business_intro"
+        case .grace_period:
+            return "grace_period"
         }
     }
     
@@ -183,6 +186,8 @@ enum PremiumLogEventsSource : Equatable {
         case .folder_tags:
             return .folder_tags
         case .upload_limit:
+            return nil
+        case .grace_period:
             return nil
         }
     }
@@ -250,7 +255,8 @@ private final class Arguments {
     let togglePeriod:(PremiumPeriod)->Void
     let execute:(String)->Void
     let copyLink:(String)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void, execute:@escaping(String)->Void, copyLink:@escaping(String)->Void) {
+    let toggleAds:(Bool)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void, execute:@escaping(String)->Void, copyLink:@escaping(String)->Void, toggleAds:@escaping(Bool)->Void) {
         self.context = context
         self.presentation = presentation
         self.showPrivacy = showPrivacy
@@ -260,6 +266,7 @@ private final class Arguments {
         self.togglePeriod = togglePeriod
         self.execute = execute
         self.copyLink = copyLink
+        self.toggleAds = toggleAds
     }
 }
 
@@ -595,6 +602,8 @@ private struct State : Equatable {
     
     var newPerks: [String] = []
     
+    var adsEnabled: Bool = false
+    
     func activateForFree(_ accountPeerId: PeerId) -> Bool {
         switch source {
         case let .gift(_, toId, _, slug, unclaimed):
@@ -618,6 +627,7 @@ private struct State : Equatable {
 
 }
 
+private let _id_toggle_ads = InputDataIdentifier("_id_toggle_ads")
 
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -630,9 +640,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     
+    let scene: PremiumBoardingHeaderItem.SceneType
+    if state.source == .business_standalone || state.source == .business {
+        scene = .coin
+    } else if state.source == .grace_period {
+        scene = .grace
+    } else {
+        scene = .star
+    }
+    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy, sceneType: state.source == .business_standalone || state.source == .business ? .coin : .star)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy, sceneType: scene)
     }))
     index += 1
     
@@ -738,6 +757,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
 
         }
+    } else {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessSwitchAdTitle), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_toggle_ads, data: .init(name: strings().businessSwitchAd, color: theme.colors.text, type: .switchable(state.adsEnabled) , viewType: .singleItem, action: {
+            arguments.toggleAds(!state.adsEnabled)
+        })))
+        
+        
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().businessSwitchAdInfo, linkHandler: arguments.execute), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
     }
     
     
@@ -802,7 +838,11 @@ private final class PremiumBoardingView : View {
                 text = strings().premiumBoardingActivateForFree
             } else {
                 if state.canMakePayment {
-                    text = option.buyString
+                    if state.source == .grace_period {
+                        text = option.renewString
+                    } else {
+                        text = option.buyString
+                    }
                 } else {
                     text = strings().premiumBoardingPaymentNotAvailalbe
                 }
@@ -1267,6 +1307,15 @@ final class PremiumBoardingController : ModalViewController {
             statePromise.set(stateValue.modify (f))
         }
         
+        
+        actionsDisposable.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.AdsEnabled(id: context.peerId)).start(next: { value in
+            updateState { current in
+                var current = current
+                current.adsEnabled = value
+                return current
+            }
+        }))
+        
         let arguments = Arguments(context: context, presentation: presentation, showTerms: {
             
         }, showPrivacy: {
@@ -1332,10 +1381,16 @@ final class PremiumBoardingController : ModalViewController {
                 return current
             }
         }, execute: { link in
-            execute(inapp: .external(link: "https://telegram.org/tos", false))
+            if link.isEmpty {
+                execute(inapp: .external(link: "https://telegram.org/tos", false))
+            } else {
+                execute(inapp: .external(link: link, false))
+            }
         }, copyLink: { link in
             copyToClipboard(link)
             showModalText(for: context.window, text: strings().shareLinkCopied)
+        }, toggleAds: { value in
+            _ = context.engine.accountData.updateAdMessagesEnabled(enabled: value).startStandalone()
         })
         
         self.arguments = arguments
@@ -1510,6 +1565,15 @@ final class PremiumBoardingController : ModalViewController {
         
         
         let buyNonStore = {
+            
+            let url = context.appConfiguration.getStringValue("premium_manage_subscription_url", orElse: "https://t.me/premiumbot?start=status")
+            if source == .grace_period {
+                let inApp = inApp(for: url.nsstring, context: context, openInfo: arguments.openInfo)
+                execute(inapp: inApp)
+                close()
+                return
+            }
+            
             if let slug = context.premiumBuyConfig.invoiceSlug {
                 
                 let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
@@ -1538,6 +1602,14 @@ final class PremiumBoardingController : ModalViewController {
         
         
         let buyAppStore = {
+            
+            let url = context.appConfiguration.getStringValue("premium_manage_subscription_url", orElse: "https://apps.apple.com/account/subscriptions")
+            if source == .grace_period {
+                let inApp = inApp(for: url.nsstring, context: context, openInfo: arguments.openInfo)
+                execute(inapp: inApp)
+                close()
+                return
+            }
             
             let premiumProduct = stateValue.with { $0.period?.storeProduct }
 

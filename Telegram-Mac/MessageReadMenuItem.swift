@@ -575,6 +575,9 @@ final class MessageReadMenuItem : ContextMenuItem {
         if chatInteraction.mode == .scheduled {
             return false
         }
+        if peer.isBot {
+            return false
+        }
         
         if let attr = message.reactionsAttribute, !attr.reactions.isEmpty {
             if !attr.canViewList {
@@ -765,7 +768,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                 self?.submenu = menu
             }))
         }
-        
+        ContextMenuItem.makeItemAvatar(self, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message))
         ContextMenuItem.checkPremiumRequired(self, context: context, peer: peer)
     }
     

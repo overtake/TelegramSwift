@@ -16,6 +16,17 @@ import InAppSettings
 import TGUIKit
 import WebKit
 
+func clearUserDefaultsObject(forKeyPrefix prefix: String) {
+    let defaults = UserDefaults.standard
+    let keys = defaults.dictionaryRepresentation().keys
+    
+    for key in keys {
+        if key.hasPrefix(prefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+}
+
 enum SendingType :String {
     case enter = "enter"
     case cmdEnter = "cmdEnter"
@@ -629,13 +640,6 @@ class FastSettings {
         })
     }
     
-    static func diceHasAlreadyPlayed(_ message: Message) -> Bool {
-        return UserDefaults.standard.bool(forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
-    }
-    static func markDiceAsPlayed(_ message: Message) {
-        UserDefaults.standard.set(true, forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
-        UserDefaults.standard.synchronize()
-    }
     
     static func updateLeftColumnWidth(_ width: CGFloat) {
         UserDefaults.standard.set(round(width), forKey: kLeftColumnWidth)
@@ -742,14 +746,16 @@ class FastSettings {
     }
     
     static func clear_uuid(_ id: Int64) {
-//#if DEBUG
         if #available(macOS 14.0, *) {
             if let uuid = FastSettings.getUUID(id) {
+//                autoreleasepool {
+//                    let configuration = WKWebViewConfiguration()
+//                    configuration.websiteDataStore = WKWebsiteDataStore(forIdentifier: uuid)
+//                }
 //                WKWebsiteDataStore.remove(forIdentifier: uuid, completionHandler: { _ in
 //                })
             }
         }
-//#endif
     }
 }
 

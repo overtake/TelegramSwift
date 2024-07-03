@@ -11,9 +11,14 @@ public final class ApiEnvironment {
     public static var bundleId: String {
         return "ru.keepcoder.Telegram"
     }
+    public static var intentsBundleId: String {
+        return teamId + "." + bundleId + ".FocusIntents"
+    }
     public static var teamId: String {
         return "6N38VWS5BX"
     }
+    
+    
     
     public static var containerURL: URL? {
         let appGroupName = ApiEnvironment.group

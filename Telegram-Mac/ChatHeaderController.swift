@@ -971,7 +971,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 })).mutableCopy() as! NSMutableAttributedString
                 
                 
-                let range = attr.string.nsstring.range(of: "🤡")
+                let range = attr.string.nsstring.range(of: clown)
                 if range.location != NSNotFound {
                     attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: status.fileId, file: nil, emoji: ""))), range: range)
                 }

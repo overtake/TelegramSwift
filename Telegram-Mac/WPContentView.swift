@@ -37,6 +37,8 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     private var action: TextButton? = nil
     
     
+    var whatThisView: TextView?
+    
     var selectableTextViews: [TextView] {
         return []
     }
@@ -50,8 +52,11 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         super.layout()
         if let content = self.content {
             containerView.frame = content.contentRect
-            textView.update(content.textLayout)
             textView.isHidden = content.textLayout == nil
+            
+            if let current = self.whatThisView, let line = textView.textLayout?.lines.first {
+                current.setFrameOrigin(NSMakePoint(line.frame.maxX + 5, textView.frame.minY + 1))
+            }
             if let action = action {
                 _ = action.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 36), thatFit: true)
                 action.setFrameOrigin(0, content.contentRect.height - action.frame.height + content.imageInsets.top * 2)
@@ -78,7 +83,6 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         addSubview(textView)
         
         
-        self.scaleOnClick = true
         
         layer?.cornerRadius = .cornerRadius
         
@@ -109,6 +113,11 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
 
     func update(with layout:WPLayout, animated: Bool) -> Void {
         self.content = layout
+        
+        self.scaleOnClick = layout.content.type != "edited"
+
+        
+        textView.update(layout.textLayout)
         
         if let text = layout.action_text {
             let current: TextButton
@@ -142,7 +151,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             self.action = nil
         }
         
-        if let pattern = layout.presentation.pattern {
+        if let pattern = layout.presentation.pattern, layout.content.type != "edited" {
             if patternTarget?.textColor != layout.presentation.activity.main {
                 patternTarget = .init(account: layout.context.account, inlinePacksContext: layout.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: layout.presentation.activity.main)
                 patternTarget?.noDelayBeforeplay = true
@@ -225,6 +234,34 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
                 patternContentLayer.removeFromSuperlayer()
             }
             self.patternContentLayers.removeAll()
+        }
+        
+        if let ad = layout.parent.adAttribute, ad.canReport {
+            let current: TextView
+            if let view = self.whatThisView {
+                current = view
+            } else {
+                current = TextView()
+                current.scaleOnClick = true
+                current.isSelectable = false
+                self.whatThisView = current
+                addSubview(current)
+            }
+            
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                showModal(with: FragmentAdsInfoController(context: layout.context), for: layout.context.window)
+            }, for: .Click)
+            
+            let text = TextViewLayout(.initialize(string: strings().chatAdWhatThis, color: layout.presentation.activity.main, font: .normal(.small)), alignment: .center)
+            text.measure(width: .greatestFiniteMagnitude)
+            current.update(text)
+            current.setFrameSize(NSMakeSize(text.layoutSize.width + 6, text.layoutSize.height + 2))
+            current.layer?.cornerRadius = current.frame.height / 2
+            current.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.2)
+        } else if let view = whatThisView {
+            performSubviewRemoval(view, animated: animated)
+            self.whatThisView = nil
         }
         
         self.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.1) //color
@@ -323,7 +360,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
                 if textLayout.isBigEmoji {
                     rect = item.rect
                 } else {
-                    rect = item.rect.insetBy(dx: -2, dy: -2)
+                    rect = item.rect
                 }
                 
                 let view: InlineStickerItemLayer

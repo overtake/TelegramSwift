@@ -16,6 +16,7 @@ struct Auth_Insets {
     static let betweenHeader: CGFloat = 20
     static let nextHeight: CGFloat = 36
     static let logoSize: NSSize = NSMakeSize(140, 140)
+    static let wordSize: NSSize = NSMakeSize(100, 100)
     static let qrSize: NSSize = NSMakeSize(210, 210)
     static let qrAnimSize: NSSize = NSMakeSize(186, 186)
     static let headerFont: NSFont = .medium(22)

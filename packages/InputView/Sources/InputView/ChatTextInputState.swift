@@ -26,4 +26,8 @@ public struct Updated_ChatTextInputState {
         let length = inputText.length
         self.selectionRange = length ..< length
     }
+    
+    public var string: String {
+        return inputText.string
+    }
 }

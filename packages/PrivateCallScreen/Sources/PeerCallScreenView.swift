@@ -15,6 +15,27 @@ import MetalEngine
 import AppKit
 
 
+let colorSets_fallback = [
+    [
+        NSColor(0x568FD6),
+        NSColor(0x626ED5),
+        NSColor(0xA667D5),
+        NSColor(0x7664DA)
+    ],
+    [
+        NSColor(0xACBD65),
+        NSColor(0x459F8D),
+        NSColor(0x53A4D1),
+        NSColor(0x3E917A)
+    ],
+    [
+        NSColor(0xC0508D),
+        NSColor(0xF09536),
+        NSColor(0xCE5081),
+        NSColor(0xFC7C4C)
+    ]
+]
+
 
 private class ShadowView: View {
     
@@ -161,7 +182,9 @@ private enum VideoMagnify {
 }
 
 final class PeerCallScreenView : Control {
-    private let backgroundLayer: CallBackgroundLayer = .init()
+    private let backgroundLayer: CallBackgroundLayer?
+    private let backgroundLayer_fallback: AnimatedGradientBackgroundView?
+    
     private var photoView: PeerCallPhotoView?
     private let statusView = PeerCallStatusView(frame: NSMakeRect(0, 0, 300, 58))
     
@@ -211,11 +234,25 @@ final class PeerCallScreenView : Control {
 
 
     required init(frame frameRect: NSRect) {
+        
+    #if arch(arm64)
+        self.backgroundLayer = CallBackgroundLayer()
+        self.backgroundLayer_fallback = nil
+    #else
+        self.backgroundLayer = nil
+        self.backgroundLayer_fallback = AnimatedGradientBackgroundView()
+    #endif
+        
         super.init(frame: frameRect)
-        self.layer?.addSublayer(backgroundLayer)
-        self.layer?.addSublayer(backgroundLayer.blurredLayer)
         
         
+        if let backgroundLayer {
+            self.layer?.addSublayer(backgroundLayer)
+            self.layer?.addSublayer(backgroundLayer.blurredLayer)
+        } else if let backgroundLayer_fallback {
+            self.addSubview(backgroundLayer_fallback)
+        }
+                
         addSubview(actions)
 
         addSubview(statusView)
@@ -238,7 +275,7 @@ final class PeerCallScreenView : Control {
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.backgroundLayer.isInHierarchy = window != nil
+        self.backgroundLayer?.isInHierarchy = window != nil
     }
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {
@@ -348,10 +385,12 @@ final class PeerCallScreenView : Control {
         transition.updateFrame(view: settingsView, frame: CGRect.init(origin: CGPoint(x: size.width - settingsView.frame.width - 5, y: 5), size: settingsView.frame.size))
         transition.updateAlpha(view: settingsView, alpha: hideOutside ? 0 : 1)
         
-        backgroundLayer.frame = size.bounds
-        backgroundLayer.blurredLayer.frame = size.bounds
+        backgroundLayer?.frame = size.bounds
+        backgroundLayer?.blurredLayer.frame = size.bounds
         
-        self.backgroundLayer.renderSpec = RenderLayerSpec(size: RenderSize(width: Int(size.width), height: Int(size.height)), edgeInset: 0)
+        backgroundLayer_fallback?.frame = size.bounds
+        
+        self.backgroundLayer?.renderSpec = RenderLayerSpec(size: RenderSize(width: Int(size.width), height: Int(size.height)), edgeInset: 0)
                 
         if let photoView {
             transition.updateFrame(view: photoView, frame: photoView.centerFrameX(y: floorToScreenPixels(size.height / 3) - 50))
@@ -445,6 +484,10 @@ final class PeerCallScreenView : Control {
         } else {
             self.targetAudioLevel = 0.0
         }
+        
+        if let blobView_fallback = photoView?.blobView_fallback {
+           blobView_fallback.updateLevel(CGFloat(value))
+       }
     }
     
         
@@ -460,12 +503,11 @@ final class PeerCallScreenView : Control {
         if self.canAnimateAudioLevel, let photoView {
             let additionalAvatarScale = CGFloat(max(0.0, min(self.audioLevel, 5.0)) * 0.05)
             self.currentAvatarAudioScale = 1.0 + additionalAvatarScale
-//            photoView.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
-//            photoView.layer?.transform = CATransform3DMakeScale(self.currentAvatarAudioScale, self.currentAvatarAudioScale, 1.0)
-//            
+//
             let blobAmplificationFactor: CGFloat = 2.0
-            photoView.blobView.blob.transform = CATransform3DMakeScale(1.0 + additionalAvatarScale * blobAmplificationFactor, 1.0 + additionalAvatarScale * blobAmplificationFactor, 1.0)
-
+            if let blobView = photoView.blobView {
+                blobView.blob.transform = CATransform3DMakeScale(1.0 + additionalAvatarScale * blobAmplificationFactor, 1.0 + additionalAvatarScale * blobAmplificationFactor, 1.0)
+            }
         }
     }
         
@@ -478,8 +520,11 @@ final class PeerCallScreenView : Control {
         self.videoViewState = videoViewState
         
         self.statusView.updateState(state, arguments: arguments, transition: transition)
-        self.backgroundLayer.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
         
+        
+        self.backgroundLayer?.update(stateIndex: state.stateIndex, isEnergySavingEnabled: false, transition: transition)
+        
+        self.backgroundLayer_fallback?.updateColors(colors: colorSets_fallback[state.stateIndex])
         
         var smallVideo: MetalCallVideoView?
         var largeVideo: MetalCallVideoView?
@@ -607,7 +652,11 @@ final class PeerCallScreenView : Control {
                  current = view
              } else {
                  current = PeerCallPhotoView(frame: NSMakeRect(0, 0, 120, 120))
-                 addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                 if backgroundLayer_fallback != nil {
+                     addSubview(current, positioned: .above, relativeTo: backgroundLayer_fallback)
+                 } else {
+                     addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                 }
                  self.photoView = current
                  
                  ContainedViewLayoutTransition.immediate.updateFrame(view: current, frame: current.centerFrameX(y: floorToScreenPixels(frame.height / 3) - 50))
@@ -617,7 +666,9 @@ final class PeerCallScreenView : Control {
                      current.layer?.animateScaleSpring(from: 0.01, to: 1, duration: 0.2, bounce: false)
                  }
              }
-             current.blobView.maskLayer = backgroundLayer.blurredLayer
+             if let backgroundLayer {
+                 current.blobView?.maskLayer = backgroundLayer.blurredLayer
+             }
              current.updateState(state, arguments: arguments, transition: transition)
          } else if let photoView {
              performSubviewRemoval(photoView, animated: transition.isAnimated, scale: true)
@@ -683,7 +734,14 @@ final class PeerCallScreenView : Control {
             for view in self.tooltipsViews {
                 view.removeFromSuperview()
             }
-            self.subviews.append(contentsOf: self.tooltipsViews)
+            let modal = subviews.firstIndex(where: {
+                $0.className.hasSuffix("ModalBackground")
+            })
+            if let modal = modal {
+                self.subviews.insert(contentsOf: self.tooltipsViews, at: modal)
+            } else {
+                self.subviews.append(contentsOf: self.tooltipsViews)
+            }
             CATransaction.commit()
             
             self.tooltips = tooltips
@@ -799,7 +857,18 @@ final class PeerCallScreenView : Control {
                 isNew = false
             } else {
                 current = SecretKeyView(frame: NSMakeRect(0, 0, 100, 25))
-                self.addSubview(current, positioned: .above, relativeTo: revealedKey)
+                if let revealedKey {
+                    self.addSubview(current, positioned: .above, relativeTo: revealedKey)
+                } else {
+                    let modal = subviews.firstIndex(where: {
+                        $0.className.hasSuffix("ModalBackground")
+                    })
+                    if let modal = modal {
+                        self.subviews.insert(current, at: modal)
+                    } else {
+                        self.addSubview(current)
+                    }
+                }
                 self.secretView = current
                 isNew = true
             }

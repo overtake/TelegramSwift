@@ -22,7 +22,7 @@ public struct ControlStyle: Equatable {
     }
     
     public func highlight(image:CGImage) -> CGImage {
-        let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
+        let context = DrawingContext(size:image.backingSize, scale: System.backingScale, clear:true)
         context.withContext { ctx in
             ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
             let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)

@@ -12,6 +12,24 @@ import Postbox
 import TelegramCore
 import DateUtils
 
+private func getGroupPeers(_ group:[ChannelAdminEventLogEntry]) -> [Peer] {
+    var groupPeers:[Peer] = []
+    for item in group {
+        switch item.event.action {
+        case let.deleteMessage(message):
+            if let author = message.author {
+                let contains = groupPeers.contains(where: { $0.id == author.id })
+                if !contains {
+                    groupPeers.append(author)
+                }
+            }
+            default:
+                break
+        }
+    }
+    return groupPeers
+}
+
 private var banHelp:[TelegramChatBannedRightsFlags] {
     var order:[TelegramChatBannedRightsFlags] = []
     order.append(.banSendText)
@@ -274,9 +292,13 @@ class ServiceEventLogItem: TableRowItem {
     fileprivate let chatInteraction: ChatInteraction
     fileprivate let isGroup: Bool
     fileprivate let peerId: PeerId
-    init(_ initialSize: NSSize, entry: ChannelAdminEventLogEntry, isGroup: Bool, chatInteraction: ChatInteraction) {
+    fileprivate let group: [ChannelAdminEventLogEntry]
+    fileprivate let groupRevealed: Bool
+    init(_ initialSize: NSSize, entry: ChannelAdminEventLogEntry, isGroup: Bool, chatInteraction: ChatInteraction, group:[ChannelAdminEventLogEntry] = [], groupRevealed: Bool = false, toggleGroup:@escaping()->Void) {
         self.entry = entry
         self.isGroup = isGroup
+        self.group = group
+        self.groupRevealed = groupRevealed
         self.peerId = chatInteraction.peerId
         self.chatInteraction = chatInteraction
         let attributedString = NSMutableAttributedString()
@@ -509,7 +531,29 @@ class ServiceEventLogItem: TableRowItem {
                     }
                 }
             case .deleteMessage:
-                serviceInfo = ServiceTextInfo(text: strings().eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                let text: String
+                let groupPeers: [Peer] = getGroupPeers(group)
+                
+                let names: String
+                if groupPeers.count == 1 {
+                    names = groupPeers[0].compactDisplayTitle
+                } else if groupPeers.count == 2 {
+                    names = strings().eventLogServiceAnd(groupPeers[0].compactDisplayTitle, groupPeers[1].compactDisplayTitle)
+                } else {
+                    let sub = groupPeers.prefix(groupPeers.count - 1).map { $0.compactDisplayTitle }.joined(separator: ", ")
+                    names = strings().eventLogServiceAnd(sub, groupPeers[groupPeers.count - 1].compactDisplayTitle)
+                }
+                
+                if group.count > 1 {
+                    if groupRevealed {
+                        text = strings().eventLogServiceDeletedMessageMultipleHideCountable(peer.displayTitle, group.count, names)
+                    } else {
+                        text = strings().eventLogServiceDeletedMessageMultipleShowCountable(peer.displayTitle, group.count, names)
+                    }
+                } else {
+                    text = strings().eventLogServiceDeletedMessage(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .editMessage(prev, new):
                 if new.anyMedia is TelegramMediaImage || new.anyMedia is TelegramMediaFile {
                     if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
@@ -799,12 +843,24 @@ class ServiceEventLogItem: TableRowItem {
             case let .changeWallpaper(prev, new):
                 let text = strings().channelEventLogMessageChangedWallpaper(peer.displayTitle)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
-
+            case let .toggleForum(isForum):
+                let text = isForum ? strings().channelEventLogServiceEnabledTopics(peer.displayTitle) : strings().channelEventLogServiceDisabledTopics(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .togglePreHistoryHidden(hidden):
+                let text = hidden ? strings().channelEventLogServiceMessageGroupPreHistoryHidden(peer.displayTitle) : strings().channelEventLogServiceMessageGroupPreHistoryVisible(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }
             if let serviceInfo = serviceInfo {
-                _ = attributedString.append(string: serviceInfo.text, color: theme.colors.grayText, font: .normal(.text))
+                
+                let attr = parseMarkdownIntoAttributedString(serviceInfo.text, attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.grayText), bold: .init(font: .medium(.text), textColor: theme.colors.text), link: .init(font: .medium(.text), textColor: theme.colors.link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                        toggleGroup()
+                    }))
+                }))
+                
+                attributedString.append(attr)
                 
                 let range = attributedString.string.nsstring.range(of: serviceInfo.firstLink.range)
                 attributedString.add(link: serviceInfo.firstLink.link, for: range)
@@ -871,7 +927,6 @@ private class ServiceEventLogRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        textView.backgroundColor = backdorColor
         messageContent?.updateColors(backdorColor)
     }
     
@@ -881,7 +936,7 @@ private class ServiceEventLogRowView : TableRowView {
         textView.update(textView.textLayout)
         textView.centerX(y: defaultContentInset.top)
         
-        let contentInset: CGFloat = (textView.frame.height != 0 ?textView.frame.maxY : 0) + defaultContentInset.top
+        let contentInset: CGFloat = (textView.frame.height != 0 ? textView.frame.maxY : 0) + defaultContentInset.top
 
         if let item = item as? ServiceEventLogItem, let arguments = item.imageArguments {
             imageView?.set(arguments: arguments)
@@ -889,16 +944,11 @@ private class ServiceEventLogRowView : TableRowView {
         
         imageView?.centerX(y: contentInset)
         if let messageContent = messageContent {
+            messageContent.frame = NSMakeRect(defaultContentInset.left, contentInset, frame.width - (defaultContentInset.left + defaultContentInset.right), messageContent.frame.height)
             messageContent.setFrameOrigin(defaultContentInset.left, contentInset)
         }
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        if let messageContent = messageContent {
-            messageContent.setFrameSize(frame.width - (defaultContentInset.left + defaultContentInset.right), messageContent.frame.height)
-        }
-    }
     
     override func set(item: TableRowItem, animated: Bool) {
         if let item = item as? ServiceEventLogItem {
@@ -944,7 +994,6 @@ private class ServiceEventLogRowView : TableRowView {
 
 
 class ChannelEventLogEditedPanelItem : TableRowItem {
-    private let _stableId:Int64 = arc4random64()
     private let previous:Message
     fileprivate let panel:ServiceEventLogMessagePanel
     fileprivate weak var associatedItem:ChatRowItem?
@@ -960,7 +1009,7 @@ class ChannelEventLogEditedPanelItem : TableRowItem {
     }
     
     override var stableId: AnyHashable {
-        return _stableId
+        return previous.id
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {

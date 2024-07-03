@@ -69,7 +69,7 @@ struct SpecificPackData : Equatable {
 }
 
 enum PackEntry: Comparable, Identifiable {
-    case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?)
+    case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?, allItems: [StickerPackItem])
     case recent
     case premium
     case saved
@@ -105,7 +105,7 @@ enum PackEntry: Comparable, Identifiable {
             return 3
         case .specificPack:
             return 4
-        case let .stickerPack(index, _, _, _):
+        case let .stickerPack(index, _, _, _, _):
             return 5 + index
         }
     }
@@ -248,6 +248,7 @@ private struct StickerPacksSearchData {
     let loading: Bool
     let basicFeaturedCount: Int
     let emojiRelated: [FoundStickerItem]
+    let premiumStickers: [TelegramMediaFile]
 }
 
 private struct StickerPacksUpdateData {
@@ -589,6 +590,10 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                     }
                     index += 1
                 }
+                if !searchData.premiumStickers.isEmpty {
+                    let collectionId = ItemCollectionId(namespace: 0, id: 0)
+                    entries.append(.pack(index: .premium(0), files: searchData.premiumStickers, packInfo: .premium, collectionId: .premium))
+                }
             }
         }
        
@@ -622,8 +627,19 @@ private func packEntries(view: ItemCollectionsView?, context: AccountContext, sp
         }
         
         for (_, info, item) in view.collectionInfos {
+            var files: [StickerPackItem] = []
             if let info = info as? StickerPackCollectionInfo {
-                entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem))
+                let items = view.entries.enumerated()
+                for (i, entry) in items {
+                    if entry.index.collectionId == info.id {
+                        if let item = entry.item as? StickerPackItem {
+                            files.append(item)
+                        }
+                    }
+                }
+            }
+            if let info = info as? StickerPackCollectionInfo {
+                entries.append(.stickerPack(index: index, stableId: .pack(info.id), info: info, topItem: item as? StickerPackItem, allItems: files))
                 index += 1
             }
         }
@@ -666,8 +682,8 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
     
     let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { (entry) -> TableRowItem in
         switch entry.entry {
-        case let .stickerPack(index, stableId, info, topItem):
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: index, isPremium: false, context: context, info: info, topItem: topItem)
+        case let .stickerPack(index, stableId, info, topItem, allItems):
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: index, isPremium: false, context: context, info: info, topItem: topItem, allItems: allItems)
         case .recent:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .premium:
@@ -855,10 +871,8 @@ class NStickersView : View {
             let current: AnimatedEmojiesCategories
             
             
-            let isNew: Bool
             if let view = self.categories {
                 current = view
-                isNew = false
             } else {
                 current = AnimatedEmojiesCategories(frame: categoryRect, presentation: presentation)
                 self.categories = current
@@ -867,7 +881,6 @@ class NStickersView : View {
                 current.select = { [weak self] category in
                     self?.arguments?.selectEmojiCategory(category)
                 }
-                isNew = true
             }
             
             current.userInteractionEnabled = current.selected != nil
@@ -1372,7 +1385,11 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }
             let searchState: SearchState
             if let category = category {
-                searchState = .init(state: .None, request: category.identifiers.joined(separator: ""))
+                if category.kind == .premium {
+                    searchState = .init(state: .None, request: "premium")
+                } else {
+                    searchState = .init(state: .None, request: category.identifiers.joined(separator: ""))
+                }
             } else {
                 searchState = .init(state: .None, request: nil)
             }
@@ -1402,7 +1419,15 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         if mode == .selectAvatar {
             searchCategories = .single(nil)
         } else {
-            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .combinedChatStickers) |> map { groups in
+                var groups = groups?.groups ?? []
+                if mode == .intro {
+                    if let index = groups.firstIndex(where: { $0.kind == .greeting }) {
+                        groups.move(at: index, to: 0)
+                    }
+                }
+                return .init(hash: 0, groups: groups)
+            }
         }
 
         
@@ -1466,104 +1491,52 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 }
             } else {
                 let searchText = values.0.request.lowercased()
-                if values.0.request.isEmpty {
-                    switch values.1 {
-                    case .initial:
-                        var firstTime = true
-                        return combineLatest(context.account.viewTracker.featuredStickerPacks(), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]), statePromise.get()) |> map { value, view, state in
-                            var found = FoundStickerSets()
-                            
-                            var installedPacks = Set<ItemCollectionId>()
-                            if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
-                                if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
-                                    for entry in packsEntries {
-                                        installedPacks.insert(entry.id)
-                                    }
-                                }
-                            }
-                            
-                            for (collectionIndex, set) in value.enumerated() {
-                                var entries:[ItemCollectionViewEntry] = []
                                 
-                                for item in set.topItems {
-                                    entries.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex(collectionIndex: Int32(collectionIndex), collectionId: set.info.id, itemIndex: item.index), item: item))
-                                }
-                                if !entries.isEmpty {
-                                    found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, installedPacks.contains(set.info.id))], entries: entries))
+                let premiumStickers: Signal<[TelegramMediaFile], NoError>
+                if searchText == "premium" {
+                    premiumStickers = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 1000) |> map { view in
+                        var files:[TelegramMediaFile] = []
+                        if !view.orderedItemListsViews[0].items.isEmpty {
+                            for item in view.orderedItemListsViews[0].items {
+                                if let entry = item.contents.get(RecentMediaItem.self) {
+                                    files.append(entry.media)
                                 }
                             }
-                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count, emojiRelated: [])
-                            let scrollToTop = firstTime
-                            firstTime = false
-                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: scrollToTop), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
                         }
-                    case let .loadFeaturedMore(current):
-                        return combineLatest(requestOldFeaturedStickerPacks(network: context.account.network, postbox: context.account.postbox, offset: current.sets.infos.count - current.basicFeaturedCount, limit: 50), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]), statePromise.get()) |> map { values, view, state in
-                            var found = current.sets
-                            
-                            
-                            var installedPacks = Set<ItemCollectionId>()
-                            if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
-                                if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
-                                    for entry in packsEntries {
-                                        installedPacks.insert(entry.id)
-                                    }
-                                }
-                            }
-                            
-                            found = found.updateInfos( { infos in
-                                var infos = infos
-                                for (i, info) in infos.enumerated() {
-                                    infos[i] = (info.0, info.1, info.2, installedPacks.contains(info.0))
-                                }
-                                return infos
-                            })
-                            
-                            for (collectionIndex, set) in values.enumerated() {
-                                var entries:[ItemCollectionViewEntry] = []
-                                
-                                for item in set.topItems {
-                                    entries.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex(collectionIndex: Int32(collectionIndex), collectionId: set.info.id, itemIndex: item.index), item: item))
-                                }
-                                if !entries.isEmpty {
-                                    found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, installedPacks.contains(set.info.id))], entries: entries))
-                                }
-                            }
-                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: current.basicFeaturedCount, emojiRelated: [])
-                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
-                        }
-                    default:
-                        fatalError()
+                        return files
                     }
-                    
                 } else {
-                    let searchLocal = context.engine.stickers.searchStickerSets(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
-                    let searchRemote = context.engine.stickers.searchStickerSetsRemotely(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
+                    premiumStickers = .single([])
+                }
+                
+                
+                
+                let searchLocal = context.engine.stickers.searchStickerSets(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
+                let searchRemote = context.engine.stickers.searchStickerSetsRemotely(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
+                                
+                let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
                     
-                    let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
-                        
-                        let signals = emojis.map {
-                            context.engine.stickers.searchStickers(query: [$0], scope: [.installed]) |> map { $0.items }
-                        }
-                        return combineLatest(signals) |> map {
-                            $0.reduce([], { current, value in
-                                return current + value.filter { $0.file.stickerText != nil && emojis.contains($0.file.stickerText!) }
-                            })
-                        }
-                    } |> delay(0.2, queue: prepareQueue)
-
-                    return combineLatest(searchLocal, searchRemote, emojiRelated, statePromise.get()) |> map { local, remote, emojiRelated, state in
-                        var value = FoundStickerSets()
-                        if let local = local {
-                            value = value.merge(with: local)
-                        }
-                        if let remote = remote {
-                            value = value.merge(with: remote)
-                        }
-                        
-                        let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0, emojiRelated: emojiRelated)
-                        return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
+                    let signals = emojis.map {
+                        context.engine.stickers.searchStickers(query: [$0], scope: [.installed]) |> map { $0.items }
                     }
+                    return combineLatest(signals) |> map {
+                        $0.reduce([], { current, value in
+                            return current + value.filter { $0.file.stickerText != nil && emojis.contains($0.file.stickerText!) }
+                        })
+                    }
+                } |> delay(0.2, queue: prepareQueue)
+
+                return combineLatest(searchLocal, searchRemote, emojiRelated, statePromise.get(), premiumStickers) |> map { local, remote, emojiRelated, state, premiumStickers in
+                    var value = FoundStickerSets()
+                    if let local = local {
+                        value = value.merge(with: local)
+                    }
+                    if let remote = remote {
+                        value = value.merge(with: remote)
+                    }
+                    
+                    let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0, emojiRelated: emojiRelated, premiumStickers: premiumStickers)
+                    return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
                 }
                 
             }
@@ -1656,7 +1629,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     
                     let fromEntry = entries[fromIndex]
                     
-                    guard case let .stickerPack(_, _, fromPackInfo, _) = fromEntry else {
+                    guard case let .stickerPack(_, _, fromPackInfo, _, _) = fromEntry else {
                         return
                     }
                     
@@ -1665,7 +1638,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     var afterAll = false
                     if toIndex < entries.count {
                         switch entries[toIndex] {
-                        case let .stickerPack(_, _, toPackInfo, _):
+                        case let .stickerPack(_, _, toPackInfo, _, _):
                             referenceId = toPackInfo.id
                         default:
                             if entries[toIndex] < fromEntry {
@@ -1771,6 +1744,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     
     override var supportSwipes: Bool {
+        if let categories = genericView.categories, categories._mouseInside() || genericView.searchView._mouseInside() {
+            return false
+        }
         return !self.genericView.packsView._mouseInside()
     }
     

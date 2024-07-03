@@ -19,11 +19,11 @@ private final class MessagePhotoInfo {
     fileprivate(set) var layoutFrame: NSRect = NSZeroRect
     fileprivate(set) var positionFlags: LayoutPositionFlags = .none
     
-    init(_ message: Message) {
+    init(_ message: Message, preview: Bool) {
         self.mid = message.id
         
         self.imageSize = ChatLayoutUtils.contentSize(for: message.media[0], with: 320)
-        self.aspectRatio = self.imageSize.width / self.imageSize.height
+        self.aspectRatio = preview ? 1 : self.imageSize.width / self.imageSize.height
 
     }
 }
@@ -76,14 +76,14 @@ class GroupedLayout {
         return nil
     }
     
-    func measure(_ maxSize: NSSize, spacing: CGFloat = 4.0) {
+    func measure(_ maxSize: NSSize, spacing: CGFloat = 4.0, preview: Bool = false) {
         
         var photos: [MessagePhotoInfo] = []
         
         switch type {
         case .photoOrVideo:
             if messages.count == 1 {
-                let photo = MessagePhotoInfo(messages[0])
+                let photo = MessagePhotoInfo(messages[0], preview: preview)
                 photos.append(photo)
                 photos[0].layoutFrame = NSMakeRect(0, 0, photos[0].imageSize.width, photos[0].imageSize.height)
                 photos[0].positionFlags = .none
@@ -92,7 +92,7 @@ class GroupedLayout {
                 var averageAspectRatio: CGFloat = 1.0
                 var forceCalc: Bool = false
                 for message in messages {
-                    let photo = MessagePhotoInfo(message)
+                    let photo = MessagePhotoInfo(message, preview: preview)
                     photos.append(photo)
                     
                     if photo.aspectRatio > 1.2 {
@@ -405,7 +405,7 @@ class GroupedLayout {
             var layouts: [MessageId: MessagePhotoInfo] = [:]
             var y: CGFloat = 0
             for (i, message) in messages.enumerated() {
-                let info = MessagePhotoInfo(message)
+                let info = MessagePhotoInfo(message, preview: preview)
                 var height:CGFloat = 40
                 if let file = message.anyMedia as? TelegramMediaFile {
                     if file.isMusicFile {
@@ -456,7 +456,7 @@ class GroupedLayout {
                     info.layoutFrame = info.layoutFrame.offsetBy(dx: 0, dy: offset)
                     if let index = index {
                         let caption = captions[index]
-                        offset += caption.layout.layoutSize.height + 6
+                        offset += caption.layout.size.height + 6
                     }
                 }
             }

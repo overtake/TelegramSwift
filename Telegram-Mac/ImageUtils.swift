@@ -469,9 +469,9 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
                 
                 let lineOrigin = CGPoint(x: floorToScreenPixels(System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
                 
-                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.translateBy(x: floorToScreenPixels(size.width / 2.0), y: floorToScreenPixels(size.height / 2.0))
                 ctx.scaleBy(x: 1.0, y: 1.0)
-                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                ctx.translateBy(x: -floorToScreenPixels(size.width / 2.0), y: -floorToScreenPixels(size.height / 2.0))
                 //
                 ctx.translateBy(x: lineOrigin.x, y: lineOrigin.y)
                 CTLineDraw(line, ctx)
@@ -479,7 +479,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
             }
             
             if let icon = icon, let iconSize = iconSize {
-                let rect = NSMakeRect((displayDimensions.width - iconSize.width)/2, (displayDimensions.height - iconSize.height)/2, iconSize.width, iconSize.height)
+                let rect = NSMakeRect(floorToScreenPixels((displayDimensions.width - iconSize.width)/2), floorToScreenPixels((displayDimensions.height - iconSize.height)/2), iconSize.width, iconSize.height)
                 ctx.draw(icon, in: rect)
             }
             

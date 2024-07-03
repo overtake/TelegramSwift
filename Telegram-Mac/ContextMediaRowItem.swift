@@ -31,7 +31,7 @@ class ContextMediaRowItem: TableRowItem {
 
     
     let result:InputMediaContextRow
-    private let _index:Int64
+    private let _index1:Int64
     let context: AccountContext
     let arguments: ContextMediaArguments
     let collection: ChatContextResultCollection?
@@ -40,14 +40,14 @@ class ContextMediaRowItem: TableRowItem {
         if let _stableId = _stableId {
             return _stableId
         } else {
-            return _index
+            return _index1
         }
     }
     
     init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments, collection: ChatContextResultCollection? = nil, stableId: AnyHashable? = nil) {
         self.result = result
         self.arguments = arguments
-        self._index = index
+        self._index1 = index
         self.context = context
         self.collection = collection
         self._stableId = stableId
@@ -196,22 +196,34 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
 
-        var subviews = self.subviews
 
-        self.removeAllSubviews()
+        
+        CATransaction.begin()
         
         if let item = item as? ContextMediaRowItem {
+
+            
+            while subviews.count > item.result.entries.count {
+                subviews.removeLast()
+            }
+
+            
             var inset:CGFloat = 0
             for i in 0 ..< item.result.entries.count {
                 let container:NSView
                 switch item.result.entries[i] {
                 case let .gif(_, file):
-                    let view: GIFContainerView
-                    let index = subviews.firstIndex(where: { $0 is GIFContainerView })
-                    if let index = index {
-                        view = subviews.remove(at: index) as! GIFContainerView
-                    } else {
+                    var view = subviews.count > i ? subviews[i] : nil
+                    if view == nil  {
                         view = GIFContainerView()
+                        subviews.append(view!)
+                    } else if !(view is GIFContainerView) {
+                        view = GIFContainerView()
+                        subviews[i] = view!
+                    }
+                    
+                    guard let view = view as? GIFContainerView else {
+                        return
                     }
                     
                     var effectiveFile = file
@@ -239,6 +251,12 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             effectiveFile = FileMediaReference.customEmoji(media: media)
                         case let .story(peer, id, _):
                             effectiveFile = FileMediaReference.story(peer: peer, id: id, media: file)
+                        case .savedSticker(media: let media):
+                            effectiveFile = FileMediaReference.savedSticker(media: media)
+                        case .recentSticker(media: let media):
+                            effectiveFile = FileMediaReference.recentSticker(media: media)
+                        case let .starsTransaction(transaction, media):
+                            effectiveFile = FileMediaReference.starsTransaction(transaction: transaction, media: media)
                         }
                         
                     }
@@ -251,12 +269,18 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     container = view
                 case let .sticker(_, file):
                     if file.isAnimatedSticker {
-                        let view: MediaAnimatedStickerView
-                        let index = subviews.firstIndex(where: { $0 is MediaAnimatedStickerView})
-                        if let index = index {
-                            view = subviews.remove(at: index) as! MediaAnimatedStickerView
-                        } else {
-                            view = MediaAnimatedStickerView(frame: NSZeroRect)
+                        
+                        var view = subviews.count > i ? subviews[i] : nil
+                        if view == nil  {
+                            view = MediaAnimatedStickerView(frame: .zero)
+                            subviews.append(view!)
+                        } else if !(view is MediaAnimatedStickerView) {
+                            view = MediaAnimatedStickerView(frame: .zero)
+                            subviews[i] = view!
+                        }
+                        
+                        guard let view = view as? MediaAnimatedStickerView else {
+                            return
                         }
                         view.backgroundColor = .clear
                         let size = NSMakeSize(round(item.result.sizes[i].width), round(item.result.sizes[i].height))
@@ -265,12 +289,18 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         
                         container = view
                     } else {
-                        let view: TransformImageView
-                        let index = subviews.firstIndex(where: { $0 is TransformImageView})
-                        if let index = index {
-                            view = subviews.remove(at: index) as! TransformImageView
-                        } else {
-                            view = TransformImageView()
+                        
+                        var view = subviews.count > i ? subviews[i] : nil
+                        if view == nil  {
+                            view = TransformImageView(frame: .zero)
+                            subviews.append(view!)
+                        } else if !(view is TransformImageView) {
+                            view = TransformImageView(frame: .zero)
+                            subviews[i] = view!
+                        }
+                        
+                        guard let view = view as? TransformImageView else {
+                            return
                         }
                         
                         view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: stickerPackFileReference(file), small: true, scale: backingScaleFactor, fetched: true))
@@ -282,12 +312,17 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     }
                     
                 case let .photo(data):
-                    let view: TransformImageView
-                    let index = subviews.firstIndex(where: { $0 is TransformImageView})
-                    if let index = index {
-                        view = subviews.remove(at: index) as! TransformImageView
-                    } else {
-                        view = TransformImageView()
+                    var view = subviews.count > i ? subviews[i] : nil
+                    if view == nil  {
+                        view = TransformImageView(frame: .zero)
+                        subviews.append(view!)
+                    } else if !(view is TransformImageView) {
+                        view = TransformImageView(frame: .zero)
+                        subviews[i] = view!
+                    }
+                    
+                    guard let view = view as? TransformImageView else {
+                        return
                     }
                     let imageSize = item.result.sizes[i]
                     let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: data.representationForDisplayAtSize(.init(imageSize))?.dimensions.size ?? imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
@@ -311,13 +346,14 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 
                 container.setFrameOrigin(inset, 0)
                 container.background = .clear
-                addSubview(container)
                 inset += item.result.sizes[i].width
             }
             assert(self.subviews.count == item.result.entries.count)
 //            NSLog("entries: \(item.result.entries.count), rowIndex: \(item.index)")
             needsLayout = true
         }
+        
+        CATransaction.commit()
     }
     
     func index(at point: NSPoint) -> Int? {

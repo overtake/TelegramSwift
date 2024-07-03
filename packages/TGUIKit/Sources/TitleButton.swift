@@ -8,6 +8,9 @@
 
 import Cocoa
 
+
+import Cocoa
+
 public enum TextButtonImageDirection {
     case left
     case right
@@ -58,6 +61,14 @@ open class TextButton: ImageButton {
     public var direction: TextButtonImageDirection = .left {
         didSet {
             if direction != oldValue {
+                updateLayout()
+            }
+        }
+    }
+    
+    public var buttonImageInset: CGFloat = 12 {
+        didSet {
+            if buttonImageInset != oldValue {
                 updateLayout()
             }
         }
@@ -123,6 +134,8 @@ open class TextButton: ImageButton {
         }
         let attributedString = NSAttributedString.initialize(string: text, color: color, font: font)
         self.text.attributedString = attributedString
+        
+        needsLayout = true
     }
     
     public var isEmpty: Bool {
@@ -154,7 +167,7 @@ open class TextButton: ImageButton {
         
         if maxSize.width < size.width {
             if let image = imageView.image, direction != .top {
-                msize.width += (image.backingSize.width + (12)) // max size
+                msize.width += (image.backingSize.width + (buttonImageInset)) // max size
             }
         }
        
@@ -167,7 +180,7 @@ open class TextButton: ImageButton {
         if let image = imageView.image, direction != .top {
             
             textSize = min(maxWidth,size.width)
-            let iwidth:CGFloat = (image.backingSize.width + (12))
+            let iwidth:CGFloat = (image.backingSize.width + (buttonImageInset))
             
             if textSize == maxWidth {
                 textSize -= iwidth
@@ -191,6 +204,7 @@ open class TextButton: ImageButton {
         
         
         self.frame = CGRect(x: self.frame.origin.x, y: self.frame.origin.y, width: maxWidth, height: max(size.height,maxSize.height) + addition.height)
+        updateLayout()
         return frame.width >= maxWidth
     }
     
@@ -304,3 +318,4 @@ open class TextButton: ImageButton {
     }
     
 }
+

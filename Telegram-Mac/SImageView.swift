@@ -31,7 +31,7 @@ class SImageView: NSView {
     var data: (CGImage, NSEdgeInsets)? {
         didSet {
             if let image = data {
-                layer?.contentsScale = 2.0
+                layer?.contentsScale = System.backingScale
                 let imageSize = image.0.backingSize
                 let insets = image.1
                 let halfPixelFudge: CGFloat = 0.49

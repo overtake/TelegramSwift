@@ -10,9 +10,8 @@ import Cocoa
 import TGUIKit
 
 
-class GeneralInteractedRowView: GeneralRowView {
+class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         
-    let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
     private(set) var selectLeftControl: SelectingControl?
     private(set) var progressView: ProgressIndicator?
@@ -78,10 +77,20 @@ class GeneralInteractedRowView: GeneralRowView {
                 } else {
                     
                     current = SelectingControl(unselectedImage: unselected, selectedImage: selected)
+                    current.scaleOnClick = true
                     containerView.addSubview(current)
                     self.selectLeftControl = current
+                    
+                    current.set(handler: { [weak self] _ in
+                        if let item = self?.item as? GeneralInteractedRowItem {
+                            item.switchAction?()
+                        }
+                    }, for: .Click)
                 }
                 current.update(unselectedImage: unselected, selectedImage: selected, selected: value, animated: animated)
+                
+                current.userInteractionEnabled = item.switchAction != nil
+                
                 
                 current.layer?.opacity = item.enabled ? 1 : 0.7
             } else if let view = self.selectLeftControl {
@@ -225,9 +234,9 @@ class GeneralInteractedRowView: GeneralRowView {
         }
         super.set(item: item, animated: animated)
         
-        
-        containerView.needsLayout = true
+        needsLayout = true
         containerView.needsDisplay = true
+        
     }
     
     override func updateIsResorting() {
@@ -294,11 +303,11 @@ class GeneralInteractedRowView: GeneralRowView {
             if let textInset = thumb.textInset {
                 textXAdditional = textInset
             } else {
-                textXAdditional = thumb.thumb.backingSize.width + 10
+                textXAdditional = thumb.thumb.systemSize.width + 10
             }
         }
         if let _ = self.selectLeftControl {
-            textXAdditional += 24 + item.viewType.innerInset.left
+            textXAdditional += 24 + 14
         }
         return textXAdditional
     }
@@ -312,7 +321,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 super.draw(layer, in: ctx)
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
-                    var f = focus(thumb.thumb.backingSize)
+                    var f = focus(thumb.thumb.systemSize)
                     if item.descLayout != nil {
                         f.origin.y = 11
                     }
@@ -322,18 +331,18 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 if item.drawCustomSeparator, !isSelect && !self.isResorting && containerView.controlState != .Highlight {
                     ctx.setFillColor(borderColor.cgColor)
-                    ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
+                    ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, containerView.frame.width - (item.inset.left + item.inset.right), .borderSize))
                 }
                 
                 
                 if case let .colorSelector(stateback) = item.type {
                     ctx.setFillColor(stateback.cgColor)
-                    ctx.fillEllipse(in: NSMakeRect(frame.width - 14 - item.inset.right - 16, floorToScreenPixels(backingScaleFactor, (frame.height - 14) / 2), 14, 14))
+                    ctx.fillEllipse(in: NSMakeRect(containerView.frame.width - 14 - item.inset.right - 16, floorToScreenPixels(backingScaleFactor, (frame.height - 14) / 2), 14, 14))
                 }
             case let .modern(position, insets):
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
-                    var f = focus(thumb.thumb.backingSize)
+                    var f = focus(thumb.thumb.systemSize)
                     
                     let icon = thumb.thumb
                     var x: CGFloat = insets.left + (thumb.thumbInset ?? 0)
@@ -363,7 +372,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                                 
                 if let afterNameImage = item.afterNameImage {
-                    ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.backingSize.width, height: afterNameImage.backingSize.height))
+                    ctx.draw(afterNameImage, in: CGRect(x: textRect.maxX + 8, y: textRect.minY, width: afterNameImage.systemSize.width, height: afterNameImage.systemSize.height))
                 }
                 
                
@@ -383,10 +392,9 @@ class GeneralInteractedRowView: GeneralRowView {
         
         containerView.layerContentsRedrawPolicy = .duringViewResize
         
-        nextView.sizeToFit()
         containerView.addSubview(nextView)
-        self.containerView.displayDelegate = self
-        self.addSubview(self.containerView)
+
+        containerView.displayDelegate = self
         
         containerView.addSubview(nameView)
         
@@ -500,19 +508,17 @@ class GeneralInteractedRowView: GeneralRowView {
                         
             switch item.viewType {
             case .legacy:
-                self.containerView.frame = bounds
-                self.containerView.setCorners([])
                 if let descriptionView = descriptionView {
                     descriptionView.setFrameOrigin(insets.left + textXAdditional, floorToScreenPixels(backingScaleFactor, frame.height - descriptionView.frame.height - 6))
                 }
                 let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (insets.right == 0 ? 10 : 0)
                 
                 if let switchView = switchView {
-                    switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
+                    switchView.centerY(x:containerView.frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
                 }
                 
                 if let badgeView = badgeView {
-                    badgeView.centerY(x:frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
+                    badgeView.centerY(x:containerView.frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
                 }
                 
                 let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout)
@@ -526,7 +532,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 nameView.setFrameOrigin(textRect.origin)
                 
                 if let textView = textView {
-                    var width:CGFloat = containerView.frame.width - item.nameLayout.layoutSize.width - nextInset - insets.right - insets.left - 10
+                    let width:CGFloat = containerView.frame.width - item.nameLayout.layoutSize.width - nextInset - insets.right - insets.left - 10
                     textView.textLayout?.measure(width: width)
                     textView.update(textView.textLayout)
                     textView.centerY(x: containerView.frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
@@ -541,16 +547,12 @@ class GeneralInteractedRowView: GeneralRowView {
                     }
                 }
                 
-                nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
+                nextView.centerY(x: containerView.frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
                 if let progressView = progressView {
-                    progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
+                    progressView.centerY(x: containerView.frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
                 }
             case let .modern(_, innerInsets):
-                self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)
-                
-                
-                self.containerView.setCorners(self.isResorting ? GeneralViewItemCorners.all : item.viewType.corners)
-                
+                                
                 if let current = self.selectLeftControl {
                     current.centerY(x: innerInsets.left)
                 }

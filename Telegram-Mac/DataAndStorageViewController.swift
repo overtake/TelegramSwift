@@ -154,7 +154,8 @@ private final class DataAndStorageControllerArguments {
     let toggleAutoplayVideos:(Bool) -> Void
     let toggleAutoplaySoundOnHover:(Bool) -> Void
     let openProxySettings:()->Void
-    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void, selectDownloadFolder: @escaping() -> Void, toggleAutoplayGifs: @escaping(Bool) -> Void, toggleAutoplayVideos:@escaping(Bool) -> Void, toggleAutoplaySoundOnHover:@escaping(Bool) -> Void, openProxySettings: @escaping()->Void) {
+    let toggleSensitiveContent:(Bool)->Void
+    init(openStorageUsage: @escaping () -> Void, openNetworkUsage: @escaping () -> Void, openCategorySettings: @escaping(AutomaticMediaDownloadCategoryPeers, String) -> Void, toggleAutomaticDownload:@escaping(Bool) -> Void, resetDownloadSettings:@escaping()->Void, selectDownloadFolder: @escaping() -> Void, toggleAutoplayGifs: @escaping(Bool) -> Void, toggleAutoplayVideos:@escaping(Bool) -> Void, toggleAutoplaySoundOnHover:@escaping(Bool) -> Void, openProxySettings: @escaping()->Void, toggleSensitiveContent:@escaping(Bool)->Void) {
         self.openStorageUsage = openStorageUsage
         self.openNetworkUsage = openNetworkUsage
         self.openCategorySettings = openCategorySettings
@@ -165,6 +166,7 @@ private final class DataAndStorageControllerArguments {
         self.toggleAutoplayVideos = toggleAutoplayVideos
         self.toggleAutoplaySoundOnHover = toggleAutoplaySoundOnHover
         self.openProxySettings = openProxySettings
+        self.toggleSensitiveContent = toggleSensitiveContent
     }
 }
 
@@ -197,6 +199,8 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     case soundOnHoverDesc(Int32, viewType: GeneralViewType)
     case resetDownloadSettings(Int32, Bool, viewType: GeneralViewType)
     case downloadFolder(Int32, String, viewType: GeneralViewType)
+    case sensitiveContent(Int32, Bool, viewType: GeneralViewType)
+    case sensitiveContentInfo(Int32, viewType: GeneralViewType)
     case proxyHeader(Int32)
     case proxySettings(Int32, String, viewType: GeneralViewType)
     case sectionId(Int32)
@@ -237,10 +241,14 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return 15
         case .soundOnHoverDesc:
             return 16
-        case .proxyHeader:
+        case .sensitiveContent:
             return 17
-        case .proxySettings:
+        case .sensitiveContentInfo:
             return 18
+        case .proxyHeader:
+            return 19
+        case .proxySettings:
+            return 20
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -282,10 +290,14 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + stableId
         case let .downloadFolder(sectionId, _, _):
             return (sectionId * 1000) + stableId
+        case let .sensitiveContent(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .sensitiveContentInfo(sectionId, _):
+            return (sectionId * 1000) + stableId
         case let .proxyHeader(sectionId):
-            return sectionId
+            return (sectionId * 1000) + stableId
         case let .proxySettings(sectionId, _, _):
-            return sectionId
+            return (sectionId * 1000) + stableId
         case let .sectionId(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -304,7 +316,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             } else {
                 next = .next
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_StorageUsage")?.precomposed(flipVertical: true), type: next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(resource: .iconStorageUsage).precomposed(flipVertical: true), type: next, viewType: viewType, action: {
                 arguments.openStorageUsage()
             })
         case let .networkUsage(_, text, totalCount, viewType):
@@ -314,7 +326,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             } else {
                 next = .next
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_NetworkUsage")?.precomposed(flipVertical: true), type: next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(resource: .iconNetworkUsage).precomposed(flipVertical: true), type: next, viewType: viewType, action: {
                 arguments.openNetworkUsage()
             })
         case let .automaticMediaDownloadHeader(_, text, viewType):
@@ -372,6 +384,12 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
             })
         case let .soundOnHoverDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageAutoplaySoundOnHoverDesc, viewType: viewType)
+        case let .sensitiveContent(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "strings().dataAndStorageSensitiveContent", type: .switchable(value), viewType: viewType, action: {
+                arguments.toggleSensitiveContent(!value)
+            }, autoswitch: false)
+        case let .sensitiveContentInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: "strings().dataAndStorageSensitiveContentInfo", viewType: viewType)
         case .proxyHeader:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsProxyHeader, viewType: .textTopItem)
         case let .proxySettings(_, text, viewType):
@@ -441,9 +459,15 @@ private func entries(state: State, data: DataAndStorageData, proxy: ProxySetting
     entries.append(.autoplayVideos(sectionId, autoplayMedia.videos, viewType: .lastItem))
 
     
+//    #if DEBUG
+//    entries.append(.sectionId(sectionId))
+//    sectionId += 1
+//    entries.append(.sensitiveContent(sectionId, false, viewType: .singleItem))
+//    entries.append(.sensitiveContentInfo(sectionId, viewType: .textBottomItem))
+//    #endif
+    
     entries.append(.sectionId(sectionId))
     sectionId += 1
-    
     
     entries.append(.proxyHeader(sectionId))
     let text: String
@@ -595,6 +619,13 @@ class DataAndStorageViewController: TableViewController {
                 pushControllerImpl(controller)
             })
             pushControllerImpl(controller)
+        }, toggleSensitiveContent: { value in
+            if value {
+//                verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
+//                    
+//                })
+            }
+            
         })
         
         let proxy:Signal<ProxySettings, NoError> = proxySettings(accountManager: context.sharedContext.accountManager)

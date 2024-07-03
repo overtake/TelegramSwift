@@ -27,17 +27,15 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         let unclaimed: Bool
     }
     
-    let headerText: TextViewLayout
-    let infoText: TextViewLayout
+    private(set) var headerText: TextViewLayout!
+    private(set) var infoText: TextViewLayout!
     
     let data: GiftData
     
     
-    let wpPresentation: WPLayoutPresentation
-
     
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
@@ -51,16 +49,12 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
             fatalError()
         }
         
+        
+
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
+        
         let textColor = data.fromGiveaway ? theme.chat.textColor(isIncoming, object.renderType == .bubble) : theme.chatServiceItemTextColor
         
-        self.wpPresentation = WPLayoutPresentation(text: textColor, activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
-
-        
-        
-        
-        
-        
-      
         
         let channelName: String
         let channelId: PeerId?
@@ -115,9 +109,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         info_attr.detectBoldColorInString(with: .medium(.text))
         
         self.infoText = .init(info_attr, alignment: .center, alwaysStaticItems: true)
-        
 
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
         self.infoText.interactions.processURL = { [weak self] _ in
             if let channelId = channelId {

@@ -2,7 +2,7 @@ import Foundation
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import MediaPlayer
+import TelegramMediaPlayer
 import AppKit
 
 private final class FramePreviewContext {

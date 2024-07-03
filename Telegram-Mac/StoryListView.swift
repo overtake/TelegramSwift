@@ -192,7 +192,7 @@ private final class StoryRepostView : Control {
                 let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
                 validIds.append(id)
                 
-                let rect = item.rect.insetBy(dx: -2, dy: -2)
+                let rect = item.rect.insetBy(dx: 0, dy: 0)
                 
                 let view: InlineStickerItemLayer
                 if let current = itemViews[id], current.frame.size == rect.size && current.textColor == id.color {
@@ -296,6 +296,8 @@ extension MediaArea {
             return ""
         case .channelMessage:
             return strings().storyViewMediaAreaViewMessage
+        case .link:
+            return strings().storyViewMediaAreaOpenUrl
         }
     }
     var menu: MenuAnimation {
@@ -306,6 +308,8 @@ extension MediaArea {
             return MenuAnimation.menu_reactions
         case .channelMessage:
             return MenuAnimation.menu_show_message
+        case .link:
+            return MenuAnimation.menu_copy_link
         }
     }
     var canDraw: Bool {
@@ -316,6 +320,8 @@ extension MediaArea {
             return false
         case .reaction:
             return true
+        case .link:
+            return false
         }
     }
     var reaction: MessageReaction.Reaction? {
@@ -326,6 +332,8 @@ extension MediaArea {
             return reaction
         case .channelMessage:
             return nil
+        case .link:
+            return nil
         }
     }
     var isDark: Bool {
@@ -335,6 +343,8 @@ extension MediaArea {
         case let .reaction(_, _, flags):
             return flags.contains(.isDark)
         case .channelMessage:
+            return false
+        case .link:
             return false
         }
     }
@@ -536,6 +546,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
             }
         }
         if let layer = layer {
+            layer.superview = self
             layer.frame = focus(size)
             control.layer?.addSublayer(layer)
             layer.isPlayable = true
@@ -800,30 +811,10 @@ final class StoryListView : Control, Notifable {
             }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true, isDark: true, bubbled: false).mutableCopy() as! NSMutableAttributedString
             
             
-            
-            var spoilers:[TextViewLayout.Spoiler] = []
-            for entity in entities {
-                switch entity.type {
-                case .Spoiler:
-                    let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                    if let range = attributed.range.intersection(range) {
-                        attributed.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                    }
-                default:
-                    break
-                }
-            }
             InlineStickerItem.apply(to: attributed, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
             
             
-            attributed.enumerateAttribute(TextInputAttributes.spoiler, in: attributed.range, options: .init(), using: { value, range, stop in
-                if let _ = value {
-                    let color: NSColor = darkAppearance.colors.text
-                    spoilers.append(.init(range: range, color: color, isRevealed: false))
-                }
-            })
-            
-            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: darkAppearance.colors.grayText, spoilers: spoilers)
+            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: darkAppearance.colors.grayText, spoilerColor: darkAppearance.colors.text)
             layout.measure(width: frame.width - 20)
             layout.interactions = globalLinkExecutor
             
@@ -1002,7 +993,7 @@ final class StoryListView : Control, Notifable {
                     if textLayout.isBigEmoji {
                         rect = item.rect
                     } else {
-                        rect = item.rect.insetBy(dx: -2, dy: -2)
+                        rect = item.rect
                     }
                     
                     let view: InlineStickerItemLayer
@@ -1307,6 +1298,16 @@ final class StoryListView : Control, Notifable {
         items.append(ContextMenuItem(mediaArea.title, handler: { [weak self] in
             self?.arguments?.invokeMediaArea(mediaArea)
         }, itemImage: mediaArea.menu.value))
+        
+        switch mediaArea {
+        case .link(let coordinates, let url):
+            items.append(ContextSeparatorItem())
+            let item = ContextMenuItem(url, itemMode: .normal)
+            item.isEnabled = false
+            items.append(item)
+        default:
+            break
+        }
 
         ContextMenu.show(items: items, view: view, event: event, onClose: { [weak self] in
             self?.arguments?.deactivateMediaArea(mediaArea)
@@ -1819,15 +1820,11 @@ final class StoryListView : Control, Notifable {
         for media in medias {
             switch media {
             case let .reaction(_, reaction, _):
-                let rect = mediaRect(media)
                 let entryViews = self.entry?.item.storyItem.views
-                var count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
+                let count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
                 interactiveMedias_values[index].apply(area: media, count: count, arguments: arguments, animated: animated)
-                
                 index += 1
-            case .venue:
-                break
-            case .channelMessage:
+            default:
                 break
             }
         }
@@ -1844,14 +1841,12 @@ final class StoryListView : Control, Notifable {
         
         for media in medias {
             switch media {
-            case let .reaction(_, reaction, _):
+            case .reaction:
                 let rect = mediaRect(media)
                 let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
                 interactiveMedias.addSubview(view)
                 interactiveMedias_values.append(view)
-            case .venue:
-                break
-            case .channelMessage:
+            default:
                 break
             }
         }

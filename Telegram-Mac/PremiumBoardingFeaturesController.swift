@@ -299,7 +299,13 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(folderTags)
         
-        
+        let business_location = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        business_location.setup(context: context, type: .business_location, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.business_location.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(business_location)
         
         let business_hours = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         business_hours.setup(context: context, type: .business_hours, decoration: .badgeStars, getView: { _ in
@@ -309,13 +315,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(business_hours)
         
-        let business_location = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        business_location.setup(context: context, type: .business_location, decoration: .badgeStars, getView: { _ in
-            let view = PremiumDemoLegacyPhoneView(frame: .zero)
-            view.setup(context: context, video: configuration.videos[PremiumValue.business_location.rawValue], position: .top)
-            return view
-        })
-        slideView.addSlide(business_location)
+  
         
         let quick_replies = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         quick_replies.setup(context: context, type: .quick_replies, decoration: .badgeStars, getView: { _ in

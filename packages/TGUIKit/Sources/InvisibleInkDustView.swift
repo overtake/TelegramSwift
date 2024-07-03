@@ -210,37 +210,27 @@ public class InvisibleInkDustView: View {
 
 
 
+
+
+
+
+
+
+
 public class MediaDustView: View {
     private var currentParams: (size: CGSize, color: NSColor, textColor: NSColor)?
     private var animColor: CGColor?
     
-    
-    private var emitterView: View
     private var emitter: CAEmitterCell?
     private var emitterLayer: CAEmitterLayer?
-    private let emitterMaskView: View
-    private let emitterSpotView: ImageView
-    private let emitterMaskFillView: View
         
     public var isRevealed = false
     
+    private let maskLayer = SimpleShapeLayer()
+    
     public override init() {
-        
-        self.emitterView = View()
-        
-        
-        self.emitterMaskView = View()
-        self.emitterSpotView = ImageView()
-        
-        self.emitterMaskFillView = View()
-        self.emitterMaskFillView.backgroundColor = .white
-        
+                
         super.init()
-        
-        self.addSubview(self.emitterView)
-        
-        self.emitterMaskView.addSubview(self.emitterSpotView)
-        self.emitterMaskView.addSubview(self.emitterMaskFillView)
         
         initialize()
     }
@@ -313,7 +303,10 @@ public class MediaDustView: View {
         
         self.emitterLayer = emitterLayer
         
-        self.emitterView.layer?.addSublayer(emitterLayer)
+        emitterLayer.mask = maskLayer
+        maskLayer.fillRule = .evenOdd
+
+        self.layer?.addSublayer(emitterLayer)
         
         self.updateEmitter()
         
@@ -413,7 +406,7 @@ public class MediaDustView: View {
         guard let (size, _, _) = self.currentParams else {
             return
         }
-        
+        self.maskLayer.frame = CGRect(origin: CGPoint(), size: size)
         self.emitterLayer?.frame = CGRect(origin: CGPoint(), size: size)
         self.emitterLayer?.emitterSize = size
         self.emitterLayer?.emitterPosition = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
@@ -428,13 +421,9 @@ public class MediaDustView: View {
 
     }
     
-    public func update(size: CGSize, color: NSColor, textColor: NSColor) {
+    public func update(size: CGSize, color: NSColor, textColor: NSColor, mask: CGPath) {
         self.currentParams = (size, color, textColor)
-                
-        self.emitterView.frame = CGRect(origin: CGPoint(), size: size)
-        self.emitterMaskView.frame = self.emitterView.bounds
-        self.emitterMaskFillView.frame = self.emitterView.bounds
-        
+        self.maskLayer.path = mask
         self.updateEmitter()
         self.setupRandomAnimations()
     }

@@ -85,7 +85,9 @@ private final class EditInfoControllerArguments {
     let openBirthdayPrivacy:()->Void
     let removeBirthday:()->Void
     let personalChannel:()->Void
-    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void, userNameColor: @escaping()->Void, birthday:@escaping()->Void, openBirthdayPrivacy:@escaping()->Void, removeBirthday:@escaping()->Void, personalChannel:@escaping()->Void) {
+    let openHours:()->Void
+    let openLocation:()->Void
+    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void, userNameColor: @escaping()->Void, birthday:@escaping()->Void, openBirthdayPrivacy:@escaping()->Void, removeBirthday:@escaping()->Void, personalChannel:@escaping()->Void, openHours:@escaping()->Void, openLocation:@escaping()->Void) {
         self.context = context
         self.logout = logout
         self.username = username
@@ -97,6 +99,8 @@ private final class EditInfoControllerArguments {
         self.openBirthdayPrivacy = openBirthdayPrivacy
         self.removeBirthday = removeBirthday
         self.personalChannel = personalChannel
+        self.openHours = openHours
+        self.openLocation = openLocation
     }
 }
 struct EditInfoState : Equatable {
@@ -126,7 +130,9 @@ struct EditInfoState : Equatable {
     let addToException: Bool
     let birthday: TelegramBirthday?
     let personalChannel: EnginePeer?
-    init(stateInited: Bool = false, firstName: String = "", lastName: String = "", about: String = "", username: String? = nil, phone: String? = nil, representation: TelegramMediaImageRepresentation? = nil, updatingPhotoState: PeerInfoUpdatingPhotoState? = nil, peer: Peer? = nil, peerStatusSettings: PeerStatusSettings? = nil, addToException: Bool = true, birthday: TelegramBirthday? = nil, personalChannel: EnginePeer? = nil) {
+    let hasBusinessHours: Bool
+    let hasBusinessLocation: Bool
+    init(stateInited: Bool = false, firstName: String = "", lastName: String = "", about: String = "", username: String? = nil, phone: String? = nil, representation: TelegramMediaImageRepresentation? = nil, updatingPhotoState: PeerInfoUpdatingPhotoState? = nil, peer: Peer? = nil, peerStatusSettings: PeerStatusSettings? = nil, addToException: Bool = true, birthday: TelegramBirthday? = nil, personalChannel: EnginePeer? = nil, hasBusinessHours: Bool = false, hasBusinessLocation: Bool = false) {
         self.firstName = firstName
         self.lastName = lastName
         self.about = about
@@ -140,6 +146,8 @@ struct EditInfoState : Equatable {
         self.addToException = addToException
         self.birthday = birthday
         self.personalChannel = personalChannel
+        self.hasBusinessHours = hasBusinessHours
+        self.hasBusinessLocation = hasBusinessLocation
     }
     
     init(_ peerView: PeerView) {
@@ -157,43 +165,47 @@ struct EditInfoState : Equatable {
         self.addToException = true
         self.birthday = (peerView.cachedData as? CachedUserData)?.birthday
         self.personalChannel = nil
+        self.hasBusinessHours = false
+        self.hasBusinessLocation = false
     }
     
     func withUpdatedInited(_ stateInited: Bool) -> EditInfoState {
-        return EditInfoState(stateInited: stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     func withUpdatedAbout(_ about: String) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     
     
     func withUpdatedFirstName(_ firstName: String) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: self.stateInited, firstName: firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     func withUpdatedLastName(_ lastName: String) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     
     func withUpdatedPeerView(_ peerView: PeerView) -> EditInfoState {
+        let cachedData = peerView.cachedData as? CachedUserData
         let peer = peerView.peers[peerView.peerId] as? TelegramUser
-        let about = stateInited ? self.about : (peerView.cachedData as? CachedUserData)?.about ?? self.about
+        let about = stateInited ? self.about : cachedData?.about ?? self.about
         let username = peer?.usernames.first(where: { $0.isActive })?.username
-        let peerStatusSettings = (peerView.cachedData as? CachedUserData)?.peerStatusSettings
-        let birthday = (peerView.cachedData as? CachedUserData)?.birthday
-        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer, peerStatusSettings: peerStatusSettings, addToException: self.addToException, birthday: birthday, personalChannel: self.personalChannel)
+        let peerStatusSettings = cachedData?.peerStatusSettings
+        let birthday = cachedData?.birthday
+        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer, peerStatusSettings: peerStatusSettings, addToException: self.addToException, birthday: birthday, personalChannel: self.personalChannel, hasBusinessHours: cachedData?.businessHours != nil, hasBusinessLocation: cachedData?.businessLocation != nil)
     }
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState), peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState), peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     func withoutUpdatingPhotoState() -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: nil, peer:self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: nil, peer:self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     func withUpdatedAddToException(_ addToException: Bool) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer:self.peer, peerStatusSettings: self.peerStatusSettings, addToException: addToException, birthday: self.birthday, personalChannel: self.personalChannel)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer:self.peer, peerStatusSettings: self.peerStatusSettings, addToException: addToException, birthday: self.birthday, personalChannel: self.personalChannel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
     func withUpdatedPersonalChannel(_ channel: EnginePeer?) -> EditInfoState {
-        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer:self.peer, peerStatusSettings: self.peerStatusSettings, addToException: addToException, birthday: self.birthday, personalChannel: channel)
+        return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: self.updatingPhotoState, peer:self.peer, peerStatusSettings: self.peerStatusSettings, addToException: addToException, birthday: self.birthday, personalChannel: channel, hasBusinessHours: self.hasBusinessHours, hasBusinessLocation: self.hasBusinessLocation)
     }
+    
 }
 
 private let _id_info = InputDataIdentifier("_id_info")
@@ -206,6 +218,8 @@ private let _id_name_color = InputDataIdentifier("_id_name_color")
 private let _id_birthday = InputDataIdentifier("_id_birthday")
 private let _id_birthday_remove = InputDataIdentifier("_id_birthday_remove")
 private let _id_personal_channel = InputDataIdentifier("_id_personal_channel")
+private let _id_business_hours = InputDataIdentifier("_id_business_hours")
+private let _id_business_location = InputDataIdentifier("_id_business_location")
 
 private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, activeAccounts: [AccountWithInfo], privacy: AccountPrivacySettings?, updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -305,6 +319,19 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_personal_channel, data: InputDataGeneralData(name: strings().editAccountPersonalChannel, color: theme.colors.text, type: .nextContext(state.personalChannel?._asPeer().displayTitle ?? strings().editAccountPersonalChannelAdd), viewType: .lastItem, action: arguments.personalChannel)))
     index += 1
     
+    if state.hasBusinessHours || state.hasBusinessLocation {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+        if state.hasBusinessHours {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_business_hours, data: InputDataGeneralData(name: strings().businessHoursTitle, color: theme.colors.text, icon: nil, type: .next, viewType: state.hasBusinessLocation ? .firstItem : .singleItem, action: arguments.openHours)))
+        }
+        if state.hasBusinessLocation {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_business_location, data: InputDataGeneralData(name: strings().businessLocationTitle, color: theme.colors.text, icon: nil, type: .next, viewType: state.hasBusinessHours ? .lastItem : .singleItem, action: arguments.openLocation)))
+        }
+    }
+    
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -320,8 +347,13 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: strings().editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, viewType: activeAccounts.count < 3 ? .lastItem : .singleItem, action: nil)))
     index += 1
     
+    
+
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+    
+    
+    
     
     return entries
 }
@@ -602,6 +634,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         _ = context.engine.accountData.updateBirthday(birthday: nil).startStandalone()
     }, personalChannel: {
         showModal(with: PersonalChannelController(context: context), for: context.window)
+    }, openHours: {
+        f(BusinessHoursController(context: context))
+    }, openLocation: {
+        f(BusinessLocationController(context: context))
     })
     
     let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo, context
@@ -638,7 +674,9 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 f(.fail(.fields([_id_info : .shake])))
             }
             var signals:[Signal<Void, NoError>] = []
+            
             if let peerView = peerView {
+                
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
                 if let names = updates.0 {
                     
@@ -646,6 +684,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 }
                 if let about = updates.1 {
                     signals.append(context.engine.accountData.updateAbout(about: about) |> `catch` { _ in .complete()})
+                }
+                if updates.0 == nil, updates.1 == nil {
+                    close?()
+                    return
                 }
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }
@@ -666,7 +708,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             let current = stateValue.modify {$0}
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
-                f((updates.0 != nil || updates.1 != nil) ? .enabled(strings().navigationDone) : .disabled(strings().navigationDone))
+                f(.enabled(strings().navigationDone))
             } else {
                 f(.disabled(strings().navigationDone))
             }

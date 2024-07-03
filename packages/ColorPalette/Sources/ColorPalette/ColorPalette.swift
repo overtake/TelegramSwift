@@ -18,10 +18,16 @@ public final class InputViewTheme: Equatable {
     public final class Quote: Equatable {
         public let foreground: PeerNameColors.Colors
         public let icon: NSImage
+        public let collapse: NSImage
+        public let expand: NSImage
         public init(foreground: PeerNameColors.Colors,
-            icon: NSImage
+                    icon: NSImage,
+                    collapse: NSImage,
+                    expand: NSImage
         ) {
             self.foreground = foreground
+            self.collapse = collapse
+            self.expand = expand
             self.icon = icon
         }
         
@@ -30,6 +36,12 @@ public final class InputViewTheme: Equatable {
                 return false
             }
             if lhs.icon != rhs.icon {
+                return false
+            }
+            if lhs.collapse != rhs.collapse {
+                return false
+            }
+            if lhs.expand != rhs.expand {
                 return false
             }
             return true
@@ -84,13 +96,13 @@ public final class InputViewTheme: Equatable {
     }
     
     public func withUpdatedQuote(_ colors: PeerNameColors.Colors) -> InputViewTheme {
-        return .init(quote: .init(foreground: colors, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+        return .init(quote: .init(foreground: colors, icon: self.quote.icon, collapse: self.quote.collapse, expand: self.quote.expand), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
     }
     public func withUpdatedTextColor(_ color: NSColor) -> InputViewTheme {
-        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: color, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon, collapse: self.quote.collapse, expand: self.quote.expand), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: color, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
     }
     public func withUpdatedFontSize(_ fontSize: CGFloat) -> InputViewTheme {
-        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: fontSize)
+        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon, collapse: self.quote.collapse, expand: self.quote.expand), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: fontSize)
     }
 }
 

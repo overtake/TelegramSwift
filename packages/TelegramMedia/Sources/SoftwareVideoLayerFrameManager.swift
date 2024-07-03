@@ -14,7 +14,7 @@ import TelegramCore
 
 import SwiftSignalKit
 import CoreMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 private let applyQueue = Queue()
 private let workers = ThreadPool(threadCount: 3, threadPriority: 0.2)

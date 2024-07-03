@@ -250,7 +250,7 @@ private final class MultiTargetContextCache {
     }
 }
 
-final class InlineStickerView: View {
+final class InlineStickerView: Control {
     private let isPlayable: Bool
     let controlContent: Bool
     let animateLayer: InlineStickerItemLayer
@@ -262,6 +262,7 @@ final class InlineStickerView: View {
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
+        userInteractionEnabled = false
     }
     init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
         let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
@@ -271,6 +272,7 @@ final class InlineStickerView: View {
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
+        userInteractionEnabled = false
     }
     
     
@@ -723,6 +725,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
                 let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon, scale: System.backingScale)
                 self.contents = image
+                
                 if resource.resize {
                     self.contentsGravity = .resizeAspect
                 } else {

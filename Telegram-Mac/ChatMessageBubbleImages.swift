@@ -48,7 +48,7 @@ func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: N
         } else {
             context.setFillColor(fillColor.cgColor)
             context.setLineWidth(lineWidth)
-            context.setStrokeColor(strokeColor.cgColor)
+            context.setStrokeColor(fillColor.cgColor)
         }
        
         

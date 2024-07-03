@@ -17,12 +17,14 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
     let stickerSize: NSSize
     let bgColor: NSColor?
     let modify:[String]?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(120, 120), bgColor: NSColor? = nil, modify:[String]? = nil) {
+    let isFullView: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(120, 120), bgColor: NSColor? = nil, modify:[String]? = nil, isFullView: Bool = false) {
         self.context = context
         self.sticker = sticker
         self.stickerSize = stickerSize
         self.bgColor = bgColor
         self.modify = modify
+        self.isFullView = isFullView
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 20, right: 20, top: 0, bottom: 10))
         
@@ -39,6 +41,22 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
+        if isFullView {
+            if let table = table {
+                var basic:CGFloat = 0
+                table.enumerateItems(with: { [weak self] item in
+                    if let strongSelf = self {
+                        if item.index < strongSelf.index {
+                            basic += item.height
+                        }
+                    }
+                    return true
+                })
+                return table.frame.height - basic
+            } else {
+                return initialSize.height
+            }
+        }
         return inset.top + inset.bottom + stickerSize.height + inset.top + textLayout.layoutSize.height
     }
 }
@@ -58,7 +76,8 @@ private final class AnimtedStickerHeaderView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.listBackground
+        guard let item = item as? AnimatedStickerHeaderItem else { return super.backdorColor }
+        return item.isFullView ? (item.bgColor ?? theme.colors.listBackground) : theme.colors.listBackground
     }
     
     override func updateColors() {
@@ -103,7 +122,12 @@ private final class AnimtedStickerHeaderView : TableRowView {
         super.layout()
         guard let item = item as? AnimatedStickerHeaderItem else { return }
 
-        self.imageView.centerX(y: item.inset.top)
+        if item.isFullView {
+            self.imageView.center()
+            self.imageView.setFrameOrigin(NSMakePoint(self.imageView.frame.minX, self.imageView.frame.minY - 40))
+        } else {
+            self.imageView.centerX(y: item.inset.top)
+        }
         self.textView.centerX(y: self.imageView.frame.maxY + item.inset.bottom)
         
         self.bgView?.frame = self.imageView.frame

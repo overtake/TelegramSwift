@@ -145,7 +145,7 @@ final class StoryLikeActionButton: Control {
          }
                 
                  
-         let finish:()->Void = { [weak self] in
+         let finish:()->Void = {
              
          }
                   
@@ -165,6 +165,7 @@ final class StoryLikeActionButton: Control {
              } else if let effectFile = effectFile {
                  let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(80, 80), playPolicy: .playCount(1))
                  player.isPlayable = true
+                 player.superview = container
                  player.frame = NSMakeRect((container.frame.width - player.frame.width) / 2, (container.frame.height - player.frame.height) / 2, player.frame.width, player.frame.height)
                  
                  container.layer?.addSublayer(player)
@@ -191,7 +192,7 @@ final class StoryLikeActionButton: Control {
              let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
              parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
          } else {
-             completed(true)
+             play(self, icon)
          }
      }
      
@@ -527,7 +528,7 @@ final class StoryInputView : Control, StoryInput {
                         let (attributed, attachments) = attributed.applyRtf()
                         
                         if !attachments.isEmpty {
-                            rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
+                            rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { urls in
                                 if !urls.isEmpty {
                                     chatInteraction.showPreviewSender(urls, true, attributed)
                                 }
@@ -824,7 +825,7 @@ final class StoryInputView : Control, StoryInput {
             }
         }
         textView.context = arguments?.context
-        textView.inputTheme = .init(quote: .init(foreground: colors, icon: NSImage(named: "Icon_Quote")!), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
+        textView.inputTheme = .init(quote: .init(foreground: colors, icon: NSImage(resource: .iconQuote), collapse: NSImage(resource: .iconQuoteCollapse), expand: NSImage(resource: .iconQuoteExpand)), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
         self.updateInputState()
         
         let input = arguments?.interaction.presentation.findInput(groupId)

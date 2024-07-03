@@ -30,7 +30,9 @@ func multigift(context: AccountContext, selected: [PeerId] = []) {
         }
     } |> deliverOnMainQueue
     
-    _ = birthdays.startStandalone(next: { birthdays in
+    let accountHasBirthday = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Birthday(id: context.peerId)) |> map { $0 != nil }
+    
+    _ = combineLatest(birthdays, accountHasBirthday).startStandalone(next: { birthdays, accountHasBirthday in
         
         let today = birthdays.filter({ $0.birthday.isToday })
         let tomorrow = birthdays.filter({ $0.birthday.isTomorrow() })
@@ -46,7 +48,23 @@ func multigift(context: AccountContext, selected: [PeerId] = []) {
             blocks.append(.init(separator: strings().birthdaySeparatorTomorrow, peerIds: tomorrow.map { $0.peer.id }))
         }
         
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, blocks: blocks, defaultSelected:  selected)
+        let additionTopItem: SelectPeers_AdditionTopItem?
+        if !accountHasBirthday {
+            additionTopItem = .init(title: strings().birthdayAddYourBirthday, color: theme.colors.accent, icon: NSImage(resource: .iconCalendar).precomposed(theme.colors.accent, flipVertical: true), callback: {
+                let controller = CalendarController(NSMakeRect(0, 0, 300, 300), context.window, current: Date(), lowYear: 1900, canBeNoYear: true, selectHandler: { date in
+                    editAccountUpdateBirthday(date, context: context)
+                })
+                let nav = NavigationViewController(controller, context.window)
+                nav._frameRect = NSMakeRect(0, 0, 300, 310)
+                showModal(with: nav, for: context.window)
+            })
+        } else {
+            additionTopItem = nil
+        }
+        
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected)
+        
+        
         
         _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
             showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)

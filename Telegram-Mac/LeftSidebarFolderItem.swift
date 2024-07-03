@@ -95,13 +95,13 @@ class LeftSidebarFolderItem: TableRowItem {
                     } else {
                         ctx.setFillColor(NSColor.grayIcon.cgColor)
                     }
-                    ctx.round(size, size.height/2.0)
+                    ctx.round(size, floorToScreenPixels(size.height/2.0))
                     ctx.fill(rect)
                     
 //                    ctx.setBlendMode(.clear)
                     
                     let focus = rect.focus(textLayout.0.size)
-                    textLayout.1.draw(focus.offsetBy(dx: 0, dy: -1), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
+                    textLayout.1.draw(focus.offsetBy(dx: 0, dy: -1), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .white)
                     
                 })!
                 
@@ -111,7 +111,7 @@ class LeftSidebarFolderItem: TableRowItem {
                     
                     ctx.draw(folderIcon, in: rect.focus(folderIcon.systemSize))
                     
-                    ctx.clip(to: NSMakeRect(rect.width - badge.systemSize.width / 2 - 11 / System.backingScale, rect.height - badge.systemSize.height + 5 / System.backingScale, badge.systemSize.width + 4, badge.systemSize.height + 4), mask: badge)
+                    ctx.clip(to: NSMakeRect(rect.width - floorToScreenPixels(badge.systemSize.width / 2) - 6, rect.height - badge.systemSize.height + 3, badge.systemSize.width + 4, badge.systemSize.height + 4), mask: badge)
                     
                     ctx.clear(rect)
                     
@@ -259,7 +259,7 @@ private final class LeftSidebarFolderView : TableRowView {
         }
      //   imageView.animates = animated
         imageView.image = item.icon
-        
+        imageView.sizeToFit()
         textView.update(item.nameLayout)
         
         
@@ -277,7 +277,7 @@ private final class LeftSidebarFolderView : TableRowView {
         
         imageView.centerX(y: 8)
         textView.centerX(y: imageView.frame.maxY + 4)
-        badgeView.setFrameOrigin(NSMakePoint(imageView.frame.maxX - badgeView.frame.width / 2 - 4, imageView.frame.minY - 4))
+        badgeView.setFrameOrigin(NSMakePoint(imageView.frame.maxX - floorToScreenPixels(badgeView.frame.width / 2) - 4, imageView.frame.minY - 4))
     }
     
     required init?(coder: NSCoder) {

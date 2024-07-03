@@ -231,6 +231,17 @@ class GalleryModernControlsView: View {
             zoomOutControl.isHidden = false
             rotateControl.isHidden = !photo.videoRepresentations.isEmpty
             fastSaveControl.isHidden = false
+        case let .media(media, _, _):
+            zoomInControl.isHidden = false
+            zoomOutControl.isHidden = false
+            fastSaveControl.isHidden = true
+            if media is TelegramMediaImage {
+                rotateControl.isHidden = false
+            } else if let file = media as? TelegramMediaFile {
+                if file.isVideo {
+                    rotateControl.isHidden = true
+                }
+            }
         default:
             zoomInControl.isHidden = false
             zoomOutControl.isHidden = false

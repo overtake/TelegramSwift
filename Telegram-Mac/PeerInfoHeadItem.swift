@@ -347,6 +347,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: strings().peerInfoActionJoinChannel, color: item.accentColor, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
                 arguments.join_channel()
             }))
+        } else if peer.participationStatus == .member {
+            items.append(ActionItem(text: strings().peerInfoActionOpenChannel, color: item.accentColor, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
+                arguments.open_channel()
+            }))
         }
         
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
@@ -374,7 +378,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: strings().peerInfoActionStatistics, color: item.accentColor, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
-                    arguments.stats(cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue))
+                    arguments.stats(cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue), stars: cachedData.flags.contains(.canViewStarsRevenue))
                 }))
             }
         }
@@ -1066,8 +1070,8 @@ private final class NameContainer : View {
                 addSubview(current)
                 self.showStatusView = current
             }
-            current.set(color: theme.colors.accent, for: .Normal)
-            current.set(background: theme.colors.accent.withAlphaComponent(0.2), for: .Normal)
+            current.set(color: item.accentColor, for: .Normal)
+            current.set(background: item.accentColor.withAlphaComponent(0.2), for: .Normal)
             current.set(text: strings().peerStatusShow, for: .Normal)
             current.sizeToFit(NSMakeSize(5, 5))
             current.layer?.cornerRadius = current.frame.height * 0.5

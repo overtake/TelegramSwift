@@ -52,7 +52,7 @@ class ChatSwitchInlineController: ChatController {
                                             controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic))
-                                        case .customChatContents, .customLink:
+                                        case .customChatContents, .customLink, .preview:
                                             fatalError()
                                         }
                                         self.navigationController?.push(controller)

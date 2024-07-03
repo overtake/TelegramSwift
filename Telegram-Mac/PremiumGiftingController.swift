@@ -571,13 +571,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         struct Tuple : Equatable {
             let value: PremiumValue
             let isNew: Bool
+            let viewType: GeneralViewType
+            let index: Int
         }
-        let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
+        let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue), viewType: viewType, index: i)
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: theme, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: arguments.openFeature)
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, presentation: theme, index: tuple.index, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: arguments.openFeature)
         }))
-        index += 1
     }
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumGiftTerms, linkHandler: { link in
         arguments.execute(link)
@@ -595,7 +596,9 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(values: context.premiumOrder.premiumValues)
+    var initialState = State(values: context.premiumOrder.premiumValues.uniqueElements.filter({ !$0.isBusiness }))
+    
+    initialState.values.insert(.business, at: 0)
     
     let paymentDisposable = MetaDisposable()
     actionsDisposable.add(paymentDisposable)

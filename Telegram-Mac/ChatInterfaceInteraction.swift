@@ -9,10 +9,11 @@
 import Cocoa
 import Postbox
 import TelegramCore
-
+import CodeSyntax
 import TGUIKit
 import SwiftSignalKit
 import MapKit
+import InputView
 
 
 final class ReplyMarkupInteractions {
@@ -100,7 +101,7 @@ final class ChatInteraction : InterfaceObserver  {
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([Message]) -> Void = {_ in}
     var reportMessages:(ReportReasonValue, [MessageId]) -> Void = { _, _ in }
-    var sendMessage: (Bool, Date?) -> Void = { _, _ in }
+    var sendMessage: (Bool, Date?, AvailableMessageEffects.MessageEffect?) -> Void = { _, _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
     
     //
@@ -108,7 +109,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusPinnedMessageId: (MessageId) -> Void = { _ in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile, Bool, String?, Bool, ItemCollectionId?) -> Void = { _,_, _, _, _ in}
-    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?, Bool) -> Void = {_,_,_,_,_,_, _ in}
+    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?, Bool, AvailableMessageEffects.MessageEffect?, Bool) -> Void = {_,_,_,_,_,_,_,_, _ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -191,7 +192,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var showEmojiUseTooltip:()->Void = { }
     var restartTopic: ()->Void = { }
-    var revealMedia:(MessageId)->Void = { _ in }
+    var revealMedia:(Message)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
     var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?, ((Signal<Never, NoError>)->Void)?)->Void = { _, _ in }
@@ -205,11 +206,17 @@ final class ChatInteraction : InterfaceObserver  {
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     var setLocationTag:(HistoryViewInputTag?)->Void = { _ in }
+    var revealFactCheck:(MessageId)->Void = { _ in }
+    
+    var hashtag:(String)->Void = { _ in }
+    
+    var sendMessageMenu:(Bool)->Signal<ContextMenu?, NoError> = { _ in .single(nil) }
     
     var removeAd:(Data)->Void = { _ in }
     
     var boostToUnrestrict:(BoostChannelSource)->Void = { _ in }
     
+    var executeReplymarkup:(MessageId)->Void = { _ in }
     var toggleUnderMouseMessage:()->Void = { }
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
@@ -217,6 +224,12 @@ final class ChatInteraction : InterfaceObserver  {
     var sendMessageShortcut:(ShortcutMessageList.Item)->Void = { _ in }
     
     var replyToAnother:(EngineMessageReplySubject, Bool)->Void = { _, _ in }
+    
+    var enqueueCodeSyntax:(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }
+    
+    var openPhoneNumberContextMenu: (String)->Void = { _ in }
+    
+    var toggleQuote: (QuoteMessageIndex)->Void = { _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
@@ -392,6 +405,8 @@ final class ChatInteraction : InterfaceObserver  {
     }
     @discardableResult func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
         
+        let text = text.mutableCopy() as! NSMutableAttributedString
+        
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
         let inputText = presentation.effectiveInput.attributedString().mutableCopy() as! NSMutableAttributedString
         
@@ -399,13 +414,26 @@ final class ChatInteraction : InterfaceObserver  {
             return selectedRange.lowerBound ..< selectedRange.lowerBound
         }
         
+        if selectedRange.lowerBound - 1 >= 0 {
+            let attributes = inputText.attributes(at: selectedRange.lowerBound - 1, effectiveRange: nil)
+                .filter { (key, value) in
+                    if value is TextInputTextCustomEmojiAttribute {
+                        return false
+                    } else {
+                        return true
+                    }
+                }
+            text.addAttributes(attributes, range: text.range)
+        }
+        
+//        if selectedRange.lowerBound == 0 {
+//            let attributes = inputText.attributes(at: selectedRange.lowerBound, effectiveRange: nil).filter {
+//                $0.key == TextInputAttributes.quote
+//            }
+//            text.addAttributes(attributes, range: text.range)
+//        }
+        
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
-            // let minUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: selectedRange.lowerBound)
-            // let maxUtfIndex = inputText.utf16.index(minUtfIndex, offsetBy: selectedRange.upperBound - selectedRange.lowerBound)
-            
-            
-            
-            // inputText.removeSubrange(minUtfIndex.samePosition(in: inputText)! ..< maxUtfIndex.samePosition(in: inputText)!)
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: text)
             selectedRange = selectedRange.lowerBound ..< selectedRange.lowerBound
         } else {
@@ -552,55 +580,57 @@ final class ChatInteraction : InterfaceObserver  {
                 let openAttach:(Peer)->Void = { [weak self] peer in
                     
                     let invoke:()->Void = { [weak self] in
-                        _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: peer.id, cached: true), for: context.window).start(next: { attach in
-                            
-                            let thumbFile: TelegramMediaFile
-                            if let file = attach.icons[.macOSAnimated] {
-                                thumbFile = file
-                            } else {
-                                thumbFile = MenuAnimation.menu_folder_bot.file
-                            }
-                            
-                            let open:()->Void = {
-                                showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
-                            }
-                            
-                            if attach.flags.contains(.showInSettingsDisclaimer) || attach.flags.contains(.notActivated) {
-                                var options: [ModalAlertData.Option] = []
-                                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: false, mandatory: true))
+                        if !WebappWindow.focus(botId: peer.id) {
+                            _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: peer.id, cached: true), for: context.window).start(next: { attach in
                                 
-                                var description: ModalAlertData.Description? = nil
-                                let installBot = !attach.flags.contains(.notActivated) && attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !attach.flags.contains(.showInAttachMenu)
-                                if installBot {
-                                    description = .init(string: strings().webBotAccountDesclaimerDesc(attach.shortName), onlyWhenEnabled: false)
+                                let thumbFile: TelegramMediaFile
+                                if let file = attach.icons[.macOSAnimated] {
+                                    thumbFile = file
+                                } else {
+                                    thumbFile = MenuAnimation.menu_folder_bot.file
                                 }
                                 
+                                let open:()->Void = {
+                                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile))
+                                }
                                 
-                                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
-                                showModalAlert(for: context.window, data: data, completion: { result in
-                                    _ = context.engine.messages.acceptAttachMenuBotDisclaimer(botId: peer.id).start()
-                                    installAttachMenuBot(context: context, peer: peer, completion: { value in
-                                        open()
-                                        if value {
-                                            showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
-                                        }
-                                    })
-                                })
-                            } else {
-                                let botInfo = attach.peer._asPeer().botInfo
-                                let installBot = botInfo?.flags.contains(.canBeAddedToAttachMenu) == true
-                                if installBot {
-                                    installAttachMenuBot(context: context, peer: peer, completion: { _ in
-                                        open()
+                                if attach.flags.contains(.showInSettingsDisclaimer) || attach.flags.contains(.notActivated) {
+                                    var options: [ModalAlertData.Option] = []
+                                    options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: false, mandatory: true))
+                                    
+                                    var description: ModalAlertData.Description? = nil
+                                    let installBot = !attach.flags.contains(.notActivated) && attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !attach.flags.contains(.showInAttachMenu)
+                                    if installBot {
+                                        description = .init(string: strings().webBotAccountDesclaimerDesc(attach.shortName), onlyWhenEnabled: false)
+                                    }
+                                    
+                                    
+                                    let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                    showModalAlert(for: context.window, data: data, completion: { result in
+                                        _ = context.engine.messages.acceptAttachMenuBotDisclaimer(botId: peer.id).start()
+                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
+                                            open()
+                                            if value {
+                                                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                                            }
+                                        })
                                     })
                                 } else {
-                                    open()
+                                    let botInfo = attach.peer._asPeer().botInfo
+                                    let installBot = botInfo?.flags.contains(.canBeAddedToAttachMenu) == true
+                                    if installBot {
+                                        installAttachMenuBot(context: context, peer: peer, completion: { _ in
+                                            open()
+                                        })
+                                    } else {
+                                        open()
+                                    }
                                 }
-                            }
-                            
-                        }, error: { _ in
-                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
-                        })
+                                
+                            }, error: { _ in
+                                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file))
+                            })
+                        }
                     }
                     if peer.isVerified {
                         invoke()
@@ -636,7 +666,9 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })
-                showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer), for: context.window)
+                if !WebappWindow.focus(botId: botPeer.id) {
+                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer))
+                }
             case .makeWebview:
                 update(animated: animated, {
                     $0.withoutInitialAction()
@@ -700,20 +732,22 @@ final class ChatInteraction : InterfaceObserver  {
                 guard let strongSelf = self else {
                     return
                 }
+                if !WebappWindow.focus(botId: bot.id) {
+                    _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak strongSelf] attach in
+                        
+                        let thumbFile: TelegramMediaFile
+                        if let file = attach.icons[.macOSAnimated] {
+                            thumbFile = file
+                        } else {
+                            thumbFile = MenuAnimation.menu_folder_bot.file
+                        }
+                        WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.flags.contains(.hasSettings), complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile))
+                        
+                    }, error: { [weak strongSelf] _ in
+                        WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file))
+                    })
+                }
                 
-                _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak strongSelf] attach in
-                    
-                    let thumbFile: TelegramMediaFile
-                    if let file = attach.icons[.macOSAnimated] {
-                        thumbFile = file
-                    } else {
-                        thumbFile = MenuAnimation.menu_folder_bot.file
-                    }
-                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.flags.contains(.hasSettings), complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
-                    
-                }, error: { [weak strongSelf] _ in
-                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
-                })
                 
             }
             if FastSettings.shouldConfirmWebApp(bot.id) {
@@ -758,25 +792,26 @@ final class ChatInteraction : InterfaceObserver  {
         let botId = bot.id
         let context = self.context
         let peerId = self.peerId
-        if simple {
-            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
-            _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic, hasSettings: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
-            })
-        } else {
-            _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
-                
-                let thumbFile: TelegramMediaFile
-                if let file = attach.icons[.macOSAnimated] {
-                    thumbFile = file
-                } else {
-                    thumbFile = MenuAnimation.menu_folder_bot.file
-                }
-                showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
-                
-            }, error: { [weak self] _ in
-                showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
-            })
+        if !WebappWindow.focus(botId: bot.id) {
+            if simple {
+                let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
+                _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
+                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url.url, title: title ?? bot.displayTitle, requestData: .simple(url: url.url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic, hasSettings: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file))
+                })
+            } else {
+                _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
+                    
+                    let thumbFile: TelegramMediaFile
+                    if let file = attach.icons[.macOSAnimated] {
+                        thumbFile = file
+                    } else {
+                        thumbFile = MenuAnimation.menu_folder_bot.file
+                    }
+                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile))
+                }, error: { [weak self] _ in
+                    WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file))
+                })
+            }
         }
     }
     
@@ -832,7 +867,11 @@ final class ChatInteraction : InterfaceObserver  {
                             if let receiptMessageId = receiptMessageId {
                                 showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, invoice: invoice), for: strongSelf.context.window)
                             } else {
-                                showModal(with: PaymentsCheckoutController(context: strongSelf.context, source: .message(keyboardMessage.id), invoice: invoice), for: strongSelf.context.window)
+                                if invoice.currency == XTR {
+                                    showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .message(keyboardMessage.id)), for: context.window)
+                                } else {
+                                    showModal(with: PaymentsCheckoutController(context: strongSelf.context, source: .message(keyboardMessage.id), invoice: invoice), for: strongSelf.context.window)
+                                }
                             }
                         }
                     case let .urlAuth(url, buttonId):
@@ -892,7 +931,9 @@ final class ChatInteraction : InterfaceObserver  {
                 }
             })
         }
-        return ReplyMarkupInteractions(context: context, proccess: {_,_  in})
+        return ReplyMarkupInteractions(context: context, proccess: { [weak self] _,_ in
+            self?.executeReplymarkup(keyboardMessage.id)
+        })
     }
     
     
@@ -962,6 +1003,23 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
+    func getMessages(_ messageIds: [MessageId], _ album: Bool) -> Signal<[Message], NoError> {
+        if let hashtags = self.mode.customChatContents {
+            return hashtags.messagesAtIds(messageIds, album: album)
+        } else {
+            return context.account.postbox.transaction { transaction in
+                var list:[Message] = []
+                for messageId in messageIds {
+                    if let messages = transaction.getMessageGroup(messageId), album {
+                        list.append(contentsOf: messages)
+                    } else if let message = transaction.getMessage(messageId) {
+                        list.append(message)
+                    }
+                }
+                return list
+            }
+        }
+    }
 
     
 }

@@ -361,7 +361,7 @@ final class AppMenuController : NSObject  {
             self.parent?.set(mouseHandler: { event in
                 isInteracted = true
                 return .rejected
-            }, with: self, for: .leftMouseDown, priority: .supreme)
+            }, with: self, for: .leftMouseDown, priority: .modal)
             
             self.parent?.set(mouseHandler: { [weak self] event in
                 if isInteracted {
@@ -370,12 +370,12 @@ final class AppMenuController : NSObject  {
                 let was = isInteracted
                 isInteracted = true
                 return !was ? .rejected : .invoked
-            }, with: self, for: .leftMouseUp, priority: .supreme)
+            }, with: self, for: .leftMouseUp, priority: .modal)
 
             self.parent?.set(mouseHandler: { event in
                 isInteracted = true
                 return .rejected
-            }, with: self, for: .rightMouseDown, priority: .supreme)
+            }, with: self, for: .rightMouseDown, priority: .modal)
 
             self.parent?.set(mouseHandler: { [weak self] event in
                 if isInteracted {
@@ -384,7 +384,7 @@ final class AppMenuController : NSObject  {
                 let was = isInteracted
                 isInteracted = true
                 return !was ? .rejected : .invoked
-            }, with: self, for: .rightMouseUp, priority: .supreme)
+            }, with: self, for: .rightMouseUp, priority: .modal)
             
 
         case .hover:
@@ -666,6 +666,9 @@ final class AppMenuController : NSObject  {
             .clear
         }
         
+        view.tableView.verticalScrollElasticity = .none
+
+        
         panel.setFrame(view.frame.insetBy(dx: -20, dy: -20), display: false)
         panel.contentView?.addSubview(view)
         
@@ -825,6 +828,11 @@ final class AppMenuController : NSObject  {
         }
         
         rect.origin = rect.origin.offsetBy(dx: -18, dy: -rect.height + 20)
+        
+        if menu.bottomAnchor {
+            rect.origin.y += (rect.height - 40)
+        }
+        
         rect = adjust(rect)
         
         view.setFrame(rect, display: true)
@@ -867,7 +875,9 @@ final class AppMenuController : NSObject  {
             window.contentView?.layer?.animateScaleSpringFrom(anchor: NSMakePoint(anchor.x, rect.height / 2), from: 0.1, to: 1, duration: 0.2, bounce: false)
             
             window.set(mouseHandler: { [weak self] event in
-                self?.closeAll()
+                if self?.menu.closeOutside == true {
+                    self?.closeAll()
+                }
                 return .rejected
             }, with: self, for: .leftMouseUp, priority: .supreme)
             
@@ -917,7 +927,10 @@ final class AppMenuController : NSObject  {
         
         self.keyDisposable = self.parent?.keyWindowUpdater.start(next: { [weak self] value in
             if !value && skippedFirst {
-                self?.closeAll()
+                let isKey = NSApp.mainWindow != nil
+                if !isKey {
+                    self?.closeAll()
+                }
             }
             skippedFirst = true
         })
@@ -953,6 +966,17 @@ public func contextMenuOnScreen()->Bool {
     }
     return false
 }
+
+
+public func contextOnScreen()->Window? {
+    for window in NSApp.windows {
+        if let window = window as? Window, let _ = window.weakView {
+            return window
+        }
+    }
+    return nil
+}
+
 public extension Window {
     var isContextMenu: Bool {
         return self.weakView != nil

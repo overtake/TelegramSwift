@@ -24,9 +24,9 @@ private class TouchIdContainerView : View {
         
         button.scaleOnClick = true
         button.autohighlight = false
-        button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.accent, highlightColor: theme.colors.accent)
+        button.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.underSelectedColor, backgroundColor: theme.colors.accent, highlightColor: theme.colors.accent)
         button.set(font: .medium(.title), for: .Normal)
-        button.set(color: .white, for: .Normal)
+        button.set(color: theme.colors.underSelectedColor, for: .Normal)
 
         button.set(text: strings().passcodeUseTouchId, for: .Normal)
         button.set(image: theme.icons.passcodeTouchId, for: .Normal)
@@ -407,18 +407,20 @@ class PasscodeLockController: ModalViewController {
         }
     }
     
+    private var touchIdCalled = false
+    
     override func windowDidBecomeKey() {
         super.windowDidBecomeKey()
 
-        if NSApp.isActive {
-          //  callTouchId()
+        if NSApp.isActive, useTouchId, !touchIdCalled {
+            callTouchId()
+            touchIdCalled = true
         }
     }
     
     override func windowDidResignKey() {
         super.windowDidResignKey()
-        if !NSApp.isActive {
-           // invalidateTouchId()
+        if !NSApp.isActive, useTouchId {
         }
     }
     

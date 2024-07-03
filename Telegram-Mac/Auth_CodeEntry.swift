@@ -127,12 +127,12 @@ final class Auth_CodeEntryView: View {
     private let error: LoginErrorStateView = LoginErrorStateView()
     private let nextView: Auth_NextView = Auth_NextView()
     
-    private let disposable = MetaDisposable()
     
     private var takeResend:(()->Void)?
     
     private var nextTextView: TextView?
-    
+    private let disposable = MetaDisposable()
+
     private var fragmentUrl: String?
     
     required init(frame frameRect: NSRect) {
@@ -190,6 +190,7 @@ final class Auth_CodeEntryView: View {
         let iconType: Auth_CodeEntryHeaderView.IconType
         let length: Int32
         var nextString: String = strings().loginNext
+        var detectBold = true
         switch type {
         case let .otherSession(_length):
             length = _length
@@ -209,6 +210,11 @@ final class Auth_CodeEntryView: View {
             info = strings().loginNewCodeFragmentInfo(formatPhoneNumber(number))
             nextString = strings().loginNextFragment
             self.fragmentUrl = url
+        case let .email(pattern, _length, _, _, _, _):
+            length = _length
+            info = strings().loginNewCodeEmail(pattern)
+            iconType = .phone
+            detectBold = false
         default:
             fatalError()
         }
@@ -221,7 +227,9 @@ final class Auth_CodeEntryView: View {
                 }
             }))
         })).mutableCopy() as! NSMutableAttributedString
-        attr.detectBoldColorInString(with: .medium(.header))
+        if detectBold {
+            attr.detectBoldColorInString(with: .medium(.header))
+        }
         
         self.header.update(desc: attr, type: iconType)
         let size = self.control.update(count: Int(length))

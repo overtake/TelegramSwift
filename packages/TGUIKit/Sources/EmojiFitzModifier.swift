@@ -109,10 +109,11 @@ public func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModif
 public func applyLottieColor(data: Data, color: NSColor) -> Data {
     if var string = String(data: data, encoding: .utf8)?.replacingOccurrences(of: " ", with: "") {
         func colorToString(_ color: NSColor) -> String {
+            let rgbColor = color.usingColorSpace(.deviceRGB) ?? NSColor(0x000000)
             var r: CGFloat = 0.0
             var g: CGFloat = 0.0
             var b: CGFloat = 0.0
-            color.getRed(&r, green: &g, blue: &b, alpha: nil)
+            rgbColor.getRed(&r, green: &g, blue: &b, alpha: nil)
             return "\"k\":[\(r),\(g),\(b),1]"
         }
         var replacements: [(NSTextCheckingResult, String)] = []

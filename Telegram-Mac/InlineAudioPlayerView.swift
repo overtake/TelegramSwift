@@ -155,10 +155,20 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         repeatControl.set(handler: { [weak self] _ in
             if let controller = self?.controller {
-                controller.nextRepeatState()
+                if self?.hasPlayerList == true {
+                    self?.showAudioPlayerList()
+                } else {
+                    controller.nextRepeatState()
+                }
             }
         }, for: .Click)
         
+        repeatControl.scaleOnClick = true
+        playPause.scaleOnClick = true
+        next.scaleOnClick = true
+        previous.scaleOnClick = true
+        dismiss.scaleOnClick = true
+        playingSpeed.scaleOnClick = true
         
         progressView.onUserChanged = { [weak self] progress in
             self?.controller?.set(trackProgress: progress)
@@ -234,9 +244,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         trackNameView.isEventLess = true
         
         
-        textViewContainer.set(handler: { [weak self] _ in
-            self?.showAudioPlayerList()
-        }, for: .LongOver)
+        
         
         textViewContainer.set(handler: { [weak self] _ in
             self?.gotoMessage()
@@ -304,17 +312,26 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
     }
     
+    var hasPlayerList: Bool {
+        if let controller = controller as? APChatMusicController, let song = controller.currentSong {
+            switch song.stableId {
+            case let .message(message):
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
     private func showAudioPlayerList() {
         guard let window = _window, let context = self.context else {return}
-        let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-        if NSPointInRect(point, textViewContainer.frame) {
-            if let controller = controller as? APChatMusicController, let song = controller.currentSong {
-                switch song.stableId {
-                case let .message(message):
-                    showPopover(for: textViewContainer, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), edge: .minX, inset: NSMakePoint(-130, -60))
-                default:
-                    break
-                }
+        if let controller = controller as? APChatMusicController, let song = controller.currentSong {
+            switch song.stableId {
+            case let .message(message):
+                showModal(with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), for: context.window)
+            default:
+                break
             }
         }
     }
@@ -533,15 +550,21 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
         
         
-        switch controller.state.repeatState {
-        case .circle:
-            repeatControl.set(image: theme.icons.audioplayer_repeat_circle, for: .Normal)
-        case .one:
-            repeatControl.set(image: theme.icons.audioplayer_repeat_one, for: .Normal)
-        case .none:
-            repeatControl.set(image: theme.icons.audioplayer_repeat_none, for: .Normal)
+        if hasPlayerList {
+            repeatControl.set(image: theme.icons.audioplayer_list, for: .Normal)
+        } else {
+            switch controller.state.repeatState {
+            case .circle:
+                repeatControl.set(image: theme.icons.audioplayer_repeat_circle, for: .Normal)
+            case .one:
+                repeatControl.set(image: theme.icons.audioplayer_repeat_one, for: .Normal)
+            case .none:
+                repeatControl.set(image: theme.icons.audioplayer_repeat_none, for: .Normal)
+            }
+            
         }
         
+       
        
         
         switch song.state {

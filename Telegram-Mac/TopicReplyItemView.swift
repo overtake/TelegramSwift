@@ -44,9 +44,9 @@ final class TopicReplyItemLayout {
         self.isSideAccessory = isSideAccessory
         let attr = NSMutableAttributedString()
         
-        _ = attr.append(string: "🤡 " + threadData.title, color: self.textColor, font: .normal(.text))
+        _ = attr.append(string: "\(clown) " + threadData.title, color: self.textColor, font: .normal(.text))
         
-        let range = attr.string.nsstring.range(of: "🤡")
+        let range = attr.string.nsstring.range(of: clown)
         if range.location != NSNotFound {
             let item: InlineStickerItem
             if let fileId = threadData.icon {

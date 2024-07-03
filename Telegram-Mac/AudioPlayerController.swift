@@ -8,13 +8,14 @@
 
 import Cocoa
 import TelegramCore
-
 import Postbox
 import SwiftSignalKit
 import TGUIKit
 import AVKit
 import RangeSet
 import TelegramMedia
+import AVFoundation
+import MediaPlayer
 
 
 class APSingleWrapper {
@@ -468,6 +469,143 @@ protocol APDelegate : AnyObject {
     func audioDidCompleteQueue(for controller:APController, animated: Bool)
 }
 
+private final class ControlCenter {
+    
+    var nextTrack:()->Bool = { return false }
+    var prevTrack:()->Bool = { return false }
+    var play:()->Bool = { return false }
+    var pause:()->Bool = { return false }
+    var togglePlayPause:()->Bool = { return false }
+    var seek:(TimeInterval)->Bool = { _ in return false }
+
+    private var playCommand: Any?
+    private var pauseCommand: Any?
+    private var nextCommand: Any?
+    private var prevCommand: Any?
+    private var togglePlayPauseCommand: Any?
+    private var playbackPositionCommand: Any?
+    
+    let account: Account
+    
+    init(account: Account) {
+        self.account = account
+        setupRemoteTransportControls()
+    }
+    
+    func setupNowPlaying(_ song: APSongItem) {
+        
+        let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+        
+        var nowPlayingInfo = [String: Any]()
+        nowPlayingInfo[MPMediaItemPropertyTitle] = song.songName
+        nowPlayingInfo[MPMediaItemPropertyArtist] = song.performerName
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = song.status.duration
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = song.status.timestamp
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = song.status.baseRate
+        if let resource = song.coverResource {
+            
+            if let path = copyToTemp(path: account.postbox.mediaBox.resourcePath(resource), ext: "jpeg") {
+                if let artworkImage = NSImage.init(contentsOfFile: path) {
+                    let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { size in
+                        return artworkImage
+                    }
+                    if #available(macOS 10.13.2, *) {
+                        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+                    }
+                }
+            }
+        }
+        nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
+
+        switch song.state {
+        case .playing:
+            nowPlayingInfoCenter.playbackState = .playing
+        default:
+            nowPlayingInfoCenter.playbackState = .paused
+        }
+        
+    }
+    
+    func clearNowPlaying() {
+        let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+        nowPlayingInfoCenter.nowPlayingInfo = nil
+        nowPlayingInfoCenter.playbackState = .stopped
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.removeTarget(playCommand)
+        commandCenter.pauseCommand.removeTarget(pauseCommand)
+        commandCenter.nextTrackCommand.removeTarget(nextCommand)
+        commandCenter.previousTrackCommand.removeTarget(prevCommand)
+        commandCenter.togglePlayPauseCommand.removeTarget(togglePlayPauseCommand)
+        commandCenter.changePlaybackPositionCommand.removeTarget(playbackPositionCommand)
+    }
+    
+    deinit {
+        clearNowPlaying()
+    }
+
+    
+    func updateControlsAvaiability(nextEnabled: Bool, prevEnabled: Bool) {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.previousTrackCommand.isEnabled = prevEnabled
+        commandCenter.nextTrackCommand.isEnabled = prevEnabled
+    }
+    
+    func setupRemoteTransportControls() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        playCommand = commandCenter.playCommand.addTarget { [unowned self] event in
+            if self.play() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+
+        pauseCommand = commandCenter.pauseCommand.addTarget { [unowned self] event in
+            if self.pause() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+
+        nextCommand = commandCenter.nextTrackCommand.addTarget { [unowned self] event in
+            if self.nextTrack() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+
+        prevCommand = commandCenter.previousTrackCommand.addTarget { [unowned self] event in
+            if self.prevTrack() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+        
+        togglePlayPauseCommand = commandCenter.togglePlayPauseCommand.addTarget { [unowned self] event in
+            if self.togglePlayPause() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+        
+        playbackPositionCommand = commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            if self.seek(event.positionTime) {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+    }
+}
 
 
 class APController : NSResponder {
@@ -503,6 +641,8 @@ class APController : NSResponder {
     }
     
     private var mediaPlayer: MediaPlayer?
+    
+    private let controlCenter: ControlCenter
    
     private let statusDisposable = MetaDisposable()
     private let readyDisposable = MetaDisposable()
@@ -523,6 +663,8 @@ class APController : NSResponder {
                     mediaPlayer?.setVolume(state.volume)
                 }
                 notifyGlobalStateChanged(animated: true)
+                
+
             }
         }
     }
@@ -625,6 +767,8 @@ class APController : NSResponder {
                 value.songDidChangedState(song: item, for: self, animated: animated)
             }
         }
+        self.controlCenter.setupNowPlaying(item)
+        self.controlCenter.updateControlsAvaiability(nextEnabled: self.nextEnabled, prevEnabled: self.prevEnabled)
     }
 
     private func notifySongChanged(item:APSongItem, animated: Bool) {
@@ -633,6 +777,8 @@ class APController : NSResponder {
                 value.songDidChanged(song: item, for: self, animated: animated)
             }
         }
+        self.controlCenter.setupNowPlaying(item)
+        self.controlCenter.updateControlsAvaiability(nextEnabled: self.nextEnabled, prevEnabled: self.prevEnabled)
     }
 
     private func notifySongDidStartPlaying(item:APSongItem,animated: Bool) {
@@ -693,8 +839,27 @@ class APController : NSResponder {
         self.state.volume = volume
         self.streamable = streamable
         self.state.baseRate = baseRate
+        self.controlCenter = ControlCenter(account: context.account)
         super.init()
         
+        controlCenter.play = { [unowned self] in
+            return self.play()
+        }
+        controlCenter.pause = { [unowned self] in
+            return self.pause()
+        }
+        controlCenter.togglePlayPause = { [unowned self] in
+            return self.playOrPause()
+        }
+        controlCenter.nextTrack = { [unowned self] in
+            return self.next()
+        }
+        controlCenter.prevTrack = { [unowned self] in
+            return self.prev()
+        }
+        controlCenter.seek = { [unowned self] timestamp in
+            return self.set(seek: timestamp)
+        }
     }
 
     @objc open func windowDidBecomeKey() {
@@ -790,7 +955,7 @@ class APController : NSResponder {
         return false
     }
 
-    func playOrPause() {
+    func playOrPause() -> Bool {
         if let _ = song {
             if case .playing = state.status {
                 mediaPlayer?.pause()
@@ -802,6 +967,7 @@ class APController : NSResponder {
                 dequeueCurrent()
             }
         }
+        return true
     }
     
     func playOrPause(_ id: APSingleWrapper) -> Bool {
@@ -849,9 +1015,9 @@ class APController : NSResponder {
     }
     
     
-    func next() {
+    @discardableResult func next() -> Bool {
         if !nextEnabled {
-            return
+            return false
         }
         switch self.state.orderState {
         case .normal:
@@ -872,11 +1038,12 @@ class APController : NSResponder {
         }
         
         dequeueCurrent()
+        return true
     }
 
-    func prev() {
+    @discardableResult func prev() -> Bool {
         if !prevEnabled {
-            return
+            return false
         }
         switch self.state.orderState {
         case .normal:
@@ -900,6 +1067,7 @@ class APController : NSResponder {
         }
         
         dequeueCurrent()
+        return true
     }
 
     var nextEnabled:Bool {
@@ -916,9 +1084,10 @@ class APController : NSResponder {
     }
 
     func complete() {
-        notifyCompleteQueue(animated: true)
-        state.status = .stopped
-        cleanup()
+        self.notifyCompleteQueue(animated: true)
+        self.state.status = .stopped
+        self.controlCenter.clearNowPlaying()
+        self.cleanup()
     }
 
     var currentSong:APSongItem? {
@@ -949,6 +1118,7 @@ class APController : NSResponder {
                 self?.audioPlayerDidFinishPlaying()
             }
         })
+        
         
         self.mediaPlayer = player
 
@@ -1070,13 +1240,25 @@ class APController : NSResponder {
         stopTimer()
     }
 
-    func set(trackProgress:Float) {
+    @discardableResult func set(trackProgress:Float) -> Bool {
         if let player = mediaPlayer, let song = song {
             let current: Double = song.status.duration * Double(trackProgress)
             player.seek(timestamp: current)
             song.setProgress(TimeInterval(trackProgress))
             notifyStateChanged(item: song, animated: false)
+            return true
         }
+        return false
+    }
+    
+    @discardableResult func set(seek: TimeInterval) -> Bool {
+        if let player = mediaPlayer, let song = song {
+            player.seek(timestamp: seek)
+            song.setProgress(TimeInterval(song.status.duration / seek))
+            notifyStateChanged(item: song, animated: false)
+            return true
+        }
+        return false
     }
 
     func cleanup() {

@@ -35,6 +35,7 @@ final class InputAnimatedEmojiAttach: View {
             
         self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, playPolicy: playPolicy, textColor: textColor)
         
+        self.media.superview = self
         let mediaRect = self.focus(media.frame.size)
         
         self.media.isPlayable = !isLite(.emoji)
@@ -85,8 +86,10 @@ final class TextView_Interactions : InterfaceObserver {
     var supports_continuity_camera: Bool = false
     var inputIsEnabled: Bool = true
     var canTransform: Bool = true
-    
+    var simpleTransform: Bool = false
     var emojiPlayPolicy: LottiePlayPolicy = .loop
+    
+    var allowedLinkHosts: [String] = []
     
     init(presentation: Updated_ChatTextInputState = .init()) {
         self.presentation = presentation
@@ -167,10 +170,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
             self.chatInputTextViewDidUpdateText()
         }
     }
-    
+    var placeholderFontSize: CGFloat? = nil
     var placeholder: String = "" {
         didSet {
-            self.view.placeholderString = .initialize(string: placeholder, color: inputTheme.grayTextColor, font: .normal(inputTheme.fontSize))
+            self.view.placeholderString = .initialize(string: placeholder, color: inputTheme.grayTextColor, font: .normal(placeholderFontSize ?? inputTheme.fontSize))
         }
     }
     
@@ -183,6 +186,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     private let delayDisposable = MetaDisposable()
     
     private var updatingInputState: Bool = false
+    
+    var isEmpty: Bool {
+        return self.inputTextState.inputText.string.isEmpty
+    }
     
     func chatInputTextViewDidUpdateText() {
         refreshInputView()
@@ -239,6 +246,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         return interactions.canTransform
     }
     
+    func inputTextSimpleTransform() -> Bool {
+        return interactions.simpleTransform
+    }
+    
     func inputViewRevealSpoilers() {
         self.revealSpoilers = true
         delayDisposable.set(delaySignal(5.0).start(completed: { [weak self] in
@@ -247,6 +258,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     }
     
     func inputApplyTransform(_ reason: InputViewTransformReason) {
+        
+        if !interactions.canTransform {
+            return
+        }
         switch reason {
         case let .attribute(attribute):
             self.interactions.update({ current in
@@ -278,12 +293,19 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
                     }
                     return current
                 }
-            }), for: window)
+            }, hosts: self.interactions.allowedLinkHosts), for: window)
             
         case .clear:
             self.interactions.update({ current in
                 return chatTextInputClearFormattingAttributes(current)
             })
+        case let .toggleQuote(quote, range):
+            self.interactions.update({ current in
+                return chatTextInputAddQuoteAttribute(current, selectionRange: range.min ..< range.max, collapsed: !quote.collapsed, doNotUpdateSelection: true)
+            })
+            if let window = self._window {
+                showModalText(for: window, text: !quote.collapsed ? strings().inputQuoteCollapsed : strings().inputQuoteExpanded)
+            }
         }
     }
     
@@ -452,6 +474,10 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
             current.selectionRange = 0 ..< current.inputText.length
             return current
         })
+    }
+    
+    func makeFirstResponder() {
+        self.window?.makeFirstResponder(self.inputView)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

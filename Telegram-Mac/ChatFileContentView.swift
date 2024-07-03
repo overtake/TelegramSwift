@@ -221,7 +221,7 @@ class ChatFileContentView: ChatMediaContentView {
                         }
                     }
                     if let pendingStatus = pendingStatus.0 {
-                        return (.Fetching(isActive: true, progress: pendingStatus.progress), archiveStatus)
+                        return (.Fetching(isActive: true, progress: pendingStatus.progress.progress), archiveStatus)
                     } else {
                         return (resourceStatus, archiveStatus)
                     }

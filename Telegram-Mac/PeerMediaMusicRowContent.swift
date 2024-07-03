@@ -232,7 +232,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                 updatedStatusSignal = combineLatest(chatMessageFileStatus(context: item.interface.context, message: item.message, file: item.file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus.0 {
-                            return .Fetching(isActive: true, progress: pendingStatus.progress)
+                            return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                         } else {
                             return resourceStatus
                         }

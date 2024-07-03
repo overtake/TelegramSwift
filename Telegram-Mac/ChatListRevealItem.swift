@@ -49,6 +49,7 @@ class ChatListRevealItem: TableStickItem {
         super.init(initialSize)
     }
     
+
     override var backdorColor: NSColor {
         return self.presentation.colors.background
     }

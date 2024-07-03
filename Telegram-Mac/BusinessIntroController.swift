@@ -308,7 +308,7 @@ func BusinessIntroController(context: AccountContext) -> InputDataController {
     
     
     let stickers = NStickersViewController(context)
-    
+    stickers.mode = .intro
     let interactions = EntertainmentInteractions(.stickers, peerId: context.peerId)
     
     interactions.sendSticker = { [weak stickers] sticker, _, _, fromRect in

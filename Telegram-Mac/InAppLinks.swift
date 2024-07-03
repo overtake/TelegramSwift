@@ -17,7 +17,39 @@ import MtProtoKit
 import ThemeSettings
 import Translate
 import InputView
-//import WalletCore
+import TelegramMedia
+
+let itunesAppLink = "https://apps.apple.com/us/app/telegram/id747648890"
+
+let XTR: String = TelegramCurrency.xtr.rawValue
+let XTRSTAR: String = "⭐️"
+let XTR_ICON = "Icon_Peer_Premium"
+let TINY_SPACE = "\u{2009}\u{2009}"
+
+let TON: String = TelegramCurrency.ton.rawValue
+
+enum TelegramCurrency : String {
+    case xtr = "XTR"
+    case ton = "TON"
+    
+    var logo: LocalAnimatedSticker {
+        switch self {
+        case .xtr:
+            return .star_currency
+        case .ton:
+            return .ton_logo
+        }
+    }
+    
+    func colored(_ color: NSColor) -> [LottieColor] {
+        switch self {
+        case .xtr:
+            return []
+        case .ton:
+            return [.init(keyPath: "", color: color)]
+        }
+    }
+}
 
 extension ResolvePeerResult : Equatable {
     var result: EnginePeer? {
@@ -255,7 +287,7 @@ var globalLinkExecutor:TextViewInteractions {
                 modified.replaceCharacters(in: range.0, with: range.1)
             }
             
-            modified.removeAttribute(TextInputAttributes.quote, range: modified.range)
+            //modified.removeAttribute(TextInputAttributes.quote, range: modified.range)
             modified.removeAttribute(TextInputAttributes.code, range: modified.range)
             modified.removeAttribute(TextInputAttributes.monospace, range: modified.range)
 
@@ -326,7 +358,11 @@ func copyContextText(from type: LinkType) -> String {
     }
 }
 
-func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
+func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bool)->Void = { _ in }) {
+    
+    let getWindow:(AccountContext)->Window = { context in
+        return window ?? context.window
+    }
     
     switch inapp {
     case let .external(link, needConfirm):
@@ -479,7 +515,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         } |> deliverOnMainQueue
 
         
-        _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { values in
+        _ = showModalProgress(signal: signal |> take(1), for: getWindow(context)).start(next: { values in
             let (result, peer) = values
             let threadMessageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
             let navigation = context.bindings.rootNavigation()
@@ -509,9 +545,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .doesntExists:
-                showModalText(for: context.window, text: strings().alertUserDoesntExists)
+                showModalText(for: getWindow(context), text: strings().alertUserDoesntExists)
             case .privateAccess:
-                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
+                showModalText(for: getWindow(context), text: strings().alertPrivateChannelAccessError)
             case .generic:
                 break
             }
@@ -568,9 +604,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .doesntExists:
-                showModalText(for: context.window, text: strings().alertUserDoesntExists)
+                showModalText(for: getWindow(context), text: strings().alertUserDoesntExists)
             case .privateAccess:
-                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
+                showModalText(for: getWindow(context), text: strings().alertPrivateChannelAccessError)
             case .generic:
                 break
             }
@@ -623,7 +659,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                 }
                 
-                _ = showModalProgress(signal: peerSignal |> deliverOnMainQueue, for: context.window).start(next: { peer in
+                _ = showModalProgress(signal: peerSignal |> deliverOnMainQueue, for: getWindow(context)).start(next: { peer in
                     if let peer = peer {
                         let messageId:MessageId?
                         if let postId = postId {
@@ -633,17 +669,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                         if let peer = peer as? TelegramChannel {
                             if peer.participationStatus == .kicked {
-                                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
+                                showModalText(for: getWindow(context), text: strings().alertPrivateChannelAccessError)
                                 return
                             }
                         }
                         invokeCallback(peer, messageId, action)
                     } else {
-                        showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
+                        showModalText(for: getWindow(context), text: strings().alertPrivateChannelAccessError)
                     }
                 })
             } else {
-                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
+                showModalText(for: getWindow(context), text: strings().alertPrivateChannelAccessError)
             }
         } else {
             let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
@@ -656,7 +692,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 
             let _ = showModalProgress(signal: signal |> mapToSignal { result -> Signal<Peer?, NoError> in
                 return .single(result?._asPeer())
-            } |> deliverOnMainQueue, for: context.window).start(next: { peer in
+            } |> deliverOnMainQueue, for: getWindow(context)).start(next: { peer in
                 if let peer = peer {
                     let messageId:MessageId?
                     if let postId = postId {
@@ -688,7 +724,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                             let chat = context.bindings.rootNavigation().controller as? ChatController
                                             chat?.chatInteraction.invokeInitialAction(action: action)
                                         }
-                                        _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
+                                        _ = showModalProgress(signal: signal, for: getWindow(context)).start(next: { _ in
                                             openAttach()
                                         }, error: { _ in
                                             if peer.username == botname {
@@ -714,7 +750,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                             settings.insert(.channels)
                                         }
                                         
-                                        _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: [], limit: 1)).start(next: { peerIds in
+                                        _ = selectModalPeers(window: getWindow(context), context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: [], limit: 1)).start(next: { peerIds in
                                             if let peerId = peerIds.first {
                                                 let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
                                                 _ = signal.start(next: { peer in
@@ -745,7 +781,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                     if chat == nil {
                                         switch action {
                                         case let .openWebview(botPeer, botApp, url):
-                                            showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer), for: context.window)
+                                            if !WebappWindow.focus(botId: botPeer.id) {
+                                                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer))
+                                            }
                                         default:
                                             break
                                         }
@@ -755,13 +793,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 }
                                 
                                 
-                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestAppWebViewError> = { botApp, allowWrite in
-                                    return context.engine.messages.requestAppWebView(peerId: peerId ?? peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
-                                        return (botApp, $0)
+                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestWebViewError> = { botApp, allowWrite in
+                                    return context.engine.messages.requestAppWebView(peerId: peerId ?? peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
+                                        return (botApp, $0.url)
                                     }
                                 }
 
-                                var signal: Signal<(BotApp, String?), RequestAppWebViewError> = botApp
+                                var signal: Signal<(BotApp, String?), RequestWebViewError> = botApp
                                 |> mapError { _ in
                                     .generic
                                 } |> mapToSignal { botApp in
@@ -771,40 +809,42 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                         return makeRequestAppWebView(botApp, false)
                                     }
                                 }
-                                signal = showModalProgress(signal: signal, for: context.window)
-                                _ = signal.start(next: { botApp, url in
-                                    
-                                    if let url = url {
-                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                    } else {
+                                if !WebappWindow.focus(botId: peer.id) {
+                                    signal = showModalProgress(signal: signal, for: getWindow(context))
+                                    _ = signal.start(next: { botApp, url in
                                         
-                                        var options: [ModalAlertData.Option] = []
-                                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
-                                        
-                                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
-                                        showModalAlert(for: context.window, data: data, completion: { result in
-                                            FastSettings.markWebAppAsConfirmed(peer.id)
+                                        if let url = url {
+                                            openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                        } else {
                                             
-                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: context.window)
+                                            var options: [ModalAlertData.Option] = []
+                                            options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
                                             
-                                            _ = signal.start(next: { botApp, url in
-                                                if let url = url {
-                                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                                }
-                                            }, error: { error in
-                                                switch error {
-                                                case .generic:
-                                                    invokeCallback(peer, messageId, nil)
-                                                }
+                                            let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                            showModalAlert(for: getWindow(context), data: data, completion: { result in
+                                                FastSettings.markWebAppAsConfirmed(peer.id)
+                                                
+                                                let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: getWindow(context))
+                                                
+                                                _ = signal.start(next: { botApp, url in
+                                                    if let url = url {
+                                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                                    }
+                                                }, error: { error in
+                                                    switch error {
+                                                    case .generic:
+                                                        invokeCallback(peer, messageId, nil)
+                                                    }
+                                                })
                                             })
-                                        })
-                                    }
-                                }, error: { error in
-                                    switch error {
-                                    case .generic:
-                                        invokeCallback(peer, messageId, nil)
-                                    }
-                                })
+                                        }
+                                    }, error: { error in
+                                        switch error {
+                                        case .generic:
+                                            invokeCallback(peer, messageId, nil)
+                                        }
+                                    })
+                                }
                             default:
                                 invokeCallback(peer, messageId, action)
                             }
@@ -815,7 +855,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         invokeCallback(peer, messageId, action)
                     }
                 } else {
-                    alert(for: context.window, info: strings().alertUserDoesntExists)
+                    alert(for: getWindow(context), info: strings().alertUserDoesntExists)
                     //showModalText(for: context.window, text: strings().alertUserDoesntExists)
                 }
                     
@@ -823,7 +863,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         afterComplete(true)
     case let .inviteBotToGroup(_, username, context, action, rights, isChannel, callback):
-        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0.result != nil } |> map { $0.result! } |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
+        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0.result != nil } |> map { $0.result! } |> deliverOnMainQueue, for: getWindow(context)).start(next: { botPeerId in
             
             
             var payload: String = ""
@@ -844,7 +884,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 title = strings().selectPeersTitleSelectGroup
             }
             
-            let result = selectModalPeers(window: context.window, context: context, title: title, behavior: SelectChatsBehavior(settings: isChannel ? [.channels, .checkInvite] : payload.isEmpty ? [.groups, .channels, .checkInvite] : [.groups, .checkInvite], limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let result = selectModalPeers(window: getWindow(context), context: context, title: title, behavior: SelectChatsBehavior(settings: isChannel ? [.channels, .checkInvite] : payload.isEmpty ? [.groups, .channels, .checkInvite] : [.groups, .checkInvite], limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 return .single(true)
             })
             |> filter { $0.first != nil }
@@ -864,7 +904,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { peerId in
                             callback(peerId, true, nil, action)
                         }, error: { error in
-                            alert(for: context.window, info: error)
+                            alert(for: getWindow(context), info: error)
                         })
                     } else {
                         let signal = showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: peerId, payload: payload), for: context.window)
@@ -878,7 +918,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                             }
                             callback(peerId, true, nil, nil)
                         }, error: { error in
-                            alert(for: context.window, info: strings().unknownError)
+                            alert(for: getWindow(context), info: strings().unknownError)
                         })
                     }
                     
@@ -887,10 +927,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 let addAdmin:()->Void = {
                     showModal(with: ChannelBotAdminController(context: context, peer: values.source, admin: values.dest, rights: rights, callback: { peerId in
                         add(peerId)
-                    }), for: context.window)
+                    }), for: getWindow(context))
                 }
                 let addSimple:()->Void = {
-                    verifyAlert_button(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
+                    verifyAlert_button(for: getWindow(context), information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
                         add(values.dest.id)
                     })
                 }
@@ -926,7 +966,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             ForumUI.open(peerId, context: context)
         }
         
-        _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: context.window).start(next: { (result) in
+        _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: getWindow(context)).start(next: { (result) in
             switch result {
             case let .alreadyJoined(peer):
                 if peer._asPeer().isForum {
@@ -942,7 +982,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         } else {
                             interaction(peer.id, true, nil, nil)
                         }
-                    }), for: context.window)
+                    }), for: getWindow(context))
                 } else {
                     showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peer in
                         if peer.isForum {
@@ -950,7 +990,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         } else {
                             interaction(peer.id, true, nil, nil)
                         }
-                    }), for: context.window)
+                    }), for: getWindow(context))
                 }
             case let .peek(peer, peek):
                 if peer._asPeer().isForum {
@@ -959,7 +999,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     interaction(peer.id, true, nil, .closeAfter(peek))
                 }
             case .invalidHash:
-                showModalText(for: context.window, text: strings().linkExpired)
+                showModalText(for: getWindow(context), text: strings().linkExpired)
             }
         })
         afterComplete(true)
@@ -974,7 +1014,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         afterComplete(true)
     case let .shareUrl(_, context, url):
         if !url.hasPrefix("@") {
-            showModal(with: ShareModalController(ShareLinkObject(context, link: url)), for: context.window)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: url)), for: getWindow(context))
         }
         afterComplete(true)
     case let .wallpaper(_, context, preview):
@@ -991,13 +1031,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }, error: { error in
                 switch error {
                 case .generic:
-                    showModalText(for: context.window, text: strings().wallpaperPreviewDoesntExists)
+                    showModalText(for: getWindow(context), text: strings().wallpaperPreviewDoesntExists)
                 }
             })
         }
         afterComplete(true)
     case let .stickerPack(_, reference, context, peerId):
-        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [reference]), for: context.window)
+        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [reference]), for: getWindow(context))
         afterComplete(true)
     case let .confirmPhone(_, context, phone, hash):
         _ = showModalProgress(signal: context.engine.auth.requestCancelAccountResetData(hash: hash) |> deliverOnMainQueue, for: context.window).start(next: { data in
@@ -1005,9 +1045,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .limitExceeded:
-                alert(for: context.window, info: strings().loginFloodWait)
+                alert(for: getWindow(context), info: strings().loginFloodWait)
             case .generic:
-                alert(for: context.window, info: strings().unknownError)
+                alert(for: getWindow(context), info: strings().unknownError)
             }
         })
         afterComplete(true)
@@ -1018,33 +1058,33 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         afterComplete(true)
     case let .requestSecureId(_, context, value):
         if value.nonce.isEmpty {
-            alert(for: context.window, info: value.isModern ? "nonce is empty" : "payload is empty")
+            alert(for: getWindow(context), info: value.isModern ? "nonce is empty" : "payload is empty")
             return
         }
         _ = showModalProgress(signal: (requestSecureIdForm(accountPeerId: context.peerId, postbox: context.account.postbox, network: context.account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
             return context.account.postbox.loadedPeerWithId(context.peerId) |> castError(RequestSecureIdFormError.self) |> map { peer in
                 return (form, peer)
             }
-        } |> deliverOnMainQueue), for: context.window).start(next: { form, peer in
+        } |> deliverOnMainQueue), for: getWindow(context)).start(next: { form, peer in
             let passport = PassportWindowController(context: context, peer: peer, request: value, form: form)
             passport.show()
         }, error: { error in
             switch error {
             case .serverError(let text):
-                alert(for: context.window, info: text)
+                alert(for: getWindow(context), info: text)
             case .generic:
-                alert(for: context.window, info: "An error occured")
+                alert(for: getWindow(context), info: "An error occured")
             case .versionOutdated:
                 updateAppAsYouWish(text: strings().secureIdAppVersionOutdated, updateApp: true)
             }
         })
         afterComplete(true)
     case let .applyLocalization(_, context, value):
-        _ = showModalProgress(signal: context.engine.localization.requestLocalizationPreview(identifier: value) |> deliverOnMainQueue, for: context.window).start(next: { info in
+        _ = showModalProgress(signal: context.engine.localization.requestLocalizationPreview(identifier: value) |> deliverOnMainQueue, for: getWindow(context)).start(next: { info in
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
-                alert(for: context.window, info: strings().applyLanguageChangeLanguageAlreadyActive(info.title))
+                alert(for: getWindow(context), info: strings().applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {
-                verifyAlert_button(for: context.window, header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancel: "", option: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
+                verifyAlert_button(for: getWindow(context), header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancel: "", option: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
                     switch result {
                     case .basic:
                         break
@@ -1053,38 +1093,38 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     }
                 })
             } else {
-                showModal(with: LocalizationPreviewModalController(context, info: info), for: context.window)
+                showModal(with: LocalizationPreviewModalController(context, info: info), for: getWindow(context))
             }
            
         }, error: { error in
             switch error {
             case .generic:
-                alert(for: context.window, info: strings().localizationPreviewErrorGeneric)
+                alert(for: getWindow(context), info: strings().localizationPreviewErrorGeneric)
             }
         })
         afterComplete(true)
     case let .theme(_, context, name):
-        _ = showModalProgress(signal: getTheme(account: context.account, slug: name), for: context.window).start(next: { value in
+        _ = showModalProgress(signal: getTheme(account: context.account, slug: name), for: getWindow(context)).start(next: { value in
             if value.file == nil, let _ = value.settings {
-                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(value)), for: context.window)
+                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(value)), for: getWindow(context))
             } else if value.file == nil {
                 showEditThemeModalController(context: context, theme: value)
             } else {
-                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(value)), for: context.window)
+                showModal(with: ThemePreviewModalController(context: context, source: .cloudTheme(value)), for: getWindow(context))
             }
         }, error: { error in
             switch error {
             case .generic:
-                alert(for: context.window, info: strings().themeGetThemeError)
+                alert(for: getWindow(context), info: strings().themeGetThemeError)
             case .unsupported:
-                alert(for: context.window, info: strings().themeGetThemeError)
+                alert(for: getWindow(context), info: strings().themeGetThemeError)
             case .slugInvalid:
-                alert(for: context.window, info: strings().themeGetThemeError)
+                alert(for: getWindow(context), info: strings().themeGetThemeError)
             }
         })
         afterComplete(true)
     case let .story(_, username, storyId, messageId, context):
-        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> map { $0.result?._asPeer() }, for: context.window)
+        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> map { $0.result?._asPeer() }, for: getWindow(context))
         _ = signal.start(next: { peer in
             if let peer = peer {
                 let controller = context.bindings.rootNavigation().controller as? ChatController
@@ -1092,11 +1132,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     controller?.chatInteraction.openStory(messageId, .init(peerId: peer.id, id: storyId))
                 } else {
                     StoryModalController.ShowSingleStory(context: context, storyId: .init(peerId: peer.id, id: storyId), initialId: nil, emptyCallback: {
-                        showModalText(for: context.window, text: strings().storyErrorNotExist)
+                        showModalText(for: getWindow(context), text: strings().storyErrorNotExist)
                     })
                 }
             } else {
-                showModalText(for: context.window, text: strings().alertUserDoesntExists)
+                showModalText(for: getWindow(context), text: strings().alertUserDoesntExists)
             }
         })
         afterComplete(true)
@@ -1130,36 +1170,40 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         afterComplete(true)
     case let .joinGroupCall(_, context, peerId, callId):
         selectGroupCallJoiner(context: context, peerId: peerId, completion: { peerId, schedule, isStream in
-            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId), for: context.window).start(next: { result in
+            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId), for: getWindow(context)).start(next: { result in
                 switch result {
                 case let .success(callContext), let .samePeer(callContext):
                     applyGroupCallResult(context.sharedContext, callContext)
                 default:
-                    alert(for: context.window, info: strings().errorAnError)
+                    alert(for: getWindow(context), info: strings().errorAnError)
                 }
             })
         })
        
         afterComplete(true)
     case let .invoice(_, context, slug):
-        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
+        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: getWindow(context))
         
         _ = signal.start(next: { invoice in
-            showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: context.window)
+            if invoice.currency == XTR {
+                showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug)), for: getWindow(context))
+            } else {
+                showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: getWindow(context))
+            }
         }, error: { error in
-            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+            showModalText(for: getWindow(context), text: strings().paymentsInvoiceNotExists)
         })
         
         afterComplete(true)
     case let .premiumOffer(_, ref, context):
         if !context.premiumIsBlocked {
             if context.isPremium {
-                showModalText(for: context.window, text: strings().premiumOffsetAlreadyHave)
+                showModalText(for: getWindow(context), text: strings().premiumOffsetAlreadyHave)
             } else {
                 if let modal = findModal(PremiumBoardingController.self) {
                     modal.buy()
                 } else {
-                    showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+                    showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: getWindow(context))
                 }
             }
         }
@@ -1170,7 +1214,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         afterComplete(true)
     case let .urlAuth(link, context):
-        _ = showModalProgress(signal: context.engine.messages.requestMessageActionUrlAuth(subject: .url(link)), for: context.window).start(next: { result in
+        _ = showModalProgress(signal: context.engine.messages.requestMessageActionUrlAuth(subject: .url(link)), for: getWindow(context)).start(next: { result in
             switch result {
             case let .accepted(url):
                 execute(inapp: .external(link: url, false))
@@ -1186,13 +1230,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 
                 let data = ModalAlertData(title: strings().botInlineAuthHeader, info: strings().botInlineAuthTitle(requestURL), ok: strings().botInlineAuthOpen, options: options)
                                 
-                showModalAlert(for: context.window, data: data, completion: { result in
+                showModalAlert(for: getWindow(context), data: data, completion: { result in
                     if result.selected.isEmpty {
                         execute(inapp: .external(link: link, false))
                     } else {
                         let allowWriteAccess = result.selected[1] == true
                         
-                        _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(link), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                        _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(link), allowWriteAccess: allowWriteAccess), for: getWindow(context)).start(next: { result in
                             switch result {
                             case .default:
                                 execute(inapp: .external(link: link, true))
@@ -1222,39 +1266,39 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 return .single(nil)
             }
         }
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+        _ = showModalProgress(signal: signal, for: getWindow(context)).start(next: { value in
             if let value = value, let boosts = value.1 {
-                showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2 ), for: context.window)
+                showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2 ), for: getWindow(context))
             } else {
                 if value == nil {
                     if username.contains(_private_) {
-                        alert(for: context.window, info: strings().channelBoostPrivateError)
+                        alert(for: getWindow(context), info: strings().channelBoostPrivateError)
                     } else {
-                        alert(for: context.window, info: strings().alertUserDoesntExists)
+                        alert(for: getWindow(context), info: strings().alertUserDoesntExists)
                     }
                 } else {
-                    alert(for: context.window, info: strings().unknownError)
+                    alert(for: getWindow(context), info: strings().unknownError)
                 }
                 
             }
         })
     case let .gift(_, slug, context):
-        _ = showModalProgress(signal: context.engine.payments.checkPremiumGiftCode(slug: slug), for: context.window).start(next: { info in
+        _ = showModalProgress(signal: context.engine.payments.checkPremiumGiftCode(slug: slug), for: getWindow(context)).start(next: { info in
             if let info = info {
-                showModal(with: GiftLinkModalController(context: context, info: info), for: context.window)
+                showModal(with: GiftLinkModalController(context: context, info: info), for: getWindow(context))
             } else {
-                alert(for: context.window, info: strings().unknownError)
+                alert(for: getWindow(context), info: strings().unknownError)
             }
         })
     case let .multigift(_, context):
         let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
         
-        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour).start(next: { peerIds in
+        _ = selectModalPeers(window: getWindow(context), context: context, title: strings().premiumGiftTitle, behavior: behaviour).start(next: { peerIds in
             
-            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: getWindow(context))
         })
     case .businessLink(link: let link, slug: let slug, context: let context):
-        _ = showModalProgress(signal: context.engine.peers.resolveMessageLink(slug: slug), for: context.window).startStandalone(next: { link in
+        _ = showModalProgress(signal: context.engine.peers.resolveMessageLink(slug: slug), for: getWindow(context)).startStandalone(next: { link in
             if let link {
                 let navigation = context.bindings.rootNavigation()
                 let current = navigation.controller as? ChatController
@@ -1269,7 +1313,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     navigation.push(ChatAdditionController(context: context, chatLocation: .peer(link.peer.id), initialAction: .inputText(text: textState, behavior: .automatic)))
                 }
             } else {
-                showModalText(for: context.window, text: strings().chatLinkUnavailable)
+                showModalText(for: getWindow(context), text: strings().chatLinkUnavailable)
             }
         })
     }
@@ -1282,7 +1326,7 @@ private func updateAppAsYouWish(text: String, updateApp: Bool) {
         verifyAlert_button(for: mainWindow, header: appName, information: text, ok: strings().alertButtonOKUpdateApp, cancel: strings().modalCancel, option: nil, successHandler: { _ in
             if updateApp {
                 #if APP_STORE
-                execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
+                execute(inapp: inAppLink.external(link: itunesAppLink, false))
                 #else
                 (NSApp.delegate as? AppDelegate)?.checkForUpdates(updateApp)
                 #endif
@@ -1799,7 +1843,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     loop: for (key,value) in vars {
                         switch key {
                         case keyURLStart:
-                            action = .start(parameter: value, behavior: .none)
+                            action = .start(parameter: escape(with: value, addPercent: false), behavior: .none)
                             break loop;
                         case keyURLStartGroup, keyURLStartChannel:
                             if let openInfo = openInfo, let context = context {
@@ -1817,7 +1861,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             break loop
                         case keyURLText:
                             if let text = vars[keyURLText], !text.isEmpty {
-                                action = .inputText(text: .init(inputText: text), behavior: .automatic)
+                                action = .inputText(text: .init(inputText: escape(with: text, addPercent: false)), behavior: .automatic)
                             }
                         default:
                             break
@@ -1949,7 +1993,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if Int(timemark) < Int32.max {
                                     action = .openMedia(Int32(timemark))
                                 }
-                            } else if userAndPost.count == 2, post == nil {
+                            } else if (userAndPost.count == 2 && post == nil) || (userAndPost.count == 3 && params[keyURLStartapp] != nil) {
                                 var appname = userAndPost[1]
                                 if let range = userAndPost[1].range(of: "?") {
                                     appname = String(userAndPost[1][..<range.lowerBound])
@@ -2016,7 +2060,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         loop: for (key,value) in vars {
                             switch key {
                             case keyURLStart:
-                                action = .start(parameter: value, behavior: .none)
+                                action = .start(parameter: escape(with: value, addPercent: false), behavior: .none)
                                 break loop;
                             case keyURLStartGroup, keyURLStartChannel:
                                 if let context = context {
@@ -2036,7 +2080,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop
                             case keyURLText:
                                 if let text = vars[keyURLText], !text.isEmpty {
-                                    action = .inputText(text: .init(inputText: text), behavior: .automatic)
+                                    action = .inputText(text: .init(inputText: escape(with: text, addPercent: false)), behavior: .automatic)
                                 }
                                 break loop
                             default:

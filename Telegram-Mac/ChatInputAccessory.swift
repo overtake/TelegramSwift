@@ -28,6 +28,8 @@ class ChatInputAccessory: View {
     private var progress: Control?
     let container:ChatAccessoryView = ChatAccessoryView()
     
+    private let disposable = MetaDisposable()
+    
     var dismissForward:(()->Void)!
     var dismissReply:(()->Void)!
     var dismissEdit:(()->Void)!
@@ -165,6 +167,22 @@ class ChatInputAccessory: View {
                 self?.dismiss.send(event: .Click)
             }, for: .Click)
             
+            container.contextMenu = { [weak self] in
+                let menu = ContextMenu()
+                
+                menu.addItem(ContextMenuItem(editState.invertMedia ? strings().previewSenderMoveTextDown : strings().previewSenderMoveTextUp, handler: {
+                    self?.chatInteraction.update {
+                        $0.updatedInterfaceState {
+                            $0.updatedEditState {
+                                $0?.withUpdatedInvertMedia(!editState.invertMedia)
+                            }
+                        }
+                    }
+                }, itemImage: editState.invertMedia ? MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
+                
+                return menu
+            }
+            
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, context: context)
            
@@ -235,8 +253,9 @@ class ChatInputAccessory: View {
                     items.append(ContextSeparatorItem())
 
                 }
-                
-                items.append(ContextMenuItem(strings().chatAlertForwardActionAnother, handler: anotherAction, itemImage: MenuAnimation.menu_replace.value))
+                if let peer = state.peer, !peer.isCopyProtected {
+                    items.append(ContextMenuItem(strings().chatAlertForwardActionAnother, handler: anotherAction, itemImage: MenuAnimation.menu_replace.value))
+                }
                 
                 let menu = ContextMenu()
                 for item in items {
@@ -265,22 +284,26 @@ class ChatInputAccessory: View {
             
             container.contextMenu = {
                 let menu = ContextMenu()
-                menu.addItem(ContextMenuItem(strings().chatInputReplyReplyToAnother, handler: {
-                    self.chatInteraction.replyToAnother(replyMessageId, true)
-                }, itemImage: MenuAnimation.menu_replace.value))
+                if let peer = state.peer, !peer.isCopyProtected {
+                    menu.addItem(ContextMenuItem(strings().chatInputReplyReplyToAnother, handler: {
+                        self.chatInteraction.replyToAnother(replyMessageId, true)
+                    }, itemImage: MenuAnimation.menu_replace.value))
+                }
                 return menu
                 
             }
         }
         
         if let displayNode = displayNode {
-            nodeReady.set(displayNode.nodeReady.get() |> map { _ in return animated})
+            nodeReady.set(displayNode.nodeReady.get() |> map { _ in return animated })
         } else {
             nodeReady.set(.single(animated))
         }
         iconView.contextMenu = container.contextMenu
         iconView.sizeToFit()
-        displayNode?.view = container
+        disposable.set(nodeReady.get().startStandalone(next: { [weak self, container] value in
+            self?.displayNode?.view = container
+        }))
     }
     
     private func updateProgress(_ loadingState: EditStateLoading) {
@@ -332,6 +355,7 @@ class ChatInputAccessory: View {
     
     
     deinit {
+        disposable.dispose()
     }
     
     var size: NSSize = .zero

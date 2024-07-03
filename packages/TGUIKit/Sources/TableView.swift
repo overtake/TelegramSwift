@@ -323,6 +323,46 @@ public extension TableScrollState {
             return self
         }
     }
+    
+    func focus(action: @escaping(NSView)->Void) -> TableScrollState {
+        switch self {
+        case let .top(id, innerId, animated, focus, inset):
+            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+        case let .bottom(id, innerId, animated, focus, inset):
+            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+        case let .center(id, innerId, animated, focus, inset):
+            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+        default:
+            return self
+        }
+    }
+    
+    func withoutFocus() -> TableScrollState {
+        switch self {
+        case let .top(id, innerId, animated, focus, inset):
+            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: false), inset: inset)
+        case let .bottom(id, innerId, animated, focus, inset):
+            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: false), inset: inset)
+        case let .center(id, innerId, animated, focus, inset):
+            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: false), inset: inset)
+        default:
+            return self
+        }
+    }
+    
+    var action: ((NSView)->Void)? {
+        switch self {
+        case let .top(_, _, _, focus, _):
+            return focus.action
+        case let .bottom(_, _, _, focus, _):
+            return focus.action
+        case let .center(_, _, _, focus, _):
+            return focus.action
+        default:
+            return nil
+        }
+    }
+    
     func text(string: String?) -> TableScrollState {
         switch self {
         case let .top(stableId, innerId, animated, focus, inset):
@@ -709,6 +749,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
+    
+    public var allItems:[TableRowItem] {
+        return list
+    }
     
     public var view: NSTableView {
         return tableView
@@ -2889,8 +2933,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if !transition.groupInOne {
             self.endTableUpdates()
         }
-        if !tableView.isFlipped, case .none = transition.state {
-            saveScrollState(visible)
+        if !tableView.isFlipped, !nonAnimatedItems.isEmpty {
+            switch transition.state {
+            case .none, .top:
+                saveScrollState(visible)
+            default:
+                break
+            }
         }
 
        // self.beginTableUpdates()
@@ -3188,9 +3237,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
         self.updateStickAfterScroll(animated)
     }
-    
-    
-    
+        
     public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, toVisible:Bool = false, ignoreLayerAnimation: Bool = false, previousDocumentOffset: CGPoint? = nil, completion: @escaping(Bool)->Void = { _ in }) {
         
         var rowRect:NSRect = bounds
@@ -3205,8 +3252,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             return item
         }
-        
-        
         
         var item:TableRowItem?
         var animate:Bool = false
@@ -3233,7 +3278,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             relativeInset = _inset
             focus = _focus
             innerId = _innerId
-            addition = contentInsets.top
+            addition = -contentInsets.top
         case let .down(_animate):
             animate = _animate
             if !tableView.isFlipped {
@@ -3333,7 +3378,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             applied = true
                             if focus.focus {
                                 view.focusAnimation(innerId, text: focus.string)
-                                focus.action?(view.interactableView)
                             }
                         }
                     }
@@ -3345,12 +3389,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let bounds = NSMakeRect(0, rowRect.minY + addition, clipView.bounds.width, clipView.bounds.height)
                         
             if animate {
-                clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
+                clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self, weak item] completed in
                     if let `self` = self {
                         scrollListener.handler(self.scrollPosition().current)
                         self.removeScroll(listener: scrollListener)
                         completion(completed)
                         self.scrollDidChangedBounds()
+                        if let view = item?.view?.interactableView {
+                            focus.action?(view)
+                        }
                     }
                 })
             } else {
@@ -3372,7 +3419,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
-
+        
     }
     
     open override func accessibilityParent() -> Any? {

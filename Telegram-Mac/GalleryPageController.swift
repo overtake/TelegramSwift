@@ -262,7 +262,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     private var startIndex:Int = -1
     let view:GalleryPageView = GalleryPageView()
-    private let textView: TextView = TextView()
+    private let textView: FoldingTextView = FoldingTextView(frame: .zero)
     private var publicPhotoView: PublicPhotoView?
     private let textContainer = View()
     private let textScrollView = ScrollView()
@@ -335,7 +335,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }))
         
         cache.countLimit = 10
-        textView.isSelectable = false
+        textView.textSelectable = false
         textView.userInteractionEnabled = true
         
         var dragged: NSPoint? = nil
@@ -368,8 +368,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
 
-            if self.textScrollView.superview != nil, NSPointInRect(point, self.textScrollView.frame) {
-                self.textView.mouseUp(with: event)
+            if let textView = hitTestView as? TextView {
+                textView.mouseUp(with: event)
                 return .invoked
             } else if self.textView.mouseInside() {
                 return .invoked
@@ -401,16 +401,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 if hasPictureInPicture {
                     return .rejected
-                }
-                
-                if let recognition = view.recognition {
-                    if recognition.hasSelectedText {
-                        var bp = 0
-                        bp += 1
-                    } else {
-                        var bp = 0
-                        bp += 1
-                    }
                 }
                 
                 _ = interactions.dismiss(event)
@@ -525,7 +515,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     private func configureTextAutohide() {
         let view = controller.selectedViewController?.view as? MagnifyView
-        if textScrollView.superview != nil {
+        if textScrollView.superview != controller.view {
             textScrollView.removeFromSuperview()
             controller.view.addSubview(textScrollView)
         }
@@ -767,7 +757,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 }
             } else {
                 let updated = controller.selectedIndex != index
-                currentController = controller.selectedViewController
                 if controller.selectedIndex != index {
                     controller.selectedIndex = index
                     pageControllerDidEndLiveTransition(controller, force: updated)
@@ -775,10 +764,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     selectedIndex.set(index)
                     pageControllerDidEndLiveTransition(controller, force: updated)
                 }
+                currentController = controller.selectedViewController
             }
             
             if items.count > 1, hasInited {
                 items[min(max(self.controller.selectedIndex - 1, 0), items.count - 1)].request()
+                items[index].request()
                 items[min(max(self.controller.selectedIndex + 1, 0), items.count - 1)].request()
             }
         } 
@@ -851,23 +842,23 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         let item = self.item(at: pageController.selectedIndex)
         if let text = item.caption {
             text.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
-            textView.update(text)
-            textView.backgroundColor = .clear
-            textView.disableBackgroundDrawing = true
-            
+            textView.update(layout: text, animated: false)
+            textView.setFrameSize(text.size)
+                  
+            textView.revealBlockAtIndex = { [weak self] index in
+                self?.toggleQuoteBlock(index)
+            }
             
             controller.view.addSubview(textScrollView)
-//            textScrollView.change(opacity: 1.0)
-            textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height))
+            textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height) + 10)
             textScrollView.centerX(y: 100)
             textScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
             textScrollView.layer?.cornerRadius = .cornerRadius
             
-            textContainer.frame = NSMakeRect(0, 0, textScrollView.frame.width, textView.frame.height)
-            textView.center()
+            textContainer.frame = NSMakeRect(0, 0, textScrollView.frame.width, textView.frame.height + 10)
+            textView.centerX(y: 5)
 
         } else {
-            textView.update(nil)
             textScrollView.removeFromSuperview()
         }
         
@@ -894,6 +885,28 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
         
         configureTextAutohide()
+    }
+    
+    private func toggleQuoteBlock(_ index: Int) {
+        if let item = self.selectedItem, let caption = item.caption {
+            caption.toggle(index)
+            
+            let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeOut)
+            
+            let prevSize = self.textView.frame.size
+            let newSize = caption.size
+
+            self.textView.update(layout: caption, animated: transition.isAnimated)
+            
+            transition.updateFrame(view: self.textView, frame: CGRect(origin: self.textView.frame.origin, size: caption.size))
+            transition.updateFrame(view: textContainer, frame: CGRect(origin: textContainer.frame.origin, size: CGSize(width: textContainer.frame.width, height: caption.size.height + 10)))
+            
+            let dif = newSize.height - prevSize.height
+            
+            var rect = textScrollView.frame.offsetBy(dx: 0, dy: dif)
+            rect.size.height += dif
+            transition.updateFrame(view: textScrollView, frame: rect)
+        }
     }
     
     private func adjustTextWith(_ event: NSEvent) {
@@ -971,7 +984,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let controller = NSViewController()
             let item = identifiers[identifier]!
             let view = item.singleView()
-            view.wantsLayer = true
             
             let magnify = GMagnifyView(view, contentSize:item.sizeValue, prev: _prev, next: _next, fillFrame: { [weak self] view in
                 guard let `self` = self else {return NSZeroRect}
@@ -1090,6 +1102,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         var oldRect = oldWindow.convertToScreen(oldView.convert(oldView.bounds, to: nil))
                         oldRect.origin = oldRect.origin.offsetBy(dx: -oldScreen.frame.minX, dy: -oldScreen.frame.minY)
                         selectedView?.contentSize = item.sizeValue.fitted(contentFrame.size)
+                        
+                        var value = value
+                        
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false

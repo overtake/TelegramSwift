@@ -9,11 +9,15 @@
 import Cocoa
 import TGUIKit
 
-enum SeparatorBlockState  {
+enum SeparatorBlockState : Equatable {
+    enum Action : Equatable {
+        case showAsMessages(onlyMy: Bool)
+    }
     case short
     case all
     case none
     case clear
+    case custom(String, Action)
 }
 
 

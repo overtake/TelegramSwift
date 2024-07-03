@@ -22,8 +22,13 @@ import InAppPurchaseManager
 import ApiCredentials
 
 let clown: String = "🤡"
+let focusIntentEmoji = "⛔️"
 
 
+
+func bestWindow(_ accountContext: AccountContext, _ controller: ViewController?) -> Window {
+    return controller?.window ?? accountContext.window
+}
 
 public struct PremiumConfiguration {
     public static var defaultValue: PremiumConfiguration {
@@ -165,6 +170,13 @@ extension AppConfiguration {
     func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
         if let value = self.data?[key] as? Double {
             return Int32(value)
+        } else {
+            return defaultValue
+        }
+    }
+    func getStringValue(_ key: String, orElse defaultValue: String) -> String {
+        if let value = self.data?[key] as? String {
+            return value
         } else {
             return defaultValue
         }
@@ -325,12 +337,12 @@ final class AccountContextBindings {
     let rootNavigation: () -> MajorNavigationController
     let mainController: () -> MainViewController
     let showControllerToaster: (ControllerToaster, Bool) -> Void
-    let globalSearch:(String)->Void
+    let globalSearch:(String, PeerId?)->Void
     let switchSplitLayout:(SplitViewState)->Void
     let entertainment:()->EntertainmentViewController
     let needFullsize:()->Void
     let displayUpgradeProgress:(CGFloat)->Void
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String, PeerId?) -> Void = { _, _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -362,6 +374,7 @@ final class AccountContext {
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
+    let starsContext: StarsContext
     
     #endif
     private(set) var timeDifference:TimeInterval  = 0
@@ -597,7 +610,8 @@ final class AccountContext {
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
-        #endif
+        self.starsContext = engine.payments.peerStarsContext()
+#endif
         
         
         giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
@@ -916,6 +930,46 @@ final class AccountContext {
         
         actionsDisposable.add(requestApplicationIcons(engine: engine).start())
 
+//        let focusIntentStatus = someAccountSetings(postbox: account.postbox) 
+//        |> distinctUntilChanged(isEqual: { 
+//            $0.focusIntentStatusEnabled == $1.focusIntentStatusEnabled &&
+//            $0.focusIntentStatusActive == $1.focusIntentStatusActive
+//        })
+//        |> deliverOnMainQueue
+//        
+//        actionsDisposable.add(focusIntentStatus.startStandalone(next: { [weak self] settings in
+//            guard let self else {
+//                return
+//            }
+//            let setStatus:(Int64?)->Void = { [weak self] fileId in
+//                guard let self else {
+//                    return
+//                }
+//                if let fileId {
+//                    let file = self.inlinePacksContext.load(fileId: fileId) |> deliverOnMainQueue
+//                    _ = file.startStandalone(next: { file in
+//                        _ = engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+//                    })
+//                } else {
+//                    _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: nil).start()
+//                }
+//            }
+//            if settings.focusIntentStatusEnabled {
+//                if let fileId = settings.focusIntentStatusActive {
+//                    setStatus(fileId)
+//                } else {
+//                     _ = (self.diceCache.top_emojies_status |> deliverOnMainQueue).startStandalone(next: { files in
+//                         if let file = files.first(where: { $0.customEmojiText == focusIntentEmoji }) {
+//                             setStatus(file.fileId.id)
+//                         }
+//                     })
+//                }
+//            } else if let fileId = settings.focusIntentStatusFallback {
+//                setStatus(fileId)
+//            } else {
+//                setStatus(nil)
+//            }
+//        }))
         
         #endif
         

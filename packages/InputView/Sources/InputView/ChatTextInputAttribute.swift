@@ -37,7 +37,9 @@ public final class TextInputTextUrlAttribute: NSObject {
 }
 
 public final class TextInputTextQuoteAttribute: NSObject {
-    override public init() {
+    public let collapsed: Bool
+    public init(collapsed: Bool) {
+        self.collapsed = collapsed
         super.init()
     }
     
@@ -48,7 +50,7 @@ public final class TextInputTextQuoteAttribute: NSObject {
         
         let _ = other
         
-        return true
+        return self.collapsed == other.collapsed
     }
 }
 
@@ -93,7 +95,7 @@ public final class TextInputTextCustomEmojiAttribute: NSObject, Codable {
     
     override public func isEqual(_ object: Any?) -> Bool {
         if let other = object as? TextInputTextCustomEmojiAttribute {
-            return self.fileId == other.fileId && self.file?.fileId == other.file?.fileId
+            return self === other
         } else {
             return false
         }
@@ -221,7 +223,6 @@ public func textAttributedStringForStateText(_ stateText: NSAttributedString, fo
             
         if !fontAttributes.isEmpty {
             var font: NSFont?
-            var fontSize = fontSize
             if fontAttributes == [.bold, .italic, .monospace] {
                 font = NSFont.semiboldItalicMonospace(fontSize)
             } else if fontAttributes == [.bold, .monospace] {
@@ -553,6 +554,33 @@ private func quoteRangesEqual(_ lhs: [(NSRange, TextInputTextQuoteAttribute)], _
     return true
 }
 
+
+func mergeQuoteRanges(_ quoteRanges: [(NSRange, TextInputTextQuoteAttribute)]) -> [(NSRange, TextInputTextQuoteAttribute)] {
+    guard !quoteRanges.isEmpty else { return [] }
+    
+    let sortedRanges = quoteRanges.sorted { $0.0.location < $1.0.location }
+    var mergedRanges: [(NSRange, TextInputTextQuoteAttribute)] = []
+    
+    var currentRange = sortedRanges[0]
+    
+    for i in 1..<sortedRanges.count {
+        let nextRange = sortedRanges[i]
+        
+        if currentRange.0.intersection(nextRange.0) != nil || currentRange.0.upperBound == nextRange.0.location {
+            // Merge ranges
+            let newLocation = min(currentRange.0.location, nextRange.0.location)
+            let newLength = max(currentRange.0.upperBound, nextRange.0.upperBound) - newLocation
+            currentRange.0 = NSRange(location: newLocation, length: newLength)
+        } else {
+            mergedRanges.append(currentRange)
+            currentRange = nextRange
+        }
+    }
+    mergedRanges.append(currentRange)
+    
+    return mergedRanges
+}
+
 private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttributedString, attributedText: NSMutableAttributedString, fullRange: NSRange) {
     var quoteRanges: [(NSRange, TextInputTextQuoteAttribute)] = []
     initialAttributedText.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: [], using: { value, range, _ in
@@ -561,6 +589,17 @@ private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttribu
         }
     })
     quoteRanges.sort(by: { $0.0.location < $1.0.location })
+    
+    var i = 0
+    while i < quoteRanges.count - 1 {
+        if quoteRanges[i].1 === quoteRanges[i + 1].1 {
+            quoteRanges[i].0.length = quoteRanges[i + 1].0.max - quoteRanges[i].0.min
+            quoteRanges.remove(at: i + 1)
+        } else {
+            i += 1
+        }
+    }
+    
     let initialQuoteRanges = quoteRanges
     
     for i in 0 ..< quoteRanges.count {
@@ -620,54 +659,44 @@ private func refreshBlockQuotes(text: NSString, initialAttributedText: NSAttribu
     
     quoteRanges = quoteRanges.filter({ $0.0.length > 0 })
     
-    while quoteRanges.count > 1 {
-        var hadReductions = false
-        outer: for i in 0 ..< quoteRanges.count - 1 {
-            if quoteRanges[i].1 === quoteRanges[i + 1].1 {
-                var combine = true
-                inner: for j in quoteRanges[i].0.upperBound ..< quoteRanges[i + 1].0.lowerBound {
-                    if let c = UnicodeScalar(text.character(at: j)) {
-                        if textUrlCharacters.contains(c) {
-                        } else {
-                            combine = false
-                            break inner
-                        }
-                    } else {
-                        combine = false
-                        break inner
-                    }
-                }
-                if combine {
-                    hadReductions = true
-                    quoteRanges[i] = (NSRange(location: quoteRanges[i].0.lowerBound, length: quoteRanges[i + 1].0.upperBound - quoteRanges[i].0.lowerBound), quoteRanges[i].1)
-                    quoteRanges.remove(at: i + 1)
-                    break outer
-                }
-            }
-        }
-        if !hadReductions {
-            break
-        }
+//    while quoteRanges.count > 1 {
+//        var hadReductions = false
+//        outer: for i in 0 ..< quoteRanges.count - 1 {
+//            if quoteRanges[i].1 === quoteRanges[i + 1].1 {
+//                var combine = true
+//                inner: for j in quoteRanges[i].0.upperBound ..< quoteRanges[i + 1].0.lowerBound {
+//                    if let c = UnicodeScalar(text.character(at: j)) {
+//                        if textUrlCharacters.contains(c) {
+//                        } else {
+//                            combine = false
+//                            break inner
+//                        }
+//                    } else {
+//                        combine = false
+//                        break inner
+//                    }
+//                }
+//                if combine {
+//                    hadReductions = true
+//                    quoteRanges[i] = (NSRange(location: quoteRanges[i].0.lowerBound, length: quoteRanges[i + 1].0.upperBound - quoteRanges[i].0.lowerBound), quoteRanges[i].1)
+//                    quoteRanges.remove(at: i + 1)
+//                    break outer
+//                }
+//            }
+//        }
+//        if !hadReductions {
+//            break
+//        }
+//    }
+    
+    
+    
+    attributedText.removeAttribute(TextInputAttributes.quote, range: fullRange)
+        
+    for (range, attribute) in mergeQuoteRanges(quoteRanges) {
+        attributedText.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: attribute.collapsed), range: range)
     }
     
-    if quoteRanges.count > 1 {
-        outer: for i in (1 ..< quoteRanges.count).reversed() {
-            for j in 0 ..< i {
-                if quoteRanges[j].1 === quoteRanges[i].1 {
-                    quoteRanges.remove(at: i)
-                    continue outer
-                }
-            }
-        }
-    }
-    
-    if !quoteRangesEqual(quoteRanges, initialQuoteRanges) {
-        attributedText.removeAttribute(TextInputAttributes.quote, range: fullRange)
-        for (range, attribute) in quoteRanges {
-            let _ = attribute
-            attributedText.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(), range: range)
-        }
-    }
 }
 
 public func refreshTextInputAttributes(_ textView: NSTextView, theme: InputViewTheme, spoilersRevealed: Bool, availableEmojis: Set<String>) {

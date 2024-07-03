@@ -153,7 +153,7 @@ private final class DesktopCapturerView : View {
         self.addSubview(visualBackgroundView)
         self.addSubview(backgroundContainerView)
         
-        backgroundContainerView.backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(0.7)
+        backgroundContainerView.backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(1.0)
 
 
         visualBackgroundView.wantsLayer = true
@@ -384,9 +384,7 @@ final class DesktopCapturerWindow : Window {
             if let source = self?.listController.selected {
                 let select = self?.select
                 let wantsToSpeak = self?.genericView.micro.isOn ?? false
-                delay(1.0, closure: {
-                    select?(source, wantsToSpeak)
-                })
+                select?(source, wantsToSpeak)
             }
         }, for: .Click)
 

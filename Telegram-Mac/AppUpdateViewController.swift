@@ -317,19 +317,19 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
                             self.urlSession(URLSession(), downloadTask: URLSessionDownloadTask(), didFinishDownloadingTo: URL(fileURLWithPath: path))
                         }
                     }, error: { [weak self] error in
-                            self?.delegate.downloaderDidFailWithError(NSError(domain: "Failed to download archive. Please try again.", code: 0, userInfo: nil))
+                            self?.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorFailedDownload, code: 0, userInfo: nil))
                     }))
                 } else {
-                    self.delegate.downloaderDidFailWithError(NSError(domain: "Wrong internal link. Please try again.", code: 0, userInfo: nil))
+                    self.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorWrongInternal, code: 0, userInfo: nil))
                 }
                 
             default:
-                self.delegate.downloaderDidFailWithError(NSError(domain: "Wrong internal link. Please try again.", code: 0, userInfo: nil))
+                self.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorWrongInternal, code: 0, userInfo: nil))
             }
             
             
         } else {
-            self.delegate.downloaderDidFailWithError(NSError(domain: "No internal link for this version. Please try again.", code: 0, userInfo: nil))
+            self.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorNoInternal, code: 0, userInfo: nil))
         }
         
     }
@@ -370,7 +370,7 @@ private final class InternalUpdateDriver : ExternalUpdateDriver {
             appcast.parseAppcastItems(fromXMLData: data, error: nil)
             self?.appcastDidFinishLoading(appcast)
         }, error: { [weak self] error in
-            self?.abortUpdateWithError(NSError(domain: "Failed to download updating info. Please try again.", code: 0, userInfo: nil))
+            self?.abortUpdateWithError(NSError(domain: strings().appUpdateErrorFailedUpdating, code: 0, userInfo: nil))
         }))
     }
     
@@ -485,6 +485,7 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
         updateState { state in
             return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
+        trySwitchUpdaterBetweenSources()
     }
     
     override func abortUpdateWithError(_ error: Error!) {
@@ -571,7 +572,6 @@ private func resetUpdater() {
             default:
                 driver?.checkForUpdates(at: URL(string: url)!, host: host, domain: updater.host)
             }
-            NSLog("check updates: \(url)")
         }
     
     

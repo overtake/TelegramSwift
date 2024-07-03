@@ -82,8 +82,8 @@ func makeNormalAction(_ image: NSImage) -> CGImage {
     return generateImage(actionSize, contextGenerator: { size, ctx in
         ctx.clear(size.bounds)
         ctx.round(size, size.height / 2)
-        ctx.draw(img, in: size.bounds.focus(img.backingSize))
-    })!
+        ctx.draw(img, in: size.bounds.focus(img.systemSize))
+    }, scale: System.backingScale)!
 }
 
 
@@ -96,11 +96,11 @@ func makeActiveAction(_ image: NSImage) -> CGImage {
         ctx.setFillColor(NSColor.white.cgColor)
         ctx.fillEllipse(in: size.bounds)
         
-        ctx.clip(to: size.bounds.focus(img.backingSize), mask: img)
+        ctx.clip(to: size.bounds.focus(img.systemSize), mask: img)
         
         ctx.setBlendMode(.clear)
         ctx.fill(size.bounds)
-    })!
+    }, scale: System.backingScale)!
 }
 
 func makeAction(type: PeerCallActionType, text: String, resource: ImageResource, active: Bool = false, enabled: Bool = true, loading: Bool = false, interactive: Bool = true, attract: Bool = false, action: @escaping()->Void) -> PeerCallAction {
@@ -129,6 +129,8 @@ final class PeerCallActionView : Control {
 
         imageLayer.contentsGravity = .resizeAspectFill
         backgroundLayer.contentsGravity = .resizeAspectFill
+
+
         
         backgroundView.wantsLayer = true
         backgroundView.material = .light

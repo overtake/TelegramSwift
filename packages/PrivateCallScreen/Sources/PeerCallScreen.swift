@@ -208,7 +208,10 @@ public final class PeerCallScreen : ViewController {
             guard let self else {
                 return
             }
-            self.external.openSettings(self.screen)
+            let isClosed = self.stateValue.with { $0.externalState.canBeRemoved == true }
+            if !isClosed {
+                self.external.openSettings(self.screen)
+            }
         })
         
         
@@ -424,6 +427,7 @@ public final class PeerCallScreen : ViewController {
                 NSAnimationContext.runAnimationGroup({ ctx in
                     self.screen.animator().alphaValue = 0
                 }, completionHandler: {
+                    closeAllModals(window: self.screen)
                     self.screen.orderOut(nil)
                 })
             })

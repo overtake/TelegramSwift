@@ -233,6 +233,8 @@ private final class StoryListContainer : Control {
 
     private let scrollView = HorizontalScrollView(frame: .zero)
     private var progress: CGFloat = 1.0
+    
+    private var documentOffset: NSPoint? = nil
 
     private var item: StoryListChatListRowItem?
     required init(frame frameRect: NSRect) {
@@ -258,7 +260,17 @@ private final class StoryListContainer : Control {
         }, for: .Click)
         
         NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
-            self?.updateScroll()
+            guard let self else {
+                return
+            }
+            let current = NSMakePoint(floor(abs(self.scrollView.documentOffset.x)), floor(abs(self.scrollView.documentOffset.y)))
+                        
+            if current != self.documentOffset {
+                DispatchQueue.main.async { [weak self] in
+                    self?.updateScroll()
+                }
+                self.documentOffset = current
+            }
         })
     }
     
@@ -310,6 +322,7 @@ private final class StoryListContainer : Control {
     
     private func getFrame(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> NSRect {
         
+        
         let focusRange = self.focusRange
         
         let w = StoryListChatListRowItem.smallSize.width
@@ -351,10 +364,10 @@ private final class StoryListContainer : Control {
         }
         frame.origin.y = (self.frame.height - frame.height) / 2
         
-        frame.size.width = floorToScreenPixels(backingScaleFactor, frame.size.width)
-        frame.size.height = floorToScreenPixels(backingScaleFactor, frame.size.height)
-
-        return frame
+//        frame.size.width = floorToScreenPixels(backingScaleFactor, frame.size.width)
+//        frame.size.height = floorToScreenPixels(backingScaleFactor, frame.size.height)
+        
+        return frame.toScreenPixel
     }
     
     
@@ -489,18 +502,19 @@ private final class StoryListContainer : Control {
     }
     
     var focusRange: NSRange {
+        let count = self.item?.itemsCount ?? views.count
         if let itemView = views.first, itemView.item?.peerId == item?.context.peerId {
-            if views.count > 3 {
+            if count > 3 {
                 return NSMakeRange(1, 3)
             } else {
                 if views.count > 3, views[1].item?.entry.hasUnseen == true {
-                    return NSMakeRange(1, min(3, views.count))
+                    return NSMakeRange(1, min(3, count))
                 } else {
-                    return NSMakeRange(0, min(3, views.count))
+                    return NSMakeRange(0, min(3, count))
                 }
             }
         } else {
-            return NSMakeRange(0, min(3, views.count))
+            return NSMakeRange(0, min(3, count))
         }
     }
     
@@ -617,7 +631,7 @@ private final class StoryListContainer : Control {
         
 
         transition.updateFrame(view: scrollView, frame: size.bounds)
-        
+                
         let visibleRange = self.visibleRange
         for (i, view) in views.enumerated() {
             if let item = view.item {
@@ -627,7 +641,7 @@ private final class StoryListContainer : Control {
                 let frame = getFrame(item, index: i, progress: progress)
                 let alpha = getAlpha(item, index: i, progress: progress)
                 
-               
+
                 view.isHidden = !visibleRange.contains(i)
                 component.isHidden = !visibleRange.contains(i)
 
@@ -928,12 +942,13 @@ private final class ComponentView : Control {
         
         let stateSize = NSMakeSize(size.width - 6, size.width - 6)
         let stateRect = CGRect(origin: CGPoint(x: (size.width - stateSize.width) / 2, y: 3), size: stateSize)
-        
+                
         transition.updateFrame(view: stateView, frame: stateRect.insetBy(dx: -3, dy: -3))
         stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition, displayProgress: !self.loadingStatuses.isEmpty)
         
     }
     
+
     
     func cancelLoading() {
         for disposable in self.loadingStatuses.copyItems() {
@@ -1105,9 +1120,10 @@ private final class ItemView : Control {
             return
         }
                 
-        let imageSize = NSMakeSize(size.width - 6 + (1 - progress) * 1, size.width - 6 + (1 - progress) * 1)
+        var imageSize = NSMakeSize(size.width - 6 + (1 - progress) * (System.backingScale == 1.0 ? 2.0 : 1), size.width - 6 + (1 - progress) * (System.backingScale == 1.0 ? 2.0 : 1))
+
+        let imageRect = CGRect(origin: CGPoint(x: floorToScreenPixels((size.width - imageSize.width) / 2), y: floorToScreenPixels(3 - (1 - progress) * 0.5)), size: imageSize)
         
-        let imageRect = CGRect(origin: CGPoint(x: (size.width - imageSize.width) / 2, y: 3 - (1 - progress) * 0.5), size: imageSize)
         
         transition.updateFrame(view: imageView, frame: imageRect)
         transition.updateFrame(view: smallImageView, frame: imageRect)
@@ -1129,7 +1145,7 @@ private final class ItemView : Control {
         }
         
         transition.updateTransformScale(layer: textView.layer!, scale: progress)
-        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: imageView.frame.maxY + 3 + (4.0 * progress), addition: (textView.frame.width * (1 - progress)) / 2))
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: floorToScreenPixels(imageView.frame.maxY + 3 + (4.0 * progress)), addition: floorToScreenPixels((textView.frame.width * (1 - progress)) / 2)))
         transition.updateAlpha(view: textView, alpha: progress)
         
     }

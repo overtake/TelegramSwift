@@ -13,9 +13,11 @@ import SwiftSignalKit
 private struct State : Equatable {
     var text: String
     var url: String?
-    init(text: String, url: String?) {
+    var hosts: [String] = []
+    init(text: String, url: String?, hosts: [String]) {
         self.text = text
         self.url = url
+        self.hosts = hosts
     }
 }
 
@@ -58,10 +60,10 @@ private func entries(state: State, presentation: TelegramPresentationTheme) -> [
     return entries
 }
 
-func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String, String?) -> Void, presentation: TelegramPresentationTheme? = nil) -> InputDataModalController {
+func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String, String?) -> Void, presentation: TelegramPresentationTheme? = nil, hosts: [String] = []) -> InputDataModalController {
     
     
-    let initialState = State(text: string, url: defaultUrl?.removingPercentEncoding)
+    let initialState = State(text: string, url: defaultUrl?.removingPercentEncoding, hosts: hosts)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -79,6 +81,23 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
         
         let url = data[_id_input_url]?.stringValue
         let text = data[_id_text]?.stringValue ?? ""
+        
+        let hosts = stateValue.with { $0.hosts }
+        
+        if !hosts.isEmpty, let url, let url = NSURL(string: url) {
+            var accept: Bool = true
+            if let host = url.host {
+                accept = hosts.contains(host)
+            } else {
+                accept = hosts.contains(where: {
+                    url.path?.hasPrefix($0) ?? false
+                })
+            }
+            if !accept {
+                showModalText(for: mainWindow, text: strings().urlLinkOnlyAllowed(hosts.joined(separator: ", ")))
+                return .fail(.fields([_id_input_url : .shake]))
+            }
+        }
         
         if text.isEmpty {
             return .fail(.fields([_id_text : .shake]))

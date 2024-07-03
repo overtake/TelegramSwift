@@ -42,11 +42,12 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     var index: Int32 = 0
     
         
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     var cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
     var microDevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+    var outputDevice = devices.audioOutput.first(where: { $0.uniqueID == settings.audioOutputDeviceId })
     
     let activeCameraDevice: AVCaptureDevice?
     if let cameraDevice = cameraDevice {
@@ -118,6 +119,22 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
         }))
         index += 1
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+       
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsOutput), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: strings().voiceChatSettingsOutputDevice, color: customTheme.textColor, type: .contextSelector(outputDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
+        arguments.toggleOutputAudioDevice(nil)
+    })] + devices.audioOutput.map { value in
+        return ContextMenuItem(value.localizedName, handler: {
+            arguments.toggleOutputAudioDevice(value.uniqueID)
+        })
+    }), viewType: .singleItem, theme: customTheme)))
+    index += 1
+    
     
     
     entries.append(.sectionId(sectionId, type: .normal))

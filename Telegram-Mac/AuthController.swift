@@ -288,7 +288,8 @@ class AuthController : GenericViewController<AuthView> {
     private let email_recovery_c: Auth_EmailController
     private let awaiting_reset_c: Auth_AwaitingResetController
     private let signup_c: Auth_SignupController
-    
+    private let word_c: Auth_WordController
+
     private let otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])
     
     init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
@@ -304,7 +305,8 @@ class AuthController : GenericViewController<AuthView> {
         self.email_recovery_c = .init(frame: NSMakeRect(0, 0, 380, 300))
         self.awaiting_reset_c = .init(frame: NSMakeRect(0, 0, 380, 300))
         self.signup_c = .init(frame: NSMakeRect(0, 0, 380, 300))
-        
+        self.word_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+
         self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
         #if !APP_STORE
         updateController = UpdateTabController(sharedContext)
@@ -436,7 +438,6 @@ class AuthController : GenericViewController<AuthView> {
                     }
                 }))
             }
-            
         }
         
         
@@ -644,87 +645,179 @@ class AuthController : GenericViewController<AuthView> {
                         })
                     }
                 })
-            case let .confirmationCodeEntry(number, type, _, timeout, nextType, _):
-                controller = code_entry_c
+            case let .confirmationCodeEntry(number, type, _, timeout, nextType, _, _, _):
+                switch type {
+                case .word,.phrase:
+                    controller = word_c
+                default:
+                    controller = code_entry_c
+                }
                 phone_number_c.set(number: number)
-                code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
-                    updateState { current in
-                        var current = current
-                        current.locked = false
-                        current.codeError = nil
-                        return current
-                    }
-                    if let account = self?.account {
-                        _ = resetAuthorizationState(account: account, to: .empty).start()
-                    }
-                }, takeNext: { [weak self] code in
-                    guard let account = self?.account else {
-                        return
-                    }
-                    updateState { current in
-                        var current = current
-                        current.locked = true
-                        return current
-                    }
-                    
-                    let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
-                        return nil
-                    })
-                    |> deliverOnMainQueue
-                    
-                    _ = signal.start(next: { value in
-                        updateState { current in
-                            var current = current
-                            current.locked = false
-                            current.codeError = nil
-                            current.lockAfterLogin = false
-                            return current
-                        }
-                        switch value {
-                        case let .signUp(data):
-                            _ = beginSignUp(account: account, data: data).start()
-                        case .loggedIn:
-                            break
-                        }
-                    }, error: { [weak self] error in
+                switch type {
+                case .word, .phrase:
+                    word_c.update(locked: state.locked, error: state.codeError, phonenumber: number, timeout: timeout, codeType: type, nextType: nextType, takeNext: { [weak self] code in
                         guard let account = self?.account else {
                             return
                         }
                         updateState { current in
                             var current = current
-                            if case .codeExpired = error {
-                                current.codeError = nil
-                                current.error = .timeout
-                            } else {
-                                current.codeError = error
-                                current.error = nil
-                            }
-                            current.locked = false
+                            current.locked = true
                             return current
                         }
-                        switch error {
-                        case .codeExpired:
+                        
+                        let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                            return nil
+                        })
+                        |> deliverOnMainQueue
+                        
+                        _ = signal.start(next: { value in
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                current.codeError = nil
+                                current.lockAfterLogin = false
+                                return current
+                            }
+                            switch value {
+                            case let .signUp(data):
+                                _ = beginSignUp(account: account, data: data).start()
+                            case .loggedIn:
+                                break
+                            }
+                        }, error: { [weak self] error in
+                            guard let account = self?.account else {
+                                return
+                            }
+                            updateState { current in
+                                var current = current
+                                if case .codeExpired = error {
+                                    current.codeError = nil
+                                    current.error = .timeout
+                                } else {
+                                    current.codeError = error
+                                    current.error = nil
+                                }
+                                current.locked = false
+                                return current
+                            }
+                            switch error {
+                            case .codeExpired:
+                                _ = resetAuthorizationState(account: account, to: .empty).start()
+                            default:
+                                break
+                            }
+                        })
+                    }, takeError: {
+                        updateState { current in
+                            var current = current
+                            current.codeError = nil
+                            return current
+                        }
+                    }, makeError: { error in
+                        updateState { current in
+                            var current = current
+                            current.codeError = error
+                            return current
+                        }
+                    }, takeReset: {
+                        
+                    }, takeResend: { [weak self] in
+                        guard let window = self?.window else {
+                            return
+                        }
+                        verifyAlert_button(for: window, information: L10n.loginSmsAppErr, cancel: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                                           
+                        }, cancelHandler:{
+                            execute(inapp: .external(link: "https://telegram.org", false))
+                        })
+                    }, takeNextType: { [weak self] in
+                        guard let account = self?.account else {
+                            return
+                        }
+                        //accountManager: sharedContext.accountManager, account: account
+                        _ = resendAuthorizationCode(accountManager: sharedContext.accountManager, account: account, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, firebaseSecretStream: .single([:])).startStandalone()
+                    })
+                default:
+                    code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            current.codeError = nil
+                            return current
+                        }
+                        if let account = self?.account {
                             _ = resetAuthorizationState(account: account, to: .empty).start()
-                        default:
-                            break
+                        }
+                    }, takeNext: { [weak self] code in
+                        guard let account = self?.account else {
+                            return
+                        }
+                        updateState { current in
+                            var current = current
+                            current.locked = true
+                            return current
+                        }
+                        
+                        let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                            return nil
+                        })
+                        |> deliverOnMainQueue
+                        
+                        _ = signal.start(next: { value in
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                current.codeError = nil
+                                current.lockAfterLogin = false
+                                return current
+                            }
+                            switch value {
+                            case let .signUp(data):
+                                _ = beginSignUp(account: account, data: data).start()
+                            case .loggedIn:
+                                break
+                            }
+                        }, error: { [weak self] error in
+                            guard let account = self?.account else {
+                                return
+                            }
+                            updateState { current in
+                                var current = current
+                                if case .codeExpired = error {
+                                    current.codeError = nil
+                                    current.error = .timeout
+                                } else {
+                                    current.codeError = error
+                                    current.error = nil
+                                }
+                                current.locked = false
+                                return current
+                            }
+                            switch error {
+                            case .codeExpired:
+                                _ = resetAuthorizationState(account: account, to: .empty).start()
+                            default:
+                                break
+                            }
+                        })
+                    }, takeResend: { [weak self] in
+                        guard let window = self?.window else {
+                            return
+                        }
+                        verifyAlert_button(for: window, information: L10n.loginSmsAppErr, cancel: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                                           
+                        }, cancelHandler:{
+                            execute(inapp: .external(link: "https://telegram.org", false))
+                        })
+                    }, takeError: {
+                        updateState { current in
+                            var current = current
+                            current.codeError = nil
+                            return current
                         }
                     })
-                }, takeResend: { [weak self] in
-                    guard let window = self?.window else {
-                        return
-                    }
-                    verifyAlert_button(for: window, information: L10n.loginSmsAppErr, cancel: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
-                                       
-                    }, cancelHandler:{
-                        execute(inapp: .external(link: "https://telegram.org", false))
-                    })
-                }, takeError: {
-                    updateState { current in
-                        var current = current
-                        current.codeError = nil
-                        return current
-                    }
-                })
+                }
+                
             case let .passwordEntry(hint, number, _, suggestReset, _):
                 controller = password_entry_c
                 if let number = number {
@@ -947,6 +1040,7 @@ class AuthController : GenericViewController<AuthView> {
         }
     }
     
+    
     private func sendCode(_ phoneNumber: String, updateState:@escaping((State) -> State) -> Void) {
         guard let window = self.window else {
             return
@@ -1103,6 +1197,7 @@ class AuthController : GenericViewController<AuthView> {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         NSApp.activate(ignoringOtherApps: true)
+        
     }
     
 }

@@ -91,10 +91,7 @@ final class DockControl {
                         Dock.setCustomAppIcon(path: resource.path, silence: true)
                     }))
                 }
-            } else {
-                Dock.setCustomAppIcon(path: nil, silence: true)
-                self?.applyResource.set(nil)
-            }
+            } 
         }))
     }
     

@@ -10,7 +10,7 @@ import Foundation
 import SwiftSignalKit
 import Postbox
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 import TelegramCore
 import TGUIKit
 

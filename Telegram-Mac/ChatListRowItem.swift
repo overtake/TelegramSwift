@@ -489,6 +489,7 @@ class ChatListRowItem: TableRowItem {
         self.isArchiveItem = true
         self.folders = nil
         self.tags = nil
+        self.canPreviewChat = false
         if let storyState = storyState, storyState.items.count > 0 {
             let unseenCount: Int = storyState.items.reduce(0, {
                 $0 + ($1.unseenCount > 0 ? 1 : 0)
@@ -678,7 +679,9 @@ class ChatListRowItem: TableRowItem {
     
     let tags: ChatListTags?
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil) {
+    let canPreviewChat: Bool
+    
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil, canPreviewChat: Bool = false) {
         
         
         
@@ -748,6 +751,7 @@ class ChatListRowItem: TableRowItem {
         self._stableId = stableId
         self.isContact = isContact
         self.folders = folders
+        self.canPreviewChat = canPreviewChat
         
         if let folders, folders.showTags, let peer, splitState != .minimisize, mode.threadData == nil {
             var tags: [ChatListTag] = []
@@ -829,12 +833,12 @@ class ChatListRowItem: TableRowItem {
         }
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
-        self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: isTopic ? 2 : 1)
+        self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: 1)
         
         let selected = titleText.mutableCopy() as! NSMutableAttributedString
         if let color = selected.attribute(.selectedColor, at: 0, effectiveRange: nil) {
             selected.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selected.range)
-            self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: isTopic ? 2 : 1)
+            self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: 1)
         }
                 
         if !forumTopicItems.isEmpty, let message = messages.first, tags == nil {
@@ -917,8 +921,12 @@ class ChatListRowItem: TableRowItem {
                         
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
                         
+                        if author.id != context.account.peerId, !isTopic {
+                            attr.insert(.embeddedAvatar(.init(author)), at: 0)
+                        }
+                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+
                         if !attr.string.isEmpty {
                             self.chatNameLayout = .init(attr, maximumNumberOfLines: 1)
                             
@@ -931,31 +939,52 @@ class ChatListRowItem: TableRowItem {
                     }
                 }
                 
-                let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
-                _ = contentImageFillSize
                 let isSecret: Bool
                 isSecret = renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
                 
+                var contentImageSpecs = self.contentImageSpecs
+                let contentImageSize = self.contentImageSize
+                
                 if draft == nil, !isSecret, forumTopicItems.isEmpty {
+                    var index: Int32 = 0
+                    let insert:(Message, Media, Bool)->Void = { message, media, increment in
+                        var message = message
+                        if increment {
+                            message = message.withUpdatedId(.init(peerId: message.id.peerId, namespace: message.id.namespace, id: message.id.id + index))
+                        }
+                        if let image = media as? TelegramMediaImage {
+                            if let _ = largestImageRepresentation(image.representations) {
+                                let fitSize = contentImageSize
+                                contentImageSpecs.append((message, image, fitSize))
+                            }
+                        } else if let file = media as? TelegramMediaFile {
+                            if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
+                                let fitSize = contentImageSize
+                                contentImageSpecs.append((message, file, fitSize))
+                            }
+                        }
+                        index += 1
+                    }
+                    
                     for message in messages {
                         inner: for media in message.media {
-                            if !message.containsSecretMedia && !message.isMediaSpoilered {
-                                if let image = media as? TelegramMediaImage {
-                                    if let _ = largestImageRepresentation(image.representations) {
-                                        let fitSize = contentImageSize
-                                        contentImageSpecs.append((message, image, fitSize))
+                            if let media = media as? TelegramMediaPaidContent {
+                                for extended in media.extendedMedia {
+                                    switch extended {
+                                    case let .preview(dimensions, immediateThumbnailData, _):
+                                        if let immediateThumbnailData, let dimensions {
+                                            insert(message, TelegramMediaImage(dimension: dimensions, immediateThumbnailData: immediateThumbnailData), true)
+                                        }
+                                    case let .full(media):
+                                        insert(message, media, true)
                                     }
-                                    break inner
-                                } else if let file = media as? TelegramMediaFile {
-                                    if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
-                                        let fitSize = contentImageSize
-                                        contentImageSpecs.append((message, file, fitSize))
-                                    }
-                                    break inner
                                 }
+                            } else if !message.containsSecretMedia && !message.isMediaSpoilered {
+                                insert(message, media, false)
                             }
                         }
                     }
+                    self.contentImageSpecs = contentImageSpecs
                 }
             }
         }
@@ -1276,7 +1305,7 @@ class ChatListRowItem: TableRowItem {
                 return 50 + (10 * 2.0)
             } else {
                 if appearMode == .short {
-                    return 10.0
+                    return 35
                 } else {
                     return 30 + (10 * 2.0)
                 }
@@ -1588,6 +1617,12 @@ class ChatListRowItem: TableRowItem {
         let togglePin:()->Void = {
             if let peerId = peerId {
                 ChatListRowItem.togglePinned(context: context, peerId: peerId, isPinned: isPinned, mode: mode, filter: filter, associatedGroupId: associatedGroupId)
+            }
+        }
+        
+        let previewChat:()->Void = {
+            if let peerId = peerId {
+                ChatListRowItem.previewChat(peerId: peerId, context: context)
             }
         }
         
@@ -1905,7 +1940,7 @@ class ChatListRowItem: TableRowItem {
             if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus, !mode.savedMessages {
                 switch hideStatus {
                 case .collapsed:
-                    firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
+                    firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand, handler: {
                         ChatListRowItem.collapseOrExpandArchive(context: context)
                     }, itemImage: MenuAnimation.menu_expand.value))
                 default:
@@ -1913,6 +1948,12 @@ class ChatListRowItem: TableRowItem {
                         ChatListRowItem.collapseOrExpandArchive(context: context)
                     }, itemImage: MenuAnimation.menu_collapse.value))
                 }
+            }
+            
+            if peerId != nil {
+                firstGroup.append(ContextMenuItem(strings().chatListContextPreview, handler: {
+                    previewChat()
+                }, itemImage: MenuAnimation.menu_eye.value))
             }
             
             var submenu: [ContextMenuItem] = []
@@ -2093,6 +2134,22 @@ class ChatListRowItem: TableRowItem {
         case .topic:
             return 53 + (displayLayout?.layoutSize.height ?? 17)
         }
+    }
+    
+    func previewChat() {
+        guard let peerId = peerId else {
+            return
+        }
+        ChatListRowItem.previewChat(peerId: peerId, context: context)
+
+    }
+    
+    static func previewChat(peerId: PeerId, context: AccountContext) {
+        let controller = ChatController(context: context, chatLocation: .peer(peerId), mode: .preview)
+        let navigation:NavigationViewController = NavigationViewController(controller, context.window)
+        navigation._frameRect = NSMakeRect(0, 0, 400, 500)
+        
+        showModal(with: navigation, for: context.window)
     }
     
 }

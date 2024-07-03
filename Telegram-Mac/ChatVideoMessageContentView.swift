@@ -386,7 +386,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                             if let pendingStatus = pendingStatus.0 {
-                                return .Fetching(isActive: true, progress: pendingStatus.progress)
+                                return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                             } else {
                                 return resourceStatus
                             }
@@ -470,7 +470,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                                 
                                 let image: TelegramMediaImage = TelegramMediaImage.init(imageId: media.fileId, representations: media.previewRepresentations, immediateThumbnailData: media.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
                                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
-                                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: approximateSynchronousValue)
+                                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: approximateSynchronousValue, isSensitive: false, payAmount: nil)
                                 current.frame = size.bounds.insetBy(dx: 2, dy: 2)
                                 current.layer?.cornerRadius = current.frame.height / 2
                                 

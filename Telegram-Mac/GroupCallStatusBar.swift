@@ -12,7 +12,7 @@ import TGUIKit
 import ColorPalette
 
 private func generateStatus(alpha: CGFloat) -> NSImage {
-    let image = generateImage(NSMakeSize(24, 20), scale: nil, rotatedContext: { size, ctx in
+    let image = generateImage(NSMakeSize(24, 20), rotatedContext: { size, ctx in
         ctx.clear(size.bounds)
         ctx.setFillColor(darkPalette.redUI.withAlphaComponent(alpha).cgColor)
         ctx.fillEllipse(in: NSMakeRect(6, 5, 10, 10))

@@ -1400,7 +1400,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 
 func showCallWindow(_ session:PCallSession) {
     
-    #if arch(arm64) && (BETA || DEBUG)
+    #if arch(arm64)
     callScreen(session.accountContext, .success(session))
     return
     #endif
@@ -1468,7 +1468,7 @@ func closeCall(minimisize: Bool = false) {
 private var peerCall: PeerCallScreen?
 func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
     
-    #if arch(arm64) && (BETA || DEBUG)
+    #if arch(arm64)
 
     callScreen(context, result)
     
