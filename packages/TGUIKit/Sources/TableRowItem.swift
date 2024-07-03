@@ -9,7 +9,20 @@
 import Cocoa
 import SwiftSignalKit
 
-open class TableRowItem: NSObject {
+open class TableRowItem: NSObject, Comparable, Identifiable {
+    
+    public static func < (lhs: TableRowItem, rhs: TableRowItem) -> Bool {
+        return lhs.index < rhs.index
+    }
+    
+    open override func isEqual(_ object: Any?) -> Bool {
+        if let object = object as? TableRowItem {
+            return self.stableId == object.stableId
+        } else {
+            return false
+        }
+    }
+    
     public weak var table:TableView? {
         didSet {
             tableViewDidUpdated()
@@ -88,7 +101,7 @@ open class TableRowItem: NSObject {
     internal var origin: NSPoint = .zero
 
     
-    var _index:Int? = nil
+    public var _index:Int? = nil
     var _yPosition:CGFloat? = nil
 
     

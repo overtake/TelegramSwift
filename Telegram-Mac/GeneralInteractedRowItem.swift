@@ -57,7 +57,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
                 break
             }
             if let thumb = thumb {
-                width -= thumb.thumb.backingSize.width + 20
+                width -= thumb.thumb.systemSize.width + 20
             }
             return width
         case let .modern(_, insets):
@@ -75,7 +75,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
                 break
             }
             if let thumb = thumb {
-                width -= thumb.thumb.backingSize.width + 20
+                width -= thumb.thumb.systemSize.width + 20
             }
             return width
         }
@@ -146,7 +146,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
                 if descLayout.lines.count > 1 {
                     return height + descLayout.layoutSize.height - 10
                 } else {
-                    return height + 4
+                    return height + 8
                 }
             }
             return height

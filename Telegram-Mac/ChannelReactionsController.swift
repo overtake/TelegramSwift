@@ -62,8 +62,9 @@ private final class ReactionsRowView: GeneralContainableRowView {
         
         overlay.isSelectable = false
         
+        inputView.placeholderFontSize = 13
         inputView.placeholder = strings().channelReactionsPlaceholder
-                
+
         
         overlay.set(handler: { [weak self] control in
             guard let item = self?.item as? ReactionsRowItem else {
@@ -122,6 +123,7 @@ private final class ReactionsRowView: GeneralContainableRowView {
                 return false
             }
         }
+        item.interactions.inputDidUpdate = { _ in }
 
         self.inputView.set(item.state.textInputState())
 
@@ -222,14 +224,15 @@ private final class Arguments {
     let createPack:()->Void
     let addReactions:(Control?)->Void
     let updateState:(Updated_ChatTextInputState)->Void
-
-    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
+    let updateMaxReactionsCount: (Int32)->Void
+    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, updateMaxReactionsCount: @escaping(Int32)->Void) {
         self.context = context
         self.interactions = interactions
         self.toggleEnabled = toggleEnabled
         self.createPack = createPack
         self.addReactions = addReactions
         self.updateState = updateState
+        self.updateMaxReactionsCount = updateMaxReactionsCount
     }
 }
 
@@ -240,6 +243,8 @@ private struct State : Equatable {
     
     var stats: ChannelBoostStatus?
     var myStatus: MyBoostStatus?
+    
+    var maxReactionsCount: Int32?
     
     var selected: [Int64] {
         let attributes = chatTextAttributes(from: state.inputText)
@@ -296,6 +301,7 @@ private struct State : Equatable {
 private let _id_enabled = InputDataIdentifier("_id_enabled")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
 private let _id_add = InputDataIdentifier("_id_add")
+private let _id_max_limit = InputDataIdentifier("_id_max_limit")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -349,6 +355,32 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.createPack()
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
+                
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        let reactions_uniq_max = arguments.context.appConfiguration.getGeneralValue("reactions_uniq_max", orElse: 11)
+        var sizes: [Int32] = []
+        var titles: [String] = []
+
+        for i in 1 ... reactions_uniq_max {
+            sizes.append(i)
+            titles.append("\(i)")
+        }
+                
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelReactionsMaxCountTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+       
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_max_limit, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.maxReactionsCount ?? reactions_uniq_max, sizes: sizes, hasMarkers: false, titles: titles, viewType: .singleItem, selectAction: { index in
+                arguments.updateMaxReactionsCount(sizes[index])
+            })
+        }))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelReactionsMaxCountInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
         
     }
    
@@ -359,14 +391,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions) -> InputDataModalController {
+func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions, reactionsCount: Int32?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
 
     let textInteractions = TextView_Interactions()
 
-    
+    var enabled: Bool = true
     if let allowedReactions = allowedReactions {
         
         switch allowedReactions {
@@ -392,11 +424,16 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
                 }
             }
         case .empty:
-            break
+            for reaction in availableReactions.reactions {
+                textInteractions.update { _ in
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                }
+            }
+            enabled = false
         }
     }
     
-    let initialState = State(available: availableReactions, state: textInteractions.presentation)
+    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation, maxReactionsCount: reactionsCount)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -499,6 +536,13 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             current.state = state
             return current
         }
+    }, updateMaxReactionsCount: { count in
+        updateState { current in
+            var current = current
+            current.maxReactionsCount = count
+            return current
+        }
+        
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in
@@ -516,7 +560,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     
     controller.validateData = { _ in
         
-        _ = showModalProgress(signal: context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: stateValue.with { $0.allowedReactions }), for: context.window).start(error: { error in
+        _ = showModalProgress(signal: context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: stateValue.with { $0.allowedReactions }, maxReactionCount: stateValue.with { $0.maxReactionsCount })), for: context.window).start(error: { error in
             
             switch error {
             case .boostRequired:

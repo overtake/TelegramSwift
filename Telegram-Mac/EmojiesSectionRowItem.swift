@@ -16,7 +16,7 @@ import FastBlur
 import ObjcUtils
 import Accelerate
 import TelegramMedia
-
+import InAppSettings
 final class EmojiesSectionRowItem : GeneralRowItem {
     
     enum Item : Equatable {
@@ -116,11 +116,12 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case channelReactions
         case channelStatus
         case defaultTags
+        case messageEffects
     }
     let mode: Mode
     let color: NSColor?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
-        self.itemSize = NSMakeSize(41, 34)
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], isBig: Bool = false, groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+        self.itemSize = isBig ? NSMakeSize(66, 60) : NSMakeSize(40, 34)
         self.info = info
         self.mode = mode
         self.color = color
@@ -139,8 +140,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.context = context
         self.callback = callback
         
-        if stableId != AnyHashable(0), let info = info {
-            var text = info.title.uppercased()
+        if stableId != AnyHashable(0), let info = info, !info.title.isEmpty {
+            let text = info.title.uppercased()
             if groupEmojiPack {
                 sectionLayout = .init(.initialize(string: strings().emojiSectionGroupEmoji, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
             }
@@ -164,7 +165,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 } else {
                     self.unlockText = nil
                 }
-            case .channelReactions, .channelStatus:
+            case .channelReactions, .channelStatus, .messageEffects:
                 self.unlockText = nil
             case .preview:
                 if stableId != AnyHashable(0) {
@@ -281,7 +282,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 input = .init(inputText: bundle, selectionRange: 0..<bundle.length, attributes: [])
             } else {
                 let text = file.customEmojiText ?? file.stickerText ?? ""
-                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id)])
+                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, file.fileId.id, file, info?.id)])
             }
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
@@ -358,11 +359,26 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                         
                         let lrect = context.window.convertFromScreen(srect)
                         
+                        
                         for hour in hours {
                             items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
                                 self?.callback(sticker, self?.info, hour, lrect)
                             }))
                         }
+                        #if DEBUG
+                        if #available(macOS 13, *) {
+                            items.append(ContextSeparatorItem())
+                            //TODO LANG
+                            items.append(ContextMenuItem("Apply for Focus Filter", handler: {
+                                _ = updateSomeSettingsInteractively(postbox: context.account.postbox, { current in
+                                    var current = current
+                                    current.focusIntentStatusActive = sticker.file.fileId.id
+                                    return current
+                                }).startStandalone()
+                                showModalText(for: context.window, text: "This emoji will be used for system Focus Mode")
+                            }))
+                        }
+                        #endif
                     }
                 }
             }
@@ -432,6 +448,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 self.installPack?(info, self.stickerItems)
             case .channelStatus:
                 self.installPack?(info, self.stickerItems)
+            case .messageEffects:
+                break
             }
             
         }
@@ -936,7 +954,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     } else {
                         current = SimpleLayer()
                         current.masksToBounds = true
-                        current.frame = NSMakeRect(rect.minX - 4.5, rect.minY - 4.5, 34, 33)
+                        current.frame = NSMakeRect(rect.minX - floorToScreenPixels(4.5), rect.minY - floorToScreenPixels(4.5), 34, 33)
                         current.cornerRadius = 10
                         if #available(macOS 10.15, *) {
                             current.cornerCurve = .continuous

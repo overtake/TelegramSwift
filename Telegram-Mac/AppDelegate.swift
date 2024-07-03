@@ -34,6 +34,56 @@ import AppCenter
 import AppCenterCrashes
 #endif
 
+
+
+@available(macOS 13, *)
+class AppIntentObserver : NSObject {
+    
+    private let defaults = UserDefaults(suiteName: ApiEnvironment.intentsBundleId)!
+    
+    private var current: AppIntentDataModel?
+    
+    override init() {
+        super.init()
+        let modelData = defaults.value(forKey: AppIntentDataModel.keyInternal) as? Data
+        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
+            self.current = model
+        }
+        defaults.addObserver(self, forKeyPath: AppIntentDataModel.key, options: .new, context: nil)
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == AppIntentDataModel.key {
+            update()
+        }
+    }
+    
+    deinit {
+        defaults.removeObserver(self, forKeyPath: AppIntentDataModel.key)
+    }
+    
+    var onUpdate:((AppIntentDataModel?)->Void)?
+    
+    func update() {
+        let modelData = defaults.value(forKey: AppIntentDataModel.key) as? Data
+        let model: AppIntentDataModel?
+        if let modelData, let value = AppIntentDataModel.decoded(modelData) {
+            model = value
+        } else {
+            model = nil
+        }
+        if let model = model {
+            defaults.setValue(model.encoded(), forKey: AppIntentDataModel.keyInternal)
+        }
+        if model != self.current {
+            self.onUpdate?(model)
+        }
+        self.current = model
+    }
+    
+    public static let shared: AppIntentObserver = AppIntentObserver()
+}
+
 final class CodeSyntax {
     private let syntaxer: Syntaxer
     private init() {
@@ -46,6 +96,7 @@ final class CodeSyntax {
     fileprivate static func initialize() {
         _ = CodeSyntax.standart
     }
+    
     
     static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
         return standart.syntaxer.syntax(code, language: language, theme: theme)
@@ -225,6 +276,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         CodeSyntax.initialize()
+        
+        
+        
+        
        // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
      //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
@@ -409,6 +464,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         launchInterface()
         
+        
     }
     
     
@@ -436,7 +492,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                  transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
             }) |> deliverOnMainQueue
             
-            data.start(next: { themeSettings, localization in
+            _ = data.startStandalone(next: { themeSettings, localization in
                 System.legacyMenu = themeSettings.legacyMenu
 
                 if let localization = localization {
@@ -505,6 +561,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         FontCacheKey.initializeCache()
+        
+        clearUserDefaultsObject(forKeyPrefix: "dice_")
         
         self.appEncryption = appEncryption
         
@@ -585,7 +643,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     let previousScale = previousBackingScale.swap(backingScale)
                     System.legacyMenu = settings.legacyMenu
                     if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper.wallpaper != settings.wallpaper.wallpaper || previous?.fontSize != settings.fontSize || previousScale != backingScale  {
-                        return updateTheme(with: settings, animated: true && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
+                        return updateTheme(with: settings, animated: ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
                     } else {
                         return nil
                     }
@@ -609,7 +667,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 //
                 
                 NotificationCenter.default.addObserver(forName: NSWindow.didChangeBackingPropertiesNotification, object: window, queue: nil, using: { notification in
-                    backingProperties.set(System.backingScale)
+                    System.updateScaleFactor(window.backingScaleFactor)
+                    backingProperties.set(window.backingScaleFactor)
                 })
                 
                 let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in
@@ -617,10 +676,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     } |> deliverOnMainQueue
                 
                 
-                _ = autoNightSignal.start(next: { preference, _ in
+                _ = combineLatest(autoNightSignal, additionalSettings(accountManager: accountManager)).start(next: { value1, value2 in
+                    
+                    let preference = value1.0
+                    let alwaysDarkMode = value2.alwaysDarkMode
                     
                     var isEnabled: Bool
                     var isDark: Bool = false
+                    
 
                     if let schedule = preference.schedule {
                         
@@ -720,11 +783,62 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 useBetaFeatures = false
                 #endif
                 
-                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
+                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, externalRequestVerificationStream: .single([:]), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
                 
                 let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
                 
                 self.hangKeybind(sharedContext)
+                
+                
+                if #available(macOS 13, *) {
+                    AppIntentObserver.shared.onUpdate = { value in
+                        _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
+                            if value?.alwaysUseDarkMode == true {
+                                return settings.withUpdatedToDefault(dark: true)
+                            } else {
+                                return settings.withUpdatedToDefault(dark: settings.defaultIsDark)
+                            }
+                        }).start()
+                        
+                        if let value = value?.useUnableStatus {
+                            
+                            _ = (sharedContext.activeAccountsWithInfo |> deliverOnMainQueue |> take(1)).startStandalone(next: { accounts in
+                                for account in accounts.1 {
+                                    _ = updateSomeSettingsInteractively(postbox: account.account.postbox, { current in
+                                        var current = current
+                                        if value {
+                                            current.focusIntentStatusFallback = account.peer.emojiStatus?.fileId
+                                        }
+                                        current.focusIntentStatusEnabled = value
+                                        return current
+                                    }).startStandalone()
+                                }
+                            })
+                            
+                            if value {
+                               
+                                
+                                /*
+                                 let files = context.diceCache.top_emojies_status |> deliverOnMainQueue
+                                  _ = files.startStandalone(next: { files in
+                                      if let file = files.first(where: { $0.customEmojiText == "⛔️" }) {
+                                          _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                                      }
+                                  })
+                                 */
+                                
+                                if let context = self.contextValue?.context {
+                                  
+                                }
+                                
+
+                            } else {
+                                
+                            }
+                        }
+                    }
+                    AppIntentObserver.shared.update()
+                }
                 
                 
                 let rawAccounts = sharedContext.activeAccounts
@@ -1300,13 +1414,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func tryApplyAutologinToken(_ url: String) -> String? {
-        if let context = contextValue?.context {
-            let config = context.appConfiguration
-            if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
-                return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+        var result: String?
+        self.enumerateAccountContexts { context in
+            if context.window == NSApp.keyWindow {
+                let config = context.appConfiguration
+                if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
+                    result = value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+                }
             }
         }
-        return nil
+        return result
     }
     
     func applicationDidHide(_ notification: Notification) {

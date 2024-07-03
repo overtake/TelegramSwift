@@ -29,12 +29,13 @@ public struct FontCacheKey : Hashable {
         case menlo
         case blockchain
         case roundTimer
+        case normalMonospaced
     }
     let type: Font
     let size: CGFloat
     
     public static func initializeCache() {
-        let all:[Font] = [.normal, .medium, .bold, .italic, .light, .ultralight, .bolditalic, .avatar, .semibold, .digitalRound, .code, .menlo, .blockchain, .italicmonospace, .semiboldItalicMonospace, .semiboldMonospace, .roundTimer]
+        let all:[Font] = [.normal, .medium, .bold, .italic, .light, .ultralight, .bolditalic, .avatar, .semibold, .digitalRound, .code, .menlo, .blockchain, .italicmonospace, .semiboldItalicMonospace, .semiboldMonospace, .roundTimer, .normalMonospaced]
         for i in 10 ..< 20 {
             let fontSize = CGFloat(i)
             for type in all {
@@ -73,6 +74,8 @@ public struct FontCacheKey : Hashable {
                     caches[.init(type: type, size: fontSize)] = .semiboldMonospace(fontSize)
                 case .roundTimer:
                     caches[.init(type: type, size: fontSize)] = .roundTimer(fontSize)
+                case .normalMonospaced:
+                    caches[.init(type: type, size: fontSize)] = .normalMonospaced(fontSize)
                 }
             }
         }
@@ -108,6 +111,20 @@ public extension NSFont {
             return font
         }
         return NSFont.systemFont(ofSize: size)
+    }
+    
+    static func normalMonospaced(_ size:FontSize) ->NSFont {
+        if let font = caches[.init(type: .normal, size: size)] {
+            return font
+        }
+        if #available(macOS 10.15, *) {
+            if let descriptor =  NSFont.systemFont(ofSize: size).fontDescriptor.withDesign(.monospaced) {
+                if let font = NSFont(descriptor: descriptor, size: size) {
+                    return font
+                }
+            }
+        }
+        return .normal(size)
     }
     
     static func light(_ size:FontSize) ->NSFont {

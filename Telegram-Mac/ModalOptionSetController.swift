@@ -64,7 +64,7 @@ private let _id_border: InputDataIdentifier = InputDataIdentifier("_id_border")
 private func _id_option(_ index: Int)->InputDataIdentifier {
     return InputDataIdentifier("_id_option_\(index)")
 }
-private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arguments: ModalOptionsArguments) -> [InputDataEntry] {
+private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, header: String?, arguments: ModalOptionsArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     var sectionId: Int32 = 0
     var index: Int32 = 0
@@ -72,6 +72,11 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
 
+    
+    if let header {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(header), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+    }
     
     if let desc = desc {
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(desc), comparable: nil, item: { initialSize, stableId in
@@ -104,7 +109,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
     return entries
 }
 
-func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet], selectOne: Bool = false, actionText: (String, NSColor), desc: String? = nil, title: String, result: @escaping ([ModalOptionSetResult])->Void) -> InputDataModalController {
+func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet], selectOne: Bool = false, actionText: (String, NSColor), desc: String? = nil, header: String? = nil, title: String, result: @escaping ([ModalOptionSetResult])->Void) -> InputDataModalController {
     
     let initialState: ModalOptionsState = ModalOptionsState(options: options, selectOne: selectOne)
     let stateValue: Atomic<ModalOptionsState> = Atomic(value: initialState)
@@ -123,7 +128,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     let actionsDisposable = DisposableSet()
     
     let dataSignal = statePromise.get() |> mapToSignal { state in
-        return .single(modalOptionsSetEntries(state: state, desc: desc, arguments: arguments))
+        return .single(modalOptionsSetEntries(state: state, desc: desc, header: header, arguments: arguments))
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }

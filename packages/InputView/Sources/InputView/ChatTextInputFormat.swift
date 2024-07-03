@@ -40,7 +40,8 @@ public func chatTextInputAddFormattingAttribute(_ state: Updated_ChatTextInputSt
         let nsRange = NSRange(location: selectionRange.lowerBound, length: selectionRange.count)
         var addAttribute = true
         var attributesToRemove: [NSAttributedString.Key] = []
-        state.inputText.enumerateAttributes(in: nsRange, options: .longestEffectiveRangeNotRequired) { attributes, range, stop in
+        
+        state.inputText.enumerateAttributes(in: nsRange, options: []) { attributes, range, stop in
             for (key, _) in attributes {
                 if key == attribute && range == nsRange {
                     addAttribute = false
@@ -55,7 +56,7 @@ public func chatTextInputAddFormattingAttribute(_ state: Updated_ChatTextInputSt
         }
         if addAttribute {
             if attribute == TextInputAttributes.quote {
-                result.addAttribute(attribute, value: TextInputTextQuoteAttribute(), range: nsRange)
+                result.addAttribute(attribute, value: TextInputTextQuoteAttribute(collapsed: false), range: nsRange)
                 if nsRange.upperBound != result.length && (result.string as NSString).character(at: nsRange.upperBound) != 0x0a {
                     result.insert(NSAttributedString(string: "\n"), at: nsRange.upperBound)
                 }
@@ -87,7 +88,9 @@ public func chatTextInputClearFormattingAttributes(_ state: Updated_ChatTextInpu
                             attributesToRemove.append((key, range))
                         }
                     } else {
-                        attributesToRemove.append((key, range))
+                        if key != TextInputAttributes.customEmoji {
+                            attributesToRemove.append((key, range))
+                        }
                     }
                 }
             }
@@ -124,7 +127,13 @@ public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, s
             result.removeAttribute(attribute, range: range)
         }
         result.replaceCharacters(in:nsRange, with: text)
-        let updatedRange = NSMakeRange(nsRange.location, max(nsRange.length, text.length))
+        let length: Int
+        if nsRange.length > text.length {
+            length = min(nsRange.length, text.length)
+        } else {
+            length = max(nsRange.length, text.length)
+        }
+        let updatedRange = NSMakeRange(nsRange.location, length)
         result.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: url), range: updatedRange)
         return Updated_ChatTextInputState(inputText: result, selectionRange: updatedRange.lowerBound ..< updatedRange.upperBound)
     } else {
@@ -162,7 +171,7 @@ public func chatTextInputAddMentionAttribute(_ state: Updated_ChatTextInputState
     }
 }
 
-public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, selectionRange: Range<Int>) -> Updated_ChatTextInputState {
+public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, selectionRange: Range<Int>, collapsed: Bool = false, doNotUpdateSelection: Bool = false) -> Updated_ChatTextInputState {
     if selectionRange.isEmpty {
         return state
     }
@@ -174,8 +183,6 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
             if key == TextInputAttributes.quote {
                 attributesToRemove.append((key, range))
                 quoteRange = quoteRange.union(range)
-            } else {
-                attributesToRemove.append((key, nsRange))
             }
         }
     }
@@ -184,7 +191,7 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
     for (attribute, range) in attributesToRemove {
         result.removeAttribute(attribute, range: range)
     }
-    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(), range: nsRange)
-    return Updated_ChatTextInputState(inputText: result, selectionRange: selectionRange)
+    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(collapsed: collapsed), range: nsRange)
+    return Updated_ChatTextInputState(inputText: result, selectionRange: doNotUpdateSelection ? state.selectionRange : selectionRange)
 }
 

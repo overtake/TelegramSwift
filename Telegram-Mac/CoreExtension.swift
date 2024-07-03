@@ -22,6 +22,7 @@ import ThemeSettings
 import Accelerate
 import TGModernGrowingTextView
 import InputView
+import TelegramMedia
 
 func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
     if let messageId = messageId {
@@ -275,9 +276,12 @@ extension Media {
             return map.venue == nil
         } else if self is TelegramMediaDice {
             return false
+        } else if self is TelegramMediaPaidContent {
+            return true
         }
         return false
     }
+    
     
     var canHaveCaption: Bool {
         if supposeToBeSticker {
@@ -465,6 +469,27 @@ public extension Message {
         return nil
     }
     
+    var effectAttribute: EffectMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? EffectMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    var hasComments: Bool {
+        if let peer = self.peers[self.id.peerId] as? TelegramChannel {
+            switch peer.info {
+            case let .broadcast(info):
+                return info.flags.contains(.hasDiscussionGroup)
+            default:
+                break
+            }
+        }
+        return false
+    }
+    
     var isExpiredStory: Bool {
         if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId] {
             return data.get(Stories.StoredItem.self) == nil
@@ -485,6 +510,21 @@ public extension Message {
             }
         }
         return nil
+    }
+    
+    
+    func hasTranslationAttribute(toLang: String) -> Bool {
+        for attr in attributes {
+            if let attr = attr as? TranslationMessageAttribute, attr.toLang == toLang {
+                if let poll = self.media.first as? TelegramMediaPoll {
+                    if poll.results.solution != nil {
+                        return attr.pollSolution != nil
+                    }
+                }
+                return true
+            }
+        }
+        return false
     }
     
     var isMediaSpoilered: Bool {
@@ -885,6 +925,15 @@ public extension Message {
         return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, customTags: [], forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
+    func withUpdatedReplyMarkupAttribute(_ attribute:ReplyMarkupMessageAttribute) -> Message {
+        
+        var attributes = self.attributes
+        attributes.removeAll(where: { $0 is ReplyMarkupMessageAttribute})
+        attributes.append(attribute)
+        
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, customTags: [], forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
+    }
+    
     func withUpdatedTimestamp(_ timestamp: Int32) -> Message {
         return Message(stableId: self.stableId, stableVersion: self.stableVersion, id: self.id, globallyUniqueId: self.globallyUniqueId, groupingKey: self.groupingKey, groupInfo: self.groupInfo, threadId: threadId, timestamp: timestamp, flags: self.flags, tags: self.tags, globalTags: self.globalTags, localTags: self.localTags, customTags: [], forwardInfo: self.forwardInfo, author: self.author, text: self.text, attributes: self.attributes, media: self.media, peers: self.peers, associatedMessages: self.associatedMessages, associatedMessageIds: self.associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
@@ -966,6 +1015,10 @@ fileprivate let edit_limit_time:Int32 = 48*60*60
 
 func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
     
+    if case .searchHashtag = mode.customChatContents?.kind {
+        return false
+    }
+    
     if mode.customChatContents != nil {
         return true
     }
@@ -1013,8 +1066,11 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
         return false
     }
     
-    if chatInteraction.mode.customChatContents != nil {
-        return false
+    if let customChatContents = chatInteraction.mode.customChatContents {
+        if case .searchHashtag = customChatContents.kind {
+        } else {
+            return false
+        }
     }
     
     if message.isExpiredStory {
@@ -1170,6 +1226,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 return false
             case .customLink:
                 return false
+            case .preview:
+                return false
             }
         }
     }
@@ -1177,6 +1235,11 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
 }
 
 func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
+    
+    
+    if case .searchHashtag = chatInteraction.mode.customChatContents?.kind {
+        return false
+    }
     
     if chatInteraction.mode.customChatContents != nil {
         return true
@@ -1285,6 +1348,37 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
 }
 
 
+func canFactCheck(_ message: Message) -> Bool {
+    
+    if let media = message.anyMedia {
+        if let file = media as? TelegramMediaFile {
+            if file.isStaticSticker || file.isAnimatedSticker || file.isEmojiAnimatedSticker {
+                return false
+            }
+            if file.isInstantVideo {
+                return false
+            }
+        }
+        if media is TelegramMediaContact {
+            return false
+        }
+        if media is TelegramMediaAction {
+            return false
+        }
+        if media is TelegramMediaMap {
+            return false
+        }
+        if media is TelegramMediaPoll {
+            return false
+        }
+        if media is TelegramMediaDice {
+            return false
+        }
+    }
+    
+    
+    return true
+}
 
 
 func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
@@ -1315,15 +1409,17 @@ func canReportMessage(_ message: Message, _ context: AccountContext) -> Bool {
 func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Account) -> Bool {
     
     if let peer = peer as? TelegramChannel, peer.isSupergroup, peer.hasPermission(.deleteAllMessages) {
-        let peerId:PeerId? = messages[0].author?.id
-        if account.peerId != peerId {
-            for message in messages {
-                if peerId != message.author?.id || !message.flags.contains(.Incoming) {
+        for message in messages {
+            let peerId:PeerId? = message.effectiveAuthor?.id
+            if account.peerId != peerId {
+                if !message.flags.contains(.Incoming) {
                     return false
                 }
+            } else {
+                return false
             }
-            return true
         }
+        return true
     }
     
     return false
@@ -2823,7 +2919,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
 
 extension AutomaticMediaDownloadSettings {
     
-    func isDownloable(_ message: Message) -> Bool {
+    func isDownloable(_ message: Message, index: Int? = nil) -> Bool {
         
         if !automaticDownload {
             return false
@@ -2888,6 +2984,18 @@ extension AutomaticMediaDownloadSettings {
                 } else if let _ = media.image {
                     return ability(categories.photo, peer)
                 }
+            } else if let media = message.anyMedia as? TelegramMediaPaidContent, let index = index {
+                switch media.extendedMedia[index] {
+                case let .full(media):
+                    if let file = media as? TelegramMediaFile {
+                        return checkFile(file, peer, categories)
+                    } else if let _ = media as? TelegramMediaImage {
+                        return ability(categories.photo, peer)
+                    }
+                default:
+                    return false
+                }
+                
             }
         }
         
@@ -3033,7 +3141,9 @@ enum FaqDestination {
 func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    _ = showModalProgress(signal: webpagePreview(account: context.account, urls: [dest.url]) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
+    let url = dest.url + language
+    
+    _ = showModalProgress(signal: webpagePreview(account: context.account, urls: [url]) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
         switch result {
         case let .result(webpage):
             if let webpage = webpage {
@@ -3251,7 +3361,15 @@ extension MessageForwardInfo {
 
 func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) -> Bool {
     let text = message.text.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "\n", with: "")
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji
+    let entities = message.entities.filter {
+        switch $0.type {
+        case .CustomEmoji:
+            return true
+        default:
+            return false
+        }
+    }
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji && entities.count == message.entities.count
 }
 
 
@@ -3566,7 +3684,9 @@ func coreMessageMainPeer(_ message: Message) -> Peer? {
 func showProtectedCopyAlert(_ message: Message, for window: Window) {
     if let peer = message.peers[message.id.peerId] {
         let text: String
-        if peer.isGroup || peer.isSupergroup {
+        if message.paidContent != nil {
+            text = strings().contextCopyPaidMediaRestricted
+        } else if peer.isGroup || peer.isSupergroup {
             text = strings().copyRestrictedGroup
         } else {
             text = strings().copyRestrictedChannel
@@ -3661,9 +3781,12 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
         let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-            showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file), for: context.window)
-        })
+        if !WebappWindow.focus(botId: bot.peer.id) {
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
+                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: result.url, title: bot.shortName, requestData: .simple(url: result.url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file))
+            })
+        }
+       
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
@@ -3697,11 +3820,12 @@ func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
 extension NSMutableAttributedString {
     func insertEmbedded(_ embedded: NSAttributedString, for symbol:String) {
         let range = self.string.nsstring.range(of: symbol)
-        self.beginEditing()
-        self.replaceCharacters(in: range, with: "")
-        self.insert(embedded, at: range.location)
-        self.endEditing()
-
+        if range.location != NSNotFound {
+            self.beginEditing()
+            self.replaceCharacters(in: range, with: "")
+            self.insert(embedded, at: range.location)
+            self.endEditing()
+        }
     }
 }
 
@@ -3735,12 +3859,27 @@ extension NSAttributedString {
 
     }
     
-    static func embeddedAnimated(_ file: TelegramMediaFile, color: NSColor? = nil) -> NSAttributedString {
+    static func embeddedAnimated(_ file: TelegramMediaFile, color: NSColor? = nil, playPolicy: LottiePlayPolicy? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         
         let emoji: String = clown
         attr.append(string: emoji)
-        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji, color: color))), range: NSMakeRange(0, emoji.length))
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji, color: color)), playPolicy: playPolicy), range: NSMakeRange(0, emoji.length))
+        return attr
+    }
+    
+    static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true, link: Any? = nil) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .avatar(peer)), range: NSMakeRange(0, emoji.length))
+        if space {
+            attr.append(string: " ")
+        }
+        if let link {
+            attr.addAttribute(NSAttributedString.Key.link, value: link, range: attr.range)
+        }
         return attr
     }
 }
@@ -3889,10 +4028,6 @@ extension MessageTextEntity {
             return 6
         case .Italic:
             return 7
-        case .Code:
-            return 8
-        case .Pre:
-            return 9
         case .TextUrl:
             return 10
         case .TextMention:
@@ -3901,8 +4036,6 @@ extension MessageTextEntity {
             return 12
         case .Strikethrough:
             return 13
-        case .BlockQuote:
-            return 14
         case .Underline:
             return 15
         case .BankCard:
@@ -3913,6 +4046,12 @@ extension MessageTextEntity {
             return 18
         case .Custom:
             return 19
+        case .Code:
+            return 20
+        case .Pre:
+            return 21
+        case .BlockQuote:
+            return 22
         }
     }
 }
@@ -3939,4 +4078,12 @@ func concatMessageAttributes(_ attributes: [MessageTextEntity]) -> [MessageTextE
     mergedAttributes.append(currentAttribute)
 
     return mergedAttributes
+}
+
+
+extension TelegramMediaImage {
+    convenience init(dimension: PixelDimensions, immediateThumbnailData: Data?) {
+        self.init(imageId: .init(namespace: 0, id: 0), representations: [.init(dimensions: dimension, resource: LocalBundleResource(name: "", ext: ""), progressiveSizes: [], immediateThumbnailData: immediateThumbnailData)], immediateThumbnailData: immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
+
+    }
 }

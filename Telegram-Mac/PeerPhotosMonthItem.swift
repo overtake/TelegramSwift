@@ -8,11 +8,17 @@
 
 import Cocoa
 import TelegramCore
-import MediaPlayer
+import TelegramMediaPlayer
 import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramMedia
+
+private let story_privacy_some_users = NSImage(resource: .iconPeerStorySomeUsers).precomposed(.white)
+private let story_privacy_contacts = NSImage(resource: .iconPeerStoryContacts).precomposed(.white)
+private let story_privacy_close_friends = NSImage(resource: .iconPeerStoryCloseFriends).precomposed(.white)
+private let story_privacy_everyone = NSImage(resource: .iconPeerStoryEveryone).precomposed(.white)
+private let story_pinned = NSImage(resource: .iconPeerStoryPinned).precomposed(.white)
 
 protocol MediaCellLayoutable {
     var context: AccountContext { get }
@@ -299,7 +305,7 @@ private final class StoryViewsView: ShadowView {
         self.textView.isEventLess = true
         
         self.direction = .vertical(true)
-        self.shadowBackground = NSColor.black.withAlphaComponent(0.8)
+        self.shadowBackground = NSColor.black.withAlphaComponent(0.25)
     }
     
     func update(_ seenCount: Int, animated: Bool) {
@@ -310,7 +316,6 @@ private final class StoryViewsView: ShadowView {
         self.imageView.image = StoryViewsView.icon
         self.imageView.sizeToFit()
         
-        self.change(size: NSMakeSize(layout.layoutSize.width + 30, 20), animated: animated)
     }
     
     override func layout() {
@@ -323,6 +328,94 @@ private final class StoryViewsView: ShadowView {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+private final class StoryPrivacyView: ShadowView {
+    private static let icon = NSImage(resource: .iconChannelViews).precomposed(.white)
+    
+    private let imageView = ImageView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        
+        self.isEventLess = true
+        self.imageView.isEventLess = true
+        
+        self.direction = .vertical(false)
+        self.shadowBackground = NSColor.black.withAlphaComponent(0.25)
+    }
+    
+    func update(_ privacy: EngineStoryPrivacy, isPinned: Bool, animated: Bool) {
+        
+        if isPinned {
+            self.imageView.image = story_pinned
+        } else {
+            switch privacy.base {
+            case .closeFriends:
+                self.imageView.image = story_privacy_close_friends
+            case .everyone:
+                self.imageView.image = nil
+            case .contacts:
+                self.imageView.image = story_privacy_contacts
+            case .nobody:
+                self.imageView.image = story_privacy_some_users
+            }
+        }
+      
+        self.imageView.sizeToFit()
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        self.imageView.centerY(x: frame.width - imageView.frame.width - 5)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private final class StoryHeaderView: View {
+    private let avatar = AvatarControl(font: .avatar(5))
+    private let nameView = TextView()
+    private let shadowView = ShadowView(frame: .zero)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(shadowView)
+        shadowView.direction = .vertical(false)
+        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.6)
+        addSubview(self.avatar)
+        addSubview(self.nameView)
+        
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        
+        self.avatar.userInteractionEnabled = false
+        
+        self.avatar.setFrameSize(NSMakeSize(15, 15))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(_ peer: EnginePeer, context: AccountContext) {
+        self.avatar.setPeer(account: context.account, peer: peer._asPeer())
+        
+        let layout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: NSColor.white, font: .medium(.small)), maximumNumberOfLines: 1)
+        layout.measure(width: frame.width - (10 + 15 + 5))
+        
+        self.nameView.update(layout)
+    }
+    
+    override func layout() {
+        super.layout()
+        shadowView.frame = bounds
+        self.avatar.centerY(x: 5)
+        self.nameView.centerY(x: avatar.frame.maxX + 5)
+    }
+}
+
 
 class MediaCell : Control {
     
@@ -339,6 +432,7 @@ class MediaCell : Control {
     private var unsupported: TextView?
     
     private var inkView: MediaInkView?
+    
 
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
@@ -347,7 +441,11 @@ class MediaCell : Control {
         userInteractionEnabled = false
     }
     private var storyViews: StoryViewsView?
+    private var storyPrivacy: StoryPrivacyView?
     
+    
+    private var storyHeaderView: StoryHeaderView?
+
     override func mouseMoved(with event: NSEvent) {
         superview?.superview?.mouseMoved(with: event)
     }
@@ -446,7 +544,7 @@ class MediaCell : Control {
                 fatalError()
             }
             let imageReference = layout.makeImageReference(image)
-            current.update(isRevealed: false, updated: isUpdated, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false)
+            current.update(isRevealed: false, updated: isUpdated, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false, isSensitive: false, payAmount: nil)
             current.frame = layout.frame.size.bounds
         } else {
             if let view = self.inkView {
@@ -456,7 +554,25 @@ class MediaCell : Control {
             }
         }
         
-        if let layout = layout as? StoryCellLayoutItem, layout.peerId.namespace == Namespaces.Peer.CloudChannel, let seenCount = layout.item.views?.seenCount {
+        if let layout = layout as? StoryCellLayoutItem, let itemPeer = layout.item.peer {
+            let current: StoryHeaderView
+            if let view = self.storyHeaderView {
+                current = view
+            } else {
+                current = StoryHeaderView(frame: NSMakeRect(0, 0, frame.width, 25))
+                addSubview(current)
+                self.storyHeaderView = current
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.set(itemPeer, context: layout.context)
+        } else if let view = self.storyHeaderView {
+            performSubviewRemoval(view, animated: animated)
+            self.storyHeaderView = nil
+        }
+        
+        if let layout = layout as? StoryCellLayoutItem, let seenCount = layout.item.storyItem.views?.seenCount {
             let current: StoryViewsView
             if let view = self.storyViews {
                 current = view
@@ -464,12 +580,35 @@ class MediaCell : Control {
                 current = StoryViewsView(frame: NSMakeRect(0, 0, frame.width, 20))
                 addSubview(current)
                 self.storyViews = current
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             }
             current.update(seenCount, animated: animated)
         } else if let view = self.storyViews {
             performSubviewRemoval(view, animated: animated)
             self.storyViews = nil
         }
+        
+        
+        if let layout = layout as? StoryCellLayoutItem, let privacy = layout.item.storyItem.privacy, context.peerId == layout.peerId, selected == nil {
+            let current: StoryPrivacyView
+            if let view = self.storyPrivacy {
+                current = view
+            } else {
+                current = StoryPrivacyView(frame: NSMakeRect(0, 0, frame.width, 20))
+                addSubview(current)
+                self.storyPrivacy = current
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(privacy, isPinned: layout.isPinned, animated: animated)
+        } else if let view = self.storyPrivacy {
+            performSubviewRemoval(view, animated: animated)
+            self.storyPrivacy = nil
+        }
+        
         
         updateSelectionState(animated: animated, selected: selected)
     }

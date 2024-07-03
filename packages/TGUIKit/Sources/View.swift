@@ -222,7 +222,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public static let chagedEffectiveAppearance: NSNotification.Name = NSNotification.Name(rawValue: "ViewChagedEffectiveAppearanceNotification")
     
-    public var userInteractionEnabled:Bool = true {
+    open var userInteractionEnabled:Bool = true {
         didSet {
             if userInteractionEnabled != oldValue {
                 viewDidUpdatedInteractivity()

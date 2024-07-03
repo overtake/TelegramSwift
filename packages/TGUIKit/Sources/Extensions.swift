@@ -357,24 +357,28 @@ public extension NSMutableAttributedString {
     }
 
     func detectBoldColorInString(with font: NSFont, string: String, color: NSColor? = nil) {
-        var offset: UInt = 0
+        var offset: Int = 0
         
-        while (offset < string.count) {
-            if let startRange = string.range(of: "**", options: [], range: string.index(string.startIndex, offsetBy: Int(offset))..<string.endIndex) {
-                offset = UInt(startRange.upperBound.utf16Offset(in: string))
+        let nsString = string.nsstring
+        
+        while (offset < nsString.length) {
+            let startRange = nsString.range(of: "**", options: [], range: NSRange(location: offset, length: nsString.length - offset))
+            if startRange.location != NSNotFound {
+                offset = startRange.upperBound
                 
-                let endOffset = string.index(string.startIndex, offsetBy: min(Int(offset), string.count))
+                let endOffset = min(offset, nsString.length)
                 
-                if let endRange = string.range(of: "**", options: [], range: endOffset..<string.endIndex) {
-                    let startIndex = string.index(string.startIndex, offsetBy: Int(offset))
-                    let endIndex = string.index(string.startIndex, offsetBy: Int(endRange.lowerBound.utf16Offset(in: string)))
-                    let attributeRange = startIndex..<endIndex
+                let endRange = nsString.range(of: "**", options: [], range: NSRange(location: endOffset, length: nsString.length - endOffset))
+                if endRange.location != NSNotFound {
+                    let startIndex = offset
+                    let endIndex = endRange.lowerBound
+                    let attributeRange = NSRange(location: startIndex, length: endIndex - startIndex)
                     
-                    addAttribute(NSAttributedString.Key.font, value: font, range: NSRange(attributeRange, in: string))
-                    if let color {
-                        addAttribute(.foregroundColor, value: color, range: NSRange(attributeRange, in: string))
+                    addAttribute(NSAttributedString.Key.font, value: font, range: attributeRange)
+                    if let color = color {
+                        addAttribute(.foregroundColor, value: color, range: attributeRange)
                     }
-                    offset = UInt(endRange.upperBound.utf16Offset(in: string))
+                    offset = endRange.upperBound
                 }
             } else {
                 break
@@ -586,9 +590,10 @@ public extension CALayer {
         self.add(animation, forKey: "transform")
     }
     
-    func animatePath(duration: Double = 0.2) {
+    func animatePath(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) {
         let animation = makeSpringAnimation("path")
         animation.duration = duration
+        animation.timingFunction = .init(name: function)
         self.add(animation, forKey: "path")
     }
     func animateShadow() {
@@ -1221,9 +1226,9 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(self.size.width, self.size.height), scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
@@ -1272,7 +1277,7 @@ public extension NSImage {
     }
     
     
-    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0, zoom: CGFloat = 1) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale, zoom: CGFloat = 1) -> CGImage {
         
         let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(size.width * zoom, size.height * zoom), scale: scale, clear: true)
         
@@ -1339,6 +1344,12 @@ public extension CGRect {
         return CGPoint(x: self.maxX, y: self.maxY)
     }
     
+    func makeSize(_ size: NSSize) -> CGRect {
+        var rect = self
+        rect.size = size
+        return rect
+    }
+    
     var center: CGPoint {
         return CGPoint(x: self.midX, y: self.midY)
     }
@@ -1381,7 +1392,11 @@ public enum ImageOrientation {
 public extension CGImage {
     
     var backingSize:NSSize {
-        return NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
+        return systemSize// NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
+    }
+    
+    var halfSize:NSSize {
+        return  NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
     }
     
     var size:NSSize {
@@ -1389,7 +1404,7 @@ public extension CGImage {
     }
     
     var systemSize:NSSize {
-        return NSMakeSize(CGFloat(width) / System.backingScale, CGFloat(height) / System.backingScale)
+        return NSMakeSize(CGFloat(width) / scale, CGFloat(height) / scale)
     }
     
     var backingBounds: NSRect {
@@ -1397,7 +1412,7 @@ public extension CGImage {
     }
     
     var scale:CGFloat {
-        return 2.0
+        return System.backingScale
     }
     
     var _NSImage: NSImage {
@@ -1406,7 +1421,7 @@ public extension CGImage {
 
     func highlight(color: NSColor) -> CGImage {
         let image = self
-        let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
+        let context = DrawingContext(size:image.backingSize, scale: System.backingScale, clear:true)
         context.withContext { ctx in
             ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
             let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
@@ -1771,26 +1786,26 @@ public extension NSRange {
 }
 
 public extension NSBezierPath {
-//    var cgPath: CGPath {
-//        let path = CGMutablePath()
-//        var points = [CGPoint](repeating: .zero, count: 3)
-//        for i in 0 ..< self.elementCount {
-//            let type = self.element(at: i, associatedPoints: &points)
-//            switch type {
-//            case .moveTo: path.move(to: points[0])
-//            case .lineTo: path.addLine(to: points[0])
-//            case .curveTo: path.addCurve(to: points[2], control1: points[0], control2: points[1])
-//            case .closePath: path.closeSubpath()
-//            case .cubicCurveTo:
-//                path.addQuadCurve(to: <#T##CGPoint#>, control: <#T##CGPoint#>)
-//            case .quadraticCurveTo:
-//                <#code#>
-//            @unknown default:
-//                <#code#>
-//            }
-//        }
-//        return path
-//    }
+    var _cgPath: CGPath {
+        let path = CGMutablePath()
+        var points = [NSPoint](repeating: .zero, count: 3)
+
+        for i in 0..<self.elementCount {
+            switch self.element(at: i, associatedPoints: &points) {
+            case .moveTo:
+                path.move(to: points[0])
+            case .lineTo:
+                path.addLine(to: points[0])
+            case .curveTo:
+                path.addCurve(to: points[2], control1: points[0], control2: points[1])
+            case .closePath:
+                path.closeSubpath()
+            @unknown default:
+                break
+            }
+        }
+        return path
+    }
 
 }
 
@@ -2552,7 +2567,7 @@ extension CGSize {
 }
 
 
-extension CGRect {
+public extension CGRect {
     static var identity: CGRect {
         return CGRect(x: 0, y: 0, width: 1, height: 1)
     }
@@ -2562,6 +2577,13 @@ extension CGRect {
                       y: origin.y.rounded(),
                       width: width.rounded(.up),
                       height: height.rounded(.up))
+    }
+    
+    var toScreenPixel: CGRect {
+        return CGRect(x: floorToScreenPixels(origin.x),
+                      y: floorToScreenPixels(origin.y),
+                      width: floorToScreenPixels(width),
+                      height: floorToScreenPixels(height))
     }
     
     var mirroredVertically: CGRect {
@@ -2892,4 +2914,23 @@ public func deg2rad(_ number: Float) -> Float {
 
 public func rad2deg(_ number: Float) -> Float {
     return number * 180.0 / .pi
+}
+
+
+public extension NSAttributedString {
+    var smallDecemial: NSAttributedString {
+        let range = self.string.nsstring.range(of: ".")
+        if range.location != NSNotFound {
+            let attr = self.mutableCopy() as! NSMutableAttributedString
+            
+            let font = attr.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+            if let font = font, let updated = NSFont(name: font.fontName, size: font.pointSize / 1.5) {
+                attr.addAttribute(.font, value: updated, range: NSMakeRange(range.location, attr.range.length - range.lowerBound))
+            }
+            return attr
+
+        } else {
+            return self
+        }
+    }
 }

@@ -158,7 +158,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         return webpageContent?.previewMediaIfPossible() ?? false
     }
     
-    private var text:TextView?
+    private var text:FoldingTextView?
 
     private(set) var webpageContent:WPContentView?
     private var actionButton: ActionButton?
@@ -166,8 +166,6 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     private var adSettingView: AdSettingsView?
     
-    private var shimmerEffect: ShimmerView?
-    private var shimmerMask: SimpleLayer?
 
     override func draw(_ dirtyRect: NSRect) {
         
@@ -215,7 +213,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         } else {
             maxY = 0
         }
-        return CGRect(origin: NSMakePoint(0, maxY), size: item.textLayout.layoutSize)
+        return CGRect(origin: NSMakePoint(0, maxY), size: item.textLayout.size)
 
     }
     
@@ -267,7 +265,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     override var selectableTextViews: [TextView] {
-        var views:[TextView] = [text].compactMap { $0 }
+        var views:[TextView] = super.selectableTextViews + (text?.textViews ?? [])
         if let webpage = webpageContent {
             views += webpage.selectableTextViews
         }
@@ -302,24 +300,28 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
 
         if let item = item as? ChatMessageItem {
             
-            let isEqual = previous?.textLayout.attributedString.string == item.textLayout.attributedString.string
+            let isEqual = previous?.textLayout.string == item.textLayout.string
             if isEqual, let view = self.text {
-                view.update(item.textLayout)
+                view.update(layout: item.textLayout, animated: animated)
             } else {
                 if let view = self.text {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current: TextView = TextView(frame: textFrame(item))
-                current.update(item.textLayout)
+                let current: FoldingTextView = FoldingTextView(frame: textFrame(item))
+                current.update(layout: item.textLayout, animated: false)
+                
+                current.revealBlockAtIndex = { [weak self] index in
+                    if let item = self?.item as? ChatMessageItem {
+                        item.revealBlockAtIndex(index)
+                    }
+                }
+                
                 self.text = current
                 addSubview(current)
                 
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
-            }
-            if let view = self.text {
-                updateInlineStickers(context: item.context, view: [view])
             }
             
             if let webpageLayout = item.webpageLayout {
@@ -376,56 +378,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     actionButton = nil
                 }
             }
-            
-            if item.isTranslateLoading, let blockImage = item.block.1 {
-                let size = blockImage.size
-                let current: ShimmerView
-                if let view = self.shimmerEffect {
-                    current = view
-                } else {
-                    current = ShimmerView()
-                    self.shimmerEffect = current
-                    self.rowView.addSubview(current, positioned: .below, relativeTo: contentView)
-                    
-                    if animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                }
-                current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
-                current.updateAbsoluteRect(size.bounds, within: size)
-                
-                let frame = contentFrame(item)
-                current.frame = blockImage.backingSize.bounds.offsetBy(dx: frame.minX - 5, dy: frame.minY - 1)
-                
-                if let blockImage = item.block.1 {
-                    if shimmerMask == nil {
-                        shimmerMask = SimpleLayer()
-                    }
-                    var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
-                    fr = CATransform3DScale(fr, 1, -1, 1)
-                    fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
-                    
-                    shimmerMask?.transform = fr
-                    shimmerMask?.contentsScale = 2.0
-                    shimmerMask?.contents = blockImage
-                    shimmerMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
-                    current.layer?.mask = shimmerMask
-                } else {
-                    self.shimmerMask = nil
-                    current.layer?.mask = nil
-                }
-            } else {
-                if let view = self.shimmerEffect {
-                    let shimmerMask = self.shimmerMask
-                    performSubviewRemoval(view, animated: animated, completed: { [weak shimmerMask] _ in
-                        shimmerMask?.removeFromSuperlayer()
-                    })
-                    self.shimmerEffect = nil
-                    self.shimmerMask = nil
-                }
-            }
-            
+                        
             if let adAttribute = item.message?.adAttribute {
                 let current: AdSettingsView
                 if let view = self.adSettingView {
@@ -448,22 +401,13 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     override func updateAnimatableContent() {
         super.updateAnimatableContent()
-        
-        if let current = shimmerEffect {
-            current.reloadAnimation()
-        }
-
     }
     
     override func clickInContent(point: NSPoint) -> Bool {
         guard let item = item as? ChatMessageItem else {return true}
         
-        if let text = self.text, !item.textLayout.lines.isEmpty {
-            let point = text.convert(point, from: self)
-            let layout = item.textLayout
-            
-            let index = layout.findIndex(location: point)
-            return index >= 0 && point.x < layout.lines[index].frame.maxX
+        if let text = self.text {
+            return text.clickInContent(point: point)
         } else {
             return false
         }

@@ -60,7 +60,7 @@ class ChatEmptyPeerItem: TableRowItem {
         
         let textColor: NSColor = isLite(.blur) ? theme.colors.text : theme.chatServiceItemTextColor
         switch chatInteraction.mode {
-        case .history:
+        case .history, .preview:
             if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                 _ = attr.append(string: strings().chatSecretChatEmptyHeader, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
@@ -85,24 +85,8 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: "\n")
                 _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
             } else {
-                if let restriction = chatInteraction.presentation.restrictionInfo {
-                    var hasRule: Bool = false
-                    for rule in restriction.rules {
-                        #if APP_STORE
-                        if rule.platform == "ios" || rule.platform == "all" {
-                            if !chatInteraction.context.contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
-                                _ = attr.append(string: rule.text, color: theme.chatServiceItemTextColor, font: .medium(.text))
-                                hasRule = true
-                                break
-                            }
-                        }
-                        #endif
-                    }
-                    if !hasRule {
-                        _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
-                        lineSpacing = nil
-                    }
-                    
+                if let restriction = chatInteraction.presentation.peer?.restrictionText(chatInteraction.context.contentSettings) {
+                    _ = attr.append(string: restriction, color: theme.chatServiceItemTextColor, font: .medium(.text))
                 } else {
                     lineSpacing = nil
                     _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
@@ -149,6 +133,8 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: strings().chatEmptyBusinessQuickReplyInfo2, color: theme.colors.text, font: .normal(.text))
                 self.standImage = (NSImage(resource: .iconBusinessChatQuickReply).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
                 attr.detectBoldColorInString(with: .medium(.text))
+            case .searchHashtag:
+                _ = attr.append(string: strings().chatEmptySearchHashtag, color: theme.colors.text, font: .medium(.text))
             }
             self._shouldBlurService = false
         case let .customLink(contents):
@@ -177,12 +163,10 @@ class ChatEmptyPeerItem: TableRowItem {
             
             let peer: Signal<Peer?, NoError> = .single(chatInteraction.presentation.mainPeer) |> then(getPeerView(peerId: chatInteraction.peerId, postbox: chatInteraction.context.account.postbox)) |> deliverOnMainQueue
 
-            
             let sticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(chatInteraction.context.engine.stickers.randomGreetingSticker() |> deliverOnMainQueue)
-            let context = self.chatInteraction.context
             
             peerViewDisposable.set(combineLatest(cachedData, peer, sticker).start(next: { [weak self] cachedData, peer, sticker in
-                if let cachedData = cachedData as? CachedUserData, let user = peer, let self {
+                if let cachedData = cachedData as? CachedUserData, let user = peer, let self, self.chatInteraction.mode == .history {
                     if let botInfo = cachedData.botInfo {
                         var about = botInfo.description
                         if about.isEmpty {
@@ -199,7 +183,9 @@ class ChatEmptyPeerItem: TableRowItem {
                         }
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
-                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                        }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
                         self.textViewLayout.interactions = globalLinkExecutor
@@ -208,7 +194,9 @@ class ChatEmptyPeerItem: TableRowItem {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
                         attr.detectBoldColorInString(with: .medium(.text))
-                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                        attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                        }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .center)
                         self.textViewLayout.interactions = globalLinkExecutor
@@ -517,20 +505,20 @@ class ChatEmptyPeerView : TableRowView {
             if let _ = premRequiredButton {
                 h += 20
             }
-            if let premRequiredImageView {
+            if let _ = premRequiredImageView {
                 h += 10
             }
             
-            if let stickerView {
+            if let _ = stickerView {
                 h += 10
             }
             
-            if let linkView {
+            if let _ = linkView {
                 h += 8
             }
             
             
-            bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, h + textView.frame.height + 20))
+            bgView.setFrameSize(NSMakeSize(max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20), h + textView.frame.height + 20))
 
             
             bgView.addSubview(self.textView)

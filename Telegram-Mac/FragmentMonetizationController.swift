@@ -15,6 +15,70 @@ import CurrencyFormat
 import InputView
 import GraphCore
 
+
+private final class TransactionTypesItem : GeneralRowItem {
+    fileprivate let context: AccountContext
+    fileprivate let items: [ScrollableSegmentItem]
+    fileprivate let callback:(State.TransactionMode)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, modes: [State.TransactionMode], transactionMode: State.TransactionMode, viewType: GeneralViewType, callback:@escaping(State.TransactionMode)->Void) {
+        self.context = context
+        self.callback = callback
+        
+        let theme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
+        
+        var items: [ScrollableSegmentItem] = []
+        
+        for mode in modes {
+            items.append(.init(title: mode.text, index: mode.rawValue, uniqueId: Int32(mode.rawValue), selected: transactionMode == mode, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(mode)))
+        }
+        
+        self.items = items
+        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return TransactionTypesView.self
+    }
+}
+
+private final class TransactionTypesView: GeneralContainableRowView {
+    fileprivate let segmentControl: ScrollableSegmentView
+    required init(frame frameRect: NSRect) {
+        self.segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        super.init(frame: frameRect)
+        addSubview(segmentControl)
+        
+        segmentControl.didChangeSelectedItem = { [weak self] selected in
+            if let item = self?.item as? TransactionTypesItem {
+                if selected.uniqueId == 0 {
+                    item.callback(.ton)
+                } else if selected.uniqueId == 1 {
+                    item.callback(.xtr)
+                }
+            }
+        }
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? TransactionTypesItem else {
+            return
+        }
+        segmentControl.updateItems(item.items, animated: animated)
+        needsLayout = true
+    }
+    
+    override func layout() {
+        segmentControl.frame = containerView.bounds
+    }
+}
+
 private final class TransactionPreviewRowItem : GeneralRowItem {
     
     let amountLayout: TextViewLayout
@@ -27,9 +91,9 @@ private final class TransactionPreviewRowItem : GeneralRowItem {
         self.peer = peer
         self.context = context
         let amountAttr = NSMutableAttributedString()
-        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(25)).smallDecemial
+        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(transaction.amount, currency: TON).prettyCurrencyNumber, color: theme.colors.text, font: .medium(25)).smallDecemial
         amountAttr.append(justAmount)
-        amountAttr.append(string: " TON", color: theme.colors.text, font: .medium(25))
+        amountAttr.append(string: " \(TON)", color: theme.colors.text, font: .medium(25))
         switch transaction.source {
         case .incoming, .refund:
             amountAttr.insert(.initialize(string: "+", font: .medium(25)), at: 0)
@@ -236,6 +300,7 @@ private func insertSymbolIntoMiddle(of string: String, with symbol: Character) -
 }
 
 
+
 extension String {
     var prettyCurrencyNumber: String {
         let nsString = self as NSString
@@ -247,6 +312,9 @@ extension String {
                 lastIndex -= 1
             }
             string = String(self.prefix(lastIndex + 1))
+        }
+        if string.hasSuffix(".") {
+            _ = string.removeLast()
         }
         return string
     }
@@ -261,28 +329,27 @@ extension String {
             }
             string = String(self.prefix(lastIndex + 1))
         }
+        if string.hasSuffix(".") {
+            _ = string.removeLast()
+        }
         return string
     }
 }
 
-private extension NSAttributedString {
-    var smallDecemial: NSAttributedString {
-        let range = self.string.nsstring.range(of: ".")
-        if range.location != NSNotFound {
-            let attr = self.mutableCopy() as! NSMutableAttributedString
-            
-            let font = attr.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
-            if let font = font, let updated = NSFont(name: font.fontName, size: font.pointSize / 1.5) {
-                attr.addAttribute(.font, value: updated, range: NSMakeRange(range.location, attr.range.length - range.lowerBound))
-            }
-            return attr
 
-        } else {
-            return self
-        }
-        
+extension StarsContext.State {
+    var usdRate: Double {
+        return 0.01
     }
+    var fractional: Double {
+        return currencyToFractionalAmount(value: balance, currency: XTR) ?? 0
+    }
+    var usdAmount: String {
+        return "$" + "\(self.fractional * self.usdRate)".prettyCurrencyNumberUsd
+    }
+    
 }
+
 
 private final class TransactionRowItem : GeneralRowItem {
     let context: AccountContext
@@ -493,413 +560,6 @@ private final class TransactioRowView : GeneralContainableRowView {
     }
 }
 
-private final class OverviewRowItem : GeneralRowItem {
-    
-    struct Overview: Equatable {
-        let tonAmount: Int64
-        let usdAmount: String
-        let info: String
-    }
-    
-    let context: AccountContext
-    
-    let overview: Overview
-    
-    let amount: TextViewLayout
-    let info: TextViewLayout
-    
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, overview: Overview, viewType: GeneralViewType) {
-        self.context = context
-        self.overview = overview
-        
-                
-        let amountAttr = NSMutableAttributedString()
-        let justAmount = NSAttributedString.initialize(string: formatCurrencyAmount(overview.tonAmount, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(.header)).smallDecemial
-        amountAttr.append(justAmount)
-        amountAttr.append(string: " ≈", color: theme.colors.grayText, font: .normal(.text))
-        
-        let justAmount2 = NSAttributedString.initialize(string: overview.usdAmount, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
-        amountAttr.append(justAmount2)
-
-        self.amount = .init(amountAttr)
-        
-        self.info = .init(.initialize(string: overview.info, color: theme.colors.grayText, font: .normal(.text)))
-        
-        super.init(initialSize, stableId: stableId, viewType: viewType)
-    }
-    
-    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
-        _ = super.makeSize(width, oldWidth: oldWidth)
-        
-        amount.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right - 22)
-        info.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
-        return true
-    }
-    
-    override func viewClass() -> AnyClass {
-        return OverviewRowView.self
-    }
-    
-    override var height: CGFloat {
-        var height: CGFloat = 0
-        height += viewType.innerInset.top
-        height += amount.layoutSize.height
-        height += 2
-        height += info.layoutSize.height
-        
-        height += viewType.innerInset.bottom
-        return height
-    }
-}
-
-private final class OverviewRowView : GeneralContainableRowView {
-    private let amountView = TextView()
-    private let infoView = TextView()
-    private let icon = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 20, 20))
-
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        addSubview(amountView)
-        addSubview(infoView)
-        addSubview(icon)
-        
-        amountView.userInteractionEnabled = false
-        amountView.isSelectable = false
-        
-        infoView.userInteractionEnabled = false
-        infoView.isSelectable = false
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    
-    override func layout() {
-        super.layout()
-        guard let item = item as? OverviewRowItem else {
-            return
-        }
-        icon.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top - 3))
-        amountView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left + 22, item.viewType.innerInset.top))
-        infoView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, amountView.frame.maxY + 2))
-        
-    }
-    
-    override func set(item: TableRowItem, animated: Bool = false) {
-        super.set(item: item, animated: animated)
-        
-        guard let item = item as? OverviewRowItem else {
-            return
-        }
-        
-        let parameters = LocalAnimatedSticker.ton_logo.parameters
-        parameters.colors = [.init(keyPath: "", color: theme.colors.accent)]
-        
-        icon.update(with: LocalAnimatedSticker.ton_logo.file, size: icon.frame.size, context: item.context, table: item.table, parameters: parameters, animated: animated)
-        
-        amountView.update(item.amount)
-        infoView.update(item.info)
-    }
-}
-
-private final class BalanceRowItem : GeneralRowItem {
-    let context: AccountContext
-    let tonBalance: TextViewLayout
-    let usdBalance: TextViewLayout
-    let balance: State.Balance
-    
-    fileprivate let interactions: TextView_Interactions
-    fileprivate let updateState:(Updated_ChatTextInputState)->Void
-    
-    fileprivate let transfer:()->Void
-    
-    let canWithdraw: Bool
-
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, balance: State.Balance, canWithdraw: Bool, viewType: GeneralViewType, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, transfer:@escaping()->Void) {
-        self.context = context
-        self.balance = balance
-        self.transfer = transfer
-        self.interactions = interactions
-        self.updateState = updateState
-        self.canWithdraw = canWithdraw
-        
-        let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.ton, currency: "TON").prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
-        let usdBalance = NSAttributedString.initialize(string: "≈" + balance.usd, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
-
-        self.tonBalance = .init(tonBalance)
-        self.usdBalance = .init(usdBalance)
-
-        super.init(initialSize, stableId: stableId, viewType: viewType)
-    }
-    
-    var withdrawText: String {
-        return strings().monetizationBalanceWithdraw
-    }
-    
-    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
-        _ = super.makeSize(width, oldWidth: oldWidth)
-        
-        self.tonBalance.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
-        self.usdBalance.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
-
-        return true
-    }
-    
-    override func viewClass() -> AnyClass {
-        return BalanceRowView.self
-    }
-    
-    var inputHeight: CGFloat {
-        let attr = NSMutableAttributedString()
-        attr.append(self.interactions.presentation.inputText)
-        attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
-        let size = attr.sizeFittingWidth(blockWidth - viewType.innerInset.left - viewType.innerInset.right - 20)
-        return max(40, size.height + 24)
-    }
-    
-    override var height: CGFloat {
-        var height: CGFloat = 0
-        height += viewType.innerInset.top
-        
-        height += 46
-        height -= 3
-        height += usdBalance.layoutSize.height
-        
-        
-        if balance.ton > 0 {
-            height += viewType.innerInset.top
-            height += 40
-            
-            height += 10
-            
-//            height += viewType.innerInset.top * 2
-//            height += inputHeight
-        }
-        
-        height += viewType.innerInset.left
-        return height
-    }
-}
-
-private final class BalanceRowView : GeneralContainableRowView {
-    
-    
-    private final class WithdrawInput : View {
-        
-        private weak var item: BalanceRowItem?
-        let inputView: UITextView = UITextView(frame: NSMakeRect(0, 0, 100, 40))
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(inputView)
-                        
-            inputView.placeholder = "Enter your TON address"
-
-            layer?.cornerRadius = 10
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        func update(item: BalanceRowItem, animated: Bool) {
-            self.item = item
-            self.backgroundColor = theme.colors.grayForeground.withAlphaComponent(0.6)
-            
-            
-            inputView.context = item.context
-            inputView.interactions.max_height = 500
-            inputView.interactions.min_height = 13
-            inputView.interactions.emojiPlayPolicy = .onceEnd
-            inputView.interactions.canTransform = false
-            
-            item.interactions.min_height = 13
-            item.interactions.max_height = 500
-            item.interactions.emojiPlayPolicy = .onceEnd
-            item.interactions.canTransform = false
-            
-
-            
-            
-            item.interactions.filterEvent = { event in
-                return true
-            }
-
-            self.inputView.set(item.interactions.presentation.textInputState())
-
-            self.inputView.interactions = item.interactions
-            
-            item.interactions.inputDidUpdate = { [weak self] state in
-                guard let `self` = self else {
-                    return
-                }
-                self.set(state)
-                self.inputDidUpdateLayout(animated: true)
-            }
-            
-        }
-        
-        
-        var textWidth: CGFloat {
-            return frame.width - 20
-        }
-        
-        func textViewSize() -> (NSSize, CGFloat) {
-            let w = textWidth
-            let height = inputView.height(for: w)
-            return (NSMakeSize(w, min(max(height, inputView.min_height), inputView.max_height)), height)
-        }
-        
-        private func inputDidUpdateLayout(animated: Bool) {
-            self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
-        }
-        
-        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-            let (textSize, textHeight) = textViewSize()
-            
-            transition.updateFrame(view: inputView, frame: CGRect(origin: CGPoint(x: 10, y: 7), size: textSize))
-            inputView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
-        }
-        
-        private func set(_ state: Updated_ChatTextInputState) {
-            guard let item else {
-                return
-            }
-            item.updateState(state)
-            
-            item.redraw(animated: true)
-        }
-        
-
-    }
-    
-    private let tonBalanceView = TextView()
-    private let tonBalanceContainer = View()
-    private let tonView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 46, 46))
-    private let usdBalanceView = TextView()
-    
-    private var withdrawAction: TextButton?
-    private var withdrawInput: WithdrawInput?
-
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        tonBalanceContainer.addSubview(tonView)
-        tonBalanceContainer.addSubview(tonBalanceView)
-        addSubview(tonBalanceContainer)
-        addSubview(usdBalanceView)
-                
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    
-    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        super.updateLayout(size: size, transition: transition)
-        
-        guard let item = item as? BalanceRowItem else {
-            return
-        }
-        
-        transition.updateFrame(view: tonBalanceContainer, frame: tonBalanceContainer.centerFrameX(y: item.viewType.innerInset.top))
-        transition.updateFrame(view: tonView, frame: tonView.centerFrameY(x: 0, addition: -3))
-        transition.updateFrame(view: tonBalanceView, frame: tonBalanceView.centerFrameY(x: tonView.frame.maxX))
-
-        
-        transition.updateFrame(view: usdBalanceView, frame: usdBalanceView.centerFrameX(y: tonBalanceContainer.frame.maxY - 4))
-        
-        var withdrawY: CGFloat = containerView.frame.height - item.viewType.innerInset.left
-        
-        if let withdrawAction {
-            withdrawY -= withdrawAction.frame.height
-            transition.updateFrame(view: withdrawAction, frame: CGRect(origin: NSMakePoint(item.viewType.innerInset.left, withdrawY), size: withdrawAction.frame.size))
-            withdrawY -= item.viewType.innerInset.left
-        }
-        if let withdrawInput {
-            withdrawY -= withdrawInput.frame.height
-            transition.updateFrame(view: withdrawInput, frame: CGRect(origin: NSMakePoint(item.viewType.innerInset.left, withdrawY), size: NSMakeSize(containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, item.inputHeight)))
-            withdrawInput.updateLayout(size: withdrawInput.frame.size, transition: transition)
-        }
-    }
-    
-    override func set(item: TableRowItem, animated: Bool = false) {
-        super.set(item: item, animated: animated)
-        
-        guard let item = item as? BalanceRowItem else {
-            return
-        }
-        
-        usdBalanceView.update(item.usdBalance)
-        tonBalanceView.update(item.tonBalance)
-        
-        var parameters = LocalAnimatedSticker.ton_logo.parameters
-        parameters.colors = [.init(keyPath: "", color: theme.colors.accent)]
-        
-        tonView.update(with: LocalAnimatedSticker.ton_logo.file, size: tonView.frame.size, context: item.context, table: item.table, parameters: parameters, animated: animated)
-        
-        tonBalanceContainer.setFrameSize(tonBalanceContainer.subviewsWidthSize)
-
-        if item.balance.ton > 0 {
-            let currentAction: TextButton
-            if let withdrawAction {
-                currentAction = withdrawAction
-            } else {
-                currentAction = TextButton()
-                currentAction.scaleOnClick = true
-                currentAction.autohighlight = false
-                currentAction.set(font: .medium(.text), for: .Normal)
-                addSubview(currentAction)
-                self.withdrawAction = currentAction
-            }
-            
-            let blockWidth = item.blockWidth - item.viewType.innerInset.left - item.viewType.innerInset.right
-            
-            currentAction.set(color: theme.colors.underSelectedColor, for: .Normal)
-            currentAction.set(background: theme.colors.accent, for: .Normal)
-            currentAction.layer?.cornerRadius = 10
-            currentAction.set(text: item.withdrawText, for: .Normal)
-            currentAction.sizeToFit(.zero, NSMakeSize(blockWidth, 40), thatFit: true)
-            
-            currentAction.removeAllHandlers()
-            
-            currentAction.isEnabled = item.canWithdraw
-            
-            currentAction.set(handler: { [weak item] _ in
-                item?.transfer()
-            }, for: .Click)
-            
-            
-//            let currentInput: WithdrawInput
-//            if let withdrawInput {
-//                currentInput = withdrawInput
-//            } else {
-//                currentInput = WithdrawInput(frame: NSMakeRect(0, 0, blockWidth, item.inputHeight))
-//                addSubview(currentInput)
-//                self.withdrawInput = currentInput
-//            }
-//            currentInput.update(item: item, animated: animated)
-            
-        } else {
-//            if let withdrawInput {
-//                performSubviewRemoval(withdrawInput, animated: animated)
-//                self.withdrawInput = nil
-//            }
-            if let withdrawAction {
-                performSubviewRemoval(withdrawAction, animated: animated)
-                self.withdrawAction = nil
-            }
-        }
-        
-        updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
-    }
-    
-    override var firstResponder: NSResponder? {
-        return withdrawInput?.inputView.inputView
-    }
-}
 
 private final class Arguments {
     let context: AccountContext
@@ -912,7 +572,9 @@ private final class Arguments {
     let transaction:(State.Transaction)->Void
     let toggleAds:()->Void
     let loadMore:()->Void
-    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping()->Void) {
+    let toggleTransactionType:(State.TransactionMode)->Void
+    let openStarsTransaction:(Star_Transaction)->Void
+    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping()->Void, toggleTransactionType:@escaping(State.TransactionMode)->Void, openStarsTransaction:@escaping(Star_Transaction)->Void) {
         self.context = context
         self.interactions = interactions
         self.updateState = updateState
@@ -923,12 +585,28 @@ private final class Arguments {
         self.transaction = transaction
         self.toggleAds = toggleAds
         self.loadMore = loadMore
+        self.toggleTransactionType = toggleTransactionType
+        self.openStarsTransaction = openStarsTransaction
     }
 }
 
 
 private struct State : Equatable {
 
+    enum TransactionMode : Int {
+        case ton = 0
+        case xtr = 1
+        
+        var text: String {
+            switch self {
+            case .xtr:
+                return strings().monetizationTransactionsStars
+            case .ton:
+                return strings().monetizationTransactionsTON
+            }
+        }
+    }
+    
     struct Transaction : Equatable {
         enum Source : Equatable {
             case incoming(fromDate: Int32, toDate: Int32)
@@ -988,11 +666,23 @@ private struct State : Equatable {
     
     var adsRestricted: Bool = false
     
+    var transactionMode: TransactionMode = .ton
+    
 }
 
-private let _id_overview = InputDataIdentifier("_id_overview")
+private func _id_overview(_ index: Int) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_overview_\(index)")
+}
+private func _id_transaction(_ index: Int) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_transaction\(index)")
+}
+
+private func _id_transaction(_ transaction: Star_Transaction) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_transaction_\(transaction.id)_\(transaction.type)")
+}
+
+
 private let _id_balance = InputDataIdentifier("_id_balance")
-private let _id_transaction = InputDataIdentifier("_id_transaction")
 
 private let _id_top_hours_graph = InputDataIdentifier("_id_top_hours_graph")
 private let _id_revenue_graph = InputDataIdentifier("_id_revenue_graph")
@@ -1001,6 +691,9 @@ private let _id_switch_ad = InputDataIdentifier("_id_switch_ad")
 
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_load_more = InputDataIdentifier("_id_load_more")
+
+private let _id_transaction_mode = InputDataIdentifier("_id_transaction_mode")
+
 
 private func entries(_ state: State, arguments: Arguments, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -1029,13 +722,13 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         }
         
         var graphs: [Graph] = []
-        if let graph = state.topHoursGraph {
+        if let graph = state.topHoursGraph, !graph.isEmpty {
             graphs.append(Graph(graph: graph, title: strings().monetizationImpressionsTitle, identifier: _id_top_hours_graph, type: .hourlyStep, rate: 1.0, load: { identifier in
                
             }))
         }
-        if let graph = state.revenueGraph {
-            graphs.append(Graph(graph: graph, title: strings().monetizationAdRevenueTitle, identifier: _id_revenue_graph, type: .currency, rate: state.balance.usdRate, load: { identifier in
+        if let graph = state.revenueGraph, !graph.isEmpty {
+            graphs.append(Graph(graph: graph, title: strings().monetizationAdRevenueTitle, identifier: _id_revenue_graph, type: .currency(TON), rate: state.balance.usdRate, load: { identifier in
                 
             }))
         }
@@ -1051,7 +744,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
             case let .Loaded(_, string):
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
-                        return StatisticRowItem(initialSize, stableId: stableId, context: arguments.context, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
+                        return StatisticRowItem(initialSize, stableId: stableId, context: arguments.context, collection: collection, viewType: .singleItem, type: graph.type, rate: graph.rate, getDetailsData: { date, completion in
                             detailedDisposable.set(arguments.loadDetailedGraph(graph.graph, Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
                                 if let graph = graph, case let .Loaded(_, data) = graph {
                                     completion(data)
@@ -1092,34 +785,34 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         sectionId += 1
         
         struct Tuple : Equatable {
-            let overview: OverviewRowItem.Overview
+            let overview: Fragment_OverviewRowItem.Overview
             let viewType: GeneralViewType
         }
         
-        let tuples: [Tuple] = [.init(overview: .init(tonAmount: state.overview.balance.ton, usdAmount: state.overview.balance.usd, info: strings().monetizationOverviewAvailable), viewType: .firstItem),
-                               .init(overview: .init(tonAmount: state.overview.last.ton, usdAmount: state.overview.last.usd, info: strings().monetizationOverviewCurrent), viewType: .innerItem),
-                               .init(overview: .init(tonAmount: state.overview.all.ton, usdAmount: state.overview.all.usd, info: strings().monetizationOverviewTotal), viewType: .lastItem)]
+        let tuples: [Tuple] = [
+            .init(overview: .init(amount: state.overview.balance.ton, usdAmount: state.overview.balance.usd, info: strings().monetizationOverviewAvailable, stars: nil), viewType: .firstItem),
+                               .init(overview: .init(amount: state.overview.all.ton, usdAmount: state.overview.all.usd, info: strings().monetizationOverviewTotal, stars: nil), viewType: .lastItem)
+        ]
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationOverviewTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        for tuple in tuples {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_overview, equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                return OverviewRowItem(initialSize, stableId: stableId, context: arguments.context, overview: tuple.overview, viewType: tuple.viewType)
+        for (i, tuple) in tuples.enumerated() {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_overview(i), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                return Fragment_OverviewRowItem(initialSize, stableId: stableId, context: arguments.context, overview: tuple.overview, currency: .ton, viewType: tuple.viewType)
             }))
         }
-        
     }
     
     
-    do {
+    if state.balance.ton > 0 {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: state.balance, canWithdraw: state.canWithdraw, viewType: .singleItem, interactions: arguments.interactions, updateState: arguments.updateState, transfer: arguments.withdraw)
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.ton, usd: state.balance.usd, currency: .ton), canWithdraw: state.canWithdraw, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
         let text: String
@@ -1131,24 +824,24 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { link in
             arguments.executeLink(link)
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        
+        index += 1
     }
-
     
-       
+
     if !state.transactions.isEmpty, let transactionsState = state.transactionsState {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationTransactionsTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+
         struct Tuple : Equatable {
             let transaction: State.Transaction
             let viewType: GeneralViewType
         }
         var tuples: [Tuple] = []
         for (i, transaction) in state.transactions.enumerated() {
-            var viewType = bestGeneralViewType(state.transactions, for: i)
+            var viewType = bestGeneralViewTypeAfterFirst(state.transactions, for: i)
             if transactionsState.count > state.transactions.count || transactionsState.isLoadingMore {
                 if i == state.transactions.count - 1 {
                     viewType = .innerItem
@@ -1157,8 +850,8 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
             tuples.append(.init(transaction: transaction, viewType: viewType))
         }
         
-        for tuple in tuples {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction, equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+        for (i, tuple) in tuples.enumerated() {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction(i), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
                 return TransactionRowItem(initialSize, stableId: stableId, context: arguments.context, transaction: tuple.transaction, viewType: tuple.viewType, action: {
                     arguments.transaction(tuple.transaction)
                 })
@@ -1170,7 +863,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
                 return LoadingTableItem(initialSize, height: 40, stableId: stableId, viewType: .lastItem)
             }))
         } else if transactionsState.count > state.transactions.count {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_switch_ad, data: .init(name: strings().monetizationTransactionShowMoreTransactionsCountable(Int(transactionsState.count) - state.transactions.count), color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().monetizationTransactionShowMoreTransactionsCountable(Int(transactionsState.count) - state.transactions.count), color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
         }
     }
     
@@ -1202,7 +895,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
     
     let detailedDisposable: DisposableDict<InputDataIdentifier> = DisposableDict()
     actionsDisposable.add(detailedDisposable)
-
+    
 
     let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("channel_revenue_withdrawal_enabled", orElse: false))
     
@@ -1221,7 +914,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         }
     }
     
-    let stats = RevenueStatsContext(postbox: context.account.postbox, network: context.account.network, peerId: peerId)
+    let stats = RevenueStatsContext(account: context.account, peerId: peerId)
     let transactions = RevenueStatsTransactionsContext(account: context.account, peerId: peerId)
     
     let contextObject = ContextObject(stats: stats, transactions: transactions)
@@ -1235,14 +928,14 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 
                 current.peer = peer
                 
-                current.balance = .init(ton: stats.currentBalance, usdRate: stats.usdRate)
-                current.overview.balance = .init(ton: stats.availableBalance, usdRate: stats.usdRate)
-                current.overview.all = .init(ton: stats.overallRevenue, usdRate: stats.usdRate)
-                current.overview.last = .init(ton: stats.currentBalance, usdRate: stats.usdRate)
+                current.balance = .init(ton: stats.balances.availableBalance, usdRate: stats.usdRate)
+                current.overview.balance = .init(ton: stats.balances.availableBalance, usdRate: stats.usdRate)
+                current.overview.all = .init(ton: stats.balances.overallRevenue, usdRate: stats.usdRate)
+                current.overview.last = .init(ton: stats.balances.currentBalance, usdRate: stats.usdRate)
                 
                 current.revenueGraph = stats.revenueGraph
                 current.topHoursGraph = stats.topHoursGraph
-                
+                                
                 var list: [State.Transaction] = []
                 
                 for transaction in transactions.transactions {
@@ -1380,13 +1073,21 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         
         if let status, let myBoost, let peer {
             if status.level >= needLevel {
-                _ = context.engine.peers.updateChannelRestrictAdMessages(peerId: peerId, restricted: restricted).startStandalone()
+                _ = context.engine.peers.updateChannelRestrictAdMessages(peerId: peerId, restricted: !restricted).startStandalone()
             } else {
                 showModal(with: BoostChannelModalController(context: context, peer: peer._asPeer(), boosts: status, myStatus: myBoost, infoOnly: true, source: .noAds(needLevel)), for: context.window)
             }
         }
     }, loadMore: { [weak contextObject] in
         contextObject?.transactions.loadMore()
+    }, toggleTransactionType: { mode in
+        updateState { current in
+            var current = current
+            current.transactionMode = mode
+            return current
+        }
+    }, openStarsTransaction: { transaction in
+        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

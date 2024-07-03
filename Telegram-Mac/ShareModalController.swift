@@ -1152,9 +1152,11 @@ final class ForwardMessagesObject : ShareObject {
     }
     private let disposable = MetaDisposable()
     private let album: Bool
-    init(_ context: AccountContext, messages: [Message], emptyPerformOnClose: Bool = false, album: Bool = false) {
+    private let getMessages:(([MessageId], Bool)->Signal<[Message], NoError>)?
+    init(_ context: AccountContext, messages: [Message], emptyPerformOnClose: Bool = false, album: Bool = false, getMessages:(([MessageId], Bool)->Signal<[Message], NoError>)? = nil) {
         self.messages = messages
         self.album = album
+        self.getMessages = getMessages
         super.init(context, emptyPerformOnClose: emptyPerformOnClose)
     }
     
@@ -1191,16 +1193,21 @@ final class ForwardMessagesObject : ShareObject {
                 return nil
             }
             
-            let messages: Signal<[Message], NoError> = context.account.postbox.transaction { transaction in
-                var list:[Message] = []
-                for messageId in messageIds {
-                    if let messages = transaction.getMessageGroup(messageId), album {
-                        list.append(contentsOf: messages)
-                    } else if let message = transaction.getMessage(messageId) {
-                        list.append(message)
+            let messages: Signal<[Message], NoError>
+            if let getMessages = self.getMessages {
+                messages = getMessages(messageIds, album)
+            } else {
+                messages = context.account.postbox.transaction { transaction in
+                    var list:[Message] = []
+                    for messageId in messageIds {
+                        if let messages = transaction.getMessageGroup(messageId), album {
+                            list.append(contentsOf: messages)
+                        } else if let message = transaction.getMessage(messageId) {
+                            list.append(message)
+                        }
                     }
+                    return list
                 }
-                return list
             }
             
             return combineLatest(messages, peers)
@@ -1889,6 +1896,32 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             return globalLinkExecutor.copyAttributedString(attributedString)
         }
         
+        contextChatInteraction.movePeerToInput = { [weak self] (peer) in
+            if let strongSelf = self {
+                let textInputState = strongSelf.contextChatInteraction.presentation.effectiveInput
+                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                    let inputText = textInputState.inputText
+                    
+                    let name:String = peer.addressName ?? peer.compactDisplayTitle
+                    
+                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                    let replacementText = name + " "
+                    
+                    let atLength = peer.addressName != nil ? 0 : 1
+                    
+                    let range = strongSelf.contextChatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                    
+                    if peer.addressName == nil {
+                        let state = strongSelf.contextChatInteraction.presentation.effectiveInput
+                        var attributes = state.attributes
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt64Value()))
+                        let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
+                        strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
+                    }
+                }
+            }
+        }
+        
         genericView.presentation = presentation
         
         
@@ -2247,7 +2280,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                             }
                         }
                         
-                        if !share.excludePeerIds.contains(value.3.id) {
+                        if !share.excludePeerIds.contains(value.3.id), value.1.isEmpty || value.1.filter == .allChats {
                             entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, nil, true, multipleSelection))
                             contains[value.3.id] = value.3.id
                         }

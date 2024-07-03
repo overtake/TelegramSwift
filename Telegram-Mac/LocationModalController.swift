@@ -114,6 +114,8 @@ private final class LocationMapView : View {
         addSubview(expandContainer)
         locateButton.autohighlight = false
         mapView.addSubview(locationPinView)
+        
+        locateButton.scaleOnClick = true
     }
     
     fileprivate func getSelectedLocation() -> CLLocation? {

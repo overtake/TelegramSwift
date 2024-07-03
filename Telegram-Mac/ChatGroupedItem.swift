@@ -28,7 +28,7 @@ class ChatGroupedItem: ChatRowItem {
     }
    
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         var captionLayouts: [ChatRowItem.RowCaption] = []
         
@@ -48,6 +48,7 @@ class ChatGroupedItem: ChatRowItem {
                     }
                     if !message.text.isEmpty {
                         captionMessages.append(message)
+                        break
                     }
                 }
             case .files:
@@ -76,22 +77,6 @@ class ChatGroupedItem: ChatRowItem {
                 var caption:NSMutableAttributedString = NSMutableAttributedString()
                 NSAttributedString.initialize()
                 _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
-                var types:ParsingType = [.Links, .Mentions, .Hashtags]
-                
-                if let peer = coreMessageMainPeer(message) as? TelegramUser {
-                    if peer.botInfo != nil {
-                        types.insert(.Commands)
-                    }
-                } else if let peer = coreMessageMainPeer(message) as? TelegramChannel {
-                    switch peer.info {
-                    case .group:
-                        types.insert(.Commands)
-                    default:
-                        break
-                    }
-                } else {
-                    types.insert(.Commands)
-                }
                 
                 var hasEntities: Bool = false
                 for attr in attributes {
@@ -102,30 +87,9 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 if hasEntities {
                     
-                    caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble).mutableCopy() as! NSMutableAttributedString
+                    caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu).mutableCopy() as! NSMutableAttributedString
                     caption.removeWhitespaceFromQuoteAttribute()
 
-                }
-                
-                if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
-                    caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
-                }
-                
-                var spoilers:[TextViewLayout.Spoiler] = []
-                for attr in attributes {
-                    if let attr = attr as? TextEntitiesMessageAttribute {
-                        for entity in attr.entities {
-                            switch entity.type {
-                            case .Spoiler:
-                                let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                                if let range = caption.range.intersection(range) {
-                                    caption.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                                }
-                            default:
-                                break
-                            }
-                        }
-                    }
                 }
                 
                 var stableId = message.stableId
@@ -137,57 +101,59 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
+                let spoilerColor: NSColor
+                if entry.renderType == .bubble {
+                    spoilerColor = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                } else {
+                    spoilerColor = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+                }
+                let isSpoilerRevealed = chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)
                 
-                caption.enumerateAttribute(TextInputAttributes.spoiler, in: caption.range, options: .init(), using: { value, range, stop in
-                    if let _ = value {
-                        let color: NSColor
-                        if entry.renderType == .bubble {
-                            color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
-                        } else {
-                            color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
-                        }
-                        spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
-                    }
-                })
                 
-                let layout: ChatRowItem.RowCaption = .init(message: message, id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
-                    chatInteraction?.update({
-                        $0.updatedInterfaceState({
-                            $0.withRevealedSpoiler(message.id)
+                let textLayout = FoldingTextLayout.make(caption, context: context, revealed: entry.additionalData.quoteRevealed, takeLayout: { string in
+                    let textLayout = TextViewLayout(string, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak chatInteraction] in
+                        chatInteraction?.update({
+                            $0.updatedInterfaceState({
+                                $0.withRevealedSpoiler(message.id)
+                            })
                         })
                     })
-                }), isLoading: isLoading)
-                layout.layout.interactions = globalLinkExecutor
+                    return textLayout
+                })
                 
+                let layout: ChatRowItem.RowCaption = .init(message: message, id: stableId, offset: .zero, layout: textLayout, isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset)
                 captionLayouts.append(layout)
-                
-                if let range = selectManager.find(stableId) {
-                    layout.layout.selectedRange.range = range
-                }
+                layout.layout.applyRanges(selectManager.findAll(stableId))
+
             }
             
         } else {
             fatalError("")
         }
         
-        super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, entry, theme: theme)
         
          self.captionLayouts = captionLayouts
         
+        
         for layout in captionLayouts {
-            layout.layout.interactions.topWindow = { [weak self] in
+            
+            let interactions = globalLinkExecutor
+
+            interactions.topWindow = { [weak self] in
                 if let strongSelf = self {
                     return strongSelf.menuAdditionView
                 } else {
                     return .single(nil)
                 }
             }
-            layout.layout.interactions.menuItems = { [weak self] type in
-                if let interactions = self?.chatInteraction, let entry = self?.entry {
-                    return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
+            interactions.menuItems = { [weak self, weak layout] type in
+                if let interactions = self?.chatInteraction, let entry = self?.entry, let layout {
+                    return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout.merged, type), chatInteraction: interactions)
                 }
                 return .complete()
             }
+            layout.layout.set(interactions)
         }
                 
         for (i, message) in layout.messages.enumerated() {
@@ -232,10 +198,10 @@ class ChatGroupedItem: ChatRowItem {
                     }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.anyMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
             }
             self.parameters[i].automaticDownloadFunc = { message in
-                return downloadSettings.isDownloable(message)
+                return entry.additionalData.automaticDownload.isDownloable(message)
             }
             self.parameters[i].revealMedia = { message in
-                chatInteraction.revealMedia(message.id)
+                chatInteraction.revealMedia(message)
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
             self.parameters[i].chatMode = chatInteraction.mode
@@ -274,9 +240,8 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                
-                
             }
+            self.parameters[i].isProtected = message.containsSecretMedia || message.isCopyProtected()
         }
         
         if isBubbleFullFilled, layout.messages.count == 1  {
@@ -441,9 +406,6 @@ class ChatGroupedItem: ChatRowItem {
         }
         for layout in captionLayouts {
             layout.layout.measure(width: maxContentWidth)
-            if layout.isLoading {
-                layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
-            }
         }
         self.captionLayouts = layout.applyCaptions(captionLayouts)
         return layout.dimensions
@@ -488,7 +450,7 @@ class ChatGroupedItem: ChatRowItem {
 
 
         if let message = msg {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil || useGroupIfNeeded)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption?.merged, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil || useGroupIfNeeded)
         }
         return super.menuItems(in: location)
     }
@@ -743,10 +705,10 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
-                if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil {
+                if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil, !item.invertMedia {
                     positionFlags.remove(.bottom)
                 }
-                if item.hasUpsideSomething {
+                if item.hasUpsideSomething || item.invertMedia {
                     positionFlags.remove(.top)
                 }
             }
@@ -1003,7 +965,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 var caption: CGFloat = 0
                 
                 if let layout = item.captionLayouts.first(where: { $0.id == item.layout.messages[index].stableId })  {
-                    caption = layout.layout.layoutSize.height + 6
+                    caption = layout.layout.size.height + 6
                 }
                 
                 
@@ -1035,7 +997,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 var caption: CGFloat = 0
                 
                 if let layout = item.captionLayouts.first(where: { $0.id == item.layout.messages[index].stableId })  {
-                    caption = layout.layout.layoutSize.height + 6
+                    caption = layout.layout.size.height + 6
                 }
                 
                 if index == 0 {
@@ -1200,6 +1162,13 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             rect.origin.x -= item.bubbleContentInset
             if item.hasBubble {
                 rect.origin.x += item.mediaBubbleCornerInset
+            }
+        }
+        
+        
+        if item.invertMedia {
+            if let layout = item.captionLayouts.last {
+                rect.origin.y += layout.invertedSize
             }
         }
         

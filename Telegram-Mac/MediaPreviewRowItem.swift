@@ -28,13 +28,15 @@ class MediaPreviewRowItem: TableRowItem {
     fileprivate let delete: (()->Void)?
     fileprivate let editedData: EditedImageData?
     fileprivate let theme: TelegramPresentationTheme
-    init(_ initialSize: NSSize, media: Media, context: AccountContext, theme: TelegramPresentationTheme, editedData: EditedImageData? = nil, isSpoiler: Bool, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    fileprivate let payAmount: Int64?
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, theme: TelegramPresentationTheme, editedData: EditedImageData? = nil, isSpoiler: Bool, payAmount: Int64?, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
         self.paint = paint
         self.delete = delete
         self.media = media
         self.context = context
         self.theme = theme
+        self.payAmount = payAmount
         self.editedData = editedData
         self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context)
         if let media = media as? TelegramMediaFile {
@@ -43,7 +45,8 @@ class MediaPreviewRowItem: TableRowItem {
             parameters = ChatMediaLayoutParameters(presentation: .make(theme: theme), media: media)
         }
         
-        parameters?.forceSpoiler = isSpoiler
+        parameters?.forceSpoiler = isSpoiler || payAmount != nil
+        parameters?.payAmount = payAmount
         
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -53,7 +56,7 @@ class MediaPreviewRowItem: TableRowItem {
     private var overSize: CGFloat? = nil
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
-        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 120))
+        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 60))
         
         if let table = table, table.count == 1 {
             if contentSize.height > table.frame.height && table.frame.height > 0 {

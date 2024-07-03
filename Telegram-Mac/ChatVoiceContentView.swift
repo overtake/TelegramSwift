@@ -181,7 +181,7 @@ class ChatVoiceContentView: ChatAudioContentView {
             updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
-                        return .Fetching(isActive: true, progress: pendingStatus.progress)
+                        return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                     } else {
                         return resourceStatus
                     }
@@ -196,40 +196,40 @@ class ChatVoiceContentView: ChatAudioContentView {
             if let strongSelf = self {
                 strongSelf.fetchStatus = status
                 
-                var state: RadialProgressState? = nil
-                switch status {
-                case let .Fetching(_, progress):
-                    state = .Fetching(progress: progress, force: false)
-                case .Paused:
-                    state = .Remote
-                case .Remote:
-                    state = .Remote
-                case .Local:
-                    break
-                }
-                if let state = state {
-                    let current: RadialProgressView
-                    if let value = strongSelf.downloadingView {
-                        current = value
-                    } else {
-                        current = RadialProgressView(theme: strongSelf.progressView.theme, twist: true, size: NSMakeSize(40, 40))
-                        current.fetchControls = strongSelf.fetchControls
-                        strongSelf.downloadingView = current
-                        strongSelf.addSubview(current)
-                        current.frame = strongSelf.progressView.frame
-                        
-                        if !approximateSynchronousValue && animated {
-                            current.layer?.animateAlpha(from: 0.2, to: 1, duration: 0.3)
-                        }
-                    }
-                    current.state = state
-                } else if let download = strongSelf.downloadingView {
-                    download.state = .Fetching(progress: 1.0, force: false)
-                    strongSelf.downloadingView = nil
-                    download.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.25, removeOnCompletion: false, completion: { [weak download] _ in
-                        download?.removeFromSuperview()
-                    })
-                }
+//                var state: RadialProgressState? = nil
+//                switch status {
+//                case let .Fetching(_, progress):
+//                    state = .Fetching(progress: progress, force: false)
+//                case .Paused:
+//                    state = .Remote
+//                case .Remote:
+//                    state = .Remote
+//                case .Local:
+//                    break
+//                }
+//                if let state = state {
+//                    let current: RadialProgressView
+//                    if let value = strongSelf.downloadingView {
+//                        current = value
+//                    } else {
+//                        current = RadialProgressView(theme: strongSelf.progressView.theme, twist: true, size: NSMakeSize(40, 40))
+//                        current.fetchControls = strongSelf.fetchControls
+//                        strongSelf.downloadingView = current
+//                     //   strongSelf.addSubview(current)
+//                        current.frame = strongSelf.progressView.frame
+//                        
+//                        if !approximateSynchronousValue && animated {
+//                            current.layer?.animateAlpha(from: 0.2, to: 1, duration: 0.3)
+//                        }
+//                    }
+//                    current.state = state
+//                } else if let download = strongSelf.downloadingView {
+//                    download.state = .Fetching(progress: 1.0, force: false)
+//                    strongSelf.downloadingView = nil
+//                    download.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.25, removeOnCompletion: false, completion: { [weak download] _ in
+//                        download?.removeFromSuperview()
+//                    })
+//                }
                 
                 if let parent = parent, let _ = parent.autoclearTimeout, parent.id.namespace == Namespaces.Message.Cloud, status == .Local, let parameters = parameters {
                     let current: SingleTimeVoiceBadgeView

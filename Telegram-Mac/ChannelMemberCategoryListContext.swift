@@ -276,9 +276,9 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             }
         }
         
-        self.headUpdateTimer?.invalidate()
-        self.headUpdateTimer = nil
-        self.checkUpdateHead()
+//        self.headUpdateTimer?.invalidate()
+//        self.headUpdateTimer = nil
+        //self.checkUpdateHead()
     }
     
     private func appendMembersAndFinishLoading(_ members: [RenderedChannelParticipant]) {

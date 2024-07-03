@@ -18,12 +18,14 @@ class PollResultStickItem: TableStickItem {
     let inset: NSEdgeInsets
     let collapse: (()->Void)?
     let _stableId: AnyHashable
-    init(_ initialSize:NSSize, stableId: AnyHashable, left: String, additionText: String, right: String, collapse: (()->Void)?, viewType: GeneralViewType) {
+    let context: AccountContext?
+    init(_ initialSize:NSSize, stableId: AnyHashable, left: NSAttributedString, context: AccountContext, additionText: String, right: String, collapse: (()->Void)?, viewType: GeneralViewType) {
         self.viewType = viewType
         self._stableId = stableId
+        self.context = context
         self.inset = NSEdgeInsets(left: 20, right: 20)
         self.collapse = collapse
-        self.leftLayout = TextViewLayout(.initialize(string: left, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
+        self.leftLayout = TextViewLayout(left, maximumNumberOfLines: 1, truncationType: .end)
         self.leftAdditionLayout = TextViewLayout(.initialize(string: additionText, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
 
         if let collapse = collapse {
@@ -58,6 +60,7 @@ class PollResultStickItem: TableStickItem {
         self.leftAdditionLayout = TextViewLayout(NSAttributedString())
         self.inset = NSEdgeInsets(left: 20, right: 20)
         self.collapse = nil
+        self.context = nil
         self._stableId = arc4random()
         super.init(initialSize)
     }
@@ -90,7 +93,7 @@ class PollResultStickItem: TableStickItem {
 
 private final class PollResultStickView : TableStickView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
-    private let textView = TextView()
+    private let textView = InteractiveTextView(frame: .zero)
     private let textAdditionView = TextView()
 
     private let rightView = TextView()
@@ -101,8 +104,7 @@ private final class PollResultStickView : TableStickView {
         containerView.addSubview(self.textView)
         containerView.addSubview(self.rightView)
         containerView.addSubview(self.textAdditionView)
-        self.textView.disableBackgroundDrawing = true
-        self.textView.isSelectable = false
+        self.textView.textView.isSelectable = false
         self.textView.userInteractionEnabled = false
         
         self.textAdditionView.disableBackgroundDrawing = true
@@ -155,7 +157,7 @@ private final class PollResultStickView : TableStickView {
         guard let item = item as? PollResultStickItem else {
             return
         }
-        self.textView.update(item.leftLayout)
+        self.textView.set(text: item.leftLayout, context: item.context)
         self.textAdditionView.update(item.leftAdditionLayout)
         self.rightView.update(item.rightLayout)
 

@@ -129,8 +129,8 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
 
 class ChatVoiceRowItem: ChatMediaItem {
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
         let isIncoming = object.message!.isIncoming(context.account, object.renderType == .bubble)
         

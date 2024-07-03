@@ -192,6 +192,16 @@ public func link(path:String?, ext:String) -> String? {
     return realPath
 }
 
+public func copyToTemp(path:String?, ext:String) -> String? {
+    var realPath:String? = path
+    if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
+        let new = NSTemporaryDirectory() + path.nsstring.lastPathComponent.nsstring.appendingPathExtension(ext)!
+        try? FileManager.default.copyItem(atPath: path, toPath: new)
+        realPath = new
+    }
+    return realPath
+}
+
 
 public func fs(_ path:String) -> Int32? {
     

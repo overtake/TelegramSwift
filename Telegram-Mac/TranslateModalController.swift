@@ -13,6 +13,8 @@ import SwiftSignalKit
 import Translate
 import ObjcUtils
 import Localization
+import TelegramCore
+import Postbox
 
 private final class Arguments {
     let context: AccountContext
@@ -32,9 +34,12 @@ private final class Arguments {
 
 private struct State : Equatable {
     let text: String
+    let textEntities: [MessageTextEntity]
+    
     var from: String?
     var to: String
     var translated: String?
+    var translatedEntities: [MessageTextEntity] = []
     var fromIsRevealed: Bool
     var toIsRevealed: Bool
 }
@@ -45,7 +50,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
   
     let from: String
@@ -67,7 +72,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }, clickable: true)))
     index += 1
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("original"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return TranslateTableRowItem(initialSize, stableId: stableId, text: state.text, revealed: state.fromIsRevealed, viewType: .singleItem, reveal: arguments.revealFrom)
+        return TranslateTableRowItem(initialSize, stableId: stableId, context: arguments.context, text: state.text, entities: state.textEntities, revealed: state.fromIsRevealed, viewType: .singleItem, reveal: arguments.revealFrom)
     }))
     index += 1
     
@@ -96,12 +101,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let text = state.translated {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("translated_\(state.to)"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return TranslateTableRowItem(initialSize, stableId: stableId, text: text, revealed: state.toIsRevealed, viewType: .singleItem, reveal: arguments.revealTo)
+            return TranslateTableRowItem(initialSize, stableId: stableId, context: arguments.context, text: text, entities: state.translatedEntities, revealed: state.toIsRevealed, viewType: .singleItem, reveal: arguments.revealTo)
         }))
         index += 1
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return GeneralLoadingRowItem.init(initialSize, stableId: stableId, viewType: .singleItem)
+            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .singleItem)
         }))
         index += 1
     }
@@ -113,29 +118,37 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     return entries
 }
-private func translate(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<(detect: String?, result: String), Translate.Error> {
-    var signals:[Signal<(detect: String?, result: String), Translate.Error>] = []
+private func translate(context: AccountContext, from: String?, to: String, blocks: [(String, [MessageTextEntity])]) -> Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> {
+    var signals:[Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error>] = []
     for block in blocks {
-        signals.append(context.engine.messages.translate(text: block, toLang: to) |> `catch` { _ in return .fail(.generic)} |> mapToSignal { value in
+        signals.append(context.engine.messages.translate(text: block.0, toLang: to, entities: block.1) |> `catch` { _ in return .fail(.generic)} |> mapToSignal { value in
             if let value = value {
-                return .single((detect: nil, result: value))
+                return .single((detect: nil, result: value.0, entities: value.1))
             } else {
-                return Translate.translateText(text: block, from: from, to: to)
+                return Translate.translateText(text: block.0, from: from, to: to) |> map {
+                    (detect: $0.detect, result: $0.result, entities: [])
+                }
             }
         })
     }
-    var signal: Signal<(detect: String?, result: String), Translate.Error> = .single((detect: nil, result: ""))
+    var signal: Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> = .single((detect: nil, result: "", entities: []))
     for current in signals {
         signal = signal |> mapToSignal { result in
-            return current |> delay(2.0, queue: .mainQueue()) |> map {
-                return (detect: $0.detect, result.result + $0.result)
+            return current |> delay(2.0, queue: .mainQueue()) |> map { value in
+                var entities: [MessageTextEntity] = []
+                for entity in value.entities {
+                    var current = entity
+                    current.range = entity.range.lowerBound + result.result.length ..< entity.range.upperBound + result.result.length
+                    entities.append(current)
+                }
+                return (detect: value.detect, result.result + value.result, entities: result.entities + entities)
             }
         }
     }
     
     return signal
 }
-func TranslateModalController(context: AccountContext, from: String?, toLang: String, text: String) -> InputDataModalController {
+func TranslateModalController(context: AccountContext, from: String?, toLang: String, text: String, entities: [MessageTextEntity] = [], canBreak: Bool = true) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let disposable = MetaDisposable()
@@ -143,7 +156,7 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
     
     
     
-    let initialState = State(text: text, from: from, to: toLang, fromIsRevealed: false, toIsRevealed: true)
+    let initialState = State(text: text, textEntities: entities, from: from, to: toLang, fromIsRevealed: !canBreak, toIsRevealed: true)
     
     var close:(()->Void)? = nil
     
@@ -153,14 +166,22 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
         statePromise.set(stateValue.modify (f))
     }
     
-   let blocks = cut_long_message(text, 1024)
+    let input = ChatTextInputState(inputText: text, selectionRange: 0..<0, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: entities), associatedMedia: [:]))
     
+    var inset: Int = 0
+    let blocks:[(String, [MessageTextEntity])] = cut_long_message(text, 1024).compactMap { value in
+        let text = input.subInputState(from: NSMakeRange(inset, value.length))
+        inset += value.length
+        return (value, text.messageTextEntities())
+    }
+
     
     let request:()->Void = {
         disposable.set(translate(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
             updateState { current in
                 var current = current
                 current.translated = result.result
+                current.translatedEntities = result.entities
                 if current.from == nil {
                     current.from = result.detect
                 }

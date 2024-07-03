@@ -588,6 +588,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var isMutedValue: PresentationGroupCallMuteAction = .muted(isPushToTalkActive: false) {
         didSet {
             if self.isMutedValue != oldValue {
+                var bp = 0
+                bp += 1
             }
         }
     }
@@ -1192,7 +1194,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false, logPath: allocateCallLogPath(account: self.account))
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false, logPath: allocateCallLogPath(account: self.account), onMutedSpeechActivityDetected: { _ in })
                 
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
@@ -1676,27 +1678,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 strongSelf.stateValue.raisedHand = participant.hasRaiseHand
                             }
 
-                            if let muteState = filteredMuteState {
-                                if muteState.canUnmute {
-                                    switch strongSelf.isMutedValue {
-                                    case let .muted(isPushToTalkActive):
-                                        if !isPushToTalkActive {
-                                            strongSelf.genericCallContext?.setIsMuted(true)
-                                        }
-                                    case .unmuted:
-                                        strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                        strongSelf.genericCallContext?.setIsMuted(true)
-                                    }
-                                } else {
-                                    strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                    strongSelf.genericCallContext?.setIsMuted(true)
-                                }
-                                strongSelf.stateValue.muteState = muteState
-                            } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
-                                strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
-                                strongSelf.genericCallContext?.setIsMuted(true)
-                            }
+                            
                         } else {
                             if let ssrc = participant.ssrc {
                                 if let volume = participant.volume {
@@ -2298,6 +2280,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             } else {
                 self.stateValue.muteState = nil
             }
+            
             if !isEffectivelyMuted {
                 if let id = self.devicesContext.currentMicroId {
                     self.genericCallContext?.switchAudioInput(id)
@@ -2381,7 +2364,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             enableNoiseSuppression: false,
             disableAudioInput: true,
             preferX264: false,
-            logPath: ""
+            logPath: "",
+            onMutedSpeechActivityDetected: { _ in }
         )
 
         self.screencastCallContext = screencastCallContext

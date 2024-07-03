@@ -34,6 +34,7 @@ private enum Images {
     static let triangle = NSImage(named: "Confetti_Triangle")!
     static let circle = NSImage(named: "Confetti_Circle")!
     static let swirl = NSImage(named: "Confetti_Spiral")!
+    static let premium = NSImage(resource: .iconPeerPremium)
 }
 
 private let colors:[NSColor] = [
@@ -49,6 +50,14 @@ private let images:[NSImage] = [
     Images.circle,
     Images.swirl
 ]
+
+private let starImages:[NSImage] = [
+    Images.box,
+    Images.premium,
+    Images.circle,
+    Images.premium
+]
+
 
 private let velocities:[Int] = [
     150,
@@ -77,46 +86,21 @@ private func getNextColor(i:Int) -> CGColor {
     }
 }
 
-private func getNextImage(i:Int) -> NSImage {
-    return images[i % 4]
+private func getNextImage(i:Int, stars: Bool = false) -> NSImage {
+    if stars {
+        return images[i % 4]
+    } else {
+        return starImages[i % 4]
+    }
 }
 
 
-func PlayConfetti(for window: Window, playEffect: Bool = false) {
+func PlayConfetti(for window: Window, playEffect: Bool = false, stars: Bool = false) {
     let contentView = window.contentView!
     
-    contentView.addSubview(ConfettiView(frame: contentView.bounds))
+    contentView.addSubview(ConfettiView(frame: contentView.bounds, stars: stars))
     
 }
-private func generateEmitterCells(left: Bool) -> [CAEmitterCell] {
-    var cells:[CAEmitterCell] = [CAEmitterCell]()
-    for index in 0 ..< 16 {
-        let cell = CAEmitterCell()
-        cell.birthRate = 20
-        cell.lifetime = 2.0
-        cell.lifetimeRange = 0
-        cell.velocity = CGFloat(getRandomVelocity()) * 1.5
-        cell.velocityRange = -CGFloat(arc4random() % 300)
-        
-        cell.alphaSpeed = -1.0/4.0
-        cell.alphaRange = cell.lifetime * cell.alphaSpeed
-        
-
-        cell.emissionLongitude = left ? -60 * (.pi / 180) : CGFloat(-Double.pi + 1.0)
-        cell.emissionRange = 30 * (.pi / 180)
-        cell.yAcceleration = max(400, CGFloat(arc4random() % 1000))
-        cell.spin = max(3.5, CGFloat(arc4random() % 14))
-        cell.spinRange = 10
-        cell.color = getNextColor(i: index)
-        cell.contents = getNextImage(i: index).cgImage(forProposedRect: nil, context: nil, hints: nil)
-        cell.scaleRange = 0.25
-        cell.scale = 0.1
-        cells.append(cell)
-    }
-    return cells
-}
-
-
 
 
 private struct Vector2 {
@@ -165,7 +149,7 @@ final class ConfettiView: View {
     private var localTime: Float = 0.0
     
     
-    required init(frame: CGRect) {
+    required init(frame: CGRect, stars: Bool) {
         super.init(frame: frame)
         
         self.isEventLess = true
@@ -181,7 +165,11 @@ final class ConfettiView: View {
         for imageType in 0 ..< 2 {
             for color in colors {
                 if imageType == 0 {
-                    images.append((generateFilledCircleImage(diameter: imageSize.width, color: color), imageSize))
+                    if stars {
+                        images.append((NSImage(resource: .iconPeerPremium).precomposed(color), NSMakeSize(12, 12)))
+                    } else {
+                        images.append((generateFilledCircleImage(diameter: imageSize.width, color: color), imageSize))
+                    }
                 } else {
                     let spriteSize = CGSize(width: 2.0, height: 6.0)
                     images.append((generateImage(spriteSize, opaque: false, rotatedContext: { size, context in
@@ -248,6 +236,10 @@ final class ConfettiView: View {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
     
     private func step() {

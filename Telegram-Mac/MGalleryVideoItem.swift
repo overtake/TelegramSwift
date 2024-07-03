@@ -39,7 +39,7 @@ class MGalleryVideoItem: MGalleryItem {
         } |> deliverOnMainQueue
     }
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
-        controller = SVideoController(postbox: context.account.postbox, reference: entry.fileReference(entry.file!))
+        controller = SVideoController(postbox: context.account.postbox, reference: entry.fileReference(entry.file!), isProtected: entry.isProtected)
         super.init(context, entry, pagerSize)
         
         controller.togglePictureInPictureImpl = { [weak self] enter, control in

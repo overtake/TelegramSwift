@@ -3398,6 +3398,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsStars: CGImage {
+      if let image = cached.with({ $0["settingsStars"] }) {
+          return image
+      } else {
+          let image = _settingsStars()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStars"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var generalCheck: CGImage {
       if let image = cached.with({ $0["generalCheck"] }) {
           return image
@@ -4893,6 +4906,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var peerInfoRecentActions: CGImage {
+      if let image = cached.with({ $0["peerInfoRecentActions"] }) {
+          return image
+      } else {
+          let image = _peerInfoRecentActions()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoRecentActions"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var peerInfoPermissions: CGImage {
       if let image = cached.with({ $0["peerInfoPermissions"] }) {
           return image
@@ -4927,6 +4953,32 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["peerInfoMembers"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var peerInfoStarsBalance: CGImage {
+      if let image = cached.with({ $0["peerInfoStarsBalance"] }) {
+          return image
+      } else {
+          let image = _peerInfoStarsBalance()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoStarsBalance"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var peerInfoBotUsername: CGImage {
+      if let image = cached.with({ $0["peerInfoBotUsername"] }) {
+          return image
+      } else {
+          let image = _peerInfoBotUsername()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoBotUsername"] = image
               return current
           }
           return image
@@ -7233,6 +7285,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var search_filter_hashtag: CGImage {
+      if let image = cached.with({ $0["search_filter_hashtag"] }) {
+          return image
+      } else {
+          let image = _search_filter_hashtag()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_hashtag"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var search_hashtag_chevron: CGImage {
+      if let image = cached.with({ $0["search_hashtag_chevron"] }) {
+          return image
+      } else {
+          let image = _search_hashtag_chevron()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_hashtag_chevron"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_reply_count_bubble_incoming: CGImage {
       if let image = cached.with({ $0["chat_reply_count_bubble_incoming"] }) {
           return image
@@ -8060,6 +8138,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["audioplayer_speed_x2"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var audioplayer_list: CGImage {
+      if let image = cached.with({ $0["audioplayer_list"] }) {
+          return image
+      } else {
+          let image = _audioplayer_list()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_list"] = image
               return current
           }
           return image
@@ -9625,6 +9716,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var msg_emoji_premium: CGImage {
+      if let image = cached.with({ $0["msg_emoji_premium"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_premium()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_premium"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var installed_stickers_archive: CGImage {
       if let image = cached.with({ $0["installed_stickers_archive"] }) {
           return image
@@ -10366,6 +10470,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var preview_text_down: CGImage {
+      if let image = cached.with({ $0["preview_text_down"] }) {
+          return image
+      } else {
+          let image = _preview_text_down()
+          _ = cached.modify { current in 
+              var current = current
+              current["preview_text_down"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var preview_text_up: CGImage {
+      if let image = cached.with({ $0["preview_text_up"] }) {
+          return image
+      } else {
+          let image = _preview_text_up()
+          _ = cached.modify { current in 
+              var current = current
+              current["preview_text_up"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10628,6 +10758,7 @@ public final class TelegramIconsTheme {
   private let _settingsProfile: ()->CGImage
   private let _settingsBusiness: ()->CGImage
   private let _settingsBusinessActive: ()->CGImage
+  private let _settingsStars: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
   private let _settingsLogout: ()->CGImage
@@ -10743,9 +10874,12 @@ public final class TelegramIconsTheme {
   private let _chatPollVoteUnselectedBubble_incoming: ()->CGImage
   private let _chatPollVoteUnselectedBubble_outgoing: ()->CGImage
   private let _peerInfoAdmins: ()->CGImage
+  private let _peerInfoRecentActions: ()->CGImage
   private let _peerInfoPermissions: ()->CGImage
   private let _peerInfoBanned: ()->CGImage
   private let _peerInfoMembers: ()->CGImage
+  private let _peerInfoStarsBalance: ()->CGImage
+  private let _peerInfoBotUsername: ()->CGImage
   private let _chatUndoAction: ()->CGImage
   private let _appUpdate: ()->CGImage
   private let _inlineVideoSoundOff: ()->CGImage
@@ -10923,6 +11057,8 @@ public final class TelegramIconsTheme {
   private let _search_filter_downloads: ()->CGImage
   private let _search_filter_add_peer: ()->CGImage
   private let _search_filter_add_peer_active: ()->CGImage
+  private let _search_filter_hashtag: ()->CGImage
+  private let _search_hashtag_chevron: ()->CGImage
   private let _chat_reply_count_bubble_incoming: ()->CGImage
   private let _chat_reply_count_bubble_outgoing: ()->CGImage
   private let _chat_reply_count: ()->CGImage
@@ -10987,6 +11123,7 @@ public final class TelegramIconsTheme {
   private let _audioplayer_volume_off: ()->CGImage
   private let _audioplayer_speed_x1: ()->CGImage
   private let _audioplayer_speed_x2: ()->CGImage
+  private let _audioplayer_list: ()->CGImage
   private let _chat_info_voice_chat: ()->CGImage
   private let _chat_info_create_group: ()->CGImage
   private let _chat_info_change_colors: ()->CGImage
@@ -11107,6 +11244,7 @@ public final class TelegramIconsTheme {
   private let _msg_emoji_vacation: ()->CGImage
   private let _msg_emoji_what: ()->CGImage
   private let _msg_emoji_work: ()->CGImage
+  private let _msg_emoji_premium: ()->CGImage
   private let _installed_stickers_archive: ()->CGImage
   private let _installed_stickers_custom_emoji: ()->CGImage
   private let _installed_stickers_dynamic_order: ()->CGImage
@@ -11164,6 +11302,8 @@ public final class TelegramIconsTheme {
   private let _premium_required_forward: ()->CGImage
   private let _create_new_message_general: ()->CGImage
   private let _bot_manager_settings: ()->CGImage
+  private let _preview_text_down: ()->CGImage
+  private let _preview_text_up: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11427,6 +11567,7 @@ public final class TelegramIconsTheme {
       settingsProfile: @escaping()->CGImage,
       settingsBusiness: @escaping()->CGImage,
       settingsBusinessActive: @escaping()->CGImage,
+      settingsStars: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
       settingsLogout: @escaping()->CGImage,
@@ -11542,9 +11683,12 @@ public final class TelegramIconsTheme {
       chatPollVoteUnselectedBubble_incoming: @escaping()->CGImage,
       chatPollVoteUnselectedBubble_outgoing: @escaping()->CGImage,
       peerInfoAdmins: @escaping()->CGImage,
+      peerInfoRecentActions: @escaping()->CGImage,
       peerInfoPermissions: @escaping()->CGImage,
       peerInfoBanned: @escaping()->CGImage,
       peerInfoMembers: @escaping()->CGImage,
+      peerInfoStarsBalance: @escaping()->CGImage,
+      peerInfoBotUsername: @escaping()->CGImage,
       chatUndoAction: @escaping()->CGImage,
       appUpdate: @escaping()->CGImage,
       inlineVideoSoundOff: @escaping()->CGImage,
@@ -11722,6 +11866,8 @@ public final class TelegramIconsTheme {
       search_filter_downloads: @escaping()->CGImage,
       search_filter_add_peer: @escaping()->CGImage,
       search_filter_add_peer_active: @escaping()->CGImage,
+      search_filter_hashtag: @escaping()->CGImage,
+      search_hashtag_chevron: @escaping()->CGImage,
       chat_reply_count_bubble_incoming: @escaping()->CGImage,
       chat_reply_count_bubble_outgoing: @escaping()->CGImage,
       chat_reply_count: @escaping()->CGImage,
@@ -11786,6 +11932,7 @@ public final class TelegramIconsTheme {
       audioplayer_volume_off: @escaping()->CGImage,
       audioplayer_speed_x1: @escaping()->CGImage,
       audioplayer_speed_x2: @escaping()->CGImage,
+      audioplayer_list: @escaping()->CGImage,
       chat_info_voice_chat: @escaping()->CGImage,
       chat_info_create_group: @escaping()->CGImage,
       chat_info_change_colors: @escaping()->CGImage,
@@ -11906,6 +12053,7 @@ public final class TelegramIconsTheme {
       msg_emoji_vacation: @escaping()->CGImage,
       msg_emoji_what: @escaping()->CGImage,
       msg_emoji_work: @escaping()->CGImage,
+      msg_emoji_premium: @escaping()->CGImage,
       installed_stickers_archive: @escaping()->CGImage,
       installed_stickers_custom_emoji: @escaping()->CGImage,
       installed_stickers_dynamic_order: @escaping()->CGImage,
@@ -11962,7 +12110,9 @@ public final class TelegramIconsTheme {
       chat_my_notes: @escaping()->CGImage,
       premium_required_forward: @escaping()->CGImage,
       create_new_message_general: @escaping()->CGImage,
-      bot_manager_settings: @escaping()->CGImage
+      bot_manager_settings: @escaping()->CGImage,
+      preview_text_down: @escaping()->CGImage,
+      preview_text_up: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12225,6 +12375,7 @@ public final class TelegramIconsTheme {
       self._settingsProfile = settingsProfile
       self._settingsBusiness = settingsBusiness
       self._settingsBusinessActive = settingsBusinessActive
+      self._settingsStars = settingsStars
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
       self._settingsLogout = settingsLogout
@@ -12340,9 +12491,12 @@ public final class TelegramIconsTheme {
       self._chatPollVoteUnselectedBubble_incoming = chatPollVoteUnselectedBubble_incoming
       self._chatPollVoteUnselectedBubble_outgoing = chatPollVoteUnselectedBubble_outgoing
       self._peerInfoAdmins = peerInfoAdmins
+      self._peerInfoRecentActions = peerInfoRecentActions
       self._peerInfoPermissions = peerInfoPermissions
       self._peerInfoBanned = peerInfoBanned
       self._peerInfoMembers = peerInfoMembers
+      self._peerInfoStarsBalance = peerInfoStarsBalance
+      self._peerInfoBotUsername = peerInfoBotUsername
       self._chatUndoAction = chatUndoAction
       self._appUpdate = appUpdate
       self._inlineVideoSoundOff = inlineVideoSoundOff
@@ -12520,6 +12674,8 @@ public final class TelegramIconsTheme {
       self._search_filter_downloads = search_filter_downloads
       self._search_filter_add_peer = search_filter_add_peer
       self._search_filter_add_peer_active = search_filter_add_peer_active
+      self._search_filter_hashtag = search_filter_hashtag
+      self._search_hashtag_chevron = search_hashtag_chevron
       self._chat_reply_count_bubble_incoming = chat_reply_count_bubble_incoming
       self._chat_reply_count_bubble_outgoing = chat_reply_count_bubble_outgoing
       self._chat_reply_count = chat_reply_count
@@ -12584,6 +12740,7 @@ public final class TelegramIconsTheme {
       self._audioplayer_volume_off = audioplayer_volume_off
       self._audioplayer_speed_x1 = audioplayer_speed_x1
       self._audioplayer_speed_x2 = audioplayer_speed_x2
+      self._audioplayer_list = audioplayer_list
       self._chat_info_voice_chat = chat_info_voice_chat
       self._chat_info_create_group = chat_info_create_group
       self._chat_info_change_colors = chat_info_change_colors
@@ -12704,6 +12861,7 @@ public final class TelegramIconsTheme {
       self._msg_emoji_vacation = msg_emoji_vacation
       self._msg_emoji_what = msg_emoji_what
       self._msg_emoji_work = msg_emoji_work
+      self._msg_emoji_premium = msg_emoji_premium
       self._installed_stickers_archive = installed_stickers_archive
       self._installed_stickers_custom_emoji = installed_stickers_custom_emoji
       self._installed_stickers_dynamic_order = installed_stickers_dynamic_order
@@ -12761,5 +12919,7 @@ public final class TelegramIconsTheme {
       self._premium_required_forward = premium_required_forward
       self._create_new_message_general = create_new_message_general
       self._bot_manager_settings = bot_manager_settings
+      self._preview_text_down = preview_text_down
+      self._preview_text_up = preview_text_up
   }
 }

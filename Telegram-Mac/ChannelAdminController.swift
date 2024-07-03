@@ -516,7 +516,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                             canTransfer = true
                         }
 
-                        if channel.isChannel && canTransfer {
+                        if (channel.isChannel || channel.isSupergroup) && canTransfer {
                             entries.append(.section(sectionId, 20))
                             sectionId += 1
                             entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? strings().channelAdminTransferOwnershipChannel : strings().channelAdminTransferOwnershipGroup, .singleItem))

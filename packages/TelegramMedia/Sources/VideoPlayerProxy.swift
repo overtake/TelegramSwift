@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSignalKit
 import AVFoundation
-import MediaPlayer
+import TelegramMediaPlayer
 
 private final class VideoPlayerProxyContext {
     private let queue: Queue

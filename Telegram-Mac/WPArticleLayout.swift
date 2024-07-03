@@ -63,6 +63,8 @@ class WPArticleLayout: WPLayout {
                             content = content.withUpdatedFile(file)
                         }
                     }
+                case .stickerPack:
+                    break
                 case .unsupported:
                     break
                 }
@@ -127,6 +129,15 @@ class WPArticleLayout: WPLayout {
         }
        
         
+        for attr in content.attributes {
+            switch attr {
+            case .stickerPack:
+                imageSize = NSMakeSize(50, 50)
+            default:
+                break
+            }
+        }
+        
         if let file = content.file, groupLayout == nil {
             if let dimensions = file.dimensions?.size {
                 imageSize = dimensions
@@ -136,6 +147,8 @@ class WPArticleLayout: WPLayout {
         } else if isTheme {
             imageSize = NSMakeSize(260, 260)
         }
+        
+        
         if let wallpaper = wallpaper {
             switch wallpaper {
             case let .wallpaper(_, _, preview):
@@ -170,6 +183,15 @@ class WPArticleLayout: WPLayout {
     
     var isFullImageSize: Bool {
         
+        
+        for attr in content.attributes {
+            switch attr {
+            case .stickerPack:
+                return false
+            default:
+                break
+            }
+        }
         
         if let attr = parent.webpagePreviewAttribute {
             if let forceLargeMedia = attr.forceLargeMedia {

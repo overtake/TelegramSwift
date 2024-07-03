@@ -30,7 +30,7 @@ final class GalleryRecognition {
         }
         if #available(macOS 10.15, *) {
             let postbox = item.context.account.postbox
-            let mediaId = item.entry.message?.anyMedia?.id
+            let mediaId = item.entry.mediaId
             let image: Signal<TextRecognizing.Result?, TextRecognizing.Error> = combineLatest(item.image.get(), item.magnify.get(), item.appearValue) |> castError(TextRecognizing.Error.self) |> mapToSignal { image, magnify, visible in
                 if magnify == 1, visible {
                     switch image.value {

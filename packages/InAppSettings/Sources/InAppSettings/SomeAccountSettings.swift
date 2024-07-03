@@ -14,13 +14,19 @@ import TelegramCore
 public struct SomeAccountSettings: Codable, Equatable {
     public var lastChatReindexTime: Int32?
     public var appVersion: String?
+    public var focusIntentStatusFallback: Int64?
+    public var focusIntentStatusActive: Int64?
+    public var focusIntentStatusEnabled: Bool
     public static var defaultSettings: SomeAccountSettings {
-        return SomeAccountSettings(lastChatReindexTime: nil, appVersion: nil)
+        return SomeAccountSettings(lastChatReindexTime: nil, appVersion: nil, focusIntentStatusFallback: nil, focusIntentStatusActive: nil, focusIntentStatusEnabled: false)
     }
     
-    public init(lastChatReindexTime: Int32?, appVersion: String?) {
+    public init(lastChatReindexTime: Int32?, appVersion: String?, focusIntentStatusFallback: Int64?, focusIntentStatusActive: Int64?, focusIntentStatusEnabled: Bool) {
         self.lastChatReindexTime = lastChatReindexTime
         self.appVersion = appVersion
+        self.focusIntentStatusFallback = focusIntentStatusFallback
+        self.focusIntentStatusActive = focusIntentStatusActive
+        self.focusIntentStatusEnabled = focusIntentStatusEnabled
     }
 
 }

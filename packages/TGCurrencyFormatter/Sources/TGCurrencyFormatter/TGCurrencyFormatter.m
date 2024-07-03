@@ -97,6 +97,8 @@
         }
         
         return result;
+    } else if ([currency isEqualToString:@"XTR"]) {
+        return [NSString stringWithFormat:@"XTR%lld", amount];
     } else {
         NSAssert(false, @"Unknown currency");
         NSNumberFormatter *_currencyFormatter = [[NSNumberFormatter alloc] init];

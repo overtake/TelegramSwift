@@ -76,17 +76,17 @@ final class ChatGiveawayRowItem : ChatRowItem {
     
     private(set) var channels: [Channel]
     
-    let wpPresentation: WPLayoutPresentation
+    let givePresentation: WPLayoutPresentation
 
     
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
         
-        let wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
-        self.wpPresentation = wpPresentation
+        let givePresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
+        self.givePresentation = givePresentation
 
         
         let media = object.message!.media.first! as! TelegramMediaGiveaway
@@ -101,33 +101,33 @@ final class ChatGiveawayRowItem : ChatRowItem {
         }
         
         let header_attr = NSMutableAttributedString()
-        _ = header_attr.append(string: strings().chatGiveawayMessagePrizeTitle, color: wpPresentation.text, font: .medium(.text))
+        _ = header_attr.append(string: strings().chatGiveawayMessagePrizeTitle, color: givePresentation.text, font: .medium(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
         
         let prizes_info = NSMutableAttributedString()
-        _ = prizes_info.append(string: strings().chatGiveawayMessageSubscriptionsCountable(Int(media.quantity)), color: wpPresentation.text, font: .normal(.text))
-        _ = prizes_info.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = prizes_info.append(string: strings().chatGiveawayMessageMonthsCountable(Int(media.months)), color: wpPresentation.text, font: .normal(.text))
+        _ = prizes_info.append(string: strings().chatGiveawayMessageSubscriptionsCountable(Int(media.quantity)), color: givePresentation.text, font: .normal(.text))
+        _ = prizes_info.append(string: "\n", color: givePresentation.text, font: .normal(.text))
+        _ = prizes_info.append(string: strings().chatGiveawayMessageMonthsCountable(Int(media.months)), color: givePresentation.text, font: .normal(.text))
         prizes_info.detectBoldColorInString(with: .medium(.text))
         self.prizesInfo = .init(prizes_info, alignment: .center, alwaysStaticItems: true)
         
         
         let participants_attr = NSMutableAttributedString()
         if media.flags.contains(.onlyNewSubscribers) {
-            _ = participants_attr.append(string: strings().chatGiveawayMessageParticipantsNew, color: wpPresentation.text, font: .normal(.text))
+            _ = participants_attr.append(string: strings().chatGiveawayMessageParticipantsNew, color: givePresentation.text, font: .normal(.text))
         } else {
-            _ = participants_attr.append(string: strings().chatGiveawayMessageParticipants, color: wpPresentation.text, font: .normal(.text))
+            _ = participants_attr.append(string: strings().chatGiveawayMessageParticipants, color: givePresentation.text, font: .normal(.text))
         }
         participants_attr.detectBoldColorInString(with: .medium(.text))
         self.participantsText = .init(participants_attr, alignment: .center, alwaysStaticItems: true)
         
         
         let winners_attr = NSMutableAttributedString()
-        _ = winners_attr.append(string: strings().chatGiveawayMessageDateTitle, color: wpPresentation.text, font: .medium(.text))
-        _ = winners_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = winners_attr.append(string: "\(stringForFullDate(timestamp: media.untilDate))", color: wpPresentation.text, font: .normal(.text))
+        _ = winners_attr.append(string: strings().chatGiveawayMessageDateTitle, color: givePresentation.text, font: .medium(.text))
+        _ = winners_attr.append(string: "\n", color: givePresentation.text, font: .normal(.text))
+        _ = winners_attr.append(string: "\(stringForFullDate(timestamp: media.untilDate))", color: givePresentation.text, font: .normal(.text))
         self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
         
         let countriesText: String
@@ -161,7 +161,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         if !countriesText.isEmpty {
             let country_attr = NSMutableAttributedString()
-            _ = country_attr.append(string: countriesText, color: wpPresentation.text, font: .normal(.text))
+            _ = country_attr.append(string: countriesText, color: givePresentation.text, font: .normal(.text))
             self.countryText = .init(country_attr, alignment: .center, alwaysStaticItems: true)
         } else {
             self.countryText = nil
@@ -181,7 +181,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
             }
         }
         self.channels = channels
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     }
     override var isForceRightLine: Bool {
         return true
@@ -697,14 +697,14 @@ private final class ChatGiveawayRowView: ChatRowView {
         
         for (i, channel) in item.channels.enumerated() {
             let view = channels.subviews[i] as! ChannelView
-            view.update(channel, item: item, presentation: item.wpPresentation)
+            view.update(channel, item: item, presentation: item.givePresentation)
             view.frame = channel.rect
         }
         
         item.badge.view?.needsDisplay = true
         action.set(font: .medium(.text), for: .Normal)
-        action.set(color: item.wpPresentation.activity.main, for: .Normal)
-        action.set(background: item.wpPresentation.activity.main.withAlphaComponent(0.1), for: .Normal)
+        action.set(color: item.givePresentation.activity.main, for: .Normal)
+        action.set(background: item.givePresentation.activity.main.withAlphaComponent(0.1), for: .Normal)
         action.set(text: strings().chatMessageGiveawayLearnMore, for: .Normal)
         action.layer?.cornerRadius = .cornerRadius
         action.scaleOnClick = true

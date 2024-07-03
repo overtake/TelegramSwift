@@ -15,7 +15,7 @@ import Postbox
 
 private enum Entry : TableItemListNodeEntry {
     case headerText(index: MessageIndex, stableId: MessageIndex, text: String, viewType: GeneralViewType)
-    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType)
+    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: Set<Int32>, rowCount: Int, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
     case emptySelf(index: MessageIndex, viewType: GeneralViewType)
@@ -27,13 +27,34 @@ private enum Entry : TableItemListNodeEntry {
         switch self {
         case let .headerText(_, stableId, text, viewType):
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: viewType, text: text, font: .normal(.text))
-        case let .month(_, stableId, peerId, peerReference, items, selected, viewType):
-            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
+        case let .month(_, stableId, peerId, peerReference, items, selected, pinnedIds, rowCount, viewType):
+            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
                 if selected == nil, arguments.isMy {
+                   
+                    if !story.isPinned {
+                        items.append(ContextMenuItem(strings().storyMediaUnarchive, handler: { [weak arguments] in
+                            arguments?.toggleStory(story)
+                        }, itemImage: MenuAnimation.menu_save_to_profile.value))
+                    } else {
+                        items.append(ContextMenuItem(strings().storyMediaArchive, handler: { [weak arguments] in
+                            arguments?.toggleStory(story)
+                        }, itemImage: MenuAnimation.menu_archive.value))
+                    }
+                    
+                    items.append(ContextMenuItem(pinnedIds.contains(story.id) ? strings().messageContextUnpin : strings().messageContextPin, handler: { [weak arguments] in
+                        arguments?.togglePinned(story)
+                    }, itemImage: pinnedIds.contains(story.id) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
+                    
                     items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak arguments] in
                         arguments?.toggleSelected(.init(peerId: peerId, id: story.id))
                     }, itemImage: MenuAnimation.menu_check_selected.value))
+                    
+                    items.append(ContextSeparatorItem())
+                    
+                    items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak arguments] in
+                        arguments?.deleteStory(story)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 return items
             })
@@ -48,7 +69,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var stableId: MessageIndex {
         switch self {
-        case let .month(_, stableId, _, _, _, _, _):
+        case let .month(_, stableId, _, _, _, _, _, _, _):
             return stableId
         default:
             return self.index
@@ -57,7 +78,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _, _, _, _, _):
+        case let .month(index, _, _, _, _, _, _, _, _):
             return index
         case let .headerText(index, _, _, _):
             return index
@@ -79,9 +100,13 @@ private final class Arguments {
     let openStory:(StoryInitialIndex?)->Void
     let toggleSelected:(StoryId)->Void
     let showArchive:()->Void
-    let processSelected:()->Void
+    let archiveSelected:()->Void
     let toggleStory: (EngineStoryItem)->Void
-    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void, processSelected:@escaping()->Void, toggleStory: @escaping(EngineStoryItem)->Void) {
+    let deleteStory:(EngineStoryItem)->Void
+    let togglePinned:(EngineStoryItem)->Void
+    let deleteSelected:()->Void
+    let togglePinSelected:()->Void
+    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void, archiveSelected:@escaping()->Void, toggleStory: @escaping(EngineStoryItem)->Void, deleteStory:@escaping(EngineStoryItem)->Void, deleteSelected:@escaping()->Void, togglePinned:@escaping(EngineStoryItem)->Void, togglePinSelected:@escaping()->Void) {
         self.context = context
         self.standalone = standalone
         self.isArchive = isArchive
@@ -89,8 +114,12 @@ private final class Arguments {
         self.openStory = openStory
         self.showArchive = showArchive
         self.toggleSelected = toggleSelected
-        self.processSelected = processSelected
+        self.archiveSelected = archiveSelected
         self.toggleStory = toggleStory
+        self.deleteStory = deleteStory
+        self.deleteSelected = deleteSelected
+        self.togglePinned = togglePinned
+        self.togglePinSelected = togglePinSelected
     }
 }
 
@@ -111,56 +140,14 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     let standalone = arguments.standalone
 
     let selected = state.selected
+    
+    let perRowCount = state.perRowCount
 
     if let state = state.state, !state.items.isEmpty, let peerReference = state.peerReference {
-        let timeDifference = Int32(arguments.context.timeDifference)
-        var temp:[EngineStoryItem] = []
-        var items = state.items.uniqueElements
-        for i in 0 ..< items.count {
-
-            let item = items[i]
-            let peerId = peerReference.id
-            temp.append(item)
-            let next = i < items.count - 1 ? items[i + 1] : nil
-            if let nextItem = next {
-                let dateId = mediaDateId(for: item.timestamp - timeDifference)
-                let nextDateId = mediaDateId(for: nextItem.timestamp - timeDifference)
-                if dateId != nextDateId {
-                    let index = MessageIndex(id: MessageId(peerId: peerId, namespace: 0, id: 0), timestamp: Int32(dateId))
-                    var viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-                    if !entries.isEmpty {
-                        entries.append(.section(index: index.peerLocalSuccessor()))
-                        entries.append(.date(index: index))
-                    } else {
-                        viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-                    }
-                    entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, selected: selected, viewType: viewType))
-                    temp.removeAll()
-                }
-            } else {
-                let dateId = mediaDateId(for: item.timestamp - timeDifference)
-                let index = MessageIndex(id: MessageId(peerId: peerId, namespace: 0, id: 0), timestamp: Int32(dateId))
-
-                if !entries.isEmpty {
-                    switch entries[entries.count - 1] {
-                    case let .month(prevIndex, stableId, peerId, peerReference, items, _, viewType):
-                        let prevDateId = mediaDateId(for: prevIndex.timestamp)
-                        if prevDateId != dateId {
-                            entries.append(.section(index: index.peerLocalSuccessor()))
-                            entries.append(.date(index: index))
-                            entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, selected: selected, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
-                        } else {
-                            entries[entries.count - 1] = .month(index: prevIndex, stableId: stableId, peerId: peerId, peerReference: peerReference, items: items + temp, selected: selected, viewType: viewType)
-                        }
-                    default:
-                        assertionFailure()
-                    }
-                } else {
-                    entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, selected: selected, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
-
-                }
-            }
-        }
+        let items = state.items.uniqueElements
+        let peerId = peerReference.id
+        let viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
+        entries.append(.month(index: MessageIndex.absoluteUpperBound(), stableId: MessageIndex.absoluteUpperBound(), peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: state.pinnedIds, rowCount: perRowCount, viewType: viewType))
 
         if standalone {
             var index = MessageIndex.absoluteUpperBound()
@@ -194,18 +181,18 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     var j: Int = 0
     for entry in entries {
         switch entry {
-        case let .month(index, _, peerId, peerReference, items, _, _):
+        case let .month(index, _, peerId, peerReference, items, _, pinnedIds, rowCount, _):
             let chunks = items.chunks(state.perRowCount)
             for (i, chunk) in chunks.enumerated() {
                 let item = chunk[0]
-                let stableId = MessageIndex(id: MessageId(peerId: index.id.peerId, namespace: 0, id: item.id), timestamp: item.timestamp)
+                let stableId = MessageIndex(id: MessageId(peerId: index.id.peerId, namespace: 0, id: item.storyItem.id), timestamp: item.storyItem.timestamp)
 
                 var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
                 if i == 0 && j == 0, !standalone {
                     viewType = chunks.count > 1 ? .innerItem : .lastItem
                 }
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, viewType: updatedViewType))
+                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: updatedViewType))
             }
             j += 1
         case .date:
@@ -238,31 +225,75 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<Entry>], right: 
 final class StoryMediaView : View {
     
     private class Panel : View {
-        private let button = TextButton()
+        private var pin = TextButton()
+        private var archive = TextButton()
+        private var delete = TextButton()
+        
+        private var arguments: Arguments?
+        
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            addSubview(button)
-            self.button.autohighlight = false
-            self.button.scaleOnClick = true
+            addSubview(pin)
+            addSubview(archive)
+            addSubview(delete)
+
+            self.pin.autohighlight = false
+            self.pin.scaleOnClick = true
+            
+            self.archive.autohighlight = false
+            self.archive.scaleOnClick = true
+
+            self.delete.autohighlight = false
+            self.delete.scaleOnClick = true
+            
+            delete.set(handler: { [weak self] _ in
+                self?.arguments?.deleteSelected()
+            }, for: .Click)
+
+            
+            archive.set(handler: { [weak self] _ in
+                if let arguments = self?.arguments {
+                    arguments.archiveSelected()
+                }
+            }, for: .Click)
+            
+            pin.set(handler: { [weak self] _ in
+                if let arguments = self?.arguments {
+                    arguments.togglePinSelected()
+                }
+            }, for: .Click)
         }
         
         
-        func update(title: String, enabled: Bool, callback:@escaping()->Void) {
+        func update(selected: Set<StoryId>, isArchive: Bool, arguments: Arguments) {
+            
+            self.arguments = arguments
+            
             self.border = [.Top]
             self.borderColor = theme.colors.border
             self.backgroundColor = theme.colors.background
 
-            self.button.set(color: theme.colors.underSelectedColor, for: .Normal)
-            self.button.set(background: theme.colors.accent, for: .Normal)
-            self.button.set(font: .medium(.text), for: .Normal)
-            self.button.set(text: title, for: .Normal)
+            self.pin.set(font: .medium(.text), for: .Normal)
+            self.pin.set(color: theme.colors.accent, for: .Normal)
+            self.pin.set(text: strings().storyMediaPin, for: .Normal)
+            self.pin.sizeToFit(NSMakeSize(10, 10))
             
-            self.button.removeAllHandlers()
-            self.button.set(handler: { _ in
-                callback()
-            }, for: .SingleClick)
+            self.archive.set(font: .medium(.text), for: .Normal)
+            self.archive.set(color: theme.colors.accent, for: .Normal)
+            self.archive.set(text: isArchive ? strings().storyMediaUnarchive : strings().storyMediaArchive, for: .Normal)
+            self.archive.sizeToFit(NSMakeSize(10, 10))
+
+            self.delete.set(font: .medium(.text), for: .Normal)
+            self.delete.set(color: theme.colors.redUI, for: .Normal)
+            self.delete.set(text: strings().storyMediaDelete, for: .Normal)
+            self.delete.sizeToFit(NSMakeSize(10, 10))
+
+            self.pin.isEnabled = !selected.isEmpty
+            self.archive.isEnabled = !selected.isEmpty
+            self.delete.isEnabled = !selected.isEmpty
+
             
-            self.button.isEnabled = enabled
+            
             
             needsLayout = true
         }
@@ -273,9 +304,9 @@ final class StoryMediaView : View {
         
         override func layout() {
             super.layout()
-            self.button.sizeToFit(.zero, NSMakeSize(frame.width - 20, frame.height - 20), thatFit: true)
-            self.button.layer?.cornerRadius = 10
-            self.button.center()
+            pin.centerY(x: 10)
+            archive.center()
+            delete.centerY(x: frame.width - delete.frame.width - 10)
         }
     }
     
@@ -299,7 +330,7 @@ final class StoryMediaView : View {
             if let view = self.panel {
                 current = view
             } else {
-                current = Panel(frame: NSMakeRect(0, frame.height - 60, frame.width, 60))
+                current = Panel(frame: NSMakeRect(0, frame.height - 50, frame.width, 50))
                 self.panel = current
                 addSubview(current)
                 
@@ -307,14 +338,12 @@ final class StoryMediaView : View {
                     current.layer?.animatePosition(from: NSMakePoint(0, frame.height), to: current.frame.origin)
                 }
             }
-            current.update(title: arguments.isArchive ? "Save to Profile" : "Remove from Profile", enabled: !selected.isEmpty, callback: { [weak arguments] in
-                arguments?.processSelected()
-            })
+            current.update(selected: selected, isArchive: arguments.isArchive, arguments: arguments)
         } else if let view = self.panel {
             performSubviewPosRemoval(view, pos: NSMakePoint(0, frame.height), animated: animated)
             self.panel = nil
         }
-        tableView.contentInsets = .init(top: 0, left: 0, bottom: self.panel != nil ? 70 : 0, right: 0)
+        tableView.contentInsets = .init(top: 0, left: 0, bottom: self.panel != nil ? 60 : 0, right: 0)
     }
     
     override func layout() {
@@ -324,7 +353,7 @@ final class StoryMediaView : View {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         if let panel = self.panel {
-            transition.updateFrame(view: panel, frame: NSMakeRect(0, size.height - 60, size.width, 60))
+            transition.updateFrame(view: panel, frame: NSMakeRect(0, size.height - 50, size.width, 50))
         }
         transition.updateFrame(view: tableView, frame: size.bounds)
     }
@@ -341,6 +370,8 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
     private var stateValue: Atomic<State> = Atomic(value: State(state: nil, selected: nil, perRowCount: 4))
     private let listContext: PeerStoryListContext
     private let archiveContext: PeerStoryListContext?
+    
+    var parentToggleSelection: (()->Void)?
 
     private func updateState(_ f:(State) -> State) {
         statePromise.set(stateValue.modify (f))
@@ -415,7 +446,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
     }
 
     
-    private func toggleSelection() {
+    func toggleSelection() {
         
         let button = self.rightBarView as? TextButtonBarView
         
@@ -498,15 +529,22 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 list.loadMore()
             }
         })
+        let maxPinLimit = context.appConfiguration.getGeneralValue("stories_pinned_to_top_count_max", orElse: 3)
 
                 
         self.setCenterTitle(isArchived ? strings().storyMediaTitleArchive : peerId == context.peerId ? strings().storyMediaTitleMyStories : "")
         
         let arguments = Arguments(context: context, standalone: standalone, isArchive: isArchived, isMy: peerId == context.peerId, openStory: { [weak self] initialId in
             if let list = self?.listContext {
-                StoryModalController.ShowPeerStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
+                StoryModalController.ShowListStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
             }
         }, toggleSelected: { [weak self] storyId in
+            
+            let value = self?.stateValue.with { $0.selected != nil }
+            if value == false {
+                self?.parentToggleSelection?()
+            }
+            
             self?.updateState { current in
                 var current = current
                 if var selected = current.selected {
@@ -523,22 +561,22 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             }
         }, showArchive: { [weak self] in
             self?.openArchive()
-        }, processSelected: { [weak self] in
+        }, archiveSelected: { [weak self] in
             let selected = self?.stateValue.with { $0.selected } ?? Set()
             let list = self?.stateValue.with { $0.state?.items } ?? []
             var stories: [Int32 : EngineStoryItem] = [:]
             for selected in selected {
-                if let story = list.first(where: { $0.id == selected.id }) {
-                    stories[story.id] = story
+                if let story = list.first(where: { $0.storyItem.id == selected.id }) {
+                    stories[story.storyItem.id] = story.storyItem
                 }
             }
             _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: stories, isPinned: isArchived).start()
             if isArchived {
                 let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
-                showModalText(for: context.window, text: text, title: strings().storyTooltipSavedTitle)
+                showModalText(for: context.window, text: text)
             } else {
                 let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
-                showModalText(for: context.window, text: text, title: strings().storyTooltipRemovedTitle)
+                showModalText(for: context.window, text: text)
             }
             self?.updateState({ current in
                 var current = current
@@ -555,6 +593,44 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
                 showModalText(for: context.window, text: text, title: strings().storyTooltipRemovedTitle)
             }
+        }, deleteStory: { story in
+            verifyAlert_button(for: context.window, information: strings().storyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
+                _ = context.engine.messages.deleteStories(peerId: peerId, ids: [story.id]).startStandalone()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 3).startStandalone()
+            })
+        }, deleteSelected: { [weak self] in
+            let ids:[Int32] = self?.stateValue.with { state in
+                return state.selected?.map { $0.id }
+            } ?? []
+            verifyAlert_button(for: context.window, information: strings().storyMediaDeleteConfirmCountable(ids.count), ok: strings().modalDelete, successHandler: { _ in
+                _ = context.engine.messages.deleteStories(peerId: peerId, ids: ids).startStandalone()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 3).startStandalone()
+                self?.toggleSelection()
+            })
+            
+        }, togglePinned: { [weak self] story in
+            var pinned = Array(self?.stateValue.with ({ $0.state?.pinnedIds }) ?? Set())
+            if let index = pinned.firstIndex(where: { $0 == story.id }) {
+                pinned.remove(at: index)
+                showModalText(for: context.window, text: strings().storyMediaTooltipUnpinnedCountable(1))
+            } else {
+                pinned.append(story.id)
+                showModalText(for: context.window, text: strings().storyMediaTooltipPinnedCountable(1))
+            }
+            _ = context.engine.messages.updatePinnedToTopStories(peerId: peerId, ids: pinned).startStandalone()
+            
+        }, togglePinSelected: { [weak self] in
+            let ids:[Int32] = self?.stateValue.with { state in
+                return state.selected?.map { $0.id }
+            } ?? []
+            
+            if ids.count <= maxPinLimit {
+                _ = context.engine.messages.updatePinnedToTopStories(peerId: peerId, ids: ids).startStandalone()
+                showModalText(for: context.window, text: strings().storyMediaTooltipPinnedCountable(ids.count))
+            } else {
+                showModalText(for: context.window, text: strings().storyMediaTooltipLimitCountable(Int(maxPinLimit)))
+            }
+            self?.toggleSelection()
         })
 
         let stateSignal = listContext.state |> deliverOnMainQueue
@@ -565,7 +641,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 return current
             }
             if state.totalCount > 0 {
-                self?.setCenterStatus("\(state.totalCount) stories")
+                self?.setCenterStatus(strings().chatListArchiveStoryCountCountable(state.totalCount).lowercased())
             } else {
                 self?.setCenterStatus(nil)
             }

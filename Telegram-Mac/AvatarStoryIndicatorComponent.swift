@@ -280,7 +280,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
             }
             
             private func updateContent() {
-                self.layer?.contents = generateImage(frame.size, scale: System.backingScale, rotatedContext: { size, context in
+                self.layer?.contents = generateImage(frame.size, rotatedContext: { size, context in
                     guard let component = self.component else {
                         return
                     }

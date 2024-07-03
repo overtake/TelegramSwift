@@ -17,25 +17,23 @@ import QuartzCore
 
 final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     
-    private let inputView: NSTextView
+    private let inputView: UITextView
     private let textContent: NSClipView
     private let __window: Window
     private let context: AccountContext
     private let tableView = HorizontalTableView(frame: .zero)
     private let containerView = View()
     private weak var relativeView: NSView?
-    private let chatInteraction: ChatInteraction
     private let presentation: TelegramPresentationTheme
     private let backgroundLayer = SimpleShapeLayer()
     private let highlightRect:(NSRange, Bool)-> NSRect
-    init(inputView: NSTextView, textContent:NSClipView, relativeView: NSView, window: Window, context: AccountContext, chatInteraction: ChatInteraction, presentation: TelegramPresentationTheme = theme, highlightRect:@escaping(NSRange, Bool)-> NSRect) {
+    init(inputView: UITextView, textContent:NSClipView, relativeView: NSView, window: Window, context: AccountContext, presentation: TelegramPresentationTheme = theme, highlightRect:@escaping(NSRange, Bool)-> NSRect) {
         self.textContent = textContent
         self.highlightRect = highlightRect
         self.inputView = inputView
         self.context = context
         self.relativeView = relativeView
         self.__window = window
-        self.chatInteraction = chatInteraction
         self.presentation = presentation
         super.init(frame: .zero)
         addSubview(containerView)
@@ -73,7 +71,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
             return false
         }
         if byClick {
-            let textInputState = chatInteraction.presentation.effectiveInput
+            let textInputState = inputView.interactions.presentation.textInputState()
             if let (stringRange, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
                 let inputText = textInputState.inputText
                 
@@ -101,8 +99,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
                     range.location += symbolLength
                     range.length -= symbolLength
                 }
-                
-                _ = chatInteraction.appendText(attach, selectedRange: range.lowerBound ..< range.upperBound)
+                inputView.insertText(attach, range: range.lowerBound ..< range.upperBound)
             }
         }
         return false

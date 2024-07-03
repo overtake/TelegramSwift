@@ -36,7 +36,7 @@ final class StoryContentItem {
     let peer: EnginePeer?
     let storyItem: EngineStoryItem
     let entityFiles: [EngineMedia.Id: TelegramMediaFile]
-    
+    let itemPeer: EnginePeer?
 
     
     var peerId: EnginePeer.Id? {
@@ -58,13 +58,15 @@ final class StoryContentItem {
         dayCounters: DayCounters?,
         peer: EnginePeer?,
         storyItem: EngineStoryItem,
-        entityFiles: [EngineMedia.Id: TelegramMediaFile]
+        entityFiles: [EngineMedia.Id: TelegramMediaFile],
+        itemPeer: EnginePeer?
     ) {
         self.position = position
         self.dayCounters = dayCounters
         self.peer = peer
         self.storyItem = storyItem
         self.entityFiles = entityFiles
+        self.itemPeer = itemPeer
     }
 
 }
@@ -657,7 +659,8 @@ final class StoryContentContextImpl: StoryContentContext {
                                 dayCounters: nil,
                                 peer: peer,
                                 storyItem: item,
-                                entityFiles: extractItemEntityFiles(item: item, allEntityFiles: allEntityFiles)
+                                entityFiles: extractItemEntityFiles(item: item, allEntityFiles: allEntityFiles),
+                                itemPeer: nil
                             )
                         }
                         
@@ -670,7 +673,8 @@ final class StoryContentContextImpl: StoryContentContext {
                                 dayCounters: nil,
                                 peer: peer,
                                 storyItem: mappedItem,
-                                entityFiles: extractItemEntityFiles(item: mappedItem, allEntityFiles: allEntityFiles)
+                                entityFiles: extractItemEntityFiles(item: mappedItem, allEntityFiles: allEntityFiles),
+                                itemPeer: nil
                             ),
                             totalCount: totalCount,
                             previousItemId: previousItemId,
@@ -1547,7 +1551,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     dayCounters: nil,
                     peer: peer,
                     storyItem: mappedItem,
-                    entityFiles: extractItemEntityFiles(item: mappedItem, allEntityFiles: allEntityFiles)
+                    entityFiles: extractItemEntityFiles(item: mappedItem, allEntityFiles: allEntityFiles), 
+                    itemPeer: nil
                 )
                 let stateValue = StoryContentContextState(
                     slice: StoryContentContextState.FocusedSlice(
@@ -1623,7 +1628,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
     private var requestedStoryKeys = Set<StoryKey>()
     private var requestStoryDisposables = DisposableSet()
     
-    private var listState: PeerStoryListContext.State?
+    private var listState: StoryListContext.State?
     
     private var focusedId: Int32?
     private var focusedIdUpdated = Promise<Void>(Void())
@@ -1631,7 +1636,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
     private var preloadStoryResourceDisposables: [EngineMedia.Id: Disposable] = [:]
     private var pollStoryMetadataDisposables = DisposableSet()
     
-    init(context: AccountContext, peerId: EnginePeer.Id, listContext: PeerStoryListContext, initialId: Int32?) {
+    init(context: AccountContext, peerId: EnginePeer.Id, listContext: StoryListContext, initialId: Int32?) {
         self.context = context
         
         context.engine.account.viewTracker.refreshCanSendMessagesForPeerIds(peerIds: [peerId])
@@ -1699,9 +1704,9 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             
             let focusedIndex: Int?
             if let current = self.focusedId {
-                if let index = state.items.firstIndex(where: { $0.id == current }) {
+                if let index = state.items.firstIndex(where: { $0.storyItem.id == current }) {
                     focusedIndex = index
-                } else if let index = state.items.firstIndex(where: { $0.id <= current }) {
+                } else if let index = state.items.firstIndex(where: { $0.storyItem.id <= current }) {
                     focusedIndex = index
                 } else if !state.items.isEmpty {
                     focusedIndex = 0
@@ -1709,9 +1714,9 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                     focusedIndex = nil
                 }
             } else if let initialId = initialId {
-                if let index = state.items.firstIndex(where: { $0.id == initialId }) {
+                if let index = state.items.firstIndex(where: { $0.storyItem.id == initialId }) {
                     focusedIndex = index
-                } else if let index = state.items.firstIndex(where: { $0.id <= initialId }) {
+                } else if let index = state.items.firstIndex(where: { $0.storyItem.id <= initialId }) {
                     focusedIndex = index
                 } else {
                     focusedIndex = nil
@@ -1741,7 +1746,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             let stateValue: StoryContentContextState
             if let focusedIndex = focusedIndex {
                 let item = state.items[focusedIndex]
-                self.focusedId = item.id
+                self.focusedId = item.storyItem.id
                 
                 var allItems: [StoryContentItem] = []
                 
@@ -1754,11 +1759,12 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                         position: i,
                         dayCounters: nil,
                         peer: peer,
-                        storyItem: stateItem,
-                        entityFiles: extractItemEntityFiles(item: stateItem, allEntityFiles: state.allEntityFiles)
+                        storyItem: stateItem.storyItem,
+                        entityFiles: extractItemEntityFiles(item: stateItem.storyItem, allEntityFiles: state.allEntityFiles), 
+                        itemPeer: stateItem.peer
                     ))
                     
-                    let day = DayIndex(timestamp: stateItem.timestamp)
+                    let day = DayIndex(timestamp: stateItem.storyItem.timestamp)
                     let dayCount: Int
                     if let current = dayCounts[day] {
                         dayCount = current + 1
@@ -1767,11 +1773,11 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                         dayCount = 1
                         dayCounts[day] = dayCount
                     }
-                    itemDayIndices[stateItem.id] = (dayCount - 1, day)
+                    itemDayIndices[stateItem.storyItem.id] = (dayCount - 1, day)
                 }
                 
                 var dayCounters: StoryContentItem.DayCounters?
-                if let (offset, day) = itemDayIndices[item.id], let dayCount = dayCounts[day] {
+                if let (offset, day) = itemDayIndices[item.storyItem.id], let dayCount = dayCounts[day] {
                     dayCounters = StoryContentItem.DayCounters(
                         position: offset,
                         totalCount: dayCount
@@ -1785,13 +1791,14 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                         item: StoryContentItem(
                             position: focusedIndex,
                             dayCounters: dayCounters,
-                            peer: peer,
-                            storyItem: item,
-                            entityFiles: extractItemEntityFiles(item: item, allEntityFiles: state.allEntityFiles)
+                            peer: item.peer ?? peer,
+                            storyItem: item.storyItem,
+                            entityFiles: extractItemEntityFiles(item: item.storyItem, allEntityFiles: state.allEntityFiles),
+                            itemPeer: item.peer
                         ),
                         totalCount: state.totalCount,
-                        previousItemId: focusedIndex == 0 ? nil : state.items[focusedIndex - 1].id,
-                        nextItemId: (focusedIndex == state.items.count - 1) ? nil : state.items[focusedIndex + 1].id,
+                        previousItemId: focusedIndex == 0 ? nil : state.items[focusedIndex - 1].storyItem.id,
+                        nextItemId: (focusedIndex == state.items.count - 1) ? nil : state.items[focusedIndex + 1].storyItem.id,
                         allItems: allItems,
                         forwardInfoStories: [:]
                     ),
@@ -1824,11 +1831,11 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                     
                     for i in focusedIndex ..< min(focusedIndex + 4, state.items.count) {
                         if i != focusedIndex {
-                            possibleItems.append((slice.peer, state.items[i]))
+                            possibleItems.append((slice.peer, state.items[i].storyItem))
                         }
                         
                         if slice.peer.id == self.context.account.peerId {
-                            pollItems.append(StoryKey(peerId: slice.peer.id, id: state.items[i].id))
+                            pollItems.append(StoryKey(peerId: slice.peer.id, id: state.items[i].storyItem.id))
                         }
                     }
                     
@@ -1927,13 +1934,13 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             case .previous:
                 indexDifference = -1
             case let .id(id):
-                if let listState = self.listState, let focusedId = self.focusedId, let index = listState.items.firstIndex(where: { $0.id == focusedId }), let nextIndex = listState.items.firstIndex(where: { $0.id == id }) {
+                if let listState = self.listState, let focusedId = self.focusedId, let index = listState.items.firstIndex(where: { $0.storyItem.id == focusedId }), let nextIndex = listState.items.firstIndex(where: { $0.storyItem.id == id }) {
                     indexDifference = nextIndex - index
                 }
             }
             
             if let indexDifference = indexDifference, let listState = self.listState, let focusedId = self.focusedId {
-                if let index = listState.items.firstIndex(where: { $0.id == focusedId }) {
+                if let index = listState.items.firstIndex(where: { $0.storyItem.id == focusedId }) {
                     var nextIndex = index + indexDifference
                     if nextIndex < 0 {
                         nextIndex = 0
@@ -1942,7 +1949,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                         nextIndex = listState.items.count - 1
                     }
                     if nextIndex != index {
-                        self.focusedId = listState.items[nextIndex].id
+                        self.focusedId = listState.items[nextIndex].storyItem.id
                         self.focusedIdUpdated.set(.single(Void()))
                     }
                 }

@@ -348,7 +348,7 @@ final class ChatListTopicNameAndTextLayout {
         
         if let data = items.first {
             let attr = NSMutableAttributedString()
-            let title = "🤡 " + data.title
+            let title = "\(clown) " + data.title
             let temp = NSAttributedString.initialize(string: title, color: theme.colors.text, font: .normal(.text))
             
             
@@ -359,7 +359,7 @@ final class ChatListTopicNameAndTextLayout {
             
             _ = attr.append(string: title.prefixWithDots(Int(maxCount - 3)), color: theme.colors.text, font: .normal(.text))
             
-            let range = attr.string.nsstring.range(of: "🤡")
+            let range = attr.string.nsstring.range(of: clown)
             if range.location != NSNotFound {
                 let item: InlineStickerItem
                 if let fileId = data.iconFileId {
@@ -412,7 +412,7 @@ final class ChatListTopicNameAndTextLayout {
                 let attr = NSMutableAttributedString()
                 for item in rest {
                     
-                    var range = attr.append(string: "🤡" + item.title, color: item.isUnread ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
+                    var range = attr.append(string: clown + item.title, color: item.isUnread ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
                     
                     range = NSMakeRange(range.location, 2)
                     
@@ -524,7 +524,7 @@ private final class TopicNameAndTextView : View {
                         
                         
                         var rect: NSRect
-                        rect = item.rect.insetBy(dx: -2, dy: -2)
+                        rect = item.rect.insetBy(dx: 1, dy: 1)
 
                         if textLayout.hasBlock {
                             rect = rect.offsetBy(dx: 6, dy: 1)
@@ -741,6 +741,11 @@ private final class ChatListMediaPreviewView: View {
     func updateLayout(size: CGSize) {
         let frame = CGRect(origin: CGPoint(), size: size)
         let media = self.media
+        
+        let isProtected = self.message.containsSecretMedia || self.message.isCopyProtected() || self.message.paidContent != nil
+        
+        self.imageView.preventsCapture = isProtected
+        
         var dimensions = CGSize(width: 100.0, height: 100.0)
         var signal: Signal<ImageDataTransformation, NoError>? = nil
         if let image = self.media as? TelegramMediaImage {
@@ -792,7 +797,7 @@ private final class ChatListMediaPreviewView: View {
                     self?.shimmer?.removeFromSuperlayer()
                     self?.shimmer = nil
                 }
-            })
+            }, isProtected: isProtected)
         }
         
         
@@ -828,7 +833,7 @@ private final class ChatListMediaPreviewView: View {
             
             let imageReference = ImageMediaReference.message(message: MessageReference(message), media: image)
             
-            current.update(isRevealed: false, updated: true, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false)
+            current.update(isRevealed: false, updated: true, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false, isSensitive: false, payAmount: nil)
             current.frame = frame
         } else if let view = self.inkView {
             performSubviewRemoval(view, animated: false)
@@ -911,9 +916,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private let revealRightView: View = View()
     
     private var messageTextView:TextView? = nil
-    private var chatNameTextView: TextView? = nil
+    private var chatNameTextView: InteractiveTextView? = nil
     private var dateTextView: TextView? = nil
-    private var displayNameView: TextView? = nil
+    private var displayNameView: InteractiveTextView? = nil
     
     private var storyReplyImageView : ImageView?
     
@@ -923,11 +928,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var topicsView: TopicNameAndTextView?
     
-    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
         
-    private var badgeView:View?
+    private var badgeView:Control?
     private var badgeShortView:View?
 
     private var mentionsView: ImageView?
@@ -1199,7 +1204,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         
                     }
                     if item.appearMode == .short, item.isTopic {
-                        addition += 20
+                        //addition += 20
                     }
                     
                     if let statusControl = statusControl {
@@ -1365,7 +1370,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
         
         for (_, value) in inlineStickerItemViews {
-            checkValue(value)
+            if let value = value as? InlineStickerItemLayer {
+                checkValue(value)
+            }
         }
         if let value = inlineTopicPhotoLayer {
             checkValue(value)
@@ -1380,36 +1387,38 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         var index: Int = textView.hashValue
 
         for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source, item.rect.width > 10 {
+            if let stickerItem = item.value as? InlineStickerItem, item.rect.width > 10 {
                 
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
-                validIds.append(id)
-                
-                let rect = item.rect.insetBy(dx: -2, dy: -2)
-                
-                let textColor = self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
-                
-                let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, current.textColor == textColor {
-                    view = current
-                } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
-                    self.inlineStickerItemViews[id] = view
-                    view.superview = textView
-                    textView.addEmbeddedLayer(view)
-                }
-                index += 1
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
+                if case let .attribute(emoji) = stickerItem.source {
+                    let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                    validIds.append(id)
+                    
+                    let rect = item.rect.insetBy(dx: 0, dy: 0)
+                    
+                    let textColor = stickerItem.playPolicy == nil && self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                    
+                    let view: InlineStickerItemLayer
+                    if let current = self.inlineStickerItemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size, current.textColor == textColor {
+                        view = current
                     } else {
-                        isKeyWindow = window.isKeyWindow
+                        self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
+                        self.inlineStickerItemViews[id] = view
+                        view.superview = textView
+                        textView.addEmbeddedLayer(view)
                     }
-                }
-                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
-                view.frame = rect
+                    index += 1
+                    var isKeyWindow: Bool = false
+                    if let window = window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
+                    }
+                    view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                    view.frame = rect
+                } 
             }
         }
         
@@ -1493,17 +1502,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              
              if let displayLayout = item.ctxDisplayLayout {
-                 let current: TextView
+                 let current: InteractiveTextView
                  if let view = self.displayNameView {
                      current = view
                  } else {
-                     current = TextView()
+                     current = InteractiveTextView(frame: .zero)
                      current.userInteractionEnabled = false
-                     current.isSelectable = false
                      self.displayNameView = current
                      contentView.addSubview(current)
                  }
-                 current.update(displayLayout)
+                 current.set(text: displayLayout, context: item.context)
              } else if let view = self.displayNameView {
                  performSubviewRemoval(view, animated: animated)
                  self.displayNameView = nil
@@ -1579,17 +1587,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              }
              
              if let nameText = item.ctxChatNameLayout, !hiddenMessage {
-                 let current: TextView
+                 let current: InteractiveTextView
                  if let view = self.chatNameTextView {
                      current = view
                  } else {
-                     current = TextView()
+                     current = InteractiveTextView()
                      current.userInteractionEnabled = false
-                     current.isSelectable = false
                      self.chatNameTextView = current
                      self.contentView.addSubview(current)
                  }
-                 current.update(nameText)
+                 current.set(text: nameText, context: item.context)
                  
              } else if let view = self.chatNameTextView {
                  self.chatNameTextView = nil
@@ -1761,12 +1768,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              case let .topic(_, data):
                  
                  if item.titleMode == .normal {
-                     let value: CGFloat = item.appearMode == .short && !item.shouldHideContent ? 16 : 30
+                     let value: CGFloat = item.appearMode == .short && !item.shouldHideContent ? 20 : 30
                      let size = NSMakeSize(value, value)
                      let current: InlineStickerItemLayer
                      let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor, isGeneral: item.mode.isGeneralTopic)
+                     let textColor = isSelect ? theme.colors.underSelectedColor : theme.colors.accent
                      let checkFileId = data.info.icon ?? forumIconFile.fileId.id
-                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size {
+                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size, layer.textColor == textColor {
                          current = layer
                      } else {
                          if let layer = inlineTopicPhotoLayer {
@@ -1774,7 +1782,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                              self.inlineTopicPhotoLayer = nil
                          }
                          if let fileId = data.info.icon {
-                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
+                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1), textColor: textColor)
                          } else {
                              current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .framesCount(1))
                          }
@@ -1864,14 +1872,23 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              if let badgeNode = item.ctxBadgeNode {
                  var presented: Bool = false
                  if badgeView == nil {
-                     badgeView = View()
+                     badgeView = Control()
+                     badgeView?.scaleOnClick = true
                      contentView.addSubview(badgeView!)
                      presented = true
+                    badgeView?.set(handler: { [weak self] _ in
+                         if let item = self?.item as? ChatListRowItem {
+                             item.previewChat()
+                         }
+                     }, for: .Click)
                  }
+                 
+                 badgeView?.userInteractionEnabled = item.peerId != nil && item.canPreviewChat
                  badgeView?.setFrameSize(badgeNode.size)
                  badgeNode.aroundFill = nil
                  badgeNode.view = badgeView
                  badgeNode.setNeedDisplay()
+                 
                  
                  let point = badgePoint(item)
 
@@ -2910,7 +2927,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 addition += theme.icons.secretImage.backingSize.height
             }
             if item.appearMode == .short, item.isTopic {
-                addition += 20
+               // addition += 20
             }
             displayNameView.setFrameOrigin(NSMakePoint(item.leftInset + addition, item.margin - 1))
             

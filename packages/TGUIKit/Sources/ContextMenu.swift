@@ -138,18 +138,21 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
 
     public let presentation: AppMenu.Presentation
     let betterInside: Bool
+    let bottomAnchor: Bool
     let maxHeight: CGFloat
     let isLegacy: Bool
     public internal(set) var isShown: Bool = false
-    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600, isLegacy: Bool = false) {
+    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600, isLegacy: Bool = false, bottomAnchor: Bool = false) {
         self.presentation = presentation
         self.betterInside = betterInside
         self.maxHeight = maxHeight
         self.isLegacy = isLegacy
+        self.bottomAnchor = bottomAnchor
         super.init(title: "")
     }
     
     public var topWindow: Window?
+    public var closeOutside: Bool = true
     
     public var loadMore: (()->Void)? = nil
 

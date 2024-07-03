@@ -18,14 +18,14 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
     static func == (lhs: StoryCellLayoutItem, rhs: StoryCellLayoutItem) -> Bool {
         return lhs.item == rhs.item && lhs.corners == rhs.corners && lhs.frame == rhs.frame
     }
-    let item: EngineStoryItem
+    let item: StoryListContextState.Item
     let peerReference: PeerReference
     let peerId: PeerId
     let frame: NSRect
     let viewType:MediaCell.Type
     let corners:ImageCorners
     let context: AccountContext
-    
+    let isPinned: Bool
     var isSecret: Bool {
         return false
     }
@@ -35,20 +35,20 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
     }
     
     var id: MessageId {
-        return .init(peerId: self.peerId, namespace: 0, id: self.item.id)
+        return .init(peerId: self.peerId, namespace: 0, id: self.item.storyItem.id)
     }
     
     
     var imageMedia: ImageMediaReference? {
-        if let image = self.item.media._asMedia() as? TelegramMediaImage {
-            return .story(peer: peerReference, id: self.item.id, media: image)
+        if let image = self.item.storyItem.media._asMedia() as? TelegramMediaImage {
+            return .story(peer: peerReference, id: self.item.storyItem.id, media: image)
         }
         return nil
     }
     
     var fileMedia: FileMediaReference? {
-        if let file = self.item.media._asMedia() as? TelegramMediaFile {
-            return .story(peer: peerReference, id: self.item.id, media: file)
+        if let file = self.item.storyItem.media._asMedia() as? TelegramMediaFile {
+            return .story(peer: peerReference, id: self.item.storyItem.id, media: file)
         }
         return nil
     }
@@ -61,17 +61,17 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
     }
     
     func makeImageReference(_ image: TelegramMediaImage) -> ImageMediaReference {
-        return .story(peer: self.peerReference, id: self.item.id, media: image)
+        return .story(peer: self.peerReference, id: self.item.storyItem.id, media: image)
     }
     
     func makeFileReference(_ file: TelegramMediaFile) -> FileMediaReference {
-        return .story(peer: self.peerReference, id: self.item.id, media: file)
+        return .story(peer: self.peerReference, id: self.item.storyItem.id, media: file)
     }
     
     var hasImmediateData: Bool {
-        if let image = item.media._asMedia() as? TelegramMediaImage {
+        if let image = item.storyItem.media._asMedia() as? TelegramMediaImage {
             return image.immediateThumbnailData != nil
-        } else if let file = item.media._asMedia() as? TelegramMediaFile {
+        } else if let file = item.storyItem.media._asMedia() as? TelegramMediaFile {
             return file.immediateThumbnailData != nil
         }
         return false
@@ -81,7 +81,7 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
 
 final class StoryMonthRowItem : GeneralRowItem {
     private var contentHeight: CGFloat = 0
-    fileprivate let items:[EngineStoryItem]
+    fileprivate let items:[StoryListContextState.Item]
     fileprivate let context: AccountContext
     fileprivate let peerReference: PeerReference
     fileprivate let peerId: PeerId
@@ -93,7 +93,10 @@ final class StoryMonthRowItem : GeneralRowItem {
     fileprivate let openStory:(StoryInitialIndex?)->Void
     fileprivate let toggleSelected: (StoryId)->Void
     fileprivate let menuItems: (EngineStoryItem)->[ContextMenuItem]
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem]) {
+    fileprivate let pinnedIds:Set<Int32>
+    fileprivate let presentation: TelegramPresentationTheme
+    fileprivate let rowCountValue: Int
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds:Set<Int32>, rowCount: Int, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem], presentation: TelegramPresentationTheme = theme) {
         self.items = items
         self.selected = selected
         self.standalone = standalone
@@ -103,13 +106,16 @@ final class StoryMonthRowItem : GeneralRowItem {
         self.openStory = openStory
         self.toggleSelected = toggleSelected
         self.menuItems = menuItems
+        self.pinnedIds = pinnedIds
+        self.rowCountValue = rowCount
+        self.presentation = presentation
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsets())
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         for item in layoutItems {
             if NSPointInRect(location, item.frame) {
-                return .single(self.menuItems(item.item))
+                return .single(self.menuItems(item.item.storyItem))
             }
         }
         return super.menuItems(in: location)
@@ -127,9 +133,9 @@ final class StoryMonthRowItem : GeneralRowItem {
         return true
     }
     
-    static func rowCount(blockWidth: CGFloat, viewType: GeneralViewType) -> (Int, CGFloat) {
-        var rowCount:Int = 4
+    static func rowCount(blockWidth: CGFloat, rowCount: Int, viewType: GeneralViewType) -> (Int, CGFloat) {
         var perWidth: CGFloat = 0
+        var rowCount = rowCount
         while true {
             let maximum = blockWidth - viewType.innerInset.left - viewType.innerInset.right - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)
@@ -147,7 +153,7 @@ final class StoryMonthRowItem : GeneralRowItem {
         
         
         if !items.isEmpty {
-            var t: time_t = time_t(TimeInterval(items[0].timestamp))
+            var t: time_t = time_t(TimeInterval(items[0].storyItem.timestamp))
             var timeinfo: tm = tm()
             localtime_r(&t, &timeinfo)
             
@@ -158,7 +164,7 @@ final class StoryMonthRowItem : GeneralRowItem {
             
         }
         
-        let (rowCount, perWidth) = StoryMonthRowItem.rowCount(blockWidth: self.blockWidth, viewType: self.viewType)
+        let (rowCount, perWidth) = StoryMonthRowItem.rowCount(blockWidth: self.blockWidth, rowCount: rowCountValue, viewType: self.viewType)
         
         assert(rowCount >= 1)
                 
@@ -168,15 +174,8 @@ final class StoryMonthRowItem : GeneralRowItem {
         var point: CGPoint = CGPoint(x: self.viewType.innerInset.left, y: self.viewType.innerInset.top + itemSize.height)
         for (i, item) in self.items.enumerated() {
             let viewType: MediaCell.Type
-            if let file = item.media._asMedia() as? TelegramMediaFile {
-                if file.isAnimated && file.isVideo {
-                    viewType = MediaGifCell.self
-                } else {
-                    viewType = MediaVideoCell.self
-                }
-            } else {
-                viewType = MediaPhotoCell.self
-            }
+            viewType = MediaPhotoCell.self
+
             
             var topLeft: ImageCorner = .Corner(0)
             var topRight: ImageCorner = .Corner(0)
@@ -230,7 +229,7 @@ final class StoryMonthRowItem : GeneralRowItem {
             }
             let corners = ImageCorners(topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
             
-            let cell = StoryCellLayoutItem(item: item, peerReference: peerReference, peerId: peerId, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, context: context)
+            let cell = StoryCellLayoutItem(item: item, peerReference: peerReference, peerId: peerId, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, context: context, isPinned: self.pinnedIds.contains(item.storyItem.id))
             
             self.layoutItems.append(cell)
             point.x += itemSize.width
@@ -245,7 +244,7 @@ final class StoryMonthRowItem : GeneralRowItem {
     }
     
     func contains(_ id: Int32) -> Bool {
-        return layoutItems.contains(where: { $0.item.id == id} )
+        return layoutItems.contains(where: { $0.item.storyItem.id == id} )
     }
     
     override var height: CGFloat {
@@ -372,7 +371,10 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        guard let item = item as? StoryMonthRowItem else {
+            return theme.colors.background
+        }
+        return item.presentation.colors.background
     }
     
     override func updateColors() {
@@ -407,7 +409,7 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
             }
             let selected: Bool?
             if let state = item.selected {
-                selected = state.contains(.init(peerId: layout.peerId, id: layout.item.id))
+                selected = state.contains(.init(peerId: layout.peerId, id: layout.item.storyItem.id))
             } else {
                 selected = nil
             }

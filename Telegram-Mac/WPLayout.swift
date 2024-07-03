@@ -314,20 +314,8 @@ class WPLayout: Equatable {
     
     var action_text:String? {
         
-        if let adAtribute = parent.adAttribute, let author = parent.author {
-            if let text = adAtribute.buttonText {
-                return text
-            } else if case .botApp = adAtribute.target {
-                return strings().chatMessageLaunchBot
-            } else if case .webPage = adAtribute.target {
-                return strings().chatMessageOpenLink
-            } else if author.isBot {
-                return strings().chatMessageViewBot
-            } else if author.isGroup || author.isSupergroup {
-                return strings().chatMessageViewGroup
-            } else {
-                return strings().chatMessageViewChannel
-            }
+        if let adAtribute = parent.adAttribute {
+            return adAtribute.buttonText
         }
         
         if self.isProxyConfig {
@@ -382,6 +370,8 @@ class WPLayout: Equatable {
                 return strings().chatMessageOpenStory
             case .boost:
                 return strings().chatMessageBoostChannel
+            case .comments:
+                return strings().chatMessageActionShowMessage
             default:
                 break
             }
@@ -396,7 +386,13 @@ class WPLayout: Equatable {
     }
     
     func premiumBoarding() {
-        showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+        if context.isPremium, let opaqueId = self.adAttribute?.opaqueId {
+            _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+            chatInteraction.removeAd(opaqueId)
+            showModalText(for: context.window, text: strings().chatDisableAdTooltip)
+        } else {
+            showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+        }
     }
     
     func invokeAction() {
@@ -405,77 +401,9 @@ class WPLayout: Equatable {
         } else if let proxyConfig = self.proxyConfig {
             applyExternalProxy(proxyConfig, accountManager: context.sharedContext.accountManager)
         } else if let adAttribute = parent.adAttribute {
-            let link: inAppLink?
-            switch adAttribute.target {
-            case let .peer(id, messageId, startParam):
-                let action: ChatInitialAction?
-                if let startParam = startParam {
-                    action = .start(parameter: startParam, behavior: .none)
-                } else {
-                    action = nil
-                }
-                link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: true, postId: messageId?.id, callback: chatInteraction.openInfo)
-            case let .join(_, joinHash, _):
-                link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
-            case let .webPage(_, url: url):
-                link = .external(link: url, false)
-            case let .botApp(peerId, botApp, startParam):
-                        
-                let context = self.context
-
-                let openWebview:(ChatInitialAction)->Void = { [weak self] action in
-                    self?.chatInteraction.invokeInitialAction(action: action)
-                }
-                
-                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestAppWebViewError> = { botApp, allowWrite in
-                    return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: startParam, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
-                        return (botApp, $0)
-                    }
-                }
-
-                var signal: Signal<(BotApp, String?), RequestAppWebViewError> = .single(botApp) |> mapToSignal { botApp in
-                    if botApp.flags.contains(.notActivated) {
-                        return .single((botApp, nil))
-                    } else {
-                        return makeRequestAppWebView(botApp, false)
-                    }
-                }
-                signal = showModalProgress(signal: signal, for: context.window)
-                _ = combineLatest(signal, context.account.postbox.loadedPeerWithId(peerId) |> castError(RequestAppWebViewError.self)).start(next: { botData, peer in
-                    let url = botData.1
-                    let botApp = botData.0
-                    
-                    if let url = url {
-                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                    } else {
-                        
-                        var options: [ModalAlertData.Option] = []
-                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
-                        
-                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
-                        showModalAlert(for: context.window, data: data, completion: { result in
-                            FastSettings.markWebAppAsConfirmed(peer.id)
-                            
-                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: context.window)
-                            
-                            _ = signal.start(next: { botApp, url in
-                                if let url = url {
-                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                }
-                            }, error: { error in
-                                
-                            })
-                        })
-                    }
-                }, error: { error in
-                    
-                })
-                link = nil
-            }
+            let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+            execute(inapp: link)
             chatInteraction.markAdAction(adAttribute.opaqueId)
-            if let link = link {
-                execute(inapp: link)
-            }
         } else {
             let link = inApp(for: self.content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
@@ -499,6 +427,30 @@ class WPLayout: Equatable {
             return true
         }
         return  false
+    }
+    
+    var isStickerPreview: Bool {
+        for attr in content.attributes {
+            switch attr {
+            case .stickerPack:
+                return true
+            default:
+                break
+            }
+        }
+        return false
+    }
+    
+    var stickerFiles: [TelegramMediaFile] {
+        for attr in content.attributes {
+            switch attr {
+            case let .stickerPack(attribute):
+                return attribute.files
+            default:
+                break
+            }
+        }
+        return []
     }
     
     var isProxyConfig: Bool {

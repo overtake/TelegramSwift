@@ -91,6 +91,22 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             } else {
                 messageText = strings().messageGiveawayStarted
             }
+        case let media as TelegramMediaPaidContent:
+            if message.text.isEmpty {
+                let hasVideo = media.extendedMedia.contains {
+                    switch $0 {
+                    case let .full(media):
+                        return media is TelegramMediaFile
+                    case let .preview(_, _, videoDuration):
+                        return videoDuration != nil
+                    }
+                }
+                if hasVideo {
+                    messageText = strings().chatListVideo1Countable(media.extendedMedia.count)
+                } else {
+                    messageText = strings().chatListPhoto1Countable(media.extendedMedia.count)
+                }
+            }
         case _ as TelegramMediaGiveawayResults:
             messageText = strings().messageGiveawayResult
         case let fileMedia as TelegramMediaFile:
@@ -339,12 +355,35 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
             
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
+            
+            if let media = message.media.first as? TelegramMediaPoll, !notifications {
+                InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
+            }
+            
+//            var replacements:[String: TelegramMediaFile] = [:]
+//            replacements["📊"] = LocalAnimatedSticker.chatlist_poll.file
+//            replacements["🎮"] = LocalAnimatedSticker.chatlist_game.file
+//            replacements["🎵"] = LocalAnimatedSticker.chatlist_music.file
+//            replacements["🎤"] = LocalAnimatedSticker.chatlist_voice.file
+//
+//            for (key, value) in replacements {
+//                let range = attributedText.string.nsstring.range(of: key)
+//                if range.location == 0, !message.media.isEmpty {
+//                    attributedText.insertEmbedded(.embeddedAnimated(value, playPolicy: .once), for: key)
+//                }
+//            }
            
-        } else if message.extendedMedia is TelegramMediaAction {
+        } else if let action = message.extendedMedia as? TelegramMediaAction {
             let service = serviceMessageText(message, account:account, isReplied: isReplied)
             _ = attributedText.append(string: service.0, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.detectBoldColorInString(with: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
+            
+            if case let .paymentSent(currency, _, _, _, _) = action.action {
+                if currency == XTR {
+                    attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
+                }
+            }
             
             InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
             

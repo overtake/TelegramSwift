@@ -1780,6 +1780,9 @@ extension Array {
         if self.count == 0 || chunkSize == 0 {
             return [self]
         }
+        if chunkSize >= self.count {
+            return [self]
+        }
         return stride(from: 0, to: self.count, by: chunkSize).map {
             Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
         }
@@ -1846,7 +1849,11 @@ func copyToClipboard(_ input: ChatTextInputState) -> Void {
 
 extension LAPolicy {
     static var applicationPolicy: LAPolicy {
-        return .deviceOwnerAuthentication
+        if #available(macOS 10.15, *) {
+            return .deviceOwnerAuthenticationWithBiometricsOrWatch
+        } else {
+            return .deviceOwnerAuthentication
+        }
     }
 }
 
@@ -2567,6 +2574,17 @@ struct DateSelectorUtil {
     
     static func formatTime(_ date: Date) -> String {
         return timerFormatter.string(from: date)
+    }
+    
+    
+    static let timerShortFormatter: DateFormatter = {
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+        return timeFormatter
+    }()
+    
+    static func shortFormatTime(_ date: Date) -> String {
+        return timerShortFormatter.string(from: date)
     }
 }
 

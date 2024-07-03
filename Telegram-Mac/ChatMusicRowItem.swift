@@ -50,8 +50,8 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
 class ChatMusicRowItem: ChatMediaItem {
     
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
 
         self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
@@ -73,15 +73,12 @@ class ChatMusicRowItem: ChatMediaItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             
-            
             let width = min(320, width - 80)
             
             for layout in captionLayouts {
-                if layout.layout.layoutSize == .zero {
-                    layout.layout.measure(width: width)
-                }
+                layout.layout.measure(width: width)
             }
-            let captionsWidth = captionLayouts.max(by: { $0.layout.layoutSize.width < $1.layout.layoutSize.width }).map { $0.layout.layoutSize.width }
+            let captionsWidth = captionLayouts.max(by: { $0.layout.size.width < $1.layout.size.width }).map { $0.layout.size.width }
             
             let labelsWidth = parameters.makeLabelsForWidth(width)
             return NSMakeSize(max(captionsWidth ?? 0, labelsWidth) + 50, 40)

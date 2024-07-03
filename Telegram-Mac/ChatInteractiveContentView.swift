@@ -13,7 +13,7 @@ import TelegramCore
 import TextRecognizing
 import TGUIKit
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 extension AutoremoveTimeoutMessageAttribute : Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
@@ -124,12 +124,103 @@ final class CornerMaskLayer : SimpleShapeLayer {
 
 }
 
+private let sensitiveImage = NSImage(resource: .iconMediaSensitiveContent).precomposed(.white)
+
 final class MediaInkView : Control {
+    
+    private final class SensitiveView: NSVisualEffectView {
+        private let textView = TextView()
+        private let imageView = ImageView()
+        required override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.wantsLayer = true
+            self.material = .ultraDark
+            self.blendingMode = .withinWindow
+            self.state = .active
+            
+            addSubview(textView)
+            addSubview(imageView)
+            
+            
+            imageView.image = sensitiveImage
+            imageView.sizeToFit()
+            
+            let textLayout = TextViewLayout(.initialize(string: strings().chatSensitiveContent, color: NSColor.white, font: .medium(.text)))
+            textLayout.measure(width: .greatestFiniteMagnitude)
+            
+            textView.update(textLayout)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+            setFrameSize(NSMakeSize(textView.frame.width + 25 + imageView.frame.width, 30))
+        }
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            self.imageView.centerY(x: 10)
+            self.textView.centerY(x: imageView.frame.maxX + 5)
+        }
+    }
+    
+    private final class PaidContentView: NSVisualEffectView {
+        private let textView = InteractiveTextView()
+        required override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.wantsLayer = true
+            self.material = .ultraDark
+            self.blendingMode = .withinWindow
+            self.state = .active
+            
+            addSubview(textView)
+            
+            textView.userInteractionEnabled = false
+            textView.textView.isSelectable = false
+            
+        }
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(amount: Int64, context: AccountContext, short: Bool) {
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: "\(clown)", color: .white, font: .medium(.text))
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.append(string: " \(amount)", color: .white, font: .medium(.text))
+            
+            let textLayout = TextViewLayout(attr)
+            textLayout.measure(width: .greatestFiniteMagnitude)
+
+            self.textView.set(text: textLayout, context: context)
+            
+            self.setFrameSize(NSMakeSize(textView.frame.width + 20, 30))
+
+        }
+        
+        override func layout() {
+            super.layout()
+            self.textView.centerY(x: 10)
+        }
+    }
+
     
     private let inkView: MediaDustView = MediaDustView()
     private var inkMaskView: CornerMaskLayer?
 
     private let preview: TransformImageView = TransformImageView()
+    
+    private var sensitiveView: SensitiveView?
+    private var paidView: PaidContentView?
+
+    private var isSensitive: Bool = false
+    private var payAmount: Int64? = nil
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -140,23 +231,48 @@ final class MediaInkView : Control {
 
     }
     
-    deinit {
-        var bp = 0
-        bp += 1
-    }
-    
-    override func removeFromSuperview() {
-        super.removeFromSuperview()
-    }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool) {
+    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool, isSensitive: Bool, payAmount: Int64?) {
         
         
-        //let imageSize = imageReference.media.representationForDisplayAtSize(.init(640, 640))?.dimensions.size ?? size
+        self.isSensitive = isSensitive
+        self.payAmount = payAmount
+        
+        if isSensitive {
+            let current: SensitiveView
+            if let view = self.sensitiveView {
+                current = view
+            } else {
+                current = SensitiveView(frame: NSMakeRect(0, 0, 100, 30))
+                current.layer?.cornerRadius = current.frame.height / 2
+                self.sensitiveView = current
+                addSubview(current)
+            }
+        } else if let view = self.sensitiveView {
+            performSubviewRemoval(view, animated: false)
+            self.sensitiveView = nil
+        }
+        
+        if let payAmount {
+            let current: PaidContentView
+            if let view = self.paidView {
+                current = view
+            } else {
+                current = PaidContentView(frame: NSMakeRect(0, 0, 100, 30))
+                self.paidView = current
+                addSubview(current)
+            }
+            current.update(amount: payAmount, context: context, short: true)
+            current.layer?.cornerRadius = current.frame.height / 2
+        } else if let view = self.paidView {
+            performSubviewRemoval(view, animated: false)
+            self.paidView = nil
+        }
+                
         
         let signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: System.backingScale, synchronousLoad: synchronousLoad)
         let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
@@ -179,7 +295,10 @@ final class MediaInkView : Control {
         let current = self.inkView
         current.frame = inkRect
         
-        current.update(size: inkRect.size, color: NSColor.white, textColor: .black)
+        let path = CGMutablePath()
+        path.addRect(inkRect.size.bounds)
+        
+        current.update(size: inkRect.size, color: NSColor.white, textColor: .black, mask: buttonPath(path))
        
         if let positionFlags = positionFlags {
             let mask: CornerMaskLayer
@@ -198,6 +317,27 @@ final class MediaInkView : Control {
             layer?.cornerRadius = 4
         }
         preview.frame = size.bounds
+        
+        needsLayout = true
+
+    }
+    
+    private func buttonPath(_ basic: CGPath) -> CGPath {
+        let buttonPath = CGMutablePath()
+
+        buttonPath.addPath(basic)
+        
+        if let view = self.sensitiveView {
+            let buttonRect = view.frame
+            buttonPath.addRoundedRect(in: buttonRect, cornerWidth: buttonRect.height / 2, cornerHeight: buttonRect.height / 2)
+        }
+        
+        if let view = self.paidView {
+            let buttonRect = view.frame
+            buttonPath.addRoundedRect(in: buttonRect, cornerWidth: buttonRect.height / 2, cornerHeight: buttonRect.height / 2)
+        }
+                    
+        return buttonPath
     }
     
     override func layout() {
@@ -205,6 +345,8 @@ final class MediaInkView : Control {
         preview.frame = bounds
         inkMaskView?.frame = bounds
         inkView.frame = bounds.insetBy(dx: -20, dy: -20)
+        sensitiveView?.center()
+        paidView?.center()
     }
 }
 
@@ -589,7 +731,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
         
         self.image.set(arguments: arguments)
-        
         if self.image.isFullyLoaded {
             
         }
@@ -624,6 +765,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         
         super.update(with: media, size: size, context: context, parent:parent, table: table, parameters:parameters, positionFlags: positionFlags)
+        
+        let isProtected = !isSpoiler && (parameters?.isProtected ?? false)
+        
+        
+        self.image.preventsCapture = isProtected
 
         
         var topLeftRadius: CGFloat = .cornerRadius
@@ -656,21 +802,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         
 
-        
-
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         var updatedStatusSignal: Signal<(MediaResourceStatus, MediaResourceStatus), NoError>?
         
         if mediaUpdated /*mediaUpdated*/ {
-            
-            
-            var dimensions: NSSize = size
-            
-            if let image = media as? TelegramMediaImage {
-                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
-            } else if let file = media as? TelegramMediaFile {
-                dimensions = file.dimensions?.size ?? size
-            }
+        
             
             let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
 
@@ -681,7 +817,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView = nil
                 videoAccessory?.removeFromSuperview()
                 videoAccessory = nil
-                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
                 
                 if let parent = parent, parent.containsSecretMedia || isSpoiler {
                     updateImageSignal = chatSecretPhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
@@ -693,7 +828,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     updatedStatusSignal = combineLatest(chatMessagePhotoStatus(account: context.account, photo: image), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
                             if let pendingStatus = pendingStatus.0, parent.forwardInfo == nil || resourceStatus != .Local {
-                                return (.Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)), .Fetching(isActive: true, progress: min(pendingStatus.progress, pendingStatus.progress * 85 / 100)))
+                                let progress: Float
+                                progress = pendingStatus.progress.mediaProgress[image.imageId] ?? pendingStatus.progress.progress
+                                return (.Fetching(isActive: true, progress: min(progress, progress * 85 / 100)), .Fetching(isActive: true, progress: min(progress, progress * 85 / 100)))
                             } else {
                                 return (resourceStatus, resourceStatus)
                             }
@@ -725,15 +862,14 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
-                dimensions = file.dimensions?.size ?? size
-                
-
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                     updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
                             if let pendingStatus = pendingStatus.0 {
-                                return (.Fetching(isActive: true, progress: pendingStatus.progress), .Fetching(isActive: true, progress: pendingStatus.progress))
+                                let progress: Float
+                                progress = pendingStatus.progress.mediaProgress[file.fileId] ?? pendingStatus.progress.progress
+                                return (.Fetching(isActive: true, progress: progress), .Fetching(isActive: true, progress: progress))
                             } else {
                                 if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
                                     return (.Local, resourceStatus)
@@ -767,11 +903,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
 
             if let updateImageSignal = updateImageSignal {
                 self.image.ignoreFullyLoad = mediaUpdated
+
                 self.image.setSignal(updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
-                })
+                }, isProtected: isProtected)
             }
             
             if let signal = updatedStatusSignal, let parent = parent, let parameters = parameters {
@@ -794,6 +931,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView?.view.positionFlags = nil
                 autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
             }
+            
+
             
             if isSpoiler {
                 let current: MediaInkView
@@ -820,6 +959,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     }
                 }, for: .Click)
                 
+                current.userInteractionEnabled = parameters?.canReveal ?? true
+                
                // self.image.layer?.opacity = 0
                 self.autoplayVideoView?.view.layer?.opacity = 0
                 
@@ -835,7 +976,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
 
                 
-                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue)
+                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: false, payAmount: parameters?.payAmount)
                 current.frame = size.bounds
             } else {
                 if let view = self.inkView {
@@ -899,6 +1040,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
                                 autoplay.mediaPlayer.attachPlayerView(autoplay.view)
                                 autoplay.view.center()
+                                autoplay.view.preventsCapture = isProtected
                             }
                             
                         } else {

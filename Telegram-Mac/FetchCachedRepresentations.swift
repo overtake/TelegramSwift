@@ -17,7 +17,7 @@ import libwebp
 import GZIP
 import Svg
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
@@ -789,6 +789,14 @@ func getAnimatedStickerThumb(data: Data, size: NSSize = NSMakeSize(512, 512)) ->
             })
             
             if let image = image {
+                let rep = NSBitmapImageRep(cgImage: image)
+                let data = rep.representation(using: .png, properties: [:])
+                let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"
+                try? data?.write(to: URL(fileURLWithPath: path))
+                return path
+            }
+        } else {
+            if let image = convertFromWebP(dataValue)?._cgImage {
                 let rep = NSBitmapImageRep(cgImage: image)
                 let data = rep.representation(using: .png, properties: [:])
                 let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"

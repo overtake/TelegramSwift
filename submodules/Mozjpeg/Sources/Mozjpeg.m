@@ -76,7 +76,7 @@ NSArray<NSNumber *> * _Nonnull extractJPEGDataScans(NSData * _Nonnull data) {
     return result;
 }
 
-NSData * _Nullable compressJPEGData(CGImageRef _Nonnull sourceImage) {
+NSData * _Nullable compressJPEGData(CGImageRef _Nonnull sourceImage, int quality) {
     int width = (int)(CGImageGetWidth(sourceImage));
     int height = (int)(CGImageGetHeight(sourceImage));
     
@@ -136,7 +136,7 @@ NSData * _Nullable compressJPEGData(CGImageRef _Nonnull sourceImage) {
     cinfo.arith_code = FALSE;
     cinfo.dct_method = JDCT_ISLOW;
     cinfo.optimize_coding = TRUE;
-    jpeg_set_quality(&cinfo, 78, 1);
+    jpeg_set_quality(&cinfo, quality, 1);
     jpeg_simple_progression(&cinfo);
     jpeg_start_compress(&cinfo, 1);
     

@@ -12,7 +12,7 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 import TelegramMedia
-import MediaPlayer
+import TelegramMediaPlayer
 
 private var _nextSeekdId: Int = 0
 private func nextSeekdId() -> Int {

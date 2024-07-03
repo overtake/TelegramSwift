@@ -73,7 +73,7 @@ private struct DiceState : Equatable {
         return lhs.play == rhs.play && isEqualMessages(lhs.message, rhs.message)
     }
     
-    init(message: Message) {
+    init(message: Message, played: Bool) {
         self.message = message
         self.messageId = message.id
         if let dice = message.anyMedia as? TelegramMediaDice, dice.value == 0 {
@@ -86,7 +86,7 @@ private struct DiceState : Equatable {
             } else if message.flags.isSending {
                 play = .idle
             } else {
-                if !FastSettings.diceHasAlreadyPlayed(message) {
+                if !played {
                     play = .end(animated: true)
                 } else {
                     play = .end(animated: false)
@@ -238,7 +238,7 @@ class ChatDiceContentView: ChatMediaContentView {
     
         let settings = InteractiveEmojiConfiguration.with(appConfiguration: context.appConfiguration)
         
-        let diceState = DiceState(message: parent)
+        let diceState = DiceState(message: parent, played: parameters?.dicePlayed(parent) ?? true)
         
         
         self.diceState = diceState
@@ -283,11 +283,11 @@ class ChatDiceContentView: ChatMediaContentView {
                             saveContext = true
                         } else {
                             playPolicy = .toEnd(from: .max)
-                            FastSettings.markDiceAsPlayed(parent)
+                            parameters?.markDiceAsPlayed(parent)
                         }
                     } else {
                         playPolicy = .toEnd(from: .max)
-                        FastSettings.markDiceAsPlayed(parent)
+                        parameters?.markDiceAsPlayed(parent)
                     }
                     
                 } else {
@@ -301,7 +301,7 @@ class ChatDiceContentView: ChatMediaContentView {
 
                 animation.onFinish = {
                     if case .end = diceState.play {
-                        FastSettings.markDiceAsPlayed(parent)
+                        parameters?.markDiceAsPlayed(parent)
                     }
                 }
                 switch diceState.play {

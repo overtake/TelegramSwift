@@ -86,9 +86,9 @@ public final class CustomSearchController {
     
     fileprivate var clickHandlerIdentifier: UInt32 = 0
     fileprivate let icon: CGImage
-    public let clickHandler:(Control, @escaping([String], CGImage)->Void)->Void
+    public let clickHandler:(Control, @escaping([SearchView.TagInfo], CGImage)->Void)->Void
     fileprivate let deleteTag:(Int)->Void
-    public init(clickHandler:@escaping(Control, @escaping([String], CGImage)->Void)->Void, deleteTag:@escaping(Int)->Void, icon: CGImage) {
+    public init(clickHandler:@escaping(Control, @escaping([SearchView.TagInfo], CGImage)->Void)->Void, deleteTag:@escaping(Int)->Void, icon: CGImage) {
         self.clickHandler = clickHandler
         self.icon = icon
         self.deleteTag = deleteTag
@@ -100,48 +100,90 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     public private(set) var state:SearchFieldState = .None
     
+    private var tagsInfo: [TagInfo] = []
     
-    public func updateTags(_ tags: [String], _ image: CGImage) {
-        
+    public struct TagInfo {
+        let text: String
+        let image: CGImage?
+        let contextMenu:(()->[ContextMenuItem])?
+        let blockInput: Bool
+        let isTextTied: Bool
+        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false, isTextTied: Bool = false) {
+            self.text = text
+            self.image = image
+            self.contextMenu = contextMenu
+            self.blockInput = blockInput
+            self.isTextTied = isTextTied
+        }
+    }
+    
+    public func updateTags(_ tags: [TagInfo], _ image: CGImage, animated: Bool = true) {
+        self.tagsInfo = tags
         for tag in self.tags {
-            tag.layer?.animateScaleSpring(from: 1.0, to: 0.3, duration: 0.2)
-            tag.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak tag] _ in
-                  tag?.removeFromSuperview()
-             })
+            if animated {
+                tag.layer?.animateScaleSpring(from: 1.0, to: 0.3, duration: 0.2)
+                tag.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak tag] _ in
+                      tag?.removeFromSuperview()
+                })
+            } else {
+                tag.removeFromSuperview()
+            }
+            
         }
         self.tags.removeAll()
+        
+        input.isEditable = !tags.contains(where: { $0.blockInput })
 
         var x: CGFloat = 35
         
-        for title in tags {
+        for tag in tags {
             let tagView = TextButton()
             tagView.animates = false
             tagView.set(font: .normal(12), for: .Normal)
             tagView.set(color: presentation.colors.underSelectedColor, for: .Normal)
-            tagView.set(background: presentation.colors.accent.darker(), for: .Normal)
-            tagView.set(text: title, for: .Normal)
+            tagView.set(background: presentation.colors.accent, for: .Normal)
+            tagView.set(text: tag.text, for: .Normal)
+            tagView.direction = .right
+            tagView.buttonImageInset = 0
+            tagView.autohighlight = false
+            tagView.scaleOnClick = true
             
-            tagView.set(background: presentation.colors.accent.lighter(), for: .Highlight)
+            if let image = tag.image {
+                tagView.set(image: image, for: .Normal)
+            }
             
-            tagView.set(handler: { [weak self] control in
-                guard let `self` = self else {
-                    return
+            if let contextMenu = tag.contextMenu {
+                tagView.contextMenu = {
+                    let menu = ContextMenu()
+                    menu.items = contextMenu()
+                    return menu
                 }
-                for tag in self.tags {
-                    if tag == control {
-                        tag.isSelected = !tag.isSelected
-                    } else {
-                        tag.isSelected = false
+            } else {
+                tagView.set(handler: { [weak self] control in
+                    guard let `self` = self else {
+                        return
                     }
-                }
-            }, for: .Click)
+                    for tag in self.tags {
+                        if tag == control {
+                            tag.isSelected = !tag.isSelected
+                        } else {
+                            tag.isSelected = false
+                        }
+                    }
+                }, for: .Click)
+            }
+            
+            tagView.set(background: presentation.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+            
+            
             
             _ = tagView.sizeToFit(NSMakeSize(6, 6), thatFit: false)
             tagView.layer?.cornerRadius = 6
             addSubview(tagView)
             tagView.centerY(x: x)
-            tagView.layer?.animateAlpha(from: 0, to: 1.0, duration: 0.2)
-           // tagView.layer?.animateScaleSpring(from: 0.6, to: 1.0, duration: 0.2)
+            if animated {
+                tagView.layer?.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+            }
             self.tags.append(tagView)
             
             x += tagView.frame.width + 5
@@ -367,12 +409,17 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         if self.query.isEmpty {
             if !tags.isEmpty {
                 customSearchControl?.deleteTag(tags.count - 1)
+                self.needsLayout = true
             } else {
                 self.change(state: .None, true)
             }
         } else {
             
             self.setString("")
+            
+            if let last = tagsInfo.last, last.isTextTied {
+                customSearchControl?.deleteTag(tags.count - 1)
+            }
         }
     }
     

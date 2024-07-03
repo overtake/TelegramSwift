@@ -19,7 +19,7 @@ class ContextListRowItem: TableRowItem {
 
     let result:ChatContextResult
     let results:ChatContextResultCollection
-    private let _index:Int64
+    private let _index1:Int64
     let context: AccountContext
     let iconSignal:Signal<ImageDataTransformation, NoError>
     let arguments:TransformImageArguments?
@@ -32,14 +32,14 @@ class ContextListRowItem: TableRowItem {
     private var vClass:AnyClass = ContextListImageView.self
     private let text:NSAttributedString
     override var stableId: AnyHashable {
-        return Int64(_index)
+        return Int64(_index1)
     }
     
     init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:ChatContextResult, _ index:Int64, _ context: AccountContext, _ chatInteraction:ChatInteraction) {
         self.result = result
         self.results = results
         self.chatInteraction = chatInteraction
-        self._index = index
+        self._index1 = index
         self.context = context
         var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil
@@ -87,12 +87,12 @@ class ContextListRowItem: TableRowItem {
         
         if let representation = representation {
             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-            iconSignal = chatWebpageSnippetPhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
+            iconSignal = chatWebpageSnippetPhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: System.backingScale, small:true)
             
             let iconSize = representation.dimensions.size.aspectFilled(CGSize(width: 50, height: 50))
             
             let imageCorners = ImageCorners(topLeft: .Corner(2.0), topRight: .Corner(2.0), bottomLeft: .Corner(2.0), bottomRight: .Corner(2.0))
-            arguments = TransformImageArguments(corners: imageCorners, imageSize: representation.dimensions.size, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+            arguments = TransformImageArguments(corners: imageCorners, imageSize: iconSize, boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsets())
             iconText = nil
         } else {
             arguments = nil
@@ -206,9 +206,6 @@ class ContextListImageView : TableRowView {
     
     override func layout() {
         super.layout()
-        if let item = item as? ContextListRowItem, let arguments = item.arguments {
-            image.set(arguments: arguments)
-        }
         image.centerY(x:10)
     }
     
@@ -233,6 +230,10 @@ class ContextListImageView : TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         let updated = self.item != item
         super.set(item: item)
+        
+        if let item = item as? ContextListRowItem, let arguments = item.arguments {
+            image.set(arguments: arguments)
+        }
         
         if let item = item as? ContextListRowItem, updated {
             if let capImage = item.capImage {

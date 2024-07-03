@@ -535,7 +535,7 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
     
     actionsDisposable.add(context.engine.accountData.keepCachedTimeZoneListUpdated().start())
     
-
+    
 
     actionsDisposable.add(combineLatest(businessHours, context.engine.accountData.cachedTimeZoneList()).start(next: { hours, timezones in
         updateState { current in
@@ -646,7 +646,10 @@ func BusinessHoursController(context: AccountContext) -> InputDataController {
 
         showModal(with: TimeRangeSelectorController(context: context, from: from, to: to, title: day.title, ok: strings().modalSave, fromString: strings().businessHoursSetOpeningTime, toString: strings().businessHoursSetClosingTime, endIsResponder: !isFrom, updatedValue: { updatedFrom, updatedTo in
             
-            let updated = State.Hours.MinutesInDay(from: Int(updatedFrom.hours * 60 + updatedFrom.minutes), to: Int(updatedTo.hours * 60 + updatedTo.minutes), uniqueId: hour.uniqueId)
+            let from = Int(updatedFrom.hours * 60 + updatedFrom.minutes)
+            let to = Int(updatedTo.hours * 60 + updatedTo.minutes)
+            
+            let updated = State.Hours.MinutesInDay(from: min(from, to), to: max(from, to), uniqueId: hour.uniqueId)
             updateState { current in
                 var current = current
                 var hours = current.data[day] ?? .init()

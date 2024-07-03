@@ -331,11 +331,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     case .right:
                         container.frame = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
                     case .left:
-                        let offset = innerInsets.left + 20 + innerInsets.left
+                        let offset = innerInsets.left + 20 + innerInsets.right
                         container.frame = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                     }
                 case .deletable:
-                    let offset = innerInsets.left + 24 + innerInsets.left
+                    let offset = innerInsets.left + 24 + innerInsets.right
                     container.frame = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                 }
                 
@@ -391,7 +391,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 if let status = (isRowSelected ? item.statusSelected : item.status) {
                     let t = title.0.size.height + status.0.size.height + 1.0
-                    tY = (self.frame.height - t) / 2.0
+                    tY = floorToScreenPixels((self.frame.height - t) / 2.0)
                 }
 
                 statusControl.setFrameOrigin(NSMakePoint(item.textInset + title.0.size.width + 2, tY + 1))
@@ -434,11 +434,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 case .right:
                     containerRect = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
                 case .left:
-                    let offset = innerInsets.left + 20 + innerInsets.left
+                    let offset = innerInsets.left + 20 + innerInsets.right
                     containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                 }
             case .deletable:
-                let offset = innerInsets.left + 24 + innerInsets.left
+                let offset = innerInsets.left + 24 + innerInsets.right
                 containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
             }
             separatorRect = NSMakeRect(containerRect.minX + item.textInset, containerRect.height - .borderSize, containerRect.width - item.textInset, .borderSize)

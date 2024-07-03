@@ -145,7 +145,7 @@ private func entries(_ view: HistoryView, arguments: Arguments) -> [InputDataEnt
     
     func makeItem(_ entry: ChatWrappedEntry, initialSize: NSSize) -> TableRowItem {
         let presentation: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
-        let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: arguments.chatInteraction, downloadSettings: entry.entry.additionalData.automaticDownload, theme: presentation)
+        let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: arguments.chatInteraction, theme: presentation)
         _ = item.makeSize(initialSize.width)
         return item;
     }
@@ -204,7 +204,7 @@ private final class TableDelegate : TableViewDelegate {
 
 
 private var nextId: Int32 = 0
-func getNextId() -> Int32 {
+private func getNextId() -> Int32 {
     return OSAtomicIncrement32(&nextId)
 }
 
@@ -336,10 +336,10 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
         pollOptionDisposable.set(context.engine.messages.requestClosePoll(messageId: messageId).start(), forKey: messageId)
     }
     
-    chatInteraction.revealMedia = { messageId in
+    chatInteraction.revealMedia = { message in
         updateState { current in
             var current = current
-            current.mediaRevealed.insert(messageId)
+            current.mediaRevealed.insert(message.id)
             return current
         }
     }

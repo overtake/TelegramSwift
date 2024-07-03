@@ -61,6 +61,8 @@ private extension EmojiSearchCategories.Group {
             return theme.icons.msg_emoji_activities
         case "home":
             return theme.icons.msg_emoji_home
+        case "premium":
+            return theme.icons.msg_emoji_premium
         default:
             return nil
         }
@@ -127,7 +129,9 @@ let emojiesInstance:[EmojiSegment:[String]] = {
     var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
     
     let resource:URL?
-    if #available(OSX 14.0, *) {
+    if #available(OSX 14.4, *) {
+        resource = Bundle.main.url(forResource:"emoji144", withExtension:"txt")
+    } else if #available(OSX 14.0, *) {
         resource = Bundle.main.url(forResource:"emoji14", withExtension:"txt")
     } else if #available(OSX 11.1, *) {
         resource = Bundle.main.url(forResource:"emoji1016", withExtension:"txt")
@@ -250,6 +254,7 @@ private struct State : Equatable {
         var dict:[MediaId: StickerPackItem]
         var installed: Bool
         var groupEmojiPack: Bool = false
+        var isBig: Bool = false
         static func ==(lhs: Section, rhs: Section) -> Bool {
             if lhs.info != rhs.info {
                 return false
@@ -264,6 +269,9 @@ private struct State : Equatable {
                 return false
             }
             if lhs.groupEmojiPack != rhs.groupEmojiPack {
+                return false
+            }
+            if lhs.isBig != rhs.isBig {
                 return false
             }
             return true
@@ -286,6 +294,8 @@ private struct State : Equatable {
     var featuredChannelStatusEmojiItems: [RecentMediaItem] = []
     var recent: RecentUsedEmoji = .defaultSettings
     var reactionSettings: ReactionSettings = .default
+    
+    var messageEffects: [AvailableMessageEffects.MessageEffect] = []
     
     var iconStatusEmoji: [TelegramMediaFile] = []
     var selectedItems: [EmojiesSectionRowItem.SelectedItem]
@@ -383,7 +393,7 @@ private func _id_emoji_segment(_ segment:Int64) -> InputDataIdentifier {
     return .init("_id_emoji_segment_\(segment)")
 }
 private func _id_aemoji_block(_ segment:Int64) -> InputDataIdentifier {
-    return .init("_id_aemoji_block\(segment)")
+    return .init("_id_aemoji_block_\(segment)")
 }
 private func _id_emoji_block(_ segment: Int64) -> InputDataIdentifier {
     return .init("_id_emoji_block_\(segment)")
@@ -419,6 +429,8 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         hasRecent = true
     case .channelReactions, .channelStatus:
         hasRecent = true
+    case .messageEffects:
+        hasRecent = false
     }
     if hasRecent {
         let recentImage = NSImage(named: "Icon_EmojiTabRecent")!
@@ -449,10 +461,10 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
         }
     }
     
-    for section in state.sections {
+    for (i, section) in state.sections.enumerated() {
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji }) && arguments.mode != .channelReactions
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, allItems: section.items, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
         }))
         index += 1
     }
@@ -816,12 +828,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
     }
     
-    for section in state.sections {
+    for (i, section) in state.sections.enumerated() {
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
-            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
-        }))
-        index += 1
+        
+        if !section.info.title.isEmpty, i > 0  {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
+                return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
+            }))
+            index += 1
+        }
         
         struct Tuple : Equatable {
             let section: State.Section
@@ -835,16 +850,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         var tuples:[Tuple] = []
 
-        let chunks = section.items.chunks(24)
+        let chunks = section.items.chunks(1000)
         var string: String = "a"
         
-        for (i, items) in chunks.enumerated() {
+        for items in chunks {
             tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: string, color: state.color))
             string += "a"
         }
+                
         for tuple in tuples {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, groupEmojiPack: tuple.section.groupEmojiPack, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, isBig: tuple.section.isBig, groupEmojiPack: tuple.section.groupEmojiPack, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
                     arguments.viewSet(info)
                 }, showAllItems: {
                     arguments.showAllItems(section.info.id.id)
@@ -874,7 +890,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             $0.stableId != .custom(_id_search_empty)
         })
     }
-    
+
     // entries
     
 //    entries.append(.sectionId(sectionId, type: .normal))
@@ -1318,7 +1334,7 @@ final class AnimatedEmojiesView : Control {
     private var mode: EmojiesController.Mode = .emoji
     fileprivate var state: State?
     private var context: AccountContext?
-    private var arguments: Arguments?
+    fileprivate var arguments: Arguments?
     
     var presentation: TelegramPresentationTheme? {
         didSet {
@@ -1389,7 +1405,7 @@ final class AnimatedEmojiesView : Control {
         
         let inSearch = searchState?.state == .Focus || state?.selectedEmojiCategory != nil
         
-        let initial: CGFloat = inSearch ? -46 : 0
+        let initial: CGFloat = inSearch || arguments?.mode == .messageEffects ? -46 : 0
         
         transition.updateFrame(view: tabs, frame: NSMakeRect(0, initial, size.width, 46))
         transition.updateFrame(view: packsView, frame: tabs.focus(NSMakeSize(size.width, 36)))
@@ -1465,7 +1481,7 @@ final class AnimatedEmojiesView : Control {
 
     func updateSearchState(_ searchState: SearchState, animated: Bool) {
         
-        if let window = _window, self.mode == .reactions || self.mode == .defaultTags {
+        if let window = _window, self.mode.isFocusSearch {
             switch searchState.state {
             case .Focus:
                 window._canBecomeKey = true
@@ -1736,7 +1752,12 @@ final class AnimatedEmojiesView : Control {
             } else if identifier.identifier.hasPrefix("_id_pack_") {
                 let collectionId = identifier.identifier.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890").inverted)
                 if let collectionId = Int64(collectionId) {
-                    let stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
+                    var stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
+                    
+                    if tableView.item(stableId: stableId) == nil {
+                        stableId = InputDataEntryId.custom(_id_section(collectionId, "a"))
+                    }
+                    
                     tableView.scroll(to: .top(id: stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
                     
                     let packStableId = InputDataEntryId.custom(_id_pack(collectionId))
@@ -1806,6 +1827,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
     
+    private let onStage = ValuePromise<Bool>(ignoreRepeated: true)
+    
     private var groupEmojiPack: Signal<(StickerPackCollectionInfo, [StickerPackItem])?, NoError> = .single(nil)
 
     
@@ -1843,6 +1866,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case channelReactions
         case channelStatus
         case defaultTags
+        case messageEffects
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1861,6 +1885,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .channelStatus
             case .defaultTags:
                 return .defaultTags
+            case .messageEffects:
+                return .messageEffects
             default:
                 return .panel
             }
@@ -1868,6 +1894,16 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         var isTransparent: Bool {
             switch self {
             case .reactions:
+                return true
+            case .messageEffects:
+                return true
+            default:
+                return false
+            }
+        }
+        var isFocusSearch: Bool {
+            switch self {
+            case .reactions, .messageEffects, .defaultTags:
                 return true
             default:
                 return false
@@ -1966,6 +2002,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        onStage.set(true)
         
         genericView.presentation = self.presentation
         genericView.packsView.delegate = self
@@ -2075,6 +2114,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             self?.updateSearchState(searchState)
         })
         
+        genericView.arguments = arguments
+        
         let selectUpdater = { [weak self] in
             if self?.genericView.tableView.clipView.isAnimateScrolling == true {
                 return
@@ -2143,10 +2184,10 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             
             let initialSize = initialSize.modify { $0 }
             
-            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true)
+            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true, makeFirstFast: true)
             
             
-            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true)
+            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true, makeFirstFast: true)
 
             return combineLatest(sectionsTransition, packsTransition) |> map { values in
                 return (sections: values.0, packs: values.1, state: state.state)
@@ -2217,15 +2258,15 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let emojies: Signal<ItemCollectionsView, NoError>
         switch mode {
         case .reactions, .quickReaction, .defaultTags:
-            emojies = context.diceCache.emojies_reactions
+            emojies = context.diceCache.emojies_reactions_small |> take(1) |> then(context.diceCache.emojies_reactions |> delay(1.0, queue: prepareQueue))
         case .status:
-            emojies = context.diceCache.emojies_status
+            emojies = context.diceCache.emojies_status_small |> take(1) |> then(context.diceCache.emojies_status |> delay(1.0, queue: prepareQueue))
         case .backgroundIcon:
-            emojies = context.diceCache.background_icons
+            emojies = context.diceCache.background_icons_small |> take(1) |> then(context.diceCache.background_icons |> delay(1.0, queue: prepareQueue))
         case .channelStatus:
-            emojies = context.diceCache.channel_statuses
+            emojies = context.diceCache.channel_statuses_small |> take(1) |> then(context.diceCache.channel_statuses |> delay(1.0, queue: prepareQueue))
         default:
-            emojies = context.diceCache.emojies
+            emojies = context.diceCache.emojies_small |> take(1) |> then(context.diceCache.emojies |> delay(1.0, queue: prepareQueue))
         }
         
         
@@ -2244,7 +2285,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         let searchCategories: Signal<EmojiSearchCategories?, NoError>
-        if mode == .emoji || mode == .reactions || mode == .quickReaction || mode == .stories {
+        if mode == .emoji || mode == .reactions || mode == .quickReaction || mode == .stories || mode == .messageEffects {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
         } else if mode == .status {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .status)
@@ -2268,218 +2309,289 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let peer = getPeerView(peerId: context.peerId, postbox: context.account.postbox)
         
-        let featured: Signal<[FeaturedStickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks()
+        let featured: Signal<[FeaturedStickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks() |> map {
+            Array($0.prefix(5))
+        } |> take(1) |> then(context.account.viewTracker.featuredEmojiPacks() |> delay(1.0, queue: prepareQueue))
         
-//        let foundSets: Signal<(FoundStickerSets?, String), NoError> = searchValue.get()
-//        |> map { $0.request }
-//        |> mapToSignal { query in
-//            if query.isEmpty || query.containsOnlyEmoji {
-//                return .single((nil, ""))
-//            } else {
-//                return context.engine.stickers.searchEmojiSetsRemotely(query: query) |> map(Optional.init) |> map { ($0, query) } |> delay(0.2, queue: .concurrentDefaultQueue()) 
-//            }
-//        }
-        
-        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions in
-            
-            
-            var featuredStatusEmoji: OrderedItemListView?
-            var recentStatusEmoji: OrderedItemListView?
-            var recentReactionsView: OrderedItemListView?
-            var topReactionsView: OrderedItemListView?
-            var featuredBackgroundIconEmoji: OrderedItemListView?
-            var featuredChannelStatusEmoji: OrderedItemListView?
-            var defaultTagReactions: OrderedItemListView?
 
-            for orderedView in view.orderedItemListsViews {
-                if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
-                    featuredStatusEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentStatusEmoji {
-                    recentStatusEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
-                    recentReactionsView = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
-                    topReactionsView = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji {
-                    featuredBackgroundIconEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji {
-                    featuredChannelStatusEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
-                    defaultTagReactions = orderedView
-                }
-            }
-            var recentStatusItems:[RecentMediaItem] = []
-            var featuredStatusItems:[RecentMediaItem] = []
-            var recentReactionsItems:[RecentReactionItem] = []
-            var topReactionsItems:[RecentReactionItem] = []
-            var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
-            var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
-            var defaultTagReactionsItems: [RecentReactionItem] = []
-            
-            if let recentStatusEmoji = recentStatusEmoji {
-                for item in recentStatusEmoji.items {
-                    guard let item = item.contents.get(RecentMediaItem.self) else {
-                        continue
-                    }
-                    recentStatusItems.append(item)
-                }
-            }
-            if let featuredStatusEmoji = featuredStatusEmoji {
-                for item in featuredStatusEmoji.items {
-                    guard let item = item.contents.get(RecentMediaItem.self) else {
-                        continue
-                    }
-                    featuredStatusItems.append(item)
-                }
-            }
-            if let featuredBackgroundIconEmoji = featuredBackgroundIconEmoji {
-                for item in featuredBackgroundIconEmoji.items {
-                    guard let item = item.contents.get(RecentMediaItem.self) else {
-                        continue
-                    }
-                    featuredBackgroundIconEmojiItems.append(item)
-                }
-            }
-            if let featuredChannelStatusEmoji = featuredChannelStatusEmoji {
-                for item in featuredChannelStatusEmoji.items {
-                    guard let item = item.contents.get(RecentMediaItem.self) else {
-                        continue
-                    }
-                    featuredChannelStatusEmojiItems.append(item)
-                }
-            }
-            
-            
-            if let recentReactionsView = recentReactionsView {
-                for item in recentReactionsView.items {
-                    guard let item = item.contents.get(RecentReactionItem.self) else {
-                        continue
-                    }
-                    recentReactionsItems.append(item)
-                }
-            }
-            if let topReactionsView = topReactionsView {
-                for item in topReactionsView.items {
-                    guard let item = item.contents.get(RecentReactionItem.self) else {
-                        continue
-                    }
-                    topReactionsItems.append(item)
-                }
-            }
-            if let defaultTagReactions = defaultTagReactions {
-                for item in defaultTagReactions.items {
-                    guard let item = item.contents.get(RecentReactionItem.self) else {
-                        continue
-                    }
-                    defaultTagReactionsItems.append(item)
-                }
-            }
-            
-            updateState { current in
-                var current = current
-                var sections: [State.Section] = []
-                var itemsDict: [MediaId: StickerPackItem] = [:]
-                
-                if let groupEmojiPack = groupEmojiPack {
-                    var files: [StickerPackItem] = []
-                    var dict: [MediaId: StickerPackItem] = [:]
-                    for item in groupEmojiPack.1 {
-                        var updated = item
-                        var attrs = item.file.attributes
-                        loop: for (i, attr) in attrs.enumerated() {
-                            switch attr {
-                            case let .CustomEmoji(isPremium, isSingleColor, alt, packReference):
-                                attrs[i] = .CustomEmoji(isPremium: false, isSingleColor: isSingleColor, alt: alt, packReference: packReference)
-                                break loop;
-                            default:
-                                break
+        switch mode {
+        case .messageEffects:
+            let messageEffects = context.engine.stickers.availableMessageEffects()
+            actionsDisposable.add(combineLatest(queue: prepareQueue, messageEffects, search, searchCategories).startStrict(next: { messageEffects, search, searchCategories in
+                updateState { current in
+                    var current = current
+                    current.messageEffects = messageEffects?.messageEffects ?? []
+                    current.searchCategories = searchCategories
+                    var sections: [State.Section] = []
+                    
+                   
+                    let emojiItems: [StickerPackItem] = current.messageEffects.filter({ value in
+                        if value.effectAnimation != nil {
+                            if let search {
+                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                return search.contains(emoji)
+                            } else {
+                                return true
                             }
                         }
-                        updated = StickerPackItem(index: updated.index, file: item.file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
-                        files.append(updated)
-                        dict[item.file.fileId] = updated
-                        itemsDict[item.file.fileId] = updated
+                        return false
+                    }).map {
+                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
                     }
-                    sections.append(.init(info: groupEmojiPack.0, items: files, dict: dict, installed: true, groupEmojiPack: true))
-                }
-                for (_, info, _) in view.collectionInfos {
-                    var files: [StickerPackItem] = []
-                    var dict: [MediaId: StickerPackItem] = [:]
                     
-                    if let info = info as? StickerPackCollectionInfo, !sections.contains(where: { $0.info.id == info.id }) {
-                        let items = view.entries
-                        for (i, entry) in items.enumerated() {
-                            if entry.index.collectionId == info.id {
-                                if let item = view.entries[i].item as? StickerPackItem {
-                                    var pass: Bool = true
-                                    if case .backgroundIcon = mode {
-                                        pass = item.file.isCustomTemplateEmoji
-                                    }
-                                    if pass {
-                                        files.append(item)
-                                        dict[item.file.fileId] = item
-                                        itemsDict[item.file.fileId] = item
+                    let stickerItems: [StickerPackItem] = current.messageEffects.filter({ value in
+                        if value.effectAnimation == nil {
+                            if let search {
+                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                return search.contains(emoji)
+                            } else {
+                                return true
+                            }
+                        }
+                        return false
+                    }).map {
+                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
+                    }
+                    
+                    
+                    
+                    var stickerDict: [MediaId : StickerPackItem] = [:]
+                    for item in stickerItems {
+                        stickerDict[item.file.fileId] = item
+                    }
+                    
+                    var emojiDict: [MediaId : StickerPackItem] = [:]
+                    for item in emojiItems {
+                        emojiDict[item.file.fileId] = item
+                    }
+                    
+                    if !emojiItems.isEmpty {
+                        sections.append(.init(info: .init(id: .init(namespace: 0, id: 0), flags: .init(), accessHash: 0, title: "", shortName: "", thumbnail: nil, thumbnailFileId: nil, immediateThumbnailData: nil, hash: 0, count: 0), items: emojiItems, dict: emojiDict, installed: true))
+                    }
+                    
+                    
+                    if !stickerItems.isEmpty {
+                        sections.append(.init(info: .init(id: .init(namespace: 0, id: 1), flags: .init(), accessHash: 0, title: strings().emojiesMessageEffectsTitle, shortName: "", thumbnail: nil, thumbnailFileId: nil, immediateThumbnailData: nil, hash: 0, count: 0), items: stickerItems, dict: stickerDict, installed: true, isBig: true))
+                    }
+                    current.search = search
+                    current.sections = sections
+                    
+                    if search != nil {
+                        var bp = 0
+                        bp += 1
+                    }
+                    return current
+                }
+                DispatchQueue.main.async {
+                    updateSearchCommand()
+                }
+            }))
+        default:
+            let signal = combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue, onStage.get()) |> filter { $0.12 }
+            actionsDisposable.add(signal.start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions, _ in
+                
+                            
+                var featuredStatusEmoji: OrderedItemListView?
+                var recentStatusEmoji: OrderedItemListView?
+                var recentReactionsView: OrderedItemListView?
+                var topReactionsView: OrderedItemListView?
+                var featuredBackgroundIconEmoji: OrderedItemListView?
+                var featuredChannelStatusEmoji: OrderedItemListView?
+                var defaultTagReactions: OrderedItemListView?
+
+                for orderedView in view.orderedItemListsViews {
+                    if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
+                        featuredStatusEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentStatusEmoji {
+                        recentStatusEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
+                        recentReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
+                        topReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji {
+                        featuredBackgroundIconEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji {
+                        featuredChannelStatusEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                        defaultTagReactions = orderedView
+                    }
+                }
+                var recentStatusItems:[RecentMediaItem] = []
+                var featuredStatusItems:[RecentMediaItem] = []
+                var recentReactionsItems:[RecentReactionItem] = []
+                var topReactionsItems:[RecentReactionItem] = []
+                var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
+                var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
+                var defaultTagReactionsItems: [RecentReactionItem] = []
+                
+                if let recentStatusEmoji = recentStatusEmoji {
+                    for item in recentStatusEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        recentStatusItems.append(item)
+                    }
+                }
+                if let featuredStatusEmoji = featuredStatusEmoji {
+                    for item in featuredStatusEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        featuredStatusItems.append(item)
+                    }
+                }
+                if let featuredBackgroundIconEmoji = featuredBackgroundIconEmoji {
+                    for item in featuredBackgroundIconEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        featuredBackgroundIconEmojiItems.append(item)
+                    }
+                }
+                if let featuredChannelStatusEmoji = featuredChannelStatusEmoji {
+                    for item in featuredChannelStatusEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        featuredChannelStatusEmojiItems.append(item)
+                    }
+                }
+                
+                
+                if let recentReactionsView = recentReactionsView {
+                    for item in recentReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        recentReactionsItems.append(item)
+                    }
+                }
+                if let topReactionsView = topReactionsView {
+                    for item in topReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        topReactionsItems.append(item)
+                    }
+                }
+                if let defaultTagReactions = defaultTagReactions {
+                    for item in defaultTagReactions.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        defaultTagReactionsItems.append(item)
+                    }
+                }
+                
+                updateState { current in
+                    var current = current
+                    var sections: [State.Section] = []
+                    var itemsDict: [MediaId: StickerPackItem] = [:]
+                    
+                    if let groupEmojiPack = groupEmojiPack {
+                        var files: [StickerPackItem] = []
+                        var dict: [MediaId: StickerPackItem] = [:]
+                        for item in groupEmojiPack.1 {
+                            var updated = item
+                            var attrs = item.file.attributes
+                            loop: for (i, attr) in attrs.enumerated() {
+                                switch attr {
+                                case let .CustomEmoji(isPremium, isSingleColor, alt, packReference):
+                                    attrs[i] = .CustomEmoji(isPremium: false, isSingleColor: isSingleColor, alt: alt, packReference: packReference)
+                                    break loop;
+                                default:
+                                    break
+                                }
+                            }
+                            updated = StickerPackItem(index: updated.index, file: item.file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
+                            files.append(updated)
+                            dict[item.file.fileId] = updated
+                            itemsDict[item.file.fileId] = updated
+                        }
+                        sections.append(.init(info: groupEmojiPack.0, items: files, dict: dict, installed: true, groupEmojiPack: true))
+                    }
+                    for (_, info, _) in view.collectionInfos {
+                        var files: [StickerPackItem] = []
+                        var dict: [MediaId: StickerPackItem] = [:]
+                        
+                        if let info = info as? StickerPackCollectionInfo, !sections.contains(where: { $0.info.id == info.id }) {
+                            let items = view.entries
+                            for (i, entry) in items.enumerated() {
+                                if entry.index.collectionId == info.id {
+                                    if let item = view.entries[i].item as? StickerPackItem {
+                                        var pass: Bool = true
+                                        if case .backgroundIcon = mode {
+                                            pass = item.file.isCustomTemplateEmoji
+                                        }
+                                        if pass {
+                                            files.append(item)
+                                            dict[item.file.fileId] = item
+                                            itemsDict[item.file.fileId] = item
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if !files.isEmpty {
-                            sections.append(.init(info: info, items: files, dict: dict, installed: true))
-                        }
-                    }
-                }
-               
-               
-                for item in featured {
-                    let contains = sections.contains(where: { $0.info.id == item.info.id })
-                    if !contains {
-                        let dict = item.topItems.toDictionary(with: {
-                            $0.file.fileId
-                        }).filter { _, value in
-                            if mode == .backgroundIcon {
-                                return value.file.isCustomTemplateEmoji
-                            } else {
-                                return true
+                            if !files.isEmpty {
+                                sections.append(.init(info: info, items: files, dict: dict, installed: true))
                             }
                         }
-                        let items = item.topItems.filter({ value in
-                            if mode == .backgroundIcon {
-                                return value.file.isCustomTemplateEmoji
-                            } else {
-                                return true
+                    }
+                   
+                   
+                    for item in featured {
+                        let contains = sections.contains(where: { $0.info.id == item.info.id })
+                        if !contains {
+                            let dict = item.topItems.toDictionary(with: {
+                                $0.file.fileId
+                            }).filter { _, value in
+                                if mode == .backgroundIcon {
+                                    return value.file.isCustomTemplateEmoji
+                                } else {
+                                    return true
+                                }
                             }
-                        })
-                        if !items.isEmpty {
-                            sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
+                            let items = item.topItems.filter({ value in
+                                if mode == .backgroundIcon {
+                                    return value.file.isCustomTemplateEmoji
+                                } else {
+                                    return true
+                                }
+                            })
+                            if !items.isEmpty {
+                                sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
+                            }
                         }
                     }
+                    
+                    if let peer = peer {
+                        current.peer = .init(peer)
+                    }
+                    current.featuredStatusItems = featuredStatusItems
+                    current.recentStatusItems = recentStatusItems
+                    current.forumTopicItems = forumTopic
+                    current.sections = sections
+                    current.itemsDict = itemsDict
+                    current.search = search
+                    current.reactions = reactions
+                    current.recent = recentEmoji
+                    current.topReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : topReactionsItems
+                    current.recentReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : recentReactionsItems
+                    current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
+                    current.featuredChannelStatusEmojiItems = featuredChannelStatusEmojiItems
+                    current.reactionSettings = reactionSettings
+                    current.iconStatusEmoji = iconStatusEmoji
+                    current.searchCategories = searchCategories
+                    current.availableReactions = availableReactions
+                    return current
                 }
-                
-                if let peer = peer {
-                    current.peer = .init(peer)
+                DispatchQueue.main.async {
+                    updateSearchCommand()
                 }
-                current.featuredStatusItems = featuredStatusItems
-                current.recentStatusItems = recentStatusItems
-                current.forumTopicItems = forumTopic
-                current.sections = sections
-                current.itemsDict = itemsDict
-                current.search = search
-                current.reactions = reactions
-                current.recent = recentEmoji
-                current.topReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : topReactionsItems
-                current.recentReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : recentReactionsItems
-                current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
-                current.featuredChannelStatusEmojiItems = featuredChannelStatusEmojiItems
-                current.reactionSettings = reactionSettings
-                current.iconStatusEmoji = iconStatusEmoji
-                current.searchCategories = searchCategories
-                current.availableReactions = availableReactions
-                return current
-            }
-            DispatchQueue.main.async {
-                updateSearchCommand()
-            }
-        }))
+            }))
+            
+
+        }
+        
         
 
             
@@ -2494,6 +2606,12 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.scrollOnAppear?()
+        onStage.set(true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        onStage.set(false)
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {

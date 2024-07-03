@@ -131,6 +131,13 @@ final class EditImageDrawTouch : Equatable {
         self.width = width
         self.canvasSize = canvasSize
     }
+    init(action: Action, lines: [NSPoint], canvasSize: NSSize, color: NSColor, width: CGFloat) {
+        self.action = action
+        self.lines = lines
+        self.color = color
+        self.width = width
+        self.canvasSize = canvasSize
+    }
     func addPoint(_ point: NSPoint) {
         self.lines.append(point)
     }

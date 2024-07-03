@@ -24,7 +24,8 @@ class MediaGroupPreviewRowItem: TableRowItem {
     fileprivate let paint:(URL)->Void
     fileprivate let delete:(URL)->Void
     fileprivate let parameters:[ChatMediaLayoutParameters]
-    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], isSpoiler: Bool, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
+    fileprivate let payAmount: Int64?
+    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], isSpoiler: Bool, payAmount: Int64?, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
         self.editedData = editedData
         self.edit = edit
@@ -33,9 +34,11 @@ class MediaGroupPreviewRowItem: TableRowItem {
         self.urls = urls
         self.reorder = reorder
         self.context = context
+        self.payAmount = payAmount
         self.parameters = messages.map {
             let param = ChatMediaLayoutParameters(presentation: .empty, media: $0.media[0])
-            param.forceSpoiler = isSpoiler
+            param.forceSpoiler = isSpoiler || payAmount != nil
+            param.fillContent = true
             return param
         }
         super.init(initialSize)
@@ -44,7 +47,7 @@ class MediaGroupPreviewRowItem: TableRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        layout.measure(NSMakeSize(width - 20, width - 20))
+        layout.measure(NSMakeSize(width, width), preview: true)
         return success
     }
     
@@ -68,7 +71,53 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
     private var contents: [ChatMediaContentView] = []
     private var startPoint: NSPoint = NSZeroPoint
     private(set) var draggingIndex: Int? = nil
+    private var paidView: PaidContentView?
     
+    private let editControl = MediaPreviewEditControl()
+    
+    
+    private final class PaidContentView: NSVisualEffectView {
+        private let textView = InteractiveTextView()
+        required override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.wantsLayer = true
+            self.material = .ultraDark
+            self.blendingMode = .withinWindow
+            self.state = .active
+            
+            addSubview(textView)
+            
+            textView.userInteractionEnabled = false
+            textView.textView.isSelectable = false
+            
+        }
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(amount: Int64, context: AccountContext, short: Bool) {
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: "\(clown)", color: .white, font: .medium(.text))
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.append(string: " \(amount)", color: .white, font: .medium(.text))
+            
+            let textLayout = TextViewLayout(attr)
+            textLayout.measure(width: .greatestFiniteMagnitude)
+
+            self.textView.set(text: textLayout, context: context)
+            
+            self.setFrameSize(NSMakeSize(textView.frame.width + 20, 30))
+
+        }
+        
+        override func layout() {
+            super.layout()
+            self.textView.centerY(x: 10)
+        }
+    }
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         
@@ -128,41 +177,36 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
                 contents.last?.userInteractionEnabled = false
             }
         }
-        
-        
-        
+                
         for i in 0 ..< contents.count {
             let content = contents[i]
             addSubview(content)
-            let control: MediaPreviewEditControl
-            if let editControl = content.subviews.last as? MediaPreviewEditControl {
-                control = editControl
-            } else {
-                let editControl = MediaPreviewEditControl()
-                content.addSubview(editControl)
-                control = editControl
-            }
-            
-            control.canEdit = item.layout.messages[i].media[0] is TelegramMediaImage
-            control.set(edit: { [weak item] in
-                guard let item = item else {return}
-                item.edit(item.urls[i])
-            }, paint: { [weak item] in
-                guard let item = item else {return}
-                item.paint(item.urls[i])
-            }, delete: { [weak item] in
-                guard let item = item else {return}
-                item.delete(item.urls[i])
-            }, editedData: item.editedData[item.urls[i]])
-            
         }
         
         assert(contents.count == item.layout.count)
         
         for i in 0 ..< item.layout.count {
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: nil, table: item.table, parameters: item.parameters[i], animated: animated, positionFlags: item.layout.position(at: i))
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: nil, table: item.table, parameters: item.parameters[i], animated: false, positionFlags: nil)
         }
         super.set(item: item, animated: animated)
+        
+        
+        if let payAmount = item.payAmount {
+            let current: PaidContentView
+            if let view = self.paidView {
+                current = view
+            } else {
+                current = PaidContentView(frame: NSMakeRect(0, 0, 100, 30))
+                self.paidView = current
+            }
+            current.update(amount: payAmount, context: item.context, short: true)
+            current.layer?.cornerRadius = current.frame.height / 2
+            addSubview(current)
+            current.center()
+        } else if let view = self.paidView {
+            performSubviewRemoval(view, animated: false)
+            self.paidView = nil
+        }
         
         needsLayout = true
         
@@ -181,35 +225,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
     }
     
     override func updateMouse(animated: Bool) {
-        guard let window = window, let table = item?.table else {
-            for node in self.contents {
-                if let control = node.subviews.last as? MediaPreviewEditControl {
-                    control.isHidden = true
-                }
-            }
-            return
-        }
-        
-        let row = table.row(at: table.documentView!.convert(window.mouseLocationOutsideOfEventStream, from: nil))
-        
-        if row == item?.index {
-            let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
-            for node in self.contents {
-                if let control = node.subviews.last as? MediaPreviewEditControl {
-                    if NSPointInRect(point, node.frame) {
-                        control.isHidden = false
-                    } else {
-                        control.isHidden = true
-                    }
-                }
-            }
-        } else {
-            for node in self.contents {
-                if let control = node.subviews.last as? MediaPreviewEditControl {
-                    control.isHidden = true
-                }
-            }
-        }
+        updateControl()
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -221,11 +237,11 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             if NSPointInRect(point, item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)) {
                 self.startPoint = point
                 self.draggingIndex = i
-                //contents[i].removeFromSuperview()
                 addSubview(contents[i])
                 break
             }
         }
+        updateControl()
         super.mouseDown(with: event)
     }
     
@@ -249,19 +265,18 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             set(item: item, animated: true)
             for i in 0 ..< item.layout.count {
                 let rect = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)
-                contents[i].change(pos: rect.origin, animated: true)
-                contents[i].change(size: rect.size, animated: true)
+                contents[i].frame = rect
             }
         } else {
             for i in 0 ..< item.layout.count {
                 let rect = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)
-                contents[i].change(pos: rect.origin, animated: true)
-                contents[i].change(size: rect.size, animated: true)
+                contents[i].frame = rect
             }
         }
         
         draggingIndex = nil
         startPoint = NSZeroPoint
+        updateControl()
     }
     private var previous: NSPoint = NSZeroPoint
     override func mouseDragged(with event: NSEvent) {
@@ -277,14 +292,13 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             current.y += (point.y - previous.y)
             
             
-            let size = contents[index].frame.size.fitted(NSMakeSize(100, 100))
+            let size = contents[index].frame.size.fitted(NSMakeSize(150, 150))
             current.x -= (size.width - past.width) * ((point.x - past.minX) / past.width)
             current.y -= (size.height - past.height) * ((point.y - past.minY) / past.height)
             
             
             if size != contents[index].frame.size {
-                contents[index].change(size: size, animated: true, timingFunction: .spring)
-                contents[index].layer?.animatePosition(from: contents[index].frame.origin - current, to: .zero, timingFunction: .spring, additive: true)
+                contents[index].setFrameSize(size)
             }
             contents[index].setFrameOrigin(current)
 
@@ -296,17 +310,15 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             
             let layout = GroupedLayout(item.layout.messages)
-            layout.measure(NSMakeSize(frame.width - 20, frame.width - 20))
+            layout.measure(NSMakeSize(frame.width, frame.width))
             
             if layout.moveItemIfNeeded(at: index, point: point) != nil {
                 
                 for i in 0 ..< layout.count {
                     let current = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y).origin
-
                     if i != index {
                         contents[i].setFrameOrigin(current)
                     }
-                    
                 }
             } else {
                 for i in 0 ..< item.layout.count {
@@ -316,6 +328,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
                 }
             }
         }
+        updateControl()
     }
     
     override var needsDisplay: Bool {
@@ -337,6 +350,65 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
         }
     }
     
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        
+        updateControl()
+        
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateControl()
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        updateControl()
+    }
+    
+    
+    func updateControl() {
+        
+        addSubview(editControl)
+        if let paidView {
+            addSubview(paidView)
+        }
+        
+        
+        guard let item = item as? MediaGroupPreviewRowItem else {
+            return
+        }
+        
+        let location = self.convert(self.window?.mouseLocationOutsideOfEventStream ?? .zero, from: nil)
+        
+        var found = false
+        for i in 0 ..< item.layout.count {
+            let rect = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y)
+            if rect.contains(location) {
+                self.editControl.canEdit = item.layout.messages[i].media[0] is TelegramMediaImage
+                
+                self.editControl.set(edit: { [weak item] in
+                    guard let item = item else {return}
+                    item.edit(item.urls[i])
+                }, paint: { [weak item] in
+                    guard let item = item else {return}
+                    item.paint(item.urls[i])
+                }, delete: { [weak item] in
+                    guard let item = item else {return}
+                    item.delete(item.urls[i])
+                }, editedData: item.editedData[item.urls[i]])
+                
+                self.editControl.setFrameOrigin(NSMakePoint(rect.maxX - editControl.frame.width - 5, rect.maxY - editControl.frame.height - 5))
+                found = true
+                break
+            }
+        }
+        
+        self.editControl.isHidden = self.draggingIndex != nil || !found
+        
+        
+    }
     
     override func viewWillMove(toSuperview newSuperview: NSView?) {
         if newSuperview == nil {
@@ -368,6 +440,8 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
                 control.setFrameOrigin(NSMakePoint(contents[i].frame.width - control.frame.width - 10, contents[i].frame.height - control.frame.height - 10))
             }
         }
+        
+        paidView?.center()
         
     }
 }

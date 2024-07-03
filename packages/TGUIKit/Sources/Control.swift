@@ -79,11 +79,11 @@ open class Control: View {
         }
     }
     open var hideAnimated:Bool = false
-    
+    public var tooltipOnclick = false
     
     public var appTooltip: String? {
         didSet {
-            if let tp = appTooltip, controlState == .Hover {
+            if let tp = appTooltip, (!tooltipOnclick && controlState == .Hover) || (tooltipOnclick && controlState == .Highlight) {
                 tooltip(for: self, text: tp)
             }
         }

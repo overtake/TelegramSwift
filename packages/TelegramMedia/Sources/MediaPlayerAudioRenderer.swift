@@ -3,7 +3,7 @@ import SwiftSignalKit
 import CoreMedia
 import AVFoundation
 import TelegramCore
-import MediaPlayer
+import TelegramMediaPlayer
 
 private enum AudioPlayerRendererState {
     case paused

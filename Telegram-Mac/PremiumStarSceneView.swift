@@ -19,6 +19,8 @@ private let sceneVersion: Int = 2
 protocol PremiumSceneView {
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
     func playAgain()
+    
+    var sceneBackground: NSColor { get set }
 }
 
 final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneView {
@@ -31,6 +33,12 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
     deinit {
         appearanceDelay.dispose()
         tapDelay.dispose()
+    }
+    
+    var sceneBackground: NSColor = .clear {
+        didSet {
+            sceneView.backgroundColor = sceneBackground
+        }
     }
 
     required init(frame: CGRect) {
@@ -164,18 +172,11 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
     }
     
     private func setup() {
-        guard let url = Bundle.main.url(forResource: "star", withExtension: ""),
-              let compressedData = try? Data(contentsOf: url),
-              let decompressedData = TGGUnzipData(compressedData, 8 * 1024 * 1024) else {
+        guard let url = Bundle.main.url(forResource: "star2", withExtension: "scn") else {
             return
         }
-        let fileName = "star_\(sceneVersion).scn"
-        let tmpURL = URL(fileURLWithPath: NSTemporaryDirectory() + fileName)
-        if !FileManager.default.fileExists(atPath: tmpURL.path) {
-            try? decompressedData.write(to: tmpURL)
-        }
         
-        guard let scene = try? SCNScene(url: tmpURL, options: nil) else {
+        guard let scene = try? SCNScene(url: url, options: nil) else {
             return
         }
         
@@ -186,8 +187,8 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
 
         self.sceneView.scene = scene
         self.sceneView.delegate = self
+                
         
-        let _ = self.sceneView.snapshot()
     }
     
     private var didSetReady = false

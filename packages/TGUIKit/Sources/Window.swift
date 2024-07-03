@@ -629,6 +629,7 @@ open class Window: NSWindow {
             return
         }
         if isReleasedWhenClosed {
+            closeAllModals(window: self)
             super.close()
         } else {
             super.close()
@@ -803,7 +804,7 @@ open class Window: NSWindow {
                 if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode]?.sorted(by: >) {
                     loop: for handle in handlers {
                         
-                        if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
+                        if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)), event.window?.isKeyWindow == true  {
                             
                             switch handle.handler(event) {
                             case .invoked:

@@ -119,6 +119,26 @@ public final class ApplicationSpecificInt64ArrayNotice: Codable {
     }
 }
 
+public final class ApplicationSpecificMessageIdArrayNotice: Codable {
+    public let values: [MessageId]
+    
+    public init(values: [MessageId]) {
+        self.values = values
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.values = try container.decode([MessageId].self, forKey: "v")
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.values, forKey: "v")
+    }
+}
+
 private func noticeNamespace(namespace: Int32) -> ValueBoxKey {
     let key = ValueBoxKey(length: 4)
     key.setInt32(0, value: namespace)
@@ -135,6 +155,7 @@ private func noticeKey(peerId: PeerId, key: Int32) -> ValueBoxKey {
 private enum ApplicationSpecificGlobalNotice: Int32 {
     case value = 0
     case dismissedBirthdayPremiumGifts = 1
+    case playedMessageEffects = 2
 
     var key: ValueBoxKey {
         let v = ValueBoxKey(length: 4)
@@ -147,10 +168,6 @@ private enum ApplicationSpecificGlobalNotice: Int32 {
 private struct ApplicationSpecificNoticeKeys {
     private static let globalNamespace: Int32 = 2
     private static let botPaymentLiabilityNamespace: Int32 = 1
-    private static let dismissedBirthdayPremiumGiftTipNamespace: Int32 = 10
-
-
-  
     
     static func botPaymentLiabilityNotice(peerId: PeerId) -> NoticeEntryKey {
         return NoticeEntryKey(namespace: noticeNamespace(namespace: botPaymentLiabilityNamespace), key: noticeKey(peerId: peerId, key: 0))
@@ -158,7 +175,9 @@ private struct ApplicationSpecificNoticeKeys {
     static func dismissedBirthdayPremiumGifts() -> NoticeEntryKey {
         return NoticeEntryKey(namespace: noticeNamespace(namespace: globalNamespace), key: ApplicationSpecificGlobalNotice.dismissedBirthdayPremiumGifts.key)
     }
-        
+    static func playedMessageEffects() -> NoticeEntryKey {
+        return NoticeEntryKey(namespace: noticeNamespace(namespace: globalNamespace), key: ApplicationSpecificGlobalNotice.playedMessageEffects.key)
+    }
 }
 
 public struct ApplicationSpecificNotice {
@@ -181,22 +200,49 @@ public struct ApplicationSpecificNotice {
     }
     
     public static func dismissedBirthdayPremiumGifts(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<[Int64]?, NoError> {
-           return accountManager.noticeEntry(key: ApplicationSpecificNoticeKeys.dismissedBirthdayPremiumGifts())
-           |> map { view -> [Int64]? in
-               if let value = view.value?.get(ApplicationSpecificInt64ArrayNotice.self) {
-                   return value.values
-               } else {
-                   return nil
-               }
-           }
-       }
-       
-       public static func setDismissedBirthdayPremiumGifts(accountManager: AccountManager<TelegramAccountManagerTypes>, values: [Int64]) -> Signal<Void, NoError> {
-           return accountManager.transaction { transaction -> Void in
-               if let entry = CodableEntry(ApplicationSpecificInt64ArrayNotice(values: values)) {
-                   transaction.setNotice(ApplicationSpecificNoticeKeys.dismissedBirthdayPremiumGifts(), entry)
-               }
-           }
-       }
+        return accountManager.noticeEntry(key: ApplicationSpecificNoticeKeys.dismissedBirthdayPremiumGifts())
+        |> map { view -> [Int64]? in
+            if let value = view.value?.get(ApplicationSpecificInt64ArrayNotice.self) {
+                return value.values
+            } else {
+                return nil
+            }
+        }
+    }
+    
+    public static func setDismissedBirthdayPremiumGifts(accountManager: AccountManager<TelegramAccountManagerTypes>, values: [Int64]) -> Signal<Void, NoError> {
+        return accountManager.transaction { transaction -> Void in
+            if let entry = CodableEntry(ApplicationSpecificInt64ArrayNotice(values: values)) {
+                transaction.setNotice(ApplicationSpecificNoticeKeys.dismissedBirthdayPremiumGifts(), entry)
+            }
+        }
+    }
+    
+    public static func playedMessageEffects(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<[MessageId]?, NoError> {
+        return accountManager.noticeEntry(key: ApplicationSpecificNoticeKeys.playedMessageEffects())
+        |> map { view -> [MessageId]? in
+            if let value = view.value?.get(ApplicationSpecificMessageIdArrayNotice.self) {
+                return value.values
+            } else {
+                return nil
+            }
+        }
+    }
+    
+    public static func addPlayedMessageEffects(accountManager: AccountManager<TelegramAccountManagerTypes>, values: [MessageId]) -> Signal<Void, NoError> {
+        return accountManager.transaction { transaction -> Void in
+            if let entry = CodableEntry(ApplicationSpecificMessageIdArrayNotice(values: values)) {
+                var current = transaction.getNotice(ApplicationSpecificNoticeKeys.playedMessageEffects())?.get(ApplicationSpecificMessageIdArrayNotice.self)
+                if let c = current {
+                    current = .init(values: c.values + values)
+                } else {
+                    current = .init(values: values)
+                }
+                if let current = current, let entry = CodableEntry(current) {
+                    transaction.setNotice(ApplicationSpecificNoticeKeys.playedMessageEffects(), entry)
+                }
+            }
+        }
+    }
 
 }

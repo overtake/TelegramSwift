@@ -38,17 +38,17 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
     
     private(set) var channels: [Channel]
     
-    let wpPresentation: WPLayoutPresentation
+    let givePresentation: WPLayoutPresentation
 
     
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
         
-        let wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
-        self.wpPresentation = wpPresentation
+        let givePresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType, pattern: nil)
+        self.givePresentation = givePresentation
 
         
         let media = object.message!.media.first! as! TelegramMediaGiveawayResults
@@ -57,7 +57,7 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
     
         
         let header_attr = NSMutableAttributedString()
-        _ = header_attr.append(string: "Winners Selected!", color: wpPresentation.text, font: .medium(.text))
+        _ = header_attr.append(string: "Winners Selected!", color: givePresentation.text, font: .medium(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
@@ -66,7 +66,7 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
         
         var openReplyMessage:(()->Void)? = nil
         
-        let attributed = parseMarkdownIntoAttributedString("**\(media.winnersCount)** winners of the [Giveaway]() were randomly selected by Telegram.", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: wpPresentation.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: wpPresentation.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: wpPresentation.link), linkAttribute: { contents in
+        let attributed = parseMarkdownIntoAttributedString("**\(media.winnersCount)** winners of the [Giveaway]() were randomly selected by Telegram.", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: givePresentation.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: givePresentation.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: givePresentation.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { url in
                 openReplyMessage?()
             }))
@@ -78,7 +78,7 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
         self.prizesInfo.interactions = globalLinkExecutor
         
         let winners_attr = NSMutableAttributedString()
-        _ = winners_attr.append(string: "All winners received gift links in private messages.", color: wpPresentation.text, font: .normal(.text))
+        _ = winners_attr.append(string: "All winners received gift links in private messages.", color: givePresentation.text, font: .normal(.text))
         self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
         
         
@@ -94,7 +94,7 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
             }
         }
         self.channels = channels
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
         openReplyMessage = { [weak self] in
             self?.openReplyMessage()
@@ -334,7 +334,7 @@ private final class ChatGiveawayResultRowView: ChatRowView {
         
         for (i, channel) in item.channels.enumerated() {
             let view = channels.subviews[i] as! ChannelView
-            view.update(channel, item: item, presentation: item.wpPresentation)
+            view.update(channel, item: item, presentation: item.givePresentation)
             view.frame = channel.rect
         }
         

@@ -495,9 +495,9 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
     let peerAllowed: Signal<PeerAllowedReactions?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
     |> map { cachedData in
         if let cachedData = cachedData as? CachedGroupData {
-            return cachedData.allowedReactions.knownValue
+            return cachedData.reactionSettings.knownValue?.allowedReactions
         } else if let cachedData = cachedData as? CachedChannelData {
-            return cachedData.allowedReactions.knownValue
+            return cachedData.reactionSettings.knownValue?.allowedReactions
         } else {
             return nil
         }
@@ -921,6 +921,7 @@ private final class StoryViewController: Control, Notifable {
                 }
             })
             mediaLayer.isPlayable = true
+            mediaLayer.superview = self.media
             
             self.media.layer?.addSublayer(mediaLayer)
             
@@ -1018,7 +1019,7 @@ private final class StoryViewController: Control, Notifable {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(inputView: textView.inputView, textContent: textView.scrollView.contentView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: darkAppearance, highlightRect: { [weak textView] range, whole in
+                current = InputSwapSuggestionsPanel(inputView: textView, textContent: textView.scrollView.contentView, relativeView: self, window: context.window, context: context, presentation: darkAppearance, highlightRect: { [weak textView] range, whole in
                     return textView?.highlight(for: range, whole: whole) ?? .zero
                 })
                 self.textInputSuggestionsView = current
@@ -2304,6 +2305,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                     }
                     self?.close()
+                    closeAllModals(window: context.window)
                 }
                 
                 if let view = view, let event = NSApp.currentEvent {
@@ -2401,7 +2403,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if let peerId = story.peerId, story.sharable {
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
                 
-                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: "repost to my stories")], topSeparator: "", bottomSeparator: "", selectable: false)
+                let additionTopItems: ShareAdditionItems = .init(items: [.init(peer: TelegramStoryRepostPeerObject(), status: strings().storyRepostToMy)], topSeparator: "", bottomSeparator: "", selectable: false)
                 
                 showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id), additionTopItems: additionTopItems, repostAction: {
                     repost(story)
@@ -2441,7 +2443,14 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
         
-        let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self] input, peerId, id, source in
+        let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self, weak interactions] input, peerId, id, source in
+            
+            
+            let locked = interactions?.presentation.lock ?? true
+            
+            if locked {
+                return
+            }
             
             if let timeout = self?.arguments?.interaction.presentation.slowMode?.timeout {
                 self?.genericView.showTooltip(.tooltip(slowModeTooltipText(timeout), MenuAnimation.menu_clear_history))
@@ -2634,9 +2643,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 
                 self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile(peer._asPeer()) : .addedToProfile(peer._asPeer()))
             }
-        }, hashtag: { [weak self] string in
-            self?.close()
-            self?.context.bindings.globalSearch(string)
+        }, hashtag: { string in
+            showModal(with: StoryFoundListController(context: context, source: .hashtag(string), presentation: darkAppearance), for: context.window)
         }, report: report,
         toggleHide: toggleHide,
         showFriendsTooltip: { [weak self] _, story in
@@ -2844,16 +2852,14 @@ final class StoryModalController : ModalViewController, Notifable {
             activateMediaArea(area)
         }, deactivateMediaArea: { area in
             deactivateMediaArea(area)
-        }, invokeMediaArea: { [weak self] area in
+        }, invokeMediaArea: { area in
             switch area {
             case let .venue(_, venue):
-                if #available(macOS 10.13, *) {
-                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: darkAppearance), for: context.window)
-                } else {
-                    execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
-                }
+                showModal(with: StoryFoundListController(context: context, source: .mediaArea(area), presentation: darkAppearance), for: context.window)
             case let .channelMessage(_, messageId):
                 openChat(messageId.peerId, messageId, nil)
+            case let .link(_, url):
+                execute(inapp: .external(link: url, false))
             default:
                 break
             }
@@ -2963,7 +2969,7 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
-        chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler in
+        chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler, messageEffect, leadingText in
             guard let interactions = self?.interactions else {
                 return
             }
@@ -2982,7 +2988,7 @@ final class StoryModalController : ModalViewController, Notifable {
             
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
+                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, messageEffect: messageEffect, leadingText: leadingText).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media(medias))
                 })
@@ -3584,7 +3590,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
     }
-    static func ShowPeerStory(context: AccountContext, listContext: PeerStoryListContext, peerId: PeerId, initialId: StoryInitialIndex?) {
+    static func ShowListStory(context: AccountContext, listContext: StoryListContext, peerId: PeerId, initialId: StoryInitialIndex?) {
         let storyContent = PeerStoryListContentContextImpl(context: context, peerId: peerId, listContext: listContext, initialId: initialId?.id)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }

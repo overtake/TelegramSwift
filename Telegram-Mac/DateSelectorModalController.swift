@@ -20,10 +20,10 @@ final class DateSelectorModalView : View {
     private let containerView = View()
     fileprivate let sendOn = TextButton()
     fileprivate let sendWhenOnline = TextButton()
-    required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect, hasSeconds: Bool) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: DateSelectorUtil.formatDay(Date()), value: Date()))
-        self.timePicker = TimePicker(selected: TimePickerOption(hours: 0, minutes: 0, seconds: 0))
+        self.timePicker = TimePicker(selected: TimePickerOption(hours: 0, minutes: 0, seconds: hasSeconds ? 0 : nil))
         super.init(frame: frameRect)
         containerView.addSubview(self.dayPicker)
         containerView.addSubview(self.atView)
@@ -44,7 +44,7 @@ final class DateSelectorModalView : View {
         self.backgroundColor = theme.colors.listBackground
         
         self.sendOn.set(font: .medium(.text), for: .Normal)
-        self.sendOn.set(color: .white, for: .Normal)
+        self.sendOn.set(color: theme.colors.underSelectedColor, for: .Normal)
         self.sendOn.set(background: theme.colors.accent, for: .Normal)
         self.sendOn.set(background: theme.colors.accent.highlighted, for: .Highlight)
 
@@ -113,6 +113,10 @@ final class DateSelectorModalView : View {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
 }
 
@@ -238,12 +242,14 @@ class DateSelectorModalController: ModalViewController {
         var timeinfo: tm = tm()
         localtime_r(&t, &timeinfo)
         
-        genericView.timePicker.selected = TimePickerOption(hours: timeinfo.tm_hour, minutes: timeinfo.tm_min, seconds: timeinfo.tm_sec)
+        genericView.timePicker.selected = TimePickerOption(hours: timeinfo.tm_hour, minutes: timeinfo.tm_min, seconds: hasSeconds ? timeinfo.tm_sec : nil)
 
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
-            genericView.sendOn.set(text: strings().scheduleSendToday(DateSelectorUtil.formatTime(date)), for: .Normal)
+            let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
+            genericView.sendOn.set(text: strings().scheduleSendToday(formatted), for: .Normal)
         } else {
-            genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), DateSelectorUtil.formatTime(date)), for: .Normal)
+            let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
+            genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), formatted), for: .Normal)
         }
     }
     
@@ -334,6 +340,16 @@ class DateSelectorModalController: ModalViewController {
         }
     }
     
+    var hasSeconds: Bool {
+        switch mode {
+        case .schedule:
+            return false
+        case .date:
+            return true
+        }
+    }
+    
+    
     private func initialize() {
         let date = self.defaultDate ?? Date()
         
@@ -341,8 +357,10 @@ class DateSelectorModalController: ModalViewController {
         var timeinfo: tm = tm()
         localtime_r(&t, &timeinfo)
         
+       
+        
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: DateSelectorUtil.formatDay(date), value: date)
-        self.genericView.timePicker.selected = TimePickerOption(hours: 0, minutes: 0, seconds: 0)
+        self.genericView.timePicker.selected = TimePickerOption(hours: 0, minutes: 0, seconds: hasSeconds ? 0 : nil)
         
         self.genericView.updateWithMode(self.mode, sendWhenOnline: self.sendWhenOnline)
         
@@ -410,5 +428,9 @@ class DateSelectorModalController: ModalViewController {
     
     deinit {
         disposable.dispose()
+    }
+    
+    override func initializer() -> NSView {
+        return DateSelectorModalView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), hasSeconds: hasSeconds);
     }
 }

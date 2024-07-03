@@ -46,8 +46,8 @@ struct EditedImageData : Equatable {
         return orientation == nil && dimensions == .none && !isHorizontalFlipped && paintings.isEmpty && images.isEmpty
     }
     
-    func makeImage(_ image: CGImage, interface: Bool) -> CGImage {
-        return EditedImageData.makeImage(image, data: self, interface: interface)
+    func makeImage(_ image: CGImage, interface: Bool, applyPainting: Bool = true) -> CGImage {
+        return EditedImageData.makeImage(image, data: self, interface: interface, applyPainting: applyPainting)
     }
     
     func isNeedToRegenerate(_ data: EditedImageData?) -> Bool {
@@ -67,11 +67,11 @@ struct EditedImageData : Equatable {
         }
     }
     
-    fileprivate static func makeImage(_ image: CGImage, data: EditedImageData, interface: Bool) -> CGImage {
+    fileprivate static func makeImage(_ image: CGImage, data: EditedImageData, interface: Bool, applyPainting: Bool = true) -> CGImage {
         var image: CGImage = image
         var orientation = data.orientation
         
-        if !data.paintings.isEmpty {
+        if !data.paintings.isEmpty, applyPainting {
             image = generateImage(image.size, scale: 1.0, rotatedContext: { size, context in
                 let rect = NSMakeRect(0, 0, size.width, size.height)
                 context.clear(rect)
@@ -142,7 +142,7 @@ struct EditedImageData : Equatable {
         return image
     }
     
-    static func generateNewUrl(data: EditedImageData, selectedRect: NSRect) -> Signal<URL, NoError> {
+    static func generateNewUrl(data: EditedImageData, selectedRect: NSRect, drawPaintings: Bool = true) -> Signal<URL, NoError> {
         return Signal { subscriber in
             
             if let image = NSImage(contentsOf: data.originalUrl)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
@@ -150,7 +150,7 @@ struct EditedImageData : Equatable {
                     subscriber.putNext(data.originalUrl)
                     subscriber.putCompletion()
                 } else {
-                    if let image = self.makeImage(image, data: data, interface: false).cropping(to: selectedRect) {
+                    if let image = self.makeImage(image, data: data, interface: false, applyPainting: drawPaintings).cropping(to: selectedRect) {
                         return putToTemp(image: NSImage(cgImage: image, size: image.size), compress: true).start(next: { url in
                             subscriber.putNext(URL(fileURLWithPath: url))
                         }, completed: {

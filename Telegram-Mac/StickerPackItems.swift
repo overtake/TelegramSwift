@@ -36,10 +36,12 @@ class StickerPackRowItem: TableRowItem {
     let installed: Bool?
     let color: NSColor?
     let isTopic: Bool
-    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?, isTopic: Bool = false) {
+    let allItems: [StickerPackItem]
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?, allItems: [StickerPackItem] = [], isTopic: Bool = false) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
+        self.allItems = allItems
         self.info = info
         self.color = color
         self.topItem = topItem
@@ -59,6 +61,16 @@ class StickerPackRowItem: TableRowItem {
         let text: String
         let option: RemoveStickerPackOption
         let animation: MenuAnimation
+        let packInfo = self.info
+        let topItem: TelegramMediaFile?
+        if let thumbnail = packInfo.thumbnail {
+            topItem = TelegramMediaFile(fileId: MediaId(namespace: 0, id: packInfo.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: packInfo.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: packInfo.id.id, accessHash: packInfo.accessHash), maskData: nil)])
+        } else {
+            topItem = self.topItem?.file
+        }
+        
+        let allItems = self.allItems
+        
         if info.namespace == Namespaces.ItemCollection.CloudEmojiPacks {
             text = strings().emojiContextRemove
             option = .delete
@@ -73,20 +85,74 @@ class StickerPackRowItem: TableRowItem {
             _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: option).start()
         }, itemImage: animation.value))
         
-        if let file = self.topItem?.file {
-            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
-                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
-                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
-                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+        if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+            items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                
+                let file: Signal<TelegramMediaFile?, NoError>
+                if let thumbnailId = packInfo.thumbnailFileId {
+                    file = context.inlinePacksContext.load(fileId: thumbnailId)
+                } else {
+                    file = .single(topItem)
+                }
+                let dataSignal: Signal<Data?, NoError> = file |> mapToSignal { file in
+                    if let file = file {
+                        return context.account.postbox.mediaBox.resourceData(file.resource) |> map {
+                            try? Data(contentsOf: URL(fileURLWithPath: $0.path))
+                        }
+                    } else {
+                        return .single(nil)
+                    }
+                } |> deliverOnMainQueue
+                
+                _ = dataSignal.startStandalone(next: { data in
+                    if let data = data {
+                        _ = getAnimatedStickerThumb(data: data).start(next: { path in
                             if let path = path {
                                 let pb = NSPasteboard.general
                                 pb.clearContents()
                                 pb.writeObjects([NSURL(fileURLWithPath: path)])
                             }
                         })
-                    }, itemImage: MenuAnimation.menu_copy_media.value))
-                }
-            }
+                    }
+                })
+            }, itemImage: MenuAnimation.menu_copy_media.value))
+            
+            items.append(ContextMenuItem("Save all (Dev.)", handler: {
+                
+                filePanel(with: [], canChooseDirectories: true, for: context.window, completion: { paths in
+                    let dataSignal: Signal<[String?], NoError> = combineLatest(allItems.map {
+                        return context.account.postbox.mediaBox.resourceData($0.file.resource) |> mapToSignal { resource in
+                            if let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
+                                return getAnimatedStickerThumb(data: data)
+                            } else {
+                                return .single(nil)
+                            }
+                        }
+                    }) |> deliverOnMainQueue
+                    
+                    _ = showModalProgress(signal: dataSignal, for: context.window).startStandalone(next: { items in
+                        if let directory = paths?.first {
+                            for (i, file) in items.enumerated() {
+                                if let file {
+                                    if let data = try? Data(contentsOf: URL(fileURLWithPath: file)) {
+                                        let path = directory + "/" + "\(i + 1).png"
+                                        try? FileManager.default.moveItem(atPath: file, toPath: path)
+                                    }
+                                }
+                            }
+                        }
+                    })
+                })
+                
+                
+                
+                /*
+                
+                 */
+                
+                
+            }, itemImage: MenuAnimation.menu_copy_media.value))
+
         }
         
         return .single(items)
@@ -350,10 +416,15 @@ private final class StickerPackRowView : HorizontalRowView {
         if let item = item as? StickerPackRowItem {
             
             var file: TelegramMediaFile?
+            var fileId: Int64?
             if let thumbnail = item.info.thumbnail {
                 file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: item.info.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                fileId = file?.fileId.id
+            } else if let fid = item.info.thumbnailFileId {
+                fileId = fid
             } else if let item = item.topItem {
                 file = item.file
+                fileId = item.file.fileId.id
             }
             
             
@@ -361,7 +432,7 @@ private final class StickerPackRowView : HorizontalRowView {
             let color = item.color ?? theme.colors.accent
             let animated = animated && previousColor == color
 
-            if let view = self.inlineSticker, view.file?.fileId == file?.fileId, view.textColor == color {
+            if let view = self.inlineSticker, view.file?.fileId.id == fileId, view.textColor == color {
                 current = view
             } else {
                 if let itemLayer = self.inlineSticker {
@@ -377,6 +448,10 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker = nil
                 if let file = file {
                     current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), playPolicy: item.isTopic ? .framesCount(1) : .loop, textColor: color)
+                    self.container.layer?.addSublayer(current!)
+                    self.inlineSticker = current
+                } else if let fileId = fileId {
+                    current = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: NSMakeSize(26, 26), playPolicy: item.isTopic ? .framesCount(1) : .loop, textColor: color)
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {

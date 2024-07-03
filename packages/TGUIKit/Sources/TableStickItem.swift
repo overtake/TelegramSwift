@@ -15,6 +15,10 @@ open class TableStickItem: TableRowItem {
         return _stableId
     }
     
+    open override func isEqual(_ object: Any?) -> Bool {
+        return self === object as? TableStickItem
+    }
+    
     open var singletonItem: Bool {
         return false
     }

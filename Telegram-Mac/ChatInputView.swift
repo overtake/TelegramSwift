@@ -14,9 +14,57 @@ import TelegramCore
 import InputView
 import Postbox
 import ColorPalette
+import TelegramMedia
 
 protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
+}
+
+final class InputMessageEffectView : Control {
+    
+    
+    class RadialGradientView: View {
+        
+        override func draw(_ layer: CALayer, in context: CGContext) {
+            super.draw(layer, in: context)
+            
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+
+            let colors = [theme.colors.background.cgColor, theme.colors.background.withAlphaComponent(0).cgColor] as CFArray
+
+            guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0]) else { return }
+
+            let center = CGPoint(x: bounds.midX, y: bounds.midY)
+            let radius = min(bounds.width, bounds.height) / 2
+
+            context.drawRadialGradient(gradient, startCenter: center, startRadius: 0, endCenter: center, endRadius: radius, options: .drawsBeforeStartLocation)
+        }
+    }
+    
+    let view: InlineStickerView
+    private let gradient: RadialGradientView = RadialGradientView(frame: NSMakeRect(0, 0, 20, 20))
+    init(account: Account, file: TelegramMediaFile, size: NSSize) {
+        self.view = .init(account: account, file: file, size: size, playPolicy: .onceEnd)
+        super.init(frame: NSMakeSize(size.width, 20).bounds)
+        self.layer?.masksToBounds = false
+        addSubview(gradient)
+        addSubview(view)
+        scaleOnClick = true
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        gradient.center()
+        view.center()
+    }
 }
 
 class ChatInputView: View, Notifable {
@@ -45,8 +93,10 @@ class ChatInputView: View, Notifable {
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
     private var disallowText:Control?
+    private var messageEffect: InputMessageEffectView?
     
     private let actionsView:ChatInputActionsView
+    
 
     
     let textView:UITextView!
@@ -161,7 +211,7 @@ class ChatInputView: View, Notifable {
                 return true
             }
             if !text.isEmpty || !interaction.presentation.interfaceState.forwardMessageIds.isEmpty || interaction.presentation.state == .editing {
-                interaction.sendMessage(false, nil)
+                interaction.sendMessage(false, nil, interaction.presentation.messageEffect)
                 if interaction.peerIsAccountPeer {
                     interaction.context.account.updateLocalInputActivity(peerId: interaction.activitySpace, activity: .typingText, isPresent: false)
                 }
@@ -204,11 +254,14 @@ class ChatInputView: View, Notifable {
         needUpdateChatState(with: chatState, false)
         needUpdateReplyMarkup(with: interaction.presentation, false)
         
+        updateMessageEffect(interaction.presentation.interfaceState.messageEffect, animated: false)
         
         updateAdditions(interaction.presentation, false)
         
         chatInteraction.add(observer: self)
         ready.set(accessory.nodeReady.get() |> map {_ in return true} |> take(1) )
+        
+
         
         updateLayout(size: frame.size, transition: .immediate)
         
@@ -239,6 +292,8 @@ class ChatInputView: View, Notifable {
                 return strings().chatInputBusinessGreeting
             case .quickReplyMessageInput:
                 return strings().chatInputBusinessQuickReply
+            case .searchHashtag:
+                return ""
             }
         }
         if case .customLink = chatInteraction.mode {
@@ -385,10 +440,135 @@ class ChatInputView: View, Notifable {
                 inputDidUpdateLayout(animated: animated)
             }
             
+            if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
+                self.updateMessageEffect(value.interfaceState.messageEffect, animated: animated)
+            }
+            
             self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            
         }
     }
     
+    private func updateMessageEffect(_ messageEffect: ChatInterfaceMessageEffect?, animated: Bool) {
+        let context = self.chatInteraction.context
+        if let messageEffect {
+            if self.messageEffect?.view.animateLayer.fileId != messageEffect.effect.effectSticker.fileId.id {
+                if let view = self.messageEffect {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
+                current.userInteractionEnabled = true
+                current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, 5))
+                
+                
+                let showMenu:(Control)->Void = { [weak self] control in
+                    if let event = NSApp.currentEvent, let chatInteraction = self?.chatInteraction {
+                        let sendMenu = chatInteraction.sendMessageMenu(true) |> deliverOnMainQueue
+                        _ = sendMenu.startStandalone(next: { menu in
+                            if let menu {
+                                AppMenu.show(menu: menu, event: event, for: control)
+                            }
+                        })
+                    }
+                }
+
+                current.set(handler: { control in
+                    showMenu(control)
+                }, for: .Down)
+                
+                current.set(handler: { control in
+                    showMenu(control)
+                }, for: .LongMouseDown)
+                
+ 
+                self.messageEffect = current
+                addSubview(current, positioned: .below, relativeTo: _ts)
+                
+                
+                if let fromRect = messageEffect.fromRect {
+                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker, emoji: ""), size: current.frame.size)
+                    
+                    let toRect = current.convert(current.frame.size.bounds, to: nil)
+                    
+                    let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                    let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                    
+                    let completed: (Bool)->Void = { [weak self] _ in
+                        DispatchQueue.main.async {
+                            if let container = self?.messageEffect {
+                                NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                                container.isHidden = false
+                            }
+                        }
+                    }
+                    current.isHidden = true
+                    parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+                    
+                    DispatchQueue.main.async { [weak self] in
+                        self?.chatInteraction.update {
+                            $0.updatedInterfaceState {
+                                $0.withRemovedEffectRect()
+                            }
+                        }
+                    }
+                    
+                    let messageEffect = messageEffect.effect
+                    let file = messageEffect.effectSticker
+                    let signal: Signal<(LottieAnimation, String)?, NoError>
+                    
+                    let animationSize = NSMakeSize(200, 200)
+                                        
+                    if let animation = messageEffect.effectAnimation {
+                        signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                            if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        if let effect = messageEffect.effectSticker.premiumEffect {
+                            signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                                if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                    return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
+                                } else {
+                                    return nil
+                                }
+                            }
+                        } else {
+                            signal = .single(nil)
+                        }
+                    }
+                    _ = (signal |> deliverOnMainQueue).startStandalone(next: { value in
+                        
+                        if let animation = value?.0 {
+                            let player = LottiePlayerView(frame: NSMakeRect(toRect.minX - animationSize.width / 2 - 50, toRect.minY - animationSize.height / 2 + 30, animationSize.width, animationSize.height))
+
+                            animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak player] in
+                                player?.removeFromSuperview()
+                            }, {})
+                            player.set(animation)
+                            context.window.contentView?.addSubview(player)
+                        }
+                    })
+                }
+            }
+        } else if let view = self.messageEffect {
+            performSubviewRemoval(view, animated: animated)
+            self.messageEffect = nil
+            
+            let players = context.window.contentView?.subviews.compactMap {
+                $0 as? LottiePlayerView
+            }
+            
+            if let players {
+                for view in players {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                }
+            }
+            
+        }
+    }
     
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
         if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown || attribute.flags.contains(.persistent) {
@@ -669,6 +849,10 @@ class ChatInputView: View, Notifable {
         self.textView.placeholder = textPlaceholder
     }
     
+    func updatePlaceholder() {
+        self.textView.placeholder = textPlaceholder
+    }
+    
     private func updateAccesory(animated: Bool) {
         self.accessory.measureSize(self.frame.width - 40.0)
         self.inputDidUpdateLayout(animated: animated)
@@ -741,6 +925,10 @@ class ChatInputView: View, Notifable {
         immediate.updateFrame(view: actionsView, frame: CGRect(origin: CGPoint(x: size.width - actionsSize.width, y: 0), size: actionsSize))
         actionsView.updateLayout(size: actionsSize, transition: immediate)
 
+        
+        if let view = messageEffect {
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, 5, view.frame.width, view.frame.height))
+        }
         
         if let view = botMenuView {
             leftInset += view.frame.width

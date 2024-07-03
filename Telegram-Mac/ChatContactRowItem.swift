@@ -22,7 +22,7 @@ class ChatContactRowItem: ChatRowItem {
     let phoneLayout:TextViewLayout
     let nameLayout: TextViewLayout
     let contact: TelegramMediaContact
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
@@ -33,6 +33,8 @@ class ChatContactRowItem: ChatRowItem {
             self.contact = contact
             
             let name = isNotEmptyStrings([contact.firstName + (!contact.firstName.isEmpty ? " " : "") + contact.lastName])
+            
+            
 
             if let peerId = contact.peerId {
                 self.contactPeer = message.peers[peerId]
@@ -59,7 +61,7 @@ class ChatContactRowItem: ChatRowItem {
             fatalError("contact not found for item")
         }
         
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     }
     
     var color: PeerNameColors.Colors {
@@ -76,7 +78,7 @@ class ChatContactRowItem: ChatRowItem {
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         nameLayout.measure(width: width - 50)
         phoneLayout.measure(width: width - 50)
-        return NSMakeSize(max(nameLayout.layoutSize.width, phoneLayout.layoutSize.width) + 50 + 20, 8 + 40 + (contact.peerId != nil ? 40 : 8))
+        return NSMakeSize(max(nameLayout.layoutSize.width, phoneLayout.layoutSize.width) + 50 + 20, 8 + 40 + (actionText != nil ? 40 : 8))
     }
     
     override func viewClass() -> AnyClass {
@@ -86,10 +88,31 @@ class ChatContactRowItem: ChatRowItem {
     func openContact() {
         if let peerId = contact.peerId {
             chatInteraction.openInfo(peerId, true , nil, nil)
+        } else if contact.vCardData != nil {
+            tryPreview()
         } else {
             copyToClipboard(formatPhoneNumber(contact.phoneNumber))
             showModalText(for: context.window, text: strings().shareLinkCopied)
         }
+    }
+    
+    private func tryPreview() {
+        if let vCard = contact.vCardData?.data(using: .utf8) {
+            let contacts = try? CNContactVCardSerialization.contacts(with: vCard)
+            if let first = contacts?.first {
+                showModal(with: VCardModalController(context: context, vCard: first, contact: contact), for: context.window)
+            }
+        }
+    }
+    
+    
+    var actionText: String? {
+        if contact.peerId != nil {
+            return strings().chatContactSendMessage
+        } else if contact.vCardData != nil {
+            return strings().chatViewContact
+        }
+        return nil
     }
 
 }
@@ -133,9 +156,7 @@ class ChatContactRowView : ChatRowView {
             contactPhotoView.userInteractionEnabled = false
             
             self.set(handler: { [weak self] control in
-                if let peerId = self?.item?.contactPeer?.id {
-                    self?.item?.openContact()
-                }
+                self?.item?.openContact()
             }, for: .Click)
             
             self.scaleOnClick = true
@@ -186,7 +207,7 @@ class ChatContactRowView : ChatRowView {
             dashLayer.colors = item.color
             borderView.isHidden = item.contact.peerId == nil
             
-            if let _ = item.contact.peerId {
+            if let actionText = item.actionText {
                 let current: TextButton
                 if let view = self.actionButton {
                     current = view
@@ -200,7 +221,7 @@ class ChatContactRowView : ChatRowView {
                 }
                 
                 current.removeAllHandlers()
-                current.set(text: strings().chatContactSendMessage, for: .Normal)
+                current.set(text: actionText, for: .Normal)
                 current.set(background: .clear, for: .Normal)
                 current.set(color: color.main, for: .Normal)
                 _ = current.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)

@@ -13,6 +13,63 @@ import TelegramCore
 import InAppVideoServices
 import SwiftSignalKit
 
+private final class StickerPreviewView : View {
+    private var preview: InlineStickerView?
+    private var previews: [InlineStickerView] = []
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    func update(files: [TelegramMediaFile], context: AccountContext) {
+        if files.count == 1 {
+            if preview?.animateLayer.file?.fileId != files[0].fileId {
+                if let current = preview {
+                    current.removeFromSuperview()
+                }
+                let preview = InlineStickerView(account: context.account, file: files[0], size: NSMakeSize(50, 50), playPolicy: .loop)
+                addSubview(preview)
+                self.preview = preview
+            }
+        } else {
+            while previews.count > files.count {
+                previews.removeLast()
+            }
+            for (i, file) in files.enumerated() {
+                let preview = previews.count > i ? previews[i] : nil
+                if preview?.animateLayer.file?.fileId != file.fileId {
+                    preview?.removeFromSuperview()
+                    let current = InlineStickerView(account: context.account, file: file, size: NSMakeSize(20, 20), playPolicy: .loop)
+                    if previews.count <= i {
+                        previews.append(current)
+                    } else {
+                        previews[i] = current
+                    }
+                    addSubview(current)
+                }
+            }
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        for (i, preview) in previews.enumerated() {
+            preview.setFrameOrigin(x, y)
+            x += preview.frame.width + 10
+            if i % 2 == 1 {
+                y += preview.frame.height + 10
+                x = 0
+            }
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 
 class WPArticleContentView: WPContentView {
     private var durationView:VideoDurationView?
@@ -29,6 +86,8 @@ class WPArticleContentView: WPContentView {
     
     private var groupedContents: [ChatMediaContentView] = []
     private let groupedContentView: View = View()
+    
+    private var stickerPreview: StickerPreviewView?
 
     override func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let _ = imageView, let content = content as? WPArticleLayout, content.isFullImageSize, let image = content.content.image {
@@ -85,17 +144,12 @@ class WPArticleContentView: WPContentView {
     }
     
     func open() {
-        if let content = content?.content, let layout = self.content, let window = _window {
+        if let content = content?.content, let layout = self.content {
             
             if layout.hasInstantPage {
                 showInstantPage(InstantPageViewController(layout.context, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))
                 return
             }
-            /*
-             if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
-                 showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
-             } else
-             */
             if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if layout.isStory {
@@ -253,7 +307,7 @@ class WPArticleContentView: WPContentView {
                 progressIndicator = nil
             }
             
-            var image = layout.content.image
+            var image = layout.groupLayout == nil ? layout.content.image : nil
             if layout.content.image == nil, let file = layout.content.file, let dimension = layout.imageSize {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
@@ -477,6 +531,23 @@ class WPArticleContentView: WPContentView {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil
             }
+            
+            
+            if layout.isStickerPreview, let imageSize = layout.imageSize {
+                let current: StickerPreviewView
+                if let view = self.stickerPreview {
+                    current = view
+                } else {
+                    current = StickerPreviewView(frame: imageSize.bounds)
+                    addSubview(current)
+                    self.stickerPreview = current
+                }
+                current.update(files: layout.stickerFiles, context: layout.context)
+            } else if let view = self.stickerPreview {
+                performSubviewRemoval(view, animated: animated)
+                self.stickerPreview = nil
+            }
+            
         }
         
         super.update(with: layout, animated: animated)
@@ -504,6 +575,18 @@ class WPArticleContentView: WPContentView {
                     origin.y += textLayout.layoutSize.height + 6.0
                 }
                 groupedContentView.setFrameOrigin(origin)
+            }
+            
+            if let stickerPreview {
+                var origin:NSPoint = NSMakePoint(layout.contentRect.width - stickerPreview.frame.width, layout.imageInsets.top)
+                if layout.textLayout?.cutout == nil {
+                    var y:CGFloat = 0
+                    if let textLayout = layout.textLayout {
+                        y += textLayout.layoutSize.height + layout.imageInsets.top
+                    }
+                    origin = NSMakePoint(0, y)
+                }
+                stickerPreview.setFrameOrigin(origin.x, origin.y)
             }
             
             if let imageView = imageView {

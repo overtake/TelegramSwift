@@ -8,15 +8,27 @@
 
 import Foundation
 import TGUIKit
+import TelegramCore
 
 final class TranslateTableRowItem : GeneralRowItem {
     let textLayout: TextViewLayout
+    let context: AccountContext
     private(set) var revealed: Bool
     let reveal: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, text: String, revealed: Bool = false, viewType: GeneralViewType, reveal: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, text: String, entities: [MessageTextEntity] = [], revealed: Bool = false, viewType: GeneralViewType, reveal: @escaping()->Void) {
         self.reveal = reveal
         self.revealed = revealed
-        self.textLayout = .init(.initialize(string: text, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: revealed ? Int32.max : 2)
+        self.context = context
+        
+        var attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: FontSize.text, openInfo: { _,_,_,_ in }, isDark: theme.colors.isDark, bubbled: true).mutableCopy() as! NSMutableAttributedString
+        
+        InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
+        
+        if !revealed {
+            attr = attr.trimNewLinesToSpace.mutableCopy() as! NSMutableAttributedString
+        }
+        
+        self.textLayout = .init(attr, maximumNumberOfLines: revealed ? Int32.max : 2)
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
@@ -49,15 +61,6 @@ private final class MoreView : Control {
         addSubview(shadowView)
         addSubview(more)
         
-//        let layer = CAGradientLayer()
-//        layer.type = .radial
-//        self.layer = layer
-        
-//        layer.colors = [theme.colors.background.withAlphaComponent(0).cgColor, theme.colors.background.cgColor];
-//
-//        layer.startPoint = CGPoint(x: 0.5, y: 0.5)
-//        layer.endPoint = CGPoint(x: 0.0, y: 1)
-
         
         more.isSelectable = false
         more.userInteractionEnabled = false
@@ -65,7 +68,6 @@ private final class MoreView : Control {
         layout.measure(width: .greatestFiniteMagnitude)
         more.update(layout)
         
-//        backgroundColor = theme.colors.background
         
         
         self.setFrameSize(NSMakeSize(layout.layoutSize.width + 30, layout.layoutSize.height + 2))
@@ -90,12 +92,13 @@ private final class MoreView : Control {
 }
 
 private final class TranslateTableRowView : GeneralContainableRowView {
-    private let textView = TextView()
+    private let textView = InteractiveTextView()
     private var more: MoreView? = nil
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
-        
+        textView.textView.isSelectable = true
+        textView.textView.userInteractionEnabled = true
         
     }
     
@@ -121,7 +124,7 @@ private final class TranslateTableRowView : GeneralContainableRowView {
         guard let item = item as? TranslateTableRowItem else {
             return
         }
-        textView.update(item.textLayout)
+        textView.set(text: item.textLayout, context: item.context)
         
         if !item.revealed {
             let current: MoreView

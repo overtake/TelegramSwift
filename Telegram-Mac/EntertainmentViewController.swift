@@ -681,6 +681,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         case common
         case selectAvatar
         case stories
+        case intro
     }
     
     private let mode: Mode

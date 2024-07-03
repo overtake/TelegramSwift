@@ -19,7 +19,7 @@ class ChatInvoiceItem: ChatRowItem {
     fileprivate let textLayout:TextViewLayout
     fileprivate var arguments:TransformImageArguments?
     fileprivate let paymentText:String?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         let message = object.message!
         
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
@@ -47,7 +47,9 @@ class ChatInvoiceItem: ChatRowItem {
             
         } else {
             _ = attr.append(string: media.title, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-            _ = attr.append(string: "\n")
+            if media.currency != XTR {
+                _ = attr.append(string: "\n")
+            }
             
             if media.receiptMessageId != nil {
                 var title = strings().checkoutReceiptTitle.uppercased()
@@ -56,15 +58,18 @@ class ChatInvoiceItem: ChatRowItem {
                 }
                 _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
             } else {
-                _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-                
-                _ = attr.append(string: " ")
-
-                var title = strings().messageInvoiceLabel.uppercased()
-                if media.flags.contains(.isTest) {
-                    title += " (Test)"
+                if media.currency != XTR {
+                    _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                    _ = attr.append(string: " ")
+                    
+                    var title = strings().messageInvoiceLabel.uppercased()
+                    if media.flags.contains(.isTest) {
+                        title += " (Test)"
+                    }
+                    
+                    _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                 }
-                _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                
             }
             
             _ = attr.append(string: "\n")
@@ -75,7 +80,7 @@ class ChatInvoiceItem: ChatRowItem {
         
         textLayout = TextViewLayout(attr)
         textLayout.interactions = globalLinkExecutor
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         
     }
     
@@ -113,7 +118,7 @@ class ChatInvoiceItem: ChatRowItem {
             }
         }
         
-        if let _ = media.photo {
+        if let _ = arguments {
             return true
         } else {
             return super.isBubbleFullFilled
@@ -248,7 +253,7 @@ class ChatInvoiceItem: ChatRowItem {
 }
 
 
-private class MediaDustView: View {
+class MediaDustView2: View {
     private var currentParams: (size: CGSize, color: NSColor)?
     private var animColor: CGColor?
         
@@ -375,14 +380,14 @@ class ChatInvoiceView : ChatRowView {
         }
         
         private let imageView = TransformImageView()
-        private let dustView: MediaDustView
+        private let dustView: MediaDustView2
         private let maskLayer = SimpleShapeLayer()
         private let button = Button(frame: NSMakeRect(0, 0, 80, 32))
         
         var callback:(()->Void)? = nil
         
         required init(frame frameRect: NSRect) {
-            self.dustView = MediaDustView(frame: frameRect.size.bounds)
+            self.dustView = MediaDustView2(frame: frameRect.size.bounds)
             super.init(frame: frameRect)
             addSubview(imageView)
             addSubview(dustView)
