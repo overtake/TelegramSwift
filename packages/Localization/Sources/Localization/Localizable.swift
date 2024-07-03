@@ -10471,6 +10471,10 @@ public final class L10n {
   public static var messagesReplyLoadingHeader: String  { return L10n.tr("Localizable", "Messages.ReplyLoading.Header") }
   /// Loading...
   public static var messagesReplyLoadingLoading: String  { return L10n.tr("Localizable", "Messages.ReplyLoading.Loading") }
+  /// subscribers will be notified when you post.
+  public static var messagesSilentTooltip: String  { return L10n.tr("Localizable", "Messages.Silent.Tooltip") }
+  /// subscribers will receive a silent notification.
+  public static var messagesSilentTooltipSilent: String  { return L10n.tr("Localizable", "Messages.Silent.Tooltip.Silent") }
   /// Apply
   public static var modalApply: String  { return L10n.tr("Localizable", "Modal.Apply") }
   /// Cancel

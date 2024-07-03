@@ -4083,7 +4083,7 @@ func concatMessageAttributes(_ attributes: [MessageTextEntity]) -> [MessageTextE
 
 extension TelegramMediaImage {
     convenience init(dimension: PixelDimensions, immediateThumbnailData: Data?) {
-        self.init(imageId: .init(namespace: 0, id: 0), representations: [.init(dimensions: dimension, resource: CloudFileMediaResource(datacenterId: 0, volumeId: 0, localId: 0, secret: 0, size: nil, fileReference: nil), progressiveSizes: [], immediateThumbnailData: immediateThumbnailData)], immediateThumbnailData: immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
+        self.init(imageId: .init(namespace: 0, id: 0), representations: [.init(dimensions: dimension, resource: LocalBundleResource(name: "", ext: ""), progressiveSizes: [], immediateThumbnailData: immediateThumbnailData)], immediateThumbnailData: immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
 
     }
 }

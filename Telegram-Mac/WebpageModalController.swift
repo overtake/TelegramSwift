@@ -1682,7 +1682,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             if self?.isBackButton == true {
                 items.append(.init(strings().webAppClose, handler: { [weak self] in
-                    self?.closeAnyway()
+                    self?.close()
                 }, itemImage: MenuAnimation.menu_clear_history.value))
             }
             
