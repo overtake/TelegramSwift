@@ -82,7 +82,7 @@
     
     return @
     {
-    AVVideoCodecKey: AVVideoCodecH264,
+    AVVideoCodecKey: AVVideoCodecTypeH264,
     AVVideoCompressionPropertiesKey: codecSettings,
     AVVideoWidthKey: @((NSInteger)dimensions.width),
     AVVideoHeightKey: @((NSInteger)dimensions.height)

@@ -849,6 +849,10 @@ class ChatInputView: View, Notifable {
         self.textView.placeholder = textPlaceholder
     }
     
+    func updatePlaceholder() {
+        self.textView.placeholder = textPlaceholder
+    }
+    
     private func updateAccesory(animated: Bool) {
         self.accessory.measureSize(self.frame.width - 40.0)
         self.inputDidUpdateLayout(animated: animated)

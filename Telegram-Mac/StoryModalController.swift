@@ -2305,6 +2305,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                     }
                     self?.close()
+                    closeAllModals(window: context.window)
                 }
                 
                 if let view = view, let event = NSApp.currentEvent {
