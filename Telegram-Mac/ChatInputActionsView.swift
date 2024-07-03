@@ -81,10 +81,12 @@ class ChatInputActionsView: View {
         }, for: .LongMouseDown)
 
         
-        muteChannelMessages.set(handler: { [weak self] _ in
+        muteChannelMessages.set(handler: { [weak self] control in
             if let chatInteraction = self?.chatInteraction {
                 FastSettings.toggleChannelMessagesMuted(chatInteraction.peerId)
-                (self?.superview?.superview as? View)?.updateLocalizationAndTheme(theme: theme)
+                let isMuted = FastSettings.isChannelMessagesMuted(chatInteraction.peerId)
+                (self?.superview?.superview as? ChatInputView)?.updatePlaceholder()
+                tooltip(for: control, text: isMuted ? strings().messagesSilentTooltipSilent : strings().messagesSilentTooltip)
             }
         }, for: .Click)
 

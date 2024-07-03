@@ -123,6 +123,8 @@ class GalleryThumbContainer : Control {
         addSubview(overlay)
         overlay.backgroundColor = .black
         layer?.cornerRadius = .cornerRadius
+        
+        handleScrollEventOnInteractionEnabled = false
     }
     
     deinit {
@@ -164,9 +166,11 @@ class GalleryThumbsControlView: View {
         
         documentView.backgroundColor = .clear
         
+        self.layer?.cornerRadius = 4
         
-        NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
-        NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.frameDidChangeNotification, object: scrollView)
+        
+       // NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
+        //NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.frameDidChangeNotification, object: scrollView)
 
     }
     
@@ -200,7 +204,6 @@ class GalleryThumbsControlView: View {
         
         previousRange = range
         
-        documentView.subviews = range.location == NSNotFound ? [] : items.subarray(with: range).map { $0.view }
     }
     
     override func layout() {
@@ -312,7 +315,8 @@ class GalleryThumbsControlView: View {
             scrollView.clipView.scroll(to: NSMakePoint(min(max(items[selectedIndex].frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated && documentView.subviews.count > 0)
         }
         previousRange = nil
-        scrollDidUpdated()
+        documentView.subviews = items.map { $0.view }
+
     }
     
 }

@@ -2423,7 +2423,7 @@ class ChatServiceRowView: TableRowView {
                     if textLayout.isBigEmoji {
                         rect = item.rect
                     } else {
-                        rect = item.rect.insetBy(dx: -2, dy: -2)
+                        rect = item.rect
                     }
                     if let item = self.item as? ChatServiceItem, item.isBubbled {
                         rect = rect.offsetBy(dx: 9, dy: 2)
