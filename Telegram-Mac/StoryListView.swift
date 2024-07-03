@@ -993,7 +993,7 @@ final class StoryListView : Control, Notifable {
                     if textLayout.isBigEmoji {
                         rect = item.rect
                     } else {
-                        rect = item.rect.insetBy(dx: -2, dy: -2)
+                        rect = item.rect
                     }
                     
                     let view: InlineStickerItemLayer

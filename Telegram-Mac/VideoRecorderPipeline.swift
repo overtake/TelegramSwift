@@ -120,7 +120,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
             audioDevices.insert(device, at: 0)
         }
             
-        let videoDevice = videoDevices.first(where: { $0.isConnected && !$0.isSuspended})
+        let videoDevice = videoDevices.filter({ $0.isConnected && !$0.isSuspended }).first(where: { $0.position == .front || $0.position == .unspecified })
+        
         let audioDevice = audioDevices.first(where: { $0.isConnected && !$0.isSuspended})
 
 
@@ -135,6 +136,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         }
         
         videoOutput.alwaysDiscardsLateVideoFrames = false
+        videoOutput
 
         videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA, kCVPixelBufferIOSurfacePropertiesKey as String: [:], kCVPixelBufferWidthKey as String: 500, kCVPixelBufferHeightKey as String: 500]
         

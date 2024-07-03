@@ -360,7 +360,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
                 if textLayout.isBigEmoji {
                     rect = item.rect
                 } else {
-                    rect = item.rect.insetBy(dx: -2, dy: -2)
+                    rect = item.rect
                 }
                 
                 let view: InlineStickerItemLayer

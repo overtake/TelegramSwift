@@ -213,7 +213,7 @@ final class StoryControlsView : Control {
         avatarAndText.scaleOnClick = true
         
         avatarAndText.set(handler: { [weak self] control in
-            if let groupId = self?.groupId {
+            if let groupId = self?.story?.peer?.id {
                 self?.arguments?.openPeerInfo(groupId, control)
             }
         }, for: .Click)
