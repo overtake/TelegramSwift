@@ -162,6 +162,9 @@ open class TransformImageView: NSView {
                 self?.layer?.animateContents()
             }
             self?.isFullyLoaded = result?.highQuality ?? false
+            if result?.image != nil {
+                self?.first = false
+            }
         }))
     }
     
