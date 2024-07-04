@@ -30,20 +30,53 @@ private class WeakGameScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
 
 
-fileprivate var weakGames:[WeakReference<WebGameViewController>] = []
 
-fileprivate func game(forKey:String) -> WebGameViewController? {
-    for i in 0 ..< weakGames.count {
-        if weakGames[i].value?.uniqueId == forKey {
-            return weakGames[i].value
-        }
+public final class GameView : View {
+    
+    let headerView: WebpageHeaderView
+    
+    let webView: WKWebView
+    
+    required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration!) {
+        headerView = .init(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        webView = WKWebView(frame: CGRect(origin: NSMakePoint(0, headerView.frame.height), size: NSMakeSize(frameRect.width, frameRect.height - headerView.frame.height)), configuration: configuration)
+        super.init(frame: frameRect)
+        
+        addSubview(webView)
+        addSubview(headerView)
+
+        updateLocalizationAndTheme(theme: theme)
     }
-    return nil
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    public override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: headerView, frame: NSMakeRect(0, 0, size.width, 50))
+        transition.updateFrame(view: webView, frame: NSMakeRect(0, headerView.frame.maxY, size.width, size.height - headerView.frame.maxY))
+    }
+    
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        self.headerView.backgroundColor = theme.colors.background
+    }
 }
 
-class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDelegate {
+class WebGameViewController: ModalViewController, WKUIDelegate {
     private let gameUrl:String
     private let peerId:PeerId
+    private let context: AccountContext
     
     private var media:TelegramMediaGame!
     private var peer:Peer!
@@ -55,38 +88,23 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
     init(_ context: AccountContext, _ peerId:PeerId, _ messageId:MessageId, _ gameUrl:String) {
         self.gameUrl = gameUrl
         self.peerId = peerId
+        self.context = context
         self.messageId = messageId
-        super.init(context)
-        weakGames.append(WeakReference(value: self))
+        super.init()
     }
     
     override var enableBack: Bool {
         return true
     }
-    override func requestUpdateRightBar() {
-        (rightBarView as? ImageBarView)?.set(image: theme.icons.webgameShare, highlightImage: nil)
-    }
-    
-    
-    override func getRightBarViewOnce() -> BarView {
-        let view = ImageBarView(controller: self, theme.icons.webgameShare)
-        
-        view.button.set(handler: { [weak self] _ in
-            self?.share_game("")
-        }, for: .Click)
-        view.set(image: theme.icons.webgameShare, highlightImage: nil)
-        return view
-    }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        genericView.load(URLRequest(url: URL(string:"file://blank")!))
-        genericView.stopLoading()
+        webView.load(URLRequest(url: URL(string:"file://blank")!))
+        webView.stopLoading()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.wantsLayer = true
         loadMessageDisposable.set((context.account.postbox.messageAtId(messageId) |> deliverOnMainQueue).start(next: { [weak self] message in
             if let message = message, let game = message.anyMedia as? TelegramMediaGame, let peer = message.inlinePeer {
                 self?.start(with: game, peer: peer, threadId: message.threadId)
@@ -94,26 +112,44 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         }))
     }
     
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.genericView.updateLocalizationAndTheme(theme: theme)
+    }
+    
     func start(with game: TelegramMediaGame, peer: Peer, threadId: Int64?) {
         self.media = game
         self.peer = peer
         self.threadId = threadId
-        self.centerBarView.text = .initialize(string: media.name, color: theme.colors.text, font: .medium(.title))
-        self.centerBarView.status = .initialize(string: "@\(peer.addressName ?? "gamebot")", color: theme.colors.grayText, font: .normal(.text))
         
+        genericView.headerView.update(title: peer.displayTitle, subtitle: media.name, left: .dismiss, animated: false, leftCallback: { [weak self] in
+            self?.close()
+        }, contextMenu: { [weak self] in
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().modalShare, handler: {
+                self?.share_game("")
+            }, itemImage: MenuAnimation.menu_share.value))
+            return menu
+        }, context: context, bot: peer)
+                
         if let url = URL(string:gameUrl) {
-            genericView.load(URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 15))
+            webView.load(URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 15))
         }
         
-        
-        
-
         
         readyOnce()
     }
     
     
-    override func initializer() -> WKWebView {
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {        
+        self.window?.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
+            self?._window?.orderOut(nil)
+            self?._window = nil
+        })
+    }
+    
+    
+    override func initializer() -> GameView {
         
         let js = "var TelegramWebviewProxyProto = function() {}; " +
             "TelegramWebviewProxyProto.prototype.postEvent = function(eventName, eventData) { " +
@@ -141,7 +177,9 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         
         configuration.userContentController = userController
         
-        return WKWebView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), configuration: configuration)
+        let rect = NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)
+        
+        return GameView(frame: rect, configuration: configuration)
     }
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
@@ -183,19 +221,34 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         let context = self.context
         let messageId = self.messageId
         let threadId = self.threadId
-        showModal(with: ShareModalController(ShareCallbackObject(context, callback: { peerIds in
-            let signals = peerIds.map { context.engine.messages.forwardGameWithScore(messageId: messageId, to: $0, threadId: threadId, as: nil) }
-            return combineLatest(signals) |> map { _ in return } |> ignoreValues
-        })), for: context.window)
+        if let window {
+            showModal(with: ShareModalController(ShareCallbackObject(context, callback: { peerIds in
+                let signals = peerIds.map { context.engine.messages.forwardGameWithScore(messageId: messageId, to: $0, threadId: threadId, as: nil) }
+                return combineLatest(signals) |> map { _ in return } |> ignoreValues
+            })), for: window)
+        }
     }
     
+    private var webView: WKWebView {
+        return (self.view as! GameView).webView
+    }
+    
+    private var genericView: GameView {
+        return (self.view as! GameView)
+    }
+    
+    
+    
+    override func viewClass() -> AnyClass {
+        return GameView.self
+    }
     
     override func becomeFirstResponder() -> Bool? {
         return true
     }
     
     override func firstResponder() -> NSResponder? {
-        return genericView
+        return webView
     }
     
     override func backKeyAction() -> KeyHandlerResult {
@@ -203,21 +256,15 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
     }
     
     deinit {
-        while true {
-            var index:Int = -1
-            loop: for i in 0 ..< weakGames.count {
-                if weakGames[i].value?.uniqueId == self.uniqueId || weakGames[i].value == nil {
-                    index = i
-                    break loop
-                }
-            }
-            if index != -1 {
-                weakGames.remove(at: index)
-            } else {
-                break
-            }
-        }
         
+    }
+    
+    override func measure(size: NSSize) {
+        let s = NSMakeSize(size.width + 20, size.height + 20)
+        let size = NSMakeSize(420, min(420 + 420 * 0.6, s.height - 80))
+        let rect = size.bounds.insetBy(dx: 10, dy: 10)
+        self.genericView.frame = rect
+        self.genericView.updateLayout(size: rect.size, transition: .immediate)
     }
     
 }

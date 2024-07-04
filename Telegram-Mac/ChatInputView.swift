@@ -440,10 +440,10 @@ class ChatInputView: View, Notifable {
                 inputDidUpdateLayout(animated: animated)
             }
             
-            if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
+            if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect  {
                 self.updateMessageEffect(value.interfaceState.messageEffect, animated: animated)
             }
-            
+            self.messageEffect?.change(opacity: value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil ? 0 : 1, animated: animated)
             self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             
         }

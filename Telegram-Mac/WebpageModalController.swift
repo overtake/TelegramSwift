@@ -62,7 +62,7 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 }
 
 
-private final class HeaderView : Control {
+final class WebpageHeaderView : Control {
     
     enum Left {
         case back
@@ -327,7 +327,7 @@ private final class WebpageView : View {
     
     private var mainButton:MainButton?
     
-    private let headerView = HeaderView(frame: .zero)
+    private let headerView = WebpageHeaderView(frame: .zero)
     
     
     required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration!) {
@@ -471,7 +471,7 @@ private final class WebpageView : View {
     }
     
     
-    func updateHeader(title: String, subtitle: String, left: HeaderView.Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?, context: AccountContext, bot: Peer?) {
+    func updateHeader(title: String, subtitle: String, left: WebpageHeaderView.Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?, context: AccountContext, bot: Peer?) {
         self.headerView.update(title: title, subtitle: subtitle, left: left, animated: animated, leftCallback: leftCallback, contextMenu: contextMenu, context: context, bot: bot)
     }
     
@@ -619,7 +619,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     fileprivate let loadingProgressPromise = Promise<CGFloat?>(nil)
     
-    var _window: Window?
     
     private var clickCount: Int = 0
     
