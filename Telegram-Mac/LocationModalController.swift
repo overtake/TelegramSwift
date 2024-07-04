@@ -328,7 +328,7 @@ private enum MapItemEntry : TableItemListNodeEntry {
                 arguments.searchVenues(state.request)
             }, { state in
                 arguments.searchVenues(state.request)
-            }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
+            }), inset: NSEdgeInsets(left: 10,right: 10, top: 0, bottom: 0))
         case let .currentLocation(_, state):
             return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, destination: arguments.destination, action: {
                 arguments.sendCurrent()
