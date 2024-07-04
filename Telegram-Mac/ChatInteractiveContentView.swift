@@ -741,7 +741,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         partDisposable.set(nil)
         
-        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
+        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion && self.parent?.stableId == parent?.stableId
+        
+        let removeViewAnimated = self.parent == nil || self.parent?.media.first?.id == parent?.media.first?.id
         
         let forceSpoiler = parameters?.forceSpoiler == true
         let messageSpoiler = parent?.isMediaSpoilered ?? false
@@ -904,7 +906,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             if let updateImageSignal = updateImageSignal {
                 self.image.ignoreFullyLoad = mediaUpdated
 
-                self.image.setSignal(updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
+                self.image.setSignal(updateImageSignal, animate: removeViewAnimated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
@@ -981,7 +983,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             } else {
                 if let view = self.inkView {
                     view.userInteractionEnabled = false
-                    performSubviewRemoval(view, animated: animated)
+                    performSubviewRemoval(view, animated: removeViewAnimated)
                     self.inkView = nil
                 }
                 self.image.layer?.opacity = 1
@@ -1103,7 +1105,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                         break
                                     }
                                     strongSelf.progressView = nil
-                                     performSubviewRemoval(progressView, animated: animated)
+                                     performSubviewRemoval(progressView, animated: removeViewAnimated)
                                 }
                             } else {
                                 strongSelf.progressView?.layer?.removeAllAnimations()

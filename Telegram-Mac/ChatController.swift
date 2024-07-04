@@ -8235,10 +8235,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let setup = strongSelf.findAndSetEditableMessage()
                     if !setup {
                         strongSelf.genericView.tableView.scrollUp()
+                        return .invoked
                     }
                 } else {
                     if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
                         strongSelf.genericView.tableView.scrollUp()
+                        return .invoked
                     }
                 }
                 
