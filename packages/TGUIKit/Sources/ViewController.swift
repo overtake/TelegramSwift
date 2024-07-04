@@ -501,7 +501,8 @@ open class ViewController : NSObject {
         }
     }
     
-    
+    public var _window: Window?
+
     
     fileprivate var _view:NSView?
     public var _frameRect:NSRect
@@ -596,6 +597,10 @@ open class ViewController : NSObject {
     
     open func executeReturn() -> Void {
         self.navigationController?.back()
+    }
+    
+    open func measure(size:NSSize) {
+        
     }
     
     open func updateNavigation(_ navigation:NavigationViewController?) {
@@ -969,7 +974,7 @@ open class ViewController : NSObject {
     }
     
     open var window:Window? {
-        return _view?.window as? Window
+        return _window ?? _view?.window as? Window
     }
     
     open func firstResponder() -> NSResponder? {
@@ -1247,9 +1252,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         return true
     }
     
-    open func measure(size:NSSize) {
-        
-    }
+ 
     
     open var modalInteractions:ModalInteractions? {
         return nil

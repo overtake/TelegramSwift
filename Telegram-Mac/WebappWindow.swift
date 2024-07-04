@@ -12,8 +12,8 @@ import SwiftSignalKit
 import Postbox
 
 private final class Webapp : Window {
-    fileprivate let controller: WebpageModalController
-    init(controller: WebpageModalController) {
+    fileprivate let controller: ViewController
+    init(controller: ViewController) {
         self.controller = controller
         let screen = NSScreen.main!
         
@@ -84,13 +84,13 @@ private final class Webapp : Window {
 
 final class WebappWindow {
     fileprivate let window: Webapp
-    private init(controller: WebpageModalController) {
+    private init(controller: ViewController) {
         self.window = Webapp(controller: controller)
         
         controller._window = window
     }
     
-    static func makeAndOrderFront(_ controller: WebpageModalController) {
+    static func makeAndOrderFront(_ controller: ViewController) {
         
 //        var found: WebpageModalController?
 //        enumerateWebpages { current in
@@ -109,20 +109,20 @@ final class WebappWindow {
         let w = WebappWindow(controller: controller)
         
         let ready = controller.ready.get() |> deliverOnMainQueue |> take(1)
-        _ = ready.startStandalone(next: { [weak w] ready in
-            w?.window.show()
+        _ = ready.startStandalone(next: { ready in
+            w.window.show()
         })
     }
     
-    static func enumerateWebpages(_ f:(WebpageModalController)->Bool) {
-        let windows = NSApp.windows.compactMap { $0 as? Webapp }
-        
-        for window in windows {
-            if f(window.controller) {
-                break
-            }
-        }
-    }
+//    static func enumerateWebpages(_ f:(WebpageModalController)->Bool) {
+//        let windows = NSApp.windows.compactMap { $0 as? Webapp }
+//        
+//        for window in windows {
+//            if f(window.controller) {
+//                break
+//            }
+//        }
+//    }
     
     static func focus(botId: PeerId) -> Bool {
 //        var found: WebpageModalController?

@@ -70,14 +70,9 @@ final class UnauthorizedApplicationContext {
         self.modal = AuthModalController(rootController)
         rootController.alwaysAnimate = true
 
-        
         account.shouldBeServiceTaskMaster.set(.single(.now))
         
- 
-        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
-        
     }
-    
     
     func applyExternalLoginCode(_ code: String) {
         authController.applyExternalLoginCode(code)
@@ -89,9 +84,6 @@ final class UnauthorizedApplicationContext {
         NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
     
-    @objc func receiveWakeNote(_ notificaiton:Notification) {
-        account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.now)))
-    }
     
 }
 

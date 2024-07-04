@@ -65,8 +65,13 @@ class SharedWakeupManager {
     init(sharedContext: SharedAccountContext, inForeground: Signal<Bool, NoError>) {
         self.sharedContext = sharedContext
         
+        
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.willSleepNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveSleepNote(_:)), name: NSWorkspace.didWakeNotification, object: nil)
+
+        
          NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
-        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidSleepNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveSleepNote(_:)), name: NSWorkspace.screensDidSleepNotification, object: nil)
 
         
         _ = (inForeground |> deliverOnMainQueue).start(next: { value in
@@ -100,12 +105,20 @@ class SharedWakeupManager {
     }
     
     @objc func receiveSleepNote(_ notification: Notification) {
+        if !self.isSleeping {
+            for (account, _, _) in self.accountsAndTasks {
+               account.shouldBeServiceTaskMaster.set(.single(.never))
+            }
+        }
         self.isSleeping = true
+        
     }
     
     @objc func receiveWakeNote(_ notificaiton:Notification) {
-         for (account, _, _) in self.accountsAndTasks {
-            account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.always)))
+        if self.isSleeping {
+            for (account, _, _) in self.accountsAndTasks {
+               account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.always)))
+            }
         }
         self.isSleeping = false
     }
