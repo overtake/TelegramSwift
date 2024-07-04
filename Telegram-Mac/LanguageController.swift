@@ -17,13 +17,15 @@ import Translate
 
 private final class Arguments {
     let context: AccountContext
+    let searchInteractions: SearchInteractions
     let change:(LocalizationInfo)->Void
     let delete:(LocalizationInfo)->Void
     let toggleTranslateChannels:()->Void
     let premiumAlert:()->Void
     let openPremium:()->Void
     let doNotTranslate:(String)->Void
-    init(context: AccountContext, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, toggleTranslateChannels: @escaping()->Void, premiumAlert:@escaping()->Void, openPremium: @escaping()->Void, doNotTranslate:@escaping(String)->Void) {
+    
+    init(context: AccountContext, searchInteractions: SearchInteractions, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, toggleTranslateChannels: @escaping()->Void, premiumAlert:@escaping()->Void, openPremium: @escaping()->Void, doNotTranslate:@escaping(String)->Void) {
         self.context = context
         self.change = change
         self.delete = delete
@@ -31,6 +33,7 @@ private final class Arguments {
         self.premiumAlert = premiumAlert
         self.toggleTranslateChannels = toggleTranslateChannels
         self.doNotTranslate = doNotTranslate
+        self.searchInteractions = searchInteractions
     }
 }
 
@@ -52,7 +55,10 @@ private func _id_language_official(_ id: String) -> InputDataIdentifier {
     return .init("_id_language_official_\(id)")
 }
 private let _id_translate_channels = InputDataIdentifier("_id_translate_channels")
-private let _id_do_not_translate =  InputDataIdentifier("_id_do_not_translate")
+private let _id_do_not_translate = InputDataIdentifier("_id_do_not_translate")
+
+private let _id_search = InputDataIdentifier("_id_search")
+private let _id_search_empty = InputDataIdentifier("_id_search_empty")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -164,8 +170,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let viewType: GeneralViewType = bestGeneralViewType(saved, for: i)
             existingIds.insert(value.languageCode)
             items.append(.init(value: value, viewType: viewType, selected: value.languageCode == state.language.primaryLanguage.languageCode, loading: value.languageCode == state.loading?.languageCode))
-
         }
+        
+              
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_language(item.value.languageCode), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 return GeneralInteractedRowItem(initialSize, stableId: stableId, name: item.value.title, description: item.value.localizedTitle, descTextColor: theme.colors.grayText, type: item.loading ? .loading : .selectable(item.selected), viewType: item.viewType, action: {
@@ -202,10 +209,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             var items: [Tuple] = []
             for (i, value) in list.enumerated() {
-                let viewType: GeneralViewType = bestGeneralViewType(list, for: i)
+                let viewType: GeneralViewType = bestGeneralViewTypeAfterFirst(list, for: i)
                 existingIds.insert(value.languageCode)
                 items.append(.init(value: value, viewType: viewType, selected: value.languageCode == state.language.primaryLanguage.languageCode, loading: value.languageCode == state.loading?.languageCode))
             }
+            
+            //search
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search, equatable: .init(state.searchState), comparable: nil, item: { initialSize, stableId in
+                return SearchRowItem(initialSize, stableId: stableId, searchInteractions: arguments.searchInteractions, viewType: .firstItem)
+            }))
             
             for item in items {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_language_official(item.value.languageCode), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
@@ -215,6 +227,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }))
                 index += 1
             }
+        } else if !state.searchState.request.isEmpty {
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search, equatable: .init(state.searchState), comparable: nil, item: { initialSize, stableId in
+                return SearchRowItem(initialSize, stableId: stableId, searchInteractions: arguments.searchInteractions, viewType: .singleItem)
+            }))
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: .init(state.searchState), comparable: nil, item: { initialSize, stableId in
+                return SearchEmptyRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+            }))
+            
         }
     } else {
         entries.append(.loading)
@@ -247,7 +269,21 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
     let applyDisposable = MetaDisposable()
     actionsDisposable.add(applyDisposable)
 
-    let arguments = Arguments(context: context, change: { value in
+    let searchInteractions: SearchInteractions = .init({ state, animated in
+        updateState { current in
+            var current = current
+            current.searchState = state
+            return current
+        }
+    }, { state in
+        updateState { current in
+            var current = current
+            current.searchState = state
+            return current
+        }
+    })
+    
+    let arguments = Arguments(context: context, searchInteractions: searchInteractions, change: { value in
         if value.languageCode != appCurrentLanguage.primaryLanguage.languageCode {
             
             updateState { current in
@@ -317,6 +353,10 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
     }
     
     let controller = InputDataController(dataSignal: signal, title: strings().telegramLanguageViewController, hasDone: false, identifier: "language")
+    
+    controller._becomeFirstResponder = {
+        return false
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()

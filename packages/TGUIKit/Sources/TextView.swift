@@ -2706,9 +2706,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         let glyphCount = CTRunGetGlyphCount(run)
                         let range = CTRunGetStringRange(run)
                                                 
-                        let under = line.embeddedItems.contains(where: { value in
-                            return value.range == NSMakeRange(range.location, range.length)
+                        let under = layout.embeddedItems.contains(where: { value in
+                            return value.range.intersection(NSMakeRange(range.location, range.length)) != nil
                         })
+                        
+                        
                         ctx.textPosition = textPosition
                         
                         if !under {

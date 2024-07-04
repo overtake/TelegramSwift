@@ -524,7 +524,7 @@ enum InputDataEntry : Identifiable, Comparable {
                 update(state)
             }, { state in
                 update(state)
-            }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
+            }), inset: NSEdgeInsets(left: 10,right: 10))
         }
     }
 }
