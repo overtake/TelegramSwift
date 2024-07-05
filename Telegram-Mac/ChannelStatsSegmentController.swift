@@ -27,14 +27,16 @@ private final class CenterView : TitledBarView {
             self?.select?(1)
         }))
         if monetization {
+            let index = self.segment.count
             segment.add(segment: .init(title: strings().statsMonetization, handler: { [weak self] in
-                self?.select?(2)
+                self?.select?(index)
             }))
         }
         
         if stars {
+            let index = self.segment.count
             segment.add(segment: .init(title: strings().statsStars, handler: { [weak self] in
-                self?.select?(3)
+                self?.select?(index)
             }))
         }
         
