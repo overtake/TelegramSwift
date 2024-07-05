@@ -1160,7 +1160,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_expand":
             break
         case "web_app_close":
-            self.close()
+            self.closeAnyway()
         case "web_app_open_scan_qr_popup":
             alert(for: window, info: strings().webAppQrIsNotSupported)
         case "web_app_setup_closing_behavior":

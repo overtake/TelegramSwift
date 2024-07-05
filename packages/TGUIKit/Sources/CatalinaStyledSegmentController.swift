@@ -243,6 +243,10 @@ public class CatalinaStyledSegmentController: ViewController {
         readyOnce()
     }
     
+    public var count: Int {
+        return self.items.count
+    }
+    
     private func select(_ index: Int, animated: Bool) {
         self.selected = index
         items[index].handler()
