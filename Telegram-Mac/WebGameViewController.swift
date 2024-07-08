@@ -106,8 +106,8 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadMessageDisposable.set((context.account.postbox.messageAtId(messageId) |> deliverOnMainQueue).start(next: { [weak self] message in
-            if let message = message, let game = message.anyMedia as? TelegramMediaGame, let peer = message.inlinePeer {
-                self?.start(with: game, peer: peer, threadId: message.threadId)
+            if let message = message, let game = message.anyMedia as? TelegramMediaGame {
+                self?.start(with: game, peer: message.inlinePeer, threadId: message.threadId)
             }
         }))
     }
@@ -117,12 +117,12 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
         self.genericView.updateLocalizationAndTheme(theme: theme)
     }
     
-    func start(with game: TelegramMediaGame, peer: Peer, threadId: Int64?) {
+    func start(with game: TelegramMediaGame, peer: Peer?, threadId: Int64?) {
         self.media = game
         self.peer = peer
         self.threadId = threadId
         
-        genericView.headerView.update(title: peer.displayTitle, subtitle: media.name, left: .dismiss, animated: false, leftCallback: { [weak self] in
+        genericView.headerView.update(title: peer?.displayTitle ?? media.title, subtitle: media.name, left: .dismiss, animated: false, leftCallback: { [weak self] in
             self?.close()
         }, contextMenu: { [weak self] in
             let menu = ContextMenu()

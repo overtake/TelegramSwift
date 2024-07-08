@@ -1204,7 +1204,13 @@ public final class TextViewLayout : Equatable {
                 
                 if brokenLineRange.location >= 0 && brokenLineRange.length > 0 && brokenLineRange.location + brokenLineRange.length <= attributedString.length {
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
-                        if let _ = attributes[.strikethroughStyle] {
+                        if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
+                            var ascent: CGFloat = 0.0
+                            var descent: CGFloat = 0.0
+                            CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
+                            
+                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
+                        } else if let _ = attributes[.strikethroughStyle] {
                             let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
                             
                             
@@ -1217,12 +1223,6 @@ public final class TextViewLayout : Equatable {
                             
                             let x = lowerX < upperX ? lowerX : upperX
                             strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
-                            var ascent: CGFloat = 0.0
-                            var descent: CGFloat = 0.0
-                            CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
-                            
-                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
                         }
 
                     }
@@ -1275,18 +1275,21 @@ public final class TextViewLayout : Equatable {
                     }
 
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
-                        if let _ = attributes[.strikethroughStyle] {
-                            let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
-                            let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
-                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
-                            let x = lowerX < upperX ? lowerX : upperX
-                            strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
+                        if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
                             var ascent: CGFloat = 0.0
                             var descent: CGFloat = 0.0
                             CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
                                                         
                             addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
+                        } else if let _ = attributes[.strikethroughStyle] {
+                            let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
+                            let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
+                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
+                            let x = lowerX < upperX ? lowerX : upperX
+                            let value = attributes.contains(where: { $0.key == TextInputAttributes.customEmoji })
+                            if !value {
+                                strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                            }
                         }
 
                     }
