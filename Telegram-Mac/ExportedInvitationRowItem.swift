@@ -15,7 +15,7 @@ import SwiftSignalKit
 
 
 private func generate(_ color: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(40 / System.backingScale, 40 / System.backingScale), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
         let rect: NSRect = .init(origin: .zero, size: size)
         ctx.clear(rect)
         
@@ -28,7 +28,7 @@ private func generate(_ color: NSColor) -> CGImage {
         ctx.clear(rect)
         
         
-    }, scale: System.backingScale)!
+    })!
 }
 
 private var menuIcon: CGImage {
