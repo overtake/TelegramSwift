@@ -303,7 +303,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         }))
         
         __window.closeInterceptor = { [weak self] in
-            if let window = self?._window, !window.styleMask.contains(.fullScreen) {
+            if let window = self?.__window, !window.styleMask.contains(.fullScreen) {
                 self?.__window.orderOut(nil)
                 instantController = nil
             } else {
