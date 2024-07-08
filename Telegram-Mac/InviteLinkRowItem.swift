@@ -14,7 +14,7 @@ import SwiftSignalKit
 
 
 private func generate(_ color: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(50 / System.backingScale, 50 / System.backingScale), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(25, 25), contextGenerator: { size, ctx in
         let rect: NSRect = .init(origin: .zero, size: size)
         ctx.clear(rect)
         
@@ -27,7 +27,7 @@ private func generate(_ color: NSColor) -> CGImage {
         ctx.clear(rect)
         
         
-    }, scale: System.backingScale)!
+    })!
 }
 
 private let linkIcon: CGImage = NSImage(resource: .iconExportedInvitationLink).precomposed(.white)
