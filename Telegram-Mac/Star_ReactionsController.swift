@@ -48,7 +48,7 @@ private final class HeaderItem : GeneralRowItem {
         self.updateValue = updateValue
         let balanceAttr = NSMutableAttributedString()
         balanceAttr.append(string: strings().starPurchaseBalance("\(clown)\(state.myBalance)"), color: theme.colors.text, font: .normal(.text))
-        balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
+        balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         self.balanceLayout = .init(balanceAttr, alignment: .right)
         
@@ -268,7 +268,7 @@ private final class BadgeView : View {
         
         
         if inlineView == nil {
-            let view = InlineStickerView(account: context.account, file: LocalAnimatedSticker.star_currency.file, size: NSMakeSize(30, 30), getColors: { _ in
+            let view = InlineStickerView(account: context.account, file: LocalAnimatedSticker.star_currency_new.file, size: NSMakeSize(30, 30), getColors: { _ in
                 return [.init(keyPath: "", color: .init(0xffffff))]
             }, playPolicy: .framesCount(1), controlContent: false)
             self.inlineView = view

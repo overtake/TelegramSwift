@@ -35,7 +35,7 @@ enum TelegramCurrency : String {
     var logo: LocalAnimatedSticker {
         switch self {
         case .xtr:
-            return .star_currency
+            return .star_currency_new
         case .ton:
             return .ton_logo
         }

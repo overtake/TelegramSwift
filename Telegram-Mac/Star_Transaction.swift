@@ -87,7 +87,7 @@ private final class HeaderItem : GeneralRowItem {
         
         let attr = NSMutableAttributedString()
         attr.append(string: "\(incoming ? "+" : "")\(transaction.count) \(clown)", color: incoming ? theme.colors.greenUI : theme.colors.redUI, font: .medium(15))
-        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.infoLayout = .init(attr)
         
@@ -170,12 +170,12 @@ private final class HeaderView : GeneralContainableRowView {
     required init(frame frameRect: NSRect) {
         self.sceneView = GoldenStarSceneView(frame: NSMakeRect(0, 0, frameRect.width, 150))
         super.init(frame: frameRect)
-        addSubview(dismiss)
         addSubview(sceneView)
         addSubview(headerView)
         addSubview(control)
         infoContainer.addSubview(infoView)
-        
+        addSubview(dismiss)
+
         self.sceneView.sceneBackground = theme.colors.listBackground
         
         addSubview(infoContainer)
@@ -524,7 +524,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
   
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionTos, linkHandler: arguments.openLink), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionTos, linkHandler: arguments.openLink), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1

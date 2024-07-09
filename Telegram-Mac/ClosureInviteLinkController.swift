@@ -11,27 +11,34 @@ import Postbox
 import TelegramCore
 import TGUIKit
 import SwiftSignalKit
-
+import InputView
 import Postbox
 
 private final class InviteLinkArguments {
     let context: AccountContext
+    let interactions: TextView_Interactions
     let usageLimit:(Int32)->Void
     let limitDate: (Int32)->Void
     let tempCount:(Int32?)->Void
     let tempDate:(Int32?)->Void
     let toggleRequestApproval: (Bool)->Void
-    init(context: AccountContext, usageLimit: @escaping(Int32)->Void, limitDate: @escaping(Int32)->Void, tempCount:@escaping(Int32?)->Void, tempDate: @escaping(Int32?)->Void, toggleRequestApproval: @escaping(Bool)->Void) {
+    let requestMonthlyFee: (Updated_ChatTextInputState?)->Void
+    let executeLink:(String)->Void
+    init(context: AccountContext, interactions: TextView_Interactions, usageLimit: @escaping(Int32)->Void, limitDate: @escaping(Int32)->Void, tempCount:@escaping(Int32?)->Void, tempDate: @escaping(Int32?)->Void, toggleRequestApproval: @escaping(Bool)->Void, executeLink:@escaping(String)->Void, requestMonthlyFee: @escaping(Updated_ChatTextInputState?)->Void) {
         self.context = context
+        self.interactions = interactions
         self.usageLimit = usageLimit
         self.limitDate = limitDate
         self.tempCount = tempCount
         self.tempDate = tempDate
         self.toggleRequestApproval = toggleRequestApproval
+        self.executeLink = executeLink
+        self.requestMonthlyFee = requestMonthlyFee
     }
 }
 
 struct ClosureInviteLinkState: Equatable {
+    fileprivate var isEditing: Bool
     fileprivate(set) var date:Int32
     fileprivate(set) var count: Int32
     fileprivate var tempCount: Int32?
@@ -39,6 +46,17 @@ struct ClosureInviteLinkState: Equatable {
     fileprivate(set) var requestApproval: Bool
     fileprivate(set) var title: String?
     fileprivate(set) var isPublic: Bool = false
+    
+    
+    fileprivate var requestMonthlyFeeState: Updated_ChatTextInputState?
+    
+    fileprivate var requestMonthlyFee: Int64? {
+        if let state = self.requestMonthlyFeeState {
+            return Int64(state.string)
+        } else {
+            return nil
+        }
+    }
 }
 
 //
@@ -50,6 +68,9 @@ private let _id_count_precise = InputDataIdentifier("_id_count_precise")
 private let _id_title = InputDataIdentifier("_id_title")
 
 private let _id_request_approval = InputDataIdentifier("_id_request_approval")
+
+private let _id_request_monthly_fee = InputDataIdentifier("_id_request_monthly_fee")
+private let _id_monthly_fee_input = InputDataIdentifier("_id_monthly_fee_input")
 
 private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteLinkArguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -67,7 +88,37 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationTitleDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
+    
+    
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    //TODOLANG
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_monthly_fee, data: .init(name: "Require Monthly Fee", color: theme.colors.text, type: .switchable(state.requestMonthlyFeeState != nil), viewType: state.requestMonthlyFeeState != nil ? .firstItem : .singleItem, enabled: !state.isEditing, action: {
+        arguments.requestMonthlyFee(state.requestMonthlyFeeState != nil ? nil : .init(inputText: .initialize(string: "500")))
+    })))
+    index += 1
+    
+    
+    if let inputState = state.requestMonthlyFeeState {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_monthly_fee_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return InviteLinkMonthlyFeeRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, enabled: !state.isEditing, state: inputState, usdRate: 0.013, viewType: .lastItem, updateState: arguments.requestMonthlyFee)
+        }))
+    }
 
+    //TODOLANG
+    let text: String
+    if state.isEditing {
+        text = "If you need change the subscription fee, create a new invite link with a different price."
+    } else {
+        text = "Charge a subscription fee from people joining your channel via this link. [Learn More >](https://telegram.org)"
+    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: arguments.executeLink), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+    
+    
     if !state.isPublic {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
@@ -227,7 +278,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     return entries
 }
 
-enum InviteLinkClosureMode {
+enum InviteLinkClosureMode : Equatable {
     case new
     case edit(_ExportedInvitation)
     
@@ -258,7 +309,7 @@ enum InviteLinkClosureMode {
 }
 
 func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: InviteLinkClosureMode, save:@escaping(ClosureInviteLinkState)->Void) -> InputDataModalController {
-    var initialState = ClosureInviteLinkState(date: 0, count: 0, requestApproval: false)
+    var initialState = ClosureInviteLinkState(isEditing: mode != .new, date: 0, count: 0, requestApproval: false)
     let week: Int32 = 60 * 60 * 24 * 1 * 7
     switch mode {
     case .new:
@@ -285,6 +336,9 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         }
         
     }
+    
+    var getController:(()->InputDataController?)? = nil
+    
     let state: ValuePromise<ClosureInviteLinkState> = ValuePromise(initialState)
     let stateValue: Atomic<ClosureInviteLinkState> = Atomic(value: initialState)
     
@@ -307,7 +361,11 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         }
     }))
     
-    let arguments = InviteLinkArguments(context: context, usageLimit: { value in
+    let interactions = TextView_Interactions()
+    
+    let max_monthly_fee = 10000
+    
+    let arguments = InviteLinkArguments(context: context, interactions: interactions, usageLimit: { value in
         updateState { current in
             var current = current
             current.count = value
@@ -337,6 +395,38 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
             current.requestApproval = !value
             return current
         }
+    }, executeLink: { link in
+        execute(inapp: .external(link: link, false))
+    }, requestMonthlyFee: { [weak interactions] value in
+        
+        if let value {
+            
+            let number = Int64(value.string) ?? 0
+            
+            var value = value
+            if number > max_monthly_fee {
+                let string = "\(max_monthly_fee)"
+                value = .init(inputText: .initialize(string: string), selectionRange: string.length..<string.length)
+                getController?()?.proccessValidation(.fail(.fields([_id_monthly_fee_input : .shake])))
+            }
+            
+            
+            interactions?.update { _ in
+                return value
+            }
+            
+            updateState { current in
+                var current = current
+                current.requestMonthlyFeeState = value
+                return current
+            }
+        } else {
+            updateState { current in
+                var current = current
+                current.requestMonthlyFeeState = nil
+                return current
+            }
+        }
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in
@@ -365,6 +455,10 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
             return current
         }
         return .none
+    }
+    
+    getController = { [weak controller] in
+        return controller
     }
     
     

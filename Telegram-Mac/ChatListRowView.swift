@@ -950,6 +950,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
     
+    private var starBadgeView: ImageView?
+    
     
     private var borderView: View?
 
@@ -1991,6 +1993,36 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  activeImage = nil
              }
              
+             if item.isPaidSubscriptionChannel, self.badgeShortView == nil {
+                 var animate: Bool = false
+                 let current: ImageView
+                 if let view = self.starBadgeView {
+                     current = view
+                 } else {
+                     current = ImageView()
+                     self.starBadgeView = current
+                     self.containerView.addSubview(current, positioned: .above, relativeTo: photoContainer)
+                     animate = true
+                 }
+                 current.image = item.isSelected && item.context.layout != .single ? theme.icons.avatar_star_badge_active : theme.icons.avatar_star_badge
+                 current.sizeToFit()
+
+                 let avatarFrame = self.photoContainer.frame
+                 let avatarBadgeSize = current.frame.size
+                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width + 4, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+
+                 
+                 current.frame = avatarBadgeFrame
+
+                 if animated && animate {
+                     current.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                 }
+             } else if let view = self.starBadgeView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.starBadgeView = nil
+             }
+             
              
              if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil, badgeShortView == nil, groupActivityView == nil {
                  let current: AvatarBadgeView
@@ -2008,7 +2040,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
                  let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
                  current.update(size: avatarBadgeSize, text: shortTimeIntervalString(value: autoremoveTimeout))
-                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width + 3, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
                  
                  
                  current.frame = avatarBadgeFrame

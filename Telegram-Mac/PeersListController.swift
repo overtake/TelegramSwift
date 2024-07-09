@@ -2550,7 +2550,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             break
         case .grace:
             break
-        case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:
+        case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex, .custom:
             break
         }
         if close {

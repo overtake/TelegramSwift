@@ -528,8 +528,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
             //showModal(with: StoryFoundListController(context: context, source: .hashtag("#telegram"), presentation: theme), for: context.window)
-            
-            showModal(with: Star_ReactionsController(context: context), for: context.window)
+            showModal(with: Star_PurschaseInApp(context: context, invoice: .init(title: "", description: "", photo: nil, receiptMessageId: nil, currency: "USD", totalAmount: 1, startParam: "", extendedMedia: nil, flags: .init(), version: 0), source: .slug("BbS2JQXHYEjXFgAAbjEtYxbaAJA"), type: .subscription), for: context.window)
+
+           // showModal(with: Star_ReactionsController(context: context), for: context.window)
             
            // showModal(with: Star_TransactionScreen(context: context, peer: .init(context.myPeer!), transaction: StarsContext.State.Transaction.init(id: "kqwjeflklqwkejflqwkejflqkwejflqkwejf", count: 1000, date: Int32(Date().timeIntervalSince1970), peer: StarsContext.State.Transaction.Peer.appStore)), for: context.window)
 //            showModal(with: FactCheckController(context: context), for: context.window)

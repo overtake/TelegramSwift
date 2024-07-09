@@ -48,6 +48,19 @@ struct Star_Transaction : Equatable {
     let native: StarsContext.State.Transaction
 }
 
+struct Star_Subscription : Equatable {
+    enum State : Equatable {
+        case active
+        case cancelled
+    }
+    let id: String
+    let peer: EnginePeer
+    let amount: Int64
+    let date: Int32
+    let renewDate: Int32
+    let state: State
+}
+
 
 private final class FloatingHeaderView : Control {
     private let textView = TextView()
@@ -75,11 +88,21 @@ private final class FloatingHeaderView : Control {
         switch source {
         case .buy:
             text = strings().starListGetStars
+            balanceView.isHidden = false
         case let .purchase(_, requested):
             let need = Int(requested - myBalance)
             text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
+            balanceView.isHidden = false
         case .account:
             text = strings().starListTelegramStars
+            balanceView.isHidden = true
+        case let .prolongSubscription(_, requested):
+            let need = Int(requested - myBalance)
+            text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
+            balanceView.isHidden = false
+        case .gift:
+            text = strings().starsGiftTitle
+            balanceView.isHidden = true
         }
         
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.text)))
@@ -90,14 +113,15 @@ private final class FloatingHeaderView : Control {
     func update(myBalance: Int64, context: AccountContext) {
         
         let balance = NSMutableAttributedString()
-        balance.append(string: strings().starListMyBalance(clown, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
+        balance.append(string: strings().starListMyBalance(clown + TINY_SPACE, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
         balance.detectBoldColorInString(with: .medium(.text))
-        balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
+        balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         let balanceLayout: TextViewLayout = .init(balance, alignment: .right)
         balanceLayout.measure(width: .greatestFiniteMagnitude)
 
         self.balanceView.set(text: balanceLayout, context: context)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -122,10 +146,13 @@ private final class BalanceItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let infoLayout: TextViewLayout
     fileprivate let buyMore: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: Int64, viewType: GeneralViewType, buyMore: @escaping()->Void) {
+    fileprivate let giftStars: ()->Void
+    fileprivate let giftPremiumLayout: TextViewLayout
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: Int64, viewType: GeneralViewType, buyMore: @escaping()->Void, giftStars: @escaping()->Void) {
         self.myBalance = myBalance
         self.context = context
         self.buyMore = buyMore
+        self.giftStars = giftStars
         
         let attr = NSMutableAttributedString()
         attr.append(string: myBalance.formattedWithSeparator, color: theme.colors.text, font: .medium(40))
@@ -136,11 +163,23 @@ private final class BalanceItem : GeneralRowItem {
         self.infoLayout.measure(width: .greatestFiniteMagnitude)
         
         
+        //TODOLANG
+        let giftAttr = NSMutableAttributedString()
+        giftAttr.append(string: "\(clown)  Gift Stars to Friends", color: theme.colors.accent, font: .normal(.title))
+        giftAttr.insertEmbedded(.embedded(name: "Icon_Gift_Stars", color: theme.colors.accent, resize: false), for: clown)
+        self.giftPremiumLayout = TextViewLayout(giftAttr)
+        
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        self.giftPremiumLayout.measure(width: blockWidth - 40)
+        return true
+    }
+    
     override var height: CGFloat {
-        return 10 + myBalanceLayout.layoutSize.height + infoLayout.layoutSize.height + 10 + 40 + 20
+        return 10 + myBalanceLayout.layoutSize.height + infoLayout.layoutSize.height + 10 + 40 + 20 + (giftPremiumLayout.layoutSize.height + 10)
     }
     
     override func viewClass() -> AnyClass {
@@ -154,13 +193,14 @@ private final class BalanceView: GeneralContainableRowView {
     private let action = TextButton()
     private var star: InlineStickerView?
     private let container = View()
+    private let giftStars = InteractiveTextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         container.addSubview(balance)
         addSubview(container)
         addSubview(info)
         addSubview(action)
-        
+        addSubview(giftStars)
         action.autohighlight = false
         action.scaleOnClick = true
         action.layer?.cornerRadius = 10
@@ -169,9 +209,18 @@ private final class BalanceView: GeneralContainableRowView {
         info.userInteractionEnabled = false
         info.isSelectable = false
         
+        giftStars.userInteractionEnabled = true
+        giftStars.scaleOnClick = true
+        
         action.set(handler: { [weak self] _ in
             if let item = self?.item as? BalanceItem {
                 item.buyMore()
+            }
+        }, for: .Click)
+        
+        giftStars.set(handler: { [weak self] _ in
+            if let item = self?.item as? BalanceItem {
+                item.giftStars()
             }
         }, for: .Click)
     }
@@ -186,9 +235,10 @@ private final class BalanceView: GeneralContainableRowView {
         guard let item = item as? BalanceItem else {
             return
         }
+        giftStars.set(text: item.giftPremiumLayout, context: item.context)
         
         if self.star == nil {
-            let view = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.star_currency.file, size: NSMakeSize(item.myBalanceLayout.layoutSize.height - 4, item.myBalanceLayout.layoutSize.height - 4))
+            let view = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.star_currency_new.file, size: NSMakeSize(item.myBalanceLayout.layoutSize.height - 4, item.myBalanceLayout.layoutSize.height - 4))
             self.star = view
             container.addSubview(view)
         }
@@ -215,7 +265,9 @@ private final class BalanceView: GeneralContainableRowView {
         }
         info.centerX(y: container.frame.maxY)
         
-        action.frame = NSMakeRect(20, containerView.frame.height - 20 - 40, containerView.frame.width - 40, 40)
+        action.frame = NSMakeRect(20, containerView.frame.height - 20 - 40 - giftStars.frame.height - 10, containerView.frame.width - 40 - 10, 40)
+        
+        giftStars.centerX(y: containerView.frame.height - giftStars.frame.height - 15)
     }
 }
 
@@ -226,20 +278,20 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let headerText: TextViewLayout
     fileprivate let dismiss: ()->Void
     fileprivate let source: Star_ListScreenSource
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: Int64, source: Star_ListScreenSource, viewType: GeneralViewType, dismiss: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: Int64, source: Star_ListScreenSource, viewType: GeneralViewType, dismiss: @escaping()->Void, openRecommendedApps: @escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
         self.source = source
         let balance = NSMutableAttributedString()
-        balance.append(string: strings().starListMyBalance(clown, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
+        balance.append(string: strings().starListMyBalance(clown + TINY_SPACE, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
         balance.detectBoldColorInString(with: .medium(.text))
-        balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
+        balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         self.balance = .init(balance, alignment: .right)
         self.balance.measure(width: .greatestFiniteMagnitude)
         
         let headerAttr = NSMutableAttributedString()
-        let headerInfo = NSMutableAttributedString()
+        var headerInfo = NSMutableAttributedString()
         
         switch source {
         case .buy:
@@ -252,12 +304,31 @@ private final class HeaderItem : GeneralRowItem {
         case .account:
             headerAttr.append(string: strings().starListTelegramStars, color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starListBuyAndUserNobot, color: theme.colors.text, font: .normal(.text))
+        case let .prolongSubscription(peer, requested):
+            let need = Int(requested - myBalance)
+            headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
+            //TODOLANG
+            headerInfo.append(string: "Buy Stars to keep your subscription for **\(peer._asPeer().displayTitle)**.", color: theme.colors.text, font: .normal(.text))
+        case let .gift(peer):
+            //TODOLANG
+            headerAttr.append(string: strings().starsGiftTitle, color: theme.colors.text, font: .medium(.header))
+            
+            let text = "With Stars, **\(peer._asPeer().displayTitle)** will be able to unlock content and services on Telegram. [See Examples >](examples)"
+            
+            headerInfo = parseMarkdownIntoAttributedString(text, attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.text), link: .init(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { value in
+                    openRecommendedApps()
+                }))
+            })).mutableCopy() as! NSMutableAttributedString
+            
         }
         headerAttr.detectBoldColorInString(with: .medium(.header))
         headerInfo.detectBoldColorInString(with: .medium(.text))
 
         self.header = .init(headerAttr, alignment: .center)
         self.headerText = .init(headerInfo, alignment: .center)
+        
+        self.headerText.interactions = globalLinkExecutor
         
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
@@ -284,6 +355,9 @@ private final class HeaderView : GeneralContainableRowView {
     private let balance = InteractiveTextView()
     private let header = TextView()
     private let headerInfo = TextView()
+    
+    private var avatarView: AvatarControl?
+    
     required init(frame frameRect: NSRect) {
         self.sceneView = GoldenStarSceneView(frame: NSMakeRect(0, 0, frameRect.width, 150))
         super.init(frame: frameRect)
@@ -303,7 +377,6 @@ private final class HeaderView : GeneralContainableRowView {
         
         header.userInteractionEnabled = false
         header.isSelectable = false
-        headerInfo.userInteractionEnabled = false
         headerInfo.isSelectable = false
         
         dismiss.set(handler: { [weak self] _ in
@@ -328,8 +401,34 @@ private final class HeaderView : GeneralContainableRowView {
             return
         }
         
+        switch item.source {
+        case let .gift(peer):
+            sceneView.hideStar()
+            balance.isHidden = true
+            let current: AvatarControl
+            if let view = self.avatarView {
+                current = view
+            } else {
+                current = AvatarControl(font: .avatar(20))
+                current.setFrameSize(NSMakeSize(80, 80))
+                self.avatarView = current
+                addSubview(current)
+            }
+            current.setPeer(account: item.context.account, peer: peer._asPeer())
+            
+        default:
+            sceneView.showStar()
+            balance.isHidden = false
+            if let avatarView {
+                performSubviewRemoval(avatarView, animated: animated)
+                self.avatarView = nil
+            }
+            balance.isHidden = item.source == .account
+        }
+        
+        
+        
         balance.set(text: item.balance, context: item.context)
-        balance.isHidden = item.source == .account
 
         header.update(item.header)
         headerInfo.update(item.headerText)
@@ -344,6 +443,9 @@ private final class HeaderView : GeneralContainableRowView {
         sceneView.centerX(y: 0)
         header.centerX(y: sceneView.frame.maxY - 20)
         headerInfo.centerX(y: header.frame.maxY + 10)
+        
+        avatarView?.centerX(y: 30)
+        
         balance.setFrameOrigin(NSMakePoint(frame.width - balance.frame.width - 13, floorToScreenPixels((50 - balance.frame.height) / 2)))
         dismiss.setFrameOrigin(NSMakePoint(13, floorToScreenPixels((50 - dismiss.frame.height) / 2)))
     }
@@ -449,10 +551,10 @@ private final class Star_ItemView : GeneralContainableRowView {
         
         for i in Int64(stars.subviews.count) ..< item.starsCount {
             if i == 0 {
-                let view = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.star_currency.file, size: NSMakeSize(20, 20))
+                let view = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.star_currency_new.file, size: NSMakeSize(20, 20))
                 stars.addSubview(view)
             } else {
-                let view = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.star_currency_part.file, size: NSMakeSize(20, 20))
+                let view = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.star_currency_part_new.file, size: NSMakeSize(20, 20))
                 stars.addSubview(view)
             }
         }
@@ -550,25 +652,32 @@ private final class Arguments {
     let openLink:(String)->Void
     let dismiss:()->Void
     let buyMore:()->Void
+    let giftStars:()->Void
     let toggleFilterMode:(State.TransactionMode)->Void
     let buy:(State.Option)->Void
     let loadMore:()->Void
     let openTransaction:(Star_Transaction)->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void) {
+    let openSubscription:(Star_Subscription)->Void
+    let openRecommendedApps:()->Void
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
         self.openLink = openLink
         self.dismiss = dismiss
         self.buyMore = buyMore
+        self.giftStars = giftStars
         self.toggleFilterMode = toggleFilterMode
         self.buy = buy
         self.loadMore = loadMore
         self.openTransaction = openTransaction
+        self.openSubscription = openSubscription
+        self.openRecommendedApps = openRecommendedApps
     }
 }
 
 private struct State : Equatable {
+        
     enum TransactionMode : Equatable {
         case all
         case incoming
@@ -606,6 +715,8 @@ private struct State : Equatable {
     var canMakePayment: Bool
     
     var starsState: StarsContext.State?
+    
+    var subscriptions: [Star_Subscription] = []
 
 }
 
@@ -616,6 +727,11 @@ private func _id_option(_ option: State.Option) -> InputDataIdentifier {
 private func _id_transaction(_ transaction: Star_Transaction) -> InputDataIdentifier {
     return .init("_id_\(transaction.id)_\(transaction.type)")
 }
+private func _id_subscription(_ subscription: Star_Subscription) -> InputDataIdentifier {
+    return .init("_id_\(subscription.peer.id.toInt64())_\(subscription.id)")
+}
+
+
 private let _id_show_more = InputDataIdentifier("_id_show_more")
 private let _id_balance = InputDataIdentifier("_id_balance")
 
@@ -624,6 +740,9 @@ private let _id_empty_transactions = InputDataIdentifier("_id_empty_transactions
 
 private let _id_load_more = InputDataIdentifier("_id_load_more")
 private let _id_loading = InputDataIdentifier("_id_loading")
+
+private let _id_loading_subs = InputDataIdentifier("_id_loading_subs")
+private let _id_load_more_subs = InputDataIdentifier("_id_load_more_subs")
 
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -634,11 +753,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let balance = state.myBalance {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return HeaderItem(initialSize, stableId: stableId, context: arguments.context, myBalance: balance, source: arguments.source, viewType: .legacy, dismiss: arguments.dismiss)
+            return HeaderItem(initialSize, stableId: stableId, context: arguments.context, myBalance: balance, source: arguments.source, viewType: .legacy, dismiss: arguments.dismiss, openRecommendedApps: arguments.openRecommendedApps)
         }))
         
         switch arguments.source {
-        case .buy, .purchase:
+        case .buy, .purchase, .prolongSubscription, .gift:
             
             struct Tuple : Equatable {
                 let option: State.Option
@@ -707,8 +826,46 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         case .account:
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state.myBalance), comparable: nil, item: { initialSize, stableId in
-                return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? 0, viewType: .singleItem, buyMore: arguments.buyMore)
+                return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? 0, viewType: .singleItem, buyMore: arguments.buyMore, giftStars: arguments.giftStars)
             }))
+            
+            if !state.subscriptions.isEmpty {
+                
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+                
+                struct Tuple : Equatable {
+                    let subscription: Star_Subscription
+                    let viewType: GeneralViewType
+                }
+                var tuples: [Tuple] = []
+                for (i, subscription) in state.subscriptions.enumerated() {
+                    var viewType: GeneralViewType = bestGeneralViewType(state.subscriptions, for: i)
+                    if i == state.subscriptions.count - 1, state.starsState?.canLoadMore == true || state.starsState?.isLoading == true {
+                        viewType = .innerItem
+                    }
+                    tuples.append(.init(subscription: subscription, viewType: viewType))
+                }
+                
+                //TODOLANG
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MY SUBSCRIPTIONS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                index += 1
+
+                
+                for tuple in tuples {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_subscription(tuple.subscription), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                        return Star_SubscriptionRowItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, subscription: tuple.subscription, callback: arguments.openSubscription)
+                    }))
+                }
+                
+                if state.starsState?.isLoading == true {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_subs, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                        return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+                    }))
+                } else if state.starsState?.canLoadMore == true {
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more_subs, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMore, iconTextInset: 42)))
+                }
+            }
             
             if let transactions = state.transactions, !transactions.isEmpty {
                 entries.append(.sectionId(sectionId, type: .normal))
@@ -799,6 +956,8 @@ enum Star_ListScreenSource : Equatable {
     case buy
     case purchase(EnginePeer, Int64)
     case account
+    case prolongSubscription(EnginePeer, Int64)
+    case gift(EnginePeer)
 }
 
 func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> InputDataModalController {
@@ -817,7 +976,22 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     canMakePayment = inAppPurchaseManager.canMakePayments
     #endif
     
-    let initialState = State(options: nil, transactions: nil, canMakePayment: canMakePayment)
+    var subscriptions:[Star_Subscription] = []
+    
+    #if DEBUG
+    for i in 0 ..< 5 {
+        let state: Star_Subscription.State
+        if arc4random64() % 2 == 0 {
+            state = .active
+        } else {
+            state = .cancelled
+        }
+        subscriptions.append(.init(id: "\(i)", peer: .init(context.myPeer!), amount: Int64.random(in: 100..<10000), date: Int32(Date().timeIntervalSince1970), renewDate: Int32(Date().timeIntervalSince1970) + Int32.random(in: 0..<10000000), state: state))
+    }
+    #endif
+    
+    
+    let initialState = State(options: nil, transactions: nil, canMakePayment: canMakePayment, subscriptions: subscriptions)
     
     
     
@@ -1003,6 +1177,8 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         close?()
     }, buyMore: {
         showModal(with: Star_ListScreen(context: context, source: .buy), for: window)
+    }, giftStars: {
+        multigift(context: context, type: .stars)
     }, toggleFilterMode: { mode in
         updateState { current in
             var current = current
@@ -1019,6 +1195,11 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         context.starsContext.loadMore()
     }, openTransaction: { transaction in
         showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: window)
+    }, openSubscription: { subscription in
+        showModal(with: Star_SubscriptionScreen(context: context, subscription: subscription), for: window)
+    }, openRecommendedApps: {
+        //TODOLANG
+        showModalText(for: window, text: "Not Supported Yet")
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

@@ -66,7 +66,7 @@ final class Fragment_OverviewRowItem : GeneralRowItem {
         if let starsAmount = overview.stars {
             let attr = NSMutableAttributedString()
             attr.append(string: "\(clown) \(starsAmount.amount)", color: theme.colors.text, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             attr.append(string: " =", color: theme.colors.grayText, font: .normal(.text))
             let usdAmount = NSAttributedString.initialize(string: starsAmount.usdAmount, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
             attr.append(usdAmount)

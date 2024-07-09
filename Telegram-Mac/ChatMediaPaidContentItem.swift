@@ -124,7 +124,7 @@ final class ChatMediaPaidContentItem : ChatRowItem {
         if isPreview {
             let attr = NSMutableAttributedString()
             attr.append(string: strings().paidMediaUnlockForCountable(Int(media.amount)), color: .white, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: "#")
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: "#")
             
             let textLayout = TextViewLayout(attr)
             textLayout.measure(width: .greatestFiniteMagnitude)

@@ -160,6 +160,14 @@ class ChatListRowItem: TableRowItem {
         return false
     }
     
+    var isPaidSubscriptionChannel: Bool {
+        #if DEBUG
+        return peer?.isChannel == true
+        #endif
+        
+        return false
+    }
+    
     let chatListIndex:ChatListIndex?
     var peerId:PeerId? {
         switch mode {
