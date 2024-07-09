@@ -1019,8 +1019,15 @@ public final class TextViewLayout : Equatable {
                 if !rawRightOffset.isEqual(to: secondaryRightOffset) {
                     rightOffset = ceil(secondaryRightOffset)
                 }
+                
+                let lineRange = NSMakeRange(CTLineGetStringRange(line).location, CTLineGetStringRange(line).length)
+                let range = NSMakeRange(startIndex, endIndex - startIndex)
+                
+                if lineRange.intersection(range) != range {
+                    return
+                }
                                         
-                if abs(rightOffset - leftOffset) < 150, abs(rightOffset - leftOffset) > 8 {
+                if abs(rightOffset - leftOffset) < 30, abs(rightOffset - leftOffset) > 8 {
                     let x = floor(min(leftOffset, rightOffset)) + 1
                     var width = floor(abs(rightOffset - leftOffset) + rightInset)
                     if Int(width) % 2 != 0 {
@@ -1209,7 +1216,7 @@ public final class TextViewLayout : Equatable {
                             var descent: CGFloat = 0.0
                             CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
                             
-                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
+                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.min, endIndex: range.max)
                         } else if let _ = attributes[.strikethroughStyle] {
                             let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
                             

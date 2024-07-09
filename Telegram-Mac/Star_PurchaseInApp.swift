@@ -35,17 +35,29 @@ private final class HeaderItem : GeneralRowItem {
         self.close = close
         
         let balanceAttr = NSMutableAttributedString()
-        balanceAttr.append(string: strings().starPurchaseBalance("\(clown)\(myBalance)"), color: theme.colors.text, font: .normal(.text))
-        balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
+        balanceAttr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(myBalance)"), color: theme.colors.text, font: .normal(.text))
+        balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         self.balanceLayout = .init(balanceAttr, alignment: .right)
         
-        self.headerLayout = .init(.initialize(string: strings().starPurchaseConfirm, color: theme.colors.text, font: .medium(.title)), alignment: .center)
+        let headerText: String
+        switch request.type {
+        case .bot, .paidMedia:
+            headerText = strings().starPurchaseConfirm
+        case .subscription:
+            //TODOLANG
+            headerText = "Subscribe to the Channel"
+        }
+        
+        self.headerLayout = .init(.initialize(string: headerText, color: theme.colors.text, font: .medium(.title)), alignment: .center)
         
         let infoAttr = NSMutableAttributedString()
         switch request.type {
         case .bot:
             infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
+        case .subscription:
+            //TODOLANG
+            infoAttr.append(string: "Do you want to subscribe for **\(peer._asPeer().displayTitle)** for \(request.count) Stars per month?", color: theme.colors.text, font: .normal(.text))
         case let .paidMedia(_, count):
             
             var description: String = ""
@@ -113,8 +125,15 @@ private final class AcceptView : Control {
     func update(_ item: HeaderItem, animated: Bool) {
         let attr = NSMutableAttributedString()
         
-        attr.append(string: strings().starPurchasePay("\(XTRSTAR)\(TINY_SPACE)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
-        attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
+        switch item.request.type {
+        case .bot, .paidMedia:
+            attr.append(string: strings().starPurchasePay("\(XTRSTAR)\(TINY_SPACE)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
+        case .subscription:
+            //TODOLANG
+            attr.append(string: "Subscribe", color: theme.colors.underSelectedColor, font: .medium(.text))
+        }
+        
         
         let layout = TextViewLayout(attr)
         layout.measure(width: item.width - 60)
@@ -229,6 +248,7 @@ private final class HeaderItemView : GeneralContainableRowView {
     private let info = InteractiveTextView()
     private let sceneView: GoldenStarSceneView
     
+    private var subBadgeView: ImageView?
     
     private let accept: AcceptView = AcceptView(frame: .zero)
     
@@ -280,6 +300,10 @@ private final class HeaderItemView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
             }
+            if let view = self.subBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.subBadgeView = nil
+            }
             if let view = self.photo {
                 performSubviewRemoval(view, animated: animated)
                 self.photo = nil
@@ -298,6 +322,10 @@ private final class HeaderItemView : GeneralContainableRowView {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
+            }
+            if let view = self.subBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.subBadgeView = nil
             }
             if let view = self.paidPreview {
                 performSubviewRemoval(view, animated: animated)
@@ -342,6 +370,20 @@ private final class HeaderItemView : GeneralContainableRowView {
                 addSubview(current)
             }
             current.setPeer(account: item.context.account, peer: item.peer._asPeer())
+            
+            do {
+                let current: ImageView
+                if let view = self.subBadgeView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    self.subBadgeView = current
+                    addSubview(current)
+                }
+                current.image = theme.icons.avatar_star_badge_large_gray
+                current.sizeToFit()
+            }
+            
         }
         
         
@@ -373,6 +415,9 @@ private final class HeaderItemView : GeneralContainableRowView {
         }
         if let avatar {
             avatar.centerX(y: 10)
+            if let subBadgeView {
+                subBadgeView.setFrameOrigin(avatar.frame.maxX - 25, avatar.frame.midY + 8)
+            }
         }
         if let paidPreview {
             paidPreview.centerX(y: 10)
@@ -457,6 +502,7 @@ enum StarPurchaseType : Equatable {
     
     case bot
     case paidMedia(TelegramMediaImage, PaidMediaCount)
+    case subscription
 }
 
 func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
@@ -527,6 +573,9 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                                 text = strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count)))
                             case .paidMedia:
                                 text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
+                            case .subscription:
+                                //TODOLANG
+                                fatalError("unsupported")
                             }
                             showModalText(for: window, text: text)
                             

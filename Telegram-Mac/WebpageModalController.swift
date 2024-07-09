@@ -1643,7 +1643,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.sendEvent(name: "theme_changed", data: themeParamsString)
         
         
-        genericView.updateHeader(title: self.defaultBarTitle, subtitle: strings().presenceBot, left: isBackButton ? .back : .dismiss, animated: true, leftCallback: { [weak self] in
+        genericView.updateHeader(title: self.defaultBarTitle, subtitle: strings().presenceMiniapp, left: isBackButton ? .back : .dismiss, animated: true, leftCallback: { [weak self] in
             if self?.isBackButton == true {
                 self?.backButtonPressed()
             } else {

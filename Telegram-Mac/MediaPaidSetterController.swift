@@ -80,7 +80,7 @@ private final class InputView : GeneralRowView {
             
             let attr = NSMutableAttributedString()
             attr.append(string: clown)
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             
             let layout = TextViewLayout(attr)
             layout.measure(width: .greatestFiniteMagnitude)

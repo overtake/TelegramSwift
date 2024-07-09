@@ -445,7 +445,7 @@ private final class WithdrawHeaderItem : GeneralRowItem {
         self.titleLayout = .init(.initialize(string: strings().fragmentStarWithdraw, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         let attr = NSMutableAttributedString()
         attr.append(string: strings().starPurchaseBalance("\(clown)\(balance)"), color: theme.colors.text, font: .normal(.text))
-        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.balance = .init(attr)
         self.balance.measure(width: .greatestFiniteMagnitude)
@@ -607,7 +607,7 @@ private final class WithdrawInputView : GeneralRowView {
             
             let iconAttr = NSMutableAttributedString()
             iconAttr.append(string: clown, color: theme.colors.text, font: .medium(.text))
-            iconAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            iconAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             
             let iconLayout = TextViewLayout(iconAttr)
             iconLayout.measure(width: frame.width - 70)
@@ -653,7 +653,7 @@ private final class WithdrawInputView : GeneralRowView {
             
             let attr = NSMutableAttributedString()
             attr.append(string: clown)
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             
             let layout = TextViewLayout(attr)
             layout.measure(width: .greatestFiniteMagnitude)

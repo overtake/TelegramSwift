@@ -11,6 +11,8 @@ import TelegramCore
 import TelegramMedia
 import Postbox
 
+private let version = 1
+
 enum LocalAnimatedSticker : String {
     case brilliant_static
     case brilliant_loading
@@ -348,8 +350,8 @@ enum LocalAnimatedSticker : String {
     case chatlist_poll
     case chatlist_voice
     
-    case star_currency
-    case star_currency_part
+    case star_currency_new
+    case star_currency_part_new
 
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

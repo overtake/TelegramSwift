@@ -10496,6 +10496,58 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var avatar_star_badge: CGImage {
+      if let image = cached.with({ $0["avatar_star_badge"] }) {
+          return image
+      } else {
+          let image = _avatar_star_badge()
+          _ = cached.modify { current in 
+              var current = current
+              current["avatar_star_badge"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var avatar_star_badge_active: CGImage {
+      if let image = cached.with({ $0["avatar_star_badge_active"] }) {
+          return image
+      } else {
+          let image = _avatar_star_badge_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["avatar_star_badge_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var avatar_star_badge_gray: CGImage {
+      if let image = cached.with({ $0["avatar_star_badge_gray"] }) {
+          return image
+      } else {
+          let image = _avatar_star_badge_gray()
+          _ = cached.modify { current in 
+              var current = current
+              current["avatar_star_badge_gray"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var avatar_star_badge_large_gray: CGImage {
+      if let image = cached.with({ $0["avatar_star_badge_large_gray"] }) {
+          return image
+      } else {
+          let image = _avatar_star_badge_large_gray()
+          _ = cached.modify { current in 
+              var current = current
+              current["avatar_star_badge_large_gray"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -11304,6 +11356,10 @@ public final class TelegramIconsTheme {
   private let _bot_manager_settings: ()->CGImage
   private let _preview_text_down: ()->CGImage
   private let _preview_text_up: ()->CGImage
+  private let _avatar_star_badge: ()->CGImage
+  private let _avatar_star_badge_active: ()->CGImage
+  private let _avatar_star_badge_gray: ()->CGImage
+  private let _avatar_star_badge_large_gray: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -12112,7 +12168,11 @@ public final class TelegramIconsTheme {
       create_new_message_general: @escaping()->CGImage,
       bot_manager_settings: @escaping()->CGImage,
       preview_text_down: @escaping()->CGImage,
-      preview_text_up: @escaping()->CGImage
+      preview_text_up: @escaping()->CGImage,
+      avatar_star_badge: @escaping()->CGImage,
+      avatar_star_badge_active: @escaping()->CGImage,
+      avatar_star_badge_gray: @escaping()->CGImage,
+      avatar_star_badge_large_gray: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12921,5 +12981,9 @@ public final class TelegramIconsTheme {
       self._bot_manager_settings = bot_manager_settings
       self._preview_text_down = preview_text_down
       self._preview_text_up = preview_text_up
+      self._avatar_star_badge = avatar_star_badge
+      self._avatar_star_badge_active = avatar_star_badge_active
+      self._avatar_star_badge_gray = avatar_star_badge_gray
+      self._avatar_star_badge_large_gray = avatar_star_badge_large_gray
   }
 }

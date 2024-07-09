@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "Star_24 (2).png",
+      "filename" : "Star_Outline_30.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Star_24@2x (2).png",
+      "filename" : "Star_Outline_30@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

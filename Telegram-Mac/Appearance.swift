@@ -92,7 +92,41 @@ public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImag
 #endif
 
 
-import Cocoa
+private func generateAvatarStarBadge(color: NSColor) -> CGImage {
+    let image = NSImage(resource: .iconStarCurrency).precomposed()
+    let bigImage = NSImage(resource: .iconStarOutline).precomposed()
+    return generateImage(bigImage.size, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        
+        ctx.clip(to: size.bounds, mask: bigImage)
+        ctx.clear(size.bounds)
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+
+        ctx.draw(image, in: size.bounds.focus(image.size))
+    })!
+}
+
+private func generateAvatarStarBadgeLarge(color: NSColor) -> CGImage {
+    let image = NSImage(resource: .iconStarCurrencyBigSize).precomposed()
+    let bigImage = NSImage(resource: .iconStarOutlineBigSize).precomposed()
+    return generateImage(bigImage.size, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        
+        ctx.clip(to: size.bounds, mask: bigImage)
+        ctx.clear(size.bounds)
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+
+        ctx.draw(image, in: size.bounds.focus(image.size))
+    })!
+}
+
+
 
 func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFloat? = nil, tailSize: CGSize = CGSize(width: 20.0, height: 9.0), tailRadius: CGFloat = 4.0, tailPosition: CGFloat? = 0.5, transformTail: Bool = true) -> NSBezierPath {
     let cornerRadius: CGFloat = cornerRadius ?? rectSize.height / 2.0
@@ -3036,8 +3070,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               create_new_message_general: { NSImage(resource: .iconNewMessage).precomposed(palette.accent, flipVertical: true) },
                               bot_manager_settings: { NSImage(resource: .iconBotManagerSettings).precomposed(palette.grayIcon) },
                               preview_text_down: { NSImage(resource: .iconMoveCaptionDown).precomposed(palette.grayIcon) },
-                              preview_text_up: { NSImage(resource: .iconMoveCaptionUp).precomposed(palette.grayIcon) }
-
+                              preview_text_up: { NSImage(resource: .iconMoveCaptionUp).precomposed(palette.grayIcon) },
+                              avatar_star_badge: { generateAvatarStarBadge(color: palette.background) },
+                              avatar_star_badge_active: { generateAvatarStarBadge(color: palette.background) },
+                              avatar_star_badge_gray: { generateAvatarStarBadge(color: palette.listBackground) },
+                              avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) }
     )
 }
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {

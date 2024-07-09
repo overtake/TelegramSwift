@@ -13,7 +13,12 @@ import SwiftSignalKit
 import Postbox
 
 
-func multigift(context: AccountContext, selected: [PeerId] = []) {
+enum MultigiftType {
+    case premium
+    case stars
+}
+
+func multigift(context: AccountContext, type: MultigiftType = .premium, selected: [PeerId] = []) {
     let birthdays: Signal<[UIChatListBirthday], NoError> = context.account.stateManager.contactBirthdays |> map {
         return $0.filter {
             $0.value.isEligble
@@ -62,12 +67,37 @@ func multigift(context: AccountContext, selected: [PeerId] = []) {
             additionTopItem = nil
         }
         
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected)
+        let limit: Int32
+        switch type {
+        case .premium:
+            limit = 10
+        case .stars:
+            limit = 1
+        }
+        
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected)
         
         
+        let title: String
+        switch type {
+        case .premium:
+            title = strings().premiumGiftTitle
+        case .stars:
+            title = strings().starsGiftTitle
+        }
         
-        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
-            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+        _ = selectModalPeers(window: context.window, context: context, title: title, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
+            switch type {
+            case .premium:
+                showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+            case .stars:
+                let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerIds[0])) |> deliverOnMainQueue
+                _ = signal.start(next: { peer in
+                    if let peer {
+                        showModal(with: Star_ListScreen(context: context, source: .gift(peer)), for: context.window)
+                    }
+                })
+            }
         })
     })
 }

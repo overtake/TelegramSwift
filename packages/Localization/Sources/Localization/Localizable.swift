@@ -13035,6 +13035,8 @@ public final class L10n {
   }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
+  /// mini app
+  public static var presenceMiniapp: String  { return L10n.tr("Localizable", "Presence.miniapp") }
   /// support
   public static var presenceSupport: String  { return L10n.tr("Localizable", "Presence.Support") }
   /// %d
@@ -15851,6 +15853,8 @@ public final class L10n {
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
   /// Buy Ads
   public static var starsBalanceBuyAds: String  { return L10n.tr("Localizable", "Stars.Balance.BuyAds") }
+  /// Gift Stars
+  public static var starsGiftTitle: String  { return L10n.tr("Localizable", "Stars.Gift.Title") }
   /// Media Purchase
   public static var starsTransactionMediaPurchase: String  { return L10n.tr("Localizable", "Stars.Transaction.MediaPurchase") }
   /// Stars Top-Up

@@ -146,6 +146,7 @@ enum UIChatListEntryId : Hashable {
     case suspicious
     case birthdays
     case grace
+    case custom
 }
 
 
@@ -187,6 +188,53 @@ struct UIChatListBirthday : Equatable {
     let peer: EnginePeer
 }
 
+struct UIChatListBuyStarsAction : UIChatListTextAction {
+    var text: NSAttributedString
+    
+    var info: NSAttributedString
+    
+    func action() {
+        showModal(with: Star_ListScreen(context: context, source: .prolongSubscription(.init(context.myPeer!), 500)), for: context.window)
+    }
+    
+    func dismiss() {
+        
+    }
+    
+    func isEqual(_ rhs: UIChatListTextAction) -> Bool {
+        if let _ = rhs as? UIChatListBuyStarsAction {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private let context: AccountContext
+    
+    init(context: AccountContext) {
+        self.context = context
+        let attr = NSMutableAttributedString()
+        //TODOLANG
+        attr.append(string: "\(XTRSTAR) **493** Stars needed for Astro Paws", color: theme.colors.text, font: .normal(.text))
+        attr.detectBoldColorInString(with: .medium(.text))
+        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: XTRSTAR)
+        self.text = attr
+        self.info = .initialize(string: "Insufficient funds to cover your subscription.", color: theme.colors.grayText, font: .normal(.text))
+    }
+}
+
+
+
+protocol UIChatListTextAction {
+    var text: NSAttributedString { get }
+    var info: NSAttributedString { get }
+    
+    func action() -> Void
+    func dismiss() -> Void
+    
+    func isEqual(_ rhs: any UIChatListTextAction) -> Bool
+}
+
 enum UIChatListEntry : Identifiable, Comparable {
     case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool, folders: FilterData?, canPreviewChat: Bool)
     case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool, EngineStorySubscriptions?)
@@ -196,6 +244,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case sharedFolderUpdated(ChatFolderUpdates)
     case suspicious(NewSessionReview)
     case birthdays([UIChatListBirthday])
+    case custom(any UIChatListTextAction)
     case grace(Bool)
     case space
     case loading(ChatListFilter)
@@ -261,6 +310,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case let .custom(lhsAction):
+            if case let .custom(rhsAction) = rhs {
+                return lhsAction.isEqual(rhsAction)
+            } else {
+                return false
+            }
         case let .loading(filter):
             if case .loading(filter) = rhs {
                 return true
@@ -319,6 +374,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .birthdays:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
+        case .custom:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .grace:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .loading:
@@ -354,6 +411,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .suspicious
         case .birthdays:
             return .birthdays
+        case .custom:
+            return .custom
         case .grace:
             return .grace
         case .space:
@@ -424,6 +483,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
                 return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) 
+            case let .custom(action):
+                return ChatListTextActionRowItem(initialSize, stableId: entry.stableId, context: arguments.context, title: action.text, info: action.info, action: action.action, dismiss: action.dismiss)
             }
         }
         
@@ -878,8 +939,12 @@ class ChatListController : PeersListController {
             
             var additionItems: [UIChatListEntry] = []
             
+            
             if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState != .minimisize {
                 additionItems.append(.suspicious(suspiciousSession))
+            }
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
+                additionItems.append(.custom(UIChatListBuyStarsAction(context: context)))
             }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
@@ -897,6 +962,8 @@ class ChatListController : PeersListController {
                     }
                 }
             }
+            
+            
             
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
                 additionItems.append(.systemDeprecated(filterData.filter))

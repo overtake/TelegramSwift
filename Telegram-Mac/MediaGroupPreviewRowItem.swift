@@ -101,7 +101,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             let attr = NSMutableAttributedString()
             attr.append(string: "\(clown)", color: .white, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             attr.append(string: " \(amount)", color: .white, font: .medium(.text))
             
             let textLayout = TextViewLayout(attr)

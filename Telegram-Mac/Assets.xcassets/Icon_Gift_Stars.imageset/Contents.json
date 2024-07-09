@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "Star_24 (2).png",
+      "filename" : "giftstars_24.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Star_24@2x (2).png",
+      "filename" : "giftstars_24@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

@@ -946,6 +946,14 @@ func initialize() -> [String] {
     array.append("preview_text_up")
 
 
+    array.append("avatar_star_badge")
+    array.append("avatar_star_badge_active")
+    
+    array.append("avatar_star_badge_gray")
+    array.append("avatar_star_badge_large_gray")
+
+    
+
     return array
 }
 //swift ./tools/generate-images.swift
