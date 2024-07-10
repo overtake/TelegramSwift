@@ -384,6 +384,7 @@ func initialize() -> [String] {
     array.append("peerInfoBanned")
     array.append("peerInfoMembers")
     array.append("peerInfoStarsBalance")
+    array.append("peerInfoBalance")
     array.append("peerInfoBotUsername")
     array.append("chatUndoAction")
     array.append("appUpdate")

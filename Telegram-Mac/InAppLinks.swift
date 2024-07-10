@@ -617,7 +617,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         
         let invokeCallback:(Peer, MessageId?, ChatInitialAction?) -> Void = { peer, messageId, action in
             if peer.isForum {
-                closeAllModals()
+                closeAllModals(window: getWindow(context))
                 if let messageId = messageId {
                     
                     _ = (context.engine.messages.getMessagesLoadIfNecessary([messageId]) |> deliverOnMainQueue).start(next: { result in
