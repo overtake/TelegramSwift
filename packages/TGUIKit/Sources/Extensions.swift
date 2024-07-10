@@ -1363,6 +1363,23 @@ public extension CGRect {
         
         return NSMakeRect(x, y, size.width, size.height)
     }
+    
+    func focusX(_ size:NSSize, y: CGFloat) -> NSRect {
+        var x:CGFloat = 0
+        
+        x = CGFloat(round((self.width - size.width)/2.0))
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
+    
+    func focusY(_ size:NSSize, x: CGFloat) -> NSRect {
+        var y:CGFloat = 0
+        
+        y = CGFloat(round((self.height - size.height)/2.0))
+        
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
 }
 
 public extension CGPoint {

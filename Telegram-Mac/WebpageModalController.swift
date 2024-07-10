@@ -1238,21 +1238,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     
                     let previous = context.bindings.rootNavigation().controller
                     
-                    if openInfo == nil {
-                        openInfo = { [weak self] peerId, toChat, messageId, initialAction in
-                            if toChat || initialAction != nil {
-                                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
-                            } else {
-                                PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-                            }
-                            if initialAction != nil {
-                                self?.closeAnyway()
-                            }
-                            context.window.makeKeyAndOrderFront(nil)
-                        }
-                    }
+                   
                     
-                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: { [weak self] peerId, toChat, messageId, initialAction in
+                        if toChat || initialAction != nil {
+                            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+                        } else {
+                            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                        }
+                        if initialAction != nil {
+                            self?.closeAnyway()
+                        }
+                        context.window.makeKeyAndOrderFront(nil)
+                    }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                    
                     execute(inapp: link, window: self.window, afterComplete: { [weak self, weak previous] _ in
                         let current = context.bindings.rootNavigation().controller

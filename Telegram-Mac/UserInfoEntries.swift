@@ -1669,7 +1669,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botEditUsername(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
         case let .botStarsBalance(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoStarsBalance, type: .nextContext(text), viewType: viewType, action: arguments.openStarsBalance)
+            let icon = generateStarBalanceIcon(text)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoBalance, type: .image(icon), viewType: viewType, action: arguments.openStarsBalance)
         case let .botEditIntro(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.editBot("intro")
@@ -2027,9 +2028,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     
                     if peer.botInfo?.flags.contains(.canEdit) == true {
                         
-                        if let stats = revenueState?.stats, stats.balances.overallRevenue > 0 {
+                        if let stats = revenueState?.stats, stats.balances.overallRevenue > 0 || true {
                             entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
-                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.availableBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.availableBalance)), viewType: .lastItem))
+                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.availableBalance == 0 ? "1234" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.availableBalance)), viewType: .lastItem))
                         } else {
                             entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
                         }
