@@ -702,21 +702,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     func openWebviewFromMenu(buttonText: String, url: String) {
         if let bot = peer {
-            let replyTo = self.presentation.interfaceState.replyMessageId?.messageId
-            let threadId = self.presentation.chatLocation.threadId
-            let context = self.context
-            let invoke:()->Void = {
-                WebappsStateContext.standart.open(tab: .mainapp(bot: .init(bot), source: .generic), context: context)
-            }
-            if FastSettings.shouldConfirmWebApp(bot.id) {
-                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
-                    invoke()
-                    FastSettings.markWebAppAsConfirmed(bot.id)
-                })
-            } else {
-                invoke()
-            }
-            
+            WebappsStateContext.standart.open(tab: .webapp(bot: .init(bot), peerId: peerId, buttonText: buttonText, url: url, payload: nil, threadId: nil, replyTo: nil, fromMenu: true), context: context)
         }
     }
     

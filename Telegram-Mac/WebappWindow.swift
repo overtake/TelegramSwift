@@ -357,8 +357,10 @@ final class WebappsStateContext {
             }
         }
         
+        let window = self.browser?.window ?? context.window
+        
         let peerId = tab.peer.id
-        if FastSettings.shouldConfirmWebApp(peerId), let window = self.browser?.window {
+        if FastSettings.shouldConfirmWebApp(peerId) {
             verifyAlert_button(for: window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(tab.peer._asPeer().displayTitle), successHandler: { _ in
                 invoke()
                 FastSettings.markWebAppAsConfirmed(peerId)

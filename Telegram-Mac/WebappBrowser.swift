@@ -732,8 +732,12 @@ struct BrowserTabData : Comparable, Identifiable {
             switch self {
             case let .mainapp(peer, _):
                 return .mainapp(peer.id.toInt64())
-            case .webapp:
-                return .webapp(arc4random64())
+            case let .webapp(_, peerId, _, _, _, _, _, fromMenu):
+                if fromMenu {
+                    return .webapp(peerId.toInt64())
+                } else {
+                    return .webapp(arc4random64())
+                }
             case .simple:
                 return .webapp(arc4random64())
             case .straight:
@@ -1512,13 +1516,7 @@ final class WebappBrowserController : ViewController {
                             
                             let data = BrowserTabData.Data.mainapp(bot: webapp.peer, source: .generic)
                             return ReactionPeerMenu(title: user.displayTitle, handler: {
-                                insertTab(data)
-                                switch data {
-                                case let .mainapp(bot, _):
-                                    WebappsStateContext.standart.add(.init(peerId: bot.id))
-                                default:
-                                    break
-                                }
+                                WebappsStateContext.standart.open(tab: data, context: context)
                             }, peer: user, context: context, reaction: nil, afterNameBadge: afterNameBadge)
                         } else {
                             return nil
