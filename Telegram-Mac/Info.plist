@@ -55,6 +55,8 @@
 	<string>We need access to your Downloads folder so that you can save files from chats.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2016 Telegram. All rights reserved.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>We need access to your location so that you can send your current locations.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need access to your location so that you can send your current locations and setup Auto-Night theme</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
