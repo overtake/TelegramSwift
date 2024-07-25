@@ -1834,7 +1834,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
     }
 
-    private func reloadPage() {
+    func reloadPage() {
         self.genericView._holder.reload()
         self.updateLocalizationAndTheme(theme: theme)
     }
