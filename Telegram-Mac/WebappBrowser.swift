@@ -95,7 +95,8 @@ private final class Arguments {
     let makeLinkManager:(BrowserTabData.Unique)->BrowserLinkManager
     let contextMenu:(BrowserTabData)->ContextMenu?
     let insertTab:(BrowserTabData.Data)->Void
-    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void) {
+    let shake:(BrowserTabData.Unique)->Void
+    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void) {
         self.context = context
         self.add = add
         self.close = close
@@ -107,6 +108,7 @@ private final class Arguments {
         self.makeLinkManager = makeLinkManager
         self.contextMenu = contextMenu
         self.insertTab = insertTab
+        self.shake = shake
     }
 }
 
@@ -565,6 +567,14 @@ private final class TabsView: View {
 
     }
     
+    func shake(_ unique: BrowserTabData.Unique) {
+        if self.selectedView?.data?.unique == unique {
+            self.selectedView?.shake(beep: false)
+        } else {
+            self.views.first(where: { $0.data?.unique == unique })?.shake(beep: false)
+        }
+    }
+    
     func merge(_ items: [BrowserTabData], arguments: Arguments, transition: ContainedViewLayoutTransition) {
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
         
@@ -704,9 +714,7 @@ struct BrowserTabData : Comparable, Identifiable {
     }
    
     enum Unique : Hashable {
-        case mainapp(Int64)
         case webapp(Int64)
-        case webappProfile(Int64, Int64)
     }
     
     
@@ -734,11 +742,11 @@ struct BrowserTabData : Comparable, Identifiable {
             switch self {
             case let .mainapp(bot, _):
                 return bot.id
-            case let .webapp(bot, peerId, _, _, _, _, _, fromMenu):
+            case let .webapp(bot, _, _, _, _, _, _, fromMenu):
                 if fromMenu {
                     return bot.id
                 } else {
-                    return bot.id
+                    return nil
                 }
             default:
                 return nil
@@ -747,11 +755,11 @@ struct BrowserTabData : Comparable, Identifiable {
         
         var newUniqueId: Unique {
             switch self {
-            case let .mainapp(peer, _):
-                return .mainapp(peer.id.toInt64())
-            case let .webapp(bot, peerId, _, _, _, _, _, fromMenu):
+            case let .mainapp(bot, _):
+                return .webapp(bot.id.toInt64())
+            case let .webapp(bot, _, _, _, _, _, _, fromMenu):
                 if fromMenu {
-                    return .webappProfile(bot.id.toInt64(), peerId.toInt64())
+                    return .webapp(bot.id.toInt64())
                 } else {
                     return .webapp(arc4random64())
                 }
@@ -860,6 +868,10 @@ private final class TabsController: GenericViewController<TabsView> {
     
     func merge(_ data: [BrowserTabData], arguments: Arguments, transition: ContainedViewLayoutTransition) {
         self.genericView.merge(data, arguments: arguments, transition: transition)
+    }
+    
+    func shake(_ unique: BrowserTabData.Unique) {
+        self.genericView.shake(unique)
     }
 }
 
@@ -1503,6 +1515,9 @@ final class WebappBrowserController : ViewController {
             let invoke:()->Void = {
                 
                 var state = stateValue.with { $0 }
+                
+                let selectedId = state.selected?.unique
+                
                 var insertedData: BrowserTabData? = nil
                 
                 (state, insertedData) = state.newTab(data, unique: unique)
@@ -1515,8 +1530,12 @@ final class WebappBrowserController : ViewController {
                         return state
                     }
                 }  else {
-                    updateState { current in
-                        return state.select(unique)
+                    if selectedId == unique {
+                        getArguments?()?.shake(unique)
+                    } else {
+                        updateState { current in
+                            return state.select(unique)
+                        }
                     }
                 }
             }
@@ -1688,6 +1707,8 @@ final class WebappBrowserController : ViewController {
             return nil
         }, insertTab: { data in
             insertTab(data)
+        }, shake: { [weak self] unique in
+            self?.tabs.shake(unique)
         })
         
         self.arguments = arguments
