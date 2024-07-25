@@ -835,7 +835,7 @@ private final class Weather_InteractiveMedia: NSView, InteractiveMedia {
         
         
         let prevEmojiSize = self.emojiSize
-        let emojiSize = CGSize(width: floor(size.height * 0.81), height: floor(size.height * 0.81))
+        let emojiSize = CGSize(width: floor(size.height * 0.5), height: floor(size.height * 0.5))
         if prevEmojiSize != emojiSize, let file = emojiFile {
             self.emojiSize = emojiSize
             self.drawSticker(file, context: context)
