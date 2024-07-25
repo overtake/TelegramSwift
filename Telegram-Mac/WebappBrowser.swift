@@ -129,16 +129,22 @@ private func createCombinedPath(leftPath: CGPath, rightPath: CGPath, totalWidth:
 
 final class WebappBrowser : Window {
     let containerView = View()
-    init() {
+    init(parent: Window) {
         
         containerView.wantsLayer = true
+        
+        let windowFrame = parent.frame
+
         
         let screen = NSScreen.main!
         
         let s = NSMakeSize(screen.frame.width + 20, screen.frame.height + 20)
         let size = NSMakeSize(420, min(420 + 420 * 0.7, s.height - 80))
-        let rect = screen.frame.focus(size)
         
+        let originX = windowFrame.origin.x + (windowFrame.width - size.width) / 2
+        let originY = windowFrame.origin.y + (windowFrame.height - size.height) / 2
+        let rect = NSRect(origin: NSPoint(x: originX, y: originY), size: size)
+
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless], backing: .buffered, defer: true)
         
         self.contentView?.wantsLayer = true
@@ -275,6 +281,12 @@ private final class TabView: Control {
                 return nil
             }
         }
+        
+        set(handler: { [weak self] _ in
+            if let item = self?.data {
+                self?.arguments?.select(item)
+            }
+        }, for: .Click)
     }
     
     override func stateDidUpdate(_ state: ControlState) {
@@ -283,9 +295,6 @@ private final class TabView: Control {
     
     func updateLayer(transition: ContainedViewLayoutTransition) {
         super.updateLayer()
-        
-    
-        
     }
     
     func update(item: BrowserTabData, arguments: Arguments, transition: ContainedViewLayoutTransition) {
@@ -297,16 +306,8 @@ private final class TabView: Control {
             self.layer?.animateBackground(duration: transition.duration, function: transition.timingFunction)
         }
         
-        removeAllHandlers()
 
-        if !item.selected {
-            set(handler: { [weak self] _ in
-                if let item = self?.data {
-                    self?.arguments?.select(item)
-                }
-            }, for: .Click)
-        }
-        
+
         let enginePeer = item.data.peer
         
         let current: AvatarControl
@@ -705,6 +706,7 @@ struct BrowserTabData : Comparable, Identifiable {
     enum Unique : Hashable {
         case mainapp(Int64)
         case webapp(Int64)
+        case webappProfile(Int64, Int64)
     }
     
     
@@ -728,13 +730,28 @@ struct BrowserTabData : Comparable, Identifiable {
             }
         }
         
+        var savebleId: PeerId? {
+            switch self {
+            case let .mainapp(bot, _):
+                return bot.id
+            case let .webapp(bot, peerId, _, _, _, _, _, fromMenu):
+                if fromMenu {
+                    return bot.id
+                } else {
+                    return bot.id
+                }
+            default:
+                return nil
+            }
+        }
+        
         var newUniqueId: Unique {
             switch self {
             case let .mainapp(peer, _):
                 return .mainapp(peer.id.toInt64())
-            case let .webapp(_, peerId, _, _, _, _, _, fromMenu):
+            case let .webapp(bot, peerId, _, _, _, _, _, fromMenu):
                 if fromMenu {
-                    return .webapp(peerId.toInt64())
+                    return .webappProfile(bot.id.toInt64(), peerId.toInt64())
                 } else {
                     return .webapp(arc4random64())
                 }
@@ -787,7 +804,7 @@ struct BrowserTabData : Comparable, Identifiable {
         if let title {
             var width = title.layoutSize.width + 20 + 20 + 10
             if let size = PremiumStatusControl.controlSize(self.data.peer._asPeer(), false) {
-                width += (size.width) + 3
+                width += (size.width) + 2
             }
             return width
         } else {
@@ -1229,6 +1246,10 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
         controller?.backButtonPressed()
     }
     
+    func reloadPage() {
+        controller?.reloadPage()
+    }
+    
     deinit {
         disposable.dispose()
     }
@@ -1346,7 +1367,7 @@ final class WebappBrowserController : ViewController {
         self.initialTab = initialTab
         super.init()
         bar = .init(height: 0)
-        _window = WebappBrowser()
+        _window = WebappBrowser(parent: context.window)
     }
     
     func add(_ tab: BrowserTabData.Data) {
@@ -1375,6 +1396,11 @@ final class WebappBrowserController : ViewController {
                 return event
             }
         })
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.current?.reloadPage()
+            return .invoked
+        }, with: self, for: .R, priority: .low, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(0)
@@ -1498,7 +1524,7 @@ final class WebappBrowserController : ViewController {
             invoke()
         }
         
-        let arguments = Arguments(context: context, add: { control in
+        let arguments = Arguments(context: context, add: { [weak self] control in
             guard let event = NSApp.currentEvent else {
                 return
             }
@@ -1507,7 +1533,7 @@ final class WebappBrowserController : ViewController {
             |> deliverOnMainQueue
             actionsDisposable.add(state.startStrict(next: { [weak control] webapps in
                 if let control {
-                    let menu = ContextMenu()
+                    let menu = ContextMenu(betterInside: true)
                     
                     let appItem:(WebappsStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
                         if let user = webapp.peer._asPeer() as? TelegramUser {
@@ -1523,7 +1549,7 @@ final class WebappBrowserController : ViewController {
                         }
                     }
                     
-                    let submenu = ContextMenu()
+                    let submenu = ContextMenu(betterInside: true)
                     
                     if !webapps.recentUsedApps.isEmpty {
                         for webapp in webapps.recentUsedApps {
@@ -1541,16 +1567,34 @@ final class WebappBrowserController : ViewController {
                         }
                     }
                     
+                    
+                    let selected = stateValue.with { $0.selected }
+                    
+                    if let selected {
+                        let menuItems = getArguments?()?.contextMenu(selected)?.contextItems ?? []
+                        if !menuItems.isEmpty {
+                            for menuItems in menuItems {
+                                menu.addItem(menuItems)
+                            }
+                        }
+                    }
+                    
+                   
+                    
                     if !submenu.items.isEmpty {
+                        
+                        menu.addItem(ContextSeparatorItem())
+                        
                         let item = ContextMenuItem(strings().chatListAppsPopular, itemImage: MenuAnimation.menu_apps.value)
                         item.submenu = submenu
                         menu.addItem(item)
                     }
                     
-                    menu.addItem(ContextSeparatorItem())
-                    menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
-                        WebappsStateContext.standart.closeBrowser()
-                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                    if !menu.items.isEmpty {
+                        menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
+                            WebappsStateContext.standart.closeBrowser()
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                    }
                     
                     AppMenu.show(menu: menu, event: event, for: control)
                 }
@@ -1626,19 +1670,16 @@ final class WebappBrowserController : ViewController {
             
             if item.selected {
                 items.append(contentsOf: webpageItems)
-                if !webpageItems.isEmpty {
-                    items.append(ContextSeparatorItem())
-                }
                 items.append(ContextMenuItem(strings().webAppClose, handler: {
                     getArguments?()?.closeTab(unique, true)
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                }, itemImage: MenuAnimation.menu_clear_history.value))
             } else {
                 items.append(ContextMenuItem(strings().webAppClose, handler: {
                     getArguments?()?.closeTab(unique, true)
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                }, itemImage: MenuAnimation.menu_clear_history.value))
             }
             if !items.isEmpty {
-                let menu = ContextMenu()
+                let menu = ContextMenu(betterInside: true)
                 for item in items {
                     menu.addItem(item)
                 }

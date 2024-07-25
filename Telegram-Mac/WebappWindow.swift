@@ -349,11 +349,8 @@ final class WebappsStateContext {
                 let controller = WebappBrowserController(context: context, initialTab: tab)
                 self.showBrowser(controller)
             }
-            switch tab {
-            case let .mainapp(bot, _):
-                self.add(.init(peerId: bot.id))
-            default:
-                break
+            if let savebleId = tab.savebleId {
+                self.add(.init(peerId: savebleId))
             }
         }
         
