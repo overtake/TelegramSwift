@@ -141,14 +141,11 @@ class ChatInputAttachView: ImageButton, Notifable {
                     if acceptMode, let peer = chatInteraction.presentation.peer {
                         for attach in chatInteraction.presentation.attachItems {
                             
-                            let thumbFile: TelegramMediaFile
                             var value: (NSColor, ContextMenuItem)-> AppMenuItemImageDrawable
                             if let file = attach.icons[.macOSAnimated] {
                                 value = MenuRemoteAnimation(context, file: file, bot: attach.peer._asPeer(), thumb: MenuAnimation.menu_webapp_placeholder).value
-                                thumbFile = file
                             } else {
                                 value = MenuAnimation.menu_folder_bot.value
-                                thumbFile = MenuAnimation.menu_folder_bot.file
                             }
                             var canAddAttach: Bool
                             if peer.isUser {
@@ -168,18 +165,10 @@ class ChatInputAttachView: ImageButton, Notifable {
                             if canAddAttach {
                                 let bot = attach
                                 items.append(ContextMenuItem(attach.shortName, handler: {
-                                    let open:()->Void = { [weak self] in
-                                        WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: "", title: attach.peer._asPeer().displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer._asPeer(), replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile))
+                                    let open:()->Void = {
+                                        WebappsStateContext.standart.open(tab: .webapp(bot: bot.peer, peerId: peerId, buttonText: "", url: nil, payload: nil, threadId: threadId, replyTo: replyTo, fromMenu: false), context: context)
+                                        
                                     }
-                                    
-                                    var description: ModalAlertData.Description? = nil
-                                    let installBot = !bot.flags.contains(.notActivated) && bot.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !bot.flags.contains(.showInAttachMenu)
-                                    
-                                    if installBot {
-                                        description = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: false)
-                                    }
-
-                                    
                                     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
                                         var options: [ModalAlertData.Option] = []
                                         options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: false, mandatory: true))

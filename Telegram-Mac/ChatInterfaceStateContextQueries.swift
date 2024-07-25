@@ -638,7 +638,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             subscriber.putNext((detectedUrl, webpagePreview(account: context.account, urls: [detectedUrl]) |> filter { $0 != .progress } |> map { value in
                                 return { _ in return value.result }
                             }))
-                        case let .followResolvedName(_, username, _, _, _, _):
+                        case let .followResolvedName(_, username, _, _, _, _, _):
                             if username.hasPrefix("_private_") {
                                 subscriber.putNext((nil, .single({ _ in return nil })))
                                 subscriber.putCompletion()
@@ -670,7 +670,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             switch link {
                             case .external:
                                 canLoad = true
-                            case let .followResolvedName(_, username, _, _, _, _):
+                            case let .followResolvedName(_, username, _, _, _, _, _):
                                 if !username.hasPrefix("_private_") {
                                     canLoad = true
                                 }

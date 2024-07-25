@@ -167,6 +167,11 @@ class UserInfoArguments : PeerInfoArguments {
         }
     }
     
+    func openApp() {
+        if let peer {
+            WebappsStateContext.standart.open(tab: .mainapp(bot: .init(peer), source: .generic), context: context)
+        }
+    }
     func openBotfather() {
         self.editBot(nil, action: false)
     }
@@ -983,7 +988,8 @@ enum UserInfoEntry: PeerInfoEntry {
     case personalChannel(sectionId:Int, item: UserInfoPersonalChannel, viewType: GeneralViewType)
     case setFirstName(sectionId:Int, text: String, viewType: GeneralViewType)
     case setLastName(sectionId:Int, text: String, placeholder: String, viewType: GeneralViewType)
-    case about(sectionId:Int, text: String, viewType: GeneralViewType)
+    case about(sectionId:Int, text: String, launchApp: Bool, viewType: GeneralViewType)
+    case aboutInfo(sectionId:Int, text: String, viewType: GeneralViewType)
     case botStarsBalance(sectionId:Int, text: String, viewType: GeneralViewType)
     case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
     case botEditIntro(sectionId:Int, viewType: GeneralViewType)
@@ -1023,6 +1029,101 @@ enum UserInfoEntry: PeerInfoEntry {
     case media(sectionId: Int, controller: PeerMediaController, isVisible: Bool, viewType: GeneralViewType)
     case section(sectionId:Int)
     
+    var viewType: GeneralViewType {
+        switch self {
+        case .info(_, _, _, _, _, let viewType):
+            return viewType
+        case .personalChannelInfo(_, _, _, let viewType):
+            return viewType
+        case .personalChannel(_, _, let viewType):
+            return viewType
+        case .setFirstName(_, _, let viewType):
+            return viewType
+        case .setLastName(_, _, _, let viewType):
+            return viewType
+        case .about(_, _, _, let viewType):
+            return viewType
+        case .aboutInfo(_, _, let viewType):
+            return viewType
+        case .botStarsBalance(_, _, let viewType):
+            return viewType
+        case .botEditUsername(_, _, let viewType):
+            return viewType
+        case .botEditIntro(_, let viewType):
+            return viewType
+        case .botEditCommands(_, let viewType):
+            return viewType
+        case .botEditSettings(_, let viewType):
+            return viewType
+        case .botEditInfo(_, let viewType):
+            return viewType
+        case .bio(_, _, _, let viewType):
+            return viewType
+        case .birthday(_, _, _, let viewType):
+            return viewType
+        case .scam(_, _, _, let viewType):
+            return viewType
+        case .phoneNumber(_, _, _, _, let viewType):
+            return viewType
+        case .peerId(_, _, let viewType):
+            return viewType
+        case .userName(_, _, let viewType):
+            return viewType
+        case .businessLocation(_, _, _, let viewType):
+            return viewType
+        case .businessHours(_, _, _, _, _, let viewType):
+            return viewType
+        case .reportReaction(_,_, let viewType):
+            return viewType
+        case .sendMessage(_, let viewType):
+            return viewType
+        case .shareContact(_, let viewType):
+            return viewType
+        case .shareMyInfo(_, let viewType):
+            return viewType
+        case .addContact(_, let viewType):
+            return viewType
+        case .botAddToGroup(_, let viewType):
+            return viewType
+        case .botAddToGroupInfo(_, let viewType):
+            return viewType
+        case .botShare(_, let name, let viewType):
+            return viewType
+        case .botHelp(_, let viewType):
+            return viewType
+        case .botSettings(_, let viewType):
+            return viewType
+        case .botPrivacy(_, let viewType):
+            return viewType
+        case .startSecretChat(_, let viewType):
+            return viewType
+        case .sharedMedia(_, let viewType):
+            return viewType
+        case .notifications(_, _, let viewType):
+            return viewType
+        case .groupInCommon(_, _, _, let viewType):
+            return viewType
+        case .setPhoto(_, _, _, _, let viewType):
+            return viewType
+        case .resetPhoto(_, _, _, _, let viewType):
+            return viewType
+        case .setPhotoInfo(_, _, let viewType):
+            return viewType
+        case .block(_, _, _, _, let viewType):
+            return viewType
+        case .deleteChat(_, let viewType):
+            return viewType
+        case .deleteContact(_, let viewType):
+            return viewType
+        case .encryptionKey(_, let viewType):
+            return viewType
+        case .media(_, _, _, let viewType):
+            return viewType
+        case .section(_):
+            return .legacy
+        }
+    }
+    
     func withUpdatedViewType(_ viewType: GeneralViewType) -> UserInfoEntry {
         switch self {
         case let .info(sectionId, peerView, editable, updatingPhotoState, stories, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, stories: stories, viewType: viewType)
@@ -1036,7 +1137,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
         case let .botEditSettings(sectionId, _): return .botEditSettings(sectionId: sectionId, viewType: viewType)
         case let .botEditInfo(sectionId, _): return .botEditInfo(sectionId: sectionId, viewType: viewType)
-        case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
+        case let .about(sectionId, text, launchApp, _): return .about(sectionId: sectionId, text: text, launchApp: launchApp, viewType: viewType)
+        case let .aboutInfo(sectionId, text, _): return .aboutInfo(sectionId: sectionId, text: text, viewType: viewType)
         case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .birthday(sectionId, text, peer, _): return .birthday(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
@@ -1204,9 +1306,16 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .about(sectionId, text, viewType):
+        case let .about(sectionId, text, launchLink, viewType):
             switch entry {
-            case .about(sectionId, text, viewType):
+            case .about(sectionId, text, launchLink, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .aboutInfo(sectionId, text, viewType):
+            switch entry {
+            case .aboutInfo(sectionId, text, viewType):
                 return true
             default:
                 return false
@@ -1467,70 +1576,72 @@ enum UserInfoEntry: PeerInfoEntry {
             return 109
         case .botEditInfo:
             return 110
-        case .scam:
-            return 111
-        case .about:
-            return 112
-        case .bio:
-            return 113
-        case .phoneNumber:
-            return 114
-        case .birthday:
-            return 115
         case .userName:
+            return 111
+        case .scam:
+            return 112
+        case .about:
+            return 113
+        case .aboutInfo:
+            return 114
+        case .bio:
+            return 115
+        case .phoneNumber:
             return 116
-        case .peerId:
+        case .birthday:
             return 117
-        case .businessHours:
+        case .peerId:
             return 118
-        case .businessLocation:
+        case .businessHours:
             return 119
-        case .sendMessage:
+        case .businessLocation:
             return 120
-        case .botAddToGroup:
+        case .sendMessage:
             return 121
-        case .botAddToGroupInfo:
+        case .botAddToGroup:
             return 122
-        case .botShare:
+        case .botAddToGroupInfo:
             return 123
-        case .botSettings:
+        case .botShare:
             return 124
-        case .botHelp:
+        case .botSettings:
             return 125
-        case .botPrivacy:
+        case .botHelp:
             return 126
-        case .shareContact:
+        case .botPrivacy:
             return 127
-        case .shareMyInfo:
+        case .shareContact:
             return 128
-        case .addContact:
+        case .shareMyInfo:
             return 129
-        case .startSecretChat:
+        case .addContact:
             return 130
-        case .sharedMedia:
+        case .startSecretChat:
             return 131
-        case .notifications:
+        case .sharedMedia:
             return 132
-        case .encryptionKey:
+        case .notifications:
             return 133
-        case .groupInCommon:
+        case .encryptionKey:
             return 134
+        case .groupInCommon:
+            return 135
         case let .setPhoto(_, _, type, _, _):
-            return 135 + type.rawValue
+            return 136 + type.rawValue
         case .resetPhoto:
-            return 139
-        case .setPhotoInfo:
             return 140
-        case .block:
+        case .setPhotoInfo:
             return 141
-        case .reportReaction:
+        case .block:
             return 142
-        case .deleteChat:
+        case .reportReaction:
             return 143
-        case .deleteContact:
+        case .deleteChat:
             return 144
-        case .media:
+        case .deleteContact:
             return 145
+        case .media:
+            return 146
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1560,7 +1671,9 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .botEditInfo(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .about(sectionId, _, _):
+        case let .about(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .aboutInfo(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .bio(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1669,7 +1782,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botEditUsername(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
         case let .botStarsBalance(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoStarsBalance, type: .nextContext(text), viewType: viewType, action: arguments.openStarsBalance)
+            let icon = generateStarBalanceIcon(text)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openStarsBalance)
         case let .botEditIntro(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.editBot("intro")
@@ -1686,16 +1800,24 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .markdown(strings().peerInfoBotEditInfo, linkHandler: { _ in
                 arguments.openBotfather()
             }), viewType: viewType)
-        case let .about(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoAbout, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
-                if toChat {
-                    arguments.peerChat(peerId, postId: postId)
-                } else {
-                    arguments.peerInfo(peerId)
-                }
-            }, hashtag: { hashtag in
-                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
-            })
+        case let .about(_, text, launchApp, viewType):
+            if text.isEmpty {
+                return GeneralActionButtonRowItem.init(initialSize, stableId: stableId.hashValue, text: strings().botInfoOpenApp, viewType: viewType, action: arguments.openApp)
+            } else {
+                return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoAbout, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
+                    if toChat {
+                        arguments.peerChat(peerId, postId: postId)
+                    } else {
+                        arguments.peerInfo(peerId)
+                    }
+                }, hashtag: { hashtag in
+                    arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+                }, launchApp: launchApp ? arguments.openApp : nil)
+            }
+        case let .aboutInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .markdown(text, linkHandler: { link in
+                execute(inapp: .external(link: link, false))
+            }), viewType: viewType)
         case let .bio(_, text, peer, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
@@ -1899,10 +2021,22 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
         var block = block.sorted { (p1, p2) -> Bool in
             return p1.isOrderedBefore(p2)
         }
-        for (i, item) in block.enumerated() {
-            block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
+        
+        var filtered = block.filter({
+            return $0.viewType == .singleItem || $0.viewType == .firstItem || $0.viewType == .lastItem || $0.viewType == .innerItem
+        })
+        
+        let restItems = block.filter({
+            return $0.viewType != .singleItem && $0.viewType != .firstItem && $0.viewType != .lastItem && $0.viewType != .innerItem
+        })
+        
+        for (i, item) in filtered.enumerated() {
+            filtered[i] = item.withUpdatedViewType(bestGeneralViewType(filtered, for: i))
         }
-        entries.append(contentsOf: block)
+        if filtered.count != block.count {
+            filtered.append(contentsOf: restItems)
+        }
+        entries.append(contentsOf: filtered)
     }
     
     var headerBlock: [UserInfoEntry] = []
@@ -1940,10 +2074,18 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let about = cachedUserData.about, !about.isEmpty, !user.isScam && !user.isFake {
-                        if peer.isBot {
-                            infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
+                        if let botInfo = peer.botInfo {
+                            infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, launchApp: botInfo.flags.contains(.hasWebApp), viewType: .singleItem))
+                            if peer.botInfo?.flags.contains(.canEdit) == true {
+                                infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfo, viewType: .textBottomItem))
+                            }
                         } else {
                             infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, PeerEquatable(peer), viewType: .singleItem))
+                        }
+                    } else if cachedUserData.about == nil, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp) {
+                        infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: "", launchApp: botInfo.flags.contains(.hasWebApp), viewType: .singleItem))
+                        if peer.botInfo?.flags.contains(.canEdit) == true {
+                            infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfo, viewType: .textBottomItem))
                         }
                     }
                 }
@@ -1964,9 +2106,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
-                if FastSettings.canViewPeerId {
-                    infoBlock.append(.peerId(sectionId: sectionId, value: "\(user.id.id._internalGetInt64Value())", viewType: .singleItem))
-                }
+          
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let birthday = cachedUserData.birthday {
@@ -2008,8 +2148,6 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             }
                         }
                     }
-                } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
-                    infoBlock.append(.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                 }
                
                 
@@ -2017,6 +2155,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 applyBlock(infoBlock)
                 
                 if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    entries.append(UserInfoEntry.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                     entries.append(UserInfoEntry.botAddToGroupInfo(sectionId: sectionId, viewType: .textBottomItem))
                 }
                 
@@ -2027,9 +2168,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     
                     if peer.botInfo?.flags.contains(.canEdit) == true {
                         
-                        if let stats = revenueState?.stats, stats.balances.overallRevenue > 0 {
+                        if let stats = revenueState?.stats, stats.balances.currentBalance > 0 {
                             entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
-                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.availableBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.availableBalance)), viewType: .lastItem))
+                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.currentBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.currentBalance)), viewType: .lastItem))
                         } else {
                             entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
                         }
@@ -2072,6 +2213,14 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             
             if peer.botInfo?.flags.contains(.canEdit) == true, state.editingState != nil {
                 entries.append(UserInfoEntry.botEditInfo(sectionId: sectionId, viewType: .textBottomItem))
+            }
+            
+            
+            
+            if FastSettings.canViewPeerId {
+                entries.append(UserInfoEntry.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(UserInfoEntry.peerId(sectionId: sectionId, value: "\(user.id.id._internalGetInt64Value())", viewType: .singleItem))
             }
             
             if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {

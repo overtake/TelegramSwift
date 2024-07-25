@@ -49,8 +49,8 @@ open class ShadowView: View {
     }
     
     private func update() {
-        self.gradient.colors = [shadowBackground.withAlphaComponent(0).cgColor, shadowBackground.cgColor];
-//            self.gradient.locations = [0.0, 1.0];
+        self.gradient.colors = [shadowBackground.withAlphaComponent(0).cgColor, shadowBackground.cgColor, shadowBackground.cgColor];
+        self.gradient.locations = [0.0, 0.7, 1.0];
 
         switch direction {
         case let .vertical(reversed):

@@ -210,14 +210,14 @@ class SuccessModalController : ModalViewController {
     }
 }
 
-public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, disposeAfterComplete: Bool = true) -> Signal<T,E> {
+public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, disposeAfterComplete: Bool = true, timeout: Double = 1.0) -> Signal<T,E> {
     return Signal { subscriber in
         
         var signal = signal |> deliverOnMainQueue
         let beforeDisposable:DisposableSet = DisposableSet()
 
         let modal = ProgressModalController(beforeDisposable)
-        let beforeModal:Signal<Void,Void> = .single(Void()) |> delay(0.25, queue: Queue.mainQueue())
+        let beforeModal:Signal<Void,Void> = .single(Void()) |> delay(timeout, queue: Queue.mainQueue())
         
         
         beforeDisposable.add(beforeModal.startStandalone(completed: {

@@ -2504,7 +2504,6 @@ public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, No
     return Signal { (subscriber) in
 
         
-        let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
         if compress {
             if let data = compressImageToJPEG(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, quality: compress ? 0.83 : 1.0) {
                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
@@ -2512,9 +2511,16 @@ public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, No
                 subscriber.putNext(path)
             }
         } else {
+            
+            let utType = image._cgImage?.utType ?? kUTTypeJPEG
+            let ext = (utType as String).nsstring.pathExtension
+            
+            let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).\(ext)"
             let options = NSMutableDictionary()
             let mutableData: CFMutableData = NSMutableData() as CFMutableData
-            if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) {
+            
+            
+            if let colorDestination = CGImageDestinationCreateWithData(mutableData, utType, 1, nil) {
                 CGImageDestinationAddImage(colorDestination, image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, options as CFDictionary)
                 if CGImageDestinationFinalize(colorDestination) {
                     try? (mutableData as Data).write(to: URL(fileURLWithPath: path))
@@ -2522,13 +2528,6 @@ public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, No
                 }
             }
         }
-        
-       
-            
-
-        
-        
-        
         
         subscriber.putCompletion()
         

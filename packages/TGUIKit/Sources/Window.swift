@@ -336,6 +336,8 @@ open class Window: NSWindow {
     public static var controlsInset: CGFloat {
         return 70
     }
+    
+    open var modalInset: CGFloat = 0
 
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     public var keyWindowUpdater: Signal<Bool, NoError> {

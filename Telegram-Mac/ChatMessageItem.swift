@@ -330,7 +330,7 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
                 let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { [weak chatInteraction] peerId, toChat, postId, initialAction in
-                    chatInteraction?.openInfo(peerId, toChat, postId, initialAction ?? .source(message.id))
+                    chatInteraction?.openInfo(peerId, toChat, postId, toChat ? (initialAction ?? .source(message.id)) : nil)
                 }
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
@@ -487,7 +487,7 @@ class ChatMessageItem: ChatRowItem {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
-                            WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction))
+                            WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size))
                             return
                         }
                         if let story = content.story {
@@ -778,7 +778,7 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, context:context, action:nil, callback: openInfo), range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, forceProfile: false, context:context, action:nil, callback: openInfo), range: range)
                 if underlineLinks {
                     string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
                 }

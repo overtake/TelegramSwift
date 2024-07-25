@@ -1,0 +1,1751 @@
+//
+//  WebappBrowser.swift
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 20.07.2024.
+//  Copyright © 2024 Telegram. All rights reserved.
+//
+
+import Foundation
+import TGUIKit
+import SwiftSignalKit
+import TelegramCore
+import KeyboardKey
+import TelegramMedia
+import Postbox
+
+private func makeWebViewController(context: AccountContext, data: BrowserTabData.Data, unique: BrowserTabData.Unique, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager?) -> Signal<WebpageModalController, RequestWebViewError> {
+    
+    let bot = data.peer._asPeer()
+    let canBeAttach = bot.botInfo?.flags.contains(.canBeAddedToAttachMenu) ?? false
+
+    return Signal { subscriber in
+        
+        let signal: Signal<(String, WebpageModalController.RequestData), RequestWebViewError>
+        let themeParams = generateWebAppThemeParams(theme)
+        switch data {
+        case let .mainapp(_, source):
+            signal = context.engine.messages.requestMainWebView(botId: bot.id, source: source, themeParams: themeParams) |> map {
+                return ($0.url, .simple(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: nil, buttonText: "", keepAliveSignal: $0.keepAliveSignal), source: source))
+            }
+        case .webapp(_, let peerId, let buttonText, let url, let payload, let threadId, let replyTo, let fromMenu):
+            signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: themeParams, fromMenu: fromMenu, replyToMessageId: replyTo, threadId: threadId) |> map {
+                return ($0.url, .normal(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: $0.keepAliveSignal)))
+            }
+        case .simple(_, _, let source):
+            signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: nil, source: source, themeParams: themeParams) |> map {
+                return ($0.url, .simple(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: nil, buttonText: "", keepAliveSignal: $0.keepAliveSignal), source: source))
+            }
+        case let .straight(_, peerId, _, result):
+            signal = .single((result.url, .normal(url: result.url, botdata: .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: "", keepAliveSignal: result.keepAliveSignal))))
+        }
+        
+                
+        let attach: Signal<AttachMenuBot?, RequestWebViewError>
+        if canBeAttach {
+            attach = context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true) |> map(Optional.init) |> mapError { _ in
+                return .generic
+            }
+        } else {
+            attach = .single(nil)
+        }
+        let disposable = combineLatest(signal, attach).start(next: { values in
+            let url = values.0.0
+            let requestData = values.0.1
+            let attach = values.1
+            
+            var thumbFile: TelegramMediaFile = MenuAnimation.menu_folder_bot.file
+            let hasSettings = attach?.flags.contains(.hasSettings) ?? false
+            if canBeAttach, let attach {
+                if let file = attach.icons[.macOSAnimated] {
+                    thumbFile = file
+                } else {
+                    thumbFile = MenuAnimation.menu_folder_bot.file
+                }
+            }
+            subscriber.putNext(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: requestData, thumbFile: thumbFile, fromMenu: true, hasSettings: hasSettings, browser: makeLinkManager(unique)))
+
+            subscriber.putCompletion()
+        }, error: { error in
+            subscriber.putError(error)
+        })
+        return disposable
+    }
+}
+
+
+
+private func layoutTabs(_ tabs: [BrowserTabData], width: CGFloat) -> [BrowserTabData] {
+    var tabs = tabs
+    for i in 0 ..< tabs.count {
+        tabs[i] = tabs[i].measure(width: width)
+    }
+    return tabs
+}
+
+private final class Arguments {
+    let context: AccountContext
+    let add:(Control)->Void
+    let close:()->Void
+    let select:(BrowserTabData)->Void
+    let setLoadingState:(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void
+    let setExternalState:(BrowserTabData.Unique, WebpageModalState)->Void
+    let closeTab:(BrowserTabData.Unique?, Bool)->Void
+    let selectAtIndex:(Int)->Void
+    let makeLinkManager:(BrowserTabData.Unique)->BrowserLinkManager
+    let contextMenu:(BrowserTabData)->ContextMenu?
+    let insertTab:(BrowserTabData.Data)->Void
+    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void) {
+        self.context = context
+        self.add = add
+        self.close = close
+        self.select = select
+        self.setLoadingState = setLoadingState
+        self.setExternalState = setExternalState
+        self.closeTab = closeTab
+        self.selectAtIndex = selectAtIndex
+        self.makeLinkManager = makeLinkManager
+        self.contextMenu = contextMenu
+        self.insertTab = insertTab
+    }
+}
+
+private func createCombinedPath(leftPath: CGPath, rightPath: CGPath, totalWidth: CGFloat) -> CGPath {
+    let combinedPath = CGMutablePath()
+    
+    let leftPathWidth: CGFloat = 22.0
+    let rightPathWidth: CGFloat = 22.0
+    let middleWidth = totalWidth - leftPathWidth - rightPathWidth
+    
+    combinedPath.addPath(leftPath)
+    combinedPath.addRect(CGRect(x: leftPathWidth, y: 0, width: middleWidth, height: 40))
+    let transform = CGAffineTransform(translationX: leftPathWidth + middleWidth, y: 0)
+    combinedPath.addPath(rightPath, transform: transform)
+    combinedPath.closeSubpath()
+    return combinedPath
+}
+
+
+
+final class WebappBrowser : Window {
+    let containerView = View()
+    init() {
+        
+        containerView.wantsLayer = true
+        
+        let screen = NSScreen.main!
+        
+        let s = NSMakeSize(screen.frame.width + 20, screen.frame.height + 20)
+        let size = NSMakeSize(420, min(420 + 420 * 0.7, s.height - 80))
+        let rect = screen.frame.focus(size)
+        
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless], backing: .buffered, defer: true)
+        
+        self.contentView?.wantsLayer = true
+        self.contentView?.autoresizesSubviews = false
+        
+        self.modalInset = 10
+       
+        self.isOpaque = false
+        self.hasShadow = false
+        self.backgroundColor = NSColor.clear
+        self.isMovableByWindowBackground = true
+        
+        self.titlebarAppearsTransparent = true
+        self.titleVisibility = .hidden
+        
+        let shadow = SimpleShapeLayer()
+        
+        let cornerRadius: CGFloat = 14.0
+
+        shadow.masksToBounds = false
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.35).cgColor
+        shadow.shadowOffset = CGSize(width: 0.0, height: 1)
+        shadow.shadowRadius = 5
+        shadow.shadowOpacity = 0.7
+        shadow.fillColor = NSColor.black.cgColor
+        shadow.path = CGPath(roundedRect: size.bounds.insetBy(dx: 11, dy: 11).size.bounds, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
+        shadow.frame = size.bounds.insetBy(dx: 11, dy: 11)
+        
+        self.contentView?.layer?.addSublayer(shadow)
+
+        containerView.frame = size.bounds.insetBy(dx: 10, dy: 10)
+
+        containerView.backgroundColor = theme.colors.listBackground
+        
+        self.contentView?.addSubview(containerView)
+        
+        if #available(macOS 10.15, *) {
+            containerView.layer?.cornerCurve = .continuous
+            shadow.cornerCurve = .continuous
+            contentView?.layer?.cornerCurve = .continuous
+        }
+                
+        containerView.layer?.cornerRadius = cornerRadius
+        self.contentView?.layer?.cornerRadius = cornerRadius
+    }
+    
+    func show() {
+
+        self.makeKeyAndOrderFront(nil)
+        
+        self.contentView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, removeOnCompletion: false)
+        self.contentView?.layer?.animateScaleSpring(from: 0.8, to: 1.0, duration: 0.2)
+        
+    }
+    
+    override func close() {
+        super.close()
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
+}
+
+
+private final class ErrorLoadingView : View {
+    private let mediaView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 150, 150))
+    private let textView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(mediaView)
+        addSubview(textView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(arguments: Arguments, error: RequestWebViewError) {
+        let text: String
+        switch error {
+        case .generic:
+            text = strings().webBrowserError
+        }
+        
+        let textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.title)).detectBold(with: .medium(.title)), alignment: .center)
+        textLayout.measure(width: frame.width - 40)
+        self.textView.update(textLayout)
+        
+        self.mediaView.update(with: LocalAnimatedSticker.duck_webapp_error.file, size: mediaView.frame.size, context: arguments.context, table: nil, animated: false)
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        var yStart = floorToScreenPixels((frame.height - (mediaView.frame.height + textView.frame.height + 10)) / 2) - 30
+        mediaView.centerX(y: yStart)
+        yStart += mediaView.frame.height + 10
+        textView.centerX(y: yStart)
+    }
+}
+
+
+private final class TabView: Control {
+    private var arguments: Arguments?
+    
+    private var textView: TextView?
+    private var iconView: AvatarControl?
+    private var shadowView: ShadowView?
+    
+    private var loading: InfiniteProgressView?
+    
+    
+    private var close: ImageButton?
+    
+    private var premiumStatus: PremiumStatusControl?
+    
+    private(set) var data: BrowserTabData?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        
+        self.updateLayer(transition: .immediate)
+        
+        self.layer?.cornerRadius = 10
+        self.scaleOnClick = true
+        
+        self.contextMenu = { [weak self] in
+            if let item = self?.data {
+                return self?.arguments?.contextMenu(item)
+            } else {
+                return nil
+            }
+        }
+    }
+    
+    override func stateDidUpdate(_ state: ControlState) {
+        super.stateDidUpdate(state)
+    }
+    
+    func updateLayer(transition: ContainedViewLayoutTransition) {
+        super.updateLayer()
+        
+    
+        
+    }
+    
+    func update(item: BrowserTabData, arguments: Arguments, transition: ContainedViewLayoutTransition) {
+        self.arguments = arguments
+        self.data = item
+        self.backgroundColor = item.selected ? item.tabColor : .clear
+        let animated = transition.isAnimated && !self.isHidden
+        if animated {
+            self.layer?.animateBackground(duration: transition.duration, function: transition.timingFunction)
+        }
+        
+        removeAllHandlers()
+
+        if !item.selected {
+            set(handler: { [weak self] _ in
+                if let item = self?.data {
+                    self?.arguments?.select(item)
+                }
+            }, for: .Click)
+        }
+        
+        let enginePeer = item.data.peer
+        
+        let current: AvatarControl
+        if let view = self.iconView {
+            current = view
+        } else {
+            current = AvatarControl(font: .avatar(8))
+            current.setFrameSize(20, 20)
+            current.userInteractionEnabled = false
+            self.iconView = current
+            addSubview(current)
+            if item.selected {
+                current.centerY(x: 20)
+            } else {
+                current.center()
+            }
+        }
+        current.setPeer(account: arguments.context.account, peer: enginePeer._asPeer())
+        
+        
+        switch item.loadingState {
+        case .none:
+            if let loading {
+                performSubviewRemoval(loading, animated: animated)
+                self.loading = nil
+            }
+        case .loading:
+            let current: InfiniteProgressView
+            if let view = self.loading {
+                current = view
+            } else {
+                current = InfiniteProgressView(color: NSColor.white, lineWidth: 1.5, insets: 3)
+                current.setFrameSize(NSMakeSize(20, 20))
+                current.progress = nil
+                current.layer?.cornerRadius = 10
+                self.loading = current
+                addSubview(current)
+                current.centerY(x: self.iconView?.frame.minX ?? 20)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.backgroundColor = NSColor.black.withAlphaComponent(0.6)
+        case .error:
+            if let loading {
+                performSubviewRemoval(loading, animated: animated)
+                self.loading = nil
+            }
+        }
+        
+        if item.selected {
+            let current: TextView
+            let isNew: Bool
+            if let view = self.textView {
+                current = view
+                isNew = false
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.textView = current
+                addSubview(current)
+                isNew = true
+            }
+            current.update(item.title)
+            
+            if isNew {
+                current.centerY(x: 50)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            
+            let statusControl = PremiumStatusControl.control(item.data.peer._asPeer(), account: arguments.context.account, inlinePacksContext: arguments.context.inlinePacksContext, isSelected: false, cached: self.premiumStatus, animated: false)
+
+            if let statusControl = statusControl {
+                let isNew = self.premiumStatus == nil
+                self.premiumStatus = statusControl
+                self.addSubview(statusControl)
+                
+                if isNew {
+                    statusControl.centerY(x: item.width - 10 - statusControl.frame.width)
+                    statusControl.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            } else if let view = self.premiumStatus {
+                performSubviewRemoval(view, animated: animated)
+                self.premiumStatus = nil
+            }
+            
+//                do {
+//                    let current: ImageButton
+//                    let isNew: Bool
+//                    if let view = self.close {
+//                        current = view
+//                        isNew = false
+//                    } else {
+//                        current = ImageButton()
+//                        current.autohighlight = false
+//                        current.scaleOnClick = true
+//                        addSubview(current)
+//                        self.close = current
+//                        isNew = true
+//
+//                        current.set(handler: { [weak self] _ in
+//                            if let item = self?.data {
+//                                self?.arguments?.closeTab(item.unique, true)
+//                            }
+//                        }, for: .Click)
+//                    }
+//
+//                    current.set(image: NSImage(resource: .iconBrowserCloseTab).precomposed(item.textColor.withAlphaComponent(0.8)), for: .Normal)
+//                    current.sizeToFit(.zero, NSMakeSize(20, 20), thatFit: true)
+//
+//
+//                    if isNew {
+//                        current.centerY(x: item.width - 10 - 20)
+//                        if animated {
+//                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+//                        }
+//                    }
+//                }
+            
+        } else {
+            if let view = self.textView {
+                performSubviewRemoval(view, animated: animated)
+                self.textView = nil
+            }
+            if let view = self.shadowView {
+                performSubviewRemoval(view, animated: animated)
+                self.shadowView = nil
+            }
+            if let view = self.close {
+                performSubviewRemoval(view, animated: animated)
+                self.close = nil
+            }
+            if let view = self.premiumStatus {
+               performSubviewRemoval(view, animated: animated)
+               self.premiumStatus = nil
+           }
+        }
+        
+        
+        updateLayer(transition: transition)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+         
+        
+        guard let data = self.data else {
+            return
+        }
+        if let iconView {
+            if data.selected {
+                transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 10))
+            } else {
+                transition.updateFrame(view: iconView, frame: iconView.centerFrame())
+            }
+            if let loading {
+                transition.updateFrame(view: loading, frame: iconView.frame)
+            }
+        }
+        if let textView {
+            transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 40))
+        }
+        if let close {
+            transition.updateFrame(view: close, frame: close.centerFrameY(x: size.width - 10 - 20))
+        }
+        if let premiumStatus {
+            transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: size.width - 10 - premiumStatus.frame.width))
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private final class TabsView: View {
+    private var views: [TabView] = []
+    private var items: [BrowserTabData] = []
+    private let scrollView = HorizontalScrollView()
+    private let documentView = View()
+    private var isLocked: Bool = false
+    private var selectedView: TabView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(scrollView)
+        self.scrollView.documentView = documentView
+        self.scrollView.background = .clear
+        
+        NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
+            guard let self, !self.isLocked else {
+                return
+            }
+            self.updateSelectingView(transition: .immediate)
+        })
+        
+        scrollView._mouseDownCanMoveWindow = true
+        scrollView.clipView._mouseDownCanMoveWindow = true
+    }
+    
+    override var mouseDownCanMoveWindow: Bool {
+        return true
+    }
+    
+    private func updateSelectingView(transition: ContainedViewLayoutTransition) {
+        guard let selectedView, let item = selectedView.data else {
+            return
+        }
+        let point = self.scrollView.clipView.destination ?? self.scrollView.documentOffset
+        
+        var rect = getRect(item.index, items: items)
+        rect.origin.x -= point.x
+        
+        rect.origin.x = min(max(0, rect.origin.x), frame.width - rect.width)
+        
+        transition.updateFrame(view: selectedView, frame: rect)
+        selectedView.updateLayout(size: rect.size, transition: transition)
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        for (i, view) in views.enumerated() {
+            view.isHidden = view.data?.selected == true
+            transition.updateFrame(view: view, frame: getRect(i, items: self.items))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        
+        let scrollRect = NSMakeRect(0, 0, size.width, size.height)
+        let documentRect = NSMakeRect(0, 0, max(width, size.width), size.height)
+        
+        
+        let documentOffset = scrollView.documentOffset
+
+        let difference = documentRect.width - documentView.frame.width
+        
+        if documentOffset.x > 0, difference != 0 {
+            documentView.setFrameOrigin(NSMakePoint(difference, 0))
+        }
+        
+        transition.updateFrame(view: documentView, frame: documentRect)
+        transition.updateFrame(view: scrollView.contentView, frame: scrollRect)
+        transition.updateFrame(view: scrollView, frame: scrollRect)
+
+    }
+    
+    func merge(_ items: [BrowserTabData], arguments: Arguments, transition: ContainedViewLayoutTransition) {
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
+        
+        CATransaction.begin()
+        isLocked = true
+        
+        for rdx in deleteIndices.reversed() {
+            performSubviewRemoval(views.remove(at: rdx), animated: transition.isAnimated, scale: true)
+        }
+        
+        for (idx, item, _) in indicesAndItems {
+            let view = TabView(frame: NSMakeRect(width, 0, 40, 38))
+            view.update(item: item, arguments: arguments, transition: .immediate)
+            
+            views.insert(view, at: idx)
+            documentView.addSubview(view)
+            if transition.isAnimated {
+                view.layer?.animateAlpha(from: 0, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+            }
+           
+        }
+        for (idx, item, _) in updateIndices {
+            let item = item
+            views[idx].update(item: item, arguments: arguments, transition: transition)
+        }
+        self.items = items
+        
+        
+        
+        let selected = items.first(where: { $0.selected })
+        
+        let selectedUpdated = selected?.unique != self.selectedView?.data?.unique
+        
+        if let selected {
+            let current: TabView
+            
+            var rect = getRect(selected.index, items: items)
+            rect = self.documentView.convert(rect, to: self)
+
+            if let view = self.selectedView {
+                current = view
+            } else {
+                current = TabView(frame: rect)
+                current.handleScrollEventOnInteractionEnabled = false
+                addSubview(current)
+                self.selectedView = current
+            }
+            
+            if selected.unique != current.data?.unique {
+               // current.frame = self.documentView.convert(views[selected.index].frame, to: self)
+            }
+            
+            current.update(item: selected, arguments: arguments, transition: transition)
+                        
+        } else if let view = self.selectedView {
+            performSubviewRemoval(view, animated: transition.isAnimated)
+            self.selectedView = nil
+        }
+        
+       
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
+        CATransaction.commit()
+        
+        if selectedUpdated, let selected {
+            let frame = getRect(selected.index, items: items)
+            scrollView.clipView.scroll(to: NSMakePoint(max(0, frame.maxX - scrollView.frame.width), 0), animated: transition.isAnimated)
+        }
+
+        updateSelectingView(transition: transition)
+
+
+        
+        isLocked = false
+
+    }
+    
+    func getRect(_ index: Int, items: [BrowserTabData]) -> NSRect {
+        var x: CGFloat = 0
+        for (i, item) in items.enumerated() {
+            if i < index {
+                x += item.width
+            }
+        }
+        return NSMakeRect(x, (50 - 38) / 2, items[index].width, 38)
+    }
+    
+    var width: CGFloat {
+        return views.reduce(0, { $0 + $1.frame.width })
+    }
+}
+
+private final class ContentController: View {
+    private var current: NSView?
+    private var item: BrowserTabData?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer?.cornerRadius = 10
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(newView: NSView, item: BrowserTabData, animated: Bool) {
+        self.item = item
+        self.backgroundColor = item.external?.backgroundColor ?? item.tabColor
+        if current != newView {
+            if let current {
+                performSubviewRemoval(current, animated: animated)
+            }
+            addSubview(newView)
+            if animated {
+                newView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            current = newView
+        }
+    }
+}
+
+extension RequestWebViewResult : Equatable {
+    public static func == (lhs: RequestWebViewResult, rhs: RequestWebViewResult) -> Bool {
+        return lhs.queryId == rhs.queryId  && lhs.flags == rhs.flags && lhs.url == rhs.url
+    }
+}
+
+struct BrowserTabData : Comparable, Identifiable {
+    
+    enum LoadingState : Equatable {
+        case none
+        case loading
+        case error(RequestWebViewError)
+    }
+   
+    enum Unique : Hashable {
+        case mainapp(Int64)
+        case webapp(Int64)
+    }
+    
+    
+    enum Data : Equatable {
+        case mainapp(bot: EnginePeer, source: RequestSimpleWebViewSource)
+        case webapp(bot: EnginePeer, peerId: PeerId, buttonText: String, url: String?, payload: String?, threadId: Int64?, replyTo: MessageId?, fromMenu: Bool)
+        case simple(bot: EnginePeer, url: String?, source: RequestSimpleWebViewSource)
+        case straight(bot: EnginePeer, peerId: PeerId, title: String, result: RequestWebViewResult)
+
+        
+        var peer: EnginePeer {
+            switch self {
+            case .mainapp(let bot, _):
+                return bot
+            case .webapp(let bot, _, _, _, _, _, _, _):
+                return bot
+            case .simple(let bot, _, _):
+                return bot
+            case let .straight(bot, _, _, _):
+                return bot
+            }
+        }
+        
+        var newUniqueId: Unique {
+            switch self {
+            case let .mainapp(peer, _):
+                return .mainapp(peer.id.toInt64())
+            case .webapp:
+                return .webapp(arc4random64())
+            case .simple:
+                return .webapp(arc4random64())
+            case .straight:
+                return .webapp(arc4random64())
+            }
+        }
+    }
+    
+    var titleText: String {
+        switch data {
+        case let .mainapp(peer, _):
+            return peer._asPeer().displayTitle
+        case let .simple(peer, title, _):
+            return title ?? peer._asPeer().displayTitle
+        case let .webapp(peer, _, _, _, _, _, _, _):
+            return peer._asPeer().displayTitle
+        case let .straight(_, _, title, _):
+            return title
+        }
+    }
+    
+    
+    var index: Int
+    let unique: Unique
+    let data: Data
+    var loadingState: LoadingState = .none
+    
+    var external: WebpageModalState? = nil
+    
+    var selected: Bool
+    
+    var title: TextViewLayout?
+    var tabColor: NSColor = .black
+    
+    var textColor: NSColor {
+        return tabColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+    }
+
+    var stableId: AnyHashable {
+        return self.unique
+    }
+    static func < (lhs: BrowserTabData, rhs: BrowserTabData) -> Bool {
+        return lhs.index < rhs.index
+    }
+    
+    var width: CGFloat {
+        if let title {
+            var width = title.layoutSize.width + 20 + 20 + 10
+            if let size = PremiumStatusControl.controlSize(self.data.peer._asPeer(), false) {
+                width += (size.width) + 3
+            }
+            return width
+        } else {
+            return 40
+        }
+    }
+    
+    func measure(width: CGFloat) -> BrowserTabData {
+        
+        var tabColor: NSColor = theme.colors.background
+        
+        
+//        if let key = self.external?.headerColorKey {
+//            if key == "bg_color" {
+//                tabColor = self.external?.backgroundColor ?? tabColor
+//            } else {
+//                tabColor = theme.colors.listBackground
+//            }
+//        } else if let color = external?.headerColor {
+//            tabColor = color
+//        } else {
+//            tabColor = self.external?.backgroundColor ?? tabColor
+//        }
+        
+        if selected {
+            let color: NSColor = tabColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            let layout = TextViewLayout(.initialize(string: titleText, color: color, font: .normal(.text)), maximumNumberOfLines: 1)
+            layout.measure(width: width - 100)
+            var tab = self
+            tab.title = layout
+            tab.tabColor = tabColor
+            return tab
+        } else {
+            var tab = self
+            tab.title = nil
+            tab.tabColor = tabColor
+            return tab
+        }
+    }
+}
+
+private final class TabsController: GenericViewController<TabsView> {
+        
+    
+    override init() {
+        super.init()
+        bar = .init(height: 0)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+    
+    func merge(_ data: [BrowserTabData], arguments: Arguments, transition: ContainedViewLayoutTransition) {
+        self.genericView.merge(data, arguments: arguments, transition: transition)
+    }
+}
+
+
+private final class BackOrClose : Control {
+    
+    enum State : Equatable {
+        case none
+        case close(NSColor)
+        case back(NSColor)
+        
+        func file(_ animated: Bool) -> LocalAnimatedSticker {
+            switch self {
+            case .close:
+                return LocalAnimatedSticker.browser_back_to_close
+            case .back:
+                return LocalAnimatedSticker.browser_close_to_back
+            case .none:
+                fatalError()
+            }
+        }
+    }
+    
+    private var state: State = .none
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(animationView)
+        self.updateState(state: .close(theme.colors.text.withAlphaComponent(0.8)), animated: false)
+    }
+    
+    private let animationView: LottiePlayerView = .init(frame: NSMakeRect(0, 0, 30, 30))
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func withUpdatedColor(_ color: NSColor) -> State {
+        switch self.state {
+        case .none:
+            return .none
+        case .close:
+            return .close(color)
+        case .back:
+            return .back(color)
+        }
+    }
+    
+    func updateState(state: State, animated: Bool) {
+        if self.state != state {
+            switch state {
+            case let .back(color), let .close(color):
+                let renderSize = self.animationView.frame.size
+                let colorChanged = self.animationView.animation?.colors.first?.color != color
+                let animation = state.file(animated)
+                
+                guard let data = animation.data else {
+                    return
+                }
+                
+                let playPolicy: LottiePlayPolicy
+                
+                if animated && !colorChanged {
+                    playPolicy = .toEnd(from: 0)
+                } else {
+                    playPolicy = .toEnd(from: .max)
+                }
+                            
+                animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60, colors: [.init(keyPath: "", color: color)], runOnQueue: .mainQueue()))
+            default:
+                break
+            }
+
+            
+            
+        }
+        
+        self.state = state
+    }
+    
+    override func layout() {
+        super.layout()
+        animationView.center()
+    }
+}
+
+private final class MoreControl : Control {
+    
+    private var lottieAnimation: LottieAnimation?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(animationView)
+        set(handler: { [weak self] _ in
+            self?.animationView.set(self?.lottieAnimation?.withUpdatedPolicy(.onceEnd), reset: true)
+        }, for: .Down)
+    }
+    private let animationView: LottiePlayerView = .init(frame: NSMakeRect(0, 0, 30, 30))
+
+    func set(color: NSColor) {
+        let renderSize = NSMakeSize(30, 30)
+        let animation = LocalAnimatedSticker.browser_more
+        guard let data = animation.data else {
+            return
+        }
+        let lottieAnimation = LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: .max), maximumFps: 60, colors: [.init(keyPath: "", color: color)], runOnQueue: .mainQueue())
+        
+        if lottieAnimation != self.lottieAnimation {
+            animationView.set(lottieAnimation)
+        }
+        self.lottieAnimation = lottieAnimation
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        animationView.center()
+    }
+}
+
+private final class BrowserView : View {
+    fileprivate var tabsView: TabsView?
+    fileprivate let more = MoreControl(frame: NSMakeRect(0, 0, 50, 50))
+    fileprivate let close = BackOrClose(frame: NSMakeRect(0, 0, 50, 50))
+    
+    let header = View()
+
+    fileprivate let contentView: ContentController = .init(frame: .zero)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer?.cornerRadius = 10
+        addSubview(contentView)
+        addSubview(header)
+        
+        more.scaleOnClick = true
+        close.scaleOnClick = true
+
+
+
+        header.addSubview(more)
+        header.addSubview(close)
+        
+        updateLocalizationAndTheme(theme: theme)
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        guard let tabsView else {
+            return
+        }
+        transition.updateFrame(view: header, frame: NSMakeRect(0, 0, size.width, 50))
+
+        transition.updateFrame(view: tabsView, frame: NSMakeRect(50, 0, size.width - 100, header.frame.height))
+
+        transition.updateFrame(view: close, frame: close.centerFrameY(x: 0))
+        transition.updateFrame(view: more, frame: more.centerFrameY(x: size.width - more.frame.width))
+
+        transition.updateFrame(view: contentView, frame: NSMakeRect(0, header.frame.height, size.width, size.height - header.frame.height))
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.more.set(color: theme.colors.text.withAlphaComponent(0.8))
+        self.close.updateState(state: self.close.withUpdatedColor(theme.colors.text.withAlphaComponent(0.8)), animated: false)
+    }
+    
+    func update(tab: BrowserTabData, animated: Bool) {
+        let isBackButton = tab.external?.isBackButton ?? false
+        let color = theme.colors.text.withAlphaComponent(0.8)
+        self.close.updateState(state: isBackButton ? .back(color) : .close(color), animated: animated)
+    }
+}
+
+
+private struct State : Equatable {
+    var tabs: [BrowserTabData] = []
+    
+    
+    var selected: BrowserTabData? {
+        return tabs.first(where: { $0.selected })
+    }
+
+    func newTab(_ data: BrowserTabData.Data, unique: BrowserTabData.Unique) -> (State, BrowserTabData?) {
+        var tabs = self.tabs
+        for i in 0 ..< tabs.count {
+            tabs[i].selected = false
+        }
+        
+        let newData: BrowserTabData?
+        
+        if let index = tabs.firstIndex(where: { $0.unique == unique }) {
+            tabs[index].selected = true
+            newData = nil
+        } else {
+            let new = BrowserTabData(index: tabs.count, unique: unique, data: data, selected: true)
+            newData = new
+            tabs.append(new)
+        }
+        
+        return (.init(tabs: tabs), newData)
+    }
+    
+    func select(_ item: BrowserTabData) -> State {
+        var tabs = self.tabs
+        for i in 0 ..< tabs.count {
+            tabs[i].selected = tabs[i].unique == item.unique
+        }
+        return .init(tabs: tabs)
+    }
+    
+    func select(_ unique: BrowserTabData.Unique) -> State {
+        var tabs = self.tabs
+        for i in 0 ..< tabs.count {
+            tabs[i].selected = tabs[i].unique == unique
+        }
+        return .init(tabs: tabs)
+    }
+    
+    func selectAt(_ index: Int) -> State {
+                
+        var tabs = self.tabs
+        
+        if index < tabs.count {
+            for i in 0 ..< tabs.count {
+                tabs[i].selected = i == index
+            }
+        }
+        
+        return .init(tabs: tabs)
+    }
+    
+    func setIsLoading(_ unqiue: BrowserTabData.Unique, loadingState: BrowserTabData.LoadingState) -> State {
+        var tabs = self.tabs
+        if let index = tabs.firstIndex(where: { $0.unique == unqiue }) {
+            tabs[index].loadingState = loadingState
+        }
+        return .init(tabs: tabs)
+    }
+    func setExternal(_ unique: BrowserTabData.Unique, external: WebpageModalState) -> State {
+        var tabs = self.tabs
+        if let index = tabs.firstIndex(where: { $0.unique == unique }) {
+            tabs[index].external = external
+        }
+        return .init(tabs: tabs)
+    }
+    
+    func closeTab(_ unique: BrowserTabData.Unique) -> State {
+        var tabs = self.tabs
+        if let index = tabs.firstIndex(where: { $0.unique == unique }) {
+            tabs.remove(at: index)
+            
+            let selectedIndex: Int
+            if index == tabs.count {
+                selectedIndex = tabs.count - 1
+            } else {
+                selectedIndex = index
+            }
+            
+            for i in 0 ..< tabs.count {
+                tabs[i].index = i
+                tabs[i].selected = selectedIndex == i
+            }
+        }
+       
+        return .init(tabs: tabs)
+    }
+}
+
+private final class WebpageContainerView : View {
+    private var loading: ProgressIndicator?
+    private var mainView: NSView?
+    private var errorView: ErrorLoadingView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(data: BrowserTabData, arguments: Arguments, animated: Bool) {
+        
+        switch data.loadingState {
+        case .loading:
+            if let view = errorView {
+                performSubviewRemoval(view, animated: animated)
+                self.errorView = nil
+            }
+            let current: ProgressIndicator
+            if let view = self.loading {
+                current = view
+            } else {
+                current = ProgressIndicator(frame: focus(NSMakeSize(40, 40)))
+                self.loading = current
+                addSubview(current)
+            }
+            current.progressColor = theme.colors.grayText
+            current.animates = true
+        case let .error(error):
+            if let view = self.loading {
+                performSubviewRemoval(view, animated: animated)
+                self.loading = nil
+            }
+            let current: ErrorLoadingView
+            if let view = self.errorView {
+                current = view
+            } else {
+                current = ErrorLoadingView(frame: bounds)
+                self.errorView = current
+                addSubview(current)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(arguments: arguments, error: error)
+        default:
+            if let view = loading {
+                performSubviewRemoval(view, animated: animated)
+                self.loading = nil
+            }
+            if let view = errorView {
+                performSubviewRemoval(view, animated: animated)
+                self.errorView = nil
+            }
+        }
+
+    }
+    
+    func setMainView(_ newView: NSView, animated: Bool) {
+        if mainView != newView {
+            if let mainView {
+                performSubviewRemoval(mainView, animated: animated)
+            }
+            addSubview(newView)
+            if animated {
+                newView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            mainView = newView
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        loading?.center()
+        mainView?.frame = bounds
+    }
+}
+
+private final class WebpageContainerController : GenericViewController<WebpageContainerView> {
+    private let data: BrowserTabData
+    private let context: AccountContext
+    private let arguments: Arguments
+    private var controller: WebpageModalController?
+    private let disposable = MetaDisposable()
+    
+    private var appeared: Bool = false
+    
+    init(data: BrowserTabData, context: AccountContext, arguments: Arguments) {
+        self.data = data
+        self.context = context
+        self.arguments = arguments
+        super.init()
+        self.bar = .init(height: 0)
+    }
+    
+    func contextMenu() -> ContextMenu? {
+        return self.controller?.contextMenu()
+    }
+    
+    func backPressed() {
+        controller?.backButtonPressed()
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        arguments.setLoadingState(data.unique, .loading)
+        
+        let signal = makeWebViewController(context: context, data: data.data, unique: data.unique, makeLinkManager: arguments.makeLinkManager) |> deliverOnMainQueue
+        disposable.set(signal.startStrict(next: { [weak self] controller in
+            guard let self else {
+                return
+            }
+            self.set(controller, animated: true)
+            arguments.setLoadingState(self.data.unique, .none)
+        }, error: { [weak self] error in
+            guard let self else {
+                return
+            }
+            arguments.setLoadingState(self.data.unique, .error(error))
+        }))
+        
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        controller?.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        appeared = true
+        controller?.viewWillAppear(animated)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        controller?.viewDidAppear(animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        appeared = false
+        controller?.viewWillDisappear(animated)
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        controller?.viewDidDisappear(animated)
+    }
+    
+    private func set(_ controller: WebpageModalController, animated: Bool) {
+        self.controller = controller
+        controller._frameRect = bounds
+        if appeared {
+            controller.viewWillAppear(animated)
+        }
+        self.genericView.setMainView(controller.view, animated: animated)
+        if appeared {
+            controller.viewDidAppear(animated)
+        }
+        
+        disposable.set(controller.externalState.startStrict(next: { [weak self] state in
+            guard let self else {
+                return
+            }
+            self.arguments.setExternalState(self.data.unique, state)
+        }))
+    }
+    
+    func update(data: BrowserTabData, arguments: Arguments, animated: Bool) {
+        self.genericView.update(data: data, arguments: arguments, animated: animated)
+    }
+    
+}
+
+final class BrowserLinkManager {
+    weak var window: Window?
+    let context: AccountContext
+    let unique: BrowserTabData.Unique
+    private weak var arguments: Arguments?
+    fileprivate init(context: AccountContext, window: Window?, unique: BrowserTabData.Unique, arguments: Arguments?) {
+        self.window = window
+        self.context = context
+        self.unique = unique
+        self.arguments = arguments
+    }
+    
+    func back() {
+        
+    }
+    func close(confirm: Bool) {
+        arguments?.closeTab(unique, confirm)
+    }
+}
+
+
+final class WebappBrowserController : ViewController {
+    private let tabs = TabsController()
+    private var webpages: [BrowserTabData.Unique : WebpageContainerController] = [:]
+    private var current: WebpageContainerController?
+    let context: AccountContext
+    private var arguments: Arguments?
+    private var wHandler: Any?
+    
+    private var initialTab: BrowserTabData.Data?
+    
+    private let publicStateValue: Promise<[BrowserTabData]> = Promise()
+    var publicState:Signal<[BrowserTabData], NoError> {
+        return publicStateValue.get()
+    }
+    
+    init(context: AccountContext, initialTab: BrowserTabData.Data? = nil) {
+        self.context = context
+        self.initialTab = initialTab
+        super.init()
+        bar = .init(height: 0)
+        _window = WebappBrowser()
+    }
+    
+    func add(_ tab: BrowserTabData.Data) {
+        arguments?.insertTab(tab)
+    }
+    
+    func makeKeyAndOrderFront() {
+        browser.makeKeyAndOrderFront(nil)
+    }
+    
+    private var browser: WebappBrowser {
+        return _window! as! WebappBrowser
+    }
+    
+    func show() {
+                
+        loadViewIfNeeded()
+        browser.contentView?.addSubview(self.view)
+        browser.show()
+        
+        wHandler = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+            if event.keyCode == KeyboardKey.W.rawValue, event.window == self?.browser {
+                self?.arguments?.closeTab(nil, true)
+                return nil
+            } else {
+                return event
+            }
+        })
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(0)
+            return .invoked
+        }, with: self, for: .One, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(1)
+            return .invoked
+        }, with: self, for: .Two, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(2)
+            return .invoked
+        }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(3)
+            return .invoked
+        }, with: self, for: .Four, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(4)
+            return .invoked
+        }, with: self, for: .Five, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(5)
+            return .invoked
+        }, with: self, for: .Six, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(6)
+            return .invoked
+        }, with: self, for: .Seven, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(7)
+            return .invoked
+        }, with: self, for: .Eight, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(8)
+            return .invoked
+        }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.arguments?.selectAtIndex(9)
+            return .invoked
+        }, with: self, for: .Zero, priority: .low, modifierFlags: [.command])
+        
+        browser.set(handler: { [weak self] _ -> KeyHandlerResult in
+            guard let self else {
+                return .rejected
+            }
+            self.arguments?.add(self.genericView.more)
+            return .invoked
+        }, with: self, for: .T, priority: .low, modifierFlags: [.command])
+        
+    }
+    
+    func hide(_ completion: @escaping()->Void) {
+        closeAllModals(window: browser)
+        browser.removeAllHandlers(for: self)
+        
+        self.browser.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
+            self?.browser.orderOut(nil)
+            self?._window = nil
+            completion()
+        })
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        
+        self.genericView.tabsView = tabs.genericView
+        self.genericView.header.addSubview(tabs.view)
+        self.genericView.layout()
+        
+        let rect = browser.frame.size.bounds.insetBy(dx: 10, dy: 10)
+        self.view.frame = rect
+        
+        let actionsDisposable = DisposableSet()
+        let context = self.context
+        let initialState = State()
+        
+        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+        let stateValue = Atomic(value: initialState)
+        let updateState: ((State) -> State) -> Void = { f in
+            statePromise.set(stateValue.modify (f))
+        }
+        
+        var getArguments:(()->Arguments?)? = nil
+        
+        let insertTab:(BrowserTabData.Data)->Void = { [weak self] data in
+            
+            let unique = data.newUniqueId
+            
+            let invoke:()->Void = {
+                
+                var state = stateValue.with { $0 }
+                var insertedData: BrowserTabData? = nil
+                
+                (state, insertedData) = state.newTab(data, unique: unique)
+                
+                if let insertedData, let arguments = getArguments?() {
+                    let controller = WebpageContainerController(data: insertedData, context: context, arguments: arguments)
+                    self?.webpages[unique] = controller
+                    
+                    updateState { current in
+                        return state
+                    }
+                }  else {
+                    updateState { current in
+                        return state.select(unique)
+                    }
+                }
+            }
+            
+            invoke()
+        }
+        
+        let arguments = Arguments(context: context, add: { control in
+            guard let event = NSApp.currentEvent else {
+                return
+            }
+            let state = WebappsStateContext.standart.fullState(context)
+            |> take(1)
+            |> deliverOnMainQueue
+            actionsDisposable.add(state.startStrict(next: { [weak control] webapps in
+                if let control {
+                    let menu = ContextMenu()
+                    
+                    let appItem:(WebappsStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
+                        if let user = webapp.peer._asPeer() as? TelegramUser {
+                            
+                            let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
+                            
+                            let data = BrowserTabData.Data.mainapp(bot: webapp.peer, source: .generic)
+                            return ReactionPeerMenu(title: user.displayTitle, handler: {
+                                insertTab(data)
+                                switch data {
+                                case let .mainapp(bot, _):
+                                    WebappsStateContext.standart.add(.init(peerId: bot.id))
+                                default:
+                                    break
+                                }
+                            }, peer: user, context: context, reaction: nil, afterNameBadge: afterNameBadge)
+                        } else {
+                            return nil
+                        }
+                    }
+                    
+                    let submenu = ContextMenu()
+                    
+                    if !webapps.recentUsedApps.isEmpty {
+                        for webapp in webapps.recentUsedApps {
+                            if let item = appItem(webapp) {
+                                submenu.addItem(item)
+                            }
+                        }
+                    }
+                    if !submenu.items.isEmpty && !webapps.recommended.isEmpty {
+                        submenu.addItem(ContextSeparatorItem())
+                    }
+                    for webapp in webapps.recommended {
+                        if let item = appItem(webapp) {
+                            submenu.addItem(item)
+                        }
+                    }
+                    
+                    if !submenu.items.isEmpty {
+                        let item = ContextMenuItem(strings().chatListAppsPopular, itemImage: MenuAnimation.menu_apps.value)
+                        item.submenu = submenu
+                        menu.addItem(item)
+                    }
+                    
+                    menu.addItem(ContextSeparatorItem())
+                    menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
+                        WebappsStateContext.standart.closeBrowser()
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                    
+                    AppMenu.show(menu: menu, event: event, for: control)
+                }
+            }))
+        }, close: { [weak self] in
+            let current = stateValue.with { $0.selected }
+            guard let current else {
+                return
+            }
+            if current.external?.isBackButton == true {
+                self?.webpages[current.unique]?.backPressed()
+            } else {
+                getArguments?()?.closeTab(nil, true)
+            }
+        }, select: { item in
+            updateState { current in
+                var current = current
+                current = current.select(item)
+                return current
+            }
+        }, setLoadingState: { unique, state in
+            updateState { current in
+                var current = current
+                current = current.setIsLoading(unique, loadingState: state)
+                return current
+            }
+        }, setExternalState: { unique, state in
+            updateState { current in
+                var current = current
+                current = current.setExternal(unique, external: state)
+                return current
+            }
+        }, closeTab: { [weak self] unique, checkAdmission in
+            let unique = unique ?? stateValue.with { $0.selected?.unique }
+            let count = stateValue.with { $0.tabs.count }
+            let data = stateValue.with { $0.tabs.first(where: { $0.unique == unique }) }
+
+            guard let unique, let data else {
+                return
+            }
+            let invoke:()->Void = {
+                if count == 1 {
+                    WebappsStateContext.standart.closeBrowser()
+                } else {
+                    updateState {
+                        $0.closeTab(unique)
+                    }
+                    self?.webpages.removeValue(forKey: unique)
+                }
+            }
+            let needAdmit = data.external?.needConfirmation ?? false
+            if needAdmit, checkAdmission, let window = self?.browser {
+                verifyAlert_button(for: window, information: strings().webpageConfirmClose, ok: strings().webpageConfirmOk, successHandler: { _ in
+                   invoke()
+                })
+            } else {
+                invoke()
+            }
+            
+        }, selectAtIndex: { index in
+            updateState { current in
+                var current = current
+                current = current.selectAt(index)
+                return current
+            }
+        }, makeLinkManager: { [weak self] id in
+            return BrowserLinkManager(context: context, window: self?.browser, unique: id, arguments: getArguments?())
+        }, contextMenu: { [weak self] item in
+            let unique = item.unique
+            let webpageItems = self?.webpages[item.unique]?.contextMenu()?.contextItems ?? []
+            
+            var items: [ContextMenuItem] = []
+            
+            if item.selected {
+                items.append(contentsOf: webpageItems)
+                if !webpageItems.isEmpty {
+                    items.append(ContextSeparatorItem())
+                }
+                items.append(ContextMenuItem(strings().webAppClose, handler: {
+                    getArguments?()?.closeTab(unique, true)
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+            } else {
+                items.append(ContextMenuItem(strings().webAppClose, handler: {
+                    getArguments?()?.closeTab(unique, true)
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+            }
+            if !items.isEmpty {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
+            }
+            return nil
+        }, insertTab: { data in
+            insertTab(data)
+        })
+        
+        self.arguments = arguments
+         
+        getArguments = { [weak arguments] in
+            return arguments
+        }
+        
+        let animated = Atomic(value: false)
+        
+        
+        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), statePromise.get(), appearanceSignal).start(next: { [weak self] state, appearance in
+            guard let self else {
+                return
+            }
+            let animated = animated.swap(true)
+            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.35, curve: .spring) : .immediate
+            
+            let tabs = layoutTabs(state.tabs, width: self.genericView.frame.width - 80 - 80)
+            
+            self.tabs.merge(tabs, arguments: arguments, transition: transition)
+            if let tab = state.tabs.first(where: { $0.selected }) {
+                self.genericView.update(tab: tab, animated: transition.isAnimated)
+            }
+            self.genericView.updateLayout(size: self.frame.size, transition: transition)
+            self.updateLocalizationAndTheme(theme: appearance.presentation)
+
+            DispatchQueue.main.async {
+                self.updateWebpage(tabs, animated: transition.isAnimated)
+            }
+        }))
+        
+        genericView.close.set(handler: { _ in
+            arguments.close()
+        }, for: .Click)
+        
+        genericView.more.set(handler: { control in
+            arguments.add(control)
+        }, for: .Click)
+        
+        onDeinit = {
+            actionsDisposable.dispose()
+        }
+        
+        if let initialTab {
+            insertTab(initialTab)
+        }
+        
+        publicStateValue.set(statePromise.get() |> map { $0.tabs })
+
+    }
+    
+    private func updateWebpage(_ tabs: [BrowserTabData], animated: Bool) {
+        guard let tab = tabs.first(where: { $0.selected }), let arguments else {
+            return
+        }
+        
+        let controller = webpages[tab.unique]!
+        if current != controller {
+            controller._frameRect = genericView.contentView.bounds
+            current?.viewWillDisappear(animated)
+            controller.viewWillAppear(animated)
+        }
+        
+        genericView.contentView.update(newView: controller.view, item: tab, animated: animated)
+
+        if current != controller {
+            controller.viewDidAppear(animated)
+            current?.viewDidDisappear(animated)
+        }
+        
+        
+        for tab in tabs {
+            webpages[tab.unique]?.update(data: tab, arguments: arguments, animated: animated)
+        }
+        
+        self.current = controller
+        
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        browser.containerView.backgroundColor = theme.colors.listBackground
+    }
+    
+    override func viewClass() -> AnyClass {
+        return BrowserView.self
+    }
+    
+    deinit {
+        if let monitor = self.wHandler {
+            NSEvent.removeMonitor(monitor)
+        }
+    }
+    
+    private var genericView: BrowserView {
+        return self.view as! BrowserView
+    }
+}

@@ -488,7 +488,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 } else if chatInteraction.peerId == repliesPeerId {
                     
                 } else if chatInteraction.peerId == chatInteraction.context.peerId {
-                    chatInteraction.context.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+                    chatInteraction.context.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, isBot: false))
                 } else {
                     switch chatInteraction.chatLocation {
                     case let .peer(peerId):

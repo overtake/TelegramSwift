@@ -860,7 +860,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 point.y += 1
             }
         }
-        return point
+        return point.toScreenPixel
     }
     
     override func layout() {

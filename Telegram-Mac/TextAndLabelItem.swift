@@ -55,9 +55,11 @@ class TextAndLabelItem: GeneralRowItem {
     let toggleHide:(()->Void)?
     let _borderColor: NSColor
     let gift: (()->Void)?
+    let launchApp: (()->Void)?
     private let added_contextItems: [ContextMenuItem]
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = [], gift: (()->Void)? = nil) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = [], gift: (()->Void)? = nil, launchApp:(()->Void)? = nil) {
         self.callback = callback
+        self.launchApp = launchApp
         self.accentColor = accentColor
         self.hideText = hideText
         self.added_contextItems = contextItems
@@ -130,12 +132,18 @@ class TextAndLabelItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
+        var height: CGFloat = 0
         switch viewType {
         case .legacy:
-            return labelsHeight + 20
+            height = labelsHeight + 20
         case let .modern(_, insets):
-            return labelsHeight + insets.top + insets.bottom - 4
+            height = labelsHeight + insets.top + insets.bottom - 4
         }
+        
+        if let _ = launchApp {
+            height += 50
+        }
+        return height
     }
     
     var labelsHeight:CGFloat {
@@ -151,11 +159,21 @@ class TextAndLabelItem: GeneralRowItem {
         if let labelLayout = labelLayout {
             inset = labelLayout.0.size.height
         }
-        return ((height - labelsHeight) / 2.0) + inset + 4.0
+        let top: CGFloat
+        if let _ = launchApp {
+            top = 8
+        } else {
+            top = ((height - labelsHeight) / 2.0)
+        }
+        return top + inset + 4.0
     }
     
     var labelY:CGFloat {
-        return (height - labelsHeight) / 2.0
+        if let _ = launchApp {
+            return 8
+        } else {
+            return (height - labelsHeight) / 2.0
+        }
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -260,7 +278,7 @@ class TextAndLabelRowView: GeneralRowView {
         }
     }
     
-
+    private var launchAppButton: TextButton?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -344,7 +362,9 @@ class TextAndLabelRowView: GeneralRowView {
             }
             self.containerView.setCorners(item.viewType.corners)
 
-
+            if let launchAppButton {
+                launchAppButton.frame = NSMakeRect(10, containerView.frame.height - launchAppButton.frame.height - 10, containerView.frame.size.width - 20, 40)
+            }
         }
         
     }
@@ -381,6 +401,31 @@ class TextAndLabelRowView: GeneralRowView {
                 toggleVisibility.sizeToFit()
             }
             
+            
+            if let _ = item.launchApp {
+                let current: TextButton
+                if let view = self.launchAppButton {
+                    current = view
+                } else {
+                    current = TextButton()
+                    current.layer?.cornerRadius = 10
+                    current.scaleOnClick = true
+                    self.launchAppButton = current
+                    containerView.addSubview(current)
+                }
+                current.removeAllHandlers()
+                current.set(handler: { [weak item] _ in
+                    item?.launchApp?()
+                }, for: .Click)
+                current.set(text: strings().botInfoOpenApp, for: .Normal)
+                current.set(font: .medium(.text), for: .Normal)
+                current.set(background: theme.colors.accent, for: .Normal)
+                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.setFrameSize(NSMakeSize(item.blockWidth - 40, 40))
+            } else if let view = self.launchAppButton {
+                performSubviewRemoval(view, animated: animated)
+                self.launchAppButton = nil
+            }
         }
         containerView.needsDisplay = true
         needsLayout = true

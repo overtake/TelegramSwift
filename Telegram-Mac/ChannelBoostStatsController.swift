@@ -194,6 +194,7 @@ private final class BoosterRowItemView : GeneralContainableRowView {
         addSubview(multiplierView)
         addSubview(reasonView)
         
+        avatar.userInteractionEnabled = false
         self.addSubview(self.avatar)
         self.avatar.setFrameSize(NSMakeSize(36, 36))
         

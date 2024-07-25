@@ -573,7 +573,7 @@ class ChatInputView: View, Notifable {
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
         if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown || attribute.flags.contains(.persistent) {
             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: keyboardMessage), theme, bottomView.documentView as? View, true)
-            replyMarkupModel?.measureSize(frame.width - 30)
+            replyMarkupModel?.measureSize(frame.width - 40)
             replyMarkupModel?.redraw()
             replyMarkupModel?.layout()
             bottomView.contentView.scroll(to: NSZeroPoint)
@@ -913,7 +913,7 @@ class ChatInputView: View, Notifable {
         
         
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
-        let keyboardWidth = frame.width - 30
+        let keyboardWidth = frame.width - 40
         var leftInset: CGFloat = 0
         let contentHeight:CGFloat = contentHeight(for: size.width)
         

@@ -487,3 +487,77 @@ public func drawSvgPath(_ context: CGContext, path: StaticString, strokeOnMove: 
         }
     }
 }
+
+
+public func createPath(_ svgPath: String) -> CGPath {
+    let path = CGMutablePath()
+    var currentPoint = CGPoint.zero
+    var startPoint = CGPoint.zero
+
+    // Split the SVG path into commands and parameters
+    let scanner = Scanner(string: svgPath)
+    scanner.charactersToBeSkipped = .whitespacesAndNewlines
+    var command: NSString?
+    
+    while !scanner.isAtEnd {
+        if scanner.scanCharacters(from: CharacterSet.letters, into: &command) {
+            let commandString = command! as String
+            
+            switch commandString {
+            case "M":
+                // Move to command
+                var x: Double = 0, y: Double = 0
+                scanner.scanDouble(&x)
+                scanner.scanDouble(&y)
+                currentPoint = CGPoint(x: x, y: y)
+                startPoint = currentPoint
+                path.move(to: currentPoint)
+                
+            case "C":
+                // Cubic Bezier curve command
+                var control1X: Double = 0, control1Y: Double = 0, control2X: Double = 0, control2Y: Double = 0, endPointX: Double = 0, endPointY: Double = 0
+                scanner.scanDouble(&control1X)
+                scanner.scanDouble(&control1Y)
+                scanner.scanDouble(&control2X)
+                scanner.scanDouble(&control2Y)
+                scanner.scanDouble(&endPointX)
+                scanner.scanDouble(&endPointY)
+                path.addCurve(to: CGPoint(x: endPointX, y: endPointY),
+                              control1: CGPoint(x: control1X, y: control1Y),
+                              control2: CGPoint(x: control2X, y: control2Y))
+                currentPoint = CGPoint(x: endPointX, y: endPointY)
+                
+            case "H":
+                // Horizontal line command
+                var x: Double = 0
+                scanner.scanDouble(&x)
+                currentPoint = CGPoint(x: x, y: currentPoint.y)
+                path.addLine(to: currentPoint)
+                
+            case "V":
+                // Vertical line command
+                var y: Double = 0
+                scanner.scanDouble(&y)
+                currentPoint = CGPoint(x: currentPoint.x, y: y)
+                path.addLine(to: currentPoint)
+                
+            case "L":
+                // Line to command
+                var x: Double = 0, y: Double = 0
+                scanner.scanDouble(&x)
+                scanner.scanDouble(&y)
+                currentPoint = CGPoint(x: x, y: y)
+                path.addLine(to: currentPoint)
+                
+            case "Z":
+                // Close path command
+                path.addLine(to: startPoint)
+                
+            default:
+                fatalError("Unknown command: \(commandString)")
+            }
+        }
+    }
+    
+    return path
+}

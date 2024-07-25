@@ -692,7 +692,7 @@ private struct State : Equatable {
         let storeProduct: InAppPurchaseManager.Product?
         
         var native: StarsTopUpOption {
-            return .init(count: amount, storeProductId: storeProduct?.id, currency: currency, amount: price)
+            return .init(count: amount, storeProductId: storeProduct?.id, currency: currency, amount: price, isExtended: false)
         }
         
         
@@ -978,17 +978,17 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     
     var subscriptions:[Star_Subscription] = []
     
-    #if DEBUG
-    for i in 0 ..< 5 {
-        let state: Star_Subscription.State
-        if arc4random64() % 2 == 0 {
-            state = .active
-        } else {
-            state = .cancelled
-        }
-        subscriptions.append(.init(id: "\(i)", peer: .init(context.myPeer!), amount: Int64.random(in: 100..<10000), date: Int32(Date().timeIntervalSince1970), renewDate: Int32(Date().timeIntervalSince1970) + Int32.random(in: 0..<10000000), state: state))
-    }
-    #endif
+//    #if DEBUG
+//    for i in 0 ..< 5 {
+//        let state: Star_Subscription.State
+//        if arc4random64() % 2 == 0 {
+//            state = .active
+//        } else {
+//            state = .cancelled
+//        }
+//        subscriptions.append(.init(id: "\(i)", peer: .init(context.myPeer!), amount: Int64.random(in: 100..<10000), date: Int32(Date().timeIntervalSince1970), renewDate: Int32(Date().timeIntervalSince1970) + Int32.random(in: 0..<10000000), state: state))
+//    }
+//    #endif
     
     
     let initialState = State(options: nil, transactions: nil, canMakePayment: canMakePayment, subscriptions: subscriptions)
@@ -1019,20 +1019,38 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         statePromise.set(stateValue.modify (f))
     }
     
+    switch source {
+    case let .gift(peer):
+        actionsDisposable.add(combineLatest(context.engine.payments.starsGiftOptions(peerId: peer.id), products).startStrict(next: { value, products in
+            let options:[State.Option] = value.compactMap { value in
+                let product = products.first(where: { $0.id == value.storeProductId })
+                return .init(amount: value.count, price: value.amount, currency: value.currency, id: "\(value.count)", storeProduct: product)
+            }
+            updateState { current in
+                var current = current
+                current.premiumProducts = products
+                current.options = options
+                return current
+            }
+        }))
+    default:
+        actionsDisposable.add(combineLatest(context.engine.payments.starsTopUpOptions(), products).startStrict(next: { value, products in
+            
+            let options:[State.Option] = value.compactMap { value in
+                let product = products.first(where: { $0.id == value.storeProductId })
+                return .init(amount: value.count, price: value.amount, currency: value.currency, id: "\(value.count)", storeProduct: product)
+            }
+            updateState { current in
+                var current = current
+                current.premiumProducts = products
+                current.options = options
+                return current
+            }
+        }))
+    }
     
-    actionsDisposable.add(combineLatest(context.engine.payments.starsTopUpOptions(), products).startStrict(next: { value, products in
-        
-        let options:[State.Option] = value.compactMap { value in
-            let product = products.first(where: { $0.id == value.storeProductId })
-            return .init(amount: value.count, price: value.amount, currency: value.currency, id: "\(value.count)", storeProduct: product)
-        }
-        updateState { current in
-            var current = current
-            current.premiumProducts = products
-            current.options = options
-            return current
-        }
-    }))
+    
+  
     
     actionsDisposable.add(starsContext.state.startStrict(next: { state in
         updateState { current in
@@ -1075,12 +1093,18 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     
     let buyNonStore:(State.Option)->Void = { option in
         
-        let source: BotPaymentInvoiceSource = .stars(option: option.native)
+        let invoiceSource: BotPaymentInvoiceSource
+        switch source {
+        case let .gift(peer):
+            invoiceSource = .starsGift(peerId: peer.id, count: option.native.count, currency: option.native.currency, amount: option.native.amount)
+        default:
+            invoiceSource = .stars(option: option.native)
+        }
         
-        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: window)
+        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: invoiceSource), for: window)
 
         _ = signal.start(next: { invoice in
-            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+            showModal(with: PaymentsCheckoutController(context: context, source: invoiceSource, invoice: invoice, completion: { status in
                 switch status {
                 case .paid:
                     PlayConfetti(for: window, stars: true)
@@ -1115,7 +1139,14 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             }
         })
         
-        let purpose: AppStoreTransactionPurpose = .stars(count: option.amount, currency: storeProduct.priceCurrencyAndAmount.currency, amount: storeProduct.priceCurrencyAndAmount.amount)
+        let purpose: AppStoreTransactionPurpose
+        switch source {
+        case let .gift(peer):
+            purpose = .starsGift(peerId: peer.id, count: option.native.count, currency: storeProduct.priceCurrencyAndAmount.currency, amount: storeProduct.priceCurrencyAndAmount.amount)
+        default:
+            purpose = .stars(count: option.amount, currency: storeProduct.priceCurrencyAndAmount.currency, amount: storeProduct.priceCurrencyAndAmount.amount)
+        }
+        
         let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
                  |> deliverOnMainQueue).start(next: { [weak lockModal] available in
             if available {
@@ -1198,8 +1229,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, openSubscription: { subscription in
         showModal(with: Star_SubscriptionScreen(context: context, subscription: subscription), for: window)
     }, openRecommendedApps: {
-        //TODOLANG
-        showModalText(for: window, text: "Not Supported Yet")
+        showModal(with: Star_AppExamples(context: context), for: window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

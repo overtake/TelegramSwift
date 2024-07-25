@@ -427,7 +427,9 @@ protocol PeerMediaSearchable : AnyObject {
             return strings().peerMediaGifs
         }
         if self == .stories {
-            if peer is TelegramChannel {
+            if peer?.isBot == true {
+                return strings().peerMediaPreview
+            } else if peer is TelegramChannel {
                 return strings().peerMediaPosts
             } else {
                 return strings().peerMediaStories
@@ -563,9 +565,8 @@ protocol PeerMediaSearchable : AnyObject {
     private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
      
-    private let storyListContext: PeerStoryListContext
-    private let archiveStoryListContext: PeerStoryListContext?
-
+    private let storyListContext: StoryListContext
+    private let archiveStoryListContext: StoryListContext?
     private let threadInfo: ThreadInfo?
         
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
@@ -594,7 +595,7 @@ protocol PeerMediaSearchable : AnyObject {
         }
     }
     
-     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil) {
+     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil, isBot: Bool) {
         self.externalSearchData = externalSearchData
         self.peerId = peerId
         self.threadInfo = threadInfo
@@ -606,7 +607,12 @@ protocol PeerMediaSearchable : AnyObject {
         }
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
-        self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
+         if isBot {
+             self.storyListContext = BotPreviewStoryListContext(account: context.account, engine: context.engine, peerId: peerId, language: nil, assumeEmpty: false)
+         } else {
+             self.storyListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false)
+         }
+         
         if peerId == context.peerId, threadInfo == nil, isProfileIntended {
             let archiveStoryListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true)
             self.archiveStoryListContext = archiveStoryListContext
@@ -1460,7 +1466,11 @@ protocol PeerMediaSearchable : AnyObject {
                 case .archiveStories:
                     string = strings().sharedMediaArchiveStoryCountCountable(count)
                 case .stories:
-                    string = strings().sharedMediaStoryCountCountable(count)
+                    if self?.peer?.isBot == true {
+                        string = strings().sharedMediaBotPreviewCountCountable(count)
+                    } else {
+                        string = strings().sharedMediaStoryCountCountable(count)
+                    }
                 case .commonGroups:
                     string = strings().sharedMediaCommonGroupsCountCountable(count)
                 case .saved:

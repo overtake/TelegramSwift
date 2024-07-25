@@ -371,18 +371,18 @@ private final class HeaderItemView : GeneralContainableRowView {
             }
             current.setPeer(account: item.context.account, peer: item.peer._asPeer())
             
-            do {
-                let current: ImageView
-                if let view = self.subBadgeView {
-                    current = view
-                } else {
-                    current = ImageView()
-                    self.subBadgeView = current
-                    addSubview(current)
-                }
-                current.image = theme.icons.avatar_star_badge_large_gray
-                current.sizeToFit()
-            }
+//            do {
+//                let current: ImageView
+//                if let view = self.subBadgeView {
+//                    current = view
+//                } else {
+//                    current = ImageView()
+//                    self.subBadgeView = current
+//                    addSubview(current)
+//                }
+//                current.image = theme.icons.avatar_star_badge_large_gray
+//                current.sizeToFit()
+//            }
             
         }
         
@@ -520,6 +520,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     var procced = false
     
     let starsContext = context.starsContext
+    
+    starsContext.load(force: true)
     
     let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil)
     

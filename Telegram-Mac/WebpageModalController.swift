@@ -40,7 +40,9 @@ private class NoScrollWebView: WKWebView {
     override func scrollWheel(with theEvent: NSEvent) {
         super.scrollWheel(with: theEvent)
     }
-
+    override var isOpaque: Bool {
+        return false
+    }
 }
 
 private let durgerKingBotIds: [Int64] = [5104055776, 2200339955]
@@ -268,6 +270,8 @@ private final class WebpageView : View {
     }
 
     
+    var standalone: Bool = true
+    
     private let loading: LinearProgressControl = LinearProgressControl(progressHeight: 2)
 
     
@@ -337,12 +341,14 @@ private final class WebpageView : View {
         addSubview(loading)
         addSubview(headerView)
         
-        
+      //  webview.setValue(false, forKey: "drawsBackground")
+
         webview.wantsLayer = true
                 
         updateLocalizationAndTheme(theme: theme)
 
     }
+    
     
     var _backgroundColor: NSColor? {
         didSet {
@@ -364,7 +370,7 @@ private final class WebpageView : View {
         super.updateLocalizationAndTheme(theme: theme)
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
         self.backgroundColor = _backgroundColor ?? theme.colors.background
-        
+        webview.background = theme.colors.background
         
         if let key = _headerColorKey {
             if key == "bg_color" {
@@ -482,7 +488,7 @@ private final class WebpageView : View {
 
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: self.headerView, frame: NSMakeRect(0, 0, size.width, 50))
+        transition.updateFrame(view: self.headerView, frame: NSMakeRect(0, 0, size.width, standalone ? 50 : 0))
         if let mainButton = mainButton {
             transition.updateFrame(view: mainButton, frame: NSMakeRect(0, size.height - 50, size.width, 50))
             self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - mainButton.frame.height - self.headerView.frame.height)
@@ -514,50 +520,71 @@ private final class WebpageView : View {
 }
 
 
+struct WebpageModalState : Equatable {
+    var backgroundColor: NSColor?
+    var headerColor: NSColor?
+    var headerColorKey: String?
+    var hasSettings: Bool = false
+    var isBackButton: Bool = false
+    var needConfirmation: Bool = false
+}
+
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate {
+    
+    private let statePromise = ValuePromise(WebpageModalState(), ignoreRepeated: true)
+    private let stateValue = Atomic(value: WebpageModalState())
+    private func updateState(_ f:(WebpageModalState) -> WebpageModalState) {
+        statePromise.set(stateValue.modify (f))
+    }
+    
+    var externalState: Signal<WebpageModalState, NoError> {
+        return statePromise.get()
+    }
     
     struct BotData {
         let queryId: Int64?
         let bot: Peer
-        let peerId: PeerId
+        let peerId: PeerId?
         let buttonText: String
         let keepAliveSignal: Signal<Never, KeepWebViewError>?
     }
     
+    
     enum RequestData {
-        case simple(url: String, bot: Peer, buttonText: String, source: RequestSimpleWebViewSource, hasSettings: Bool)
-        case normal(url: String?, peerId: PeerId, threadId: Int64?, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
+        case simple(url: String, botdata: BotData, source: RequestSimpleWebViewSource)
+        case normal(url: String, botdata: BotData)
+        
+        var url: String {
+            switch self {
+            case let .simple(url, _, _):
+                return url
+            case let .normal(url, _):
+                return url
+            }
+        }
         
         var bot: Peer {
             switch self {
-            case let .simple(_, bot, _, _, _):
-                return bot
-            case let .normal(_, _, _, bot, _, _, _, _, _, _):
-                return bot
+            case let .simple(_, bot, _):
+                return bot.bot
+            case let .normal(_, bot):
+                return bot.bot
             }
         }
         var buttonText: String {
             switch self {
-            case let .simple(_, _, buttonText, _, _):
-                return buttonText
-            case let .normal(_, _, _, _, _, buttonText, _, _, _, _):
-                return buttonText
+            case let .simple(_, botdata, _):
+                return botdata.buttonText
+            case let .normal(_, botdata):
+                return botdata.buttonText
             }
         }
         var isInline: Bool {
             switch self {
-            case let .simple(_, _, _, source, _):
+            case let .simple(_, _, source):
                 return source == .inline
             case .normal:
                 return false
-            }
-        }
-        var hasSettings: Bool {
-            switch self {
-            case let .simple(_, _, _, _, hasSettings):
-                return hasSettings
-            case let .normal(_, _, _, _, _, _, _, _, hasSettings, _):
-                return hasSettings
             }
         }
     }
@@ -602,7 +629,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var counter: Int = 0
     private let title: String
     private let thumbFile: TelegramMediaFile?
-    
+    private var browser: BrowserLinkManager? = nil
+
     private var keepAliveDisposable: Disposable?
     private let installedBotsDisposable = MetaDisposable()
     private let requestWebDisposable = MetaDisposable()
@@ -610,12 +638,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var iconDisposable: Disposable?
     
     private var installedBots:[PeerId] = []
-    private var chatInteraction: ChatInteraction?
     
     private let laContext = LAContext()
 
     
-    private var needCloseConfirmation = false
+    private var needCloseConfirmation = false {
+        didSet {
+            updateState { current in
+                var current = current
+                current.needConfirmation = needCloseConfirmation
+                return current
+            }
+        }
+    }
     
     fileprivate let loadingProgressPromise = Promise<CGFloat?>(nil)
     
@@ -625,18 +660,35 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var _backgroundColor: NSColor? {
         didSet {
             genericView._backgroundColor = _backgroundColor
+            updateState { current in
+                var current = current
+                current.backgroundColor = _backgroundColor
+                return current
+            }
         }
     }
     private var _headerColorKey: String? {
         didSet {
             genericView._headerColorKey = _headerColorKey
+            updateState { current in
+                var current = current
+                current.headerColorKey = _headerColorKey
+                return current
+            }
         }
     }
     private var _headerColor: NSColor? {
         didSet {
             genericView._headerColor = _headerColor
+            updateState { current in
+                var current = current
+                current.headerColor = _headerColor
+                return current
+            }
         }
     }
+    
+    private let apperanceDisposable = MetaDisposable()
     
     private var botPeer: Peer? = nil
     
@@ -655,17 +707,28 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     private var biometryDisposable: Disposable?
     
-    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil) {
+    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil, fromMenu: Bool? = nil, hasSettings: Bool = false, browser: BrowserLinkManager? = nil) {
         self.url = url
         self.requestData = requestData
         self.data = nil
-        self.chatInteraction = chatInteraction
+        self.hasSettings = hasSettings
+        self._fromMenu = fromMenu
+        self.browser = browser
         self.context = context
         self.title = title
         self.effectiveSize = effectiveSize
         self.thumbFile = thumbFile
         self.botPeer = botPeer
         super.init(frame: NSMakeRect(0,0,380,450))
+    }
+    
+    private let _fromMenu: Bool?
+    
+    var fromMenu: Bool {
+        if let _fromMenu {
+            return _fromMenu
+        }
+        return false
     }
     
     private var preloadData: (TelegramMediaFile, AccountContext)? {
@@ -678,7 +741,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         genericView.update(inProgress: false, preload: self.preloadData, animated: true)
-//        self.updateLocalizationAndTheme(theme: theme)
     }
     
     override var dynamicSize:Bool {
@@ -696,11 +758,16 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         "window.webkit.messageHandlers.performAction.postMessage({'eventName': eventName, 'eventData': eventData}); " +
         "}; " +
         "var TelegramWebviewProxy = new TelegramWebviewProxyProto();"
+        
+        let selectionSource = "var css = '*{-webkit-touch-callout:none;} :not(input):not(textarea):not([\"contenteditable\"=\"true\"]){-webkit-user-select:none;}';"
+                + " var head = document.head || document.getElementsByTagName('head')[0];"
+                + " var style = document.createElement('style'); style.type = 'text/css';" +
+                " style.appendChild(document.createTextNode(css)); head.appendChild(style);"
+
 
         let configuration = WKWebViewConfiguration()
         let userController = WKUserContentController()
         
-//        #if DEBUG
         if #available(macOS 14.0, *) {
             if !FastSettings.isDefaultAccount(context.account.id.int64) {
                 if let uuid = FastSettings.getUUID(context.account.id.int64) {
@@ -708,10 +775,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     configuration.websiteDataStore = store
                 }
             }
-            
         }
-//        #endif
-        
        
         
 
@@ -721,6 +785,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userController.addUserScript(userScript)
+        
+        let selectionScript = WKUserScript(source: selectionSource, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        userController.addUserScript(selectionScript)
+
         
 
         userController.add(WeakScriptMessageHandler { [weak self] message in
@@ -764,17 +832,26 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self?.close()
             return .invoked
         }, with: self, for: .W, priority: responderPriority, modifierFlags: [.command])
+        
+        apperanceDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
+            self?.updateLocalizationAndTheme(theme: appearance.presentation)
+        }))
+    }
+    
+    override var window: Window? {
+        return browser?.window ?? _window ?? view.window as? Window
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeObserver(for: self)
+        apperanceDisposable.set(nil)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        genericView.standalone = self.browser == nil
         
         genericView._holder.uiDelegate = self
         genericView._holder.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: [], context: nil)
@@ -787,70 +864,26 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         readyOnce()
         let context = self.context
         
-        
         if let requestData = requestData {
-            
-            
             switch requestData {
-            case let .simple(url, bot, _, source, _):
-                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, source: source, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
-                
-                requestWebDisposable.set(signal.start(next: { [weak self] url in
-                    self?.url = url.url
-                    self?.genericView.load(url: url.url, preload: self?.preloadData, animated: true)
-                }, error: { [weak self] error in
-                    switch error {
-                    case .generic:
-                        if let window = self?.window {
-                            alert(for: window, info: strings().unknownError)
-                        }
+            case let .simple(url, result, _), let .normal(url, result):
+                self.url = url
+                self.genericView.load(url: url, preload: self.preloadData, animated: true)
+                if let keepAliveSignal = result.keepAliveSignal {
+                    self.keepAliveDisposable = (keepAliveSignal |> deliverOnMainQueue).start(error: { [weak self] _ in
                         self?.close()
-                    }
-                }))
-            case .normal(let url, let peerId, let threadId, let bot, let replyTo, let buttonText, let payload, let fromMenu, _, let complete):
-                
-                
-                
-                
-                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), fromMenu: fromMenu, replyToMessageId: replyTo, threadId: threadId) |> deliverOnMainQueue
-                requestWebDisposable.set(signal.start(next: { [weak self] result in
-                    
-                    
-                    self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
-                    self?.genericView.load(url: result.url, preload: self?.preloadData, animated: true)
-                    if let keepAliveSignal = result.keepAliveSignal {
-                        self?.keepAliveDisposable = (keepAliveSignal
-                                                     |> deliverOnMainQueue).start(error: { [weak self] _ in
-                            self?.close()
-                        }, completed: { [weak self] in
-                            self?.close()
-                            complete?()
-                        })
-                    }
-                    
-                    self?.url = result.url
-                }, error: { [weak self] error in
-                    switch error {
-                    case .generic:
-                        if let window = self?.window {
-                            alert(for: window, info: strings().unknownError)
-                        }
+                    }, completed: { [weak self] in
                         self?.close()
-                    }
-                }))
+                    })
+                }
             }
-            
-            
-           
-            
         } else {
             self.genericView.load(url: url, preload: self.preloadData, animated: true)
         }
         
         let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
-        installedBotsDisposable.set(combineLatest(bots, appearanceSignal).start(next: { [weak self] items, appearance in
+        installedBotsDisposable.set(bots.start(next: { [weak self] items in
             self?.installedBots = items.filter { $0.flags.contains(.showInAttachMenu) }.map { $0.peer.id }
-            self?.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
         
         guard let botPeer = requestData?.bot else {
@@ -981,9 +1014,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
-            let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
+            let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: nil, hashtag: nil, command: nil, applyProxy: nil, confirm: true)
             switch link {
-            case .external:
+            case .external, .shareUrl:
                 break
             default:
                 self.close()
@@ -1006,7 +1039,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
                                 
-                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
+                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: nil, hashtag: nil, command: nil, applyProxy: nil, confirm: true)
                 switch link {
                 case .external:
                     break
@@ -1024,11 +1057,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     override func measure(size: NSSize) {
-        let s = NSMakeSize(size.width + 20, size.height + 20)
-        let size = NSMakeSize(420, min(420 + 420 * 0.6, s.height - 80))
-        let rect = size.bounds.insetBy(dx: 10, dy: 10)
-        self.genericView.frame = rect
-        self.genericView.updateLayout(rect.size, transition: .immediate)
+        if browser == nil  {
+            let s = NSMakeSize(size.width + 20, size.height + 20)
+            let size = NSMakeSize(420, min(420 + 420 * 0.6, s.height - 80))
+            let rect = size.bounds.insetBy(dx: 10, dy: 10)
+            self.genericView.frame = rect
+            self.genericView.updateLayout(rect.size, transition: .immediate)
+        }
     }
     
     
@@ -1039,6 +1074,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         requestWebDisposable.dispose()
         iconDisposable?.dispose()
         biometryDisposable?.dispose()
+        apperanceDisposable.dispose()
         if isLoaded() {
             self.genericView._holder.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
         }
@@ -1053,9 +1089,22 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var isBackButton: Bool = false {
         didSet {
             updateLocalizationAndTheme(theme: theme)
+            updateState { current in
+                var current = current
+                current.isBackButton = isBackButton
+                return current
+            }
         }
     }
-    private var hasSettings: Bool = false
+    private var hasSettings: Bool = false {
+        didSet {
+            updateState { current in
+                var current = current
+                current.hasSettings = hasSettings
+                return current
+            }
+        }
+    }
 
     fileprivate func sendClipboardTextEvent(requestId: String, fillData: Bool) {
         var paramsString: String
@@ -1114,9 +1163,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 self?.webAppReady()
             })
         case "web_app_switch_inline_query":
-            if let interaction = chatInteraction, let data = self.requestData {
-                if data.isInline == true, let json = json, let query = json["query"] as? String {
-                    let address = (data.bot.addressName ?? "")
+            if let data = self.bot {
+                if let json = json, let query = json["query"] as? String {
+                    let address = (data.addressName ?? "")
                     let inputQuery = "@\(address)" + " " + query
 
                     if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
@@ -1135,7 +1184,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     } else {
                         self.needCloseConfirmation = false
                         self.close()
-                        interaction.updateInput(with: inputQuery)
+                        let action: ChatInitialAction = .inputText(text: .init(inputText: inputQuery), behavior: .automatic)
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(data.id), initialAction: action))
                     }
                 }
             }
@@ -1171,34 +1221,64 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
         case "web_app_open_popup":
             if let json = json {
-                let alert:NSAlert = NSAlert()
-                alert.alertStyle = .informational
-                alert.messageText = (json["title"] as? String) ?? appName
-                alert.informativeText = (json["message"] as? String) ?? ""
-                alert.window.appearance = theme.appearance
+                let header = (json["title"] as? String) ?? self.defaultBarTitle
+                let info = (json["message"] as? String) ?? ""
+                
+                
                 let buttons = json["buttons"] as? Array<[NSString : Any]>
+                var ok: (String, Int)?
+                var cancel: (String, Int)?
+                var third: (String, Int)?
+                
+                
                 if let buttons = buttons {
-                    for button in buttons {
+                    for (i, button) in buttons.enumerated() {
                         if (button["type"] as? String) == "default" {
-                            alert.addButton(withTitle: button["text"] as? String ?? "")
+                            ok = (button["text"] as? String ?? "", i)
                         } else if (button["type"] as? String) == "ok" {
-                            alert.addButton(withTitle: strings().alertOK)
+                            ok = (strings().alertOK, i)
                         } else if (button["type"] as? String) == "close" {
-                            alert.addButton(withTitle: strings().navigationClose)
+                            ok = (strings().navigationClose, i)
                         } else if (button["type"]  as? String) == "cancel" {
-                            alert.addButton(withTitle: strings().alertCancel)
+                            cancel = (strings().alertCancel, i)
                         } else if (button["type"]  as? String) == "destructive" {
-                            alert.addButton(withTitle: button["text"] as? String ?? "")
+                            third = (button["text"] as? String ?? "", i)
                         }
                     }
                 }
-                if !alert.buttons.isEmpty {
-                    alert.beginSheetModal(for: window, completionHandler: { [weak self] response in
-                        let index = response.rawValue - 1000
-                        if let id = buttons?[index]["id"] as? String {
+                
+                if ok != nil || cancel != nil || third != nil {
+                    let active = [ok, cancel, third].compactMap { $0 }
+                    
+                    let invokeId:(Int)->Void = { [weak self] idx in
+                        if let id = buttons?[idx]["id"] as? String {
                             self?.poupDidClose(id)
                         }
-                    })
+                    }
+                    
+                    if active.count == 1 {
+                        alert(for: window, header: header, info: info, ok: active[0].0, completion: {
+                            invokeId(active[0].1)
+                        })
+                    } else {
+                        verifyAlert_button(for: window, header: header, information: info, ok: ok?.0 ?? strings().modalOK, cancel: cancel?.0 ?? strings().modalCancel, option: third?.0, successHandler: { succes in
+                            switch succes {
+                            case .thrid:
+                                if let third {
+                                    invokeId(third.1)
+                                }
+                            case .basic:
+                                if let ok {
+                                    invokeId(ok.1)
+                                }
+                            }
+                        }, cancelHandler: {
+                            if let cancel {
+                                invokeId(cancel.1)
+                            }
+                        })
+
+                    }
                 }
             }
         case "web_app_open_link":
@@ -1233,26 +1313,22 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_open_tg_link":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let path_full = json["path_full"] as? String {
-                    
-                    var openInfo = chatInteraction?.openInfo
-                    
+                                        
                     let previous = context.bindings.rootNavigation().controller
                     
-                    if openInfo == nil {
-                        openInfo = { [weak self] peerId, toChat, messageId, initialAction in
-                            if toChat || initialAction != nil {
-                                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
-                            } else {
-                                PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-                            }
-                            if initialAction != nil {
-                                self?.closeAnyway()
-                            }
-                            context.window.makeKeyAndOrderFront(nil)
-                        }
-                    }
+                   
                     
-                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: { [weak self] peerId, toChat, messageId, initialAction in
+                        if toChat || initialAction != nil {
+                            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+                        } else {
+                            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                        }
+                        if initialAction != nil {
+                            self?.closeAnyway()
+                        }
+                        context.window.makeKeyAndOrderFront(nil)
+                    }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                    
                     execute(inapp: link, window: self.window, afterComplete: { [weak self, weak previous] _ in
                         let current = context.bindings.rootNavigation().controller
@@ -1595,6 +1671,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private func webAppReady() {
         genericView.update(inProgress: false, preload: self.preloadData, animated: true)
+        self.updateLocalizationAndTheme(theme: theme)
     }
     
     
@@ -1615,10 +1692,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         })
     }
     
-    private func backButtonPressed() {
+    func backButtonPressed() {
         self.sendEvent(name: "back_button_pressed", data: nil)
     }
-    private func settingsPressed() {
+    func settingsPressed() {
         self.sendEvent(name: "settings_button_pressed", data: nil)
     }
     
@@ -1650,46 +1727,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 self?.close()
             }
         }, contextMenu: { [weak self] in
-            var items:[ContextMenuItem] = []
-
-            items.append(.init(strings().webAppReload, handler: { [weak self] in
-                self?.reloadPage()
-            }, itemImage: MenuAnimation.menu_reload.value))
-
-            if self?.hasSettings == true {
-                items.append(.init(strings().webAppSettings, handler: { [weak self] in
-                    self?.settingsPressed()
-                }, itemImage: MenuAnimation.menu_gear.value))
-            }
-            
-            if let installedBots = self?.installedBots {
-                if let data = self?.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
-                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                        if installedBots.contains(where: { $0 == bot.id }) {
-                            items.append(ContextSeparatorItem())
-                            items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
-                                self?.removeBotFromAttachMenu(bot: bot)
-                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                        } else {
-                            items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
-                                self?.addBotToAttachMenu(bot: bot)
-                            }, itemImage: MenuAnimation.menu_plus.value))
-                        }
-                    }
-                }
-            }
-            
-            if self?.isBackButton == true {
-                items.append(.init(strings().webAppClose, handler: { [weak self] in
-                    self?.close()
-                }, itemImage: MenuAnimation.menu_clear_history.value))
-            }
-            
-            let menu = ContextMenu()
-            for item in items {
-                menu.addItem(item)
-            }
-            return menu
+            return self?.contextMenu()
         }, context: context, bot: self.bot)
 
     }
@@ -1699,6 +1737,46 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
 
     
+    func contextMenu() -> ContextMenu {
+        var items:[ContextMenuItem] = []
+
+        items.append(.init(strings().webAppReload, handler: { [weak self] in
+            self?.reloadPage()
+        }, itemImage: MenuAnimation.menu_reload.value))
+
+        if self.hasSettings == true {
+            items.append(.init(strings().webAppSettings, handler: { [weak self] in
+                self?.settingsPressed()
+            }, itemImage: MenuAnimation.menu_gear.value))
+        }
+        
+        if let data = self.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
+            if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+                if installedBots.contains(where: { $0 == bot.id }) {
+                    items.append(ContextSeparatorItem())
+                    items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
+                        self?.removeBotFromAttachMenu(bot: bot)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                } else {
+                    items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
+                        self?.addBotToAttachMenu(bot: bot)
+                    }, itemImage: MenuAnimation.menu_plus.value))
+                }
+            }
+        }
+        
+        if self.isBackButton == true, browser == nil {
+            items.append(.init(strings().webAppClose, handler: { [weak self] in
+                self?.close()
+            }, itemImage: MenuAnimation.menu_clear_history.value))
+        }
+        
+        let menu = ContextMenu()
+        for item in items {
+            menu.addItem(item)
+        }
+        return menu
+    }
 
     
     private func handleSendData(data string: String) {
@@ -1723,11 +1801,18 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.close()
     }
     
-    private func closeAnyway() {
-        self.window?.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
-            self?._window?.orderOut(nil)
-            self?._window = nil
-        })
+    func closeAnyway() {
+        if let browser {
+            browser.close(confirm: false)
+        } else {
+            if let window {
+                closeAllModals(window: window)
+            }
+            self.window?.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
+                self?._window?.orderOut(nil)
+                self?._window = nil
+            })
+        }
     }
     
     override var shouldCloseAllTheSameModals: Bool {
@@ -1735,13 +1820,18 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
-        if needCloseConfirmation, let window {
-            verifyAlert_button(for: window, information: strings().webpageConfirmClose, ok: strings().webpageConfirmOk, successHandler: { [weak self] _ in
-                self?.closeAnyway()
-            })
+        if let browser {
+            browser.close(confirm: needCloseConfirmation)
         } else {
-            self.closeAnyway()
+            if needCloseConfirmation, let window {
+                verifyAlert_button(for: window, information: strings().webpageConfirmClose, ok: strings().webpageConfirmOk, successHandler: { [weak self] _ in
+                    self?.closeAnyway()
+                })
+            } else {
+                self.closeAnyway()
+            }
         }
+        
     }
 
     private func reloadPage() {
@@ -1835,7 +1925,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     override var containerBackground: NSColor {
         return .clear
     }
-
+    
 }
 
 

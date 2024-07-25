@@ -49,6 +49,7 @@ open class ContextMenuItem : NSMenuItem {
         case cmdc = "⌘C"
         case cmde = "⌘E"
         case cmdr = "⌘R"
+        case cmdw = "⌘W"
     }
     
     open func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {

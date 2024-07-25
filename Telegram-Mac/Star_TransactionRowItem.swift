@@ -78,19 +78,25 @@ final class Star_TransactionItem : GeneralRowItem {
                 break
             }
         } else {
-            if let desc = transaction.native.description {
-                descString = desc
+            if transaction.native.flags.contains(.isGift) {
+                //TODO LANG
+                descString = "Received Gift"
             } else {
-                if transaction.amount > 0 {
-                    if transaction.native.flags.contains(.isRefund) {
-                        descString = strings().starListRefund
-                    } else {
-                        descString = strings().starsTransactionTopUp
-                    }
+                if let desc = transaction.native.description {
+                    descString = desc
                 } else {
-                    descString = ""
+                    if transaction.amount > 0 {
+                        if transaction.native.flags.contains(.isRefund) {
+                            descString = strings().starListRefund
+                        } else {
+                            descString = strings().starsTransactionTopUp
+                        }
+                    } else {
+                        descString = ""
+                    }
                 }
             }
+           
         }
         
         if let descString {
@@ -305,19 +311,19 @@ private final class TransactionView : GeneralContainableRowView {
             }
             switch item.transaction.type.source {
             case .appstore:
-                current.image = NSImage(resource: .iconAppStoreStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowStars).precomposed()
             case .fragment:
-                current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
             case .ads:
-                current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
             case .playmarket:
-                current.image = NSImage(resource: .iconAndroidStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowAndroid).precomposed()
             case .peer:
                 break
             case .premiumbot:
-                current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowPremiumBot).precomposed()
             case .unknown:
-                current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
             }
         }
 

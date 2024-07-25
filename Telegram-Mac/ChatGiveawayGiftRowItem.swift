@@ -33,7 +33,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     let data: GiftData
     
     
-    
+    let textColor: NSColor
     
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
@@ -48,12 +48,12 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         default:
             fatalError()
         }
-        
-        
+                
+        self.textColor = data.fromGiveaway ? theme.chat.textColor(isIncoming, object.renderType == .bubble) : theme.chatServiceItemTextColor
+
 
         super.init(initialSize, chatInteraction, context, object, theme: theme)
         
-        let textColor = data.fromGiveaway ? theme.chat.textColor(isIncoming, object.renderType == .bubble) : theme.chatServiceItemTextColor
         
         
         let channelName: String
@@ -79,7 +79,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
             title = strings().chatGiftTitleGift
         }
         
-        _ = header_attr.append(string: title, color: wpPresentation.text, font: .normal(.text))
+        _ = header_attr.append(string: title, color: textColor, font: .normal(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
@@ -105,7 +105,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         }
         
 
-        _ = info_attr.append(string: infoText, color: wpPresentation.text, font: .normal(.text))
+        _ = info_attr.append(string: infoText, color: textColor, font: .normal(.text))
         info_attr.detectBoldColorInString(with: .medium(.text))
         
         self.infoText = .init(info_attr, alignment: .center, alwaysStaticItems: true)
@@ -257,6 +257,7 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
             } else {
                 current = VisualEffect(frame: container.bounds)
                 self.visualEffect = current
+                current.alphaValue = 0.8
                 container.addSubview(current, positioned: .below, relativeTo: container.subviews.first)
             }
             current.bgColor = item.presentation.blurServiceColor
@@ -275,8 +276,8 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         
         action.set(font: .medium(.text), for: .Normal)
         if item.shouldBlurService {
-            action.set(color: item.wpPresentation.text, for: .Normal)
-            action.layer?.borderColor = item.wpPresentation.text.cgColor
+            action.set(color: item.textColor, for: .Normal)
+            action.layer?.borderColor = item.textColor.cgColor
         } else {
             action.set(color: item.wpPresentation.activity.main, for: .Normal)
             action.layer?.borderColor = item.wpPresentation.activity.main.cgColor

@@ -428,7 +428,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let threadData = source.threadData {
                                 photos.append(peerAvatarImage(account: account, photo: .topic(threadData.info, message.threadId == 1), genCap: false) |> map { data in return (message.id, data.0)})
                             } else {
-                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
+                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message, nil), genCap: false) |> map { data in return (message.id, data.0)})
                             }
                         }
                     }

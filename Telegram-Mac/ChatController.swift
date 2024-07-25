@@ -4157,7 +4157,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     if let navigation = strongSelf.navigationController {
                         if mode.isSavedMessagesThread {
-                            let controller = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo)
+                            let controller = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isBot: false)
                             navigation.push(controller)
                         } else {
                             PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories)
@@ -4440,7 +4440,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             case let .url(url):
                                 if isGame {
                                     WebappWindow.makeAndOrderFront(WebGameViewController(context, strongSelf.chatInteraction.peerId, messageId, url))
-                                   // strongSelf.navigationController?.push(WebGameViewController(context, strongSelf.chatInteraction.peerId, messageId, url))
                                 } else {
                                     execute(inapp: .external(link: url, !(strongSelf.chatInteraction.peer?.isVerified ?? false)))
                                 }
@@ -8202,7 +8201,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     switch confirm {
                     case .thrid:
-                        execute(inapp: inAppLink.followResolvedName(link: "@spambot", username: "spambot", postId: nil, context: context, action: nil, callback: { [weak strongSelf] peerId, openChat, postid, initialAction in
+                        execute(inapp: inAppLink.followResolvedName(link: "@spambot", username: "spambot", postId: nil, forceProfile: false, context: context, action: nil, callback: { [weak strongSelf] peerId, openChat, postid, initialAction in
                             strongSelf?.chatInteraction.openInfo(peerId, openChat, postid, initialAction)
                         }))
                     default:

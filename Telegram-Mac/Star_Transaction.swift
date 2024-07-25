@@ -49,44 +49,58 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let infoLayout: TextViewLayout
     fileprivate let descLayout: TextViewLayout?
     fileprivate let incoming: Bool
+    fileprivate let purpose: Star_TransactionPurpose
     
     fileprivate var refund: TextViewLayout?
     fileprivate let arguments: Arguments
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?, arguments: Arguments) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?, purpose: Star_TransactionPurpose, arguments: Arguments) {
         self.context = context
         self.transaction = transaction
         self.peer = peer
         self.arguments = arguments
+        self.purpose = purpose
+        
+        let isGift = purpose == .gift || transaction.flags.contains(.isGift)
         
         let header: String
         let incoming: Bool = transaction.count > 0
-        self.incoming = incoming
-        switch transaction.peer {
-        case .appStore:
-            header = strings().starListTransactionAppStore
-        case .fragment:
-            header = strings().starListTransactionFragment
-        case .playMarket:
-            header = strings().starListTransactionPlayMarket
-        case .premiumBot:
-            header = strings().starListTransactionPremiumBot
-        case .ads:
-            header = strings().starListTransactionAds
-        case .unsupported:
-            header = strings().starListTransactionUnknown
-        case .peer:
-            if !transaction.media.isEmpty {
-                header = strings().starsTransactionMediaPurchase
-            } else {
-                header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
+        let amount: Int64
+        if isGift {
+            header = incoming ? "Received Gift" : "Sent Gift"
+            amount = abs(transaction.count)
+        } else {
+            switch transaction.peer {
+            case .appStore:
+                header = strings().starListTransactionAppStore
+            case .fragment:
+                header = strings().starListTransactionFragment
+            case .playMarket:
+                header = strings().starListTransactionPlayMarket
+            case .premiumBot:
+                header = strings().starListTransactionPremiumBot
+            case .ads:
+                header = strings().starListTransactionAds
+            case .unsupported:
+                header = strings().starListTransactionUnknown
+            case .peer:
+                if !transaction.media.isEmpty {
+                    header = strings().starsTransactionMediaPurchase
+                } else {
+                    header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
+                }
             }
+            amount = transaction.count
         }
+        
+        self.incoming = incoming
         
         self.headerLayout = .init(.initialize(string: header, color: theme.colors.text, font: .medium(18)), alignment: .center)
         
+        
+        
         let attr = NSMutableAttributedString()
-        attr.append(string: "\(incoming ? "+" : "")\(transaction.count) \(clown)", color: incoming ? theme.colors.greenUI : theme.colors.redUI, font: .medium(15))
+        attr.append(string: "\(incoming ? "+" : "")\(amount) \(clown)", color: incoming ? theme.colors.greenUI : (amount > 0 ? theme.colors.text : theme.colors.redUI), font: .normal(15))
         attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.infoLayout = .init(attr)
@@ -119,8 +133,23 @@ private final class HeaderItem : GeneralRowItem {
             self.descLayout = .init(.initialize(string: description, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         } else if let desc = transaction.description {
             self.descLayout = .init(.initialize(string: desc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        } else if isGift {
+            //TODOLANG
+            let text = parseMarkdownIntoAttributedString("Use Stars to unlock content and services on Telegram. [See Examples >](apps)", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            }))
+            
+            self.descLayout = .init(text, alignment: .center)
         } else {
             self.descLayout = nil
+        }
+        
+        self.descLayout?.interactions.processURL = { url in
+            if let url = url as? String {
+                if url == "apps" {
+                    arguments.openApps()
+                }
+            }
         }
         
         if transaction.flags.contains(.isRefund) {
@@ -146,7 +175,15 @@ private final class HeaderItem : GeneralRowItem {
         return HeaderView.self
     }
     override var height: CGFloat {
-        var height = 10 + 80 + 10 + headerLayout.layoutSize.height + 5 + infoLayout.layoutSize.height
+        var height = 10 + 10 + headerLayout.layoutSize.height + 5 + infoLayout.layoutSize.height + 10
+        
+        switch purpose {
+        case .payment:
+            height += 80
+        case .gift:
+            height += 100
+        }
+        
         if let descLayout {
             height += descLayout.layoutSize.height + 5 + 2
         }
@@ -167,6 +204,9 @@ private final class HeaderView : GeneralContainableRowView {
     private let infoContainer: View = View()
     private var outgoingView: ImageView?
     private var descView: TextView?
+    
+    private var giftView: InlineStickerView?
+    
     required init(frame frameRect: NSRect) {
         self.sceneView = GoldenStarSceneView(frame: NSMakeRect(0, 0, frameRect.width, 150))
         super.init(frame: frameRect)
@@ -176,6 +216,8 @@ private final class HeaderView : GeneralContainableRowView {
         infoContainer.addSubview(infoView)
         addSubview(dismiss)
 
+        control.layer?.masksToBounds = false
+        
         self.sceneView.sceneBackground = theme.colors.listBackground
         
         addSubview(infoContainer)
@@ -189,6 +231,8 @@ private final class HeaderView : GeneralContainableRowView {
                 item.arguments.previewMedia()
             }
         }, for: .Click)
+        
+        self.layer?.masksToBounds = false
 
     }
     
@@ -212,10 +256,35 @@ private final class HeaderView : GeneralContainableRowView {
             return
         }
         
-        if let media = item.transaction.media.first, let messageId = item.transaction.paidMessageId {
+        
+        if item.purpose == .gift {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
+            }
+            if let view = self.photo {
+                performSubviewRemoval(view, animated: animated)
+                self.photo = nil
+            }
+            
+            let current: InlineStickerView
+            
+            if let view = self.giftView {
+                current = view
+            } else {
+                current = InlineStickerView(account: item.context.account, file: LocalAnimatedSticker.bestForStarsGift(abs(item.transaction.count)).file, size: NSMakeSize(130, 130), isPlayable: true, playPolicy: .onceEnd, controlContent: false, ignorePreview: true)
+                control.addSubview(current)
+                self.giftView = current
+            }
+            
+        } else if let media = item.transaction.media.first, let messageId = item.transaction.paidMessageId {
+            if let view = self.avatar {
+                performSubviewRemoval(view, animated: animated)
+                self.avatar = nil
+            }
+            if let view = self.giftView {
+                performSubviewRemoval(view, animated: animated)
+                self.giftView = nil
             }
             let current: TransformImageView
             
@@ -261,6 +330,10 @@ private final class HeaderView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
             }
+            if let view = self.giftView {
+                performSubviewRemoval(view, animated: animated)
+                self.giftView = nil
+            }
             let current: TransformImageView
             if let view = self.photo {
                 current = view
@@ -286,7 +359,10 @@ private final class HeaderView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.photo = nil
             }
-            
+            if let view = self.giftView {
+                performSubviewRemoval(view, animated: animated)
+                self.giftView = nil
+            }
             let current: AvatarControl
             if let view = self.avatar {
                 current = view
@@ -379,18 +455,18 @@ private final class HeaderView : GeneralContainableRowView {
     
     override func layout() {
         super.layout()
-        sceneView.centerX(y: -10)
+        sceneView.centerX(y: 0)
         
-        control.centerX(y: 10)
+        control.centerX(y: 20)
         
         avatar?.center()
         photo?.center()
+        giftView?.center()
         outgoingView?.center()
+        dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2)))
         
-        dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2) - 10))
         
-        
-        headerView.centerX(y: 90 + 10)
+        headerView.centerX(y: (giftView != nil ? 110 : 90) + 20)
         
         infoContainer.centerX(y: headerView.frame.maxY + 5)
         infoView.centerY(x: 0)
@@ -410,17 +486,20 @@ private final class Arguments {
     let copyTransaction:(String)->Void
     let openLink:(String)->Void
     let previewMedia:()->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void) {
+    let openApps:()->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
         self.openLink = openLink
         self.previewMedia = previewMedia
+        self.openApps = openApps
     }
 }
 
 private struct State : Equatable {
     var transaction: StarsContext.State.Transaction
+    var purpose: Star_TransactionPurpose
     var peer: EnginePeer?
     var paidPeer: EnginePeer?
 }
@@ -434,11 +513,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .customModern(10)))
-    sectionId += 1
+   // entries.append(.sectionId(sectionId, type: .customModern(10)))
+   // sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, transaction: state.transaction, peer: state.peer, arguments: arguments)
+        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, transaction: state.transaction, peer: state.peer, purpose: state.purpose, arguments: arguments)
     }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -449,12 +528,26 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var rows: [InputDataTableBasedItem.Row] = []
     
     if let peer = state.peer {
-        let from: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(peer._asPeer().displayTitle)](\(peer.id.toInt64()))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+        
+        let fromPeer: String
+        if peer.id == servicePeerId {
+            fromPeer = strings().starTransactionUnknwonUser
+        } else {
+            fromPeer = "[\(peer._asPeer().displayTitle)](peer_id_\(peer.id.toInt64()))"
+        }
+        
+        let from: TextViewLayout = .init(parseMarkdownIntoAttributedString(fromPeer, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, contents)
         })), maximumNumberOfLines: 1, alwaysStaticItems: true)
         
-        from.interactions.processURL = { _ in
-            arguments.openPeer(peer.id)
+        from.interactions.processURL = { url in
+            if let url = url as? String {
+                if url.hasPrefix("peer_id_") {
+                    arguments.openPeer(peer.id)
+                } else {
+                    arguments.openLink(url)
+                }
+            }
         }
         
         let fromText: String
@@ -465,15 +558,27 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         rows.append(.init(left: .init(.initialize(string: fromText, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
-            let control: AvatarControl
-            if let previous = previous as? AvatarControl {
-                control = previous
+            if peer.id == servicePeerId {
+                let control: ImageView
+                if let previous = previous as? ImageView {
+                    control = previous
+                } else {
+                    control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
+                }
+                control.image = NSImage(resource: .iconStarTransactionAnonymous).precomposed()
+                return control
             } else {
-                control = AvatarControl(font: .avatar(6))
+                let control: AvatarControl
+                if let previous = previous as? AvatarControl {
+                    control = previous
+                } else {
+                    control = AvatarControl(font: .avatar(6))
+                }
+                control.setFrameSize(NSMakeSize(20, 20))
+                control.setPeer(account: arguments.context.account, peer: peer._asPeer())
+                return control
             }
-            control.setFrameSize(NSMakeSize(20, 20))
-            control.setPeer(account: arguments.context.account, peer: peer._asPeer())
-            return control
+            
         })))
         
         if let messageId = state.transaction.paidMessageId, let peer = state.paidPeer {
@@ -498,20 +603,46 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             rows.append(.init(left: .init(.initialize(string: strings().starTransactionMessageId, color: theme.colors.text, font: .normal(.text))), right: .init(name: messageIdText)))
 
         }
-    }
-    
-    let transactionId: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(state.transaction.id)](\(state.transaction.id))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), linkAttribute: { contents in
-        return (NSAttributedString.Key.link.rawValue, contents)
-    })), alwaysStaticItems: true)
-    
-    transactionId.interactions.processURL = { inapplink in
-        if let inapplink = inapplink as? String {
-            arguments.copyTransaction(inapplink)
+    } else if state.transaction.flags.contains(.isGift) {
+        let fromPeer: String = strings().starTransactionUnknwonUser
+        
+        let from: TextViewLayout = .init(parseMarkdownIntoAttributedString(fromPeer, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        })), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        
+        from.interactions.processURL = { url in
+            if let url = url as? String {
+                arguments.openLink(url)
+            }
         }
+        
+        let fromText: String = strings().starTransactionFrom
+        
+        rows.append(.init(left: .init(.initialize(string: fromText, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+            let control: ImageView
+            if let previous = previous as? ImageView {
+                control = previous
+            } else {
+                control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
+            }
+            control.image = NSImage(resource: .iconStarTransactionAnonymous).precomposed()
+            return control
+        })))
     }
-
     
-    rows.append(.init(left: .init(.initialize(string: strings().starTransactionId, color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+    if !state.transaction.id.isEmpty {
+        let transactionId: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(state.transaction.id)](\(state.transaction.id))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        })), alwaysStaticItems: true)
+        
+        transactionId.interactions.processURL = { inapplink in
+            if let inapplink = inapplink as? String {
+                arguments.copyTransaction(inapplink)
+            }
+        }        
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionId, color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+    }
+    
     
     rows.append(.init(left: .init(.initialize(string: strings().starTransactionDate, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.transaction.date), color: theme.colors.text, font: .normal(.text))))))
 
@@ -533,7 +664,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction) -> InputDataModalController {
+enum Star_TransactionPurpose {
+    case payment
+    case gift
+}
+
+func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction, purpose: Star_TransactionPurpose = .payment) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -542,7 +678,7 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
     var getTableView:(()->TableView?)? = nil
 
     
-    let initialState = State(transaction: transaction, peer: peer)
+    let initialState = State(transaction: transaction, purpose: purpose, peer: peer)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -608,6 +744,8 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
             let message = Message(TelegramMediaPaidContent(amount: amount, extendedMedia: medias.map { .full(media: $0) }), stableId: 0, messageId: .init(peerId: peer.id, namespace: 0, id: 0))
             showPaidMedia(context: context, medias: medias, parent: message, firstIndex: 0, firstStableId: ChatHistoryEntryId.mediaId(0, message), getTableView?(), nil)
         }
+    }, openApps: {
+        showModal(with: Star_AppExamples(context: context), for: window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

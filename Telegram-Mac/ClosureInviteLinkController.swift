@@ -95,28 +95,28 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     sectionId += 1
     
     
-    //TODOLANG
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_monthly_fee, data: .init(name: "Require Monthly Fee", color: theme.colors.text, type: .switchable(state.requestMonthlyFeeState != nil), viewType: state.requestMonthlyFeeState != nil ? .firstItem : .singleItem, enabled: !state.isEditing, action: {
-        arguments.requestMonthlyFee(state.requestMonthlyFeeState != nil ? nil : .init(inputText: .initialize(string: "500")))
-    })))
-    index += 1
-    
-    
-    if let inputState = state.requestMonthlyFeeState {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_monthly_fee_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return InviteLinkMonthlyFeeRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, enabled: !state.isEditing, state: inputState, usdRate: 0.013, viewType: .lastItem, updateState: arguments.requestMonthlyFee)
-        }))
-    }
-
-    //TODOLANG
-    let text: String
-    if state.isEditing {
-        text = "If you need change the subscription fee, create a new invite link with a different price."
-    } else {
-        text = "Charge a subscription fee from people joining your channel via this link. [Learn More >](https://telegram.org)"
-    }
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: arguments.executeLink), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
+//    //TODOLANG
+//    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_monthly_fee, data: .init(name: "Require Monthly Fee", color: theme.colors.text, type: .switchable(state.requestMonthlyFeeState != nil), viewType: state.requestMonthlyFeeState != nil ? .firstItem : .singleItem, enabled: !state.isEditing, action: {
+//        arguments.requestMonthlyFee(state.requestMonthlyFeeState != nil ? nil : .init(inputText: .initialize(string: "500")))
+//    })))
+//    index += 1
+//    
+//    
+//    if let inputState = state.requestMonthlyFeeState {
+//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_monthly_fee_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+//            return InviteLinkMonthlyFeeRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, enabled: !state.isEditing, state: inputState, usdRate: 0.013, viewType: .lastItem, updateState: arguments.requestMonthlyFee)
+//        }))
+//    }
+//
+//    //TODOLANG
+//    let text: String
+//    if state.isEditing {
+//        text = "If you need change the subscription fee, create a new invite link with a different price."
+//    } else {
+//        text = "Charge a subscription fee from people joining your channel via this link. [Learn More >](https://telegram.org)"
+//    }
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: arguments.executeLink), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//    index += 1
     
     
     if !state.isPublic {

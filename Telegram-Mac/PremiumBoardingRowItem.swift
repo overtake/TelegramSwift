@@ -94,6 +94,10 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
         
     }
     
+    override var additionBorderInset: CGFloat {
+        return 36
+    }
+    
     override var borderColor: NSColor {
         guard let item = item as? PremiumBoardingRowItem else {
             return super.backdorColor

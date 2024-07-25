@@ -399,7 +399,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
             var messageId: MessageId? = nil
             let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch link {
-            case let .followResolvedName(_, _, postId, _, _, _):
+            case let .followResolvedName(_, _, postId, _, _, _, _):
                 if let postId = postId {
                     messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: postId)
                 }

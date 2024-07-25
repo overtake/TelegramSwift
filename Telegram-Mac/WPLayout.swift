@@ -327,7 +327,7 @@ class WPLayout: Equatable {
             let content = self.content
             let link = inApp(for: content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
             switch link {
-            case let .followResolvedName(_, _, postId, _, action, _):
+            case let .followResolvedName(_, _, postId, _, _, action, _):
                 var actionIsSource: Bool = false
                 if case .source = action {
                     actionIsSource = true

@@ -1397,14 +1397,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     
                     let rect = item.rect.insetBy(dx: 0, dy: 0)
                     
-                    let textColor = stickerItem.playPolicy == nil && self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                    let isSelected = stickerItem.playPolicy == nil && self.highlighed
+                    let textColor = isSelected ? theme.colors.underSelectedColor : theme.colors.grayText
                     
                     let view: InlineStickerItemLayer
                     if let current = self.inlineStickerItemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size, current.textColor == textColor {
                         view = current
                     } else {
                         self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
+                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor, isSelected: isSelected)
                         self.inlineStickerItemViews[id] = view
                         view.superview = textView
                         textView.addEmbeddedLayer(view)

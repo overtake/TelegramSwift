@@ -215,7 +215,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
     case foundStories(StoryListContext.State, index: Int, query: String)
     case emptySearch
-    case emptyChannels
+    case emptyList(listType: SearchTags.ListType)
     var stableId: ChatListSearchEntryStableId {
         switch self {
         case let .localPeer(peer, _, secretChat, _, _, _, _):
@@ -242,7 +242,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .topPeers
         case .emptySearch:
             return .emptySearch
-        case .emptyChannels:
+        case .emptyList:
             return .emptySearch
         case .foundStories:
             return .foundStories
@@ -269,7 +269,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return index
         case .emptySearch:
             return 0
-        case .emptyChannels:
+        case .emptyList:
             return 0
         case .foundStories:
             return 0
@@ -337,8 +337,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case .emptyChannels:
-            if case .emptyChannels = rhs {
+        case .emptyList:
+            if case .emptyList = rhs {
                 return true
             } else {
                 return false
@@ -504,7 +504,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 } else {
                     id = .chatList(.init(anonymousSavedMessagesId))
                     mode = .savedMessages(anonymousSavedMessagesId)
-                    peer = RenderedPeer.init(peer: TelegramUser(id: .init(anonymousSavedMessagesId), accessHash: nil, firstName: nil, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil))
+                    peer = RenderedPeer.init(peer: TelegramUser(id: .init(anonymousSavedMessagesId), accessHash: nil, firstName: nil, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil))
                 }
             } else {
                 id = .chatList(message.id.peerId)
@@ -572,11 +572,23 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             return SeparatorRowItem(initialSize, ChatListSearchEntryStableId.separator(index), string: text.uppercased(), right: right?.lowercased(), state: state, border: [.Right])
         case .emptySearch:
             return SearchEmptyRowItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, border: [.Right])
-        case .emptyChannels:
+        case let .emptyList(listType):
             let attr = NSMutableAttributedString()
-            attr.append(string: strings().chatListChannelSearchEmptyTitle, color: theme.colors.darkGrayText, font: .medium(.header))
+            
+            let text1: String
+            let text2: String
+            switch listType {
+            case .bots:
+                text1 = strings().chatListAppsSearchEmptyTitle
+                text2 = strings().chatListAppsSearchEmptyInfo
+            case .channels:
+                text1 = strings().chatListChannelSearchEmptyTitle
+                text2 = strings().chatListChannelSearchEmptyInfo
+            }
+            
+            attr.append(string: text1, color: theme.colors.darkGrayText, font: .medium(.header))
             attr.append(string: "\n")
-            attr.append(string: strings().chatListChannelSearchEmptyInfo, color: theme.colors.darkGrayText, font: .normal(.text))
+            attr.append(string: text2, color: theme.colors.darkGrayText, font: .normal(.text))
             return AnimatedStickerHeaderItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, context: arguments.context, sticker: LocalAnimatedSticker.duck_empty, text: attr, bgColor: theme.colors.background, isFullView: true)
         case let .topPeers(_, articlesEnabled, unreadArticles, selfPeer, peers, unread, online):
             return PopularPeersRowItem(initialSize, stableId: entry.stableId, context: arguments.context, selfPeer: selfPeer, articlesEnabled: articlesEnabled, unreadArticles: unreadArticles, peers: peers, unread: unread, online: online, action: { type in
@@ -625,16 +637,22 @@ struct AppSearchOptions : OptionSet {
 
 
 struct SearchTags : Hashable {
+    
+    enum ListType : Equatable {
+        case channels
+        case bots
+    }
+    
     let messageTags:MessageTags?
     let peerTag: PeerId?
-    let isChannels: Bool
+    let listType: ListType?
     let text: String?
     let publicPosts: Bool
     let myMessages: Bool
-    init(messageTags: MessageTags?, peerTag: PeerId?, isChannels: Bool = false, text: String? = nil, publicPosts: Bool = false, myMessages: Bool = false) {
+    init(messageTags: MessageTags?, peerTag: PeerId?, listType: ListType? = nil, text: String? = nil, publicPosts: Bool = false, myMessages: Bool = false) {
         self.messageTags = messageTags
         self.peerTag = peerTag
-        self.isChannels = isChannels
+        self.listType = listType
         self.text = text
         self.publicPosts = publicPosts
         self.myMessages = myMessages
@@ -643,11 +661,25 @@ struct SearchTags : Hashable {
         return messageTags == nil && peerTag == nil && text == nil && !publicPosts && !myMessages
     }
     
+    var scope: TelegramSearchPeersScope {
+        if let listType {
+            switch listType {
+            case .channels:
+                return .channels
+            case .bots:
+                return .everywhere
+            }
+        } else {
+            return .everywhere
+        }
+        
+    }
+    
     var location: SearchMessagesLocation {
         if let peerTag = peerTag {
             return .peer(peerId: peerTag, fromId: nil, tags: messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
         } else {
-            return .general(scope: isChannels ? .channels : .everywhere, tags: messageTags, minDate: nil, maxDate: nil)
+            return .general(scope: scope, tags: messageTags, minDate: nil, maxDate: nil)
         }
     }
 }
@@ -714,8 +746,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.needUpdateVisibleAfterScroll = true
         genericView.border = [.Right]
         
-        let _ = self.context.engine.peers.requestGlobalRecommendedChannelsIfNeeded().startStandalone()
-
+    
+        
+        
         
         genericView.getBackgroundColor = {
             theme.colors.background
@@ -754,7 +787,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 let link = inApp(for: query as NSString, context: context, peerId: nil, openInfo: callback, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                 
                 switch link {
-                case let .followResolvedName(_, username, _, context, _, _):
+                case let .followResolvedName(_, username, _, _, context, _, _):
                     foundQueryPeers.set(resolveUsername(username: username, context: context))
                 default:
                     foundQueryPeers.set(.single(nil))
@@ -766,8 +799,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 let localPeers:Signal<([RenderedPeer], [PeerId: UnreadSearchBadge], EngineDataMap<TelegramEngine.EngineData.Item.Peer.StoryStats>.Result), NoError> = combineLatest(all.map {
                     return context.account.postbox.searchPeers(query: $0) |> map {
                         $0.filter { peer in
-                            if globalTags.isChannels {
-                                return peer.peer?.isChannel == true
+                            if let listType = globalTags.listType {
+                                switch listType {
+                                case .channels:
+                                    return peer.peer?.isChannel == true
+                                case .bots:
+                                    return peer.peer?.isBot == true
+                                }
                             } else {
                                 return true
                             }
@@ -859,7 +897,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     } else {
                         location = globalTags.location
                         if globalTags.isEmpty {
-                            foundRemotePeers = query.hasPrefix("#") || !options.contains(.chats) || !globalTags.isEmpty ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.isChannels ? .channels : .everywhere)
+                            foundRemotePeers = query.hasPrefix("#") || !options.contains(.chats) || !globalTags.isEmpty ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.scope)
                                 |> delay(0.2, queue: prepareQueue)
                                 |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                     
@@ -1098,12 +1136,39 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return (value.0, value.1, false, value.2, value.3)
                     }
                 
-            } else if query.isEmpty, globalTags.isChannels {
+            } else if query.isEmpty, let listType = globalTags.listType {
                 let channels: Signal<[FoundPeer], NoError> = context.engine.peers.recommendedChannels(peerId: nil) |> map {
                     $0?.channels.map {
                         .init(peer: $0.peer._asPeer(), subscribers: $0.subscribers)
                     } ?? []
                 }
+                
+                let recentApps = context.engine.peers.recentApps() |> mapToSignal { recentAppIds in
+                    return context.engine.data.subscribe(
+                        EngineDataMap(
+                            recentAppIds.map { peerId -> TelegramEngine.EngineData.Item.Peer.Peer in
+                                return TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+                            }
+                        )) |> map  {
+                            (recentAppIds, $0)
+                        }
+                }
+                
+                let recommendedApps = context.engine.peers.recommendedAppPeerIds() |> mapToSignal { allRecommendedAppIds in
+                    if let allRecommendedAppIds {
+                        return context.engine.data.subscribe(
+                            EngineDataMap(
+                                allRecommendedAppIds.map { peerId -> TelegramEngine.EngineData.Item.Peer.Peer in
+                                    return TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+                                }
+                            )) |> map  {
+                                (allRecommendedAppIds, $0)
+                            }
+                    } else {
+                        return .single(([], [:]))
+                    }
+                }
+                
                 let localChannels = context.engine.messages.getAllLocalChannels(count: 100) |> mapToSignal { allChannelIds in
                     return context.engine.data.subscribe(
                         EngineDataMap(
@@ -1136,67 +1201,133 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 }
                      
 
-
                 
-                return combineLatest(queue: prepareQueue, channels, isChannelsRevealed, localChannels) |> map { channels, isChannelsRevealed, localChannels -> ([ChatListSearchEntry], Bool) in
+                
+                return combineLatest(queue: prepareQueue, channels, isChannelsRevealed, localChannels, recommendedApps, recentApps) |> map { channels, isChannelsRevealed, localChannels, recommendedApps, recentApps -> ([ChatListSearchEntry], Bool) in
                     var entries:[ChatListSearchEntry] = []
                     var i:Int = 0
                     var ids:[PeerId:PeerId] = [:]
                     
                     
-                    if !localChannels.0.isEmpty {
+                    let header: String
+                    let popularText: String
+                    switch listType {
+                    case .bots:
+                        header = strings().searchSeparatorAppsYouUse
+                        popularText = strings().searchSeparatorAppsPopular
                         
-                        let list = isChannelsRevealed ? localChannels.0 : Array(localChannels.0.prefix(upTo: 5))
-                        
-                        if localChannels.0.count > 5 {
-                            entries.append(.separator(text: strings().searchSeparatorChannelsJoined, index: -1, state: !isChannelsRevealed ? .short : .all))
+                        if !recentApps.0.isEmpty {
+                            let list = isChannelsRevealed ? recentApps.0 : Array(recentApps.0.prefix(5))
+                            
+                            if recentApps.0.count > 5 {
+                                entries.append(.separator(text: header, index: -1, state: !isChannelsRevealed ? .short : .all))
+                                
+                                for botId in list {
+                                    let peer = recentApps.1[botId] ?? nil
+
+                                    if let peer = peer?._asPeer() as? TelegramUser {
+                                        if ids[botId] == nil {
+                                            ids[botId] = botId
+                                            let stringTheme = PeerStatusStringTheme(titleFont: .medium(.title))
+                                            let subCount = Int(peer.subscriberCount ?? 0)
+                                            let status = peer.subscriberCount == nil ? strings().presenceBot : strings().peerStatusUsersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
+                                            let result = PeerStatusStringResult(.initialize(string: peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
+
+                                            entries.append(.recentlySearch(peer, i, nil, result, .none, true, nil, false))
+                                            i += 1
+
+                                        }
+                                    }
+                                }
+                            }
                         }
                         
-                        for channelId in list {
-                            let subscribers = localChannels.1.3[channelId] ?? 0
-                            let peer = localChannels.1.0[channelId] ?? nil
-                            let notificationSettings = localChannels.1.1[channelId] ?? nil
-                            let unreadCount = localChannels.1.2[channelId] ?? nil
+                        if recommendedApps.0.count > 0 {
+                            entries.append(.separator(text: popularText, index: i, state: .none))
+                            i += 1
+                            for botId in recommendedApps.0 {
+                                let peer = recommendedApps.1[botId] ?? nil
 
-                            let storyStats = localChannels.1.4[channelId] ?? nil
+                                if let peer = peer?._asPeer() as? TelegramUser {
+                                    if ids[botId] == nil {
+                                        ids[botId] = botId
+                                        let stringTheme = PeerStatusStringTheme(titleFont: .medium(.title))
+                                        let subCount = Int(peer.subscriberCount ?? 0)
+                                        let status = peer.subscriberCount == nil ? strings().presenceBot : strings().peerStatusUsersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
+                                        let result = PeerStatusStringResult(.initialize(string: peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
 
-                            if let peer = peer {
-                                if ids[channelId] == nil {
-                                    ids[channelId] = channelId
+                                        entries.append(.recentlySearch(peer, i, nil, result, .none, true, nil, false))
+                                        i += 1
+
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if entries.isEmpty {
+                            entries.append(.emptyList(listType: listType))
+                        }
+                        
+                    case .channels:
+                        header = strings().searchSeparatorChannelsJoined
+                        popularText = strings().searchSeparatorRecommended
+                        
+                        if !localChannels.0.isEmpty {
+                            
+                            let list = isChannelsRevealed ? localChannels.0 : Array(localChannels.0.prefix(upTo: 5))
+                            
+                            if localChannels.0.count > 5 {
+                                entries.append(.separator(text: header, index: -1, state: !isChannelsRevealed ? .short : .all))
+                            }
+                            
+                            for channelId in list {
+                                let subscribers = localChannels.1.3[channelId] ?? 0
+                                let peer = localChannels.1.0[channelId] ?? nil
+                                let notificationSettings = localChannels.1.1[channelId] ?? nil
+                                let unreadCount = localChannels.1.2[channelId] ?? nil
+
+                                let storyStats = localChannels.1.4[channelId] ?? nil
+
+                                if let peer = peer {
+                                    if ids[channelId] == nil {
+                                        ids[channelId] = channelId
+                                        let stringTheme = PeerStatusStringTheme(titleFont: .medium(.title))
+                                        let subCount = Int(subscribers ?? 0)
+                                        let status = subscribers == nil ? strings().peerStatusChannel : strings().peerStatusSubscribersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
+                                        let result = PeerStatusStringResult(.initialize(string: peer._asPeer().displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
+
+                                        entries.append(.recentlySearch(peer._asPeer(), i, nil, result, .none, true, storyStats, false))
+                                        i += 1
+
+                                    }
+                                }
+                            }
+                        }
+                                                                
+                        if channels.count > 0 {
+                            entries.append(.separator(text: popularText, index: i, state: .none))
+                            i += 1
+                            for channel in channels {
+                                if ids[channel.peer.id] == nil {
+                                    ids[channel.peer.id] = channel.peer.id
                                     let stringTheme = PeerStatusStringTheme(titleFont: .medium(.title))
-                                    let subCount = Int(subscribers ?? 0)
-                                    let status = subscribers == nil ? strings().peerStatusChannel : strings().peerStatusSubscribersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
-                                    let result = PeerStatusStringResult(.initialize(string: peer._asPeer().displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
+                                    let subCount = Int(channel.subscribers ?? 0)
+                                    let status = channel.subscribers == nil ? strings().peerStatusChannel : strings().peerStatusSubscribersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
+                                    let result = PeerStatusStringResult(.initialize(string: channel.peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
 
-                                    entries.append(.recentlySearch(peer._asPeer(), i, nil, result, .none, true, storyStats, false))
+                                    entries.append(.recentlySearch(channel.peer, i, nil, result, .none, true, nil, false))
                                     i += 1
 
                                 }
                             }
                         }
-                    }
-                                                            
-                    if channels.count > 0 {
-                        entries.append(.separator(text: strings().searchSeparatorRecommended, index: i, state: .none))
-                        i += 1
-                        for channel in channels {
-                            if ids[channel.peer.id] == nil {
-                                ids[channel.peer.id] = channel.peer.id
-                                let stringTheme = PeerStatusStringTheme(titleFont: .medium(.title))
-                                let subCount = Int(channel.subscribers ?? 0)
-                                let status = channel.subscribers == nil ? strings().peerStatusChannel : strings().peerStatusSubscribersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
-                                let result = PeerStatusStringResult(.initialize(string: channel.peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
-
-                                entries.append(.recentlySearch(channel.peer, i, nil, result, .none, true, nil, false))
-                                i += 1
-
-                            }
+                        
+                        if entries.isEmpty {
+                            entries.append(.emptyList(listType: listType))
                         }
                     }
                     
-                    if entries.isEmpty {
-                        entries.append(.emptyChannels)
-                    }
+                    
                     
                     return (entries.sorted(by: <), false)
                 } |> map {value in
@@ -1388,7 +1519,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         break
                     }
                 }
-            } else if self.searchTags?.isChannels == false || self.searchTags == nil {
+            } else if self.searchTags?.listType == nil || self.searchTags == nil {
                 self.genericView.cancelSelection()
             }
             self.readyOnce()
@@ -1758,7 +1889,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         if let query = query, let peerId = peerId, messageId == nil {
             let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch link {
-            case let .followResolvedName(_, _, postId, _, _, _):
+            case let .followResolvedName(_, _, postId, _, _, _, _):
                 if let postId = postId {
                     messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: postId)
                 }
@@ -1788,8 +1919,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         marked = true
         
-        let isChannels = searchTags?.isChannels == true
-        let close = self.closeNext || (messageId == nil && !isGlobal && !isChannels)
+        let hasScope = searchTags?.listType != nil
+        let close = self.closeNext || (messageId == nil && !isGlobal && !hasScope)
 
         if let message, let tags = self.searchTags {
             let current = context.bindings.rootNavigation().controller as? ChatController
@@ -1799,6 +1930,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 current?.focusExistingMessage(message)
                 return
             }
+        }
+        
+        if let peerId, let tags = self.searchTags, tags.listType == .bots {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+            return
         }
         
         if let id = id {

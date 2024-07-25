@@ -15,17 +15,19 @@ import TGUIKit
 private final class CenterView : TitledBarView {
     let segment: CatalinaStyledSegmentController
     var select:((Int)->Void)? = nil
-    init(controller: ViewController, monetization: Bool, stars: Bool) {
+    init(controller: ViewController, monetization: Bool, stars: Bool, onlyMonetization: Bool) {
         self.segment = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(controller: controller)
         
-        segment.add(segment: .init(title: strings().statsStatistics, handler: { [weak self] in
-            self?.select?(0)
-        }))
-        
-        segment.add(segment: .init(title: strings().statsBoosts, handler: { [weak self] in
-            self?.select?(1)
-        }))
+        if !onlyMonetization {
+            segment.add(segment: .init(title: strings().statsStatistics, handler: { [weak self] in
+                self?.select?(0)
+            }))
+            
+            segment.add(segment: .init(title: strings().statsBoosts, handler: { [weak self] in
+                self?.select?(1)
+            }))
+        }
         if monetization {
             let index = self.segment.count
             segment.add(segment: .init(title: strings().statsMonetization, handler: { [weak self] in
@@ -73,9 +75,11 @@ final class ChannelStatsSegmentController : SectionViewController {
     private let stars: ViewController?
     private let context: AccountContext
     private let peerId: PeerId
-    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool, monetization: Bool = false, stars: Bool = false) {
+    private let onlyMonetization: Bool
+    init(_ context: AccountContext, peerId: PeerId, isChannel: Bool, monetization: Bool = false, stars: Bool = false, onlyMonetization: Bool = false) {
         self.context = context
         self.peerId = peerId
+        self.onlyMonetization = onlyMonetization
         if isChannel {
             self.stats = ChannelStatsViewController(context, peerId: peerId)
             if monetization {
@@ -96,8 +100,10 @@ final class ChannelStatsSegmentController : SectionViewController {
         self.boosts = ChannelBoostStatsController(context: context, peerId: peerId)
 
         var items:[SectionControllerItem] = []
-        items.append(SectionControllerItem(title: { "" }, controller: stats))
-        items.append(SectionControllerItem(title: { "" }, controller: boosts))
+        if !onlyMonetization {
+            items.append(SectionControllerItem(title: { "" }, controller: stats))
+            items.append(SectionControllerItem(title: { "" }, controller: boosts))
+        }
 
         if let monetization = self.monetization {
             items.append(SectionControllerItem(title: { "" }, controller: monetization))
@@ -110,7 +116,7 @@ final class ChannelStatsSegmentController : SectionViewController {
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {
-        return CenterView(controller: self, monetization: self.monetization != nil, stars: self.stars != nil)
+        return CenterView(controller: self, monetization: self.monetization != nil, stars: self.stars != nil, onlyMonetization: onlyMonetization)
     }
     
     override func getRightBarViewOnce() -> BarView {
