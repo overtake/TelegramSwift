@@ -264,8 +264,9 @@ final class InlineStickerView: Control {
         layer.superview = self
         userInteractionEnabled = false
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true, ignorePreview: Bool = false) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor, ignorePreview: ignorePreview)
+        layer.isPlayable = isPlayable
         self.isPlayable = isPlayable
         self.animateLayer = layer
         self.controlContent = controlContent
@@ -348,6 +349,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.ignorePreview = layer.ignorePreview
         self.synchronyous = layer.synchronyous
         self.color = nil
+        self.isSelected = layer.isSelected
         super.init()
     }
     
@@ -407,8 +409,9 @@ final class InlineStickerItemLayer : SimpleLayer {
     let size: NSSize
     let synchronyous: Bool
     let color: NSColor?
+    let isSelected: Bool
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -419,6 +422,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.size = size
         self.color = emoji.color
         self.ignorePreview = ignorePreview
+        self.isSelected = isSelected
         self.synchronyous = synchronyous
         super.init()
         self.frame = size.bounds
@@ -444,7 +448,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -456,6 +460,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.ignorePreview = ignorePreview
         self.synchronyous = synchronyous
         self.color = nil
+        self.isSelected = isSelected
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -723,7 +728,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
             
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
-                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon, scale: System.backingScale)
+                let image = NSImage(named: resource.name)?.precomposed(self.isSelected ? textColor : (resource.color ?? theme.colors.accentIcon), scale: System.backingScale)
                 self.contents = image
                 
                 if resource.resize {

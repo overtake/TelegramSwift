@@ -23,6 +23,7 @@ import ApiCredentials
 
 let clown: String = "🤡"
 let focusIntentEmoji = "⛔️"
+let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
 
 
@@ -611,7 +612,13 @@ final class AccountContext {
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         self.starsContext = engine.payments.peerStarsContext()
-#endif
+        
+        let _ = self.engine.peers.requestGlobalRecommendedChannelsIfNeeded().startStandalone()
+        let _ = self.engine.peers.requestRecommendedAppsIfNeeded().startStandalone()
+        let _ = self.engine.peers.managedUpdatedRecentApps().startStandalone()
+
+        
+    #endif
         
         
         giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)

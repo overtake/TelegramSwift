@@ -860,7 +860,10 @@ class ChatPresentationInterfaceState: Equatable {
             
             if let peer = peer as? TelegramChannel {
                 if let text = permissionText(from: peer, for: .banSendText) {
-                    if let cachedData = cachedData as? CachedChannelData, let boostsToRestrict = cachedData.boostsToUnrestrict {
+                    
+                    let isPersonalRestriction = peer.hasBannedPermission(.banSendText)?.1 ?? false
+                    
+                    if let cachedData = cachedData as? CachedChannelData, let boostsToRestrict = cachedData.boostsToUnrestrict, !isPersonalRestriction {
                         let appliedBoosts = cachedData.appliedBoosts ?? 0
                         if boostsToRestrict > appliedBoosts {
                             return .action(strings().boostGroupChatInputAction, { chatInteraction in

@@ -383,6 +383,10 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                 if currency == XTR {
                     attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
                 }
+            } else if case let .paymentRefunded(_, currency, _, _, _) = action.action {
+                if currency == XTR {
+                    attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
+                }
             }
             
             InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
@@ -959,7 +963,17 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().notificationBoostMultiple(peerName, boostsString)
                 }
             }
-
+        case let .giftStars(currency, amount, count, cryptoCurrency, cryptoAmount, transactionId):
+            let formatted = formatCurrencyAmount(amount, currency: currency)
+            if authorId == account.peerId {
+                text = strings().chatServicePremiumGiftSentYou(formatted)
+            } else {
+                text = strings().chatServicePremiumGiftSent(authorName, formatted)
+            }
+        case let .paymentRefunded(_, currency, totalAmount, _, _):
+            let peerName = message.author?.compactDisplayTitle ?? ""
+            //TODOLANG
+            text = "\(peerName) refunded back \(currency + TINY)\(totalAmount)"
         }
     }
     return (text, entities, media)
@@ -1041,7 +1055,13 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
             } else if user.flags.contains(.isSupport) {
                 return PeerStatusStringResult(title, .initialize(string: strings().presenceSupport,  color: theme.statusColor, font: theme.statusFont))
             } else if let _ = user.botInfo {
-                return PeerStatusStringResult(title, .initialize(string: strings().presenceBot,  color: theme.statusColor, font: theme.statusFont))
+                let string: String
+                if let subscriberCount = user.subscriberCount {
+                    string = strings().peerStatusUsersCountable(Int(subscriberCount)).replacingOccurrences(of: "\(subscriberCount)", with: subscriberCount.formattedWithSeparator)
+                } else {
+                    string = strings().presenceBot
+                }
+                return PeerStatusStringResult(title, .initialize(string: string,  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence, !ignoreActivity {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 let (string, activity, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp), expanded: expanded)

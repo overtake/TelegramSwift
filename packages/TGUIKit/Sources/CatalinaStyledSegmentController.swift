@@ -201,7 +201,10 @@ private class CatalinaSegmentedControlView: View {
         
         
         var x: CGFloat = 0
-        let itemWidth = floor(frame.width / CGFloat(items.count))
+        var itemWidth = floor(frame.width / CGFloat(items.count))
+        if itemWidth == frame.width {
+            itemWidth = frame.width - 4
+        }
         for view in items {
             view.frame = NSMakeRect(x, 0, itemWidth, frame.height)
             

@@ -161,10 +161,6 @@ class ChatListRowItem: TableRowItem {
     }
     
     var isPaidSubscriptionChannel: Bool {
-        #if DEBUG
-        return peer?.isChannel == true
-        #endif
-        
         return false
     }
     
@@ -602,6 +598,8 @@ class ChatListRowItem: TableRowItem {
             let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
             if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                 selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                
+                
                 self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: 2)
             }
         }
@@ -900,7 +898,7 @@ class ChatListRowItem: TableRowItem {
                     if let peer = info.author {
                         author = peer
                     } else if let signature = info.authorSignature {
-                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil)
+                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil)
                     }
                 } else {
                     author = message.author
@@ -1034,7 +1032,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !peer.id.isAnonymousSavedMessages, !isEmpty {
-            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum)
+            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum, nil)
         } else {
             self.photo = .Empty
         }

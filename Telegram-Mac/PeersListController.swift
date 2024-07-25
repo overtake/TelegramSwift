@@ -98,6 +98,7 @@ struct PeerListState : Equatable {
         var peer: TelegramChannel
         var peerView: PeerView
         var online: Int32
+        
     }
     
     var proxySettings: ProxySettings
@@ -119,6 +120,7 @@ struct PeerListState : Equatable {
     var presentation: TelegramPresentationTheme
     var privacy: GlobalPrivacySettings?
     var displaySavedAsTopics: Bool
+    var webapps: WebappsStateContext.FullState? = nil
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForumLike {
             if self.splitState == .minimisize {
@@ -387,6 +389,197 @@ private final class ActionView : Control {
     }
 }
 
+fileprivate final class WebappsControl : Control {
+    
+    
+    struct WebAppItem : Identifiable, Comparable {
+        static func < (lhs: WebAppItem, rhs: WebAppItem) -> Bool {
+            return lhs.index < rhs.index
+        }
+        let peer: EnginePeer
+        let index: Int
+        var stableId: AnyHashable {
+            return peer.id
+        }
+    }
+    
+    class Control : View {
+        private let avatar = AvatarControl(font: .avatar(8))
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            avatar.frame = bounds
+            addSubview(avatar)
+            avatar.userInteractionEnabled = false
+            self.layer?.cornerRadius = 4
+            self.layer?.borderWidth = 2
+            self.layer?.borderColor = theme.colors.background.cgColor
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+            self.layer?.borderColor = theme.colors.background.cgColor
+        }
+        
+        func update(item: WebAppItem, context: AccountContext) {
+            self.avatar.setPeer(account: context.account, peer: item.peer._asPeer(), size: NSMakeSize(24, 24), cornerRadius: 0)
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: avatar, frame: size.bounds)
+        }
+    }
+    
+    private var views: [Control] = []
+    private var items: [WebAppItem] = []
+    
+    private var imageView: ImageView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layer?.masksToBounds = false
+        scaleOnClick = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(webapps: [EnginePeer], context: AccountContext, animated: Bool) {
+        var items: [WebAppItem] = []
+        var index: Int = .max
+        for webapp in webapps.prefix(4).reversed() {
+            items.append(.init(peer: webapp, index: index))
+            index -= 1
+        }
+        
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
+        
+        for rdx in deleteIndices.reversed() {
+            performSubviewRemoval(views.remove(at: rdx), animated: animated, scale: true)
+        }
+        
+        let rects = getRects(items)
+        
+        for (idx, item, _) in indicesAndItems {
+            let view = Control(frame: rects[idx])
+            view.update(item: item, context: context)
+            
+            views.insert(view, at: idx)
+            self.addSubview(view)
+            if animated {
+                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.5, bounce: true)
+            }
+           
+        }
+        for (idx, item, _) in updateIndices {
+            let item = item
+            views[idx].update(item: item, context: context)
+        }
+        
+        self.items = items
+        
+        if items.isEmpty {
+            let current: ImageView
+            let isNew: Bool
+            if let view = self.imageView {
+                current = view
+                isNew = false
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.imageView = current
+                isNew = true
+            }
+            current.image = theme.icons.chatlist_apps
+            current.sizeToFit()
+            
+            
+            if animated, isNew {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.5, bounce: true)
+            }
+        } else if let view = self.imageView {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.imageView = nil
+        }
+        
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.35, curve: .spring) : .immediate
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
+        
+        for (i, view) in views.enumerated() {
+            view.layer?.borderWidth = items.count < 4 ? 2 : 0
+            view.layer?.cornerRadius = items.count < 4 ? 6 : 2
+            if animated {
+                view.layer?.animateBorder()
+                view.layer?.animateCornerRadius()
+            }
+        }
+        
+        let size: NSSize
+        if items.count == 4 || items.count == 0 {
+            size = NSMakeSize(28, 24)
+        } else {
+            let last = getRects(items).last!
+            size = NSMakeSize(last.maxX, 24)
+        }
+        transition.updateFrame(view: self, frame: CGRect(origin: self.frame.origin, size: size))
+    }
+    
+    private func getRects(_ items: [WebAppItem]) -> [NSRect] {
+        var rects: [NSRect] = []
+        
+        if items.count < 4 {
+            let size = NSMakeSize(24, 24)
+            if items.count == 1 {
+                rects.append(.init(origin: NSPoint(x: 2, y: 0), size: size))
+            } else {
+                rects.append(.init(origin: NSPoint(x: 0, y: 0), size: size))
+            }
+            if items.count < 3 {
+                rects.append(.init(origin: NSPoint(x: size.width / 2, y: 0), size: size))
+            } else {
+                rects.append(.init(origin: NSPoint(x: floorToScreenPixels(size.width / 3), y: 0), size: size))
+                rects.append(.init(origin: NSPoint(x: floorToScreenPixels(size.width / 3 * 2), y: 0), size: size))
+            }
+        } else {
+            let size = NSMakeSize(11, 11)
+            rects.append(.init(origin: NSPoint(x: 2, y: 2), size: size))
+            rects.append(.init(origin: NSPoint(x: size.width + 4, y: 2), size: size))
+            rects.append(.init(origin: NSPoint(x: 2, y: size.height + 4), size: size))
+            rects.append(.init(origin: NSPoint(x: size.width + 4, y: size.height + 4), size: size))
+            rects = rects.reversed()
+        }
+        
+        return Array(rects.prefix(items.count))
+    }
+    
+    override func layout() {
+        super.layout()
+        self.imageView?.center()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+        
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let rects = self.getRects(self.items)
+        for (i, view) in views.enumerated() {
+            transition.updateFrame(view: view, frame: rects[i])
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+    }
+}
+
 fileprivate final class TitleView : Control {
     
     enum Source {
@@ -618,6 +811,7 @@ class PeerListContainerView : Control {
     
     fileprivate let titleView = TitleView(frame: .zero)
     
+    private var webapps: WebappsControl?
     
     fileprivate var showDownloads:(()->Void)? = nil
     fileprivate var hideDownloads:(()->Void)? = nil
@@ -893,6 +1087,114 @@ class PeerListContainerView : Control {
             self.backButton = nil
         }
         
+        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, backButton == nil {
+            let current: WebappsControl
+            let isNew: Bool
+            if let view = self.webapps {
+                current = view
+                isNew = false
+            } else {
+                current = WebappsControl(frame: NSMakeRect(0, 0, 24, 24))
+                containerView.addSubview(current)
+                self.webapps = current
+                isNew = true
+            }
+            
+            let openedItems = Array(webapps.opened.compactMap { $0.data.peer }.reversed())
+            current.update(webapps: openedItems, context: arguments.context, animated: animated)
+            
+            current.contextMenu = {
+                let menu = ContextMenu()
+                
+                if !webapps.opened.isEmpty {
+                    for webapp in webapps.opened {
+                        menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                            WebappsStateContext.standart.open(tab: webapp.data, context: arguments.context)
+                        }, peer: webapp.data.peer._asPeer(), context: arguments.context, reaction: nil))
+                    }
+                    menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
+                        WebappsStateContext.standart.closeAll()
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                }
+                
+                
+                if !webapps.recentlyMenu.isEmpty {
+                    if !menu.items.isEmpty {
+                        menu.addItem(ContextSeparatorItem())
+                    }
+                    for recent in webapps.recentlyMenu {
+                        if let peer = webapps.peers[recent.peerId] {
+                            menu.addItem(ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: {
+                                WebappsStateContext.standart.open(tab: .mainapp(bot: peer, source: .generic), context: arguments.context)
+                            }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                        }
+                    }
+                    menu.addItem(ContextMenuItem(strings().chatListAppsClearRecent, handler: {
+                        WebappsStateContext.standart.clearRecent()
+                    }, itemImage: MenuAnimation.menu_delete.value))
+                }
+                
+                
+                if !webapps.recommended.isEmpty || !webapps.recentUsedApps.isEmpty {
+                    
+                    if !menu.items.isEmpty {
+                        menu.addItem(ContextSeparatorItem())
+                    }
+                    
+                    let presentation = AppMenu.Presentation(colors: theme.colors)
+                    
+                    let subMenu = ContextMenu()
+                    
+                    let appItem:(WebappsStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
+                        if let user = webapp.peer._asPeer() as? TelegramUser {
+                            
+                            let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
+                            
+                            return ReactionPeerMenu(title: user.displayTitle, handler: {
+                                WebappsStateContext.standart.open(tab: .mainapp(bot: webapp.peer, source: .generic), context: arguments.context)
+                            }, peer: user, context: arguments.context, reaction: nil, afterNameBadge: afterNameBadge)
+                        } else {
+                            return nil
+                        }
+                    }
+                    
+                    if !webapps.recentUsedApps.isEmpty {
+                        for webapp in webapps.recentUsedApps {
+                            if let item = appItem(webapp) {
+                                subMenu.addItem(item)
+                            }
+                        }
+                    }
+                    if !subMenu.items.isEmpty && !webapps.recommended.isEmpty {
+                        subMenu.addItem(ContextSeparatorItem())
+                    }
+                    for webapp in webapps.recommended {
+                        if let item = appItem(webapp) {
+                            subMenu.addItem(item)
+                        }
+                    }
+                    if !subMenu.items.isEmpty {
+                        let item = ContextMenuItem(strings().chatListAppsPopular, itemImage: MenuAnimation.menu_apps.value)
+                        item.submenu = subMenu
+                        menu.addItem(item)
+                    }
+                }
+                
+                
+                return menu
+            }
+            
+            if isNew {
+                current.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - current.frame.height) / 2)))
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+        } else if let view = self.webapps {
+            performSubviewRemoval(view, animated: animated)
+            self.webapps = nil
+        }
+        
         
         
         if previous?.appear != state.appear {
@@ -900,6 +1202,7 @@ class PeerListContainerView : Control {
         } else if previous?.splitState != state.splitState {
             self.delta = nil
         }
+        
 
         
         let transition: ContainedViewLayoutTransition
@@ -964,10 +1267,15 @@ class PeerListContainerView : Control {
                     
                     if state.forumPeer == nil, !state.mode.isForumLike {
                         items.append(ContextMenuItem(strings().chatListChannelsTag, handler: {
-                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil, isChannels: true))
+                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil, listType: .channels))
                             updateTitle([.init(text: strings().chatListChannelsTag)], theme.icons.search_filter)
 
                         }, itemImage: MenuAnimation.menu_channel.value))
+                        
+                        items.append(ContextMenuItem(strings().chatListAppsTag, handler: {
+                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil, listType: .bots))
+                            updateTitle([.init(text: strings().chatListAppsTag)], theme.icons.search_filter)
+                        }, itemImage: MenuAnimation.menu_apps.value))
                     }
                     
                     for tag in tags {
@@ -1253,6 +1561,10 @@ class PeerListContainerView : Control {
                 }
             }
             
+        }
+        
+        if let view = self.webapps {
+            transition.updateFrame(view: view, frame: CGRect(origin: NSMakePoint(10, floorToScreenPixels((50 - view.frame.height) / 2)), size: view.frame.size))
         }
         
 
@@ -1675,6 +1987,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         
         
+        
+        
         switch mode {
         case .savedMessagesChats:
             let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.DisplaySavedChatsAsTopics()) |> deliverOnMainQueue
@@ -1876,7 +2190,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
        
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance in
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, WebappsStateContext.standart.fullState(context)).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0
@@ -1892,6 +2206,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.isContacts = isContacts
                 current.presentation = appearance.presentation
                 current.privacy = privacy
+                current.webapps = webappsState
                 return current
             }
         }))
@@ -2272,7 +2587,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             let signal = searchController.externalSearchMessages
                 |> filter { $0 != nil && $0?.tags == messageTags }
             
-            let controller = PeerMediaController(context: context, peerId: peerId, isProfileIntended: false, externalSearchData: PeerMediaExternalSearchData(initialTags: messageTags, searchResult: signal, loadMore: { }))
+            let controller = PeerMediaController(context: context, peerId: peerId, isProfileIntended: false, externalSearchData: PeerMediaExternalSearchData(initialTags: messageTags, searchResult: signal, loadMore: { }), isBot: false)
             
             controller.onDeinit = onDeinit
             

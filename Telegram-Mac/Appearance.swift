@@ -25,6 +25,25 @@ import CodeSyntax
 let premiumGradient = [NSColor(rgb: 0x6B93FF), NSColor(rgb: 0x976FFF), NSColor(rgb: 0xE46ACE)]
 
 
+func generateContextMenuSubsCount(_ count: Int32?) -> CGImage? {
+    
+    guard let count else {
+        return nil
+    }
+    
+    let presentation = AppMenu.Presentation.current(theme.colors)
+    let membersImage = NSImage(resource: .iconMiniAppMembers).precomposed(presentation.disabledTextColor, flipVertical: true)
+
+    let textNode = TextNode.layoutText(.initialize(string: Int64(count).prettyNumber, color: presentation.disabledTextColor, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    var size = textNode.0.size
+    size.width += membersImage.backingSize.width
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(membersImage, in: size.bounds.focusY(membersImage.backingSize, x: 0))
+        textNode.1.draw(size.bounds.focusY(textNode.0.size, x: membersImage.backingSize.width), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })
+}
+
 func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -> CGImage {
     let layout = TextNode.layoutText(count, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
     let image = NSImage(resource: .iconBoostPrepaid).precomposed(bgColor, flipVertical: true)
@@ -95,7 +114,7 @@ public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImag
 private func generateAvatarStarBadge(color: NSColor) -> CGImage {
     let image = NSImage(resource: .iconStarCurrency).precomposed()
     let bigImage = NSImage(resource: .iconStarOutline).precomposed()
-    return generateImage(bigImage.size, contextGenerator: { size, ctx in
+    return generateImage(bigImage.systemSize, contextGenerator: { size, ctx in
         ctx.clear(size.bounds)
         
         
@@ -105,7 +124,7 @@ private func generateAvatarStarBadge(color: NSColor) -> CGImage {
         ctx.setFillColor(color.cgColor)
         ctx.fill(size.bounds)
 
-        ctx.draw(image, in: size.bounds.focus(image.size))
+        ctx.draw(image, in: size.bounds.focus(image.systemSize))
     })!
 }
 
@@ -334,6 +353,78 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
     })!
 }
 
+
+func generateStarBalanceIcon(_ text: String) -> CGImage {
+    return generateBalanceIcon(text: text, icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
+}
+
+private func generateBalanceIcon(text: String, icon: CGImage) -> CGImage {
+    let textNode = TextNode.layoutText(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    let icon = icon
+    var size = textNode.0.size
+    
+    size.width += icon.size.width + 1
+    size.height = max(size.height, icon.size.height)
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        let iconRect = size.bounds.focusY(icon.size, x: 0)
+        let textRect = size.bounds.focusY(textNode.0.size, x: iconRect.maxX + 1)
+        ctx.draw(icon, in: iconRect)
+        
+        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
+
+func generateTonAndStarBalanceIcon(ton: Int64, stars: Int64) -> CGImage {
+    
+    
+    let starsIcon: CGImage?
+    let tonIcon: CGImage?
+    if stars > 0 {
+        starsIcon = generateBalanceIcon(text: "\(stars)", icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
+    } else {
+        starsIcon = nil
+    }
+    if ton > 0 {
+        tonIcon = generateBalanceIcon(text: "\(ton)", icon: NSImage(resource: .iconTonCurrency).precomposed(flipVertical: true, zoom: 0.75))
+    } else {
+        tonIcon = nil
+    }
+
+    var size = NSMakeSize(0, 0)
+    if let tonIcon {
+        size.width += tonIcon.size.width
+        size.height = tonIcon.size.height
+    }
+    if let starsIcon {
+        size.width += starsIcon.size.width
+        size.height = max(size.height, starsIcon.size.height)
+    }
+    if starsIcon != nil, tonIcon != nil {
+        size.width += 2
+    }
+    
+    return generateImage(size, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        if let tonIcon, let starsIcon {
+            let tonRect = size.bounds.focusY(tonIcon.size, x: 0)
+            let starsRect = size.bounds.focusY(starsIcon.size, x: tonRect.maxX + 2)
+            
+            ctx.draw(tonIcon, in: tonRect)
+            ctx.draw(starsIcon, in: starsRect)
+
+        } else if let tonIcon {
+            let tonRect = size.bounds.focusY(tonIcon.size, x: 0)
+            ctx.draw(tonIcon, in: tonRect)
+        } else if let starsIcon {
+            let starsRect = size.bounds.focusY(starsIcon.size, x: 0)
+            ctx.draw(starsIcon, in: starsRect)
+        }
+    })!
+}
+
 func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage {
     return generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
 }
@@ -448,8 +539,8 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
     })!
 }
 
-private func generatePollIcon(_ image: NSImage, backgound: NSColor, doubleSize: Bool = false) -> CGImage {
-    return generateImage(NSMakeSize(doubleSize ? 36 : 18, doubleSize ? 36 : 18), contextGenerator: { size, ctx in
+private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
@@ -464,9 +555,9 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor, doubleSize: 
             ctx.clip(to: rect, mask: image)
             ctx.clear(rect)
         } else {
-            ctx.draw(image, in: rect.focus(NSMakeSize(image.size.width / System.backingScale * (doubleSize ? 2 : 1), image.size.height / System.backingScale * (doubleSize ? 2 : 1))))
+            ctx.draw(image, in: rect.focus(image.size))
         }
-    }, scale: System.backingScale)!
+    })!
 }
 
 private func generateSecretThumbSmall(_ image: CGImage) -> CGImage {
@@ -2639,6 +2730,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerInfoBanned: { NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true) },
                                                peerInfoMembers: { NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true) },
                                                peerInfoStarsBalance: { NSImage(resource: .iconPeerInfoStarsBalance).precomposed(flipVertical: true) },
+                                               peerInfoBalance: { NSImage(resource: .iconPeerInfoBalance).precomposed(flipVertical: true) },
                                                peerInfoBotUsername: { NSImage(resource: .iconPeerInfoBotUsername).precomposed(flipVertical: true) },
                                                chatUndoAction: { NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF)) },
                                                appUpdate: { NSImage(named: "Icon_AppUpdate")!.precomposed() },
@@ -2704,15 +2796,15 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
                                                poll_quiz_unselected: { generateUnslectedCap(palette.grayText) },
                                                poll_selected: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity) },
-                                               poll_selection: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity, doubleSize: System.backingScale == 1) },
+                                               poll_selection: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity) },
                                                poll_selected_correct: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenUI) },
                                                poll_selected_incorrect: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redUI) },
                                                poll_selected_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming) },
-                                               poll_selection_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming, doubleSize: System.backingScale == 1) },
+                                               poll_selection_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming) },
                                                poll_selected_correct_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_incoming) },
                                                poll_selected_incorrect_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_incoming) },
                                                poll_selected_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
-                                               poll_selection_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing, doubleSize: System.backingScale == 1) },
+                                               poll_selection_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
                                                poll_selected_correct_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_outgoing) },
                                                poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) },
                                                chat_filter_edit: { NSImage(named: "Icon_FilterEdit")!.precomposed(palette.accentIcon) },
@@ -3072,9 +3164,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               preview_text_down: { NSImage(resource: .iconMoveCaptionDown).precomposed(palette.grayIcon) },
                               preview_text_up: { NSImage(resource: .iconMoveCaptionUp).precomposed(palette.grayIcon) },
                               avatar_star_badge: { generateAvatarStarBadge(color: palette.background) },
-                              avatar_star_badge_active: { generateAvatarStarBadge(color: palette.background) },
+                              avatar_star_badge_active: { generateAvatarStarBadge(color: palette.accentSelect) },
                               avatar_star_badge_gray: { generateAvatarStarBadge(color: palette.listBackground) },
-                              avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) }
+                              avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) },
+                              chatlist_apps: { NSImage(resource: .iconChatListApps).precomposed(palette.accent) }
     )
 }
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {

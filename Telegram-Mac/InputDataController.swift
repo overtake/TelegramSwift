@@ -23,6 +23,8 @@ public class InputDataModalController : ModalViewController {
     
     private let isMain: Bool
     
+    public var alwaysActiveHeader: Bool = false
+    
     init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme, isMain: Bool = true) {
         self.controller = controller
         self._modalInteractions = modalInteractions
@@ -303,7 +305,7 @@ public class InputDataModalController : ModalViewController {
         } else {
             self.current.tableView.verticalScrollElasticity = .none
         }
-        if position.rect.minY - self.current.tableView.frame.height > 0 {
+        if position.rect.minY - self.current.tableView.frame.height > 0 || alwaysActiveHeader {
             self.modal?.makeHeaderState(state: .active, animated: true)
         } else {
             self.modal?.makeHeaderState(state: .normal, animated: true)

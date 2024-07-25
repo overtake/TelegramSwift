@@ -1181,6 +1181,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         }
     }
     
+    
     open var modalTheme:Theme {
         return Theme()
     }

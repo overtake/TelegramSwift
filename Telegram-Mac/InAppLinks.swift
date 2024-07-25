@@ -25,6 +25,7 @@ let XTR: String = TelegramCurrency.xtr.rawValue
 let XTRSTAR: String = "⭐️"
 let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
+let TINY = "\u{2009}"
 
 let TON: String = TelegramCurrency.ton.rawValue
 
@@ -174,7 +175,7 @@ enum ChatInitialAction : Equatable {
     case joinVoiceChat(_ joinHash: String?)
     case attachBot(_ bot: String, _ payload: String?, _ choose:[String]?)
     case makeWebview(appname: String, command: String?)
-    case openWebview(botPeer: PeerEquatable, botApp: BotApp, url: String)
+    case openWebview(botPeer: PeerEquatable, botApp: BotApp, result: RequestWebViewResult)
 
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
@@ -613,11 +614,11 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         })
 
         afterComplete(true)
-    case let .followResolvedName(_, username, postId, context, action, callback):
+    case let .followResolvedName(_, username, postId, forceProfile, context, action, callback):
         
         let invokeCallback:(Peer, MessageId?, ChatInitialAction?) -> Void = { peer, messageId, action in
             if peer.isForum {
-                closeAllModals()
+                closeAllModals(window: getWindow(context))
                 if let messageId = messageId {
                     
                     _ = (context.engine.messages.getMessagesLoadIfNecessary([messageId]) |> deliverOnMainQueue).start(next: { result in
@@ -641,7 +642,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     ForumUI.open(peer.id, context: context)
                 }
             } else {
-                callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                callback(peer.id, (peer.isChannel || peer.isSupergroup || peer.isBot) && !forceProfile, messageId, forceProfile ? nil : action)
             }
         }
         
@@ -771,7 +772,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     $0 is ChatController
                                 } as? ChatController
                                 
-                                let peerId = chat?.chatLocation.peerId
+                                let peerId = chat?.chatLocation.peerId ?? peer.id
                                 
                                 let openWebview:(ChatInitialAction)->Void = { action in
                                     let chat = context.bindings.rootNavigation().first {
@@ -780,10 +781,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     
                                     if chat == nil {
                                         switch action {
-                                        case let .openWebview(botPeer, botApp, url):
-                                            if !WebappWindow.focus(botId: botPeer.id) {
-                                                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file, botPeer: botPeer.peer))
-                                            }
+                                        case let .openWebview(botPeer, botApp, result):
+                                            WebappsStateContext.standart.open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result), context: context)
                                         default:
                                             break
                                         }
@@ -792,14 +791,13 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     }
                                 }
                                 
-                                
-                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestWebViewError> = { botApp, allowWrite in
-                                    return context.engine.messages.requestAppWebView(peerId: peerId ?? peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
-                                        return (botApp, $0.url)
+                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = { botApp, allowWrite in
+                                    return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
+                                        return (botApp, $0)
                                     }
                                 }
 
-                                var signal: Signal<(BotApp, String?), RequestWebViewError> = botApp
+                                var signal: Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = botApp
                                 |> mapError { _ in
                                     .generic
                                 } |> mapToSignal { botApp in
@@ -809,42 +807,40 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                         return makeRequestAppWebView(botApp, false)
                                     }
                                 }
-                                if !WebappWindow.focus(botId: peer.id) {
-                                    signal = showModalProgress(signal: signal, for: getWindow(context))
-                                    _ = signal.start(next: { botApp, url in
+                                signal = showModalProgress(signal: signal, for: getWindow(context))
+                                _ = signal.start(next: { botApp, result in
+                                    
+                                    if let result = result {
+                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, result: result))
+                                    } else {
                                         
-                                        if let url = url {
-                                            openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                        } else {
+                                        var options: [ModalAlertData.Option] = []
+                                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                        
+                                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                        showModalAlert(for: getWindow(context), data: data, completion: { result in
+                                            FastSettings.markWebAppAsConfirmed(peer.id)
                                             
-                                            var options: [ModalAlertData.Option] = []
-                                            options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: getWindow(context))
                                             
-                                            let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
-                                            showModalAlert(for: getWindow(context), data: data, completion: { result in
-                                                FastSettings.markWebAppAsConfirmed(peer.id)
-                                                
-                                                let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: getWindow(context))
-                                                
-                                                _ = signal.start(next: { botApp, url in
-                                                    if let url = url {
-                                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
-                                                    }
-                                                }, error: { error in
-                                                    switch error {
-                                                    case .generic:
-                                                        invokeCallback(peer, messageId, nil)
-                                                    }
-                                                })
+                                            _ = signal.start(next: { botApp, result in
+                                                if let result = result {
+                                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, result: result))
+                                                }
+                                            }, error: { error in
+                                                switch error {
+                                                case .generic:
+                                                    invokeCallback(peer, messageId, nil)
+                                                }
                                             })
-                                        }
-                                    }, error: { error in
-                                        switch error {
-                                        case .generic:
-                                            invokeCallback(peer, messageId, nil)
-                                        }
-                                    })
-                                }
+                                        })
+                                    }
+                                }, error: { error in
+                                    switch error {
+                                    case .generic:
+                                        invokeCallback(peer, messageId, nil)
+                                    }
+                                })
                             default:
                                 invokeCallback(peer, messageId, action)
                             }
@@ -1429,7 +1425,7 @@ enum inAppLink {
     
     case external(link:String, Bool) // link, confirm
     case peerInfo(link: String, peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
-    case followResolvedName(link: String, username:String, postId:Int32?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case followResolvedName(link: String, username:String, postId:Int32?, forceProfile: Bool, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case comments(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
     case topic(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
     case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, rights: String?, isChannel: Bool, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
@@ -1478,7 +1474,7 @@ enum inAppLink {
             return link
         case let .topic(link, _, _, _, _):
             return link
-        case let .followResolvedName(link, _, _, _, _, _):
+        case let .followResolvedName(link, _, _, _, _, _, _):
             return link
         case let .inviteBotToGroup(link, _, _, _, _, _, _):
             return link
@@ -1894,7 +1890,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let joinKeys:[String] = ["+", "%20"]
                         let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
                         if "+\(phone)" == username {
-                            return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: action, callback: openInfo)
+                            let forceProfile = empty.contains("profile")
+                            return .followResolvedName(link: urlString, username: phone, postId: nil, forceProfile: forceProfile, context: context, action: action, callback: openInfo)
                         } else {
                             for joinKey in joinKeys {
                                 if username.hasPrefix(joinKey), username.length > joinKey.length {
@@ -1916,6 +1913,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
                         
+                        let forceProfile = components.contains("profile")
+                        
                         if components.count == 2, components[1] == "boost" {
                             return .boost(link: urlString, username: username, context: context)
                         } else if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
@@ -1923,7 +1922,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         } else if let topicId = vars[keyURLTopicId]?.nsstring.intValue {
                             return .topic(link: urlString, username: username, context: context, threadId: topicId, commentId: nil)
                         } else {
-                            return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
+                            return .followResolvedName(link: urlString, username: username, postId: nil, forceProfile: forceProfile, context: context, action: action, callback: openInfo)
                         }
                     }
                 }
@@ -1931,6 +1930,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 let userAndPost = string.components(separatedBy: "/")
                 if userAndPost.count >= 2 {
                     let name = userAndPost[0]
+                    let forceProfile = false
                     if name == "c" {
                         
                         if let context = context {
@@ -1958,7 +1958,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if action.first == "boost" {
                                     return .boost(link: urlString, username: "\(_private_)\(username)", context: context)
                                 } else {
-                                    return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
+                                    let forceProfile = false
+                                    return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, forceProfile: forceProfile, context: context, action:nil, callback: openInfo)
                                 }
                             }
                         }
@@ -1980,8 +1981,17 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .external(link: urlString, false)
                         } else if name.hasPrefix("share?") || name == "share" {
                             let (params, _) = urlVars(with: url as String)
-                            if let url = params[keyURLLang], let context = context {
-                                return .shareUrl(link: urlString, context, url)
+                            if let url = params[keyURLUrl], let context = context {
+                                let url = url.nsstring.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
+                                let text = params[keyURLText]?.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
+                                if let url = url {
+                                    var applied = url
+                                    if let text = text {
+                                        applied += "\n" + text
+                                    }
+                                    return .shareUrl(link: urlString, context, applied)
+                                    
+                                }
                             }
                             return .external(link: urlString, false)
                         } else if let context = context {
@@ -2019,7 +2029,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             } else if let storyId = storyId {
                                 return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
                             } else {
-                                return .followResolvedName(link: urlString, username: name, postId: post, context: context, action: action, callback: openInfo)
+                                let forceProfile = userAndPost.contains("profile")
+                                return .followResolvedName(link: urlString, username: name, postId: post, forceProfile: forceProfile, context: context, action: action, callback: openInfo)
                             }
                         }
                     }
@@ -2029,7 +2040,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     }
     
     if url.hasPrefix("@"), let openInfo = openInfo, let context = context {
-        return .followResolvedName(link: urlString, username: url.substring(from: 1), postId: nil, context: context, action:nil, callback: openInfo)
+        return .followResolvedName(link: urlString, username: url.substring(from: 1), postId: nil, forceProfile: false, context: context, action:nil, callback: openInfo)
     }
     
     if url.hasPrefix("/"), let command = command {
@@ -2109,11 +2120,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             } else if let story = story {
                                 return .story(link: urlString, username: username, storyId: story, messageId: messageId, context: context)
                             } else {
-                                return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
+                                let forceProfile = emptyVars.contains("profile")
+                                return .followResolvedName(link: urlString, username: username, postId: post, forceProfile: forceProfile, context: context, action: action, callback:openInfo)
                             }
                         }
                     } else if let phone = vars[keyURLPhone], let openInfo = openInfo, let context = context {
-                        return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: nil, callback: openInfo)
+                        let forceProfile = emptyVars.contains("profile")
+                        return .followResolvedName(link: urlString, username: phone, postId: nil, forceProfile: forceProfile, context: context, action: nil, callback: openInfo)
                     }
                 case known_scheme[1]:
                     if let url = vars[keyURLUrl] {
@@ -2254,7 +2267,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         } else if let topicId = topicId, let context = context {
                             return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: topicId, commentId: post)
                         } else if let context = context {
-                            return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
+                            let forceProfile = emptyVars.contains("profile")
+                            return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, forceProfile: forceProfile, context: context, action:nil, callback: openInfo)
                         }
                     }
                 case known_scheme[12]:

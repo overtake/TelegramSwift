@@ -1221,15 +1221,24 @@ public final class TextViewLayout : Equatable {
                             let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
                             
                             
+                            
                             let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
                             var upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, min(range.location + range.length, lineRange.location + lineRange.length), nil))
+                            
+                            let lineStartIndex = CTLineGetStringIndexForPosition(coreTextLine, NSMakePoint(lowerX, lineFrame.minY))
+
                             
                             if lowerX > 0 && upperX == 0 {
                                 upperX = lineWidth
                             }
                             
-                            let x = lowerX < upperX ? lowerX : upperX
-                            strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                            if lowerX == 0, !range.contains(lineStartIndex) {
+                                
+                            } else {
+                                let x = lowerX < upperX ? lowerX : upperX
+                                strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                            }
+                            
                         }
 
                     }
@@ -1518,7 +1527,7 @@ public final class TextViewLayout : Equatable {
                 rects[i].size.height = height
                 if self.penFlush == 0.5 {
                     rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
-                    rects[i].size.width += 14
+                    rects[i].size.width += 20
                 } else {
                     rects[i].size.width += 10
                     rects[i].origin.x -= 5
@@ -3223,7 +3232,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
                 
                 blockMask?.transform = fr
-                blockMask?.contentsScale = 2.0
+                blockMask?.contentsScale = backingScaleFactor
                 blockMask?.contents = blockImage
                 blockMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
                 self.layer?.mask = blockMask

@@ -376,10 +376,16 @@ class FastSettings {
     }
     
     static var isNeedCollage: Bool {
-        if UserDefaults.standard.value(forKey: kNeedCollage) == nil {
-            return true
+        get {
+            if UserDefaults.standard.value(forKey: kNeedCollage) == nil {
+                return true
+            }
+            return UserDefaults.standard.bool(forKey: kNeedCollage)
         }
-        return UserDefaults.standard.bool(forKey: kNeedCollage)
+        set {
+            UserDefaults.standard.set(newValue, forKey: kNeedCollage)
+            UserDefaults.standard.synchronize()
+        }
     }
     
     static var enableRTF: Bool {

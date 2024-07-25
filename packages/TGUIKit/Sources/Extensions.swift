@@ -579,9 +579,14 @@ public extension CALayer {
     }
     
     
-    func animateBackground() ->Void {
-        let animation = CABasicAnimation(keyPath: "backgroundColor")
-        animation.duration = 0.2
+    func animateBackground(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) ->Void {
+        let animation: CABasicAnimation
+        if function == .spring {
+            animation = makeSpringAnimation("backgroundColor")
+        } else {
+            animation = CABasicAnimation(keyPath: "backgroundColor")
+            animation.timingFunction = .init(name: function)
+        }
         self.add(animation, forKey: "backgroundColor")
     }
     func animateTransform() ->Void {
@@ -591,9 +596,14 @@ public extension CALayer {
     }
     
     func animatePath(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) {
-        let animation = makeSpringAnimation("path")
+        let animation: CABasicAnimation
+        if function == .spring {
+            animation = makeSpringAnimation("path")
+        } else {
+            animation = CABasicAnimation(keyPath: "path")
+            animation.timingFunction = .init(name: function)
+        }
         animation.duration = duration
-        animation.timingFunction = .init(name: function)
         self.add(animation, forKey: "path")
     }
     func animateShadow() {
@@ -1363,6 +1373,23 @@ public extension CGRect {
         
         return NSMakeRect(x, y, size.width, size.height)
     }
+    
+    func focusX(_ size:NSSize, y: CGFloat) -> NSRect {
+        var x:CGFloat = 0
+        
+        x = CGFloat(round((self.width - size.width)/2.0))
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
+    
+    func focusY(_ size:NSSize, x: CGFloat) -> NSRect {
+        var y:CGFloat = 0
+        
+        y = CGFloat(round((self.height - size.height)/2.0))
+        
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
 }
 
 public extension CGPoint {
@@ -1373,6 +1400,11 @@ public extension CGPoint {
         let xdst = self.x - p2.x
         let ydst = self.y - p2.y
         return sqrt((xdst * xdst) + (ydst * ydst))
+    }
+    
+    var toScreenPixel: CGPoint {
+        return CGPoint(x: floorToScreenPixels(x),
+                      y: floorToScreenPixels(y))
     }
 }
 
@@ -2933,4 +2965,54 @@ public extension NSAttributedString {
             return self
         }
     }
+}
+
+
+public extension CGPath {
+    
+    static func rounded(frame: NSRect, cornerRadius: CGFloat, rectCorner: NSRectCorner) -> CGPath {
+        
+        let path = CGMutablePath()
+        
+        let minx:CGFloat = frame.minX, midx = frame.maxX/2.0, maxx = frame.maxX
+        let miny:CGFloat = frame.maxY, midy = frame.maxY/2.0, maxy: CGFloat = 0
+        
+        path.move(to: NSMakePoint(minx, midy))
+        
+        var topLeftRadius: CGFloat = 0
+        var bottomLeftRadius: CGFloat = 0
+        var topRightRadius: CGFloat = 0
+        var bottomRightRadius: CGFloat = 0
+        
+        
+        if rectCorner.contains(.topLeft) {
+            topLeftRadius = cornerRadius
+        }
+        if rectCorner.contains(.topRight) {
+            topRightRadius = cornerRadius
+        }
+        if rectCorner.contains(.bottomLeft) {
+            bottomLeftRadius = cornerRadius
+        }
+        if rectCorner.contains(.bottomRight) {
+            bottomRightRadius = cornerRadius
+        }
+        
+        
+        path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+        path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+        path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+        path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+        
+        if rectCorner.contains(.topLeft) {
+             path.move(to: NSMakePoint(minx, cornerRadius))
+        } else {
+             path.move(to: NSMakePoint(minx, maxy))
+        }
+       
+        path.addLine(to: NSMakePoint(minx, midy))
+        
+        return path
+    }
+    
 }

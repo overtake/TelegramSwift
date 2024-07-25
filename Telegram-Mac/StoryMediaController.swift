@@ -15,7 +15,7 @@ import Postbox
 
 private enum Entry : TableItemListNodeEntry {
     case headerText(index: MessageIndex, stableId: MessageIndex, text: String, viewType: GeneralViewType)
-    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: Set<Int32>, rowCount: Int, viewType: GeneralViewType)
+    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: [Int32], rowCount: Int, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
     case emptySelf(index: MessageIndex, viewType: GeneralViewType)
@@ -368,7 +368,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
     private let isArchived: Bool
     private var statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     private var stateValue: Atomic<State> = Atomic(value: State(state: nil, selected: nil, perRowCount: 4))
-    private let listContext: PeerStoryListContext
+    private let listContext: StoryListContext
     private let archiveContext: PeerStoryListContext?
     
     var parentToggleSelection: (()->Void)?
@@ -479,7 +479,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: peerId, listContext: listContext, standalone: standalone, isArchived: isArchived))
     }
     
-    init(context: AccountContext, peerId: EnginePeer.Id, listContext: PeerStoryListContext, standalone: Bool = false, isArchived: Bool = false) {
+    init(context: AccountContext, peerId: EnginePeer.Id, listContext: StoryListContext, standalone: Bool = false, isArchived: Bool = false) {
         self.peerId = peerId
         self.isArchived = isArchived
         self.standalone = standalone
@@ -526,7 +526,9 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         
         genericView.tableView.setScrollHandler({ [weak self] _ in
             if let list = self?.listContext {
-                list.loadMore()
+                list.loadMore(completion: {
+                    
+                })
             }
         })
         let maxPinLimit = context.appConfiguration.getGeneralValue("stories_pinned_to_top_count_max", orElse: 3)
@@ -609,7 +611,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             })
             
         }, togglePinned: { [weak self] story in
-            var pinned = Array(self?.stateValue.with ({ $0.state?.pinnedIds }) ?? Set())
+            var pinned = Array(self?.stateValue.with ({ $0.state?.pinnedIds }) ?? [])
             if let index = pinned.firstIndex(where: { $0 == story.id }) {
                 pinned.remove(at: index)
                 showModalText(for: context.window, text: strings().storyMediaTooltipUnpinnedCountable(1))

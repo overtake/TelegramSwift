@@ -13,11 +13,12 @@ private final class InfiniteProgressViewParameters: NSObject {
     let color: NSColor
     let progress: CGFloat
     let lineWidth: CGFloat?
-    
-    init(color: NSColor, progress: CGFloat, lineWidth: CGFloat?) {
+    let inset: CGFloat
+    init(color: NSColor, progress: CGFloat, lineWidth: CGFloat?, inset: CGFloat) {
         self.color = color
         self.progress = progress
         self.lineWidth = lineWidth
+        self.inset = inset
     }
 }
 
@@ -31,6 +32,7 @@ private final class InfiniteLayer : CALayer {
     }
     override func draw(in context: CGContext) {
         if let parameters = parameters {
+
             context.setStrokeColor(parameters.color.cgColor)
             let factor = bounds.size.width / 50.0
             
@@ -48,14 +50,14 @@ private final class InfiniteLayer : CALayer {
             
             let pathDiameter: CGFloat
             if parameters.lineWidth != nil {
-                pathDiameter = bounds.size.width - lineWidth
+                pathDiameter = bounds.size.width - lineWidth - parameters.inset
             } else {
-                pathDiameter = bounds.size.width - lineWidth - 2.5 * 2.0
+                pathDiameter = bounds.size.width - lineWidth - 2.5 * 2.0 - parameters.inset
             }
             
             let path = CGMutablePath()
             
-            path.addArc(center: CGPoint(x: bounds.size.width / 2.0, y: bounds.size.height / 2.0), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.progress >= 1)
+            path.addArc(center: CGPoint(x: bounds.size.width / 2.0 , y: bounds.size.height / 2.0), radius: pathDiameter / 2.0, startAngle: startAngle, endAngle: endAngle, clockwise: parameters.progress >= 1)
             
             context.setLineWidth(lineWidth)
             context.setLineCap(.round)
@@ -118,10 +120,12 @@ public final class InfiniteProgressView: View {
     }
     
     let lineWidth: CGFloat?
+    let insets: CGFloat
     
-    public init(color: NSColor, lineWidth: CGFloat?) {
+    public init(color: NSColor, lineWidth: CGFloat?, insets: CGFloat = 0) {
         self.color = color
         self.lineWidth = lineWidth
+        self.insets = insets
 
         super.init()
         pLayer.contentsScale = backingScaleFactor
@@ -147,7 +151,7 @@ public final class InfiniteProgressView: View {
     }
     
     private var parameters: InfiniteProgressViewParameters {
-        return InfiniteProgressViewParameters(color: self.color, progress: self.effectiveProgress, lineWidth: self.lineWidth)
+        return InfiniteProgressViewParameters(color: self.color, progress: self.effectiveProgress, lineWidth: self.lineWidth, inset: self.insets)
     }
     
     public override func viewDidMoveToWindow() {

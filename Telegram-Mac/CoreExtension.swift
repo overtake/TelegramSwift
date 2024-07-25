@@ -177,7 +177,7 @@ extension RenderedPeer {
 extension TelegramMediaFile {
     var videoSize:NSSize {
         for attr in attributes {
-            if case let .Video(_,size, _, _) = attr {
+            if case let .Video(_,size, _, _, _) = attr {
                 return size.size
             }
         }
@@ -186,7 +186,7 @@ extension TelegramMediaFile {
     
     var isStreamable: Bool {
         for attr in attributes {
-            if case let .Video(_, _, flags, _) = attr {
+            if case let .Video(_, _, flags, _, _) = attr {
                 return flags.contains(.supportsStreaming)
             }
         }
@@ -218,7 +218,7 @@ extension TelegramMediaFile {
     
     var videoDuration: Double {
         for attr in attributes {
-            if case let .Video(duration,_, _, _) = attr {
+            if case let .Video(duration,_, _, _, _) = attr {
                 return duration
             }
         }
@@ -1202,7 +1202,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
                     return true
                 } else {
-                    return peer.canSendMessage(false, threadData: threadData)
+                    return true//peer.canSendMessage(false, threadData: threadData)
                 }
             case .scheduled:
                 return false
@@ -1475,7 +1475,7 @@ extension Media {
         if let media = self as? TelegramMediaFile {
             for attr in media.attributes {
                 switch attr {
-                case let .Video(_, _, flags, _):
+                case let .Video(_, _, flags, _, _):
                     return flags.contains(.isSilent)
                 default:
                     return false
@@ -2853,7 +2853,7 @@ func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = th
 
 
 func canCollagesFromUrl(_ urls:[URL]) -> Bool {
-    var canCollage: Bool = urls.count > 1
+    var canCollage: Bool = urls.count >= 1
     
     var musicCount: Int = 0
     var voiceCount: Int = 0
@@ -3780,13 +3780,7 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
-        let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
-        if !WebappWindow.focus(botId: bot.peer.id) {
-            _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
-                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: result.url, title: bot.shortName, requestData: .simple(url: result.url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file))
-            })
-        }
-       
+        WebappsStateContext.standart.open(tab: .simple(bot: bot.peer, url: nil, source: .settings), context: context)
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //

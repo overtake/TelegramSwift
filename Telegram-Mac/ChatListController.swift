@@ -943,9 +943,9 @@ class ChatListController : PeersListController {
             if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState != .minimisize {
                 additionItems.append(.suspicious(suspiciousSession))
             }
-            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
-                additionItems.append(.custom(UIChatListBuyStarsAction(context: context)))
-            }
+//            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
+//                additionItems.append(.custom(UIChatListBuyStarsAction(context: context)))
+//            }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
                 if suggestions.contains(.gracePremium) {

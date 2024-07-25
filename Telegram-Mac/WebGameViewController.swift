@@ -75,7 +75,7 @@ public final class GameView : View {
 
 class WebGameViewController: ModalViewController, WKUIDelegate {
     private let gameUrl:String
-    private let peerId:PeerId
+    let peerId:PeerId
     private let context: AccountContext
     
     private var media:TelegramMediaGame!
@@ -266,5 +266,6 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
         self.genericView.frame = rect
         self.genericView.updateLayout(size: rect.size, transition: .immediate)
     }
+
     
 }

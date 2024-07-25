@@ -2276,12 +2276,13 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             
             if let messageId = messageId {
-                let _ = ((context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .local)
+                let _ = ((context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .cloud(skipLocal: false))
                           |> mapToSignal { result -> Signal<Message?, GetMessagesError> in
                               if case let .result(messages) = result {
                                   return .single(messages.first)
+                              } else {
+                                  return .never()
                               }
-                              return .single(nil)
                           })
                           |> deliverOnMainQueue).startStandalone(next: { message in
                               if let _ = message {
@@ -2852,14 +2853,28 @@ final class StoryModalController : ModalViewController, Notifable {
             activateMediaArea(area)
         }, deactivateMediaArea: { area in
             deactivateMediaArea(area)
-        }, invokeMediaArea: { area in
+        }, invokeMediaArea: { [weak self] area in
             switch area {
             case let .venue(_, venue):
                 showModal(with: StoryFoundListController(context: context, source: .mediaArea(area), presentation: darkAppearance), for: context.window)
             case let .channelMessage(_, messageId):
                 openChat(messageId.peerId, messageId, nil)
             case let .link(_, url):
-                execute(inapp: .external(link: url, false))
+                let link = inApp(for: url.nsstring, context: context, openInfo: { peerId, toChat, messageId, initialAction in
+                    if toChat {
+                        openChat(peerId, messageId, initialAction)
+                    } else {
+                        openPeerInfo(peerId, nil)
+                    }
+                })
+                let previous = context.bindings.rootNavigation().controller
+
+                execute(inapp: link, afterComplete: { [weak self, weak previous] _ in
+                    let current = context.bindings.rootNavigation().controller
+                    if current != previous {
+                        self?.close()
+                    }
+                })
             default:
                 break
             }

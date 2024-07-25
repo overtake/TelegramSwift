@@ -12,6 +12,8 @@ import SwiftSignalKit
 import Postbox
 import TGUIKit
 
+private let gradient = [NSColor(0xFFAC04), NSColor(0xFFCA35)]
+
 private final class Arguments {
     let context: AccountContext
     let dismiss:()->Void
@@ -32,6 +34,14 @@ private struct State : Equatable {
 
 
 private final class HeaderItem : GeneralRowItem {
+    
+    fileprivate struct Sender : Equatable {
+        let titleLayout: TextViewLayout
+        let amountLayout: TextViewLayout
+        let peer: EnginePeer
+        let amount: Int64
+    }
+    
     fileprivate let context: AccountContext
     fileprivate let state: State
     fileprivate let close:()->Void
@@ -40,6 +50,8 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let balanceLayout: TextViewLayout
     fileprivate let headerLayout: TextViewLayout
     fileprivate let info: TextViewLayout
+    
+    fileprivate var senders: [Sender] = []
 
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: State, viewType: GeneralViewType, updateValue:@escaping(Int64)->Void, action:@escaping()->Void, close:@escaping()->Void) {
         self.context = context
@@ -47,7 +59,7 @@ private final class HeaderItem : GeneralRowItem {
         self.close = close
         self.updateValue = updateValue
         let balanceAttr = NSMutableAttributedString()
-        balanceAttr.append(string: strings().starPurchaseBalance("\(clown)\(state.myBalance)"), color: theme.colors.text, font: .normal(.text))
+        balanceAttr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(state.myBalance)"), color: theme.colors.text, font: .normal(.text))
         balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         self.balanceLayout = .init(balanceAttr, alignment: .right)
@@ -61,6 +73,12 @@ private final class HeaderItem : GeneralRowItem {
         attr.detectBoldColorInString(with: .medium(.text))
         self.info = .init(attr, alignment: .center)
         
+        for i in 0 ..< 3 {
+            let peer = EnginePeer(context.myPeer!)
+            let amount = Int64.random(in: 100...100000)
+            
+            senders.append(.init(titleLayout: .init(.initialize(string: peer._asPeer().compactDisplayTitle, color: theme.colors.text, font: .normal(.text))), amountLayout: .init(.initialize(string: "\(amount.prettyNumber)", color: .white, font: .medium(.short))), peer: peer, amount: amount))
+        }
         
         super.init(initialSize, stableId: stableId, viewType: viewType, action: action, inset: .init())
     }
@@ -72,11 +90,22 @@ private final class HeaderItem : GeneralRowItem {
 
         self.headerLayout.measure(width: width - 40 - balanceLayout.layoutSize.width)
         self.info.measure(width: width - 40)
+        
+        
         return true
     }
     
     override var height: CGFloat {
-        return 50 + (48 + 12) + 10 + 30 + info.layoutSize.height + 10 + 40 + 10 + 10
+        var height: CGFloat = 50 + (48 + 12) + 10 + 30 + info.layoutSize.height + 10 + 40 + 10 + 10
+        
+        if !senders.isEmpty {
+            height += sendersHeight + 20
+        }
+        return height
+    }
+    
+    var sendersHeight: CGFloat {
+        return 20 + 36 + 20 + 80
     }
     
     override func viewClass() -> AnyClass {
@@ -125,11 +154,172 @@ private final class AcceptView : Control {
     }
 }
 
+private final class SendersView: View {
+    
+    private class BadgeView : View {
+        private let container: View = View()
+        private let gradientLayer = SimpleGradientLayer()
+        private let textView = TextView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(container)
+            
+            container.layer?.addSublayer(gradientLayer)
+            
+            container.addSubview(textView)
+            
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+            //TODOLANG
+            let layout = TextViewLayout(.initialize(string: "Top Senders", color: NSColor.white, font: .medium(.text)), alignment: .center)
+            layout.measure(width: .greatestFiniteMagnitude)
+            self.textView.update(layout)
+            
+            container.setFrameSize(NSMakeSize(textView.frame.width + 20, frameRect.height))
+            container.layer?.cornerRadius = container.frame.height / 2
+            
+            gradientLayer.colors = gradient.map { $0.cgColor }
+            gradientLayer.startPoint = NSMakePoint(0, 0.5)
+            gradientLayer.endPoint = NSMakePoint(1, 0.5)
+            
+            gradientLayer.frame = container.bounds
+        }
+        
+        override func layout() {
+            super.layout()
+            textView.center()
+            container.center()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            super.draw(layer, in: ctx)
+            
+            ctx.setFillColor(theme.colors.border.cgColor)
+            ctx.fill(NSMakeRect(10, frame.height / 2, container.frame.minX - 20, .borderSize))
+            ctx.fill(NSMakeRect(container.frame.maxX + 10, frame.height / 2, container.frame.minX - 20, .borderSize))
+
+        }
+    }
+    
+    private final class PeerView : Control {
+        private let avatarView = AvatarControl(font: .avatar(18))
+        private let nameView = TextView()
+        
+        private let badgeView = View()
+        private let amountView = InteractiveTextView()
+        private let amountIcon = ImageView()
+        private let badgeGradient = SimpleGradientLayer()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.avatarView.setFrameSize(70, 70)
+            addSubview(avatarView)
+            self.badgeView.layer?.addSublayer(badgeGradient)
+            self.badgeView.addSubview(amountView)
+            self.badgeView.addSubview(amountIcon)
+            addSubview(self.badgeView)
+            addSubview(nameView)
+            
+            badgeGradient.colors = gradient.map { $0.cgColor }
+            badgeGradient.startPoint = NSMakePoint(0, 0.5)
+            badgeGradient.endPoint = NSMakePoint(1, 0.5)
+            
+            
+            nameView.userInteractionEnabled = false
+            nameView.isSelectable = false
+            self.layer?.masksToBounds = false
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(_ sender: HeaderItem.Sender, context: AccountContext, animated: Bool) {
+            self.avatarView.setPeer(account: context.account, peer: sender.peer._asPeer())
+            
+            sender.titleLayout.measure(width: frame.width + 20)
+            nameView.update(sender.titleLayout)
+            
+            sender.amountLayout.measure(width: .greatestFiniteMagnitude)
+            amountView.set(text: sender.amountLayout, context: context)
+            
+            badgeView.layer?.borderColor = theme.colors.background.cgColor
+            badgeView.layer?.borderWidth = 2
+            
+            amountIcon.image = NSImage(resource: .iconPeerPremium).precomposed(NSColor.white, zoom: 0.875)
+            amountIcon.sizeToFit()
+            
+            badgeView.setFrameSize(NSMakeSize(amountView.frame.width + 14 + amountIcon.frame.width, amountView.frame.height + 5))
+            badgeView.layer?.cornerRadius = badgeView.frame.height / 2
+            
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            nameView.centerX(y: frame.height - nameView.frame.height)
+            badgeView.centerX(y: avatarView.frame.maxY - floorToScreenPixels(nameView.frame.height / 2))
+            amountIcon.centerY(x: 6, addition: -1)
+            amountView.centerY(x: amountIcon.frame.maxX, addition: -1)
+            badgeGradient.frame = badgeView.bounds
+        }
+    }
+    
+    private let badge: BadgeView
+    private let container: View
+    required init(frame frameRect: NSRect) {
+        badge = BadgeView(frame: NSMakeRect(0, 0, frameRect.width, 36))
+        container = View(frame: NSMakeRect(0, badge.frame.height + 20, frameRect.width, 100))
+        super.init(frame: frameRect)
+        addSubview(badge)
+        addSubview(container)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    
+    func update(_ senders: [HeaderItem.Sender], context: AccountContext, animated: Bool) {
+        
+        
+        while container.subviews.count > senders.count {
+            container.subviews.last?.removeFromSuperview()
+        }
+        while container.subviews.count < senders.count {
+            container.addSubview(PeerView(frame: NSMakeRect(0, 0, 70, container.frame.height)))
+        }
+        
+        for (i, sender) in senders.enumerated() {
+            let view = container.subviews[i] as! PeerView
+            view.update(sender, context: context, animated: animated)
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        let between = floorToScreenPixels((frame.width - container.subviewsWidthSize.width) / CGFloat(container.subviews.count + 1))
+        var x: CGFloat = between
+        for view in container.subviews {
+            view.setFrameOrigin(NSMakePoint(x, 0))
+            x += view.frame.width + between
+        }
+    }
+}
+
 private final class SliderView : Control {
     let dotLayer = View(frame: NSMakeRect(0, 0, 28, 28))
-    private let backgroundLayer = SimpleLayer()
     private let foregroundLayer = SimpleGradientLayer()
-    
+    private let emptyLayer = SimpleLayer()
+
     private var progress: CGFloat = 0.0
     
     var updateProgress:((CGFloat)->Void)? = nil
@@ -142,17 +332,18 @@ private final class SliderView : Control {
         
         self.layer?.cornerRadius = 15
         
-        self.layer?.addSublayer(backgroundLayer)
+        self.layer?.addSublayer(emptyLayer)
         self.layer?.addSublayer(foregroundLayer)
         self.addSubview(dotLayer)
         
-        backgroundLayer.backgroundColor = NSColor.random.cgColor
+        emptyLayer.backgroundColor = theme.colors.listBackground.cgColor
 
         
-        foregroundLayer.colors = [NSColor(0xFFAC04), NSColor(0xFFCA35)].map { $0.cgColor }
+        foregroundLayer.colors = gradient.map { $0.cgColor }
         foregroundLayer.startPoint = NSMakePoint(0, 0.5)
         foregroundLayer.endPoint = NSMakePoint(1, 0.2)
 
+        foregroundLayer.cornerRadius = frameRect.height / 2
         
         self.set(handler: { [weak self] _ in
             self?.checkAndUpdate()
@@ -200,8 +391,9 @@ private final class SliderView : Control {
     }
     
     func checkAndUpdate() {
-        if let current = self.window?.mouseLocationOutsideOfEventStream {
+        if var current = self.window?.mouseLocationOutsideOfEventStream {
             let width = self.frame.width - dotLayer.frame.width / 2
+            current.x -= dotLayer.frame.width / 2
             let newValue = self.convert(current, from: nil)
             let percent = max(0, min(1, newValue.x / width))
                         
@@ -211,11 +403,15 @@ private final class SliderView : Control {
     
     override func layout() {
         super.layout()
-        foregroundLayer.frame = bounds
-        backgroundLayer.frame = bounds
-        dotLayer.frame = NSMakeRect(1, 1, 28, 28)
         
-        dotLayer.frame = NSMakeRect(max(1, min(1 + floor((frame.width - dotLayer.frame.width - 1) * progress), frame.width - dotLayer.frame.width - 1)), 1, dotLayer.frame.width, dotLayer.frame.height)
+        
+        emptyLayer.frame = bounds
+        dotLayer.frame = NSMakeRect(1, 1, 26, 26)
+        
+        dotLayer.frame = NSMakeRect(max(2, min(2 + floor((frame.width - dotLayer.frame.width - 2) * progress), frame.width - dotLayer.frame.width - 2)), 2, dotLayer.frame.width, dotLayer.frame.height)
+        
+        foregroundLayer.frame = NSMakeRect(0, 0, dotLayer.frame.maxX + 2, frame.height)
+
     }
     
     required init?(coder: NSCoder) {
@@ -245,7 +441,7 @@ private final class BadgeView : View {
         
         textView.userInteractionEnabled = false
         
-        foregroundLayer.colors = [NSColor(0xFFAC04), NSColor(0xFFCA35)].map { $0.cgColor }
+        foregroundLayer.colors = gradient.map { $0.cgColor }
         foregroundLayer.startPoint = NSMakePoint(0, 0.5)
         foregroundLayer.endPoint = NSMakePoint(1, 0.2)
         foregroundLayer.mask = shapeLayer
@@ -332,6 +528,8 @@ private final class HeaderItemView : GeneralContainableRowView {
     private let badgeView = BadgeView(frame: NSMakeRect(0, 0, 100, 48))
     private let sliderView = SliderView(frame: NSMakeRect(0, 0, 100, 30))
     
+    private var sendersView: SendersView?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(dismiss)
@@ -399,6 +597,21 @@ private final class HeaderItemView : GeneralContainableRowView {
         accept.update(item, animated: animated)
         accept.setFrameSize(NSMakeSize(frame.width - 20, 40))
         
+        if !item.senders.isEmpty {
+            let current: SendersView
+            if let view = self.sendersView {
+                current = view
+            } else {
+                current = .init(frame: NSMakeRect(0, 0, frame.width, item.sendersHeight))
+                addSubview(current)
+                self.sendersView = current
+            }
+            current.update(item.senders, context: item.context, animated: animated)
+        } else if let view = self.sendersView {
+            performSubviewRemoval(view, animated: animated)
+            self.sendersView = nil
+        }
+        
         needsLayout = true
 
     }
@@ -415,6 +628,10 @@ private final class HeaderItemView : GeneralContainableRowView {
         header.centerX(y: floorToScreenPixels((50 - header.frame.height) / 2) - 10)
         accept.centerX(y: frame.height - accept.frame.height)
         
+        
+        if let sendersView {
+            sendersView.setFrameOrigin(NSMakePoint(0, accept.frame.minY - sendersView.frame.height - 20))
+        }
         
         sliderView.frame = NSMakeRect(10, 50 + badgeView.frame.height + 10, frame.width - 20, 30)
         
@@ -443,6 +660,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return HeaderItem(initialSize, stableId: stableId, context: arguments.context, state: state, viewType: .legacy, updateValue: arguments.updateValue, action: arguments.react, close: arguments.dismiss)
     }))
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("h2"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: theme.colors.background)
+    }))
+    sectionId += 1
   
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("By sending Stars you agree to the [Terms of Service](https://telegram.org).", linkHandler: { link in
     }), data: .init(color: theme.colors.grayText, viewType: .textBottomItem, fontSize: 12, centerViewAlignment: true, alignment: .center, linkColor: theme.colors.link)))

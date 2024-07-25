@@ -20,7 +20,7 @@ final class InlineAvatarLayer: SimpleLayer {
         self.frame = frame
         let size = frame.size
                 
-        let signal: Signal<(CGImage?, Bool), NoError> = peerAvatarImage(account: context.account, photo: .peer(peer._asPeer(), peer._asPeer().smallProfileImage, peer._asPeer().nameColor, peer.displayLetters, nil), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+        let signal: Signal<(CGImage?, Bool), NoError> = peerAvatarImage(account: context.account, photo: .peer(peer._asPeer(), peer._asPeer().smallProfileImage, peer._asPeer().nameColor, peer.displayLetters, nil, nil), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
         
         let disposable = signal.start(next: { [weak self] values in
             self?.contents = values.0

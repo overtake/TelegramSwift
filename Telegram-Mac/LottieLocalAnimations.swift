@@ -135,6 +135,11 @@ enum LocalAnimatedSticker : String {
     case show_status_profile
     case show_status_read
     
+    case duck_webapp_error
+    case browser_back_to_close
+    case browser_close_to_back
+    case browser_more
+
     case menu_add_to_folder
     case menu_archive
     case menu_clear_history
@@ -295,6 +300,7 @@ enum LocalAnimatedSticker : String {
     case menu_sort_down
     case menu_verification
     case menu_paid
+    case menu_apps
     
     case emoji_category_activities
     case emoji_category_angry
@@ -382,6 +388,16 @@ enum LocalAnimatedSticker : String {
             }
         }
         return nil
+    }
+    
+    static func bestForStarsGift(_ amount: Int64) -> LocalAnimatedSticker {
+        if amount < 1000 {
+            return LocalAnimatedSticker.premium_gift_3
+        } else if amount < 2500 {
+            return LocalAnimatedSticker.premium_gift_6
+        } else {
+            return LocalAnimatedSticker.premium_gift_12
+        }
     }
     
     var parameters: ChatAnimatedStickerMediaLayoutParameters {

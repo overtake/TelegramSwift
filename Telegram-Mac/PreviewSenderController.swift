@@ -135,7 +135,7 @@ fileprivate class PreviewSenderView : Control {
     fileprivate var totalCount: Int = 0
     fileprivate var slowMode: SlowMode? = nil
     
-    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true, isSpoiler: false, sort: .down, payAmount: nil)
+    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: FastSettings.isNeedCollage, isSpoiler: false, sort: .down, payAmount: nil)
     
     var state: PreviewSendingState {
         set {
@@ -283,18 +283,20 @@ fileprivate class PreviewSenderView : Control {
                     }
                 }, itemImage: newValue.state == .archive ? MenuAnimation.menu_check_selected.value : nil))
             }
-            if canCollage {
+            if canCollage, totalCount > 1 {
                 menu.addItem(ContextSeparatorItem())
 
                 menu.addItem(ContextMenuItem(strings().previewSenderGrouped, handler: {
                     updateValue {
                         $0.withUpdatedIsCollage(true)
                     }
+                    FastSettings.isNeedCollage = true
                 }, itemImage: newValue.isCollage ? MenuAnimation.menu_check_selected.value : nil))
                 menu.addItem(ContextMenuItem(strings().previewSenderUngrouped, handler: {
                     updateValue {
                         $0.withUpdatedIsCollage(false)
                     }
+                    FastSettings.isNeedCollage = false
                 }, itemImage: !newValue.isCollage ? MenuAnimation.menu_check_selected.value : nil))
             }
             if canSpoiler || state.state == .media {
@@ -309,7 +311,7 @@ fileprivate class PreviewSenderView : Control {
                 }, itemImage: MenuAnimation.menu_send_spoiler.value))
             }
             if state.state == .media, let peer = self.controller?.chatInteraction.peer {
-                menu.addItem(ContextMenuItem(newValue.sortValue == .up ? strings().previewSenderMoveTextUp : strings().previewSenderMoveTextDown, handler: {
+                menu.addItem(ContextMenuItem(newValue.sortValue == .down ? strings().previewSenderMoveTextUp : strings().previewSenderMoveTextDown, handler: {
                     updateValue {
                         $0.withUpdatedSort($0.sort == .down ? .up : .down)
                     }
@@ -1640,7 +1642,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             
             let slowMode = self.chatInteraction.presentation.slowMode
             let inputState = self.genericView.textView.interactions.presentation
-
+            
             if let slowMode = slowMode, slowMode.hasLocked {
                 self.genericView.textView.shake()
             } else if self.inputPlaceholder != strings().previewSenderCaptionPlaceholder && slowMode != nil && inputState.inputText.length > 0 {
@@ -1734,14 +1736,14 @@ class PreviewSenderController: ModalViewController, Notifable {
                 let effect = self.contextChatInteraction.presentation.messageEffect
                 
                 self.chatInteraction.sendMessage(silent, atDate, effect)
-                if state.isCollage {
+                if state.isCollage && medias.count > 1 {
                     let collages = medias.chunks(10)
                     for collage in collages {
                         self.chatInteraction.sendMedias(makeMedia(collage, true), input, state.isCollage && state.payAmount == nil, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
                         additionalMessage = nil
                     }
                 } else {
-                    self.chatInteraction.sendMedias(makeMedia(medias, false), input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
+                    self.chatInteraction.sendMedias(makeMedia(medias, false), input, false, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler, effect, state.sortValue == .up)
                 }
             }
             
