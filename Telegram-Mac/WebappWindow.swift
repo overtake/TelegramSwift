@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import KeyboardKey
 private final class Webapp : Window {
     fileprivate let controller: ViewController
     init(controller: ViewController) {
@@ -199,6 +199,23 @@ final class WebappsStateContext {
                 cleanup(key)
             }
         }
+    }
+    
+    static func checkKey(_ event: NSEvent) -> NSEvent? {
+        if event.keyCode == KeyboardKey.W.rawValue {
+            let list = accountHolder.with { $0.values }
+            var invoked: Bool = false
+            for value in list {
+                if value.browser?.window == event.window {
+                    value.browser?.closeTab()
+                    invoked = true
+                }
+            }
+            if invoked {
+                return nil
+            }
+        }
+        return event
     }
     
     public private(set) var browser: WebappBrowserController? = nil
