@@ -243,18 +243,18 @@ public class InputDataModalController : ModalViewController {
     var height: CGFloat {
         let topHeight = current.genericView.topView?.frame.height ?? 0
         let wh = view.window?.frame.height ?? 0
-        return min(min(wh - 100, 700), current.tableView.listHeight + topHeight)
+        return min(min(wh - 160, 700), current.tableView.listHeight + topHeight)
     }
     
     override open func measure(size: NSSize) {
         let topHeight = current.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 350))), min(min(size.height - 100, 700), current.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 330))), min(min(size.height - 160, 700), current.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = current.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 100, 700), current.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 330))), min(min(contentSize.height - 160, 700), current.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     

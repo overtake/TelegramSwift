@@ -89,6 +89,15 @@ public class CustomViewHandlers {
 
 public var viewEnableTouchBar: Bool = true
 
+open class EventLessView : NSView {
+    
+    var isEventLess: Bool {
+        return true
+    }
+
+}
+
+
 
 open class LayerBackedView : NSView, AppearanceViewProtocol {
     
