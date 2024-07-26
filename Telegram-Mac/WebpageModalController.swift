@@ -1561,7 +1561,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 
                 
             }
-
+        case "web_app_share_to_story":
+            alert(for: window, info: strings().webappStoryNotAvailable)
         default:
             break
         }

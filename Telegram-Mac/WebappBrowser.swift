@@ -1369,7 +1369,6 @@ final class WebappBrowserController : ViewController {
     private var current: WebpageContainerController?
     let context: AccountContext
     private var arguments: Arguments?
-    private var wHandler: Any?
     
     private var initialTab: BrowserTabData.Data?
     
@@ -1398,6 +1397,10 @@ final class WebappBrowserController : ViewController {
         browser.makeKeyAndOrderFront(nil)
     }
     
+    func closeTab() {
+        self.arguments?.closeTab(nil, false)
+    }
+    
     private var browser: WebappBrowser {
         return _window! as! WebappBrowser
     }
@@ -1408,15 +1411,7 @@ final class WebappBrowserController : ViewController {
         browser.contentView?.addSubview(self.view)
         browser.show()
         
-        wHandler = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
-            if event.keyCode == KeyboardKey.W.rawValue, event.window == self?.browser {
-                self?.arguments?.closeTab(nil, true)
-                return nil
-            } else {
-                return event
-            }
-        })
-        
+
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.current?.reloadPage()
             return .invoked
@@ -1488,9 +1483,6 @@ final class WebappBrowserController : ViewController {
         }
         
         browser.removeAllHandlers(for: self)
-        if let monitor = self.wHandler {
-            NSEvent.removeMonitor(monitor)
-        }
         
         self.browser.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
             self?.browser.orderOut(nil)

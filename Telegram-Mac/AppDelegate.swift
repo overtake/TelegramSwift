@@ -28,6 +28,7 @@ import CodeSyntax
 import MetalEngine
 import TelegramMedia
 import RLottie
+import KeyboardKey
 
 #if !APP_STORE
 import AppCenter
@@ -318,6 +319,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+            return WebappsStateContext.checkKey(event)
+        })
+        
         
        // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
       
