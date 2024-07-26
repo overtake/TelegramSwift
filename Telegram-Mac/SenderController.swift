@@ -270,7 +270,7 @@ class Sender: NSObject {
             |> deliverOnMainQueue
     }
     
-    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool, isCollage: Bool = false) -> Signal<(Media,String), NoError> {
+    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool, isCollage: Bool = false, isUniquelyReferencedTemporaryFile: Bool = true) -> Signal<(Media,String), NoError> {
         return Signal { (subscriber) in
             
             let path = container.path
@@ -298,7 +298,7 @@ class Sender: NSObject {
                         resource = LocalFileMediaResource(fileId: id, size: fileSize(path), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
                     } else {
-                        resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fileSize(path))
+                        resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: isUniquelyReferencedTemporaryFile, size: fileSize(path))
                     }
                     
                     attrs.append(.Audio(isVoice: true, duration: Int(container.data.duration), title: nil, performer: nil, waveform: memoryWaveform))
@@ -311,7 +311,7 @@ class Sender: NSObject {
                         resource = LocalFileMediaResource(fileId: id, size: fileSize(path), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
                     } else {
-                        resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fileSize(path))
+                        resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: isUniquelyReferencedTemporaryFile, size: fileSize(path))
                     }
                     
                     
@@ -343,15 +343,11 @@ class Sender: NSObject {
                             } else {
                                 let data = compressImageToJPEG(image, quality: 0.73)
                                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
-                                if let data = data {
-                                    try? data.write(to: URL(fileURLWithPath: path))
-                                }
-                                
-
+                                FileManager.default.createFile(atPath: path, contents: data)
 
                                 
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
-                                let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
+                                let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: isUniquelyReferencedTemporaryFile)
                                 
                                 media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             }

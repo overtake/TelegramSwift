@@ -330,6 +330,22 @@ extension MediaArea {
             return true
         }
     }
+    
+    var canClick: Bool {
+        switch self {
+        case .venue:
+            return true
+        case .channelMessage:
+            return true
+        case .reaction:
+            return false
+        case .link:
+            return true
+        case .weather:
+            return false
+        }
+    }
+    
     var reaction: MessageReaction.Reaction? {
         switch self {
         case .venue:
@@ -693,7 +709,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     
 }
 
-private final class Weather_InteractiveMedia: NSView, InteractiveMedia {
+private final class Weather_InteractiveMedia: EventLessView, InteractiveMedia {
     
     var _mediaArea: MediaArea
     
@@ -701,11 +717,6 @@ private final class Weather_InteractiveMedia: NSView, InteractiveMedia {
         return _mediaArea
     }
     
-    private final class Container: NSImageView {
-        override var isFlipped: Bool {
-            return true
-        }
-    }
     
     private var emojiView: InlineStickerItemLayer?
     private var arguments: StoryArguments?
@@ -737,6 +748,10 @@ private final class Weather_InteractiveMedia: NSView, InteractiveMedia {
         }
         super.init(frame: frameRect)
         
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        textView.isEventLess = true
+        
         addSubview(textView)
                 
         self.wantsLayer = true
@@ -767,6 +782,61 @@ private final class Weather_InteractiveMedia: NSView, InteractiveMedia {
             }
         }))
     }
+    
+    func playReaction(_ reaction: StoryReactionAction, context: AccountContext) -> Void {
+         
+        let size = NSMakeSize(self.frame.width * 3.0, self.frame.height * 3.0)
+        
+         var effectFileId: Int64?
+         var effectFile: TelegramMediaFile?
+         switch reaction.item {
+         case let .custom(fileId, file):
+             effectFileId = fileId
+             effectFile = file
+         case let .builtin(string):
+             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
+             effectFile = reaction?.aroundAnimation
+         }
+         
+                
+         let play:(NSView)->Void = { [weak self] container in
+             guard let `self` = self else {
+                 return
+             }
+             if let effectFileId = effectFileId {
+                 let player = CustomReactionEffectView(frame: NSMakeSize(size.width * 2, size.height * 2).bounds, context: context, fileId: effectFileId, file: effectFile)
+                 player.isEventLess = true
+                 player.triggerOnFinish = { [weak player] in
+                     player?.removeFromSuperview()
+                 }
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+                 player.frame = rect
+                 container.addSubview(player)
+                 
+             } else if let effectFile = effectFile {
+                 let player = InlineStickerView(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1), controlContent: false)
+                 player.isEventLess = true
+                 player.animateLayer.isPlayable = true
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+
+                 player.frame = rect
+                 
+                 container.addSubview(player)
+                 player.animateLayer.triggerOnState = (.finished, { [weak player] state in
+                     player?.removeFromSuperview()
+                 })
+             }
+         }
+         
+         let completed: (Bool)->Void = { [weak self]  _ in
+             DispatchQueue.main.async {
+                 if let container = self?.superview {
+                     play(container)
+                 }
+             }
+         }
+        completed(true)
+     }
     
     private func drawSticker(_ file: TelegramMediaFile, context: AccountContext) {
         
@@ -1455,7 +1525,7 @@ final class StoryListView : Control, Notifable {
     }
     
     func showMediaAreaViewer(_ mediaArea: MediaArea) {
-        guard let event = NSApp.currentEvent else {
+        guard let event = NSApp.currentEvent, let arguments else {
             return
         }
         if let viewer = self.mediaAreaViewer {
@@ -1470,7 +1540,12 @@ final class StoryListView : Control, Notifable {
         
         self.content.addSubview(view)
                 
+//        if case let .weather(_, emoji, _, _) = mediaArea {
+//            return
+//        }
+        
         var items: [ContextMenuItem] = []
+        
         
         items.append(ContextMenuItem(mediaArea.title, handler: { [weak self] in
             self?.arguments?.invokeMediaArea(mediaArea)
@@ -1535,7 +1610,7 @@ final class StoryListView : Control, Notifable {
 
         
         for area in story.storyItem.mediaAreas {
-            if isPoint(point, in: area), !area.canDraw {
+            if isPoint(point, in: area), area.canClick {
                 selectedMediaArea = area
                 break
             }

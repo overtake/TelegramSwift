@@ -21,7 +21,7 @@ import InAppPurchaseManager
 #endif
 import ApiCredentials
 
-let clown: String = "🤡"
+let clown: String = "#️⃣"
 let focusIntentEmoji = "⛔️"
 let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 

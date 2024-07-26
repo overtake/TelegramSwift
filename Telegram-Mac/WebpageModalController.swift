@@ -850,6 +850,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        if let peerId = bot?.id {
+            FastSettings.markWebAppAsConfirmed(peerId)
+        }
         
         genericView.standalone = self.browser == nil
         
@@ -1562,7 +1565,64 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 
             }
         case "web_app_share_to_story":
-            alert(for: window, info: strings().webappStoryNotAvailable)
+            
+            if let json = json, let mediaUrl = json["media_url"] as? String {
+                let text = json["text"] as? String
+                
+                
+                enum FetchResult {
+                    case result(Data)
+                    case progress(Float)
+                }
+                
+                let _ = (showModalProgress(signal: fetchHttpResource(url: mediaUrl), for: window)
+                |> map(Optional.init)
+                |> `catch` { error in
+                    return .single(nil)
+                }
+                |> mapToSignal { value -> Signal<FetchResult, NoError> in
+                    if case let .dataPart(_, data, _, complete) = value, complete {
+                        return .single(.result(data))
+                    } else if case let .progressUpdated(progress) = value {
+                        return .single(.progress(progress))
+                    } else {
+                        return .complete()
+                    }
+                }
+                |> deliverOnMainQueue).start(next: { [weak self] next in
+                    guard let self else {
+                        return
+                    }
+                    
+                    switch next {
+                    case let .result(data):
+                        var source: String?
+                        if let _ = NSImage(data: data) {
+                            let tempFile = TempBox.shared.tempFile(fileName: "image.jpeg")
+                            if let _ = try? data.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic) {
+                                source = tempFile.path
+                            }
+                        } else {
+                            let tempFile = TempBox.shared.tempFile(fileName: "image.mp4")
+                            if let _ = try? data.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic) {
+                                source = tempFile.path
+                            }
+                        }
+                        if let source, let botPeer = self.bot {
+                            let signal = Sender.generateMedia(for: .init(path: source), account: context.account, isSecretRelated: false, isUniquelyReferencedTemporaryFile: false) |> deliverOnMainQueue
+                            _ =  signal.startStandalone(next: { [weak self] media, _ in
+                                if let window = self?.window {
+                                    showModal(with: StoryPrivacyModalController(context: context, presentation: theme, reason: .upload(media, .init(botPeer)), text: text), for: window)
+                                }
+                            })
+                            
+                        }
+                    default:
+                        break
+                    }
+                })
+            }
+            
         default:
             break
         }

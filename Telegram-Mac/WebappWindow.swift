@@ -202,7 +202,7 @@ final class WebappsStateContext {
     }
     
     static func checkKey(_ event: NSEvent) -> NSEvent? {
-        if event.keyCode == KeyboardKey.W.rawValue {
+        if event.keyCode == KeyboardKey.W.rawValue, event.modifierFlags.contains(.command) {
             let list = accountHolder.with { $0.values }
             var invoked: Bool = false
             for value in list {

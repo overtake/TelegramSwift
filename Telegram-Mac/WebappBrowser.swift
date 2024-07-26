@@ -1415,57 +1415,57 @@ final class WebappBrowserController : ViewController {
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.current?.reloadPage()
             return .invoked
-        }, with: self, for: .R, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(0)
             return .invoked
-        }, with: self, for: .One, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .One, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(1)
             return .invoked
-        }, with: self, for: .Two, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Two, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(2)
             return .invoked
-        }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Three, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(3)
             return .invoked
-        }, with: self, for: .Four, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Four, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(4)
             return .invoked
-        }, with: self, for: .Five, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Five, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(5)
             return .invoked
-        }, with: self, for: .Six, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Six, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(6)
             return .invoked
-        }, with: self, for: .Seven, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Seven, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(7)
             return .invoked
-        }, with: self, for: .Eight, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Eight, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(8)
             return .invoked
-        }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Nine, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.arguments?.selectAtIndex(9)
             return .invoked
-        }, with: self, for: .Zero, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Zero, priority: .modal, modifierFlags: [.command])
         
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let self else {
@@ -1473,7 +1473,7 @@ final class WebappBrowserController : ViewController {
             }
             self.arguments?.add(self.genericView.more)
             return .invoked
-        }, with: self, for: .T, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
         
     }
     

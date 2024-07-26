@@ -102,9 +102,9 @@ final class EmojiScreenEffect {
                             
                             if isPremium {
                                 if !animation.mirror {
-                                    point.x += 50
+                                    point.x += 18
                                 } else {
-                                    point.x -= 50
+                                    point.x -= 18
                                 }
                                 point.y -= 10
                             } else {

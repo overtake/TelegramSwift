@@ -320,7 +320,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-        _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+        _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
             return WebappsStateContext.checkKey(event)
         })
         
