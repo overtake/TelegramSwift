@@ -169,7 +169,7 @@ class UserInfoArguments : PeerInfoArguments {
     
     func openApp() {
         if let peer {
-            WebappsStateContext.standart.open(tab: .mainapp(bot: .init(peer), source: .generic), context: context)
+            WebappsStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .generic), context: context)
         }
     }
     func openBotfather() {

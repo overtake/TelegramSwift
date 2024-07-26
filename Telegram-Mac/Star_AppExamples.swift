@@ -123,7 +123,7 @@ func Star_AppExamples(context: AccountContext) -> InputDataModalController {
     }
 
     let arguments = Arguments(context: context, launchApp: { peer in
-        WebappsStateContext.standart.open(tab: .mainapp(bot: peer, source: .generic), context: context)
+        WebappsStateContext.get(context).open(tab: .mainapp(bot: peer, source: .generic), context: context)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

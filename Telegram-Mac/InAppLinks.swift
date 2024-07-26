@@ -782,7 +782,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     if chat == nil {
                                         switch action {
                                         case let .openWebview(botPeer, botApp, result):
-                                            WebappsStateContext.standart.open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result), context: context)
+                                            WebappsStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result), context: context)
                                         default:
                                             break
                                         }

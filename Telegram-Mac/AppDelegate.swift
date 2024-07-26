@@ -245,7 +245,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         return sharedContextPromise.get() |> take(1) |> deliverOnMainQueue
     }
     private(set) var sharedApplicationContextValue: SharedApplicationContext?
-    private(set) var supportAccountContextValue: SupportAccountContext?
+    private(set) var supportAccountContextValue: SupportAccountContext? {
+        didSet {
+            supportAccountContextValue?.didUpdate = { _ in
+                self.updateActiveContexts()
+            }
+        }
+    }
     
     var passlock: Signal<Bool, NoError> {
         return sharedContextPromise.get() |> mapToSignal {
@@ -253,7 +259,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
     }
     
-    fileprivate var contextValue: AuthorizedApplicationContext?
+    fileprivate var contextValue: AuthorizedApplicationContext? {
+        didSet {
+            updateActiveContexts()
+        }
+    }
     private let context = Promise<AuthorizedApplicationContext?>()
     
     private var authContextValue: UnauthorizedApplicationContext?
@@ -941,6 +951,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 
                 self.supportAccountContextValue = .init(applicationContext: sharedApplicationContext)
                 
+                
                 self.sharedContextPromise.set(accountManager.transaction { transaction -> (SharedApplicationContext, LoggingSettings) in
                     return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings)?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings)
                 }
@@ -1093,7 +1104,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         closeAllPopovers(for: window)
                         
                         self.contextValue = context
-                        
+                                                
                         if let context = context {
                             context.context.isCurrent = true
                             context.applyNewTheme()
@@ -1495,7 +1506,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
     }
     
-    
+    func updateActiveContexts() {
+        let records = [self.contextValue?.context.account.id].compactMap { $0 } + (supportAccountContextValue?.accountIds ?? [])
+        WebappsStateContext.focus(records)
+    }
     
     
     func applicationDidResignActive(_ notification: Notification) {

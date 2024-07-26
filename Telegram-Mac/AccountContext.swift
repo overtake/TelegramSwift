@@ -617,7 +617,6 @@ final class AccountContext {
         let _ = self.engine.peers.requestRecommendedAppsIfNeeded().startStandalone()
         let _ = self.engine.peers.managedUpdatedRecentApps().startStandalone()
 
-        
     #endif
         
         
@@ -737,49 +736,7 @@ final class AccountContext {
                 }
             }
         }
-        
-        
-        let defaultAndCustom: Signal<(SmartThemeCachedData, SmartThemeCachedData?), NoError> = combineLatest(appearanceSignal, themeSettingsView(accountManager: sharedContext.accountManager)) |> map { appearance, value -> (ThemePaletteSettings, TelegramPresentationTheme, ThemePaletteSettings?) in
-            
-            let `default` = value.withUpdatedToDefault(dark: appearance.presentation.dark)
-                .withUpdatedCloudTheme(nil)
-                .withUpdatedPalette(appearance.presentation.colors.parent.palette)
-                .installDefaultWallpaper()
-            
-            
-            let  customData = value.withUpdatedCloudTheme(appearance.presentation.cloudTheme)
-                .withUpdatedPalette(appearance.presentation.colors)
-                .installDefaultWallpaper()
-            
-            var custom: ThemePaletteSettings?
-            if let cloud = customData.cloudTheme, cloud.settings == nil {
-                custom = customData
-            } else if let cloud = customData.cloudTheme {
-                if let settings = cloud.effectiveSettings(for: value.palette.parent.palette) {
-                    if customData.wallpaper.wallpaper != settings.wallpaper?.uiWallpaper {
-                        custom = customData
-                    }
-                }
-            }
-            
-            return (`default`, appearance.presentation, custom)
-        } |> deliverOn(.concurrentBackgroundQueue()) |> mapToSignal { (value, theme, custom) in
-            
-            var signals:[Signal<SmartThemeCachedData, NoError>] = []
-            
-            let  values = [value, custom].compactMap { $0 }
-            for (i, value) in values.enumerated() {
-                let newTheme = theme.withUpdatedColors(value.palette).withUpdatedWallpaper(value.wallpaper)
-                signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: value.wallpaper.wallpaper) |> mapToSignal { _ in
-                    return generateChatThemeThumb(palette: newTheme.colors, bubbled: value.bubbled, backgroundMode: value.bubbled ? newTheme.backgroundMode : .color(color: newTheme.colors.chatBackground))
-                } |> map { previewIcon in
-                    return SmartThemeCachedData(source: .local(value.palette), data: .init(appTheme: newTheme, previewIcon: previewIcon, emoticon: i == 0 ? "🏠" : "🎨"))
-                })
-            }
-            
-            return combineLatest(signals) |> map { ($0[0], $0.count == 2 ? $0[1] : nil) }
-        }
-        
+                
         _cloudThemes.set(cloudThemes |> map { cloudThemes in
             return .init(themes: cloudThemes, list: [:], default: nil, custom: nil)
         })

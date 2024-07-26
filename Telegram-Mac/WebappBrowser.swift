@@ -87,7 +87,7 @@ private final class Arguments {
     let context: AccountContext
     let add:(Control)->Void
     let close:()->Void
-    let select:(BrowserTabData)->Void
+    let select:(BrowserTabData.Unique)->Void
     let setLoadingState:(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void
     let setExternalState:(BrowserTabData.Unique, WebpageModalState)->Void
     let closeTab:(BrowserTabData.Unique?, Bool)->Void
@@ -96,7 +96,7 @@ private final class Arguments {
     let contextMenu:(BrowserTabData)->ContextMenu?
     let insertTab:(BrowserTabData.Data)->Void
     let shake:(BrowserTabData.Unique)->Void
-    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void) {
+    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData.Unique)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void) {
         self.context = context
         self.add = add
         self.close = close
@@ -188,6 +188,8 @@ final class WebappBrowser : Window {
             shadow.cornerCurve = .continuous
             contentView?.layer?.cornerCurve = .continuous
         }
+        
+        self.isReleasedWhenClosed = false
                 
         containerView.layer?.cornerRadius = cornerRadius
         self.contentView?.layer?.cornerRadius = cornerRadius
@@ -286,7 +288,7 @@ private final class TabView: Control {
         
         set(handler: { [weak self] _ in
             if let item = self?.data {
-                self?.arguments?.select(item)
+                self?.arguments?.select(item.unique)
             }
         }, for: .Click)
     }
@@ -568,10 +570,12 @@ private final class TabsView: View {
     }
     
     func shake(_ unique: BrowserTabData.Unique) {
-        if self.selectedView?.data?.unique == unique {
-            self.selectedView?.shake(beep: false)
-        } else {
-            self.views.first(where: { $0.data?.unique == unique })?.shake(beep: false)
+        if self.window?.isKeyWindow == true {
+            if self.selectedView?.data?.unique == unique {
+                self.selectedView?.shake(beep: false)
+            } else {
+                self.views.first(where: { $0.data?.unique == unique })?.shake(beep: false)
+            }
         }
     }
     
@@ -900,7 +904,7 @@ private final class BackOrClose : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(animationView)
-        self.updateState(state: .close(theme.colors.text.withAlphaComponent(0.8)), animated: false)
+        self.updateState(state: .close(theme.colors.text.withAlphaComponent(0.5)), animated: false)
     }
     
     private let animationView: LottiePlayerView = .init(frame: NSMakeRect(0, 0, 30, 30))
@@ -1047,13 +1051,13 @@ private final class BrowserView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        self.more.set(color: theme.colors.text.withAlphaComponent(0.8))
-        self.close.updateState(state: self.close.withUpdatedColor(theme.colors.text.withAlphaComponent(0.8)), animated: false)
+        self.more.set(color: theme.colors.text.withAlphaComponent(0.5))
+        self.close.updateState(state: self.close.withUpdatedColor(theme.colors.text.withAlphaComponent(0.5)), animated: false)
     }
     
     func update(tab: BrowserTabData, animated: Bool) {
         let isBackButton = tab.external?.isBackButton ?? false
-        let color = theme.colors.text.withAlphaComponent(0.8)
+        let color = theme.colors.text.withAlphaComponent(0.5)
         self.close.updateState(state: isBackButton ? .back(color) : .close(color), animated: animated)
     }
 }
@@ -1382,8 +1386,12 @@ final class WebappBrowserController : ViewController {
         _window = WebappBrowser(parent: context.window)
     }
     
-    func add(_ tab: BrowserTabData.Data) {
-        arguments?.insertTab(tab)
+    func add(_ tab: BrowserTabData.Data, uniqueId: BrowserTabData.Unique? = nil) {
+        if let uniqueId, let _ = webpages[uniqueId] {
+            arguments?.select(uniqueId)
+        } else {
+            arguments?.insertTab(tab)
+        }
     }
     
     func makeKeyAndOrderFront() {
@@ -1474,13 +1482,21 @@ final class WebappBrowserController : ViewController {
         
     }
     
-    func hide(_ completion: @escaping()->Void) {
-        closeAllModals(window: browser)
+    func hide(_ completion: @escaping()->Void, close: Bool = true) {
+        if close {
+            closeAllModals(window: browser)
+        }
+        
         browser.removeAllHandlers(for: self)
+        if let monitor = self.wHandler {
+            NSEvent.removeMonitor(monitor)
+        }
         
         self.browser.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
             self?.browser.orderOut(nil)
-            self?._window = nil
+            if close {
+                self?._window = nil
+            }
             completion()
         })
     }
@@ -1547,7 +1563,7 @@ final class WebappBrowserController : ViewController {
             guard let event = NSApp.currentEvent else {
                 return
             }
-            let state = WebappsStateContext.standart.fullState(context)
+            let state = WebappsStateContext.get(context).fullState(context)
             |> take(1)
             |> deliverOnMainQueue
             actionsDisposable.add(state.startStrict(next: { [weak control] webapps in
@@ -1561,7 +1577,7 @@ final class WebappBrowserController : ViewController {
                             
                             let data = BrowserTabData.Data.mainapp(bot: webapp.peer, source: .generic)
                             return ReactionPeerMenu(title: user.displayTitle, handler: {
-                                WebappsStateContext.standart.open(tab: data, context: context)
+                                WebappsStateContext.get(context).open(tab: data, context: context)
                             }, peer: user, context: context, reaction: nil, afterNameBadge: afterNameBadge)
                         } else {
                             return nil
@@ -1609,10 +1625,10 @@ final class WebappBrowserController : ViewController {
                         menu.addItem(item)
                     }
                     
-                    if !menu.items.isEmpty {
+                    if !menu.items.isEmpty, stateValue.with ({ $0.tabs.count > 1 }) {
                         menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
-                            WebappsStateContext.standart.closeBrowser()
-                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                            WebappsStateContext.get(context).hide()
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_close_multiple.value))
                     }
                     
                     AppMenu.show(menu: menu, event: event, for: control)
@@ -1628,10 +1644,10 @@ final class WebappBrowserController : ViewController {
             } else {
                 getArguments?()?.closeTab(nil, true)
             }
-        }, select: { item in
+        }, select: { uniqueId in
             updateState { current in
                 var current = current
-                current = current.select(item)
+                current = current.select(uniqueId)
                 return current
             }
         }, setLoadingState: { unique, state in
@@ -1656,7 +1672,7 @@ final class WebappBrowserController : ViewController {
             }
             let invoke:()->Void = {
                 if count == 1 {
-                    WebappsStateContext.standart.closeBrowser()
+                    WebappsStateContext.get(context).hide()
                 } else {
                     updateState {
                         $0.closeTab(unique)
@@ -1800,9 +1816,7 @@ final class WebappBrowserController : ViewController {
     }
     
     deinit {
-        if let monitor = self.wHandler {
-            NSEvent.removeMonitor(monitor)
-        }
+        
     }
     
     private var genericView: BrowserView {
