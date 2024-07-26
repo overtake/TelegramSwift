@@ -47,6 +47,7 @@
 		270FD5972C516A9B000070E6 /* browser_back_to_close.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD5952C516A99000070E6 /* browser_back_to_close.tgs */; };
 		270FD5982C516A9B000070E6 /* browser_close_to_back.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD5962C516A9A000070E6 /* browser_close_to_back.tgs */; };
 		270FD59A2C5181D9000070E6 /* browser_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD5992C5181D9000070E6 /* browser_more.tgs */; };
+		270FD59E2C53CEAF000070E6 /* menu_close_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */; };
 		2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */; };
 		27161A9C27EC98290069BCEF /* menu_drugs.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27161A9B27EC98280069BCEF /* menu_drugs.tgs */; };
 		2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718244C2A0507A300AFBD4C /* menu_success.tgs */; };
@@ -1640,6 +1641,7 @@
 		270FD5952C516A99000070E6 /* browser_back_to_close.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = browser_back_to_close.tgs; sourceTree = "<group>"; };
 		270FD5962C516A9A000070E6 /* browser_close_to_back.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = browser_close_to_back.tgs; sourceTree = "<group>"; };
 		270FD5992C5181D9000070E6 /* browser_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = browser_more.tgs; sourceTree = "<group>"; };
+		270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_close_multiple.tgs; sourceTree = "<group>"; };
 		2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaObjectToAvatar.swift; sourceTree = "<group>"; };
 		27161A9B27EC98280069BCEF /* menu_drugs.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_drugs.tgs; sourceTree = "<group>"; };
 		2718244C2A0507A300AFBD4C /* menu_success.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_success.tgs; sourceTree = "<group>"; };
@@ -3944,6 +3946,7 @@
 				276143292BD7E2900034338C /* menu_ban.tgs */,
 				2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */,
 				2787AD672BED0DCD0046578E /* menu_adult.tgs */,
+				270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */,
 				2780B29C2BFB427700F75124 /* menu_verification.tgs */,
 				270595E32B6BDCF500E05493 /* menu_boost.tgs */,
 				27A01AD22B9AF40800C59661 /* menu_search.tgs */,
@@ -7133,6 +7136,7 @@
 				272934122778E01100F10D3C /* menu_video.tgs in Resources */,
 				2751E79527F340AD003E3937 /* menu_webapp_placeholder.tgs in Resources */,
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
+				270FD59E2C53CEAF000070E6 /* menu_close_multiple.tgs in Resources */,
 				27803C0027A3E944007B0FA9 /* menu_folder_book.tgs in Resources */,
 				271F78CE280AD9520040EE8F /* durgerking.placeholder in Resources */,
 				2763A16B261DF65700C12762 /* voice_chat_set_reminder.tgs in Resources */,

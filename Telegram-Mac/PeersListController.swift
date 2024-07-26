@@ -1109,11 +1109,11 @@ class PeerListContainerView : Control {
                 if !webapps.opened.isEmpty {
                     for webapp in webapps.opened {
                         menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
-                            WebappsStateContext.standart.open(tab: webapp.data, context: arguments.context)
+                            WebappsStateContext.get(arguments.context).open(tab: webapp.data, context: arguments.context, uniqueId: webapp.unique)
                         }, peer: webapp.data.peer._asPeer(), context: arguments.context, reaction: nil))
                     }
                     menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
-                        WebappsStateContext.standart.closeAll()
+                        WebappsStateContext.get(arguments.context).closeAll()
                     }, itemImage: MenuAnimation.menu_clear_history.value))
                 }
                 
@@ -1125,12 +1125,12 @@ class PeerListContainerView : Control {
                     for recent in webapps.recentlyMenu {
                         if let peer = webapps.peers[recent.peerId] {
                             menu.addItem(ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: {
-                                WebappsStateContext.standart.open(tab: .mainapp(bot: peer, source: .generic), context: arguments.context)
+                                WebappsStateContext.get(arguments.context).open(tab: .mainapp(bot: peer, source: .generic), context: arguments.context)
                             }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
                         }
                     }
                     menu.addItem(ContextMenuItem(strings().chatListAppsClearRecent, handler: {
-                        WebappsStateContext.standart.clearRecent()
+                        WebappsStateContext.get(arguments.context).clearRecent()
                     }, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
@@ -1151,7 +1151,7 @@ class PeerListContainerView : Control {
                             let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
                             
                             return ReactionPeerMenu(title: user.displayTitle, handler: {
-                                WebappsStateContext.standart.open(tab: .mainapp(bot: webapp.peer, source: .generic), context: arguments.context)
+                                WebappsStateContext.get(arguments.context).open(tab: .mainapp(bot: webapp.peer, source: .generic), context: arguments.context)
                             }, peer: user, context: arguments.context, reaction: nil, afterNameBadge: afterNameBadge)
                         } else {
                             return nil
@@ -2190,7 +2190,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
        
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, WebappsStateContext.standart.fullState(context)).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, WebappsStateContext.get(context).fullState(context)).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0

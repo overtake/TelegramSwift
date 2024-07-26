@@ -1221,65 +1221,97 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
         case "web_app_open_popup":
             if let json = json {
-                let header = (json["title"] as? String) ?? self.defaultBarTitle
-                let info = (json["message"] as? String) ?? ""
-                
-                
+                let alert:NSAlert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = (json["title"] as? String) ?? appName
+                alert.informativeText = (json["message"] as? String) ?? ""
+                alert.window.appearance = theme.appearance
                 let buttons = json["buttons"] as? Array<[NSString : Any]>
-                var ok: (String, Int)?
-                var cancel: (String, Int)?
-                var third: (String, Int)?
-                
-                
                 if let buttons = buttons {
-                    for (i, button) in buttons.enumerated() {
+                    for button in buttons {
                         if (button["type"] as? String) == "default" {
-                            ok = (button["text"] as? String ?? "", i)
+                            alert.addButton(withTitle: button["text"] as? String ?? "")
                         } else if (button["type"] as? String) == "ok" {
-                            ok = (strings().alertOK, i)
+                            alert.addButton(withTitle: strings().alertOK)
                         } else if (button["type"] as? String) == "close" {
-                            ok = (strings().navigationClose, i)
+                            alert.addButton(withTitle: strings().navigationClose)
                         } else if (button["type"]  as? String) == "cancel" {
-                            cancel = (strings().alertCancel, i)
+                            alert.addButton(withTitle: strings().alertCancel)
                         } else if (button["type"]  as? String) == "destructive" {
-                            third = (button["text"] as? String ?? "", i)
+                            alert.addButton(withTitle: button["text"] as? String ?? "")
                         }
                     }
                 }
-                
-                if ok != nil || cancel != nil || third != nil {
-                    let active = [ok, cancel, third].compactMap { $0 }
-                    
-                    let invokeId:(Int)->Void = { [weak self] idx in
-                        if let id = buttons?[idx]["id"] as? String {
+                if !alert.buttons.isEmpty {
+                    alert.beginSheetModal(for: context.window, completionHandler: { [weak self] response in
+                        let index = response.rawValue - 1000
+                        if let id = buttons?[index]["id"] as? String {
                             self?.poupDidClose(id)
                         }
-                    }
-                    
-                    if active.count == 1 {
-                        alert(for: window, header: header, info: info, ok: active[0].0, completion: {
-                            invokeId(active[0].1)
-                        })
-                    } else {
-                        verifyAlert_button(for: window, header: header, information: info, ok: ok?.0 ?? strings().modalOK, cancel: cancel?.0 ?? strings().modalCancel, option: third?.0, successHandler: { succes in
-                            switch succes {
-                            case .thrid:
-                                if let third {
-                                    invokeId(third.1)
-                                }
-                            case .basic:
-                                if let ok {
-                                    invokeId(ok.1)
-                                }
-                            }
-                        }, cancelHandler: {
-                            if let cancel {
-                                invokeId(cancel.1)
-                            }
-                        })
-
-                    }
+                    })
                 }
+
+                /*
+                 let header = (json["title"] as? String) ?? self.defaultBarTitle
+                 let info = (json["message"] as? String) ?? ""
+                 
+                 
+                 let buttons = json["buttons"] as? Array<[NSString : Any]>
+                 var ok: (String, Int)?
+                 var cancel: (String, Int)?
+                 var third: (String, Int)?
+                 
+                 
+                 if let buttons = buttons {
+                     for (i, button) in buttons.enumerated() {
+                         if (button["type"] as? String) == "default" {
+                             ok = (button["text"] as? String ?? "", i)
+                         } else if (button["type"] as? String) == "ok" {
+                             ok = (strings().alertOK, i)
+                         } else if (button["type"] as? String) == "close" {
+                             ok = (strings().navigationClose, i)
+                         } else if (button["type"]  as? String) == "cancel" {
+                             cancel = (strings().alertCancel, i)
+                         } else if (button["type"]  as? String) == "destructive" {
+                             third = (button["text"] as? String ?? "", i)
+                         }
+                     }
+                 }
+                 
+                 if ok != nil || cancel != nil || third != nil {
+                     let active = [ok, cancel, third].compactMap { $0 }
+                     
+                     let invokeId:(Int)->Void = { [weak self] idx in
+                         if let id = buttons?[idx]["id"] as? String {
+                             self?.poupDidClose(id)
+                         }
+                     }
+                     
+                     if active.count == 1 {
+                         alert(for: window, header: header, info: info, ok: active[0].0, onDeinit: {
+                             invokeId(active[0].1)
+                         })
+                     } else {
+                         verifyAlert_button(for: window, header: header, information: info, ok: ok?.0 ?? strings().modalOK, cancel: cancel?.0 ?? strings().modalCancel, option: third?.0, successHandler: { succes in
+                             switch succes {
+                             case .thrid:
+                                 if let third {
+                                     invokeId(third.1)
+                                 }
+                             case .basic:
+                                 if let ok {
+                                     invokeId(ok.1)
+                                 }
+                             }
+                         }, onDeinit: {
+                             if let cancel {
+                                 invokeId(cancel.1)
+                             }
+                         })
+
+                     }
+                 }
+                 */
             }
         case "web_app_open_link":
             if clickCount > 0 {

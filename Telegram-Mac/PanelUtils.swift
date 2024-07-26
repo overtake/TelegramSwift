@@ -156,12 +156,12 @@ enum ConfirmResult {
     case basic
 }
 
-func verifyAlert_button(for window:Window, header: String = appName, information:String?, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: @escaping()->Void = { }, presentation: TelegramPresentationTheme = theme) {
+func verifyAlert_button(for window:Window, header: String = appName, information:String?, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: @escaping()->Void = { }, presentation: TelegramPresentationTheme = theme, onDeinit: @escaping()->Void = {}) {
 
-    verifyAlert(for: window, header: header, information: information, ok: ok, cancel: cancel, option: option, optionIsSelected: nil, successHandler: successHandler, cancelHandler: cancelHandler, presentation: presentation)
+    verifyAlert(for: window, header: header, information: information, ok: ok, cancel: cancel, option: option, optionIsSelected: nil, successHandler: successHandler, cancelHandler: cancelHandler, presentation: presentation, onDeinit: onDeinit)
 }
 
-func verifyAlert(for window:Window, header: String = appName, information:String? = nil, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, optionIsSelected: Bool? = true, successHandler:@escaping(ConfirmResult)->Void, cancelHandler:@escaping()->Void = { }, presentation: TelegramPresentationTheme = theme) {
+func verifyAlert(for window:Window, header: String = appName, information:String? = nil, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, optionIsSelected: Bool? = true, successHandler:@escaping(ConfirmResult)->Void, cancelHandler:@escaping()->Void = { }, presentation: TelegramPresentationTheme = theme, onDeinit: @escaping()->Void = {}) {
     
     
     var options: [ModalAlertData.Option] = []
@@ -189,7 +189,7 @@ func verifyAlert(for window:Window, header: String = appName, information:String
                 successHandler(.basic)
             }
         }
-    }, cancel: cancelHandler, presentation: presentation)
+    }, cancel: cancelHandler, onDeinit: onDeinit, presentation: presentation)
     
 }
 

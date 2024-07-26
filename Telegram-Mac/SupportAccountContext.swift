@@ -14,9 +14,20 @@ import TGUIKit
 import InAppSettings
 
 final class SupportAccountContext {
+    
+    var didUpdate:([AccountRecordId])->Void = { _ in }
+    
     private let applicationContext: SharedApplicationContext
     
-    private var contexts:[AuthorizedApplicationContext] = []
+    var accountIds: [AccountRecordId] {
+        return contexts.map { $0.context.account.id }
+    }
+    
+    private var contexts:[AuthorizedApplicationContext] = [] {
+        didSet {
+            self.didUpdate(contexts.map { $0.context.account.id })
+        }
+    }
     private var windows: [Window] = []
     init(applicationContext: SharedApplicationContext) {
         self.applicationContext = applicationContext

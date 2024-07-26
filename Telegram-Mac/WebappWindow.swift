@@ -94,29 +94,6 @@ class WebappRecentlyUsed : Equatable {
     }
 }
 
-class WebappOpened : Equatable {
-    static func == (lhs: WebappOpened, rhs: WebappOpened) -> Bool {
-        return lhs.uniqueId == rhs.uniqueId
-    }
-    
-    enum WebappType : Equatable {
-        case game
-        case webapp
-    }
-    var type: WebappType
-    var peerId: EnginePeer.Id
-    let title: String
-    let uniqueId = arc4random64()
-    weak var window: Window?
-    
-    init(type: WebappType, title: String, peerId: EnginePeer.Id, window: Window? = nil) {
-        self.type = type
-        self.title = title
-        self.peerId = peerId
-        self.window = window
-    }
-}
-
 final class WebappWindow {
     fileprivate let window: Webapp
     private init(controller: ViewController) {
@@ -130,18 +107,6 @@ final class WebappWindow {
         
         let w = WebappWindow(controller: controller)
         
-        var recently: WebappRecentlyUsed? = nil
-        if let controller = controller as? WebpageModalController {
-            if let peer = controller.bot {
-                if let hasWebApp = peer.botInfo?.flags.contains(.hasWebApp), hasWebApp, controller.fromMenu {
-                    recently = .init(peerId: peer.id)
-                }
-            }
-        }
-
-        if let recently {
-            WebappsStateContext.standart.add(recently)
-        }
         
         let ready = controller.ready.get() |> deliverOnMainQueue |> take(1)
         _ = ready.startStandalone(next: { ready in
@@ -177,27 +142,87 @@ struct WebappsState : Equatable {
     }
 }
 
+private let accountHolder: Atomic<[AccountRecordId : WebappsStateContext]> = .init(value: [:])
+
+
+
 final class WebappsStateContext {
     
+    static func get(_ context: AccountContext) -> WebappsStateContext {
+        let holder = accountHolder.with { $0[context.account.id] }
+        if let holder {
+            return holder
+        } else {
+            return accountHolder.modify { value in
+                var value = value
+                value[context.account.id] = .init()
+                return value
+            }[context.account.id]!
+        }
+    }
     
-    static let standart: WebappsStateContext = .init()
+    static func cleanup(_ accountId: AccountRecordId) {
+        let holder = accountHolder.with { $0[accountId] }
+        holder?.hide(close: true)
+        
+        _ = accountHolder.modify { value in
+            var value = value
+            value.removeValue(forKey: accountId)
+            return value
+        }
+    }
+    
+    static func hide(_ accountId: AccountRecordId) {
+        accountHolder.with { $0[accountId] }?.hide(close: false)
+    }
+    
+    static func focus(_ active: [AccountRecordId]) -> Void {
+        for accountId in active {
+            let holder = accountHolder.with { $0[accountId] }
+            if let browser = holder?.browser {
+                holder?.show(browser)
+            }
+        }
+        
+        let holders = accountHolder.with { $0 }
+        for (key, holder) in holders {
+            if !active.contains(key) {
+                holder.hide(close: false)
+            }
+        }
+    }
+    
+    static func checkActive(_ active: [AccountRecordId]) {
+        let holders = accountHolder.with { $0 }
+        for (key, _) in holders {
+            if !active.contains(key) {
+                cleanup(key)
+            }
+        }
+    }
     
     public private(set) var browser: WebappBrowserController? = nil
     private let browserState: Promise<[BrowserTabData]> = Promise([])
     
-    func showBrowser(_ browser: WebappBrowserController) {
+    func show(_ browser: WebappBrowserController) {
         self.browser = browser
         browser.show()
         
         browserState.set(browser.publicState)
     }
     
-    public func closeBrowser() {
+    public func hide(close: Bool = true) {
         self.browser?.hide({ [weak self] in
-            self?.browser = nil
-        })
-        browserState.set(.single([]))
+            if close {
+                self?.browser = nil
+            }
+        }, close: close)
+        if close {
+            browserState.set(.single([]))
+        }
     }
+    
+    
     
     private let statePromise = ValuePromise<WebappsState>(.init(), ignoreRepeated: true)
     private let stateValue = Atomic<WebappsState>(value: .init())
@@ -307,10 +332,7 @@ final class WebappsStateContext {
     private func updateState(_ f:(WebappsState) -> WebappsState) {
         self.statePromise.set(stateValue.modify(f))
     }
-    private init() {
-        
-    }
-    
+
     
     func add(_ recently: WebappRecentlyUsed) {
         updateState { current in
@@ -326,7 +348,7 @@ final class WebappsStateContext {
     
     
     func closeAll() {
-        closeBrowser()
+        hide()
     }
     
     func clearRecent() {
@@ -337,17 +359,17 @@ final class WebappsStateContext {
         }
     }
     
-    func open(tab: BrowserTabData.Data, context: AccountContext) {
+    func open(tab: BrowserTabData.Data, context: AccountContext, uniqueId: BrowserTabData.Unique? = nil) {
         let invoke:()->Void = { [weak self] in
             guard let self else {
                 return
             }
             if let browser = self.browser {
-                browser.add(tab)
+                browser.add(tab, uniqueId: uniqueId)
                 browser.makeKeyAndOrderFront()
             } else {
                 let controller = WebappBrowserController(context: context, initialTab: tab)
-                self.showBrowser(controller)
+                self.show(controller)
             }
             if let savebleId = tab.savebleId {
                 self.add(.init(peerId: savebleId))
