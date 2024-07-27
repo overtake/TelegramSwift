@@ -270,6 +270,7 @@ private final class TabView: Control {
     private var arguments: Arguments?
     
     private var textView: TextView?
+    private var urlText: TextView?
     private var avatarView: AvatarControl?
     private var iconView: ImageView?
     private var shadowView: ShadowView?
@@ -323,6 +324,8 @@ private final class TabView: Control {
             self.layer?.animateBackground(duration: transition.duration, function: transition.timingFunction)
         }
         
+        self.toolTip = item.external?.url
+        
 
         if let enginePeer = item.data.peer {
             let current: AvatarControl
@@ -367,10 +370,26 @@ private final class TabView: Control {
             if let favicon = item.external?.favicon {
                 current.nsImage = favicon
             } else {
-                current.image = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+                
+                let color: NSColor = item.selected ? theme.colors.listBackground : theme.colors.background
+                
+                let text: String
+                if item.external?.error != nil {
+                    text = "!"
+                } else if let url = item.external?.url, let parsedUrl = URL(string: url) {
+                    text = parsedUrl.host?.first.flatMap(String.init) ?? "!"
+                } else {
+                    text = "!"
+                }
+                
+                let textNode = TextNode.layoutText(.initialize(string: text.uppercased(), color: theme.colors.darkGrayText, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+
+                current.image = generateImage(NSMakeSize(20, 20), rotatedContext: { size, ctx in
                     ctx.clear(size.bounds)
-                    ctx.setFillColor(NSColor.black.cgColor)
+                    ctx.setFillColor(color.cgColor)
                     ctx.fill(size.bounds)
+                    
+                    textNode.1.draw(size.bounds.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
                 })
             }
         } else if let iconView {
@@ -427,9 +446,38 @@ private final class TabView: Control {
             current.update(item.title)
             
             if isNew {
-                current.centerY(x: 50)
+                current.centerY(x: 40)
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            
+            do {
+                if let urlText = item.urlText {
+                    let current: TextView
+                    let isNew: Bool
+                    if let view = self.urlText {
+                        current = view
+                        isNew = false
+                    } else {
+                        current = TextView()
+                        current.userInteractionEnabled = false
+                        current.isSelectable = false
+                        self.urlText = current
+                        addSubview(current)
+                        isNew = true
+                    }
+                    current.update(urlText)
+                    
+                    if isNew {
+                        current.centerY(x: 40)
+                        if animated {
+                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                    }
+                } else if let urlText {
+                    performSubviewRemoval(urlText, animated: animated)
+                    self.urlText = nil
                 }
             }
             
@@ -505,6 +553,10 @@ private final class TabView: Control {
                performSubviewRemoval(view, animated: animated)
                self.premiumStatus = nil
            }
+            if let urlText {
+                performSubviewRemoval(urlText, animated: animated)
+                self.urlText = nil
+            }
         }
         
         
@@ -530,8 +582,15 @@ private final class TabView: Control {
                 transition.updateFrame(view: loading, frame: imageView.frame)
             }
         }
-        if let textView {
-            transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 40))
+        if let urlText {
+            if let textView {
+                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(40, 4), size: textView.frame.size))
+            }
+            transition.updateFrame(view: urlText, frame: CGRect(origin: NSMakePoint(40, size.height - urlText.frame.height - 4), size: urlText.frame.size))
+        } else {
+            if let textView {
+                transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 40))
+            }
         }
         if let close {
             transition.updateFrame(view: close, frame: close.centerFrameY(x: size.width - 10 - 20))
@@ -869,6 +928,8 @@ struct BrowserTabData : Comparable, Identifiable {
     var selected: Bool
     
     var title: TextViewLayout?
+    var urlText: TextViewLayout?
+    
     var tabColor: NSColor = .black
     
     var textColor: NSColor {
@@ -884,7 +945,8 @@ struct BrowserTabData : Comparable, Identifiable {
     
     var width: CGFloat {
         if let title {
-            var width = title.layoutSize.width + 20 + 20 + 10
+            let textWidth = max(title.layoutSize.width, urlText?.layoutSize.width ?? 0)
+            var width = textWidth + 20 + 20 + 10
             if let peer = self.data.peer {
                 if let size = PremiumStatusControl.controlSize(peer._asPeer(), false) {
                     width += (size.width) + 2
@@ -918,8 +980,25 @@ struct BrowserTabData : Comparable, Identifiable {
             let color: NSColor = tabColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
             let layout = TextViewLayout(.initialize(string: titleText, color: color, font: .normal(.text)), maximumNumberOfLines: 1)
             layout.measure(width: width - 100)
+            
+            let urlLayout: TextViewLayout?
+            if let url = external?.url, let url = URL(string: url), let (result, host) = urlWithoutScheme(from: url), external?.title != host {
+                
+                let attributedString = NSMutableAttributedString()
+                attributedString.append(string: result, color: theme.colors.grayText, font: .normal(.small))
+                let range = attributedString.string.nsstring.range(of: host)
+                if range.location != NSNotFound {
+                    attributedString.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
+                }
+                urlLayout = .init(attributedString, maximumNumberOfLines: 1)
+                urlLayout?.measure(width: width - 100)
+            } else {
+                urlLayout = nil
+            }
+            
             var tab = self
             tab.title = layout
+            tab.urlText = urlLayout
             tab.tabColor = tabColor
             return tab
         } else {
@@ -1447,6 +1526,9 @@ final class BrowserLinkManager {
     }
     func close(confirm: Bool) {
         arguments?.closeTab(unique, confirm)
+    }
+    func open(_ tab: BrowserTabData.Data) {
+        arguments?.insertTab(tab)
     }
 }
 

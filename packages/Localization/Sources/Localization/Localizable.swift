@@ -19221,8 +19221,8 @@ public final class L10n {
   public static var webBotAccountDisclaimerTitle: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Title") }
   /// **Something went wrong, sorry.**\nPlease try again later.
   public static var webBrowserError: String  { return L10n.tr("Localizable", "WebBrowser.Error") }
-  /// Sorry, posting stories is only available from mobile devices.
-  public static var webappStoryNotAvailable: String  { return L10n.tr("Localizable", "Webapp.StoryNotAvailable") }
+  /// Open Main Page
+  public static var webBrowserOpenMainPage: String  { return L10n.tr("Localizable", "WebBrowser.OpenMainPage") }
   /// Allow
   public static var webappAllowMessagesOK: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.OK") }
   /// This will allow the bot %@ to message you on Telegram?

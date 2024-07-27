@@ -1127,7 +1127,7 @@ class PeerListContainerView : Control {
                     for recent in webapps.recentlyMenu {
                         if let peer = webapps.peers[recent.peerId] {
                             menu.addItem(ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: {
-                                WebappsStateContext.get(arguments.context).open(tab: .mainapp(bot: peer, source: .generic), context: arguments.context)
+                                WebappsStateContext.get(arguments.context).open(tab: recent.tab, context: arguments.context)
                             }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
                         }
                     }
@@ -1142,9 +1142,7 @@ class PeerListContainerView : Control {
                     if !menu.items.isEmpty {
                         menu.addItem(ContextSeparatorItem())
                     }
-                    
-                    let presentation = AppMenu.Presentation(colors: theme.colors)
-                    
+                                        
                     let subMenu = ContextMenu()
                     
                     let appItem:(WebappsStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in

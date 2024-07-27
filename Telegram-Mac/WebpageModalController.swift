@@ -532,6 +532,7 @@ struct WebpageModalState : Equatable {
     var error: RequestWebViewError? = nil
     var isSite: Bool = false
     var title: String? = nil
+    var url: String?
 }
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate, BrowserPage {

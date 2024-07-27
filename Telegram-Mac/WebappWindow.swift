@@ -89,8 +89,11 @@ class WebappRecentlyUsed : Equatable {
         return lhs.peerId != rhs.peerId
     }
     let peerId: PeerId
-    init(peerId: PeerId) {
+    let tabdata: BrowserTabData.Data
+    
+    init(peerId: PeerId, tabdata: BrowserTabData.Data) {
         self.peerId = peerId
+        self.tabdata = tabdata
     }
 }
 
@@ -251,9 +254,8 @@ final class WebappsStateContext {
     struct FullState : Equatable {
         
         struct ResolvedRecently : Equatable {
-            var url: String
-            let text: String
             var peerId: PeerId
+            let tab: BrowserTabData.Data
         }
         
         let opened: [BrowserTabData]
@@ -264,7 +266,6 @@ final class WebappsStateContext {
         
         struct Recommended : Equatable {
             let peer: EnginePeer
-            let button: BotMenuButton?
         }
         
         var isEmpty: Bool {
@@ -280,8 +281,14 @@ final class WebappsStateContext {
             let peersSignal: [Signal<EnginePeer?, NoError>] = value.peerIds.map {
                 context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: $0))
             }
-            let recentApps: [Signal<(BotMenuButton?, PeerId), NoError>] = value.recentlyUsed.map { value in
-                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotMenu(id: value.peerId)) |> map { ($0, value.peerId)}
+            let recentApps: [Signal<(EnginePeer, BrowserTabData.Data)?, NoError>] = value.recentlyUsed.map { value in
+                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: value.peerId)) |> map { peer in
+                    if let peer {
+                        return (peer, value.tabdata)
+                    } else {
+                        return nil
+                    }
+                }
             }
             
             let recommendedList:(Signal<[EnginePeer.Id]?, NoError>) -> Signal<[FullState.Recommended], NoError> = { signal in
@@ -292,15 +299,11 @@ final class WebappsStateContext {
                                 appIds.map { peerId -> TelegramEngine.EngineData.Item.Peer.Peer in
                                     return TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
                                 }
-                            ), EngineDataMap(
-                                appIds.map { peerId -> TelegramEngine.EngineData.Item.Peer.BotMenu in
-                                    return TelegramEngine.EngineData.Item.Peer.BotMenu(id: peerId)
-                                }
-                            )) |> map  { (peers, menu) in
+                            )) |> map  { peers in
                                 var result: [FullState.Recommended] = []
                                 for id in appIds {
                                     if let peer = peers[id] as? EnginePeer  {
-                                        result.append(FullState.Recommended(peer: peer, button: menu[id] as? BotMenuButton))
+                                        result.append(FullState.Recommended(peer: peer))
                                     }
                                 }
                                 return Array(result)
@@ -315,18 +318,12 @@ final class WebappsStateContext {
             let recentUsedApps: Signal<[FullState.Recommended], NoError> = recommendedList(context.engine.peers.recentApps() |> map(Optional.init)) |> map { Array($0.filter { $0.peer._asPeer().botInfo?.flags.contains(.hasWebApp) == true }.prefix(10)) }
             
             
-            let combinedRecentApps = combineLatest(recentApps) |> map { menus in
+            let combinedRecentApps = combineLatest(recentApps) |> map { peers in
                 var recent: [FullState.ResolvedRecently] = []
-                for menu in menus {
-                    if let menuValue = menu.0 {
-                        switch menuValue {
-                        case let .webView(text, url):
-                            if !browserState.contains(where: { $0.data.peer?.id == menu.1 }) {
-                                recent.append(.init(url: url, text: text, peerId: menu.1))
-                            }
-                        default:
-                            break
-                        }
+                let peers = peers.compactMap { $0 }
+                for (peer, tab) in peers {
+                    if !browserState.contains(where: { $0.data.peer?.id == peer.id }) {
+                        recent.append(.init(peerId: peer.id, tab: tab))
                     }
                 }
                 return recent
@@ -389,7 +386,7 @@ final class WebappsStateContext {
                 self.show(controller)
             }
             if let savebleId = tab.savebleId {
-                self.add(.init(peerId: savebleId))
+                self.add(.init(peerId: savebleId, tabdata: tab))
             }
         }
         
