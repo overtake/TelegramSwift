@@ -527,9 +527,14 @@ struct WebpageModalState : Equatable {
     var hasSettings: Bool = false
     var isBackButton: Bool = false
     var needConfirmation: Bool = false
+    
+    var favicon: NSImage? = nil
+    var error: RequestWebViewError? = nil
+    var isSite: Bool = false
+    var title: String? = nil
 }
 
-class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate {
+class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate, BrowserPage {
     
     private let statePromise = ValuePromise(WebpageModalState(), ignoreRepeated: true)
     private let stateValue = Atomic(value: WebpageModalState())
@@ -827,11 +832,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
             return .invoked
         }, with: self, priority: responderPriority)
-        
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.close()
-            return .invoked
-        }, with: self, for: .W, priority: responderPriority, modifierFlags: [.command])
         
         apperanceDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
             self?.updateLocalizationAndTheme(theme: appearance.presentation)

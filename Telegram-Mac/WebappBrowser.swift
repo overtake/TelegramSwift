@@ -14,9 +14,19 @@ import KeyboardKey
 import TelegramMedia
 import Postbox
 
+protocol BrowserPage {
+    func contextMenu() -> ContextMenu
+    func backButtonPressed()
+    func reloadPage()
+    var externalState: Signal<WebpageModalState, NoError> { get }
+}
+
 private func makeWebViewController(context: AccountContext, data: BrowserTabData.Data, unique: BrowserTabData.Unique, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager?) -> Signal<WebpageModalController, RequestWebViewError> {
     
-    let bot = data.peer._asPeer()
+    guard let bot = data.peer?._asPeer() else {
+        return .fail(.generic)
+    }
+    
     let canBeAttach = bot.botInfo?.flags.contains(.canBeAddedToAttachMenu) ?? false
 
     return Signal { subscriber in
@@ -38,6 +48,8 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
             }
         case let .straight(_, peerId, _, result):
             signal = .single((result.url, .normal(url: result.url, botdata: .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: "", keepAliveSignal: result.keepAliveSignal))))
+        case .tonsite:
+            signal = .fail(.generic)
         }
         
                 
@@ -258,7 +270,8 @@ private final class TabView: Control {
     private var arguments: Arguments?
     
     private var textView: TextView?
-    private var iconView: AvatarControl?
+    private var avatarView: AvatarControl?
+    private var iconView: ImageView?
     private var shadowView: ShadowView?
     
     private var loading: InfiniteProgressView?
@@ -311,25 +324,59 @@ private final class TabView: Control {
         }
         
 
-
-        let enginePeer = item.data.peer
-        
-        let current: AvatarControl
-        if let view = self.iconView {
-            current = view
-        } else {
-            current = AvatarControl(font: .avatar(8))
-            current.setFrameSize(20, 20)
-            current.userInteractionEnabled = false
-            self.iconView = current
-            addSubview(current)
-            if item.selected {
-                current.centerY(x: 20)
+        if let enginePeer = item.data.peer {
+            let current: AvatarControl
+            if let view = self.avatarView {
+                current = view
             } else {
-                current.center()
+                current = AvatarControl(font: .avatar(8))
+                current.setFrameSize(20, 20)
+                current.userInteractionEnabled = false
+                self.avatarView = current
+                addSubview(current)
+                if item.selected {
+                    current.centerY(x: 20)
+                } else {
+                    current.center()
+                }
             }
+            current.setPeer(account: arguments.context.account, peer: enginePeer._asPeer())
+        } else if let avatarView {
+            performSubviewRemoval(avatarView, animated: animated)
+            self.avatarView = nil
         }
-        current.setPeer(account: arguments.context.account, peer: enginePeer._asPeer())
+        
+        if item.external?.isSite == true {
+            let current: ImageView
+            if let view = self.iconView {
+                current = view
+            } else {
+                current = ImageView()
+                current.setFrameSize(20, 20)
+                current.isEventLess = true
+                current.layer?.cornerRadius = 4
+                self.iconView = current
+                addSubview(current)
+                current.animates = true
+                if item.selected {
+                    current.centerY(x: 20)
+                } else {
+                    current.center()
+                }
+            }
+            if let favicon = item.external?.favicon {
+                current.nsImage = favicon
+            } else {
+                current.image = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(NSColor.black.cgColor)
+                    ctx.fill(size.bounds)
+                })
+            }
+        } else if let iconView {
+            performSubviewRemoval(iconView, animated: animated)
+            self.iconView = nil
+        }
         
         
         switch item.loadingState {
@@ -349,7 +396,7 @@ private final class TabView: Control {
                 current.layer?.cornerRadius = 10
                 self.loading = current
                 addSubview(current)
-                current.centerY(x: self.iconView?.frame.minX ?? 20)
+                current.centerY(x: self.avatarView?.frame.minX ?? 20)
                 
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -386,21 +433,27 @@ private final class TabView: Control {
                 }
             }
             
-            let statusControl = PremiumStatusControl.control(item.data.peer._asPeer(), account: arguments.context.account, inlinePacksContext: arguments.context.inlinePacksContext, isSelected: false, cached: self.premiumStatus, animated: false)
+            if let peer = item.data.peer {
+                let statusControl = PremiumStatusControl.control(peer._asPeer(), account: arguments.context.account, inlinePacksContext: arguments.context.inlinePacksContext, isSelected: false, cached: self.premiumStatus, animated: false)
 
-            if let statusControl = statusControl {
-                let isNew = self.premiumStatus == nil
-                self.premiumStatus = statusControl
-                self.addSubview(statusControl)
-                
-                if isNew {
-                    statusControl.centerY(x: item.width - 10 - statusControl.frame.width)
-                    statusControl.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                if let statusControl = statusControl {
+                    let isNew = self.premiumStatus == nil
+                    self.premiumStatus = statusControl
+                    self.addSubview(statusControl)
+                    
+                    if isNew {
+                        statusControl.centerY(x: item.width - 10 - statusControl.frame.width)
+                        statusControl.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                } else if let view = self.premiumStatus {
+                    performSubviewRemoval(view, animated: animated)
+                    self.premiumStatus = nil
                 }
             } else if let view = self.premiumStatus {
                 performSubviewRemoval(view, animated: animated)
                 self.premiumStatus = nil
             }
+            
             
 //                do {
 //                    let current: ImageButton
@@ -464,14 +517,17 @@ private final class TabView: Control {
         guard let data = self.data else {
             return
         }
-        if let iconView {
+        
+        let imageView = avatarView ?? iconView
+        
+        if let imageView {
             if data.selected {
-                transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 10))
+                transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 10))
             } else {
-                transition.updateFrame(view: iconView, frame: iconView.centerFrame())
+                transition.updateFrame(view: imageView, frame: imageView.centerFrame())
             }
             if let loading {
-                transition.updateFrame(view: loading, frame: iconView.frame)
+                transition.updateFrame(view: loading, frame: imageView.frame)
             }
         }
         if let textView {
@@ -719,6 +775,7 @@ struct BrowserTabData : Comparable, Identifiable {
    
     enum Unique : Hashable {
         case webapp(Int64)
+        case url(String)
     }
     
     
@@ -727,9 +784,9 @@ struct BrowserTabData : Comparable, Identifiable {
         case webapp(bot: EnginePeer, peerId: PeerId, buttonText: String, url: String?, payload: String?, threadId: Int64?, replyTo: MessageId?, fromMenu: Bool)
         case simple(bot: EnginePeer, url: String?, source: RequestSimpleWebViewSource)
         case straight(bot: EnginePeer, peerId: PeerId, title: String, result: RequestWebViewResult)
-
+        case tonsite(url: String)
         
-        var peer: EnginePeer {
+        var peer: EnginePeer? {
             switch self {
             case .mainapp(let bot, _):
                 return bot
@@ -739,6 +796,8 @@ struct BrowserTabData : Comparable, Identifiable {
                 return bot
             case let .straight(bot, _, _, _):
                 return bot
+            case .tonsite:
+                return nil
             }
         }
         
@@ -771,6 +830,8 @@ struct BrowserTabData : Comparable, Identifiable {
                 return .webapp(arc4random64())
             case .straight:
                 return .webapp(arc4random64())
+            case let .tonsite(url):
+                return .url(url)
             }
         }
     }
@@ -785,6 +846,15 @@ struct BrowserTabData : Comparable, Identifiable {
             return peer._asPeer().displayTitle
         case let .straight(_, _, title, _):
             return title
+        case let .tonsite(url):
+            if let title = external?.title {
+                return title
+            }
+            if let parsedUrl = URL(string: url) {
+                return parsedUrl.host ?? ""
+            } else {
+                return url
+            }
         }
     }
     
@@ -815,9 +885,12 @@ struct BrowserTabData : Comparable, Identifiable {
     var width: CGFloat {
         if let title {
             var width = title.layoutSize.width + 20 + 20 + 10
-            if let size = PremiumStatusControl.controlSize(self.data.peer._asPeer(), false) {
-                width += (size.width) + 2
+            if let peer = self.data.peer {
+                if let size = PremiumStatusControl.controlSize(peer._asPeer(), false) {
+                    width += (size.width) + 2
+                }
             }
+            
             return width
         } else {
             return 40
@@ -1171,12 +1244,20 @@ private final class WebpageContainerView : View {
     
     func update(data: BrowserTabData, arguments: Arguments, animated: Bool) {
         
+        let error: RequestWebViewError?
+        switch data.loadingState {
+        case let  .error(value):
+            error = value
+        default:
+            if let value = data.external?.error {
+                error = value
+            } else {
+                error = nil
+            }
+        }
+        
         switch data.loadingState {
         case .loading:
-            if let view = errorView {
-                performSubviewRemoval(view, animated: animated)
-                self.errorView = nil
-            }
             let current: ProgressIndicator
             if let view = self.loading {
                 current = view
@@ -1192,6 +1273,14 @@ private final class WebpageContainerView : View {
                 performSubviewRemoval(view, animated: animated)
                 self.loading = nil
             }
+        default:
+            if let view = loading {
+                performSubviewRemoval(view, animated: animated)
+                self.loading = nil
+            }
+        }
+
+        if let error {
             let current: ErrorLoadingView
             if let view = self.errorView {
                 current = view
@@ -1204,17 +1293,10 @@ private final class WebpageContainerView : View {
                 }
             }
             current.update(arguments: arguments, error: error)
-        default:
-            if let view = loading {
-                performSubviewRemoval(view, animated: animated)
-                self.loading = nil
-            }
-            if let view = errorView {
-                performSubviewRemoval(view, animated: animated)
-                self.errorView = nil
-            }
+        } else if let view = errorView {
+            performSubviewRemoval(view, animated: animated)
+            self.errorView = nil
         }
-
     }
     
     func setMainView(_ newView: NSView, animated: Bool) {
@@ -1241,7 +1323,7 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
     private let data: BrowserTabData
     private let context: AccountContext
     private let arguments: Arguments
-    private var controller: WebpageModalController?
+    private var controller: (ModalViewController & BrowserPage)?
     private let disposable = MetaDisposable()
     
     private var appeared: Bool = false
@@ -1275,20 +1357,26 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
         
         arguments.setLoadingState(data.unique, .loading)
         
-        let signal = makeWebViewController(context: context, data: data.data, unique: data.unique, makeLinkManager: arguments.makeLinkManager) |> deliverOnMainQueue
-        disposable.set(signal.startStrict(next: { [weak self] controller in
-            guard let self else {
-                return
-            }
+        switch data.data {
+        case let .tonsite(url):
+            let controller = WebsiteController(context: context, url: url, browser: arguments.makeLinkManager(data.unique))
             self.set(controller, animated: true)
-            arguments.setLoadingState(self.data.unique, .none)
-        }, error: { [weak self] error in
-            guard let self else {
-                return
-            }
-            arguments.setLoadingState(self.data.unique, .error(error))
-        }))
-        
+            arguments.setLoadingState(data.unique, .none)
+        case .mainapp, .simple, .straight, .webapp:
+            let signal = makeWebViewController(context: context, data: data.data, unique: data.unique, makeLinkManager: arguments.makeLinkManager) |> deliverOnMainQueue
+            disposable.set(signal.startStrict(next: { [weak self] controller in
+                guard let self else {
+                    return
+                }
+                self.set(controller, animated: true)
+                arguments.setLoadingState(self.data.unique, .none)
+            }, error: { [weak self] error in
+                guard let self else {
+                    return
+                }
+                arguments.setLoadingState(self.data.unique, .error(error))
+            }))
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1317,7 +1405,7 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
         controller?.viewDidDisappear(animated)
     }
     
-    private func set(_ controller: WebpageModalController, animated: Bool) {
+    private func set(_ controller: (ModalViewController & BrowserPage), animated: Bool) {
         self.controller = controller
         controller._frameRect = bounds
         if appeared {

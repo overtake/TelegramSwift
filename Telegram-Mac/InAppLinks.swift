@@ -1312,6 +1312,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().chatLinkUnavailable)
             }
         })
+    case let .tonsite(link, context):
+        WebappsStateContext.get(context).open(tab: .tonsite(url: link), context: context)
     }
     
 }
@@ -1424,6 +1426,7 @@ enum inAppLink {
     
     
     case external(link:String, Bool) // link, confirm
+    case tonsite(link: String, context: AccountContext)
     case peerInfo(link: String, peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case followResolvedName(link: String, username:String, postId:Int32?, forceProfile: Bool, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case comments(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
@@ -1529,6 +1532,8 @@ enum inAppLink {
         case let .multigift(link, _):
             return link
         case let .businessLink(link, _, _):
+            return link
+        case let .tonsite(link, _):
             return link
         case .nothing:
             return ""
@@ -1636,6 +1641,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     if let url = URL(string: url as String), url.scheme == "file" {
         return .nothing
     }
+    
+    if let url = URL(string: url as String), url.scheme == "tonsite" {
+        if let context {
+            return .tonsite(link: urlString, context: context)
+        }
+    }
+    
     
     
     if let urlValue = URL(string: url as String), let host = urlValue.host?.lowercased(), let context = context {
@@ -2456,3 +2468,11 @@ func resolveInstantViewUrl(account: Account, url: String) -> Signal<inAppLink, N
     }
 }
 
+
+public func explicitUrl(_ url: String) -> String {
+    var url = url
+    if !url.hasPrefix("http") && !url.hasPrefix("https") && url.range(of: "://") == nil {
+        url = "https://\(url)"
+    }
+    return url
+}

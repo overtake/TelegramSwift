@@ -528,6 +528,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
+            WebappsStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"), context: context)
+            
             
            // showModal(with: Star_AppExamples(context: context), for: context.window)
             

@@ -321,7 +321,7 @@ final class WebappsStateContext {
                     if let menuValue = menu.0 {
                         switch menuValue {
                         case let .webView(text, url):
-                            if !browserState.contains(where: { $0.data.peer.id == menu.1 }) {
+                            if !browserState.contains(where: { $0.data.peer?.id == menu.1 }) {
                                 recent.append(.init(url: url, text: text, peerId: menu.1))
                             }
                         default:
@@ -341,7 +341,7 @@ final class WebappsStateContext {
                 let recommended = recommendedApps.filter { value in
                     return !recentUsedApps.contains(where: { $0.peer.id == value.peer.id })
                 }
-                return FullState(opened: browserState, state: value, peers: peers, recentlyMenu: recentlyMenu, recommended: recommended, recentUsedApps: recentUsedApps)
+                return FullState(opened: browserState.filter { $0.data.peer != nil }, state: value, peers: peers, recentlyMenu: recentlyMenu, recommended: recommended, recentUsedApps: recentUsedApps)
             }
         }
     }
@@ -395,15 +395,20 @@ final class WebappsStateContext {
         
         let window = self.browser?.window ?? context.window
         
-        let peerId = tab.peer.id
-        if FastSettings.shouldConfirmWebApp(peerId) {
-            verifyAlert_button(for: window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(tab.peer._asPeer().displayTitle), successHandler: { _ in
+        if let peer = tab.peer {
+            let peerId = peer.id
+            if FastSettings.shouldConfirmWebApp(peerId) {
+                verifyAlert_button(for: window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer._asPeer().displayTitle), successHandler: { _ in
+                    invoke()
+                    FastSettings.markWebAppAsConfirmed(peerId)
+                })
+            } else {
                 invoke()
-                FastSettings.markWebAppAsConfirmed(peerId)
-            })
+            }
         } else {
             invoke()
         }
+        
     }
 }
 
