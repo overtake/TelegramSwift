@@ -48,6 +48,7 @@
 		270FD5982C516A9B000070E6 /* browser_close_to_back.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD5962C516A9A000070E6 /* browser_close_to_back.tgs */; };
 		270FD59A2C5181D9000070E6 /* browser_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD5992C5181D9000070E6 /* browser_more.tgs */; };
 		270FD59E2C53CEAF000070E6 /* menu_close_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */; };
+		270FD5A02C54620A000070E6 /* WebsiteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270FD59F2C54620A000070E6 /* WebsiteController.swift */; };
 		2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */; };
 		27161A9C27EC98290069BCEF /* menu_drugs.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27161A9B27EC98280069BCEF /* menu_drugs.tgs */; };
 		2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718244C2A0507A300AFBD4C /* menu_success.tgs */; };
@@ -1642,6 +1643,7 @@
 		270FD5962C516A9A000070E6 /* browser_close_to_back.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = browser_close_to_back.tgs; sourceTree = "<group>"; };
 		270FD5992C5181D9000070E6 /* browser_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = browser_more.tgs; sourceTree = "<group>"; };
 		270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_close_multiple.tgs; sourceTree = "<group>"; };
+		270FD59F2C54620A000070E6 /* WebsiteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsiteController.swift; sourceTree = "<group>"; };
 		2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaObjectToAvatar.swift; sourceTree = "<group>"; };
 		27161A9B27EC98280069BCEF /* menu_drugs.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_drugs.tgs; sourceTree = "<group>"; };
 		2718244C2A0507A300AFBD4C /* menu_success.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_success.tgs; sourceTree = "<group>"; };
@@ -3589,6 +3591,7 @@
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
 				2761549D2C2081DF0090BFFC /* WebappWindow.swift */,
 				270FD5912C4C21D3000070E6 /* WebappBrowser.swift */,
+				270FD59F2C54620A000070E6 /* WebsiteController.swift */,
 			);
 			name = "mini-apps";
 			sourceTree = "<group>";
@@ -8021,6 +8024,7 @@
 				D00EECD7252CD2EF001EB99F /* MicrophonePreviewRowItem.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */,
+				270FD5A02C54620A000070E6 /* WebsiteController.swift in Sources */,
 				27296B392B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift in Sources */,
 				27EE1E022C3365150002BAF8 /* Star_ReactionsController.swift in Sources */,
 				27F4F18E284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift in Sources */,

@@ -1108,9 +1108,11 @@ class PeerListContainerView : Control {
                 
                 if !webapps.opened.isEmpty {
                     for webapp in webapps.opened {
-                        menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
-                            WebappsStateContext.get(arguments.context).open(tab: webapp.data, context: arguments.context, uniqueId: webapp.unique)
-                        }, peer: webapp.data.peer._asPeer(), context: arguments.context, reaction: nil))
+                        if let peer = webapp.data.peer {
+                            menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                                WebappsStateContext.get(arguments.context).open(tab: webapp.data, context: arguments.context, uniqueId: webapp.unique)
+                            }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                        }
                     }
                     menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
                         WebappsStateContext.get(arguments.context).closeAll()
