@@ -20,7 +20,7 @@ func fetchFavicon(context: AccountContext, url: String, size: CGSize) -> Signal<
         return .single(icon)
     }
     let proxyServerHost = context.appConfiguration.getStringValue("ton_proxy_address", orElse: "magic.org")
-    let url = mapTonUrl(url, proxyServerHost: proxyServerHost)
+    let url = mapTonUrl(url, proxyServerHost: proxyServerHost, context: context)
     
     return context.engine.resources.httpData(url: url)
     |> map(Optional.init)
@@ -210,26 +210,36 @@ final class BrowserContentState: Equatable {
 
 
 
-private func mapTonUrl(_ url: String, proxyServerHost: String) -> String {
-    guard let url = URL(string: url) else {
+private func mapTonUrl(_ url: String, proxyServerHost: String, context: AccountContext) -> String {
+    
+    let link = inApp(for: url.nsstring, context: context)
+
+    switch link {
+    case .tonsite:
+        guard let url = URL(string: url) else {
+            return url
+        }
+        
+        var mappedHost: String = ""
+        if let host = url.host {
+            mappedHost = host
+            mappedHost = mappedHost.replacingOccurrences(of: "-", with: "-h")
+            mappedHost = mappedHost.replacingOccurrences(of: ".", with: "-d")
+        }
+        
+        var mappedPath = ""
+        if  !url.path.isEmpty {
+            mappedPath = url.path
+            if !url.path.hasPrefix("/") {
+                mappedPath = "/\(mappedPath)"
+            }
+        }
+        let mappedUrl = "https://\(mappedHost).\(proxyServerHost)\(mappedPath)"
+        return mappedUrl
+    default:
         return url
     }
-    var mappedHost: String = ""
-    if let host = url.host {
-        mappedHost = host
-        mappedHost = mappedHost.replacingOccurrences(of: "-", with: "-h")
-        mappedHost = mappedHost.replacingOccurrences(of: ".", with: "-d")
-    }
     
-    var mappedPath = ""
-    if  !url.path.isEmpty {
-        mappedPath = url.path
-        if !url.path.hasPrefix("/") {
-            mappedPath = "/\(mappedPath)"
-        }
-    }
-    let mappedUrl = "https://\(mappedHost).\(proxyServerHost)\(mappedPath)"
-    return mappedUrl
 }
 
 
@@ -391,13 +401,34 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
     
     var externalState: Signal<WebpageModalState, NoError> {
         return state |> map {
-            return .init(isBackButton: $0.canGoBack, needConfirmation: false, favicon: $0.favicon, error: $0.error, isSite: true, title: $0.title)
+            return .init(backgroundColor: .clear, isBackButton: $0.canGoBack, needConfirmation: false, favicon: $0.favicon, error: $0.error, isSite: true, title: $0.title, url: $0.url)
         }
     }
 
     
     func contextMenu() -> ContextMenu {
-        return ContextMenu()
+        let menu = ContextMenu()
+        
+        if let url = URL(string: _state.url), let (result, host) = urlWithoutScheme(from: url) {
+            if result != host, let scheme = url.scheme {
+                menu.addItem(ContextMenuItem(strings().webBrowserOpenMainPage, handler: { [weak self] in
+                    self?.navigateTo(address: scheme + "://" + host)
+                }, itemImage: MenuAnimation.menu_folder_home.value))
+            }
+        }
+        
+        menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: { [weak self] in
+            if let url = self?._state.url, let window = self?.window {
+                copyToClipboard(url)
+                showModalText(for: window, text: strings().shareLinkCopied)
+            }
+        }, itemImage: MenuAnimation.menu_copy.value))
+        
+        menu.addItem(ContextMenuItem(strings().webAppReload, handler: { [weak self] in
+            self?.reloadPage()
+        }, itemImage: MenuAnimation.menu_reload.value))
+        
+        return menu
     }
     
     func backButtonPressed() {
@@ -436,6 +467,9 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
 
             title = parsedUrl.host ?? ""
         }
+        if #available(macOS 12.0, *) {
+            webView.underPageBackgroundColor = theme.colors.listBackground
+        }
         
         self._state = BrowserContentState(title: title, url: url, estimatedProgress: 0.0, readingProgress: 0.0, contentType: .webPage, error: nil)
         statePromise.set(.single(self._state))
@@ -473,6 +507,19 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
             handleScriptMessageImpl?(message)
         }, name: "performAction")
         
+        if #available(macOS 14.0, *) {
+            if !FastSettings.isDefaultAccount(context.account.id.int64) {
+                if let uuid = FastSettings.getUUID(context.account.id.int64) {
+                    let store = WKWebsiteDataStore(forIdentifier: uuid)
+                    configuration.websiteDataStore = store
+                }
+            }
+        }
+
+        if FastSettings.debugWebApp {
+            configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        }
+        
         handleScriptMessageImpl = { [weak self] message in
             self?.handleScriptMessage(message)
         }
@@ -503,12 +550,6 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
     
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
-        guard let body = message.body as? [String: Any] else {
-            return
-        }
-        guard let eventName = body["eventName"] as? String else {
-            return
-        }
         
     }
 
@@ -540,6 +581,7 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
             return
         }
         self.webView.load(URLRequest(url: url))
+    
     }
     
     func scrollToTop() {
@@ -569,7 +611,7 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if let url = navigationAction.request.url?.absoluteString {
+        if let _ = navigationAction.request.url?.absoluteString {
             decisionHandler(.allow)
         } else {
             decisionHandler(.allow)
@@ -606,8 +648,23 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
         
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         if navigationAction.targetFrame == nil {
+            let context = self.context
             if let url = navigationAction.request.url?.absoluteString {
-                
+                let link = inApp(for: url.nsstring, context: context, openInfo: { peerId, toChat, messageId, initialAction in
+                    if toChat || initialAction != nil {
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+                    } else {
+                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                    }
+                    context.window.makeKeyAndOrderFront(nil)
+                }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+               
+                switch link {
+                case let .tonsite(link, _):
+                    self.browser.open(.tonsite(url: link))
+                default:
+                    execute(inapp: link, window: self.window)
+                }
             }
         }
         return nil

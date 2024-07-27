@@ -389,7 +389,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 if url.length > 10, range.lowerBound > url.index(url.startIndex, offsetBy: 10) {
                     url = "http://" + url
                 }
-            } else {
+            } else if !url.hasPrefix("mailto:") {
                 url = "http://" + url
             }
         }
@@ -1642,9 +1642,30 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         return .nothing
     }
     
-    if let url = URL(string: url as String), url.scheme == "tonsite" {
+    if let url = URL(string: url as String) {
+        let eligible = url.scheme == "tonsite"
         if let context {
-            return .tonsite(link: urlString, context: context)
+            if eligible {
+                return .tonsite(link: urlString, context: context)
+            } else {
+                let host: String?
+                if #available(macOS 13.0, *) {
+                    host = url.host()
+                } else {
+                    host = url.host
+                }
+                if let host, host.components(separatedBy: ".").last == "ton" {
+                    var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                    components?.scheme = "tonsite"
+                    var urlString: String? = nil
+                    if let url = components?.url?.absoluteString {
+                        urlString = url
+                    }
+                    if let urlString {
+                        return .tonsite(link: urlString, context: context)
+                    }
+                }
+            }
         }
     }
     
@@ -2475,4 +2496,35 @@ public func explicitUrl(_ url: String) -> String {
         url = "https://\(url)"
     }
     return url
+}
+
+
+func urlWithoutScheme(from url: URL) -> (url: String, host: String)? {
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+        return nil
+    }
+    
+    guard let host = components.host else {
+        return nil
+    }
+    
+    var urlString = host
+    
+    if !components.path.isEmpty {
+        urlString += components.path
+    }
+    
+    if let query = components.query, !query.isEmpty {
+        urlString += "?" + query
+    }
+    
+    if let fragment = components.fragment, !fragment.isEmpty {
+        urlString += "#" + fragment
+    }
+    
+    if urlString.hasSuffix("/") {
+        _ = urlString.removeLast()
+    }
+    
+    return (url: urlString, host: host)
 }
