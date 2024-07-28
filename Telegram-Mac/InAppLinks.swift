@@ -1642,18 +1642,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         return .nothing
     }
     
-    if let url = URL(string: url as String) {
+    if var url = URL(string: url as String) {
         let eligible = url.scheme == "tonsite"
         if let context {
             if eligible {
                 return .tonsite(link: urlString, context: context)
             } else {
-                let host: String?
-                if #available(macOS 13.0, *) {
-                    host = url.host()
-                } else {
-                    host = url.host
+                if url.scheme == nil, let domain = URL(string: "https://" + url.absoluteString) {
+                    url = domain
                 }
+                let host = urlWithoutScheme(from: url)?.host
                 if let host, host.components(separatedBy: ".").last == "ton" {
                     var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
                     components?.scheme = "tonsite"
