@@ -785,7 +785,7 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         if self._state.canGoBack {
-            browser.back()
+            self.navigateBack()
         } else {
             browser.close(confirm: false)
         }

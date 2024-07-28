@@ -234,6 +234,9 @@ private final class ErrorLoadingView : View {
         super.init(frame: frameRect)
         addSubview(mediaView)
         addSubview(textView)
+        
+        self.textView.userInteractionEnabled = false
+        self.textView.isSelectable = false
     }
     
     required init?(coder: NSCoder) {
@@ -246,6 +249,8 @@ private final class ErrorLoadingView : View {
         case .generic:
             text = strings().webBrowserError
         }
+        
+        self.backgroundColor = theme.colors.background
         
         let textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.title)).detectBold(with: .medium(.title)), alignment: .center)
         textLayout.measure(width: frame.width - 40)
