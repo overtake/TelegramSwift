@@ -439,6 +439,10 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
         self.webView.reload()
     }
     
+    func add(_ tab: BrowserTabData.Data) -> Bool {
+        return false
+    }
+    
     private var browser: BrowserLinkManager
     
     

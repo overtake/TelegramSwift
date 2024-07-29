@@ -555,7 +555,7 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
             ctx.clip(to: rect, mask: image)
             ctx.clear(rect)
         } else {
-            ctx.draw(image, in: rect.focus(image.size))
+            ctx.draw(image, in: rect.focus(image.backingSize))
         }
     })!
 }

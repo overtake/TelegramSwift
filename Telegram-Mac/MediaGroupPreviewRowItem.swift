@@ -38,7 +38,6 @@ class MediaGroupPreviewRowItem: TableRowItem {
         self.parameters = messages.map {
             let param = ChatMediaLayoutParameters(presentation: .empty, media: $0.media[0])
             param.forceSpoiler = isSpoiler || payAmount != nil
-            param.fillContent = true
             return param
         }
         super.init(initialSize)

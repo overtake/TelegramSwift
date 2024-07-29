@@ -321,7 +321,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            return WebappsStateContext.checkKey(event)
+            return BrowserStateContext.checkKey(event)
         })
         
         
@@ -1514,7 +1514,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func updateActiveContexts() {
         let records = [self.contextValue?.context.account.id].compactMap { $0 } + (supportAccountContextValue?.accountIds ?? [])
-        WebappsStateContext.focus(records)
+        BrowserStateContext.focus(records)
     }
     
     

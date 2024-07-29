@@ -11,7 +11,7 @@ import SwiftSignalKit
 
 
 
-public protocol MajorControllerListener : class {
+public protocol MajorControllerListener {
     func navigationWillShowMajorController(_ controller:ViewController);
 }
 
@@ -88,10 +88,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
   
     open override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        
         self.genericView.setFrameSize(size)
-        //_ = atomicSize.swap(size)
-     //   self.genericView.frame = NSMakeRect(0, barInset, <#T##w: CGFloat##CGFloat#>, <#T##h: CGFloat##CGFloat#>)
     }
     
     public init(_ majorClass:AnyClass, _ empty:ViewController, _ window: Window) {

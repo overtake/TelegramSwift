@@ -936,7 +936,7 @@ open class ViewController : NSObject {
     
     open func backKeyAction() -> KeyHandlerResult {
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift), let textView = window?.firstResponder as? TextView, let layout = textView.textLayout, layout.selectedRange.range.max != 0 {
-            _ = layout.selectPrevChar()
+            layout.selectPrevChar()
             textView.needsDisplay = true
             return .invoked
         }
@@ -945,7 +945,7 @@ open class ViewController : NSObject {
     
     open func nextKeyAction() -> KeyHandlerResult {
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift), let textView = window?.firstResponder as? TextView, let layout = textView.textLayout, layout.selectedRange.range.max != 0 {
-            _ = layout.selectNextChar()
+            layout.selectNextChar()
             textView.needsDisplay = true
             return .invoked
         }

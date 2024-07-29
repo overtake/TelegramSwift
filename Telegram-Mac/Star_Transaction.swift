@@ -134,8 +134,7 @@ private final class HeaderItem : GeneralRowItem {
         } else if let desc = transaction.description {
             self.descLayout = .init(.initialize(string: desc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         } else if isGift {
-            //TODOLANG
-            let text = parseMarkdownIntoAttributedString("Use Stars to unlock content and services on Telegram. [See Examples >](apps)", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+            let text = parseMarkdownIntoAttributedString(strings().starsExampleAppsText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, contents)
             }))
             

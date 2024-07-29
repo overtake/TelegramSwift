@@ -1334,7 +1334,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                                 }
                                 switch result {
                                 case let .instantView(_, webPage, _):
-                                    showInstantPage(InstantPageViewController(strongSelf.context, webPage: webPage, message: nil, saveToRecent: false))
+                                    strongSelf.browser?.open(.instantView(url: url, webPage: webPage, anchor: nil))
                                 default:
                                     execute(inapp: link, window: self?.window)
                                 }
@@ -1791,6 +1791,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     func settingsPressed() {
         self.sendEvent(name: "settings_button_pressed", data: nil)
+    }
+    
+    func add(_ tab: BrowserTabData.Data) -> Bool {
+        return false
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

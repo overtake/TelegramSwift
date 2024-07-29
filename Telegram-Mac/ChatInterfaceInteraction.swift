@@ -581,7 +581,7 @@ final class ChatInteraction : InterfaceObserver  {
                     
                     let open:()->Void = {
                         let tab: BrowserTabData.Data = .webapp(bot: .init(peer), peerId: peerId, buttonText: "", url: nil, payload: payload, threadId: threadId, replyTo: replyId, fromMenu: false)
-                        WebappsStateContext.get(context).open(tab: tab, context: context)
+                        BrowserStateContext.get(context).open(tab: tab)
                     }
                     
                     let invoke:()->Void = {
@@ -646,7 +646,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })
-                WebappsStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result), context: context)
+                BrowserStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result))
             case .makeWebview:
                 update(animated: animated, {
                     $0.withoutInitialAction()
@@ -702,7 +702,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     func openWebviewFromMenu(buttonText: String, url: String) {
         if let bot = peer {
-            WebappsStateContext.get(context).open(tab: .webapp(bot: .init(bot), peerId: peerId, buttonText: buttonText, url: url, payload: nil, threadId: nil, replyTo: nil, fromMenu: true), context: context)
+            BrowserStateContext.get(context).open(tab: .webapp(bot: .init(bot), peerId: peerId, buttonText: buttonText, url: url, payload: nil, threadId: nil, replyTo: nil, fromMenu: true))
         }
     }
     
@@ -733,7 +733,7 @@ final class ChatInteraction : InterfaceObserver  {
         } else {
             tab = .webapp(bot: .init(bot), peerId: peerId, buttonText: buttonText, url: url, payload: nil, threadId: threadId, replyTo: replyTo, fromMenu: false)
         }
-        WebappsStateContext.get(context).open(tab: tab, context: context)
+        BrowserStateContext.get(context).open(tab: tab)
     }
     
     func processBotKeyboard(with keyboardMessage:Message) ->ReplyMarkupInteractions {

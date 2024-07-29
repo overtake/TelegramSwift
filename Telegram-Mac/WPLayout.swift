@@ -397,7 +397,8 @@ class WPLayout: Equatable {
     
     func invokeAction() {
         if self.hasInstantPage {
-            showInstantPage(InstantPageViewController(context, webPage: parent.media[0] as! TelegramMediaWebpage, message: parent.text))
+            BrowserStateContext.get(context).open(tab: .instantView(url: self.content.url, webPage: parent.media[0] as! TelegramMediaWebpage, anchor: nil))
+           // showInstantPage(InstantPageViewController(context, webPage: , message: parent.text))
         } else if let proxyConfig = self.proxyConfig {
             applyExternalProxy(proxyConfig, accountManager: context.sharedContext.accountManager)
         } else if let adAttribute = parent.adAttribute {

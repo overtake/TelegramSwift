@@ -5229,6 +5229,10 @@ public final class L10n {
   }
   /// pinned message
   public static var chatServicePinnedMessage: String  { return L10n.tr("Localizable", "Chat.Service.PinnedMessage") }
+  /// %@ refunded back %@
+  public static func chatServiceRefund(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Refund", p1, p2)
+  }
   /// Search messages by %@
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
@@ -8245,6 +8249,8 @@ public final class L10n {
   public static func eventLogServicePromotedChanged1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.Promoted.Changed1", p1, p2)
   }
+  /// Examples
+  public static var exampleAppsTitle: String  { return L10n.tr("Localizable", "ExampleApps.Title") }
   /// Done
   public static var exportedInvitationDone: String  { return L10n.tr("Localizable", "ExportedInvitation.Done") }
   /// joined via folder invite link
@@ -15933,8 +15939,16 @@ public final class L10n {
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
   /// [Unknown User](https://fragment.com/stars)
   public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
+  /// %@ Gift Stars to Friends
+  public static func starsGiftToFriends(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftToFriends", p1)
+  }
   /// Buy Ads
   public static var starsBalanceBuyAds: String  { return L10n.tr("Localizable", "Stars.Balance.BuyAds") }
+  /// Use Stars to unlock content and services on Telegram. [See Examples >](apps)
+  public static var starsExampleAppsText: String  { return L10n.tr("Localizable", "Stars.ExampleApps.Text") }
+  /// Use Stars to unlock content and services on Telegram.
+  public static var starsGiftServiceInfo: String  { return L10n.tr("Localizable", "Stars.Gift.ServiceInfo") }
   /// Gift Stars
   public static var starsGiftTitle: String  { return L10n.tr("Localizable", "Stars.Gift.Title") }
   /// Media Purchase
@@ -19221,6 +19235,8 @@ public final class L10n {
   public static var webBotAccountDisclaimerTitle: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Title") }
   /// **Something went wrong, sorry.**\nPlease try again later.
   public static var webBrowserError: String  { return L10n.tr("Localizable", "WebBrowser.Error") }
+  /// Instant View
+  public static var webBrowserInstantView: String  { return L10n.tr("Localizable", "WebBrowser.InstantView") }
   /// Open Main Page
   public static var webBrowserOpenMainPage: String  { return L10n.tr("Localizable", "WebBrowser.OpenMainPage") }
   /// Allow

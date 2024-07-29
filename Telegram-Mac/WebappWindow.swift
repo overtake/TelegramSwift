@@ -145,20 +145,24 @@ struct WebappsState : Equatable {
     }
 }
 
-private let accountHolder: Atomic<[AccountRecordId : WebappsStateContext]> = .init(value: [:])
+private let accountHolder: Atomic<[AccountRecordId : BrowserStateContext]> = .init(value: [:])
 
 
 
-final class WebappsStateContext {
+final class BrowserStateContext {
     
-    static func get(_ context: AccountContext) -> WebappsStateContext {
+    private init(context: AccountContext) {
+        self.context = context
+    }
+    
+    static func get(_ context: AccountContext) -> BrowserStateContext {
         let holder = accountHolder.with { $0[context.account.id] }
         if let holder {
             return holder
         } else {
             return accountHolder.modify { value in
                 var value = value
-                value[context.account.id] = .init()
+                value[context.account.id] = .init(context: context)
                 return value
             }[context.account.id]!
         }
@@ -222,6 +226,8 @@ final class WebappsStateContext {
     }
     
     public private(set) var browser: WebappBrowserController? = nil
+    private let context: AccountContext
+    
     private let browserState: Promise<[BrowserTabData]> = Promise([])
     
     func show(_ browser: WebappBrowserController) {
@@ -373,7 +379,7 @@ final class WebappsStateContext {
         }
     }
     
-    func open(tab: BrowserTabData.Data, context: AccountContext, uniqueId: BrowserTabData.Unique? = nil) {
+    func open(tab: BrowserTabData.Data, uniqueId: BrowserTabData.Unique? = nil) {
         let invoke:()->Void = { [weak self] in
             guard let self else {
                 return
