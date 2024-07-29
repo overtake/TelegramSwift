@@ -212,7 +212,7 @@ class InstantPageSelectText : NSObject {
                 }
             }
             
-            return .invoked
+            return .invokeNext
         }, with: self, for: .rightMouseDown, priority: .modal)
         
         window.set(mouseHandler: { [weak self, weak window] event -> KeyHandlerResult in
@@ -585,76 +585,6 @@ class InstantPageSelectText : NSObject {
             instantSelectManager.add(line: line, attributedString: selectedText)
         }
 
-       
-//        if let item = item, let textItem = item.0 as? InstantPageTextItem {
-//            let itemRect: NSRect
-//            if let tableItem = item.1 {
-//                let effectiveRect = effectiveRectForItem(item.1!)
-//                let skipCells = tableItem.itemFrameSkipCells(textItem, effectiveRect: effectiveRect)
-//                itemRect = rect.offsetBy(dx: -skipCells.minX, dy: -skipCells.minY)
-//            } else if let detailsItem = item.2 {
-//                let effectiveRect = detailsItem.effectiveRect
-//                let r = NSMakeRect(rect.minX - effectiveRect.minX, rect.minY - effectiveRect.minY, 1, 1).offsetBy(dx: 0, dy: -detailsItem.titleHeight)
-//                itemRect = detailsItem.deepRect(r).offsetBy(dx: -item.0.frame.minX, dy: -item.0.frame.minY)
-//            } else {
-//                let effectiveRect = effectiveRectForItem(textItem)
-//                itemRect = rect.offsetBy(dx: -effectiveRect.minX, dy: -effectiveRect.minY)
-//            }
-//
-//        }
-        
-//        for i in 0 ..< lines.count  {
-//            let line = lines[i]
-//
-//            let item = items.first(where: {$0.lines.contains(where: {$0 === line})})!
-//
-//            let itemRect = effectiveRectForItem(item)
-//
-//            var minX:CGFloat = itemRect.minX
-//            switch item.alignment {
-//            case .center:
-//                minX += floorToScreenPixels(System.backingScale, (itemRect.width - line.frame.width) / 2)
-//            default:
-//                break
-//            }
-//
-//            let selectedText:NSAttributedString
-//
-//            let beginX = beginInnerLocation.x - minX
-//            let endX = endInnerLocation.x - minX
-//
-//            let firstLine: InstantPageTextLine = reversed ? lines.last! : lines.first!
-//            let endLine: InstantPageTextLine = !reversed ? lines.last! : lines.first!
-//            let multiple: Bool = lines.count > 1
-//
-//            if firstLine === line {
-//                if !reversed {
-//                    if multiple {
-//                        selectedText = line.selectText(in: NSMakeRect(beginX, 0, itemRect.width - beginX, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//                    } else {
-//                        selectedText = line.selectText(in: NSMakeRect(beginX, 0, endX - beginX, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//                    }
-//                } else {
-//                    if multiple {
-//                        selectedText = line.selectText(in: NSMakeRect(0, 0, beginX, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//                    } else {
-//                        selectedText = line.selectText(in: NSMakeRect(endX, 0, beginX - endX, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//                    }
-//                }
-//
-//            } else if endLine === line {
-//                if !reversed {
-//                    selectedText = line.selectText(in: NSMakeRect(0, 0, endX, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//                } else {
-//                    selectedText = line.selectText(in: NSMakeRect(endX, 0, itemRect.maxX - endX, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//                }
-//            } else {
-//                selectedText = line.selectText(in: NSMakeRect(0, 0, itemRect.width, 0), boundingWidth: itemRect.width, alignment: item.alignment)
-//            }
-//
-//            instantSelectManager.add(line: line, attributedString: selectedText)
-//        }
-
         updateLayout()
         
     }
@@ -662,7 +592,6 @@ class InstantPageSelectText : NSObject {
     
     func removeHandlers(for window:Window) {
         window.removeAllHandlers(for: self)
-
     }
     
 }

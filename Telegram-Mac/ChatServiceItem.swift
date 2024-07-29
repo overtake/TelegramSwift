@@ -1176,8 +1176,7 @@ class ChatServiceItem: ChatRowItem {
                 case let .paymentRefunded(peerId, currency, totalAmount, payload, transactionId):
                     let peerName = message.author?.compactDisplayTitle ?? ""
 
-                    //TODOLANG
-                    let _ = attributedString.append(string: "\(peerName) refunded back \(clown)\(totalAmount)", color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ = attributedString.append(string: strings().chatServiceRefund(peerName, "\(clown + TINY_SPACE)\(totalAmount))"), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
@@ -1190,11 +1189,10 @@ class ChatServiceItem: ChatRowItem {
                     
                 case let .giftStars(currency, amount, count, cryptoCurrency, cryptoAmount, transactionId):
                     
-                    //TODOLANG
                     let info = NSMutableAttributedString()
-                    info.append(string: "\(count) Stars", color: grayTextColor, font: .medium(theme.fontSize + 1))
+                    info.append(string: strings().starListItemCountCountable(Int(count)), color: grayTextColor, font: .medium(theme.fontSize + 1))
                     info.append(string: "\n", font: .medium(theme.fontSize + 1))
-                    _ = info.append(string: "Use Stars to unlock content and services on Telegram.", color: grayTextColor, font: .normal(theme.fontSize))
+                    _ = info.append(string: strings().starsGiftServiceInfo, color: grayTextColor, font: .normal(theme.fontSize))
                     info.detectBoldColorInString(with: .medium(theme.fontSize))
                     
                     

@@ -166,7 +166,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 let bot = attach
                                 items.append(ContextMenuItem(attach.shortName, handler: {
                                     let open:()->Void = {
-                                        WebappsStateContext.get(context).open(tab: .webapp(bot: bot.peer, peerId: peerId, buttonText: "", url: nil, payload: nil, threadId: threadId, replyTo: replyTo, fromMenu: false), context: context)
+                                        BrowserStateContext.get(context).open(tab: .webapp(bot: bot.peer, peerId: peerId, buttonText: "", url: nil, payload: nil, threadId: threadId, replyTo: replyTo, fromMenu: false))
                                         
                                     }
                                     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //

@@ -3147,7 +3147,7 @@ func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
         switch result {
         case let .result(webpage):
             if let webpage = webpage {
-                showInstantPage(InstantPageViewController(context, webPage: webpage.webpage, message: nil))
+                showInstantPage(InstantPageViewController(context, url: url, webPage: webpage.webpage, message: nil))
             } else {
                 execute(inapp: .external(link: dest.url + language, true))
             }
@@ -3780,7 +3780,7 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
-        WebappsStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, source: .settings), context: context)
+        BrowserStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, source: .settings))
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //

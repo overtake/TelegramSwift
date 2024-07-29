@@ -553,7 +553,7 @@ class SharedAccountContext {
             self.activeAccountsInfoValue = (primary, accounts)
             self.accountPhotos = photos
             self.updateStatusBarMenuItem()
-            WebappsStateContext.checkActive(accounts.map { $0.account.id })
+            BrowserStateContext.checkActive(accounts.map { $0.account.id })
             
             #if !SHARE
             spotlights.removeAll()

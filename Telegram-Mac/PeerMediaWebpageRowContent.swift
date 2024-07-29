@@ -154,9 +154,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         
         for linkLayout in linkLayouts {
             linkLayout.interactions = TextViewInteractions(processURL: { [weak self] url in
-                if let webpage = self?.message.anyMedia as? TelegramMediaWebpage, let `self` = self {
+                if let webpage = self?.message.anyMedia as? TelegramMediaWebpage, let `self` = self, let url = webpage.content.url {
                     if self.hasInstantPage {
-                        showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
+                        BrowserStateContext.get(self.interface.context).open(tab: .instantView(url: url, webPage: webpage, anchor: nil))
                         return
                     }
                 }

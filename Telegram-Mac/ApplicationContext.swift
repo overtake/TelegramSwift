@@ -319,7 +319,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if value {
                 let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                 FastSettings.clear_uuid(context.account.id.int64)
-                WebappsStateContext.cleanup(context.account.id)
+                BrowserStateContext.cleanup(context.account.id)
             }
         }))
         
@@ -528,7 +528,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
-            WebappsStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"), context: context)
+            BrowserStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"))
             
             
            // showModal(with: Star_AppExamples(context: context), for: context.window)

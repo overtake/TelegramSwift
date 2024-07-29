@@ -49,6 +49,7 @@
 		270FD59A2C5181D9000070E6 /* browser_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD5992C5181D9000070E6 /* browser_more.tgs */; };
 		270FD59E2C53CEAF000070E6 /* menu_close_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */; };
 		270FD5A02C54620A000070E6 /* WebsiteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270FD59F2C54620A000070E6 /* WebsiteController.swift */; };
+		270FD5A62C57C34B000070E6 /* InstantViewInBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270FD5A52C57C34B000070E6 /* InstantViewInBrowser.swift */; };
 		2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */; };
 		27161A9C27EC98290069BCEF /* menu_drugs.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27161A9B27EC98280069BCEF /* menu_drugs.tgs */; };
 		2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718244C2A0507A300AFBD4C /* menu_success.tgs */; };
@@ -1644,6 +1645,7 @@
 		270FD5992C5181D9000070E6 /* browser_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = browser_more.tgs; sourceTree = "<group>"; };
 		270FD59D2C53CEAF000070E6 /* menu_close_multiple.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_close_multiple.tgs; sourceTree = "<group>"; };
 		270FD59F2C54620A000070E6 /* WebsiteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsiteController.swift; sourceTree = "<group>"; };
+		270FD5A52C57C34B000070E6 /* InstantViewInBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantViewInBrowser.swift; sourceTree = "<group>"; };
 		2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaObjectToAvatar.swift; sourceTree = "<group>"; };
 		27161A9B27EC98280069BCEF /* menu_drugs.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_drugs.tgs; sourceTree = "<group>"; };
 		2718244C2A0507A300AFBD4C /* menu_success.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_success.tgs; sourceTree = "<group>"; };
@@ -3592,6 +3594,7 @@
 				2761549D2C2081DF0090BFFC /* WebappWindow.swift */,
 				270FD5912C4C21D3000070E6 /* WebappBrowser.swift */,
 				270FD59F2C54620A000070E6 /* WebsiteController.swift */,
+				270FD5A52C57C34B000070E6 /* InstantViewInBrowser.swift */,
 			);
 			name = "mini-apps";
 			sourceTree = "<group>";
@@ -7707,6 +7710,7 @@
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
 				271892082B0B2E5C0008B238 /* SimilarChannelsController.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
+				270FD5A62C57C34B000070E6 /* InstantViewInBrowser.swift in Sources */,
 				27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
 				D0D7520B24C04FD60037D73A /* VideoEditorScrubbler.swift in Sources */,

@@ -123,15 +123,14 @@ func Star_AppExamples(context: AccountContext) -> InputDataModalController {
     }
 
     let arguments = Arguments(context: context, launchApp: { peer in
-        WebappsStateContext.get(context).open(tab: .mainapp(bot: peer, source: .generic), context: context)
+        BrowserStateContext.get(context).open(tab: .mainapp(bot: peer, source: .generic))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Examples")
+    let controller = InputDataController(dataSignal: signal, title: strings().exampleAppsTitle)
     
     
     

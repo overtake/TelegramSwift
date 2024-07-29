@@ -163,9 +163,8 @@ private final class BalanceItem : GeneralRowItem {
         self.infoLayout.measure(width: .greatestFiniteMagnitude)
         
         
-        //TODOLANG
         let giftAttr = NSMutableAttributedString()
-        giftAttr.append(string: "\(clown)  Gift Stars to Friends", color: theme.colors.accent, font: .normal(.title))
+        giftAttr.append(string: strings().starsGiftToFriends(clown), color: theme.colors.accent, font: .normal(.title))
         giftAttr.insertEmbedded(.embedded(name: "Icon_Gift_Stars", color: theme.colors.accent, resize: false), for: clown)
         self.giftPremiumLayout = TextViewLayout(giftAttr)
         

@@ -120,7 +120,7 @@ struct PeerListState : Equatable {
     var presentation: TelegramPresentationTheme
     var privacy: GlobalPrivacySettings?
     var displaySavedAsTopics: Bool
-    var webapps: WebappsStateContext.FullState? = nil
+    var webapps: BrowserStateContext.FullState? = nil
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForumLike {
             if self.splitState == .minimisize {
@@ -1110,12 +1110,12 @@ class PeerListContainerView : Control {
                     for webapp in webapps.opened {
                         if let peer = webapp.data.peer {
                             menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
-                                WebappsStateContext.get(arguments.context).open(tab: webapp.data, context: arguments.context, uniqueId: webapp.unique)
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
                             }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
                         }
                     }
                     menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
-                        WebappsStateContext.get(arguments.context).closeAll()
+                        BrowserStateContext.get(arguments.context).closeAll()
                     }, itemImage: MenuAnimation.menu_clear_history.value))
                 }
                 
@@ -1127,12 +1127,12 @@ class PeerListContainerView : Control {
                     for recent in webapps.recentlyMenu {
                         if let peer = webapps.peers[recent.peerId] {
                             menu.addItem(ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: {
-                                WebappsStateContext.get(arguments.context).open(tab: recent.tab, context: arguments.context)
+                                BrowserStateContext.get(arguments.context).open(tab: recent.tab)
                             }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
                         }
                     }
                     menu.addItem(ContextMenuItem(strings().chatListAppsClearRecent, handler: {
-                        WebappsStateContext.get(arguments.context).clearRecent()
+                        BrowserStateContext.get(arguments.context).clearRecent()
                     }, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
@@ -1145,13 +1145,13 @@ class PeerListContainerView : Control {
                                         
                     let subMenu = ContextMenu()
                     
-                    let appItem:(WebappsStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
+                    let appItem:(BrowserStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
                         if let user = webapp.peer._asPeer() as? TelegramUser {
                             
                             let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
                             
                             return ReactionPeerMenu(title: user.displayTitle, handler: {
-                                WebappsStateContext.get(arguments.context).open(tab: .mainapp(bot: webapp.peer, source: .generic), context: arguments.context)
+                                BrowserStateContext.get(arguments.context).open(tab: .mainapp(bot: webapp.peer, source: .generic))
                             }, peer: user, context: arguments.context, reaction: nil, afterNameBadge: afterNameBadge)
                         } else {
                             return nil
@@ -2190,7 +2190,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
        
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, WebappsStateContext.get(context).fullState(context)).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, BrowserStateContext.get(context).fullState(context)).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0

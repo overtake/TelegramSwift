@@ -19,6 +19,8 @@ protocol BrowserPage {
     func backButtonPressed()
     func reloadPage()
     var externalState: Signal<WebpageModalState, NoError> { get }
+    
+    func add(_ tab: BrowserTabData.Data) -> Bool
 }
 
 private func makeWebViewController(context: AccountContext, data: BrowserTabData.Data, unique: BrowserTabData.Unique, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager?) -> Signal<WebpageModalController, RequestWebViewError> {
@@ -49,6 +51,8 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
         case let .straight(_, peerId, _, result):
             signal = .single((result.url, .normal(url: result.url, botdata: .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: "", keepAliveSignal: result.keepAliveSignal))))
         case .tonsite:
+            signal = .fail(.generic)
+        case .instantView:
             signal = .fail(.generic)
         }
         
@@ -281,20 +285,18 @@ private final class TabView: Control {
     private var shadowView: ShadowView?
     
     private var loading: InfiniteProgressView?
-    
-    
-    private var close: ImageButton?
-    
+        
     private var premiumStatus: PremiumStatusControl?
+    private let backgroundView = View()
     
     private(set) var data: BrowserTabData?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        addSubview(backgroundView)
         
-        self.updateLayer(transition: .immediate)
         
-        self.layer?.cornerRadius = 10
+        backgroundView.layer?.cornerRadius = 10
         self.scaleOnClick = true
         
         self.contextMenu = { [weak self] in
@@ -323,7 +325,7 @@ private final class TabView: Control {
     func update(item: BrowserTabData, arguments: Arguments, transition: ContainedViewLayoutTransition) {
         self.arguments = arguments
         self.data = item
-        self.backgroundColor = item.selected ? item.tabColor : .clear
+        self.backgroundView.backgroundColor = item.selected ? item.tabColor : .clear
         let animated = transition.isAnimated && !self.isHidden
         if animated {
             self.layer?.animateBackground(duration: transition.duration, function: transition.timingFunction)
@@ -372,11 +374,22 @@ private final class TabView: Control {
                     current.center()
                 }
             }
-            if let favicon = item.external?.favicon {
+            
+            let color: NSColor = item.selected ? theme.colors.listBackground : theme.colors.background
+
+            if case .instantView = item.unique {
+                let icon = NSImage(resource: .iconInstantViewFavicon).precomposed(theme.colors.darkGrayText, flipVertical: true)
+                current.image = generateImage(NSMakeSize(20, 20), rotatedContext: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(size.bounds)
+                    
+                    ctx.draw(icon, in: size.bounds.focus(icon.backingSize))
+                })
+            } else  if let favicon = item.external?.favicon {
                 current.nsImage = favicon
             } else {
                 
-                let color: NSColor = item.selected ? theme.colors.listBackground : theme.colors.background
                 
                 let text: String
                 if item.external?.error != nil {
@@ -451,7 +464,7 @@ private final class TabView: Control {
             current.update(item.title)
             
             if isNew {
-                current.centerY(x: 40)
+                current.centerY(x: 50)
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
@@ -475,7 +488,7 @@ private final class TabView: Control {
                     current.update(urlText)
                     
                     if isNew {
-                        current.centerY(x: 40)
+                        current.centerY(x: 50)
                         if animated {
                             current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         }
@@ -507,40 +520,6 @@ private final class TabView: Control {
                 self.premiumStatus = nil
             }
             
-            
-//                do {
-//                    let current: ImageButton
-//                    let isNew: Bool
-//                    if let view = self.close {
-//                        current = view
-//                        isNew = false
-//                    } else {
-//                        current = ImageButton()
-//                        current.autohighlight = false
-//                        current.scaleOnClick = true
-//                        addSubview(current)
-//                        self.close = current
-//                        isNew = true
-//
-//                        current.set(handler: { [weak self] _ in
-//                            if let item = self?.data {
-//                                self?.arguments?.closeTab(item.unique, true)
-//                            }
-//                        }, for: .Click)
-//                    }
-//
-//                    current.set(image: NSImage(resource: .iconBrowserCloseTab).precomposed(item.textColor.withAlphaComponent(0.8)), for: .Normal)
-//                    current.sizeToFit(.zero, NSMakeSize(20, 20), thatFit: true)
-//
-//
-//                    if isNew {
-//                        current.centerY(x: item.width - 10 - 20)
-//                        if animated {
-//                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//                        }
-//                    }
-//                }
-            
         } else {
             if let view = self.textView {
                 performSubviewRemoval(view, animated: animated)
@@ -549,10 +528,6 @@ private final class TabView: Control {
             if let view = self.shadowView {
                 performSubviewRemoval(view, animated: animated)
                 self.shadowView = nil
-            }
-            if let view = self.close {
-                performSubviewRemoval(view, animated: animated)
-                self.close = nil
             }
             if let view = self.premiumStatus {
                performSubviewRemoval(view, animated: animated)
@@ -564,8 +539,6 @@ private final class TabView: Control {
             }
         }
         
-        
-        updateLayer(transition: transition)
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -575,11 +548,13 @@ private final class TabView: Control {
             return
         }
         
+        transition.updateFrame(view: self.backgroundView, frame: size.bounds.insetBy(dx: 10, dy: 0))
+        
         let imageView = avatarView ?? iconView
         
         if let imageView {
             if data.selected {
-                transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 10))
+                transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 20))
             } else {
                 transition.updateFrame(view: imageView, frame: imageView.centerFrame())
             }
@@ -589,19 +564,16 @@ private final class TabView: Control {
         }
         if let urlText {
             if let textView {
-                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(40, 4), size: textView.frame.size))
+                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(50, 4), size: textView.frame.size))
             }
-            transition.updateFrame(view: urlText, frame: CGRect(origin: NSMakePoint(40, size.height - urlText.frame.height - 4), size: urlText.frame.size))
+            transition.updateFrame(view: urlText, frame: CGRect(origin: NSMakePoint(50, size.height - urlText.frame.height - 4), size: urlText.frame.size))
         } else {
             if let textView {
-                transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 40))
+                transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 50))
             }
         }
-        if let close {
-            transition.updateFrame(view: close, frame: close.centerFrameY(x: size.width - 10 - 20))
-        }
         if let premiumStatus {
-            transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: size.width - 10 - premiumStatus.frame.width))
+            transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: size.width - 20 - premiumStatus.frame.width))
         }
     }
     
@@ -840,6 +812,7 @@ struct BrowserTabData : Comparable, Identifiable {
     enum Unique : Hashable {
         case webapp(Int64)
         case url(String)
+        case instantView(MediaId)
     }
     
     
@@ -849,6 +822,7 @@ struct BrowserTabData : Comparable, Identifiable {
         case simple(bot: EnginePeer, url: String?, source: RequestSimpleWebViewSource)
         case straight(bot: EnginePeer, peerId: PeerId, title: String, result: RequestWebViewResult)
         case tonsite(url: String)
+        case instantView(url: String, webPage: TelegramMediaWebpage, anchor: String?)
         
         var peer: EnginePeer? {
             switch self {
@@ -861,6 +835,8 @@ struct BrowserTabData : Comparable, Identifiable {
             case let .straight(bot, _, _, _):
                 return bot
             case .tonsite:
+                return nil
+            case .instantView:
                 return nil
             }
         }
@@ -896,6 +872,8 @@ struct BrowserTabData : Comparable, Identifiable {
                 return .webapp(arc4random64())
             case let .tonsite(url):
                 return .url(url)
+            case let .instantView(_, webPage, _):
+                return .instantView(webPage.webpageId)
             }
         }
     }
@@ -919,6 +897,11 @@ struct BrowserTabData : Comparable, Identifiable {
             } else {
                 return url
             }
+        case .instantView:
+            if let title = external?.title {
+                return title
+            }
+            return strings().webBrowserInstantView
         }
     }
     
@@ -951,7 +934,7 @@ struct BrowserTabData : Comparable, Identifiable {
     var width: CGFloat {
         if let title {
             let textWidth = max(title.layoutSize.width, urlText?.layoutSize.width ?? 0)
-            var width = textWidth + 20 + 20 + 10
+            var width = textWidth + 20 + 20 + 10 + 20
             if let peer = self.data.peer {
                 if let size = PremiumStatusControl.controlSize(peer._asPeer(), false) {
                     width += (size.width) + 2
@@ -1407,7 +1390,7 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
     private let data: BrowserTabData
     private let context: AccountContext
     private let arguments: Arguments
-    private var controller: (ModalViewController & BrowserPage)?
+    private var controller: (ViewController & BrowserPage)?
     private let disposable = MetaDisposable()
     
     private var appeared: Bool = false
@@ -1432,6 +1415,10 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
         controller?.reloadPage()
     }
     
+    func add(_ tab: BrowserTabData.Data) -> Bool {
+        return controller?.add(tab) ?? false
+    }
+    
     deinit {
         disposable.dispose()
     }
@@ -1444,6 +1431,10 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
         switch data.data {
         case let .tonsite(url):
             let controller = WebsiteController(context: context, url: url, browser: arguments.makeLinkManager(data.unique))
+            self.set(controller, animated: true)
+            arguments.setLoadingState(data.unique, .none)
+        case let .instantView(url, webPage, anchor):
+            let controller = InstantViewInBrowser(webPage: webPage, context: arguments.context, url: url, anchor: anchor, browser: arguments.makeLinkManager(data.unique))
             self.set(controller, animated: true)
             arguments.setLoadingState(data.unique, .none)
         case .mainapp, .simple, .straight, .webapp:
@@ -1489,7 +1480,7 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
         controller?.viewDidDisappear(animated)
     }
     
-    private func set(_ controller: (ModalViewController & BrowserPage), animated: Bool) {
+    private func set(_ controller: (ViewController & BrowserPage), animated: Bool) {
         self.controller = controller
         controller._frameRect = bounds
         if appeared {
@@ -1561,8 +1552,9 @@ final class WebappBrowserController : ViewController {
     }
     
     func add(_ tab: BrowserTabData.Data, uniqueId: BrowserTabData.Unique? = nil) {
-        if let uniqueId, let _ = webpages[uniqueId] {
+        if let uniqueId, let webpage = webpages[uniqueId] {
             arguments?.select(uniqueId)
+            _ = webpage.add(tab)
         } else {
             arguments?.insertTab(tab)
         }
@@ -1713,7 +1705,9 @@ final class WebappBrowserController : ViewController {
                         return state
                     }
                 }  else {
-                    if selectedId == unique {
+                    let added = self?.webpages[unique]?.add(data) ?? false
+                    
+                    if selectedId == unique, !added {
                         getArguments?()?.shake(unique)
                     } else {
                         updateState { current in
@@ -1730,21 +1724,21 @@ final class WebappBrowserController : ViewController {
             guard let event = NSApp.currentEvent else {
                 return
             }
-            let state = WebappsStateContext.get(context).fullState(context)
+            let state = BrowserStateContext.get(context).fullState(context)
             |> take(1)
             |> deliverOnMainQueue
             actionsDisposable.add(state.startStrict(next: { [weak control] webapps in
                 if let control {
                     let menu = ContextMenu(betterInside: true)
                     
-                    let appItem:(WebappsStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
+                    let appItem:(BrowserStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
                         if let user = webapp.peer._asPeer() as? TelegramUser {
                             
                             let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
                             
                             let data = BrowserTabData.Data.mainapp(bot: webapp.peer, source: .generic)
                             return ReactionPeerMenu(title: user.displayTitle, handler: {
-                                WebappsStateContext.get(context).open(tab: data, context: context)
+                                BrowserStateContext.get(context).open(tab: data)
                             }, peer: user, context: context, reaction: nil, afterNameBadge: afterNameBadge)
                         } else {
                             return nil
@@ -1794,7 +1788,7 @@ final class WebappBrowserController : ViewController {
                     
                     if !menu.items.isEmpty, stateValue.with ({ $0.tabs.count > 1 }) {
                         menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
-                            WebappsStateContext.get(context).hide()
+                            BrowserStateContext.get(context).hide()
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_close_multiple.value))
                     }
                     
@@ -1839,7 +1833,7 @@ final class WebappBrowserController : ViewController {
             }
             let invoke:()->Void = {
                 if count == 1 {
-                    WebappsStateContext.get(context).hide()
+                    BrowserStateContext.get(context).hide()
                 } else {
                     updateState {
                         $0.closeTab(unique)

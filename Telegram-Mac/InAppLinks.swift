@@ -782,7 +782,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     if chat == nil {
                                         switch action {
                                         case let .openWebview(botPeer, botApp, result):
-                                            WebappsStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result), context: context)
+                                            BrowserStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result))
                                         default:
                                             break
                                         }
@@ -1313,7 +1313,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             }
         })
     case let .tonsite(link, context):
-        WebappsStateContext.get(context).open(tab: .tonsite(url: link), context: context)
+        BrowserStateContext.get(context).open(tab: .tonsite(url: link))
     }
     
 }
