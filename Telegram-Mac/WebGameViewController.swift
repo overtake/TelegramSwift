@@ -36,14 +36,18 @@ public final class GameView : View {
     let headerView: WebpageHeaderView
     
     let webView: WKWebView
+    let isBrowser: Bool
     
-    required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration!) {
+    required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration!, isBrowser: Bool) {
+        self.isBrowser = isBrowser
         headerView = .init(frame: NSMakeRect(0, 0, frameRect.width, 50))
         webView = WKWebView(frame: CGRect(origin: NSMakePoint(0, headerView.frame.height), size: NSMakeSize(frameRect.width, frameRect.height - headerView.frame.height)), configuration: configuration)
         super.init(frame: frameRect)
         
         addSubview(webView)
         addSubview(headerView)
+        
+        headerView.isHidden = isBrowser
 
         updateLocalizationAndTheme(theme: theme)
     }
@@ -62,7 +66,7 @@ public final class GameView : View {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: headerView, frame: NSMakeRect(0, 0, size.width, 50))
+        transition.updateFrame(view: headerView, frame: NSMakeRect(0, headerView.isHidden ? -50 : 0, size.width, 50))
         transition.updateFrame(view: webView, frame: NSMakeRect(0, headerView.frame.maxY, size.width, size.height - headerView.frame.maxY))
     }
     
@@ -73,7 +77,47 @@ public final class GameView : View {
     }
 }
 
-class WebGameViewController: ModalViewController, WKUIDelegate {
+private struct PageState : Equatable {
+    var title: String = ""
+    var subtitle: String = ""
+    var peer: EnginePeer?
+}
+
+class WebGameViewController: ModalViewController, WKUIDelegate, BrowserPage {
+    
+    private let statePromise = ValuePromise<PageState>(ignoreRepeated: true)
+    private let stateValue = Atomic(value: PageState())
+    private func updateState(_ f:(PageState)->PageState) -> Void {
+        self.statePromise.set(self.stateValue.modify(f))
+    }
+    
+    
+    func contextMenu() -> ContextMenu {
+        let menu = ContextMenu()
+        menu.addItem(ContextMenuItem(strings().modalShare, handler: { [weak self] in
+            self?.share_game("")
+        }, itemImage: MenuAnimation.menu_share.value))
+        return menu
+    }
+    
+    func backButtonPressed() {
+        
+    }
+    
+    func reloadPage() {
+        self.webView.reload()
+    }
+    
+    var externalState: Signal<WebpageModalState, NoError> {
+        return statePromise.get() |> map {
+            return .init(title: $0.title, subtitle: $0.subtitle, peer: $0.peer)
+        }
+    }
+    
+    func add(_ tab: BrowserTabData.Data) -> Bool {
+        return false
+    }
+    
     private let gameUrl:String
     let peerId:PeerId
     private let context: AccountContext
@@ -85,11 +129,13 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
     private let messageId:MessageId
     fileprivate let uniqueId:String = "_\(arc4random())"
     private let loadMessageDisposable = MetaDisposable()
-    init(_ context: AccountContext, _ peerId:PeerId, _ messageId:MessageId, _ gameUrl:String) {
+    private let browser: BrowserLinkManager
+    init(_ context: AccountContext, peerId:PeerId, messageId:MessageId, gameUrl:String, browser: BrowserLinkManager) {
         self.gameUrl = gameUrl
         self.peerId = peerId
         self.context = context
         self.messageId = messageId
+        self.browser = browser
         super.init()
     }
     
@@ -99,8 +145,6 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        webView.load(URLRequest(url: URL(string:"file://blank")!))
-        webView.stopLoading()
     }
     
     override func viewDidLoad() {
@@ -122,6 +166,16 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
         self.peer = peer
         self.threadId = threadId
         
+        updateState { current in
+            var current = current
+            current.subtitle = media.name
+            current.title = peer?.displayTitle ??  media.title
+            if let peer = peer {
+                current.peer = .init(peer)
+            }
+            return current
+        }
+        
         genericView.headerView.update(title: peer?.displayTitle ?? media.title, subtitle: media.name, left: .dismiss, animated: false, leftCallback: { [weak self] in
             self?.close()
         }, contextMenu: { [weak self] in
@@ -142,10 +196,7 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
     
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {        
-        self.window?.contentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] _ in
-            self?._window?.orderOut(nil)
-            self?._window = nil
-        })
+        browser.close(confirm: false)
     }
     
     
@@ -179,7 +230,7 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
         
         let rect = NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)
         
-        return GameView(frame: rect, configuration: configuration)
+        return GameView(frame: rect, configuration: configuration, isBrowser: true)
     }
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
@@ -214,7 +265,9 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
         
     }
     @objc func share_game(_ data:String) {
-        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(self.peer.addressName ?? "gamebot")" + "?game=\(self.media.name)")), for: mainWindow)
+        if let window {
+            showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(self.peer.addressName ?? "gamebot")" + "?game=\(self.media.name)")), for: window)
+        }
     }
     @objc func share_score(_ data:String) {
         
@@ -259,6 +312,22 @@ class WebGameViewController: ModalViewController, WKUIDelegate {
         
     }
     
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        window?.set(escape: { [weak self] _ -> KeyHandlerResult in
+            if self?.escapeKeyAction() == .rejected {
+                self?.close()
+            }
+            return .invoked
+        }, with: self, priority: responderPriority)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.window?.removeAllHandlers(for: self)
+    }
     override func measure(size: NSSize) {
         let s = NSMakeSize(size.width + 20, size.height + 20)
         let size = NSMakeSize(420, min(420 + 420 * 0.6, s.height - 80))

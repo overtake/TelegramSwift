@@ -533,6 +533,10 @@ struct WebpageModalState : Equatable {
     var isSite: Bool = false
     var title: String? = nil
     var url: String?
+    
+    var subtitle: String?
+    
+    var peer: EnginePeer?
 }
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate, BrowserPage {
