@@ -54,6 +54,8 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
             signal = .fail(.generic)
         case .instantView:
             signal = .fail(.generic)
+        case .game:
+            signal = .fail(.generic)
         }
         
                 
@@ -334,7 +336,7 @@ private final class TabView: Control {
         self.toolTip = item.external?.url
         
 
-        if let enginePeer = item.data.peer {
+        if let enginePeer = item.peer {
             let current: AvatarControl
             if let view = self.avatarView {
                 current = view
@@ -499,16 +501,16 @@ private final class TabView: Control {
                 }
             }
             
-            if let peer = item.data.peer {
+            if let peer = item.peer {
                 let statusControl = PremiumStatusControl.control(peer._asPeer(), account: arguments.context.account, inlinePacksContext: arguments.context.inlinePacksContext, isSelected: false, cached: self.premiumStatus, animated: false)
 
-                if let statusControl = statusControl {
+                if let statusControl = statusControl, let textView {
                     let isNew = self.premiumStatus == nil
                     self.premiumStatus = statusControl
                     self.addSubview(statusControl)
                     
                     if isNew {
-                        statusControl.centerY(x: item.width - 10 - statusControl.frame.width)
+                        statusControl.setFrameOrigin(NSMakePoint(textView.frame.maxX + 3, textView.frame.minY))
                         statusControl.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 } else if let view = self.premiumStatus {
@@ -572,8 +574,8 @@ private final class TabView: Control {
                 transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 50))
             }
         }
-        if let premiumStatus {
-            transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: size.width - 20 - premiumStatus.frame.width))
+        if let premiumStatus, let textView {
+            transition.updateFrame(view: premiumStatus, frame: CGRect(origin: NSMakePoint(textView.frame.maxX + 3, textView.frame.minY), size: premiumStatus.frame.size))
         }
     }
     
@@ -813,6 +815,7 @@ struct BrowserTabData : Comparable, Identifiable {
         case webapp(Int64)
         case url(String)
         case instantView(MediaId)
+        case game(MessageId)
     }
     
     
@@ -823,7 +826,7 @@ struct BrowserTabData : Comparable, Identifiable {
         case straight(bot: EnginePeer, peerId: PeerId, title: String, result: RequestWebViewResult)
         case tonsite(url: String)
         case instantView(url: String, webPage: TelegramMediaWebpage, anchor: String?)
-        
+        case game(url: String, peerId: PeerId, messageId: MessageId)
         var peer: EnginePeer? {
             switch self {
             case .mainapp(let bot, _):
@@ -837,6 +840,8 @@ struct BrowserTabData : Comparable, Identifiable {
             case .tonsite:
                 return nil
             case .instantView:
+                return nil
+            case .game:
                 return nil
             }
         }
@@ -874,6 +879,8 @@ struct BrowserTabData : Comparable, Identifiable {
                 return .url(url)
             case let .instantView(_, webPage, _):
                 return .instantView(webPage.webpageId)
+            case let .game(_, _, messageId):
+                return .game(messageId)
             }
         }
     }
@@ -902,6 +909,8 @@ struct BrowserTabData : Comparable, Identifiable {
                 return title
             }
             return strings().webBrowserInstantView
+        case .game:
+            return external?.title ?? "Game"
         }
     }
     
@@ -931,11 +940,15 @@ struct BrowserTabData : Comparable, Identifiable {
         return lhs.index < rhs.index
     }
     
+    var peer: EnginePeer? {
+        return external?.peer ?? self.data.peer
+    }
+    
     var width: CGFloat {
         if let title {
             let textWidth = max(title.layoutSize.width, urlText?.layoutSize.width ?? 0)
             var width = textWidth + 20 + 20 + 10 + 20
-            if let peer = self.data.peer {
+            if let peer = self.peer {
                 if let size = PremiumStatusControl.controlSize(peer._asPeer(), false) {
                     width += (size.width) + 2
                 }
@@ -970,7 +983,13 @@ struct BrowserTabData : Comparable, Identifiable {
             layout.measure(width: width - 100)
             
             let urlLayout: TextViewLayout?
-            if let url = external?.url, let url = URL(string: url), let (result, host) = urlWithoutScheme(from: url), external?.title != host {
+            
+            if let subtitle = self.external?.subtitle {
+                let attributedString = NSMutableAttributedString()
+                attributedString.append(string: subtitle, color: theme.colors.grayText, font: .normal(.small))
+                urlLayout = .init(attributedString, maximumNumberOfLines: 1)
+                urlLayout?.measure(width: width - 100)
+            } else if let url = external?.url, let url = URL(string: url), let (result, host) = urlWithoutScheme(from: url), external?.title != host {
                 
                 let attributedString = NSMutableAttributedString()
                 attributedString.append(string: result, color: theme.colors.grayText, font: .normal(.small))
@@ -1435,6 +1454,10 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
             arguments.setLoadingState(data.unique, .none)
         case let .instantView(url, webPage, anchor):
             let controller = InstantViewInBrowser(webPage: webPage, context: arguments.context, url: url, anchor: anchor, browser: arguments.makeLinkManager(data.unique))
+            self.set(controller, animated: true)
+            arguments.setLoadingState(data.unique, .none)
+        case let .game(url, peerId, messageId):
+            let controller = WebGameViewController(arguments.context, peerId: peerId, messageId: messageId, gameUrl: url, browser: arguments.makeLinkManager(data.unique))
             self.set(controller, animated: true)
             arguments.setLoadingState(data.unique, .none)
         case .mainapp, .simple, .straight, .webapp:

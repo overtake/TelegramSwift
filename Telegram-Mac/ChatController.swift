@@ -4439,7 +4439,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 strongSelf.botCallbackAlertMessage.set(.single((text, true)))
                             case let .url(url):
                                 if isGame {
-                                    WebappWindow.makeAndOrderFront(WebGameViewController(context, strongSelf.chatInteraction.peerId, messageId, url))
+                                    BrowserStateContext.get(context).open(tab: .game(url: url, peerId: strongSelf.chatInteraction.peerId, messageId: messageId))
                                 } else {
                                     execute(inapp: .external(link: url, !(strongSelf.chatInteraction.peer?.isVerified ?? false)))
                                 }
