@@ -723,13 +723,12 @@ final class ChatInteraction : InterfaceObserver  {
     func openWebview(bot:Peer, title: String?, buttonText: String, url: String, simple: Bool, inline: Bool) {
         let replyTo = self.presentation.interfaceState.replyMessageId?.messageId
         let threadId = self.presentation.chatLocation.threadId
-        let botId = bot.id
         let context = self.context
         let peerId = self.peerId
         
         let tab: BrowserTabData.Data
         if simple {
-            tab = .mainapp(bot: .init(bot), source: inline ? .inline : .generic)
+            tab = .simple(bot: .init(bot), url: url, buttonText: buttonText, source: inline ? .inline : .generic)
         } else {
             tab = .webapp(bot: .init(bot), peerId: peerId, buttonText: buttonText, url: url, payload: nil, threadId: threadId, replyTo: replyTo, fromMenu: false)
         }
