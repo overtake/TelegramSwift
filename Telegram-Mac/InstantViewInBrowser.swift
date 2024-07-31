@@ -17,6 +17,7 @@ private struct PageState : Equatable {
     var isBackButton: Bool = false
     var title: String = ""
     var appearance: InstantViewAppearance
+    var loading: CGFloat = 0
 }
 
 
@@ -62,7 +63,7 @@ class InstantViewInBrowser : TelegramGenericViewController<View>, BrowserPage {
     
     var externalState: Signal<WebpageModalState, NoError> {
         return statePromise.get() |> map {
-            return .init(isBackButton: $0.isBackButton, isSite: true, title: $0.title)
+            return .init(isBackButton: $0.isBackButton, isLoading: $0.loading != 0, isSite: true, title: $0.title)
         }
     }
     
@@ -214,19 +215,15 @@ class InstantViewInBrowser : TelegramGenericViewController<View>, BrowserPage {
     
     
     func updateProgress(_ signal: Signal<CGFloat, NoError>, animated: Bool = true) {
-//        loadProgressDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] value in
-//            guard let `self` = self else {return}
-//            self.genericView.loadingIndicatorView.set(progress: value, animated: animated, duration: 0.2)
-//            if value == 1 || value == 0 {
-//                self.genericView.loadingIndicatorView.change(opacity: 0, animated: animated, completion: { [weak self] completed in
-//                    if completed {
-//                        self?.genericView.loadingIndicatorView.set(progress: 0, animated: false)
-//                    }
-//                })
-//            } else if value > 0 {
-//                self.genericView.loadingIndicatorView.change(opacity: 1, animated: animated)
-//            }
-//        }))
+        loadProgressDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] value in
+            guard let `self` = self else {return}
+            
+            self.updateState { current in
+                var current = current
+                current.loading = value
+                return current
+            }
+        }))
     }
 
     

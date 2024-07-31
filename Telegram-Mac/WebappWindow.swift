@@ -209,13 +209,19 @@ final class BrowserStateContext {
     }
     
     static func checkKey(_ event: NSEvent) -> NSEvent? {
-        if event.keyCode == KeyboardKey.W.rawValue, event.modifierFlags.contains(.command) {
+        if event.modifierFlags.contains(.command) {
             let list = accountHolder.with { $0.values }
             var invoked: Bool = false
             for value in list {
                 if value.browser?.window == event.window {
-                    value.browser?.closeTab()
-                    invoked = true
+                    if event.keyCode == KeyboardKey.W.rawValue {
+                        value.browser?.closeTab()
+                        invoked = true
+                    } else {
+                        event.window?.sendEvent(event)
+                        invoked = true
+                    }
+                               
                 }
             }
             if invoked {
