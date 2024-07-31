@@ -3267,6 +3267,8 @@ class ChatRowItem: TableRowItem {
                         reaction = value
                     case .custom:
                         reaction = context.isPremium ? value : builtin?.enabled.first?.value
+                    case .stars:
+                        break
                     }
                 case let .limited(array):
                     if array.contains(value) {
@@ -3285,6 +3287,8 @@ class ChatRowItem: TableRowItem {
                     reaction = context.isPremium ? value : builtin?.enabled.first?.value
                 case .builtin:
                     reaction = value
+                case .stars:
+                    break
                 }
             }
             if let reaction = reaction {
@@ -3441,6 +3445,8 @@ class ChatRowItem: TableRowItem {
                                         }
                                     case let .custom(fileId):
                                         return .custom(value: reaction, fileId: fileId, nil, isSelected: isSelected(reaction))
+                                    case .stars:
+                                        return nil
                                     }
                                 }
                             case .empty:
@@ -3461,6 +3467,8 @@ class ChatRowItem: TableRowItem {
                             }
                         case let .custom(file):
                             return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: isSelected(.custom(file.fileId.id)))
+                        case .stars:
+                            return nil
                         }
                     }
                 }
@@ -3490,6 +3498,8 @@ class ChatRowItem: TableRowItem {
                             } else {
                                 return nil
                             }
+                        case .stars:
+                            return nil
                         }
                     }
                     accessToAll = false
@@ -3564,6 +3574,8 @@ class ChatRowItem: TableRowItem {
                                 selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
                             case let .custom(fileId):
                                 selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                            case .stars:
+                                break
                             }
                         }
                     }

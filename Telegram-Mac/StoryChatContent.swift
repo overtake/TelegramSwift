@@ -2010,6 +2010,8 @@ func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signa
             if !customReactions.contains(fileId) {
                 customReactions.append(fileId)
             }
+        case .stars:
+            break
         }
     }
     if !builtinReactions.isEmpty {
@@ -2247,6 +2249,8 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
                     if !customReactions.contains(fileId) {
                         customReactions.append(fileId)
                     }
+                case .stars:
+                    break
                 }
             }
         }

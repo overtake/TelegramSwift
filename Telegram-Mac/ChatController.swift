@@ -963,6 +963,8 @@ class ChatControllerView : View, ChatInputDelegate {
                         if let file = savedMessageTags.files[fileId] {
                             tags?.append(.init(emoji: tag.reaction.string, tag: tag, file: file))
                         }
+                    case .stars:
+                        break
                     }
                 }
             }
@@ -6143,6 +6145,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         break
                     case let .custom(fileId):
                         customFileIds.append(fileId)
+                    case .stars:
+                        break
                     }
                 }
                 

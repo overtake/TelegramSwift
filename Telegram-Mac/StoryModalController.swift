@@ -574,6 +574,8 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
                 }
             case let .custom(file):
                 return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: selectedItems.contains(where: { $0.source == .custom(file.fileId.id) }))
+            case .stars:
+                return nil
             }
         }
         
@@ -877,6 +879,8 @@ private final class StoryViewController: Control, Notifable {
                 case let .builtin(string):
                     let reaction = context.reactions.available?.reactions.first(where: { $0.value.string == string })
                     file = reaction?.selectAnimation
+                case .stars:
+                    break
                 }
                 if let file = file {
                     mediaFile = file
@@ -1615,6 +1619,8 @@ private final class StoryViewController: Control, Notifable {
             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
             file = reaction?.selectAnimation
             effectFile = reaction?.aroundAnimation
+        case .stars:
+            break
         }
         
         guard let icon = file else {
@@ -2526,6 +2532,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 } else {
                     self?.genericView.like(reaction)
                 }
+            case .stars:
+                break
             }
         }
 
@@ -2547,6 +2555,8 @@ final class StoryModalController : ModalViewController, Notifable {
                             self?.genericView.playReaction(reaction)
                         }
                     }
+                case .stars:
+                    break
                 }
             }
         }
@@ -2893,6 +2903,8 @@ final class StoryModalController : ModalViewController, Notifable {
                         selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
                     case let .custom(fileId):
                         selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    case .stars:
+                        break
                     }
                 }
                 _ = storyReactions(context: context, peerId: entryId, react: like, onClose: {

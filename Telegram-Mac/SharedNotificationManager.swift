@@ -540,6 +540,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                                     let file = file ?? message.associatedMedia[mediaId] as? TelegramMediaFile
                                     reactionText = (file?.customEmojiText ?? file?.stickerText ?? "").normalizedEmoji
+                                case .stars:
+                                    reactionText = "⭐️"
                                 }
                                 
                                 let msg = pullText(from: message).string as String

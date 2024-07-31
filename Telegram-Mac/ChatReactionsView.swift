@@ -536,6 +536,8 @@ final class ChatReactionsLayout {
                 } else {
                     source = nil
                 }
+            case .stars:
+                source = nil
             }
             
             if let source = source {

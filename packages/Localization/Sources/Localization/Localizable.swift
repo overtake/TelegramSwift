@@ -2981,6 +2981,8 @@ public final class L10n {
   public static var channelReactionsAdd: String  { return L10n.tr("Localizable", "ChannelReactions.Add") }
   /// Enable Reaction
   public static var channelReactionsEnableReactions: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions") }
+  /// Enable Paid Reactions
+  public static var channelReactionsEnableStars: String  { return L10n.tr("Localizable", "ChannelReactions.EnableStars") }
   /// %d Boost Level Required
   public static func channelReactionsLevelRequired(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelReactions.LevelRequired", p1)
@@ -2997,6 +2999,8 @@ public final class L10n {
   public static var channelReactionsAddInfo: String  { return L10n.tr("Localizable", "ChannelReactions.Add.Info") }
   /// You can add emoji from any emoji pack as a reaction.
   public static var channelReactionsEnableReactionsInfo: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions.Info") }
+  /// Switch this on to let your subscribers set paid reactions with Telegram Stars, which you will be able to withdraw later as TON. [Learn More >](https://telegram.org)
+  public static var channelReactionsEnableStarsInfo: String  { return L10n.tr("Localizable", "ChannelReactions.EnableStars.Info") }
   /// Limit the number of different reactions that can be added to a post, including already published posts.
   public static var channelReactionsMaxCountInfo: String  { return L10n.tr("Localizable", "ChannelReactions.MaxCount.Info") }
   /// MAXIMUM REACTIONS PER POST

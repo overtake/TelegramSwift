@@ -245,6 +245,7 @@ private struct State : Equatable {
     var myStatus: MyBoostStatus?
     
     var maxReactionsCount: Int32?
+    var starsAllowed: Bool? = nil
     
     var selected: [Int64] {
         let attributes = chatTextAttributes(from: state.inputText)
@@ -302,6 +303,7 @@ private let _id_enabled = InputDataIdentifier("_id_enabled")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
 private let _id_add = InputDataIdentifier("_id_add")
 private let _id_max_limit = InputDataIdentifier("_id_max_limit")
+private let _id_stars_allowed = InputDataIdentifier("_id_stars_allowed")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -385,13 +387,27 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
    
     
+    if let starsAllowed = state.starsAllowed {
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_stars_allowed, data: .init(name: strings().channelReactionsEnableStars, color: theme.colors.text, type: .switchable(starsAllowed), viewType: .singleItem)))
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().channelReactionsEnableStarsInfo, linkHandler: { link in
+            execute(inapp: .external(link: link, false))
+        }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
+    }
+    
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries
 }
 
-func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions, reactionsCount: Int32?) -> InputDataModalController {
+func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions, reactionsCount: Int32?, starsAllowed: Bool?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -421,6 +437,8 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
                     textInteractions.update { _ in
                         return textInteractions.insertText(.makeAnimated(fileId, text: clown))
                     }
+                case .stars:
+                    break
                 }
             }
         case .empty:
@@ -433,7 +451,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         }
     }
     
-    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation, maxReactionsCount: reactionsCount)
+    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation, maxReactionsCount: reactionsCount, starsAllowed: starsAllowed)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -560,7 +578,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     
     controller.validateData = { _ in
         
-        _ = showModalProgress(signal: context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: stateValue.with { $0.allowedReactions }, maxReactionCount: stateValue.with { $0.maxReactionsCount })), for: context.window).start(error: { error in
+        _ = showModalProgress(signal: context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: stateValue.with { $0.allowedReactions }, maxReactionCount: stateValue.with { $0.maxReactionsCount }, starsAllowed: stateValue.with { $0.starsAllowed })), for: context.window).start(error: { error in
             
             switch error {
             case .boostRequired:

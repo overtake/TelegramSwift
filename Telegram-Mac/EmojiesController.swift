@@ -76,6 +76,8 @@ private extension RecentReactionItem.Content {
             return .custom(file.fileId.id)
         case let .builtin(emoji):
             return .builtin(emoji)
+        case .stars:
+            return .stars
         }
     }
 }
@@ -695,6 +697,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         }
                     case let .custom(file):
                         return .init(index: .init(index: -1, id: 0), file: file, indexKeys: [])
+                    case .stars:
+                        return nil
                     }
                     return nil
                 }

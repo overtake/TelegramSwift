@@ -455,7 +455,8 @@ private final class StoryViewerRowView: GeneralRowView {
                     layer = nil
                 }
             }
-            
+        case .stars:
+            layer = .init(account: context.account, file: LocalAnimatedSticker.star_currency_new.file, size: size)
         }
         
         return layer
