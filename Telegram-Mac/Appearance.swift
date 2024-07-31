@@ -363,12 +363,12 @@ private func generateBalanceIcon(text: String, icon: CGImage) -> CGImage {
     let icon = icon
     var size = textNode.0.size
     
-    size.width += icon.size.width + 1
-    size.height = max(size.height, icon.size.height)
+    size.width += icon.backingSize.width + 1
+    size.height = max(size.height, icon.backingSize.height)
     return generateImage(size, rotatedContext: { size, ctx in
         ctx.clear(size.bounds)
         
-        let iconRect = size.bounds.focusY(icon.size, x: 0)
+        let iconRect = size.bounds.focusY(icon.backingSize, x: 0)
         let textRect = size.bounds.focusY(textNode.0.size, x: iconRect.maxX + 1)
         ctx.draw(icon, in: iconRect)
         
@@ -394,12 +394,12 @@ func generateTonAndStarBalanceIcon(ton: Int64, stars: Int64) -> CGImage {
 
     var size = NSMakeSize(0, 0)
     if let tonIcon {
-        size.width += tonIcon.size.width
-        size.height = tonIcon.size.height
+        size.width += tonIcon.backingSize.width
+        size.height = tonIcon.backingSize.height
     }
     if let starsIcon {
-        size.width += starsIcon.size.width
-        size.height = max(size.height, starsIcon.size.height)
+        size.width += starsIcon.backingSize.width
+        size.height = max(size.height, starsIcon.backingSize.height)
     }
     if starsIcon != nil, tonIcon != nil {
         size.width += 2
@@ -409,17 +409,17 @@ func generateTonAndStarBalanceIcon(ton: Int64, stars: Int64) -> CGImage {
         ctx.clear(size.bounds)
         
         if let tonIcon, let starsIcon {
-            let tonRect = size.bounds.focusY(tonIcon.size, x: 0)
-            let starsRect = size.bounds.focusY(starsIcon.size, x: tonRect.maxX + 2)
+            let tonRect = size.bounds.focusY(tonIcon.backingSize, x: 0)
+            let starsRect = size.bounds.focusY(starsIcon.backingSize, x: tonRect.maxX + 2)
             
             ctx.draw(tonIcon, in: tonRect)
             ctx.draw(starsIcon, in: starsRect)
 
         } else if let tonIcon {
-            let tonRect = size.bounds.focusY(tonIcon.size, x: 0)
+            let tonRect = size.bounds.focusY(tonIcon.backingSize, x: 0)
             ctx.draw(tonIcon, in: tonRect)
         } else if let starsIcon {
-            let starsRect = size.bounds.focusY(starsIcon.size, x: 0)
+            let starsRect = size.bounds.focusY(starsIcon.backingSize, x: 0)
             ctx.draw(starsIcon, in: starsRect)
         }
     })!
