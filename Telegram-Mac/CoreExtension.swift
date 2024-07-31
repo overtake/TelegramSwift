@@ -3780,7 +3780,7 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
-        BrowserStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, source: .settings))
+        BrowserStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, buttonText: "", source: .settings))
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //

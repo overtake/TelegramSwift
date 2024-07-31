@@ -44,9 +44,9 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
             signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: themeParams, fromMenu: fromMenu, replyToMessageId: replyTo, threadId: threadId) |> map {
                 return ($0.url, .normal(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: $0.keepAliveSignal)))
             }
-        case .simple(_, _, let source):
-            signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: nil, source: source, themeParams: themeParams) |> map {
-                return ($0.url, .simple(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: nil, buttonText: "", keepAliveSignal: $0.keepAliveSignal), source: source))
+        case let .simple(_, url, buttonText, source):
+            signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, source: source, themeParams: themeParams) |> map {
+                return ($0.url, .simple(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: nil, buttonText: buttonText, keepAliveSignal: $0.keepAliveSignal), source: source))
             }
         case let .straight(_, peerId, _, result):
             signal = .single((result.url, .normal(url: result.url, botdata: .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: "", keepAliveSignal: result.keepAliveSignal))))
@@ -822,7 +822,7 @@ struct BrowserTabData : Comparable, Identifiable {
     enum Data : Equatable {
         case mainapp(bot: EnginePeer, source: RequestSimpleWebViewSource)
         case webapp(bot: EnginePeer, peerId: PeerId, buttonText: String, url: String?, payload: String?, threadId: Int64?, replyTo: MessageId?, fromMenu: Bool)
-        case simple(bot: EnginePeer, url: String?, source: RequestSimpleWebViewSource)
+        case simple(bot: EnginePeer, url: String?, buttonText: String, source: RequestSimpleWebViewSource)
         case straight(bot: EnginePeer, peerId: PeerId, title: String, result: RequestWebViewResult)
         case tonsite(url: String)
         case instantView(url: String, webPage: TelegramMediaWebpage, anchor: String?)
@@ -833,7 +833,7 @@ struct BrowserTabData : Comparable, Identifiable {
                 return bot
             case .webapp(let bot, _, _, _, _, _, _, _):
                 return bot
-            case .simple(let bot, _, _):
+            case .simple(let bot, _, _, _):
                 return bot
             case let .straight(bot, _, _, _):
                 return bot
@@ -889,8 +889,8 @@ struct BrowserTabData : Comparable, Identifiable {
         switch data {
         case let .mainapp(peer, _):
             return peer._asPeer().displayTitle
-        case let .simple(peer, title, _):
-            return title ?? peer._asPeer().displayTitle
+        case let .simple(peer, _, _, _):
+            return peer._asPeer().displayTitle
         case let .webapp(peer, _, _, _, _, _, _, _):
             return peer._asPeer().displayTitle
         case let .straight(_, _, title, _):

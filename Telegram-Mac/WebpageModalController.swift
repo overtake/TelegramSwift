@@ -1048,13 +1048,26 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         return
                     }
                 }
+                
+                let context = self.context
                                 
-                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: nil, hashtag: nil, command: nil, applyProxy: nil, confirm: true)
+                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: { [weak self] peerId, toChat, messageId, initialAction in
+                    if toChat || initialAction != nil {
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+                    } else {
+                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                    }
+                    if initialAction != nil {
+                        self?.closeAnyway()
+                    }
+                    context.window.makeKeyAndOrderFront(nil)
+                }, hashtag: nil, command: nil, applyProxy: nil, confirm: true)
+                
                 switch link {
                 case .external:
                     break
                 default:
-                    self.close()
+                    break
                 }
                 execute(inapp: link, window: self.window)
                 decisionHandler(.cancel)
