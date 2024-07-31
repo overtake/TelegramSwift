@@ -528,6 +528,8 @@ struct WebpageModalState : Equatable {
     var isBackButton: Bool = false
     var needConfirmation: Bool = false
     
+    var isLoading: Bool = false
+    
     var favicon: NSImage? = nil
     var error: RequestWebViewError? = nil
     var isSite: Bool = false

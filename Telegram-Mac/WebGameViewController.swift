@@ -33,6 +33,12 @@ private class WeakGameScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
 public final class GameView : View {
     
+    
+    public override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.webView.isHidden = window == nil
+    }
+    
     let headerView: WebpageHeaderView
     
     let webView: WKWebView
@@ -309,7 +315,9 @@ class WebGameViewController: ModalViewController, WKUIDelegate, BrowserPage {
     }
     
     deinit {
-        
+        genericView.webView.stopLoading()
+        genericView.webView.loadHTMLString("", baseURL: nil)
+        genericView.webView.removeFromSuperview()
     }
     
     

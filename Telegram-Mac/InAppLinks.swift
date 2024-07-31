@@ -766,81 +766,87 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                 
                             case let .makeWebview(appname, command):
                                 
-                                let botApp = context.engine.messages.getBotApp(botId: peer.id, shortName: appname)
-                                
-                                let chat = context.bindings.rootNavigation().first {
-                                    $0 is ChatController
-                                } as? ChatController
-                                
-                                let peerId = chat?.chatLocation.peerId ?? peer.id
-                                
-                                let openWebview:(ChatInitialAction)->Void = { action in
+                                if !appname.isEmpty {
+                                    let botApp = context.engine.messages.getBotApp(botId: peer.id, shortName: appname)
+                                    
                                     let chat = context.bindings.rootNavigation().first {
                                         $0 is ChatController
                                     } as? ChatController
                                     
-                                    if chat == nil {
-                                        switch action {
-                                        case let .openWebview(botPeer, botApp, result):
-                                            BrowserStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result))
-                                        default:
-                                            break
+                                    let peerId = chat?.chatLocation.peerId ?? peer.id
+                                    
+                                    let openWebview:(ChatInitialAction)->Void = { action in
+                                        let chat = context.bindings.rootNavigation().first {
+                                            $0 is ChatController
+                                        } as? ChatController
+                                        
+                                        if chat == nil {
+                                            switch action {
+                                            case let .openWebview(botPeer, botApp, result):
+                                                BrowserStateContext.get(context).open(tab: .straight(bot: .init(botPeer.peer), peerId: peerId, title: botApp.title, result: result))
+                                            default:
+                                                break
+                                            }
+                                        } else {
+                                            chat?.chatInteraction.invokeInitialAction(action: action)
                                         }
-                                    } else {
-                                        chat?.chatInteraction.invokeInitialAction(action: action)
                                     }
+                                    
+                                    let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = { botApp, allowWrite in
+                                        return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
+                                            return (botApp, $0)
+                                        }
+                                    }
+
+                                    var signal: Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = botApp
+                                    |> mapError { _ in
+                                        .generic
+                                    } |> mapToSignal { botApp in
+                                        if botApp.flags.contains(.notActivated) {
+                                            return .single((botApp, nil))
+                                        } else {
+                                            return makeRequestAppWebView(botApp, false)
+                                        }
+                                    }
+                                    signal = showModalProgress(signal: signal, for: getWindow(context))
+                                    _ = signal.start(next: { botApp, result in
+                                        
+                                        if let result = result {
+                                            openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, result: result))
+                                        } else {
+                                            
+                                            var options: [ModalAlertData.Option] = []
+                                            options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                            
+                                            let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                            showModalAlert(for: getWindow(context), data: data, completion: { result in
+                                                FastSettings.markWebAppAsConfirmed(peer.id)
+                                                
+                                                let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: getWindow(context))
+                                                
+                                                _ = signal.start(next: { botApp, result in
+                                                    if let result = result {
+                                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, result: result))
+                                                    }
+                                                }, error: { error in
+                                                    switch error {
+                                                    case .generic:
+                                                        invokeCallback(peer, messageId, nil)
+                                                    }
+                                                })
+                                            })
+                                        }
+                                    }, error: { error in
+                                        switch error {
+                                        case .generic:
+                                            invokeCallback(peer, messageId, nil)
+                                        }
+                                    })
+                                } else {
+                                    BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .generic))
                                 }
                                 
-                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = { botApp, allowWrite in
-                                    return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
-                                        return (botApp, $0)
-                                    }
-                                }
-
-                                var signal: Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = botApp
-                                |> mapError { _ in
-                                    .generic
-                                } |> mapToSignal { botApp in
-                                    if botApp.flags.contains(.notActivated) {
-                                        return .single((botApp, nil))
-                                    } else {
-                                        return makeRequestAppWebView(botApp, false)
-                                    }
-                                }
-                                signal = showModalProgress(signal: signal, for: getWindow(context))
-                                _ = signal.start(next: { botApp, result in
-                                    
-                                    if let result = result {
-                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, result: result))
-                                    } else {
-                                        
-                                        var options: [ModalAlertData.Option] = []
-                                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
-                                        
-                                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
-                                        showModalAlert(for: getWindow(context), data: data, completion: { result in
-                                            FastSettings.markWebAppAsConfirmed(peer.id)
-                                            
-                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: getWindow(context))
-                                            
-                                            _ = signal.start(next: { botApp, result in
-                                                if let result = result {
-                                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, result: result))
-                                                }
-                                            }, error: { error in
-                                                switch error {
-                                                case .generic:
-                                                    invokeCallback(peer, messageId, nil)
-                                                }
-                                            })
-                                        })
-                                    }
-                                }, error: { error in
-                                    switch error {
-                                    case .generic:
-                                        invokeCallback(peer, messageId, nil)
-                                    }
-                                })
+                               
                             default:
                                 invokeCallback(peer, messageId, action)
                             }
@@ -1898,7 +1904,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         action = .joinVoiceChat(nil)
                     }
                 }
-                 
+                
+                 if userAndVariables.count == 2, userAndVariables[1] == keyURLStartapp {
+                     action = .makeWebview(appname: "", command: nil)
+                 }
             
                  
                 if action == nil, let messageId = messageId {

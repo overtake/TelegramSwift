@@ -432,7 +432,6 @@ private final class TabView: Control {
                 current = InfiniteProgressView(color: NSColor.white, lineWidth: 1.5, insets: 3)
                 current.setFrameSize(NSMakeSize(20, 20))
                 current.progress = nil
-                current.layer?.cornerRadius = 10
                 self.loading = current
                 addSubview(current)
                 current.centerY(x: self.avatarView?.frame.minX ?? 20)
@@ -441,6 +440,7 @@ private final class TabView: Control {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
+            current.layer?.cornerRadius = item.peer != nil ? 10 : 4
             current.backgroundColor = NSColor.black.withAlphaComponent(0.6)
         case .error:
             if let loading {
@@ -920,6 +920,19 @@ struct BrowserTabData : Comparable, Identifiable {
     let data: Data
     var loadingState: LoadingState = .none
     
+    var isLoading: Bool {
+        if let external, external.isLoading {
+            return true
+        } else {
+            switch self.loadingState {
+            case .loading:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+    
     var external: WebpageModalState? = nil
     
     var selected: Bool
@@ -1342,8 +1355,7 @@ private final class WebpageContainerView : View {
             }
         }
         
-        switch data.loadingState {
-        case .loading:
+        if data.isLoading {
             let current: ProgressIndicator
             if let view = self.loading {
                 current = view
@@ -1354,12 +1366,7 @@ private final class WebpageContainerView : View {
             }
             current.progressColor = theme.colors.grayText
             current.animates = true
-        case let .error(error):
-            if let view = self.loading {
-                performSubviewRemoval(view, animated: animated)
-                self.loading = nil
-            }
-        default:
+        } else {
             if let view = loading {
                 performSubviewRemoval(view, animated: animated)
                 self.loading = nil
