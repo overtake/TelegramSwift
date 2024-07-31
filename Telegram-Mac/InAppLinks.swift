@@ -1320,6 +1320,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         })
     case let .tonsite(link, context):
         BrowserStateContext.get(context).open(tab: .tonsite(url: link))
+    case let .starsTopup(link, amount, context):
+        showModal(with: Star_ListScreen(context: context, source: .buy), for: getWindow(context))
     }
     
 }
@@ -1468,7 +1470,7 @@ enum inAppLink {
     case boost(link: String, username: String, context: AccountContext)
     case gift(link: String, slug: String, context: AccountContext)
     case businessLink(link: String, slug: String, context: AccountContext)
-
+    case starsTopup(link: String, amount: Int64, context: AccountContext)
     case multigift(link: String, context: AccountContext)
     var link: String {
         switch self {
@@ -1541,6 +1543,8 @@ enum inAppLink {
             return link
         case let .tonsite(link, _):
             return link
+        case let .starsTopup(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1553,7 +1557,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup"]
 
 
 let ton_scheme:String = "ton://"
@@ -1588,6 +1592,7 @@ private let keyURLTimecode = "t";
 private let keyURLBgColor = "bg_color";
 private let keyURLHash = "hash";
 private let keyURLCode = "code";
+private let keyURLAmount = "amount"
 
 private let keyURLChannel = "channel";
 
@@ -2355,6 +2360,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[21]:
                     if let context = context {
                         return .multigift(link: urlString, context: context)
+                    }
+                case known_scheme[22]:
+                    if let context = context, let amount = vars[keyURLAmount].flatMap ({ Int64($0) }) {
+                        return .starsTopup(link: urlString, amount: amount, context: context)
                     }
                 default:
                     break

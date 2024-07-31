@@ -268,9 +268,9 @@ class ChannelInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
-    func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?) {
+    func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, starsAllowed: Bool?) {
         if let availableReactions = availableReactions {
-            showModal(with: ChannelReactionsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount), for: context.window)
+            showModal(with: ChannelReactionsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount, starsAllowed: starsAllowed), for: context.window)
         }
     }
     
@@ -694,7 +694,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
-    case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, viewType: GeneralViewType)
+    case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, starsAllowed: Bool?, viewType: GeneralViewType)
     case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
     case stats(section: ChannelInfoSection, datacenterId: Int32, monetization: Bool, stars: Bool, viewType: GeneralViewType)
     case balance(section: ChannelInfoSection, ton: Int64, stars: Int64, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
@@ -726,7 +726,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
         case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
-        case let .reactions(section, text, allowedReactions, availableReactions, reactionsCount, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount, viewType: viewType)
+        case let .reactions(section, text, allowedReactions, availableReactions, reactionsCount, starsAllowed, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount, starsAllowed: starsAllowed, viewType: viewType)
         case let .color(section, peer, _): return .color(section: section, peer: peer, viewType: viewType)
         case let .stats(section, datacenterId, monetization, stars, _): return .stats(section: section, datacenterId: datacenterId, monetization: monetization, stars: stars, viewType: viewType)
         case let .balance(section, ton, stars, canSeeTon, canSeeStars, _): return .balance(section: section, ton: ton, stars: stars, canSeeTon: canSeeTon, canSeeStars: canSeeStars, viewType: viewType)
@@ -883,8 +883,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .reactions(sectionId, text, allowedReactions, availableReactions, reactionsCount, viewType):
-            if case .reactions(sectionId, text, allowedReactions, availableReactions, reactionsCount, viewType) = entry {
+        case let .reactions(sectionId, text, allowedReactions, availableReactions, reactionsCount, starsAllowed, viewType):
+            if case .reactions(sectionId, text, allowedReactions, availableReactions, reactionsCount, starsAllowed, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1050,7 +1050,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .discussion(sectionId, _, _, _):
             return sectionId.rawValue
-        case let .reactions(sectionId, _, _, _, _, _):
+        case let .reactions(sectionId, _, _, _, _, _, _):
             return sectionId.rawValue
         case let .color(sectionId, _, _):
             return sectionId.rawValue
@@ -1109,7 +1109,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussion(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .reactions(sectionId, _, _, _, _, _):
+        case let .reactions(sectionId, _, _, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .color(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1224,9 +1224,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDiscussion, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .discussionDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoDiscussionDesc, viewType: viewType)
-        case let .reactions(_, text, allowedReactions, availableReactions, reactionsCount, viewType):
+        case let .reactions(_, text, allowedReactions, availableReactions, reactionsCount, starsAllowed, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(""), viewType: viewType, action: {
-                arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount)
+                arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount, starsAllowed: starsAllowed)
             })
         case let .color(_, peer, viewType):
             let level = (peer.peer as? TelegramChannel)?.approximateBoostLevel ?? 0
@@ -1355,7 +1355,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     
                     block.append(.color(section: .type, peer: PeerEquatable(peer: channel), viewType: .singleItem))
                     
-                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, reactionsCount: cachedData?.reactionSettings.knownValue?.maxReactionCount, viewType: .singleItem))
+                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, reactionsCount: cachedData?.reactionSettings.knownValue?.maxReactionCount, starsAllowed: cachedData?.reactionSettings.knownValue?.starsAllowed, viewType: .singleItem))
                     
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
                 }

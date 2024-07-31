@@ -522,6 +522,8 @@ class InstalledStickerPacksController: TableViewController {
                     } else if let first = available?.enabled.first {
                         current.quick = .builtin(value: first.value, staticFile: first.staticIcon, selectFile: first.selectAnimation, appearFile: first.appearAnimation, isSelected: false)
                     }
+                case .stars:
+                    break
                 }
                 return current
             }

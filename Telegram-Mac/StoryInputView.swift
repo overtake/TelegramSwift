@@ -138,6 +138,8 @@ final class StoryLikeActionButton: Control {
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
              file = reaction?.selectAnimation
              effectFile = reaction?.aroundAnimation
+         case .stars:
+             break
          }
          
          guard let icon = file else {
@@ -210,7 +212,6 @@ final class StoryLikeActionButton: Control {
                 let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd, textColor: NSColor(0xffffff))
             } else {
-                
                 if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
                     let file = appear ? animation.activateAnimation : animation.selectAnimation
                     layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
@@ -218,7 +219,8 @@ final class StoryLikeActionButton: Control {
                     layer = nil
                 }
             }
-            
+        case .stars:
+            layer = nil
         }
         if let layer = layer {
             layer.frame = focus(size)

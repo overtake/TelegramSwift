@@ -454,6 +454,8 @@ extension MessageReaction.Reaction {
             return .custom(fileId: fileId, file: file)
         case let .builtin(emoji):
             return .builtin(emoji)
+        case .stars:
+            return .stars
         }
     }
 }
@@ -727,6 +729,8 @@ public extension Message {
                         let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                         let file = self.associatedMedia[mediaId] as? TelegramMediaFile
                         return .custom(fileId: fileId, file: file)
+                    case .stars:
+                        return .stars
                     }
                 }
                 return nil

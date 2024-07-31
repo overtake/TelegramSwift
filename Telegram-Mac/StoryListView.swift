@@ -482,6 +482,8 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
                 update = .builtin(string)
             case let .custom(fileId):
                 update = .custom(fileId: fileId, file: layer.file)
+            case .stars:
+                update = .stars
             }
             arguments.like(reaction, arguments.interaction.presentation)
         default:
@@ -571,6 +573,8 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
             } else {
                 layer = nil
             }
+        case .stars:
+            layer = nil
         }
         if let layer = layer {
             layer.superview = self
@@ -665,6 +669,8 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
              effectFile = reaction?.aroundAnimation
+         case .stars:
+             break
          }
          
                 
@@ -796,6 +802,8 @@ private final class Weather_InteractiveMedia: EventLessView, InteractiveMedia {
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
              effectFile = reaction?.aroundAnimation
+         case .stars:
+             break
          }
          
                 
@@ -1457,6 +1465,8 @@ final class StoryListView : Control, Notifable {
                         selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
                     case let .custom(fileId):
                         selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    case .stars:
+                        break
                     }
                 }
                 let window: Signal<Window?, NoError>

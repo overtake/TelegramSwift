@@ -325,6 +325,8 @@ final class EmojiScreenEffect {
                     self?.initAnimation(.builtin(animation), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
             }), forKey: messageId)
+        case .stars:
+            break
         }
         
         
