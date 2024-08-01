@@ -218,8 +218,11 @@ final class BrowserStateContext {
                         value.browser?.closeTab()
                         invoked = true
                     } else {
-                        event.window?.sendEvent(event)
-                        invoked = true
+                        let keyCodes: [KeyboardKey] = [.Escape, .Zero, .One, .Two, .Three, .Four, .Five, .Six, .Seven, .Eight, .Nine]
+                        if keyCodes.contains(where: { $0.rawValue == event.keyCode }) {
+                            event.window?.sendEvent(event)
+                            invoked = true
+                        }
                     }
                                
                 }
