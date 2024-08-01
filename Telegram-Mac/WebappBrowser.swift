@@ -1418,7 +1418,8 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
     private let arguments: Arguments
     private var controller: (ViewController & BrowserPage)?
     private let disposable = MetaDisposable()
-    
+    private let externalState = MetaDisposable()
+
     private var appeared: Bool = false
     
     init(data: BrowserTabData, context: AccountContext, arguments: Arguments) {
@@ -1447,6 +1448,7 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
     
     deinit {
         disposable.dispose()
+        externalState.dispose()
     }
     
     override func viewDidLoad() {
@@ -1521,7 +1523,7 @@ private final class WebpageContainerController : GenericViewController<WebpageCo
             controller.viewDidAppear(animated)
         }
         
-        disposable.set(controller.externalState.startStrict(next: { [weak self] state in
+        externalState.set(controller.externalState.startStrict(next: { [weak self] state in
             guard let self else {
                 return
             }

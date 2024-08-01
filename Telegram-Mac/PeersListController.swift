@@ -1087,7 +1087,7 @@ class PeerListContainerView : Control {
             self.backButton = nil
         }
         
-        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize {
+        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, state.selectedForum == nil {
             let current: WebappsControl
             let isNew: Bool
             if let view = self.webapps {
