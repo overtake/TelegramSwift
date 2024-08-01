@@ -87,7 +87,7 @@ final class ChatReactionsLayout {
         let hasWallpaper: Bool
         let tagBackground: NSImage?
         
-        static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, mode: ChatReactionsLayout.Mode) -> Theme {
+        static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, mode: ChatReactionsLayout.Mode, isStars: Bool) -> Theme {
             let bgColor: NSColor
             let textColor: NSColor
             let textSelectedColor: NSColor
@@ -102,22 +102,22 @@ final class ChatReactionsLayout {
                             bgColor = theme.colors.grayIcon.withAlphaComponent(0.2)
                             textColor = theme.colors.accent
                             borderColor = .clear
-                            selectedColor = theme.colors.accent
+                            selectedColor = isStars ? GOLD : theme.colors.accent
                             textSelectedColor = theme.colors.underSelectedColor
                         } else {
                             bgColor = theme.blurServiceColor
                             textColor = theme.chatServiceItemTextColor
                             borderColor = .clear
-                            selectedColor = theme.colors.accent
-                            textSelectedColor = theme.colors.underSelectedColor
+                            selectedColor = isStars ? GOLD : theme.colors.accent
+                            textSelectedColor = selectedColor.underTextColor
                         }
                     } else {
                         if isIncoming {
                             bgColor = theme.colors.accent.withAlphaComponent(0.1)
                             textColor = theme.colors.accent
                             borderColor = .clear
-                            selectedColor = theme.colors.accent
-                            textSelectedColor = theme.colors.underSelectedColor
+                            selectedColor = isStars ? GOLD : theme.colors.accent
+                            textSelectedColor = selectedColor.underTextColor
                         } else {
                             bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
                             textColor = theme.chat.grayText(false, true)
@@ -130,8 +130,8 @@ final class ChatReactionsLayout {
                     bgColor = theme.colors.accent.withAlphaComponent(0.1)
                     textColor = theme.colors.accent
                     borderColor = .clear
-                    selectedColor = theme.colors.accent
-                    textSelectedColor = theme.colors.underSelectedColor
+                    selectedColor = isStars ? GOLD : theme.colors.accent
+                    textSelectedColor = selectedColor.underTextColor
                 }
             }
            
@@ -174,13 +174,15 @@ final class ChatReactionsLayout {
         enum Source : Equatable {
             case builtin(AvailableReactions.Reaction)
             case custom(Int64, TelegramMediaFile?, TelegramMediaFile?)
-            
+            case stars(TelegramMediaFile, TelegramMediaFile?)
             var effect: TelegramMediaFile? {
                 switch self {
                 case let .builtin(reaction):
                     return reaction.centerAnimation
                 case let .custom(_, _, effect):
                     return effect
+                case let .stars(_, file):
+                    return file
                 }
             }
             var file: TelegramMediaFile? {
@@ -188,6 +190,8 @@ final class ChatReactionsLayout {
                 case .builtin:
                     return nil
                 case let .custom(_, file, _):
+                    return file
+                case let .stars(file, _):
                     return file
                 }
             }
@@ -209,6 +213,8 @@ final class ChatReactionsLayout {
                     }
                     return colors
                 }, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+            case .stars:
+                return .init(account: context.account, file: LocalAnimatedSticker.star_currency_new.file, size: NSMakeSize(presentation.reactionSize.width + 4, presentation.reactionSize.height + 4), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             }
         }
         
@@ -234,6 +240,7 @@ final class ChatReactionsLayout {
         let canViewList: Bool
         let avatars:[Avatar]
         var rect: CGRect = .zero
+        let starReact:()->Void
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.value == rhs.value &&
@@ -254,7 +261,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, savedMessageTags: SavedMessageTags?, currentTag: MessageReaction.Reaction?, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, savedMessageTags: SavedMessageTags?, currentTag: MessageReaction.Reaction?, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void, starReact: @escaping()->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -267,6 +274,7 @@ final class ChatReactionsLayout {
             self.mode = mode
             self.openInfo = openInfo
             self.runEffect = runEffect
+            self.starReact = starReact
             switch mode {
             case .full, .tag:
                 let height = presentation.reactionSize.height + presentation.insetInner * 2
@@ -421,6 +429,8 @@ final class ChatReactionsLayout {
                 source = .builtin(reaction.staticIcon)
             case let .custom(fileId, file, _):
                 source = .custom(fileId, file)
+            case let .stars(file, effect):
+                source = .stars(file, effect)
             }
             weak var weakSelf = self
             let makeItem:(_ peer: Peer, _ readTimestamp: Int32?) -> ContextMenuItem = { peer, readTimestamp in
@@ -488,7 +498,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, savedMessageTags: SavedMessageTags?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, currentTag: MessageReaction.Reaction?, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, savedMessageTags: SavedMessageTags?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, currentTag: MessageReaction.Reaction?, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void, starReact:@escaping()->Void) {
         
         var mode: Mode = .full
         if message.id.peerId == context.peerId {
@@ -501,7 +511,7 @@ final class ChatReactionsLayout {
         self.engine = engine
         self.mode = mode
         self.openInfo = openInfo
-        let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode)
+        let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode, isStars: false)
         self.presentation = presentation
         
         var index: Int = 0
@@ -537,7 +547,7 @@ final class ChatReactionsLayout {
                     source = nil
                 }
             case .stars:
-                source = nil
+                source = .stars(LocalAnimatedSticker.star_currency_new.file, nil)
             }
             
             if let source = source {
@@ -578,13 +588,20 @@ final class ChatReactionsLayout {
                         }
                     }
                 }
+                
+                let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode, isStars: reaction.value == .stars)
+                
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, savedMessageTags: savedMessageTags, currentTag: currentTag, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, isFilterTag in
                     if message.id.peerId == context.peerId, !isFilterTag, mode == .tag {
                        tagAction(value)
                     } else {
-                        engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
+                        if value == .stars {
+                            engine.sendStarsReaction(message.id, count: 1)
+                        } else {
+                            engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
+                        }
                     }
-                }, openInfo: openInfo, runEffect: runEffect)
+                }, openInfo: openInfo, runEffect: runEffect, starReact: starReact)
             } else {
                 return nil
             }
@@ -813,6 +830,9 @@ final class ChatReactionsView : View {
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
             
+            self.set(handler: { [weak self] _ in
+                self?.reaction?.starReact()
+            }, for: .LongMouseDown)
             
         }
         
@@ -1108,7 +1128,6 @@ final class ChatReactionsView : View {
             self.set(handler: { [weak self] _ in
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
-            
             
         }
         
@@ -1455,7 +1474,10 @@ final class ChatReactionsView : View {
         
                 
         let new = reactions.filter { $0.value.isSelected }.filter { value in
-            let prev = previous.first(where: { $0.value.value == value.value.value && $0.value.isSelected })
+            var prev = previous.first(where: { $0.value.value == value.value.value && $0.value.isSelected })
+            if value.value.value == .stars {
+                prev = previous.first(where: { $0.value.value == value.value.value && $0.value.count == value.value.count })
+            }
             return prev == nil
         }
         

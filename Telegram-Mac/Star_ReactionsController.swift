@@ -47,6 +47,8 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let close:()->Void
     fileprivate let updateValue:(Int64)->Void
     
+    let maxValue: Int64
+    
     fileprivate let balanceLayout: TextViewLayout
     fileprivate let headerLayout: TextViewLayout
     fileprivate let info: TextViewLayout
@@ -58,6 +60,7 @@ private final class HeaderItem : GeneralRowItem {
         self.state = state
         self.close = close
         self.updateValue = updateValue
+        self.maxValue = Int64(context.appConfiguration.getGeneralValue("stars_paid_reaction_amount_max", orElse: 1))
         let balanceAttr = NSMutableAttributedString()
         balanceAttr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(state.myBalance)"), color: theme.colors.text, font: .normal(.text))
         balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
@@ -543,7 +546,7 @@ private final class HeaderItemView : GeneralContainableRowView {
         
         sliderView.updateProgress = { [weak self] progress in
             if let item = self?.item as? HeaderItem {
-                item.updateValue(Int64(ceil(progress * 100)))
+                item.updateValue(Int64(ceil(progress * CGFloat(item.maxValue))))
             }
         }
         
@@ -576,15 +579,16 @@ private final class HeaderItemView : GeneralContainableRowView {
         }
         
         let transition: ContainedViewLayoutTransition = .immediate
+        
 
-        let size = badgeView.update(item.state.count, max: 100, context: item.context)
+        let size = badgeView.update(item.state.count, max: item.maxValue, context: item.context)
         
         transition.updateFrame(view: self.badgeView, frame: self.focus(size))
         badgeView.updateLayout(size: size, transition: transition)
         
         info.set(text: item.info, context: item.context)
         
-        sliderView.update(count: item.state.count, minValue: 1, maxValue: 100)
+        sliderView.update(count: item.state.count, minValue: 1, maxValue: item.maxValue)
                 
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         dismiss.sizeToFit()
@@ -678,7 +682,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Star_ReactionsController(context: AccountContext) -> InputDataModalController {
+func Star_ReactionsController(context: AccountContext, message: Message) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -698,16 +702,34 @@ func Star_ReactionsController(context: AccountContext) -> InputDataModalControll
             return bestWindow(context, getController?())
         }
     }
+    context.starsContext.load(force: true)
+    
+    actionsDisposable.add(context.starsContext.state.start(next: { state in
+        updateState { current in
+            var current = current
+            current.myBalance = state?.balance ?? 0
+            return current
+        }
+    }))
+    
+    let react:()->Void = {
+        let count = stateValue.with { Int($0.count) }
+        let myBalance = stateValue.with { $0.myBalance }
+        
+        if let peer = message.peers[message.id.peerId] {
+            if count > myBalance {
+                showModal(with: Star_ListScreen(context: context, source: .purchase(.init(peer), Int64(count) - myBalance)), for: context.window)
+            } else {
+                context.reactions.sendStarsReaction(message.id, count: count)
+                close?()
+            }
+        }
+        
+    }
 
     let arguments = Arguments(context: context, dismiss: {
         
-    }, react: {
-        updateState { current in
-            var current = current
-            current.count += 1
-            return current
-        }
-    }, updateValue: { value in
+    }, react: react, updateValue: { value in
         updateState { current in
             var current = current
             current.count = max(1, value)
@@ -720,6 +742,11 @@ func Star_ReactionsController(context: AccountContext) -> InputDataModalControll
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    controller.validateData = { _ in
+        react()
+        return .none
+    }
     
     getController = { [weak controller] in
         return controller

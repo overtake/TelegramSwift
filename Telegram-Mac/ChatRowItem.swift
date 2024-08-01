@@ -1633,6 +1633,8 @@ class ChatRowItem: TableRowItem {
                     } else {
                         chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction), nil))
                     }
+                }, starReact: {
+                    showModal(with: Star_ReactionsController(context: context, message: message), for: context.window)
                 })
                 
                 _reactionsLayout = layout
@@ -3321,6 +3323,18 @@ class ChatRowItem: TableRowItem {
             }
             |> take(1)
             
+            let starsAllowed: Signal<Bool?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+            |> map { cachedData in
+                if let cachedData = cachedData as? CachedGroupData {
+                    return cachedData.reactionSettings.knownValue?.starsAllowed
+                } else if let cachedData = cachedData as? CachedChannelData {
+                    return cachedData.reactionSettings.knownValue?.starsAllowed
+                } else {
+                    return nil
+                }
+            }
+            |> take(1)
+            
             let maximumReactionsLimit: Signal<Int32?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
             |> map { cachedData in
                 if let cachedData = cachedData as? CachedChannelData {
@@ -3395,10 +3409,10 @@ class ChatRowItem: TableRowItem {
             }
             
             
-            let signal = combineLatest(queue: .mainQueue(), builtin, peerAllowed, reactions, maximumReactionsLimit)
+            let signal = combineLatest(queue: .mainQueue(), builtin, peerAllowed, reactions, maximumReactionsLimit, starsAllowed)
             |> take(1)
 
-            return signal |> map { builtin, peerAllowed, reactions, maximumReactionsLimit in
+            return signal |> map { builtin, peerAllowed, reactions, maximumReactionsLimit, starsAllowed in
                 let enabled = builtin?.enabled ?? []
 
                 var available:[ContextReaction] = []
@@ -3508,6 +3522,10 @@ class ChatRowItem: TableRowItem {
                 
                 guard !available.isEmpty else {
                     return nil
+                }
+                
+                if let starsAllowed, starsAllowed {
+                    available.insert(.stars(file: LocalAnimatedSticker.star_currency_new.file, isSelected: false), at: 0)
                 }
                 
                 if accessToAll {
@@ -3630,7 +3648,11 @@ class ChatRowItem: TableRowItem {
                     if isTags, !context.isPremium {
                         showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
-                        context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
+                        if value == .stars {
+                            context.reactions.sendStarsReaction(message.id, count: 1, fromRect: fromRect)
+                        } else {
+                            context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
+                        }
                     }
                 }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout)
                 

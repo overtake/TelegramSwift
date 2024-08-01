@@ -96,6 +96,9 @@ private final class FloatingHeaderView : Control {
         case .account:
             text = strings().starListTelegramStars
             balanceView.isHidden = true
+        case .reactions:
+            text = strings().starListTelegramStars
+            balanceView.isHidden = false
         case let .prolongSubscription(_, requested):
             let need = Int(requested - myBalance)
             text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
@@ -302,6 +305,10 @@ private final class HeaderItem : GeneralRowItem {
             headerInfo.append(string: strings().starListBuyAndUse(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
         case .account:
             headerAttr.append(string: strings().starListTelegramStars, color: theme.colors.text, font: .medium(.header))
+            headerInfo.append(string: strings().starListBuyAndUserNobot, color: theme.colors.text, font: .normal(.text))
+        case let .reactions(_, requested):
+            let need = Int(requested - myBalance)
+            headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starListBuyAndUserNobot, color: theme.colors.text, font: .normal(.text))
         case let .prolongSubscription(peer, requested):
             let need = Int(requested - myBalance)
@@ -756,7 +763,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         
         switch arguments.source {
-        case .buy, .purchase, .prolongSubscription, .gift:
+        case .buy, .purchase, .prolongSubscription, .gift, .reactions:
             
             struct Tuple : Equatable {
                 let option: State.Option
@@ -957,6 +964,7 @@ enum Star_ListScreenSource : Equatable {
     case account
     case prolongSubscription(EnginePeer, Int64)
     case gift(EnginePeer)
+    case reactions(EnginePeer, Int64)
 }
 
 func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> InputDataModalController {
