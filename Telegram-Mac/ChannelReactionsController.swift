@@ -225,7 +225,8 @@ private final class Arguments {
     let addReactions:(Control?)->Void
     let updateState:(Updated_ChatTextInputState)->Void
     let updateMaxReactionsCount: (Int32)->Void
-    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, updateMaxReactionsCount: @escaping(Int32)->Void) {
+    let togglePaidReactions:()->Void
+    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, updateMaxReactionsCount: @escaping(Int32)->Void, togglePaidReactions:@escaping()->Void) {
         self.context = context
         self.interactions = interactions
         self.toggleEnabled = toggleEnabled
@@ -233,6 +234,7 @@ private final class Arguments {
         self.addReactions = addReactions
         self.updateState = updateState
         self.updateMaxReactionsCount = updateMaxReactionsCount
+        self.togglePaidReactions = togglePaidReactions
     }
 }
 
@@ -253,7 +255,7 @@ private struct State : Equatable {
         
         for attribute in attributes {
             switch attribute {
-            case let .animated(_, _, fileId, file, _):
+            case let .animated(_, _, fileId, _, _):
                 files.append(fileId)
             default:
                 break
@@ -392,7 +394,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_stars_allowed, data: .init(name: strings().channelReactionsEnableStars, color: theme.colors.text, type: .switchable(starsAllowed), viewType: .singleItem)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_stars_allowed, data: .init(name: strings().channelReactionsEnableStars, color: theme.colors.text, type: .switchable(starsAllowed), viewType: .singleItem, action: arguments.togglePaidReactions)))
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().channelReactionsEnableStarsInfo, linkHandler: { link in
             execute(inapp: .external(link: link, false))
@@ -560,7 +562,14 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             current.maxReactionsCount = count
             return current
         }
-        
+    }, togglePaidReactions: {
+        updateState { current in
+            var current = current
+            if let starsAllowed = current.starsAllowed {
+                current.starsAllowed = !starsAllowed
+            }
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

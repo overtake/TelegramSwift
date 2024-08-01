@@ -709,6 +709,7 @@ final class ReactionPeerMenu : ContextMenuItem {
     enum Source : Equatable {
         case builtin(TelegramMediaFile)
         case custom(Int64, TelegramMediaFile?)
+        case stars(TelegramMediaFile, TelegramMediaFile?)
     }
     enum Destination {
         case common
@@ -789,6 +790,9 @@ final class ReactionPeerMenu : ContextMenuItem {
             case let .custom(fileId, _):
                 value.combine("custom")
                 value.combine(fileId)
+            case let .stars(file, _):
+                value.combine("stars")
+                value.combine(file.fileId.id)
             }
         }
         return Int64(value.finalize().hashValue)
@@ -1082,6 +1086,8 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
                     layer = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize)
                 case let .builtin(file):
                     layer = .init(account: item.context.account, file: file, size: reactionSize)
+                case let .stars(file, _):
+                    layer = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: reactionSize)
                 }
                 let isLite = item.context.isLite(.emoji)
                 self.imageView.updateLayer(layer, isLite: isLite, animated: animated)

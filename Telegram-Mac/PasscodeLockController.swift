@@ -424,25 +424,21 @@ class PasscodeLockController: ModalViewController {
         }
     }
     
-    func callTouchId() {
-        if laContext.canUseBiometric {
-            laContext.evaluatePolicy(.applicationPolicy, localizedReason: strings().passcodeUnlockTouchIdReason) { (success, evaluateError) in
-                if (success) {
-                    Queue.mainQueue().async {
-                        self._doneValue.set(.single(true))
-                        self.close()
-                    }
+    func callTouchId(tryAnotherWay: Bool = false) {
+        laContext.evaluatePolicy(tryAnotherWay ? .deviceOwnerAuthentication : .applicationPolicy, localizedReason: strings().passcodeUnlockTouchIdReason) { [weak self] (success, evaluateError) in
+            if (success) {
+                Queue.mainQueue().async {
+                    self?._doneValue.set(.single(true))
+                    self?.close()
                 }
+            } else if let evaluateError, !tryAnotherWay {
+                self?.callTouchId(tryAnotherWay: true)
             }
         }
     }
     
     override var cornerRadius: CGFloat {
         return 0
-    }
-    
-    func invalidateTouchId() {
-        laContext.invalidate()
     }
     
     

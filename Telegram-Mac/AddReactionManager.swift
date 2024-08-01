@@ -95,6 +95,7 @@ private func generateParabollicMotionKeyframes(from sourcePoint: CGPoint, to tar
 
 
 enum ContextReaction : Equatable {
+    case stars(file: TelegramMediaFile, isSelected: Bool)
     case builtin(value: MessageReaction.Reaction, staticFile: TelegramMediaFile, selectFile: TelegramMediaFile, appearFile: TelegramMediaFile, isSelected: Bool)
     case custom(value: MessageReaction.Reaction, fileId: Int64, TelegramMediaFile?, isSelected: Bool)
     
@@ -104,6 +105,8 @@ enum ContextReaction : Equatable {
             return staticFile
         case let .custom(_, _, file, _ ):
             return file
+        case let .stars(file, _):
+            return file
         }
     }
     var fileId: Int64 {
@@ -112,6 +115,8 @@ enum ContextReaction : Equatable {
             return staticFile.fileId.id
         case let .custom(_, fileId, _, _):
             return fileId
+        case let .stars(file, _):
+            return file.fileId.id
         }
     }
     var isSelected: Bool {
@@ -119,6 +124,8 @@ enum ContextReaction : Equatable {
         case let .builtin(_, _, _, _, isSelected):
             return isSelected
         case let .custom(_, _, _, isSelected):
+            return isSelected
+        case let .stars(_, isSelected):
             return isSelected
         }
     }
@@ -128,6 +135,8 @@ enum ContextReaction : Equatable {
             return .single(selectAnimation)
         case .custom:
             return .complete()
+        case .stars:
+            return .complete()
         }
     }
     var selectedAnimation: TelegramMediaFile? {
@@ -135,6 +144,8 @@ enum ContextReaction : Equatable {
         case let .builtin(_, _, selectAnimation, _, _):
             return selectAnimation
         case let .custom(_, _, file, _ ):
+            return file
+        case let .stars(file, _):
             return file
         }
     }
@@ -144,6 +155,8 @@ enum ContextReaction : Equatable {
             return appearAnimation
         case .custom:
             return nil
+        case .stars:
+            return nil
         }
     }
     var value: MessageReaction.Reaction {
@@ -152,6 +165,8 @@ enum ContextReaction : Equatable {
             return value
         case let .custom(value, _, _, _):
             return value
+        case .stars:
+            return .stars
         }
     }
     
@@ -210,6 +225,8 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 self.layer?.cornerRadius = 0
             case .custom:
                 self.layer?.cornerRadius = 4
+            case .stars:
+                self.layer?.cornerRadius = 0
             }
             
             stateDisposable.set(player.state.start(next: { [weak self] state in

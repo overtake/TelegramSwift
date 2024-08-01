@@ -65,6 +65,11 @@ public final class Reactions {
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
+    public func sendStarsReaction(_ messageId: MessageId, count: Int, fromRect: NSRect? = nil) {
+        _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
+        engine.messages.sendStarsReaction(id: messageId, count: count)
+    }
+    
     public func updateQuick(_ value: MessageReaction.Reaction) {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
