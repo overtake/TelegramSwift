@@ -14,7 +14,22 @@ import TGUIKit
 
 private let gradient = [NSColor(0xFFAC04), NSColor(0xFFCA35)]
 
-
+private func calculateSliderValue(from progress: Double, minValue: Double = 1, maxValue: Double = 2500) -> Double {
+    let clampedProgress = min(max(progress, 0), 1)
+    let logarithmicProgress = log(1 + clampedProgress * 9) / log(10)  // Using log base 10 for ease
+    let sliderValue = minValue + logarithmicProgress * (maxValue - minValue)
+    
+    return sliderValue
+}
+func calculateProgress(from value: Double, minValue: Double = 1, maxValue: Double = 2500) -> Double {
+    let clampedValue = min(max(value, minValue), maxValue)
+    let normalizedValue = (clampedValue - minValue) / (maxValue - minValue)
+    let logBase: Double = 10
+    let progress = (pow(logBase, normalizedValue) - 1) / 9
+    let clampedProgress = min(max(progress, 0), 1)
+    
+    return clampedProgress
+}
 
 private final class BadgeStarsViewEffect: View {
     private let staticEmitterLayer = CAEmitterLayer()
@@ -672,7 +687,7 @@ private final class SliderView : Control {
     
     func update(count: Int64, minValue: Int64, maxValue: Int64) {
         
-        self.progress = CGFloat(max(minValue - 1, min(maxValue, count - 1))) / CGFloat(maxValue - 1)
+        self.progress = calculateProgress(from: Double(count), minValue: Double(minValue), maxValue: Double(maxValue))//CGFloat(max(minValue - 1, min(maxValue, count - 1))) / CGFloat(maxValue - 1)
         
         layout()
     }
@@ -854,7 +869,8 @@ private final class HeaderItemView : GeneralContainableRowView {
         
         sliderView.updateProgress = { [weak self] progress, maybeToBalance in
             if let item = self?.item as? HeaderItem {
-                var value = progress * CGFloat(item.maxValue)
+                
+                var value = calculateSliderValue(from: progress, minValue: 1, maxValue: Double(item.maxValue))//progress * CGFloat(item.maxValue)
                 let myBalance = CGFloat(item.state.myBalance)
                 if maybeToBalance, item.state.count < item.state.myBalance, value > myBalance {
                     value = myBalance
