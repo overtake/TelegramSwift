@@ -1840,7 +1840,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     execute(inapp: .external(link: "https://fragment.com", false))
                 }, itemImage: MenuAnimation.menu_show_info.value, removeTail: false, overrideWidth: 200))
             }
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(context: arguments.context, number: value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
                 
                 if value.number.hasPrefix("888") {
                     arguments.openFragment(.phoneNumber(value.number))

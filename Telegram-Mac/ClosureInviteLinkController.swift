@@ -47,6 +47,14 @@ struct ClosureInviteLinkState: Equatable {
     fileprivate(set) var title: String?
     fileprivate(set) var isPublic: Bool = false
     
+    var pricing: StarsSubscriptionPricing? {
+        if let requestMonthlyFee {
+            return .init(period: star_sub_period, amount: requestMonthlyFee)
+        } else {
+            return nil
+        }
+    }
+    
     
     fileprivate var requestMonthlyFeeState: Updated_ChatTextInputState?
     
@@ -95,45 +103,48 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     sectionId += 1
     
     
-//    //TODOLANG
-//    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_monthly_fee, data: .init(name: "Require Monthly Fee", color: theme.colors.text, type: .switchable(state.requestMonthlyFeeState != nil), viewType: state.requestMonthlyFeeState != nil ? .firstItem : .singleItem, enabled: !state.isEditing, action: {
-//        arguments.requestMonthlyFee(state.requestMonthlyFeeState != nil ? nil : .init(inputText: .initialize(string: "500")))
-//    })))
-//    index += 1
-//    
-//    
-//    if let inputState = state.requestMonthlyFeeState {
-//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_monthly_fee_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-//            return InviteLinkMonthlyFeeRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, enabled: !state.isEditing, state: inputState, usdRate: 0.013, viewType: .lastItem, updateState: arguments.requestMonthlyFee)
-//        }))
-//    }
-//
-//    //TODOLANG
-//    let text: String
-//    if state.isEditing {
-//        text = "If you need change the subscription fee, create a new invite link with a different price."
-//    } else {
-//        text = "Charge a subscription fee from people joining your channel via this link. [Learn More >](https://telegram.org)"
-//    }
-//    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: arguments.executeLink), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-//    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_monthly_fee, data: .init(name: strings().inviteLinkSubText, color: theme.colors.text, type: .switchable(state.requestMonthlyFeeState != nil), viewType: state.requestMonthlyFeeState != nil ? .firstItem : .singleItem, enabled: !state.isEditing, action: {
+        arguments.requestMonthlyFee(state.requestMonthlyFeeState != nil ? nil : .init(inputText: .initialize(string: "500")))
+    })))
+    index += 1
+    
+    
+    if let inputState = state.requestMonthlyFeeState {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_monthly_fee_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return InviteLinkMonthlyFeeRowItem(initialSize, stableId: stableId, context: arguments.context, interactions: arguments.interactions, enabled: !state.isEditing, state: inputState, usdRate: XTR_USD_RATE, viewType: .lastItem, updateState: arguments.requestMonthlyFee)
+        }))
+    }
+
+    let text: String
+    if state.isEditing {
+        text = strings().inviteLinkSubInfoEditing
+    } else {
+        text = strings().inviteLinkSubInfo
+    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: arguments.executeLink), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
     
     
     if !state.isPublic {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: strings().editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: strings().editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval && state.requestMonthlyFeeState == nil), viewType: .singleItem, enabled: state.requestMonthlyFeeState == nil, action: {
             arguments.toggleRequestApproval(state.requestApproval)
         })))
         index += 1
         
         let requestApprovalText: String
-        if state.requestApproval {
-            requestApprovalText = strings().editInvitationRequestApprovalChannelOn
+        if state.requestMonthlyFeeState == nil {
+            if state.requestApproval {
+                requestApprovalText = strings().editInvitationRequestApprovalChannelOn
+            } else {
+                requestApprovalText = strings().editInvitationRequestApprovalChannelOff
+            }
         } else {
-            requestApprovalText = strings().editInvitationRequestApprovalChannelOff
+            requestApprovalText = strings().inviteLinkSubReqApproval
         }
+       
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
@@ -335,6 +346,10 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
             initialState.tempCount = initialState.count
         }
         
+        if let pricing = invitation.pricing {
+            initialState.requestMonthlyFeeState = .init(inputText: .initialize(string: "\(pricing.amount)"))
+        }
+        
     }
     
     var getController:(()->InputDataController?)? = nil
@@ -361,10 +376,12 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         }
     }))
     
-    let interactions = TextView_Interactions()
+    let interactions = TextView_Interactions(presentation: initialState.requestMonthlyFeeState ?? .init())
     
-    let max_monthly_fee = 10000
     
+    
+    let max_monthly_fee = context.appConfiguration.getGeneralValue("stars_subscription_amount_max", orElse: 2500)
+
     let arguments = InviteLinkArguments(context: context, interactions: interactions, usageLimit: { value in
         updateState { current in
             var current = current

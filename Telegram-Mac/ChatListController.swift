@@ -211,15 +211,28 @@ struct UIChatListBuyStarsAction : UIChatListTextAction {
     
     private let context: AccountContext
     
-    init(context: AccountContext) {
+    init(context: AccountContext, state: StarsSubscriptionsContext.State) {
         self.context = context
-        let attr = NSMutableAttributedString()
-        //TODOLANG
-        attr.append(string: "\(XTRSTAR) **493** Stars needed for Astro Paws", color: theme.colors.text, font: .normal(.text))
-        attr.detectBoldColorInString(with: .medium(.text))
-        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: XTRSTAR)
-        self.text = attr
-        self.info = .initialize(string: "Insufficient funds to cover your subscription.", color: theme.colors.grayText, font: .normal(.text))
+        
+        let amount = state.balance
+        let peers = state.subscriptions.map(\.peer)
+        
+        let title: String
+        let text: String
+        let starsValue = strings().chatListSubscriptionsLowBalanceCountable(Int(amount))
+        if let peer = peers.first, peers.count == 1 {
+            title = strings().chatListSubscriptionsLowBalanceSingleTitle(starsValue, peer._asPeer().compactDisplayTitle)
+            text = strings().chatListSubscriptionsLowBalanceSingleText
+        } else {
+            title = strings().chatListSubscriptionsLowBalanceMultipleTitle(starsValue)
+            text = strings().chatListSubscriptionsLowBalanceMultipleText
+        }
+        let attributedTitle = NSMutableAttributedString(string: "\(clown_space)\(title)", font: .normal(.text), textColor: theme.colors.text)
+        attributedTitle.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+        
+        self.text = attributedTitle
+        self.info = NSAttributedString(string: text, font: .normal(.text), textColor: theme.colors.grayText)
+
     }
 }
 
@@ -654,6 +667,7 @@ class ChatListController : PeersListController {
     private var preloadStorySubscriptionsDisposable: Disposable?
     private var preloadStoryResourceDisposables: [MediaId: Disposable] = [:]
 
+    private let subContext: StarsSubscriptionsContext?
 
     
     private let filterDisposable = MetaDisposable()
@@ -853,9 +867,14 @@ class ChatListController : PeersListController {
         
         let myBirthday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: context.peerId))
         
+        let subState: Signal<StarsSubscriptionsContext.State?, NoError>
+        if let subContext {
+            subState = subContext.state |> map(Optional.init)
+        } else {
+            subState = .single(nil)
+        }
         
-        
-        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), additionalSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday) |> mapToQueue { value, appearance, state, inAppSettings, additionalSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), additionalSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday, context.starsContext.state, subState) |> mapToQueue { value, appearance, state, inAppSettings, additionalSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday, starsSubscriptionsState, missingBalanceState -> Signal<TableUpdateTransition, NoError> in
                                 
             let filterData = value.1
             let folderUpdates = value.3
@@ -943,9 +962,13 @@ class ChatListController : PeersListController {
             if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState != .minimisize {
                 additionItems.append(.suspicious(suspiciousSession))
             }
-//            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
-//                additionItems.append(.custom(UIChatListBuyStarsAction(context: context)))
-//            }
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
+                if suggestions.contains(where: { $0 == .starsSubscriptionLowBalance }), let missingBalanceState {
+                    if missingBalanceState.balance > 0, !missingBalanceState.subscriptions.isEmpty {
+                        additionItems.append(.custom(UIChatListBuyStarsAction(context: context, state: missingBalanceState)))
+                    }
+                }
+            }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
                 if suggestions.contains(.gracePremium) {
@@ -1539,6 +1562,8 @@ class ChatListController : PeersListController {
         super.viewDidAppear(animated)
         
         
+        subContext?.load(force: true)
+        
         let isLocked = (NSApp.delegate as? AppDelegate)?.passlock ?? .single(false)
         
         
@@ -1898,7 +1923,12 @@ class ChatListController : PeersListController {
     
     init(_ context: AccountContext, modal:Bool = false, mode: PeerListMode = .plain) {
         
-
+        if mode == .plain {
+            self.subContext = context.engine.payments.peerStarsSubscriptionsContext(starsContext: nil, missingBalance: true)
+        } else {
+            self.subContext = nil
+        }
+        
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         let searchOptions:AppSearchOptions
         switch mode {

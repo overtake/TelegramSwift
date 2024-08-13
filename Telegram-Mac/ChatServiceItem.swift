@@ -147,7 +147,7 @@ class ChatServiceItem: ChatRowItem {
             case .premium:
                 showModal(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, media: [])
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, media: [], subscriptionPeriod: nil)
                 
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: .gift), for: context.window)
             }
@@ -541,7 +541,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, media: [])
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, media: [], subscriptionPeriod: nil)
                                         showModal(with: Star_TransactionScreen(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -1176,11 +1176,11 @@ class ChatServiceItem: ChatRowItem {
                 case let .paymentRefunded(peerId, currency, totalAmount, payload, transactionId):
                     let peerName = message.author?.compactDisplayTitle ?? ""
 
-                    let _ = attributedString.append(string: strings().chatServiceRefund(peerName, "\(clown + TINY_SPACE)\(totalAmount))"), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ = attributedString.append(string: strings().chatServiceRefund(peerName, "\(clown_space)\(totalAmount)"), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, media: [])
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, media: [], subscriptionPeriod: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, peer: .init(peer), transaction: transaction), for: context.window)
                         })

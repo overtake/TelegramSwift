@@ -54,6 +54,12 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             containerView.frame = content.contentRect
             textView.isHidden = content.textLayout == nil
             
+            if content.isLeadingMedia {
+                textView.setFrameOrigin(NSMakePoint(0, content.contentRect.height - textView.frame.height - (action != nil ? 36 : 0)))
+            } else {
+                textView.setFrameOrigin(.zero)
+            }
+            
             if let current = self.whatThisView, let line = textView.textLayout?.lines.first {
                 current.setFrameOrigin(NSMakePoint(line.frame.maxX + 5, textView.frame.minY + 1))
             }

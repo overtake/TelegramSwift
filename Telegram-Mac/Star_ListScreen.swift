@@ -14,7 +14,7 @@ import TGUIKit
 import SwiftSignalKit
 import CurrencyFormat
 import InAppPurchaseManager
-
+import Localization
 enum Star_TransactionType : Equatable {
     enum Source : Equatable {
         case peer
@@ -50,8 +50,9 @@ struct Star_Transaction : Equatable {
 
 struct Star_Subscription : Equatable {
     enum State : Equatable {
-        case active
-        case cancelled
+        case active(refulfil: Bool)
+        case cancelled(refulfil: Bool)
+        case expired
     }
     let id: String
     let peer: EnginePeer
@@ -59,6 +60,7 @@ struct Star_Subscription : Equatable {
     let date: Int32
     let renewDate: Int32
     let state: State
+    let native: StarsContext.State.Subscription
 }
 
 
@@ -86,10 +88,19 @@ private final class FloatingHeaderView : Control {
         
         let text: String
         switch source {
-        case .buy:
-            text = strings().starListGetStars
+        case let .buy(suffix, amount):
+            if let amount {
+                let need = Int(amount - myBalance)
+                text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
+            } else {
+                text = strings().starListGetStars
+            }
             balanceView.isHidden = false
         case let .purchase(_, requested):
+            let need = Int(requested - myBalance)
+            text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
+            balanceView.isHidden = false
+        case let .purchaseSubscribe(_, requested):
             let need = Int(requested - myBalance)
             text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
             balanceView.isHidden = false
@@ -167,7 +178,7 @@ private final class BalanceItem : GeneralRowItem {
         
         
         let giftAttr = NSMutableAttributedString()
-        giftAttr.append(string: strings().starsGiftToFriends(clown), color: theme.colors.accent, font: .normal(.title))
+        giftAttr.append(string: strings().starsGiftToFriends(clown_space), color: theme.colors.accent, font: .normal(.title))
         giftAttr.insertEmbedded(.embedded(name: "Icon_Gift_Stars", color: theme.colors.accent, resize: false), for: clown)
         self.giftPremiumLayout = TextViewLayout(giftAttr)
         
@@ -296,9 +307,18 @@ private final class HeaderItem : GeneralRowItem {
         var headerInfo = NSMutableAttributedString()
         
         switch source {
-        case .buy:
-            headerAttr.append(string: strings().starListGetStars, color: theme.colors.text, font: .medium(.header))
-            headerInfo.append(string: strings().starListHowMany, color: theme.colors.text, font: .normal(.text))
+        case let .buy(suffix, amount):
+            if let amount {
+                let need = Int(amount - myBalance)
+                headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
+            } else {
+                headerAttr.append(string: strings().starListGetStars, color: theme.colors.text, font: .medium(.header))
+            }
+            if let suffix {
+                headerInfo.append(string: _NSLocalizedString("Star.Buy.Custom_\(suffix)"), color: theme.colors.text, font: .normal(.text))
+            } else {
+                headerInfo.append(string: strings().starListHowMany, color: theme.colors.text, font: .normal(.text))
+            }
         case let .purchase(peer, requested):
             let need = Int(requested - myBalance)
             headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
@@ -313,13 +333,16 @@ private final class HeaderItem : GeneralRowItem {
         case let .prolongSubscription(peer, requested):
             let need = Int(requested - myBalance)
             headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
-            //TODOLANG
-            headerInfo.append(string: "Buy Stars to keep your subscription for **\(peer._asPeer().displayTitle)**.", color: theme.colors.text, font: .normal(.text))
+            headerInfo.append(string: strings().starBuyScreenProlongSubs(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
+        case let .purchaseSubscribe(peer, requested):
+            let need = Int(requested - myBalance)
+            headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
+            headerInfo.append(string: strings().starBuyScreenPurschaseSub(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
+
         case let .gift(peer):
-            //TODOLANG
             headerAttr.append(string: strings().starsGiftTitle, color: theme.colors.text, font: .medium(.header))
             
-            let text = "With Stars, **\(peer._asPeer().displayTitle)** will be able to unlock content and services on Telegram. [See Examples >](examples)"
+            let text = strings().starBuyScreenGift(peer._asPeer().displayTitle)
             
             headerInfo = parseMarkdownIntoAttributedString(text, attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.text), link: .init(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { value in
@@ -661,11 +684,12 @@ private final class Arguments {
     let giftStars:()->Void
     let toggleFilterMode:(State.TransactionMode)->Void
     let buy:(State.Option)->Void
-    let loadMore:()->Void
+    let loadMoreTransactions:()->Void
+    let loadMoreSubscriptions:()->Void
     let openTransaction:(Star_Transaction)->Void
     let openSubscription:(Star_Subscription)->Void
     let openRecommendedApps:()->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void) {
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
@@ -675,7 +699,8 @@ private final class Arguments {
         self.giftStars = giftStars
         self.toggleFilterMode = toggleFilterMode
         self.buy = buy
-        self.loadMore = loadMore
+        self.loadMoreTransactions = loadMoreTransactions
+        self.loadMoreSubscriptions = loadMoreSubscriptions
         self.openTransaction = openTransaction
         self.openSubscription = openSubscription
         self.openRecommendedApps = openRecommendedApps
@@ -763,7 +788,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         
         switch arguments.source {
-        case .buy, .purchase, .prolongSubscription, .gift, .reactions:
+        case .buy, .purchase, .prolongSubscription, .gift, .reactions, .purchaseSubscribe:
             
             struct Tuple : Equatable {
                 let option: State.Option
@@ -847,14 +872,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 var tuples: [Tuple] = []
                 for (i, subscription) in state.subscriptions.enumerated() {
                     var viewType: GeneralViewType = bestGeneralViewType(state.subscriptions, for: i)
-                    if i == state.subscriptions.count - 1, state.starsState?.canLoadMore == true || state.starsState?.isLoading == true {
+                    if i == state.subscriptions.count - 1, state.starsState?.canLoadMoreSubscriptions == true || state.starsState?.isLoading == true {
                         viewType = .innerItem
                     }
                     tuples.append(.init(subscription: subscription, viewType: viewType))
                 }
                 
-                //TODOLANG
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MY SUBSCRIPTIONS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starBuyScreenMySubs), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
                 index += 1
 
                 
@@ -868,8 +892,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_subs, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
                         return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
                     }))
-                } else if state.starsState?.canLoadMore == true {
-                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more_subs, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMore, iconTextInset: 42)))
+                } else if state.starsState?.canLoadMoreSubscriptions == true {
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more_subs, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMoreSubscriptions, iconTextInset: 42)))
                 }
             }
             
@@ -904,7 +928,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 var tuples: [Tuple] = []
                 for (i, transaction) in transactions.enumerated() {
                     var viewType = bestGeneralViewTypeAfterFirst(transactions, for: i)
-                    if i == transactions.count - 1, state.starsState?.canLoadMore == true || state.starsState?.isLoading == true {
+                    if i == transactions.count - 1, state.starsState?.canLoadMoreTransactions == true || state.starsState?.isLoading == true {
                         viewType = .innerItem
                     }
                     tuples.append(.init(transaction: transaction, viewType: viewType))
@@ -927,8 +951,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
                             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
                         }))
-                    } else if state.starsState?.canLoadMore == true {
-                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMore, iconTextInset: 42)))
+                    } else if state.starsState?.canLoadMoreTransactions == true {
+                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().starListTransactionsShowMore, color: theme.colors.accent, icon: theme.icons.chatSearchUp, viewType: .lastItem, action: arguments.loadMoreTransactions, iconTextInset: 42)))
                     }
                 } else {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_transactions, equatable: .init(state.transactionMode), comparable: nil, item: { initialSize, stableId in
@@ -959,8 +983,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 }
 
 enum Star_ListScreenSource : Equatable {
-    case buy
+    case buy(suffix: String?, amount: Int64?)
     case purchase(EnginePeer, Int64)
+    case purchaseSubscribe(EnginePeer, Int64)
     case account
     case prolongSubscription(EnginePeer, Int64)
     case gift(EnginePeer)
@@ -975,30 +1000,22 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     let inAppPurchaseManager = context.inAppPurchaseManager
     
     let starsContext = context.starsContext
+    let starsSubscriptionsContext = context.starsSubscriptionsContext
     
-    starsContext.load(force: true)
+    
+    let transactions = context.engine.payments.peerStarsTransactionsContext(subject: .starsContext(starsContext), mode: .all)
 
+    starsContext.load(force: true)
+    starsSubscriptionsContext.load(force: true)
+    
     var canMakePayment: Bool = true
     #if APP_STORE || DEBUG
     canMakePayment = inAppPurchaseManager.canMakePayments
     #endif
     
-    var subscriptions:[Star_Subscription] = []
-    
-//    #if DEBUG
-//    for i in 0 ..< 5 {
-//        let state: Star_Subscription.State
-//        if arc4random64() % 2 == 0 {
-//            state = .active
-//        } else {
-//            state = .cancelled
-//        }
-//        subscriptions.append(.init(id: "\(i)", peer: .init(context.myPeer!), amount: Int64.random(in: 100..<10000), date: Int32(Date().timeIntervalSince1970), renewDate: Int32(Date().timeIntervalSince1970) + Int32.random(in: 0..<10000000), state: state))
-//    }
-//    #endif
     
     
-    let initialState = State(options: nil, transactions: nil, canMakePayment: canMakePayment, subscriptions: subscriptions)
+    let initialState = State(options: nil, transactions: nil, canMakePayment: canMakePayment, subscriptions: [])
     
     
     
@@ -1059,11 +1076,24 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     
   
     
-    actionsDisposable.add(starsContext.state.startStrict(next: { state in
+    actionsDisposable.add(combineLatest(starsContext.state, starsSubscriptionsContext.state, transactions.state).startStrict(next: { state, subscriptionState, transactions in
         updateState { current in
             var current = current
             current.myBalance = state?.balance
-            current.transactions = state?.transactions.map { value in
+            current.subscriptions = subscriptionState.subscriptions.map { value in
+                let state: Star_Subscription.State
+                if value.untilDate < context.timestamp, !value.flags.contains(.isCancelled) {
+                    state = .expired
+                } else {
+                    if value.flags.contains(.isCancelled) {
+                        state = .cancelled(refulfil: value.flags.contains(.canRefulfill))
+                    } else {
+                        state = .active(refulfil: value.flags.contains(.canRefulfill))
+                    }
+                }
+                return .init(id: value.id, peer: value.peer, amount: value.pricing.amount, date: value.untilDate - value.pricing.period, renewDate: value.untilDate, state: state, native: value)
+            }
+            current.transactions = transactions.transactions.map { value in
                 let type: Star_TransactionType
                 var botPeer: EnginePeer?
                 let incoming: Bool = value.count > 0
@@ -1214,7 +1244,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, dismiss: {
         close?()
     }, buyMore: {
-        showModal(with: Star_ListScreen(context: context, source: .buy), for: window)
+        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: nil)), for: window)
     }, giftStars: {
         multigift(context: context, type: .stars)
     }, toggleFilterMode: { mode in
@@ -1229,8 +1259,10 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         #else
         buyNonStore(option)
         #endif
-    }, loadMore: {
-        context.starsContext.loadMore()
+    }, loadMoreTransactions: {
+        transactions.loadMore()
+    }, loadMoreSubscriptions: {
+        starsSubscriptionsContext.loadMore()
     }, openTransaction: { transaction in
         showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: window)
     }, openSubscription: { subscription in

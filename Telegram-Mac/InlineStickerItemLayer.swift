@@ -264,8 +264,8 @@ final class InlineStickerView: Control {
         layer.superview = self
         userInteractionEnabled = false
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true, ignorePreview: Bool = false) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor, ignorePreview: ignorePreview)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true, ignorePreview: Bool = false, synchronyous: Bool = false) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor, ignorePreview: ignorePreview, synchronyous: synchronyous)
         layer.isPlayable = isPlayable
         self.isPlayable = isPlayable
         self.animateLayer = layer
@@ -682,7 +682,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             } else {
                 data = account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
-            if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
+            if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)), playPolicy != .framesCount(1) {
                 self.resourceDisposable.set((data |> map { resourceData -> Data? in
                     if resourceData.complete {
                         if file.isWebm {
@@ -697,7 +697,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                         let maximumFps: Int = 30
                         var cache: ASCachePurpose = .temporaryLZ4(.effect)
                         let colors = self?.getColors?(file) ?? []
-                        if file.isVideo && file.isCustomEmoji || !colors.isEmpty || size.width < 80 {
+                        if !colors.isEmpty {
                             cache = .none
                         }
                         let type: LottieAnimationType

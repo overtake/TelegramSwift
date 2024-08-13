@@ -68,7 +68,7 @@ public final class MediaPlayerView: View {
     public var preventsCapture: Bool = false {
         didSet {
             if #available(macOS 10.15, *) {
-                videoLayer?.preventsCapture = preventsCapture
+              //  videoLayer?.preventsCapture = preventsCapture
             }
         }
     }

@@ -124,14 +124,14 @@ private func generateAvatarStarBadge(color: NSColor) -> CGImage {
         ctx.setFillColor(color.cgColor)
         ctx.fill(size.bounds)
 
-        ctx.draw(image, in: size.bounds.focus(image.systemSize))
+        ctx.draw(image, in: size.bounds.focus(image.backingSize))
     })!
 }
 
 private func generateAvatarStarBadgeLarge(color: NSColor) -> CGImage {
     let image = NSImage(resource: .iconStarCurrencyBigSize).precomposed()
     let bigImage = NSImage(resource: .iconStarOutlineBigSize).precomposed()
-    return generateImage(bigImage.size, contextGenerator: { size, ctx in
+    return generateImage(bigImage.backingSize, contextGenerator: { size, ctx in
         ctx.clear(size.bounds)
         
         
@@ -141,7 +141,7 @@ private func generateAvatarStarBadgeLarge(color: NSColor) -> CGImage {
         ctx.setFillColor(color.cgColor)
         ctx.fill(size.bounds)
 
-        ctx.draw(image, in: size.bounds.focus(image.size))
+        ctx.draw(image, in: size.bounds.focus(image.backingSize))
     })!
 }
 

@@ -323,7 +323,7 @@ private func canEditAdminRights(accountPeerId: PeerId, channelView: PeerView, in
             switch initialParticipant {
             case .creator:
                 return false
-            case let .member(_, _, adminInfo, _, _):
+            case let .member(_, _, adminInfo, _, _, _):
                 if let adminInfo = adminInfo {
                     return adminInfo.canBeEditedByAccountPeer || adminInfo.promotedBy == accountPeerId
                 } else {
@@ -443,7 +443,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 let currentRightsFlags: TelegramChatAdminRightsFlags
                 if let updatedFlags = state.updatedFlags {
                     currentRightsFlags = updatedFlags
-                } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
+                } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                     currentRightsFlags = adminRights.rights.rights
                 } else if let adminRights = channel.adminRights {
                     currentRightsFlags = adminRights.rights.subtracting([.canAddAdmins])
@@ -526,7 +526,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             }
 
             
-        } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _, _) = initialParticipant, let adminInfo = maybeAdminInfo {
+        } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _, _, _) = initialParticipant, let adminInfo = maybeAdminInfo {
             
             entries.append(.section(sectionId, 20))
             sectionId += 1
@@ -662,7 +662,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             let currentRightsFlags: TelegramChatAdminRightsFlags
             if let updatedFlags = state.updatedFlags {
                 currentRightsFlags = updatedFlags
-            } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
+            } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                 currentRightsFlags = adminRights.rights.rights.subtracting(.canAddAdmins)
             } else {
                 currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
@@ -724,7 +724,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 switch initialParticipant {
                 case .creator:
                     break
-                case let .member(_, _, adminInfo, _, _):
+                case let .member(_, _, adminInfo, _, _, _):
                     if let adminInfo = adminInfo {
                         if adminInfo.promotedBy == accountPeerId || adminInfo.canBeEditedByAccountPeer {
                             canDismiss = true
@@ -1037,7 +1037,7 @@ class ChannelAdminController: TableModalViewController {
                             switch initialParticipant {
                             case .creator:
                                 break
-                            case let .member(_, _, adminInfo, _, _):
+                            case let .member(_, _, adminInfo, _, _, _):
                                 if let adminInfo = adminInfo {
                                     if adminInfo.promotedBy == context.account.peerId || adminInfo.canBeEditedByAccountPeer {
                                         canDismiss = true

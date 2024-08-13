@@ -79,8 +79,19 @@ final class Star_TransactionItem : GeneralRowItem {
             }
         } else {
             if transaction.native.flags.contains(.isGift) {
-                //TODO LANG
-                descString = "Received Gift"
+                descString = strings().starsTransactionReceivedGift
+            } else if transaction.native.flags.contains(.isReaction) {
+                descString = strings().starsTransactionPaidReaction
+            } else if let period = transaction.native.subscriptionPeriod {
+                if period == 30 * 24 * 60 * 60 {
+                    descString = strings().starsSubscriptionPeriodMonthly
+                } else if period == 7 * 24 * 60 * 60 {
+                    descString = strings().starsSubscriptionPeriodWeekly
+                } else if period == 1 * 24 * 60 * 60 {
+                    descString = strings().starsSubscriptionPeriodDaily
+                } else {
+                    descString = strings().starsSubscriptionPeriodUnknown
+                }
             } else {
                 if let desc = transaction.native.description {
                     descString = desc

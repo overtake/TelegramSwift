@@ -135,8 +135,8 @@ enum ContextReaction : Equatable {
             return .single(selectAnimation)
         case .custom:
             return .complete()
-        case .stars:
-            return .complete()
+        case let .stars(file, _):
+            return .single(file)
         }
     }
     var selectedAnimation: TelegramMediaFile? {
@@ -193,7 +193,11 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var selectionView : View?
         private let presentation: TelegramPresentationTheme
         
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, theme: TelegramPresentationTheme) {
+        private var starEffect: StarsButtonEffectLayer?
+        
+        private var starBackground: SimpleGradientLayer?
+        
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, theme: TelegramPresentationTheme, message: Message?) {
             
             let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
             let rect = CGRect(origin: .zero, size: size)
@@ -207,6 +211,32 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
            
             super.init(frame: frameRect)
             
+            self.layer?.masksToBounds = false
+            
+            if case .stars = reaction.value {
+                
+                if !reaction.isSelected {
+                    starBackground = .init(frame: frameRect.size.bounds.insetBy(dx: -2, dy: -2))
+                    self.layer?.addSublayer(starBackground!)
+                    
+                    starBackground?.colors =  [NSColor(0xFFAC04).withAlphaComponent(0.15),
+                                               NSColor(0xFFCA35).withAlphaComponent(0.1),
+                                               NSColor(0xffffff).withAlphaComponent(0.0)].map { $0.cgColor }
+                    
+                    starBackground?.startPoint = NSMakePoint(0, 0.5)
+                    starBackground?.endPoint = NSMakePoint(1, 0.5)
+                }
+                
+                
+
+                
+                starEffect = .init()
+                starEffect?.frame = rect
+                starEffect?.update(size: rect.size)
+                self.layer?.addSublayer(starEffect!)
+            }
+
+            
             let imageView: InlineStickerView
             if let file = reaction.selectedAnimation {
                 imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
@@ -218,7 +248,8 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
 
             addSubview(player)
             self.player.isHidden = false
-
+            
+          
            
             switch reaction {
             case .builtin:
@@ -245,8 +276,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             }))
                                     
 
-            let signal = reaction.selectAnimation(context) |> mapToSignal {
-                context.account.postbox.mediaBox.resourceData($0.resource, attemptSynchronously: true)
+            let signal = reaction.selectAnimation(context) |> mapToSignal { file in
+                if let resource = file.resource as? LocalBundleResource, let path = resource.path {
+                    return .single(MediaResourceData(path: path, offset: 0, size: 0, complete: true))
+                } else {
+                    return context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: true)
+                }
             }
             |> filter {
                 $0.complete
@@ -256,7 +291,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             disposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.selectAnimationData = data
-                    if isLite {
+                    if !isLite {
                         let apply:()->Void = {
                             self?.apply(data, key: "select", policy: .framesCount(1))
                         }
@@ -264,21 +299,32 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                     }
                 }
             }))
-            set(handler: { control in
-                if let window = control.window {
-                    let wrect = control.convert(control.frame.size.bounds, to: nil)
-                    let srect = window.convertToScreen(wrect)
-                    add(reaction.value, true, context.window.convertFromScreen(srect))
-                }
-            }, for: .Click)
             
-            contextMenu = {
-                let menu = ContextMenu()
-                menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
-                    context.reactions.updateQuick(reaction.value)
-                }, itemImage: MenuAnimation.menu_add_to_favorites.value))
-                return menu
+            if case .stars = reaction.value, let message {
+                self.set(handler: { _ in
+                    showModal(with: Star_ReactionsController(context: context, message: message), for: context.window)
+                }, for: .Click)
+            } else {
+                
+                set(handler: { control in
+                    if let window = control.window {
+                        let wrect = control.convert(control.frame.size.bounds, to: nil)
+                        let srect = window.convertToScreen(wrect)
+                        add(reaction.value, true, context.window.convertFromScreen(srect))
+                    }
+                }, for: .Click)
+                
+                contextMenu = {
+                    let menu = ContextMenu()
+                    menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                        context.reactions.updateQuick(reaction.value)
+                    }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                    return menu
+                }
             }
+            
+            
+            
             
             if reaction.isSelected {
                 let view = View()
@@ -452,7 +498,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let presentation: TelegramPresentationTheme
     private let hasBubble: Bool
     private let aboveText: TextViewLayout?
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((ContextAddReactionsListView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme, hasBubble: Bool = true, aboveText: TextViewLayout? = nil) {
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((ContextAddReactionsListView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme, hasBubble: Bool = true, aboveText: TextViewLayout? = nil, message: Message? = nil) {
         self.list = list
         self.showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34), theme: presentation)
         self.revealReactions = revealReactions
@@ -558,7 +604,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         for reaction in list {
             let add:(ContextReaction)->Void = { reaction in
                 let itemSize = size.bounds
-                let reaction = ReactionView(frame: NSMakeRect(x, y, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add, theme: presentation)
+                let reaction = ReactionView(frame: NSMakeRect(x, y, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add, theme: presentation, message: message)
                 
                 self.documentView.addSubview(reaction)
                 x += size.width + 4

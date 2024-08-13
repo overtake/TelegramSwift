@@ -67,8 +67,22 @@ private final class HeaderItem : GeneralRowItem {
         let incoming: Bool = transaction.count > 0
         let amount: Int64
         if isGift {
-            header = incoming ? "Received Gift" : "Sent Gift"
+            header = incoming ? strings().starsTransactionReceivedGift : strings().starsTransactionSentGift
             amount = abs(transaction.count)
+        } else if transaction.flags.contains(.isReaction) {
+            header = strings().starsTransactionPaidReaction
+            amount = transaction.count
+        } else if let period = transaction.subscriptionPeriod {
+            if period == 30 * 24 * 60 * 60 {
+                header = strings().starsSubscriptionPeriodMonthly
+            } else if period == 7 * 24 * 60 * 60 {
+                header = strings().starsSubscriptionPeriodWeekly
+            } else if period == 1 * 24 * 60 * 60 {
+                header = strings().starsSubscriptionPeriodDaily
+            } else {
+                header = strings().starsSubscriptionPeriodUnknown
+            }
+            amount = transaction.count
         } else {
             switch transaction.peer {
             case .appStore:
@@ -203,6 +217,7 @@ private final class HeaderView : GeneralContainableRowView {
     private let infoContainer: View = View()
     private var outgoingView: ImageView?
     private var descView: TextView?
+    private var starBadgeView: ImageView?
     
     private var giftView: InlineStickerView?
     
@@ -265,7 +280,10 @@ private final class HeaderView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.photo = nil
             }
-            
+            if let view = self.starBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.starBadgeView = nil
+            }
             let current: InlineStickerView
             
             if let view = self.giftView {
@@ -280,6 +298,10 @@ private final class HeaderView : GeneralContainableRowView {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
+            }
+            if let view = self.starBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.starBadgeView = nil
             }
             if let view = self.giftView {
                 performSubviewRemoval(view, animated: animated)
@@ -333,6 +355,10 @@ private final class HeaderView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.giftView = nil
             }
+            if let view = self.starBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.starBadgeView = nil
+            }
             let current: TransformImageView
             if let view = self.photo {
                 current = view
@@ -372,6 +398,30 @@ private final class HeaderView : GeneralContainableRowView {
                 control.addSubview(current)
             }
             current.setPeer(account: item.context.account, peer: item.peer?._asPeer())
+            
+            if item.transaction.subscriptionPeriod != nil {
+                let starBadgeView: ImageView
+                if let view = self.starBadgeView {
+                    starBadgeView = view
+                } else {
+                    starBadgeView = ImageView()
+                    self.starBadgeView = starBadgeView
+                    control.addSubview(starBadgeView)
+                }
+                starBadgeView.image = theme.icons.avatar_star_badge_large_gray
+                starBadgeView.sizeToFit()
+
+                let avatarFrame = current.frame
+                let avatarBadgeSize = starBadgeView.frame.size
+                let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width + 4, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+
+                starBadgeView.frame = avatarBadgeFrame
+            } else {
+                if let view = self.starBadgeView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.starBadgeView = nil
+                }
+            }
         }
         
         self.headerView.update(item.headerLayout)
@@ -599,7 +649,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             }
             
-            rows.append(.init(left: .init(.initialize(string: strings().starTransactionMessageId, color: theme.colors.text, font: .normal(.text))), right: .init(name: messageIdText)))
+            rows.append(.init(left: .init(.initialize(string: state.transaction.flags.contains(.isReaction) ? strings().starTransactionReactionId :  strings().starTransactionMessageId, color: theme.colors.text, font: .normal(.text))), right: .init(name: messageIdText)))
 
         }
     } else if state.transaction.flags.contains(.isGift) {

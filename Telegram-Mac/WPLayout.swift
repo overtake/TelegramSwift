@@ -395,6 +395,10 @@ class WPLayout: Equatable {
         }
     }
     
+    var isLeadingMedia: Bool {
+        return content.type == "telegram_ad" && content.isMediaLargeByDefault == true
+    }
+    
     func invokeAction() {
         if self.hasInstantPage {
             BrowserStateContext.get(context).open(tab: .instantView(url: self.content.url, webPage: parent.media[0] as! TelegramMediaWebpage, anchor: nil))

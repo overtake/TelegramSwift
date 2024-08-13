@@ -2491,7 +2491,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         |> map { $0 as? PeerView }
         |> filter { $0?.cachedData != nil }
         |> map { $0! }
-        |> take(1)
         |> map { peerView -> TelegramChannel? in
             if let channel = peerViewMainPeer(peerView) as? TelegramChannel {
                 if channel.isSupergroup || channel.isGigagroup {
@@ -2500,10 +2499,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     } else if let cachedData = peerView.cachedData as? CachedChannelData, cachedData.linkedDiscussionPeerId.peerId != nil {
                         return channel
                     }
+                } else if case let .broadcast(info) = channel.info {
+                    if info.flags.contains(.messagesShouldHaveProfiles), channel.isAdmin {
+                        return channel
+                    }
                 }
             }
             return nil
-        } |> mapToSignal { channel in
+        } |> distinctUntilChanged |> mapToSignal { channel in
             if let channel = channel {
                 return combineLatest(currentAccountPeer, context.engine.peers.sendAsAvailablePeers(peerId: peerId)) |> map { current, peers in
                     var items:[SendAsPeer] = []
@@ -2511,6 +2514,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         items = current
                     }
                     items.append(contentsOf: peers)
+                    if items.count == 1, items[0].peer.id == context.peerId {
+                        items.removeAll()
+                    }
                     return items
                 }
             } else {
@@ -4825,24 +4831,32 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.revealMedia = { [weak self] message in
             
-            self?.updateState { current in
-                var current = current
-                current.mediaRevealed.insert(message.id)
-                return current
+            if message.isSensitiveContent(platform: "ios") {
+                verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: strings().chatSensitiveContentConfirmThird, optionIsSelected: false, successHandler: { result in
+                    self?.updateState { current in
+                        var current = current
+                        current.mediaRevealed.insert(message.id)
+                        return current
+                    }
+                    if result == .thrid {
+                        let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                        let messages = self?.historyView?.originalView?.entries.compactMap { $0.message } ?? []
+                        self?.updateState { current in
+                            var current = current
+                            for message in messages {
+                                current.mediaRevealed.insert(message.id)
+                            }
+                            return current
+                        }
+                    }
+                })
+            } else {
+                self?.updateState { current in
+                    var current = current
+                    current.mediaRevealed.insert(message.id)
+                    return current
+                }
             }
-//            
-//            #if DEBUG
-//            verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: strings().chatSensitiveContentConfirmThird, successHandler: { result in
-//                self?.updateState { current in
-//                    var current = current
-//                    current.mediaRevealed.insert(message.id)
-//                    return current
-//                }
-//            })
-//            #else
-//            
-//            #endif
-            
             
         }
         chatInteraction.openStories = { [weak self] f, setProgress in
@@ -8014,8 +8028,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
             if !selectManager.isEmpty {
-                _ = selectManager.selectPrevChar()
-                return .invoked
+                let result = selectManager.selectPrevChar()
+                if result {
+                    return .invoked
+                }
             }
         }
         
@@ -8041,8 +8057,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
             if !selectManager.isEmpty {
-                _ = selectManager.selectNextChar()
-                return .invoked
+                let result = selectManager.selectNextChar()
+                if result {
+                    return .invoked
+                }
             }
         }
         
@@ -8551,7 +8569,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                    }
                }
                beginPendingTime = CFAbsoluteTimeGetCurrent()
-               SoundEffectPlay.play(postbox: context.account.postbox, name: "sent", volume: 1.0)
+               playSoundEffect(.sent)
            }
        }))
 

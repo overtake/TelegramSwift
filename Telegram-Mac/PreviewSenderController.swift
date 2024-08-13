@@ -1566,7 +1566,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             
             
 
-            if self.genericView.tableView.isEmpty {
+            if medias.isEmpty {
                 self.closeModal()
                 if self.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
                     let input = self.genericView.textView.interactions.presentation.textInputState()

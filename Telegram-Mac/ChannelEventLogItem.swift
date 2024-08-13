@@ -397,9 +397,9 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
             case let .participantToggleAdmin(prev, new):
                 switch prev.participant {
-                case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _, rank: prevRank):
+                case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _, rank: prevRank, prevSubscriptionUntilDate):
                     switch new.participant {
-                    case let .member(_, _, adminInfo: newAdminInfo, banInfo: _, rank: newRank):
+                    case let .member(_, _, adminInfo: newAdminInfo, banInfo: _, rank: newRank, newSubscriptionUntilDate):
                         if let memberPeer = entry.peers[memberId] {
                             let message = NSMutableAttributedString()
                    
@@ -600,9 +600,9 @@ class ServiceEventLogItem: TableRowItem {
                 }
             case let .participantToggleBan(prev, new):
                 switch prev.participant {
-                case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo, rank: _):
+                case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo, rank: _, prevVubscriptionUntilDate):
                     switch new.participant {
-                    case let .member(_, _, adminInfo: _, banInfo: newBanInfo, rank: _):
+                    case let .member(_, _, adminInfo: _, banInfo: newBanInfo, rank: _, newSubscriptionUntilDate):
                         let message = NSMutableAttributedString()
                         if let memberPeer = entry.peers[memberId] {
                             

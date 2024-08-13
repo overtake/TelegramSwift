@@ -359,6 +359,15 @@ enum LocalAnimatedSticker : String {
     
     case star_currency_new
     case star_currency_part_new
+    
+    
+    case premium_reaction_6
+    
+    case premium_reaction_effect_1
+    case premium_reaction_effect_2
+    case premium_reaction_effect_3
+    case premium_reaction_effect_4
+    case premium_reaction_effect_5
 
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

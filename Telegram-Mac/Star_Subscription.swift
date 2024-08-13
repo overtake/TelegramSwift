@@ -27,12 +27,10 @@ private final class HeaderItem : GeneralRowItem {
         self.subscription = subscription
         self.arguments = arguments
         
-        //TODOLANG
-        self.headerLayout = .init(.initialize(string: "Subscription", color: theme.colors.text, font: .medium(18)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: strings().starSubScreenTitle, color: theme.colors.text, font: .medium(18)), alignment: .center)
         
         let attr = NSMutableAttributedString()
-        //TODOLANG
-        attr.append(string: "\(clown)\(TINY_SPACE)\(subscription.amount) / month", color: theme.colors.listGrayText, font: .normal(.text))
+        attr.append(string: strings().starSubScreenPrice("\(clown_space)\(subscription.amount)"), color: theme.colors.listGrayText, font: .normal(.text))
         attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.infoLayout = .init(attr)
@@ -206,8 +204,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         arguments.openPeer(peer.id)
     }
 
-    //TODOLANG
-    rows.append(.init(left: .init(.initialize(string: "Subscription", color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+    rows.append(.init(left: .init(.initialize(string: strings().starSubScreenRowSub, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
         let control: AvatarControl
         if let previous = previous as? AvatarControl {
             control = previous
@@ -219,12 +216,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return control
     })))
 
-    //TODOLANG
-    rows.append(.init(left: .init(.initialize(string: "Subscribed", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.subscription.date), color: theme.colors.text, font: .normal(.text))))))
+    rows.append(.init(left: .init(.initialize(string: strings().starSubScreenRowSubd, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.subscription.date), color: theme.colors.text, font: .normal(.text))))))
 
 
-    //TODOLANG
-    rows.append(.init(left: .init(.initialize(string: "Renews", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.subscription.renewDate), color: theme.colors.text, font: .normal(.text))))))
+    rows.append(.init(left: .init(.initialize(string: strings().starSubScreenRowRenew, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.subscription.renewDate), color: theme.colors.text, font: .normal(.text))))))
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_rows, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -240,21 +235,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
 
     switch state.subscription.state {
-    case .active:
-        //TODOLANG
-        let cancelText = "If you cancel now, you can still access your subscription until \(stringForMediumDate(timestamp: state.subscription.renewDate))."
+    case let .active(refulfil):
+        let cancelText = strings().starSubScreenStatusActive(stringForMediumDate(timestamp: state.subscription.renewDate))
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(cancelText), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
         index += 1
         
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown("[Cancel Subscription]()", linkColor: theme.colors.redUI, linkFont: .medium(.text), linkHandler: { _ in
-            arguments.cancel()
-        }), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
-        index += 1
+        if !refulfil {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown("[\(strings().starSubScreenStatusActiveCancel)]()", linkColor: theme.colors.redUI, linkFont: .medium(.text), linkHandler: { _ in
+                arguments.cancel()
+            }), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+            index += 1
+        }
     case .cancelled:
-        //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You have cancelled your subscription."), data: .init(color: theme.colors.redUI, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starSubScreenStatusCancelled), data: .init(color: theme.colors.redUI, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        index += 1
+    case .expired:
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starSubScreenStatusExpired), data: .init(color: theme.colors.grayText, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
         index += 1
     }
     
@@ -297,7 +294,9 @@ func Star_SubscriptionScreen(context: AccountContext, subscription: Star_Subscri
         context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
         close?()
     }, cancel: {
-        showModalText(for: window, text: "Cancel")
+        context.starsSubscriptionsContext.updateSubscription(id: subscription.id, cancel: true)
+        showModalText(for: window, text: strings().starSubScreenCancelledAlert)
+        close?()
     }, openLink: { link in
         execute(inapp: inApp(for: link.nsstring, context: context))
     })
@@ -320,13 +319,40 @@ func Star_SubscriptionScreen(context: AccountContext, subscription: Star_Subscri
     let modalInteractions: ModalInteractions?
     
     switch subscription.state {
-    case .active:
-        modalInteractions = nil
-    case .cancelled:
-        //TODOLANG
-        modalInteractions = ModalInteractions(acceptTitle: "Renew Subscription", accept: {
-            close?()
+    case let .active(refulfil):
+        modalInteractions = ModalInteractions(acceptTitle: refulfil ? strings().starSubScreenActionJoin : strings().starSubScreenActionOpen, accept: {
+            if refulfil {
+                _ = context.engine.payments.fulfillStarsSubscription(peerId: context.peerId, subscriptionId: subscription.id).start()
+            }
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(subscription.peer.id), initialAction: nil))
+            closeAllModals(window: window)
         }, singleButton: true)
+    case let .cancelled(refulfil):
+        modalInteractions = ModalInteractions(acceptTitle: refulfil ? strings().starSubScreenActionJoin : strings().starSubScreenActionRenew, accept: {
+            if refulfil {
+                _ = context.engine.payments.fulfillStarsSubscription(peerId: context.peerId, subscriptionId: subscription.id).start()
+                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(subscription.peer.id), initialAction: nil))
+                closeAllModals(window: window)
+            } else {
+                context.starsSubscriptionsContext.updateSubscription(id: subscription.id, cancel: false)
+                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(subscription.peer.id), initialAction: nil))
+                closeAllModals(window: window)
+            }
+        }, singleButton: true)
+    case .expired:
+        if let inviteHash = subscription.native.inviteHash {
+            modalInteractions = ModalInteractions(acceptTitle: strings().starSubScreenActionRenew, accept: {
+                execute(inapp: .joinchat(link: "", inviteHash, context: context, callback: { peerId, toChat, messageId, initialAction in
+                    delay(1.5, closure: {
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(subscription.peer.id), initialAction: nil))
+                        closeAllModals(window: window)
+                    })
+                }))
+                close?()
+            }, singleButton: true)
+        } else {
+            modalInteractions = nil
+        }
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)

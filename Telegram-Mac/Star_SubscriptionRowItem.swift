@@ -31,13 +31,14 @@ final class Star_SubscriptionRowItem : GeneralRowItem {
         self.callback = callback
         
         let amountAttr = NSMutableAttributedString()
-        //TODOLANG
         switch subscription.state {
         case .active:
-            amountAttr.append(string: "\(clown)\(TINY_SPACE)\(subscription.amount)", color: theme.colors.text, font: .medium(.title))
+            amountAttr.append(string: "\(clown_space)\(subscription.amount)", color: theme.colors.text, font: .medium(.title))
             amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         case .cancelled:
-            amountAttr.append(string: "cancelled", color: theme.colors.redUI, font: .normal(.short))
+            amountAttr.append(string: strings().starSubscriptionStatusCancelled, color: theme.colors.redUI, font: .normal(.short))
+        case .expired:
+            amountAttr.append(string: strings().starSubscriptionStatusExpired, color: theme.colors.redUI, font: .normal(.short))
         }
         
         self.amountLayout = .init(amountAttr)
@@ -46,25 +47,22 @@ final class Star_SubscriptionRowItem : GeneralRowItem {
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         
         
-        if subscription.state == .active {
-            self.perMonthLayout = .init(.initialize(string: "per month", color: theme.colors.grayText, font: .normal(.short)))
+        if case .active = subscription.state {
+            self.perMonthLayout = .init(.initialize(string: strings().starSubscriptionStatusActive, color: theme.colors.grayText, font: .normal(.short)))
             self.perMonthLayout?.measure(width: .greatestFiniteMagnitude)
         } else {
             self.perMonthLayout = nil
         }
         
-        //TODOLANG
         let date = stringForMediumDate(timestamp: subscription.renewDate)
         var dateText: String
         switch subscription.state {
         case .active:
-            dateText = "renews on \(date)"
+            dateText = strings().starSubscriptionStatusActiveInfo(date)
         case .cancelled:
-            if subscription.renewDate < context.timestamp {
-                dateText = "expired on \(date)"
-            } else {
-                dateText = "expires on \(date)"
-            }
+            dateText = strings().starSubscriptionStatusCancelledInfo(date)
+        case .expired:
+            dateText = strings().starSubscriptionStatusExpiredInfo(date)
         }
         self.dateLayout = .init(.initialize(string: dateText, color: theme.colors.grayText, font: .normal(.text)))
         

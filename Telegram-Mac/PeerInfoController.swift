@@ -101,7 +101,7 @@ class PeerInfoArguments {
             } else {
                 switch subject {
                 case .phoneNumber(let string):
-                    self?.copy(formatPhoneNumber(string))
+                    self?.copy(formatPhoneNumber(context: context, number: string))
                 case .username(let string):
                     self?.copy("@\(string)")
                 }

@@ -31,6 +31,7 @@ private func generate(_ color: NSColor) -> CGImage {
 }
 
 private let linkIcon: CGImage = NSImage(resource: .iconExportedInvitationLink).precomposed(.white)
+private let paidLinkIcon: CGImage = NSImage(resource: .iconInviteLinkSubscription).precomposed()
 
 
 
@@ -68,7 +69,7 @@ class InviteLinkRowItem: GeneralRowItem {
 }
 private final class ProgressView : View {
 
-    private let circle: View = View(frame: NSMakeRect(0, 0, 35, 35))
+    private let circle: View = View(frame: NSMakeRect(0, 0, 36, 36))
     private let progressView: FireTimerControl = FireTimerControl(frame: NSMakeRect(0, 0, 50, 50))
     private let imageView = ImageView()
 
@@ -187,6 +188,7 @@ private final class InviteLinkTokenView : Control {
     private let titleView = TextView()
     private let countView = TextView()
     private let progressView = ProgressView(frame: NSMakeRect(0, 0, 50, 50))
+    private var paidLinkView: ImageView?
     private var action:(()->Void)?
     private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
@@ -216,10 +218,10 @@ private final class InviteLinkTokenView : Control {
         return NSMakePoint(7, focus(progressView.frame.size).minY)
     }
     private var titlePoint: NSPoint {
-        return NSMakePoint(65, 8)
+        return NSMakePoint(65, 9)
     }
     private var countPoint: NSPoint {
-        return NSMakePoint(65, frame.height - 8 - countView.frame.height)
+        return NSMakePoint(65, frame.height - 9 - countView.frame.height)
     }
 
     
@@ -227,6 +229,7 @@ private final class InviteLinkTokenView : Control {
         super.layout()
         actions.setFrameOrigin(actionsPoint)
         progressView.setFrameOrigin(progressPoint)
+        paidLinkView?.centerY(x: 14)
         titleView.setFrameOrigin(titlePoint)
         countView.setFrameOrigin(countPoint)
     }
@@ -334,6 +337,22 @@ private final class InviteLinkTokenView : Control {
             self.timer?.invalidate()
             self.timer = nil
         }
+        
+        if link.pricing != nil {
+            let current: ImageView
+            if let view = self.paidLinkView {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.paidLinkView = current
+            }
+            current.image = paidLinkIcon
+            current.sizeToFit()
+        } else if let view = paidLinkView {
+            performSubviewRemoval(view, animated: animated)
+            self.paidLinkView = nil
+        }
 
         updateText()
         
@@ -393,8 +412,6 @@ private final class InviteLinkRowView : GeneralContainableRowView {
         }
 
         layout()
-
-
 
         contentView.update(with: item.link, frame: containerView.bounds, animated: animated, showContextMenu: { [weak self] in
             if let event = NSApp.currentEvent {
