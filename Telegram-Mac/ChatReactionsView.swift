@@ -106,6 +106,10 @@ extension MessageReaction.Reaction {
 
 extension MessageReaction {
     static func <(lhs: MessageReaction, rhs: MessageReaction) -> Bool {
+        
+        if rhs.value == .stars {
+            return false
+        }
         var lhsCount = lhs.count
         if lhs.chosenOrder != nil {
             lhsCount -= 1
