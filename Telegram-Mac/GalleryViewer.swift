@@ -1215,6 +1215,7 @@ class GalleryViewer: NSResponder {
     var contextMenu:ContextMenu {
         let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
         
+
         if let item = self.pager.selectedItem, item.entry.message?.adAttribute == nil {
             if !(item is MGalleryExternalVideoItem) {
                 if item.entry.message?.isCopyProtected() == true {
