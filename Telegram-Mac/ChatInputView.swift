@@ -836,7 +836,7 @@ class ChatInputView: View, Notifable {
                 }
             }))
         }
-
+        markNextTextChangeToFalseActivity = false
         
     }
     private var updateFirstTime: Bool = true

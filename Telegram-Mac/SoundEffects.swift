@@ -12,6 +12,7 @@ enum SoundEffect {
     case quizCorrect
     case quizIncorrect
     case confetti
+    case sent
     var name: String {
         switch self {
         case .quizCorrect:
@@ -20,11 +21,13 @@ enum SoundEffect {
             return "quiz-incorrect"
         case .confetti:
             return "confetti"
+        case .sent:
+            return "sent"
         }
     }
     var ext: String {
         switch self {
-        case .quizCorrect, .quizIncorrect, .confetti:
+        case .quizCorrect, .quizIncorrect, .confetti, .sent:
             return "mp3"
         }
     }

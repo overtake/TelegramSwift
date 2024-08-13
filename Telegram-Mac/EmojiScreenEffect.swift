@@ -326,7 +326,32 @@ final class EmojiScreenEffect {
                 }
             }), forKey: messageId)
         case .stars:
-            break
+            
+            let files = [LocalAnimatedSticker.premium_reaction_effect_1.file,
+                         LocalAnimatedSticker.premium_reaction_effect_2.file,
+                         LocalAnimatedSticker.premium_reaction_effect_3.file,
+                         LocalAnimatedSticker.premium_reaction_effect_4.file,
+                         LocalAnimatedSticker.premium_reaction_effect_5.file]
+            
+            let signal: Signal<LottieAnimation?, NoError> = .single(files.randomElement()!) |> map { file -> MediaResourceData? in
+                if let path = (file.resource as? LocalBundleResource)?.path {
+                    return MediaResourceData(path: path, offset: 0, size: 0, complete: true)
+                } else {
+                    return nil
+                }
+            } |> map { resource in
+                if let resource, let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_reaction_e_\(resource.path.hashValue)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+                } else {
+                    return nil
+                }
+            } |> deliverOnMainQueue
+            
+            reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
+                if let animation = animation, let parentView = parentView {
+                    self?.initAnimation(.builtin(animation), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                }
+            }), forKey: messageId)
         }
         
         

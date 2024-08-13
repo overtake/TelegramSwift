@@ -89,7 +89,10 @@ private final class InviteLinkMonthlyFeeRowView : GeneralContainableRowView {
             addSubview(view)
         }
         
-        inputView.placeholder = "Stars Amount per month"
+        
+        inputView.placeholder = strings().inviteLinkSubAmountPlaceholder
+        
+        inputView.inputTheme = inputView.inputTheme.withUpdatedTextColor(item.enabled ? theme.colors.text : theme.colors.grayText)
         
         inputView.context = item.context
         inputView.interactions.max_height = 500
@@ -104,6 +107,7 @@ private final class InviteLinkMonthlyFeeRowView : GeneralContainableRowView {
         item.interactions.canTransform = false
         
         item.interactions.inputIsEnabled = item.enabled
+        
         
         self.inputView.alphaValue = item.enabled ? 1 : 0.8
         self.starView?.alphaValue = item.enabled ? 1 : 0.8

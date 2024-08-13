@@ -28,15 +28,16 @@ struct _ExportedInvitation : Equatable {
     var usageLimit: Int32?
     var count: Int32?
     var requestedCount: Int32?
+    var pricing: StarsSubscriptionPricing?
     
     var invitation: ExportedInvitation {
-        return .link(link: link, title: title, isPermanent: isPermanent, requestApproval: requestApproval, isRevoked: isRevoked, adminId: adminId, date: date, startDate: startDate, expireDate: expireDate, usageLimit: usageLimit, count: count, requestedCount: requestedCount)
+        return .link(link: link, title: title, isPermanent: isPermanent, requestApproval: requestApproval, isRevoked: isRevoked, adminId: adminId, date: date, startDate: startDate, expireDate: expireDate, usageLimit: usageLimit, count: count, requestedCount: requestedCount, pricing: pricing)
     }
     
     static func initialize(_ inivitation: ExportedInvitation) -> _ExportedInvitation? {
         switch inivitation {
-        case .link(let link, let title, let isPermanent, let requestApproval, let isRevoked, let adminId, let date, let startDate, let expireDate, let usageLimit, let count, let requestedCount):
-            return .init(link: link, title: title, isPermanent: isPermanent, requestApproval: requestApproval, isRevoked: isRevoked, adminId: adminId, date: date, startDate: startDate, expireDate: expireDate, usageLimit: usageLimit, count: count, requestedCount: requestedCount)
+        case .link(let link, let title, let isPermanent, let requestApproval, let isRevoked, let adminId, let date, let startDate, let expireDate, let usageLimit, let count, let requestedCount, let pricing):
+            return .init(link: link, title: title, isPermanent: isPermanent, requestApproval: requestApproval, isRevoked: isRevoked, adminId: adminId, date: date, startDate: startDate, expireDate: expireDate, usageLimit: usageLimit, count: count, requestedCount: requestedCount, pricing: pricing)
         case .publicJoinRequest:
             return nil
         }
@@ -133,11 +134,11 @@ final class InviteLinkPeerManager {
         
     }
     
-    func createPeerExportedInvitation(title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<_ExportedInvitation?, NoError> {
+    func createPeerExportedInvitation(title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil, pricing: StarsSubscriptionPricing? = nil) -> Signal<_ExportedInvitation?, NoError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = context.engine.peers.createPeerExportedInvitation(peerId: peerId, title: title, expireDate: expireDate, usageLimit: usageLimit, requestNeeded: requestNeeded) |> deliverOnMainQueue
+            let signal = context.engine.peers.createPeerExportedInvitation(peerId: peerId, title: title, expireDate: expireDate, usageLimit: usageLimit, requestNeeded: requestNeeded, subscriptionPricing: pricing) |> deliverOnMainQueue
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -653,7 +654,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         }), for: context.window)
     }, newLink: { [weak manager] in
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, save: { [weak manager] link in
-            let signal = manager?.createPeerExportedInvitation(title: link.title, expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval)
+            let signal = manager?.createPeerExportedInvitation(title: link.title, expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval, pricing: link.pricing)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: context.window).start(next: { invitation in
                     if let invitation = invitation {

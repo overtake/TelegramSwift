@@ -183,7 +183,7 @@ class SelectManager : NSResponder {
         var result: Bool = false
         _ = ranges.modify { ranges in
             var ranges = ranges
-            if let first = ranges.first, let textView = first.1.value {
+            if let first = ranges.first, let textView = first.1.value, textView.window?.isKeyWindow == true {
                 if let layout = textView.textLayout {
                     
                     var range = first.2.range

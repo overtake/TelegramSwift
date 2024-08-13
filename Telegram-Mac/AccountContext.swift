@@ -21,8 +21,7 @@ import InAppPurchaseManager
 #endif
 import ApiCredentials
 
-let clown: String = "#️⃣"
-let focusIntentEmoji = "⛔️"
+
 let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
 
@@ -376,7 +375,13 @@ final class AccountContext {
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
     let starsContext: StarsContext
-    
+    let starsSubscriptionsContext: StarsSubscriptionsContext
+    let currentCountriesConfiguration: Atomic<CountriesConfiguration> = Atomic(value: CountriesConfiguration(countries: loadCountryCodes()))
+    private let _countriesConfiguration = Promise<CountriesConfiguration>()
+    var countriesConfiguration: Signal<CountriesConfiguration, NoError> {
+        return self._countriesConfiguration.get()
+    }
+
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -612,10 +617,40 @@ final class AccountContext {
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         self.starsContext = engine.payments.peerStarsContext()
+        self.starsSubscriptionsContext = engine.payments.peerStarsSubscriptionsContext(starsContext: self.starsContext)
         
         let _ = self.engine.peers.requestGlobalRecommendedChannelsIfNeeded().startStandalone()
         let _ = self.engine.peers.requestRecommendedAppsIfNeeded().startStandalone()
         let _ = self.engine.peers.managedUpdatedRecentApps().startStandalone()
+        
+        self.reactions.checkStarsAmount = { [weak self] amount in
+            if let self {
+                return self.starsContext.state
+                |> filter { $0 != nil }
+                |> map { $0! }
+                |> take(1)
+                |> map { state in
+                    return state.balance >= amount
+                }
+            } else {
+                return .single(false)
+            }
+        }
+        
+        self.reactions.failStarsAmount = { [weak self] amount, messageId in
+            if let self {
+                let signal = self.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: messageId.peerId)) |> deliverOnMainQueue
+                _ = signal.start(next: { [weak self] peer in
+                    if let peer = peer, let self {
+                        showModal(with: Star_ListScreen(context: self, source: .reactions(peer, Int64(amount))), for: self.window)
+                    }
+                })
+            }
+        }
+        
+        self.reactions.successStarsAmount = { [weak self] amount in
+            self?.starsContext.add(balance: -Int64(amount))
+        }
 
     #endif
         
@@ -685,6 +720,13 @@ final class AccountContext {
             self?._emoticonThemes.swap(values)
             self?._chatThemes.set(.single(values))
         }))
+        
+        let currentCountriesConfiguration = currentCountriesConfiguration
+        self.actionsDisposable.add((engine.localization.getCountriesList(accountManager: sharedContext.accountManager, langCode: nil)
+        |> deliverOnMainQueue).start(next: { value in
+            let _ = currentCountriesConfiguration.swap(CountriesConfiguration(countries: value))
+        }))
+
         
         
         let cloudThemes: Signal<[TelegramTheme], NoError> = telegramThemes(postbox: account.postbox, network: account.network, accountManager: sharedContext.accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
@@ -1476,30 +1518,3 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     }
 }
 
-
-/*
- let signal:Signal<Void, NoError> = Signal { subscriber in
-     
-     let signal: Signal<Never, NoError> = account.postbox.transaction {
-         return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
-     } |> mapToSignal { configuration in
-         let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
-         var signals = value.emojis.map {
-             engine.stickers.searchGifs(query: $0)
-         }
-         signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
-         return combineLatest(signals) |> ignoreValues
-     }
-     
-     let disposable = signal.start(completed: {
-         subscriber.putCompletion()
-     })
-     
-     return ActionDisposable {
-         disposable.dispose()
-     }
- }
- 
- let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
- preloadGifsDisposable.set(updated.start())
- */

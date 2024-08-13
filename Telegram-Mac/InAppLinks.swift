@@ -27,6 +27,20 @@ let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
 let TINY = "\u{2009}"
 let GOLD = NSColor(0xFFAC04)
+let clown: String = "🆔"
+
+let clown_space: String = "\(clown)\(TINY_SPACE)"
+
+
+let focusIntentEmoji = "⛔️"
+
+let XTR_USD_RATE = 0.013
+
+#if DEBUG
+let star_sub_period: Int32 = 300
+#else
+let star_sub_period: Int32 = 2592000
+#endif
 
 let TON: String = TelegramCurrency.ton.rawValue
 
@@ -969,6 +983,12 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             ForumUI.open(peerId, context: context)
         }
         
+//        #if DEBUG
+//        showModal(with: Star_PurschaseInApp(context: context, invoice: nil, source: .starsChatSubscription(hash: hash), type: .subscription(500)), for: getWindow(context))
+//        return
+//        #endif
+        
+        
         _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: getWindow(context)).start(next: { (result) in
             switch result {
             case let .alreadyJoined(peer):
@@ -978,7 +998,23 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     interaction(peer.id, true, nil, nil)
                 }
             case let .invite(state):
-                if state.flags.requestNeeded {
+                if state.flags.canRefulfillSubscription {
+                    _ = showModalProgress(signal: context.engine.peers.joinChannel(peerId: context.peerId, hash: hash), for: getWindow(context))
+                } else if let _ = state.subscriptionPricing {
+                    showModal(with: Star_PurschaseInApp(context: context, invoice: nil, source: .starsChatSubscription(hash: hash), type: .subscription(state), completion: { state in
+                        switch state {
+                        case let .paid(_, peerId):
+                            if let peerId {
+                                delay(1.0, closure: {
+                                    interaction(peerId, true, nil, nil)
+                                })
+                            }
+                        default:
+                            break
+                        }
+                        
+                    }), for: getWindow(context))
+                } else if state.flags.requestNeeded {
                     showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peer in
                         if peer.isForum {
                             openForum(peer.id)
@@ -1321,8 +1357,19 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         })
     case let .tonsite(link, context):
         BrowserStateContext.get(context).open(tab: .tonsite(url: link))
-    case let .starsTopup(link, amount, context):
-        showModal(with: Star_ListScreen(context: context, source: .buy), for: getWindow(context))
+    case let .starsTopup(_, amount, purpose, context):
+        let balance = context.starsContext.state |> map { $0?.balance } |> take(1) |> deliverOnMainQueue
+        _ = balance.startStandalone(next: { balance in
+            if let balance = balance {
+                if balance > amount {
+                    showModalText(for: getWindow(context), text: strings().starsYouHaveEnough, callback: { value in
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: purpose, amount: nil)), for: getWindow(context))
+                    })
+                } else {
+                    showModal(with: Star_ListScreen(context: context, source: .buy(suffix: purpose, amount: amount)), for: getWindow(context))
+                }
+            }
+        })
     }
     
 }
@@ -1471,7 +1518,7 @@ enum inAppLink {
     case boost(link: String, username: String, context: AccountContext)
     case gift(link: String, slug: String, context: AccountContext)
     case businessLink(link: String, slug: String, context: AccountContext)
-    case starsTopup(link: String, amount: Int64, context: AccountContext)
+    case starsTopup(link: String, amount: Int64, purpose: String, context: AccountContext)
     case multigift(link: String, context: AccountContext)
     var link: String {
         switch self {
@@ -1544,7 +1591,7 @@ enum inAppLink {
             return link
         case let .tonsite(link, _):
             return link
-        case let .starsTopup(link, _, _):
+        case let .starsTopup(link, _, _, _):
             return link
         case .nothing:
             return ""
@@ -1594,6 +1641,8 @@ private let keyURLBgColor = "bg_color";
 private let keyURLHash = "hash";
 private let keyURLCode = "code";
 private let keyURLAmount = "amount"
+private let keyURLBalance = "balance"
+private let keyURLPurpose = "purpose"
 
 private let keyURLChannel = "channel";
 
@@ -2363,8 +2412,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         return .multigift(link: urlString, context: context)
                     }
                 case known_scheme[22]:
-                    if let context = context, let amount = vars[keyURLAmount].flatMap ({ Int64($0) }) {
-                        return .starsTopup(link: urlString, amount: amount, context: context)
+                    if let context = context, let amount = vars[keyURLBalance].flatMap ({ Int64($0) }), let purpose = vars[keyURLPurpose] {
+                        return .starsTopup(link: urlString, amount: amount, purpose: purpose, context: context)
                     }
                 default:
                     break

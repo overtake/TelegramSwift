@@ -296,9 +296,6 @@ class ChannelInfoArguments : PeerInfoArguments {
         })
     }
     
-    func toggleSignatures( _ enabled: Bool) -> Void {
-        toggleSignaturesDisposable.set(context.engine.peers.toggleShouldChannelMessagesSignatures(peerId: peerId, enabled: enabled).start())
-    }
     
     func members() -> Void {
         pushViewController(ChannelMembersViewController(context, peerId: peerId))
@@ -702,8 +699,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
     case aboutDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
-    case signMessages(sectionId: ChannelInfoSection, sign:Bool, viewType: GeneralViewType)
-    case signDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case report(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case leave(sectionId: ChannelInfoSection, isCreator: Bool, viewType: GeneralViewType)
     
@@ -733,8 +728,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
-        case let .signMessages(sectionId, sign, _): return .signMessages(sectionId: sectionId, sign: sign, viewType: viewType)
-        case let .signDesc(sectionId, _): return .signDesc(sectionId: sectionId, viewType: viewType)
         case let .report(sectionId, _): return .report(sectionId: sectionId, viewType: viewType)
         case let .leave(sectionId, isCreator, _): return .leave(sectionId: sectionId, isCreator: isCreator, viewType: viewType)
         case let .media(sectionId, controller, isVisible, _): return .media(sectionId: sectionId, controller: controller, isVisible: isVisible, viewType: viewType)
@@ -925,18 +918,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .signMessages(sectionId, sign, viewType):
-            if case .signMessages(sectionId, sign, viewType) = entry {
-                return true
-            } else {
-                return false
-            }
-        case let .signDesc(sectionId, viewType):
-            if case .signDesc(sectionId, viewType) = entry {
-                return true
-            } else {
-                return false
-            }
+
         case let .leave(sectionId, isCreator, viewType):
             switch entry {
             case .leave(sectionId, isCreator, viewType):
@@ -1005,10 +987,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 21
         case .aboutDesc:
             return 22
-        case .signMessages:
-            return 23
-        case .signDesc:
-            return 24
         case .report:
             return 25
         case .leave:
@@ -1064,10 +1042,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .aboutDesc(sectionId, _):
             return sectionId.rawValue
-        case let .signMessages(sectionId, _, _):
-            return sectionId.rawValue
-        case let .signDesc(sectionId, _):
-            return sectionId.rawValue
         case let .report(sectionId, _):
             return sectionId.rawValue
         case let .leave(sectionId, _, _):
@@ -1122,10 +1096,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .aboutInput(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .aboutDesc(sectionId, _):
-            return (sectionId.rawValue * 1000) + stableIndex
-        case let .signMessages(sectionId, _, _):
-            return (sectionId.rawValue * 1000) + stableIndex
-        case let .signDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .report(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1248,12 +1218,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .aboutDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().channelDescriptionHolderDescrpiton, viewType: viewType)
-        case let .signMessages(_, sign, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSignMessages, icon: theme.icons.profile_channel_sign, type: .switchable(sign), viewType: viewType, action: { [weak arguments] in
-                arguments?.toggleSignatures(!sign)
-            })
-        case let .signDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoSignMessagesDesc, viewType: viewType)
         case let .leave(_, isCreator, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? strings().peerInfoDeleteChannel : strings().peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
         case let .media(_, controller, isVisible, viewType):
@@ -1375,10 +1339,6 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 messagesShouldHaveSignatures = false
             }
             
-            if channel.hasPermission(.changeInfo) {
-//                entries.append(.signMessages(sectionId: .sign, sign: messagesShouldHaveSignatures, viewType: .singleItem))
-//                entries.append(.signDesc(sectionId: .sign, viewType: .textBottomItem))
-            }
             if channel.flags.contains(.isCreator) {
                 entries.append(.leave(sectionId: .destruct, isCreator: channel.flags.contains(.isCreator), viewType: .singleItem))
             }

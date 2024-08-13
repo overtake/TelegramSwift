@@ -19,7 +19,7 @@ import Svg
 import ColorPalette
 import ThemeSettings
 import RangeSet
-
+import ImageIO
 
 
 let progressiveRangeMap: [(Int, [Int])] = [
@@ -2513,7 +2513,10 @@ public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, No
         } else {
             
             let utType = image._cgImage?.utType ?? kUTTypeJPEG
-            let ext = (utType as String).nsstring.pathExtension
+                        
+            //let ext = UTType(utType as String)?.preferredFilenameExtension ?? (utType as String).nsstring.pathExtension
+            
+            let ext = (UTTypeCopyPreferredTagWithClass(utType, kUTTagClassFilenameExtension)?.takeRetainedValue() as? String) ?? (utType as String).nsstring.pathExtension
             
             let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).\(ext)"
             let options = NSMutableDictionary()

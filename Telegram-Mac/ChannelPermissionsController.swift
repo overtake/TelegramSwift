@@ -468,7 +468,7 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.participant.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                     var text: String?
                     switch item.participant.participant {
-                    case let .member(_, _, _, banInfo, _):
+                    case let .member(_, _, _, banInfo, _, _):
                         var exceptionsString = ""
                         if let banInfo = banInfo {
                             for (rights, _) in internal_allPossibleGroupPermissionList {
@@ -613,7 +613,7 @@ final class ChannelPermissionsController : TableViewController {
         let restrict:(ChannelParticipant, Bool) -> Void = { participant, unban in
             showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
                 switch participant {
-                case let .member(memberId, _, _, _, _):
+                case let .member(memberId, _, _, _, _, _):
                     
                     
                     let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
@@ -830,7 +830,7 @@ final class ChannelPermissionsController : TableViewController {
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {
-                        if case let .member(_, _, adminInfo, _, _) = participant.participant {
+                        if case let .member(_, _, adminInfo, _, _, _) = participant.participant {
                             if let adminInfo = adminInfo {
                                 if !adminInfo.canBeEditedByAccountPeer && adminInfo.promotedBy != context.account.peerId {
                                     adminError = true
@@ -852,7 +852,7 @@ final class ChannelPermissionsController : TableViewController {
                 if let p = behavior.participants[memberId] {
                     participant = p
                 } else if let temporary = behavior.result[memberId] {
-                    participant = RenderedChannelParticipant(participant: .member(id: memberId, invitedAt: 0, adminInfo: nil, banInfo: nil, rank: nil), peer: temporary.peer, peers: [memberId: temporary.peer], presences: temporary.presence != nil ? [memberId: temporary.presence!] : [:])
+                    participant = RenderedChannelParticipant(participant: .member(id: memberId, invitedAt: 0, adminInfo: nil, banInfo: nil, rank: nil, subscriptionUntilDate: nil), peer: temporary.peer, peers: [memberId: temporary.peer], presences: temporary.presence != nil ? [memberId: temporary.presence!] : [:])
                 }
                 if let participant = participant {
                     restrict(participant.participant, false)

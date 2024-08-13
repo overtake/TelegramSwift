@@ -161,7 +161,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     var isPaidSubscriptionChannel: Bool {
-        return false
+        return (peer as? TelegramChannel)?.subscriptionUntilDate != nil
     }
     
     let chatListIndex:ChatListIndex?

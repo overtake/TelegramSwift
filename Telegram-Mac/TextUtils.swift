@@ -972,8 +972,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .paymentRefunded(_, currency, totalAmount, _, _):
             let peerName = message.author?.compactDisplayTitle ?? ""
-            //TODOLANG
-            text = "\(peerName) refunded back \(currency + TINY)\(totalAmount)"
+            text = strings().chatServiceRefundedBackCountable(peerName, currency + TINY_SPACE, Int(totalAmount))
         }
     }
     return (text, entities, media)

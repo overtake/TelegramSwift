@@ -680,6 +680,14 @@ class ChatRowItem: TableRowItem {
                 if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
                     return true
                 }
+                if message.author != nil, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                    switch peer.info {
+                    case let .broadcast(info):
+                        return info.flags.contains(.messagesShouldHaveProfiles)
+                    default:
+                        break
+                    }
+                }
             }
         }
         if chatInteraction.isGlobalSearchMessage {
@@ -1176,10 +1184,15 @@ class ChatRowItem: TableRowItem {
         if message.adAttribute != nil {
             return false
         }
+      
         switch chatInteraction.chatLocation {
         case .peer, .thread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
+                
+               
+                
+                
                 if let media = message.anyMedia {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
@@ -1204,6 +1217,19 @@ class ChatRowItem: TableRowItem {
                     }
                     if !disable {
                         canFillAuthorName = true
+                    }
+                }
+                
+                if let peer = message.peers[message.id.peerId] as? TelegramChannel, let author = message.author {
+                    switch peer.info {
+                    case let .broadcast(info):
+                        if info.flags.contains(.messagesShouldHaveProfiles) {
+                            if !disable {
+                                canFillAuthorName = true
+                            }
+                        }
+                    default:
+                        break
                     }
                 }
             }
@@ -2173,8 +2199,15 @@ class ChatRowItem: TableRowItem {
                 var titlePeer:Peer? = self.peer
                 var title:String = self.peer?.displayTitle ?? ""
                 
+                
+                
                 if object.renderType == .list, let _ = message.forwardInfo?.psaType {
                     
+                } else if let peer = message.peers[message.id.peerId] as? TelegramChannel, case let .broadcast(info) = peer.info {
+                    if info.flags.contains(.messagesShouldHaveProfiles) {
+                        titlePeer = message.author ?? self.peer
+                        title = titlePeer?.displayTitle ?? ""
+                    }
                 } else if let peer = coreMessageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info, message.adAttribute == nil {
                     title = peer.displayTitle
                     titlePeer = peer
@@ -3525,7 +3558,7 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 if let starsAllowed, starsAllowed {
-                    available.insert(.stars(file: LocalAnimatedSticker.star_currency_new.file, isSelected: false), at: 0)
+                    available.insert(.stars(file: LocalAnimatedSticker.premium_reaction_6.file, isSelected: isSelected(.stars)), at: 0)
                 }
                 
                 if accessToAll {
@@ -3649,12 +3682,12 @@ class ChatRowItem: TableRowItem {
                         showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
                         if value == .stars {
-                            context.reactions.sendStarsReaction(message.id, count: 1, fromRect: fromRect)
+                            context.reactions.sendStarsReaction(message.id, count: 1, isAnonymous: message.isAnonymousInStarReaction, fromRect: fromRect)
                         } else {
                             context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
                         }
                     }
-                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout)
+                }, radiusLayer: nil, revealReactions: reveal, aboveText: aboveLayout, message: message)
                 
                 
                 panel.contentView?.addSubview(view)

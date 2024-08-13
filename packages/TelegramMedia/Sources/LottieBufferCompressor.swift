@@ -48,7 +48,7 @@ private struct DstData : Codable {
 }
 
 
-private let version = 67
+private let version = 68
 
 final class TRLotData {
     
@@ -65,6 +65,7 @@ final class TRLotData {
             for (key, value) in cpy.dest {
                 map.dest[key] = .init(offset: value.offset, length: value.length, finished: isFinished)
             }
+            self.save()
         }
     }
     
@@ -114,15 +115,17 @@ final class TRLotData {
         return .failed
     }
     
-    deinit {
+    private func save() {
         queue.sync {
-            self.readHandle?.closeFile()
-            self.writeHandle?.closeFile()
             let data = try? PropertyListEncoder().encode(self.map)
             if let data = data {
                 _ = NSKeyedArchiver.archiveRootObject(data, toFile: self.mapPath)
             }
         }
+    }
+    
+    deinit {
+        save()
         _ = sharedData.modify { value in
             var value = value
             value.removeValue(forKey: self.key)
@@ -228,10 +231,9 @@ final class TRLotData {
             self.bufferSize = bufferSize
             deferr(self)
         }
-        if !self.map.dest.isEmpty {
-            self.isFinished = self.map.dest.filter { $0.value.finished }.count == self.map.dest.count
-        } else {
-            self.isFinished = false
+        
+        if !self.map.dest.isEmpty, self.map.dest.filter ({ $0.value.finished }).count == self.map.dest.count {
+            self.isFinished = true
         }
     }
     

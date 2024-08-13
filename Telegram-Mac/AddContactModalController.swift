@@ -146,7 +146,7 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
             return state
                 .withUpdatedFirstName(data[_id_input_first_name]?.stringValue ?? "")
                 .withUpdatedLastName(data[_id_input_last_name]?.stringValue ?? "")
-                .withUpdatedPhoneNumber(formatPhoneNumber(data[_id_input_phone_number]?.stringValue ?? ""))
+                .withUpdatedPhoneNumber(formatPhoneNumber(context: context, number: data[_id_input_phone_number]?.stringValue ?? ""))
                 .withUpdatedError(nil, for: _id_input_first_name)
                 .withUpdatedError(nil, for: _id_input_last_name)
                 .withUpdatedError(nil, for: _id_input_phone_number)

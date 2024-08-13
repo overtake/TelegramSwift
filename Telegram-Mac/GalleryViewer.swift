@@ -35,6 +35,8 @@ final class GalleryInteractions {
     var fastSave:()->Void = {}
     
     var canShare:()->Bool = { true }
+    
+    var invokeAd:(PeerId, AdMessageAttribute)->Void = { _, _ in }
 }
 private(set) var viewer:GalleryViewer?
 
@@ -345,6 +347,22 @@ class GalleryViewer: NSResponder {
         }
         interactions.fastSave = { [weak self] in
             self?.saveAs(true)
+        }
+        
+        interactions.invokeAd = { [weak self] peerId, adAttribute in
+            
+            guard let self else {
+                return
+            }
+            self.close()
+            closeAllModals(window: self.window)
+            
+            let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: { [weak self] peerId, toChat, messageId, action in
+                self?.openInfo(peerId, toChat, messageId, action)
+            })
+            execute(inapp: link)
+            
+            context.engine.messages.markAdAction(peerId: peerId, opaqueId: adAttribute.opaqueId)
         }
         interactions.canShare = { [weak self] in
             let isProtected = self?.pager.selectedItem?.entry.message?.isCopyProtected() ?? false
@@ -1197,7 +1215,7 @@ class GalleryViewer: NSResponder {
     var contextMenu:ContextMenu {
         let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
         
-        if let item = self.pager.selectedItem {
+        if let item = self.pager.selectedItem, item.entry.message?.adAttribute == nil {
             if !(item is MGalleryExternalVideoItem) {
                 if item.entry.message?.isCopyProtected() == true {
                     
@@ -1239,7 +1257,7 @@ class GalleryViewer: NSResponder {
     
     
     func saveAs(_ fast: Bool = false) -> Void {
-        if let item = self.pager.selectedItem {
+        if let item = self.pager.selectedItem, item.entry.message?.adAttribute == nil {
             let isProtected = item.entry.isProtected
 
             if !(item is MGalleryExternalVideoItem), !isProtected {
@@ -1328,10 +1346,14 @@ class GalleryViewer: NSResponder {
         }
     }
     
-    func openInfo(_ peerId: PeerId) {
+    func openInfo(_ peerId: PeerId, _ toChat: Bool = false, _ messageId: MessageId? = nil, _ initialAction: ChatInitialAction? = nil) {
         close()
         closeAllModals()
-        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+        if toChat {
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+        } else {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+        }
     }
     
     func share(_ control: Control) -> Void {

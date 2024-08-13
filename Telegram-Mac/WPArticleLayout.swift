@@ -202,6 +202,10 @@ class WPArticleLayout: WPLayout {
 //            return value
 //        }
         
+        if content.type == "telegram_ad" {
+            return content.isMediaLargeByDefault ?? false
+        }
+        
         if content.type == "telegram_background" || content.type == "telegram_theme" {
             return true
         }

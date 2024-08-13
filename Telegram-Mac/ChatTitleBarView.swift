@@ -209,7 +209,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private let photoContainer: Control = Control(frame: NSMakeRect(0, 0, 36, 36))
     
-
+    
     
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
@@ -669,6 +669,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     } else {
                         callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId || presentation.reportMode != nil
                     }
+                    
+                    
                 } else {
                     callButton.isHidden = true
                 }
@@ -728,13 +730,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 self.statusControl = nil
             }
             
+            
+            
             callButton.sizeToFit()
 
         }
         updateTitle(force, presentation: chatInteraction.presentation)
 
         self.updatePhoto(chatInteraction.presentation, animated: false)
-        
+
         needsLayout = true
     }
     

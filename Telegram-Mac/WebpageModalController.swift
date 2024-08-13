@@ -1048,13 +1048,26 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         return
                     }
                 }
+                
+                let context = self.context
                                 
-                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: nil, hashtag: nil, command: nil, applyProxy: nil, confirm: true)
+                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: { [weak self] peerId, toChat, messageId, initialAction in
+                    if toChat || initialAction != nil {
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+                    } else {
+                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                    }
+                    if initialAction != nil {
+                        self?.closeAnyway()
+                    }
+                    context.window.makeKeyAndOrderFront(nil)
+                }, hashtag: nil, command: nil, applyProxy: nil, confirm: true)
+                
                 switch link {
                 case .external:
                     break
                 default:
-                    self.close()
+                    break
                 }
                 execute(inapp: link, window: self.window)
                 decisionHandler(.cancel)
@@ -1355,11 +1368,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_open_tg_link":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let path_full = json["path_full"] as? String {
-                                        
-                    let previous = context.bindings.rootNavigation().controller
-                    
-                   
-                    
+                                                                                
                     let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: { [weak self] peerId, toChat, messageId, initialAction in
                         if toChat || initialAction != nil {
                             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
@@ -1372,12 +1381,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         context.window.makeKeyAndOrderFront(nil)
                     }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                    
-                    execute(inapp: link, window: self.window, afterComplete: { [weak self, weak previous] _ in
-                        let current = context.bindings.rootNavigation().controller
-                        if current != previous {
-                            self?.close()
-                        }
-                    })
+                    execute(inapp: link, window: self.window)
                     
                 }
             }
@@ -1400,15 +1404,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: window)
                     
                     _ = signal.start(next: { [weak self] invoice in
-                        let completion:(PaymentCheckoutCompletionStatus)->Void = { [weak self] status in
+                        let completion1:(StarPurchaseCompletionStatus)->Void = { [weak self] status in
+                            let data = "{\"slug\": \"\(slug)\", \"status\": \"\(status.rawValue)\"}"
+                            self?.sendEvent(name: "invoice_closed", data: data)
+                        }
+                        let completion2:(PaymentCheckoutCompletionStatus)->Void = { [weak self] status in
                             let data = "{\"slug\": \"\(slug)\", \"status\": \"\(status.rawValue)\"}"
                             self?.sendEvent(name: "invoice_closed", data: data)
                         }
                         if let window = self?.window {
                             if invoice.currency == XTR {
-                                showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug), completion: completion), for: window)
+                                showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug), completion: completion1), for: window)
                             } else {
-                                showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: completion), for: window)
+                                showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: completion2), for: window)
                             }
                         }
                         

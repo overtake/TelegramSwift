@@ -747,7 +747,16 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         let forceSpoiler = parameters?.forceSpoiler == true
         let messageSpoiler = parent?.isMediaSpoilered ?? false
-        let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
+        
+        
+        let isSensitive: Bool
+        if let parent = parent {
+            isSensitive = parent.isSensitiveContent(platform: "ios")
+        } else {
+            isSensitive = false
+        }
+        
+        let isSpoiler = (messageSpoiler || forceSpoiler || isSensitive) && (parameters?.isRevealed == false)
 
         
         let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || self.frame.size != size || previousIsSpoiler != isSpoiler
@@ -769,6 +778,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
         super.update(with: media, size: size, context: context, parent:parent, table: table, parameters:parameters, positionFlags: positionFlags)
         
         let isProtected = !isSpoiler && (parameters?.isProtected ?? false)
+        
+
         
         
         self.image.preventsCapture = isProtected
@@ -978,7 +989,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
 
                 
-                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: false, payAmount: parameters?.payAmount)
+                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: isSensitive, payAmount: parameters?.payAmount)
                 current.frame = size.bounds
             } else {
                 if let view = self.inkView {
@@ -1090,7 +1101,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
                                 removeProgress = true
                             }
-                            if strongSelf.isStory {
+                            if strongSelf.isStory || (isSensitive && isSpoiler) {
                                 removeProgress = true
                             }
                             

@@ -15,6 +15,7 @@ public final class Reactions {
     
     public struct Interactive {
         public let messageId: MessageId
+        public let reaction: MessageReaction.Reaction?
         public let rect: NSRect?
     }
     public struct InteractiveStatus {
@@ -22,6 +23,11 @@ public final class Reactions {
         public let previousFileId: Int64?
         public let rect: NSRect?
     }
+    
+    public var checkStarsAmount:((Int)->Signal<Bool, NoError>)?
+    public var failStarsAmount:((Int, MessageId)->Void)?
+    public var successStarsAmount:((Int)->Void)?
+
     
     private(set) public var available: AvailableReactions?
         
@@ -61,13 +67,22 @@ public final class Reactions {
     }
     
     public func react(_ messageId: MessageId, values: [UpdateMessageReaction], fromRect: NSRect? = nil, storeAsRecentlyUsed: Bool = false) {
-        _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
+        _ = _isInteractive.swap(.init(messageId: messageId, reaction: nil, rect: fromRect))
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
-    public func sendStarsReaction(_ messageId: MessageId, count: Int, fromRect: NSRect? = nil) {
-        _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
-        engine.messages.sendStarsReaction(id: messageId, count: count)
+    public func sendStarsReaction(_ messageId: MessageId, count: Int, isAnonymous: Bool, fromRect: NSRect? = nil) {
+        if let signal = checkStarsAmount?(count) {
+            _ = signal.start(next: { [weak self] value in
+                if value {
+                    _ = self?._isInteractive.swap(.init(messageId: messageId, reaction: .stars, rect: fromRect))
+                    self?.engine.messages.sendStarsReaction(id: messageId, count: count, isAnonymous: isAnonymous)
+                    self?.successStarsAmount?(count)
+                } else {
+                    self?.failStarsAmount?(count, messageId)
+                }
+            })
+        }
     }
     
     public func updateQuick(_ value: MessageReaction.Reaction) {

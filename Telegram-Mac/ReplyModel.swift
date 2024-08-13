@@ -604,7 +604,7 @@ class ExpiredStoryReplyModel: ChatAccessoryModel {
                 
         let title: String = peer.displayTitle
         let text: NSMutableAttributedString = .init()
-        text.append(string: clown, color: presentation.disabledText, font: .normal(.text))
+        text.append(string: clown_space, color: presentation.disabledText, font: .normal(.text))
         text.append(string: strings().chatReplyExpiredStory, color: presentation.disabledText, font: .normal(.text))
         
 

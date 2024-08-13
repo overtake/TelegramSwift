@@ -45,8 +45,7 @@ private final class HeaderItem : GeneralRowItem {
         case .bot, .paidMedia:
             headerText = strings().starPurchaseConfirm
         case .subscription:
-            //TODOLANG
-            headerText = "Subscribe to the Channel"
+            headerText = strings().starsPurchaseSubscribe
         }
         
         self.headerLayout = .init(.initialize(string: headerText, color: theme.colors.text, font: .medium(.title)), alignment: .center)
@@ -56,8 +55,7 @@ private final class HeaderItem : GeneralRowItem {
         case .bot:
             infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
         case .subscription:
-            //TODOLANG
-            infoAttr.append(string: "Do you want to subscribe for **\(peer._asPeer().displayTitle)** for \(request.count) Stars per month?", color: theme.colors.text, font: .normal(.text))
+            infoAttr.append(string: strings().starsPurchaseSubscribeInfoCountable(peer._asPeer().displayTitle, Int(request.count)), color: theme.colors.text, font: .normal(.text))
         case let .paidMedia(_, count):
             
             var description: String = ""
@@ -130,8 +128,7 @@ private final class AcceptView : Control {
             attr.append(string: strings().starPurchasePay("\(XTRSTAR)\(TINY_SPACE)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
             attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
         case .subscription:
-            //TODOLANG
-            attr.append(string: "Subscribe", color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.append(string: strings().starsPurchaseSubscribeAction, color: theme.colors.underSelectedColor, font: .medium(.text))
         }
         
         
@@ -318,7 +315,7 @@ private final class HeaderItemView : GeneralContainableRowView {
                 self.paidPreview = current
             }
             current.update(image: image, count: Int(count.total), context: item.context)
-        } else if let photo = item.request.invoice.photo {
+        } else if let photo = item.request.invoice?.photo {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
@@ -370,20 +367,22 @@ private final class HeaderItemView : GeneralContainableRowView {
                 addSubview(current)
             }
             current.setPeer(account: item.context.account, peer: item.peer._asPeer())
-            
-//            do {
-//                let current: ImageView
-//                if let view = self.subBadgeView {
-//                    current = view
-//                } else {
-//                    current = ImageView()
-//                    self.subBadgeView = current
-//                    addSubview(current)
-//                }
-//                current.image = theme.icons.avatar_star_badge_large_gray
-//                current.sizeToFit()
-//            }
-            
+        }
+        
+        if case .subscription = item.request.type {
+            let current: ImageView
+            if let view = self.subBadgeView {
+                current = view
+            } else {
+                current = ImageView()
+                self.subBadgeView = current
+                addSubview(current)
+            }
+            current.image = theme.icons.avatar_star_badge_large_gray
+            current.sizeToFit()
+        } else if let subBadgeView {
+            performSubviewRemoval(subBadgeView, animated: animated)
+            self.subBadgeView = nil
         }
         
         
@@ -448,14 +447,14 @@ private struct State : Equatable {
     struct Request : Equatable {
         let count: Int64
         let info: String
-        let invoice: TelegramMediaInvoice
+        let invoice: TelegramMediaInvoice?
         let type: StarPurchaseType
     }
     var request: Request
     var peer: EnginePeer?
     var myBalance: Int64?
     var starsState: StarsContext.State?
-    var form: BotPaymentForm?
+    var formId: Int64?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -502,14 +501,42 @@ enum StarPurchaseType : Equatable {
     
     case bot
     case paidMedia(TelegramMediaImage, PaidMediaCount)
-    case subscription
+    case subscription(ExternalJoiningChatState.Invite)
 }
 
-func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
+enum StarPurchaseCompletionStatus : Equatable {
+    case paid(messageId: MessageId?, peerId: PeerId?)
+    case cancelled
+    case failed
+    
+    var rawValue: String {
+        switch self {
+        case .paid:
+            return "paid"
+        case .cancelled:
+            return "cancelled"
+        case .failed:
+            return "failed"
+        }
+    }
+}
+
+func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(StarPurchaseCompletionStatus)->Void = { _ in }) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(request: .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice, type: type), myBalance: nil)
+    let request: State.Request
+    if let invoice {
+        request = .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice, type: type)
+    } else {
+        if case let .subscription(state) = type {
+            request = .init(count: state.subscriptionPricing!.amount, info: "", invoice: nil, type: type)
+        } else {
+            fatalError()
+        }
+    }
+    
+    let initialState = State(request: request, myBalance: nil)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -523,26 +550,45 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     
     starsContext.load(force: true)
     
-    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil)
-    
-    actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { [weak actionsDisposable] form in
+    actionsDisposable.add(starsContext.state.startStrict(next: { starsState in
         updateState { current in
             var current = current
-            current.form = form
+            current.myBalance = starsState?.balance
+            current.starsState = starsState
             return current
         }
+    }))
+    
+    switch type {
+    case let .subscription(state):
+        let photo = state.photoRepresentation.flatMap({ [$0] }) ?? []
+        updateState { current in
+            var current = current
+            current.peer = .init(TelegramUser.init(id: .init(0), accessHash: nil, firstName: state.title, lastName: nil, username: nil, phone: nil, photo: photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: state.nameColor, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil))
+            current.formId = state.subscriptionFormId
+            return current
+        }
+    default:
+        let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil)
         
-        actionsDisposable?.add(combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: form.paymentBotId)), starsContext.state).startStrict(next: { peer, starsState in
+        actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { [weak actionsDisposable] form in
             updateState { current in
                 var current = current
-                current.peer = peer
-                current.myBalance = starsState?.balance
-                current.starsState = starsState
+                current.formId = form.id
                 return current
             }
+            actionsDisposable?.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: form.paymentBotId)).startStrict(next: { peer in
+                updateState { current in
+                    var current = current
+                    current.peer = peer
+                    return current
+                }
+            }))
+            
         }))
-        
-    }))
+    }
+    
+    
     
     
     
@@ -562,12 +608,18 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
         let myBalance = state.myBalance ?? 0
         if let peer = state.peer {
             if state.request.count > myBalance {
-                showModal(with: Star_ListScreen(context: context, source: .purchase(peer, state.request.count)), for: window)
+                let sourceValue: Star_ListScreenSource
+                if case .starsChatSubscription = source {
+                    sourceValue = .purchaseSubscribe(peer, state.request.count)
+                } else {
+                    sourceValue = .purchase(peer, state.request.count)
+                }
+                showModal(with: Star_ListScreen(context: context, source: sourceValue), for: window)
             } else {
-                if let form = state.form {
-                    _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: window).startStandalone(next: { result in
+                if let formId = state.formId {
+                    _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: formId, source: source), for: window).startStandalone(next: { result in
                         switch result {
-                        case .done:
+                        case let .done(receiptMessageId, subscriptionPeerId):
 //                            starsContext.add(balance: -state.request.count)
                             let text: String
                             switch type {
@@ -575,20 +627,21 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                                 text = strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count)))
                             case .paidMedia:
                                 text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
-                            case .subscription:
-                                //TODOLANG
-                                fatalError("unsupported")
+                            case let .subscription(invite):
+                                text = strings().starsPurchaseSubscribeSuccess(invite.title)
                             }
                             showModalText(for: window, text: text)
                             
                             switch type {
-                            case .paidMedia:
+                            case .paidMedia, .subscription:
                                 PlayConfetti(for: window, stars: true)
                             default:
                                 break
                             }
+                            context.starsContext.load(force: true)
+                            context.starsSubscriptionsContext.load(force: true)
                             
-                            completion(.paid)
+                            completion(.paid(messageId: receiptMessageId, peerId: subscriptionPeerId))
                             procced = true
                             close?()
                         default:

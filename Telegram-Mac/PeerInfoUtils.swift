@@ -142,7 +142,7 @@ extension TelegramChannel {
             return false
         }
         switch participant {
-        case let .member(_, _,  adminInfo, _, _):
+        case let .member(_, _,  adminInfo, _, _, _):
             if let adminInfo = adminInfo {
                 return accountId == adminInfo.promotedBy || flags.contains(.isCreator)
             } else {
@@ -195,11 +195,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank):
+    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank, lhsSuccriptionDate):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank):
+        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank, rhsSuccriptionDate):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

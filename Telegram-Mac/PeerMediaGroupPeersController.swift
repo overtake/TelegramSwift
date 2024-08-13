@@ -273,7 +273,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
             if !state.temporaryParticipants.isEmpty {
                 for participant in state.temporaryParticipants {
                     if !existingParticipantIds.contains(participant.peer.id) {
-                        updatedParticipants.append(RenderedChannelParticipant(participant: .member(id: participant.peer.id, invitedAt: participant.timestamp, adminInfo: nil, banInfo: nil, rank: nil), peer: participant.peer))
+                        updatedParticipants.append(RenderedChannelParticipant(participant: .member(id: participant.peer.id, invitedAt: participant.timestamp, adminInfo: nil, banInfo: nil, rank: nil, subscriptionUntilDate: nil), peer: participant.peer))
                         if let presence = participant.presence, peerPresences[participant.peer.id] == nil {
                             peerPresences[participant.peer.id] = presence
                         }
@@ -323,7 +323,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                     switch sortedParticipants[i].participant {
                     case let .creator(_, _, rank):
                         memberStatus = .admin(rank: rank ?? strings().chatOwnerBadge)
-                    case let .member(_, _, adminRights, _, rank):
+                    case let .member(_, _, adminRights, _, rank, _):
                         memberStatus = adminRights != nil ? .admin(rank: rank ?? strings().chatAdminBadge) : .member
                     }
                 } else {
@@ -340,7 +340,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                     case .creator:
                         canPromote = false
                         canRestrict = false
-                    case let .member(_, _, adminRights, bannedRights, _):
+                    case let .member(_, _, adminRights, bannedRights, _, _):
                         if channel.hasPermission(.addAdmins) {
                             canPromote = true
                         } else {

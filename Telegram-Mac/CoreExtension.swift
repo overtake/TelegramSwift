@@ -42,8 +42,8 @@ extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
         let updated: ChannelParticipant
         switch participant {
-        case let.member(id, invitedAt, adminInfo, _, rank):
-            updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info, rank: rank)
+        case let.member(id, invitedAt, adminInfo, _, rank, subscriptionUntilDate):
+            updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info, rank: rank, subscriptionUntilDate: subscriptionUntilDate)
         case let .creator(id, info, rank):
             updated = ChannelParticipant.creator(id: id, adminInfo: info, rank: rank)
         }
@@ -668,6 +668,14 @@ public extension Message {
         return nil
     }
     
+    var isAnonymousInStarReaction: Bool {
+        if let attribute = self.reactionsAttribute, let myReactions = attribute.topPeers.first(where: { $0.isMy }) {
+            return myReactions.isAnonymous
+        } else {
+            return false
+        }
+    }
+    
     var extendedMedia: Media? {
         if let media = self.media.first as? TelegramMediaInvoice {
             if let extended = media.extendedMedia {
@@ -743,7 +751,14 @@ public extension Message {
         } else {
             updated.append(reaction)
         }
-        return updated
+        return updated.filter { value in
+            switch value {
+            case .stars:
+                return false
+            default:
+                return true
+            }
+        }
     }
     
     func effectiveReactions(_ accountPeerId: PeerId, isTags: Bool) -> ReactionsMessageAttribute? {
@@ -832,7 +847,7 @@ public extension Message {
         }
         
         if let peer = coreMessageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
-            _peer = peer
+            _peer = author ?? peer
         } else if let author = effectiveAuthor, _peer == nil {
             if author is TelegramSecretChat {
                 return coreMessageMainPeer(self)
@@ -1562,13 +1577,13 @@ func <(lhs:RenderedChannelParticipant, rhs: RenderedChannelParticipant) -> Bool 
     switch lhs.participant {
     case .creator:
         lhsInvitedAt = Int32.min
-    case .member(_, let invitedAt, _, _, _):
+    case .member(_, let invitedAt, _, _, _, _):
         lhsInvitedAt = invitedAt
     }
     switch rhs.participant {
     case .creator:
         rhsInvitedAt = Int32.min
-    case .member(_, let invitedAt, _, _, _):
+    case .member(_, let invitedAt, _, _, _, _):
         rhsInvitedAt = invitedAt
     }
     return lhsInvitedAt < rhsInvitedAt
@@ -3784,7 +3799,7 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
-        BrowserStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, source: .settings))
+        BrowserStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, buttonText: "", source: .settings))
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //

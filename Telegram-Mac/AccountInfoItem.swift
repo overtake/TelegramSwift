@@ -57,7 +57,7 @@ class AccountInfoItem: GeneralRowItem {
         self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
         
         if let phone = peer.phone {
-            _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: formatPhoneNumber(context: context, number: phone), color: theme.colors.grayText, font: .normal(.text))
         }
         if let username = peer.username, !username.isEmpty {
             if !attr.string.isEmpty {

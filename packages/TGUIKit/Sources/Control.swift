@@ -316,6 +316,11 @@ open class Control: View {
         return new.identifier
     }
     
+    @discardableResult public func setSingle(handler:@escaping (Control) -> Void, for event:ControlEvent) -> UInt32 {
+        self.removeAllHandlers()
+        return self.set(handler: handler, for: event)
+    }
+    
     open override func cursorUpdate(with event: NSEvent) {
       //  super.cursorUpdate(with: event)
         apply(state: self.controlState)
