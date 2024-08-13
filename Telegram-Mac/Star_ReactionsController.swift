@@ -184,7 +184,8 @@ private struct State : Equatable {
     
     var myPeer: EnginePeer
     var myBalance: Int64 = 1000
-    var count: Int64 = 1
+    var count: Int64 = 50
+    var countUpdated: Bool = false
     var message: EngineMessage
     var showMeInTop: Bool = true
     
@@ -197,7 +198,7 @@ private struct State : Equatable {
             return Array(topPeers.sorted(by: { $0.count > $1.count }).prefix(3))
         } else {
             var topPeers = self.topPeers
-            if count > 1 {
+            if countUpdated {
                 let myTopPeer = TopPeer(peer: self.myPeer, isMy: true, count: count, isAnonymous: !self.showMeInTop)
                 topPeers.append(myTopPeer)
             }
@@ -1094,6 +1095,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
         updateState { current in
             var current = current
             current.count = max(1, value)
+            current.countUpdated = true
             return current
         }
         let current = stateValue.with { $0.count }

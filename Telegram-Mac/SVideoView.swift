@@ -304,6 +304,13 @@ final class SVideoInteractions {
 
 private final class SVideoControlsView : Control {
     
+    var isControlsLimited: Bool = false {
+        didSet {
+            let controlStyle = self.controlStyle
+            self.controlStyle = controlStyle
+        }
+    }
+    
     var bufferingRanges:[Range<CGFloat>] = [] {
         didSet {
             progress.set(fetchingProgressRanges: bufferingRanges, animated: oldValue != bufferingRanges)
@@ -321,12 +328,16 @@ private final class SVideoControlsView : Control {
     
     var controlStyle: SVideoControlsStyle = .regular(pip: false, fullScreen: false, hideRewind: false) {
         didSet {
-            rewindBackward.isHidden = controlStyle.hideRewind
-            rewindForward.isHidden = controlStyle.hideRewind
+            rewindBackward.isHidden = controlStyle.hideRewind || isControlsLimited
+            rewindForward.isHidden = controlStyle.hideRewind || isControlsLimited
             volumeContainer.isHidden = controlStyle.isCompact
             togglePip.set(image: controlStyle.isPip ? theme.icons.videoPlayerPIPOut : theme.icons.videoPlayerPIPIn, for: .Normal)
             toggleFullscreen.set(image: controlStyle.isPip ? theme.icons.videoPlayerClose : controlStyle.isFullScreen ? theme.icons.videoPlayerExitFullScreen : theme.icons.videoPlayerEnterFullScreen, for: .Normal)
-            menuItems.isHidden = controlStyle.isPip
+            menuItems.isHidden = controlStyle.isPip || isControlsLimited
+            togglePip.isHidden = isControlsLimited
+            toggleFullscreen.isHidden = isControlsLimited
+            playOrPause.isHidden = isControlsLimited
+            volumeContainer.isHidden = isControlsLimited
             layout()
         }
     }
@@ -819,6 +830,11 @@ class SVideoView: NSView {
   
     private let controls: SVideoControlsView = SVideoControlsView(frame: NSZeroRect)
     private var pipControls: SVideoPipControls?
+    var isControlsLimited: Bool = false {
+        didSet {
+            controls.isControlsLimited = isControlsLimited
+        }
+    }
 
     let mediaPlayer: MediaPlayerView = MediaPlayerView()
     private let backgroundView: NSView = NSView()
@@ -829,7 +845,7 @@ class SVideoView: NSView {
         mediaPlayer.updateLayout()
         let previousIsCompact: Bool = self.controlsStyle.isCompact
         self.controlsStyle = self.controlsStyle.withUpdatedStyle(compact: frame.width < 300).withUpdatedHideRewind(hideRewind: frame.width < 400)
-        controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), 94)
+        controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), self.isControlsLimited ? 46 : 94)
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus
         if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact || oldSize != frame.size {

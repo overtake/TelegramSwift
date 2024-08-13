@@ -256,12 +256,14 @@ private func channelAdminsControllerEntries(context: AccountContext, accountPeer
             }
             
             if peer.hasPermission(.changeInfo) {        
-                let sign = state.showProfile ?? messagesShouldHaveAuthor
+                let sign = state.signature ?? messagesShouldHaveSignatures
                 let show = state.showProfile ?? messagesShouldHaveAuthor
-                entries.append(.signMessages(sectionId: sectionId, sign: sign, show: show, viewType: .firstItem))
-                entries.append(.showAuthorProfiles(sectionId: sectionId, sign: sign, show: show, viewType: .lastItem))
-                entries.append(.signMessagesInfo(sectionId: sectionId, sign: sign, viewType: .textBottomItem))
-                
+                entries.append(.signMessages(sectionId: sectionId, sign: sign, show: show, viewType: !sign ? .singleItem : .firstItem))
+                if sign {
+                    entries.append(.showAuthorProfiles(sectionId: sectionId, sign: sign, show: show, viewType: .lastItem))
+                }
+                entries.append(.signMessagesInfo(sectionId: sectionId, sign: !sign, viewType: .textBottomItem))
+
                 entries.append(.section(sectionId))
                 sectionId += 1
 

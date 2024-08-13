@@ -377,6 +377,7 @@ final class AccountContext {
     let starsContext: StarsContext
     let starsSubscriptionsContext: StarsSubscriptionsContext
     let currentCountriesConfiguration: Atomic<CountriesConfiguration> = Atomic(value: CountriesConfiguration(countries: loadCountryCodes()))
+    private(set) var contentConfig: ContentSettingsConfiguration = .default
     private let _countriesConfiguration = Promise<CountriesConfiguration>()
     var countriesConfiguration: Signal<CountriesConfiguration, NoError> {
         return self._countriesConfiguration.get()
@@ -508,6 +509,7 @@ final class AccountContext {
     private let checkSidebarShouldEnable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
+    
     
     private var _peerNameColors: PeerNameColors?
     
@@ -797,6 +799,10 @@ final class AccountContext {
         
         reactionSettingsDisposable.set(settings.start(next: { [weak self] settings in
             self?.reactionSettings = settings
+        }))
+        
+        actionsDisposable.add((contentSettingsConfiguration(network: account.network) |> deliverOnMainQueue).startStandalone(next: { [weak self] settings in
+            self?.contentConfig = settings
         }))
         
         #endif

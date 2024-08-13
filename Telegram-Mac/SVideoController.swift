@@ -70,11 +70,13 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var scrubbingFrames = false
     private var scrubbingFrameDisposable: Disposable?
     private let isProtected: Bool
+    private let isControlsLimited: Bool
     
-    init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false, isProtected: Bool = false) {
+    init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
         self.reference = reference
         self.postbox = postbox
         self.isProtected = isProtected
+        self.isControlsLimited = isControlsLimited
         mediaPlayer = MediaPlayer(postbox: postbox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)
@@ -315,6 +317,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         genericView.layerContentsRedrawPolicy = .duringViewResize
 
         genericView.mediaPlayer.preventsCapture = isProtected
+        
+        genericView.isControlsLimited = isControlsLimited
         
         mediaPlayer.attachPlayerView(genericView.mediaPlayer)
         genericView.isStreamable = reference.media.isStreamable
