@@ -207,7 +207,9 @@ private struct State : Equatable {
     var peers: [TopPeer] {
         if let myTopIndex = topPeers.firstIndex(where: { $0.isMy }) {
             var topPeers = self.topPeers
-            topPeers[myTopIndex].count += count
+            if countUpdated {
+                topPeers[myTopIndex].count += count
+            }
             topPeers[myTopIndex].isAnonymous = !self.showMeInTop
             topPeers[myTopIndex].peer = myPeer
             return Array(topPeers.sorted(by: { $0.count > $1.count }).prefix(3))
@@ -287,7 +289,7 @@ private final class HeaderItem : GeneralRowItem {
         
         for (i, topPeer) in state.peers.enumerated() {
             let amount = topPeer.count
-            let title = topPeer.isAnonymous ? strings().starsReactScreenAnonymous : topPeer.peer?._asPeer().compactDisplayTitle ?? ""
+            let title = topPeer.isAnonymous || topPeer.peer == nil ? strings().starsReactScreenAnonymous : topPeer.peer?._asPeer().compactDisplayTitle ?? ""
             senders.append(.init(titleLayout: .init(.initialize(string: title, color: theme.colors.text, font: .normal(.text))), amountLayout: .init(.initialize(string: "\(amount.prettyNumber)", color: .white, font: .medium(.short))), peer: !topPeer.isAnonymous ? topPeer.peer : nil, amount: amount, index: i))
 
         }
@@ -488,7 +490,7 @@ private final class SendersView: View {
         override func layout() {
             super.layout()
             nameView.centerX(y: frame.height - nameView.frame.height)
-            badgeView.centerX(y: avatarView.frame.maxY - floorToScreenPixels(nameView.frame.height / 2))
+            badgeView.centerX(y: avatarView.frame.maxY - floorToScreenPixels(badgeView.frame.height / 2))
             amountIcon.centerY(x: 6, addition: -1)
             amountView.centerY(x: amountIcon.frame.maxX, addition: -1)
             badgeGradient.frame = badgeView.bounds

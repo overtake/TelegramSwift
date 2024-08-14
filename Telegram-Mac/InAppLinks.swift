@@ -27,7 +27,7 @@ let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
 let TINY = "\u{2009}"
 let GOLD = NSColor(0xFFAC04)
-let clown: String = "🆔"
+let clown: String = "🤡"
 
 let clown_space: String = "\(clown)\(TINY_SPACE)"
 
