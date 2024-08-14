@@ -903,6 +903,12 @@ final class ChatReactionsView : View {
                 return nil
             }
             
+            self.set(handler: { [weak self] _ in
+                if let reaction = self?.reaction, reaction.value.value == .stars {
+                    reaction.starReact()
+                }
+            }, for: .LongMouseDown)
+            
             
             self.set(handler: { [weak self] _ in
                 self?.reaction?.cancelMenu()
