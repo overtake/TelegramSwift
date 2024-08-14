@@ -1983,7 +1983,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             case .previewMedia:
                 result = false
             case .react:
-                result = item.reactAction()
+                let hitView = self.reactionsView?.hitTest(location)
+                if hitView == self.reactionsView || hitView == nil {
+                    result = item.reactAction()
+                } else {
+                    result = false
+                }
             }
             if result {
                 focusAnimation(nil, text: nil)

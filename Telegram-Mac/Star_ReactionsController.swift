@@ -1106,7 +1106,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     }
 
     let arguments = Arguments(context: context, dismiss: {
-        
+        close?()
     }, react: react, updateValue: { value in
         updateState { current in
             var current = current
