@@ -46,8 +46,8 @@ final class StarsButtonEffectLayer: SimpleLayer {
         let emitter = CAEmitterCell()
         emitter.name = "emitter"
         emitter.contents = NSImage(resource: .starReactionParticle).precomposed()
-        emitter.birthRate = 25.0 / 2
-        emitter.lifetime = 2.0
+        emitter.birthRate = 10
+        emitter.lifetime = 1.5
         emitter.velocity = 10.0
         emitter.velocityRange = 3
         emitter.scale = 0.1
@@ -887,7 +887,6 @@ final class ChatReactionsView : View {
             scaleOnClick = true
             
             self.layer?.masksToBounds = false
-            self.backgroundView?.layer?.masksToBounds = false
             
             self.set(handler: { [weak self] _ in
                 if let reaction = self?.reaction {
@@ -1148,7 +1147,7 @@ final class ChatReactionsView : View {
                     current = StarsButtonEffectLayer()
                     self.starButtonEffect = current
                 }
-                let rect = reaction.rect.size.bounds.insetBy(dx: -10, dy: -10)
+                let rect = reaction.rect.size.bounds.insetBy(dx: -5, dy: -5)
                 current.frame = rect
                 current.update(size: rect.size)
                 
@@ -1486,6 +1485,7 @@ final class ChatReactionsView : View {
     private var views:[NSView] = []
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.layer?.masksToBounds = false
     }
     
     func getView(_ value: MessageReaction.Reaction) -> ReactionViewImpl? {
@@ -1558,14 +1558,6 @@ final class ChatReactionsView : View {
                     reusedPix = pix
                 }
             }
-            /*
-             else if inserted.count == 1, removed.count == 1 {
-                let kv = deletedViews.first!
-                prevView = kv.value
-                reused.insert(kv.key)
-                reusedPix = kv.key
-           }
-             */
             let getView: (NSView?)->NSView = { prev in
                 switch layout.mode {
                 case .full:
@@ -1608,6 +1600,7 @@ final class ChatReactionsView : View {
         }
         
         for (i, view) in views.enumerated() {
+            view.layer?.masksToBounds = false
             view.layer?.zPosition = CGFloat(i)
         }
         

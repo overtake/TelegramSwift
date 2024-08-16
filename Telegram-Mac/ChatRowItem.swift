@@ -3552,14 +3552,14 @@ class ChatRowItem: TableRowItem {
                     accessToAll = false
                 }
                 
+                if let starsAllowed, starsAllowed {
+                    available.insert(.stars(file: LocalAnimatedSticker.premium_reaction_6.file, isSelected: isSelected(.stars)), at: 0)
+                }
                 
                 guard !available.isEmpty else {
                     return nil
                 }
                 
-                if let starsAllowed, starsAllowed {
-                    available.insert(.stars(file: LocalAnimatedSticker.premium_reaction_6.file, isSelected: isSelected(.stars)), at: 0)
-                }
                 
                 if accessToAll {
                     available = Array(available.prefix(7))

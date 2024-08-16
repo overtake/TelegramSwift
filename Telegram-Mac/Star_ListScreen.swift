@@ -315,7 +315,13 @@ private final class HeaderItem : GeneralRowItem {
                 headerAttr.append(string: strings().starListGetStars, color: theme.colors.text, font: .medium(.header))
             }
             if let suffix {
-                headerInfo.append(string: _NSLocalizedString("Star.Buy.Custom_\(suffix)"), color: theme.colors.text, font: .normal(.text))
+                let suffixKey = "Star.Buy.Custom_\(suffix)"
+                let text: String = _NSLocalizedString(suffixKey)
+                if text == suffixKey {
+                    headerInfo.append(string: strings().starListHowMany, color: theme.colors.text, font: .normal(.text))
+                } else {
+                    headerInfo.append(string: _NSLocalizedString("Star.Buy.Custom_\(suffix)"), color: theme.colors.text, font: .normal(.text))
+                }
             } else {
                 headerInfo.append(string: strings().starListHowMany, color: theme.colors.text, font: .normal(.text))
             }

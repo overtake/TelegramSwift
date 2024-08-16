@@ -665,8 +665,10 @@ class SharefilterCallbackObject : ShareObject {
 
 class ShareLinkObject : ShareObject {
     let link:String
-    init(_ context: AccountContext, link:String) {
+    let text: String?
+    init(_ context: AccountContext, link:String, text: String? = nil) {
         self.link = link.removingPercentEncoding ?? link
+        self.text = text
         super.init(context)
     }
     
@@ -1877,6 +1879,15 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let link = self.share as? ShareLinkObject, let text = link.text, !text.isEmpty {
+            self.genericView.textView.interactions.update({ _ in
+                return .init(inputText: .initialize(string: text))
+            })
+            self.contextChatInteraction.update({
+                $0.withUpdatedEffectiveInputState(self.genericView.textView.interactions.presentation.textInputState())
+            })
+        }
         
         self.genericView.textView.interactions.inputDidUpdate = { [weak self] state in
             guard let `self` = self else {

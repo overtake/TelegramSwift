@@ -356,10 +356,11 @@ private final class InviteLinkTokenView : Control {
 
         updateText()
         
-        actions.removeAllHandlers()
-        actions.set(handler: { _ in
+        actions.setSingle(handler: { _ in
            showContextMenu()
         }, for: .Click)
+        
+        needsLayout = true
         
     }
     

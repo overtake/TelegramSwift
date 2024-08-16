@@ -845,6 +845,12 @@ public final class L10n {
   public static var botInfoLaunchInfo: String  { return L10n.tr("Localizable", "BotInfo.LaunchInfo") }
   /// Open App
   public static var botInfoOpenApp: String  { return L10n.tr("Localizable", "BotInfo.OpenApp") }
+  /// https://telegram.org/privacy-tpa
+  public static var botInfoLaunchInfoPrivacyUrl: String  { return L10n.tr("Localizable", "BotInfo.LaunchInfo.PrivacyUrl") }
+  /// By launching this mini app, you agree to the [Telegram Terms of Service Mini Apps.](%@)
+  public static func botInfoLaunchInfoUser(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BotInfo.LaunchInfo.User", p1)
+  }
   /// active
   public static var botUsernameActive: String  { return L10n.tr("Localizable", "BotUsername.Active") }
   /// USERNAME
@@ -6837,6 +6843,8 @@ public final class L10n {
   public static var chatMessageSponsoredReportSuccess: String  { return L10n.tr("Localizable", "ChatMessage.Sponsored.Report.Success") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
+  /// Stars reactions is disabled by the channel.
+  public static var chatReactionStarsDisabled: String  { return L10n.tr("Localizable", "ChatReaction.StarsDisabled") }
   /// Tag the message with an emoji for quick search
   public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage") }
   /// Organize your Saved Messages with tags\nfor quicker access. [Learn More...]()
@@ -16188,6 +16196,34 @@ public final class L10n {
   /// Send %@%d
   public static func starsReactScreenSendZero(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Stars.ReactScreen.Send_zero", p1, p2)
+  }
+  /// %d
+  public static func starsReactScreenSentValueCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_countable", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_few", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_many", p1)
+  }
+  /// You sent %d star to support this post.
+  public static func starsReactScreenSentValueOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_one", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_other", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_two", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_zero", p1)
   }
   /// Show Me in Top Senders
   public static var starsReactScreenShowMeInTop: String  { return L10n.tr("Localizable", "Stars.ReactScreen.ShowMeInTop") }
