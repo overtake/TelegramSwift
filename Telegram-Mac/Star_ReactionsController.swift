@@ -241,6 +241,7 @@ private final class HeaderItem : GeneralRowItem {
         let titleLayout: TextViewLayout
         let amountLayout: TextViewLayout
         let peer: EnginePeer?
+        let message: EngineMessage
         let amount: Int64
         let index: Int
     }
@@ -283,14 +284,19 @@ private final class HeaderItem : GeneralRowItem {
         let title = state.message.peers[state.message.id.peerId]?.displayTitle ?? ""
         
         let attr = NSMutableAttributedString()
-        attr.append(string: strings().starsReactScreenInfo(title), color: theme.colors.text, font: .normal(.text))
+        var currentSentAmount: Int?
+        if let myPeer = state.message._asMessage().reactionsAttribute?.topPeers.first(where: { $0.isMy }) {
+            currentSentAmount = Int(myPeer.count)
+        }
+        
+        attr.append(string: currentSentAmount != nil ? strings().starsReactScreenSentValueCountable(currentSentAmount!) : strings().starsReactScreenInfo(title), color: theme.colors.text, font: .normal(.text))
         attr.detectBoldColorInString(with: .medium(.text))
         self.info = .init(attr, alignment: .center)
         
         for (i, topPeer) in state.peers.enumerated() {
             let amount = topPeer.count
             let title = topPeer.isAnonymous || topPeer.peer == nil ? strings().starsReactScreenAnonymous : topPeer.peer?._asPeer().compactDisplayTitle ?? ""
-            senders.append(.init(titleLayout: .init(.initialize(string: title, color: theme.colors.text, font: .normal(.text))), amountLayout: .init(.initialize(string: "\(amount.prettyNumber)", color: .white, font: .medium(.short))), peer: !topPeer.isAnonymous ? topPeer.peer : nil, amount: amount, index: i))
+            senders.append(.init(titleLayout: .init(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), amountLayout: .init(.initialize(string: "\(amount.prettyNumber)", color: .white, font: .medium(.short))), peer: !topPeer.isAnonymous ? topPeer.peer : nil, message: state.message, amount: amount, index: i))
 
         }
         
@@ -461,7 +467,7 @@ private final class SendersView: View {
         
         func update(_ sender: HeaderItem.Sender, context: AccountContext, animated: Bool) {
             if let peer = sender.peer?._asPeer() {
-                self.avatarView.setPeer(account: context.account, peer: peer)
+                self.avatarView.setPeer(account: context.account, peer: peer, message: sender.message._asMessage())
             } else {
                 let icon = theme.icons.chat_hidden_author
                 self.avatarView.setState(account: context.account, state: .Empty)
@@ -715,7 +721,9 @@ private final class BadgeView : View {
         foregroundLayer.endPoint = NSMakePoint(1, 0.2)
         foregroundLayer.mask = shapeLayer
         
-        foregroundLayer.addSublayer(effectLayer)
+        
+        self.layer?.masksToBounds = false
+        self.foregroundLayer.masksToBounds = false
         
         
         self.layer?.addSublayer(foregroundLayer)
@@ -725,6 +733,9 @@ private final class BadgeView : View {
         
         shapeLayer.fillColor = NSColor.red.cgColor
         shapeLayer.transform = CATransform3DMakeScale(1.0, -1.0, 1.0)
+        
+        container.layer?.addSublayer(effectLayer)
+
         
         container.addSubview(textView)
         addSubview(container)
@@ -773,7 +784,7 @@ private final class BadgeView : View {
             transition.updateFrame(view: textView, frame: textView.centerFrameY(x: inlineView.frame.maxX + 2))
         }
         
-        effectLayer.frame = size.bounds
+        effectLayer.frame = size.bounds.insetBy(dx: -20, dy: -20)
         effectLayer.update(size: size)
     }
     

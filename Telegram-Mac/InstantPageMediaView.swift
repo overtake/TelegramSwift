@@ -91,7 +91,7 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
         
         progressView.isHidden = true
         
-        self.imageView.animatesAlphaOnFirstTransition = true
+     //   self.imageView.animatesAlphaOnFirstTransition = true
         self.addSubview(self.imageView)
         addSubview(progressView)
         

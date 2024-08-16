@@ -26,7 +26,7 @@ let XTRSTAR: String = "⭐️"
 let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
 let TINY = "\u{2009}"
-let GOLD = NSColor(0xFFAC04)
+let GOLD = NSColor(0xD2720B)
 let clown: String = "🤡"
 
 let clown_space: String = "\(clown)\(TINY_SPACE)"
@@ -1051,9 +1051,9 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
     case let .logout(interaction):
         interaction()
         afterComplete(true)
-    case let .shareUrl(_, context, url):
+    case let .shareUrl(_, context, url, text):
         if !url.hasPrefix("@") {
-            showModal(with: ShareModalController(ShareLinkObject(context, link: url)), for: getWindow(context))
+            showModal(with: ShareModalController(ShareLinkObject(context, link: url, text: text)), for: getWindow(context))
         }
         afterComplete(true)
     case let .wallpaper(_, context, preview):
@@ -1492,7 +1492,7 @@ enum inAppLink {
     case callback(String, (String)->Void)
     case code(String, (String)->Void)
     case hashtag(String, (String)->Void)
-    case shareUrl(link: String, AccountContext, String)
+    case shareUrl(link: String, AccountContext, String, String?)
     case joinchat(link: String, String, context: AccountContext, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case logout(()->Void)
     case stickerPack(link: String, StickerPackPreviewSource, context: AccountContext, peerId:PeerId?)
@@ -1539,7 +1539,7 @@ enum inAppLink {
             return link
         case let .botCommand(link, _), let .callback(link, _), let .code(link, _), let .hashtag(link, _):
             return link
-        case let .shareUrl(link, _, _):
+        case let .shareUrl(link, _, _, _):
             return link
         case let .joinchat(link, _, _, _):
             return link
@@ -2080,11 +2080,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 let url = url.nsstring.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
                                 let text = params[keyURLText]?.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
                                 if let url = url {
-                                    var applied = url
-                                    if let text = text {
-                                        applied += "\n" + text
-                                    }
-                                    return .shareUrl(link: urlString, context, applied)
+                                    return .shareUrl(link: urlString, context, url, text)
                                     
                                 }
                             }
@@ -2229,10 +2225,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let text = vars[keyURLText]?.replacingOccurrences(of: "+", with: " ").removingPercentEncoding
                         if let url = url, let context = context {
                             var applied = url
-                            if let text = text {
-                                applied += "\n" + text
-                            }
-                            return .shareUrl(link: urlString, context, applied)
+                            return .shareUrl(link: urlString, context, applied, text)
                             
                         }
                     }

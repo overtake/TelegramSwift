@@ -74,7 +74,7 @@ class TextAndLabelItem: GeneralRowItem {
         text = hideText == true ? Array(repeating: "*", count: text.count / 2).joined() : text
         _ = attr.append(string: text, color: textColor, font: textFont)
         if detectLinks, let context = context {
-            attr.detectLinks(type: [.Links, .Hashtags, .Mentions], onlyInApp: onlyInApp, context: context, color: theme.colors.link, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
+            attr.detectLinks(type: [.Links, .Hashtags, .Mentions, .Ton], onlyInApp: onlyInApp, context: context, color: theme.colors.link, openInfo: openInfo, hashtag: hashtag, applyProxy: { settings in
                 applyExternalProxy(settings, accountManager: context.sharedContext.accountManager)
             })
         }

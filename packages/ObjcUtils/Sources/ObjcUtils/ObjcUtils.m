@@ -155,28 +155,48 @@
     {
         NSError *error = nil;
         static NSDataDetector *dataDetector = nil;
-        if (dataDetector == nil)
-            dataDetector = [NSDataDetector dataDetectorWithTypes:(int)(NSTextCheckingTypeLink) error:&error];
-        
+        if (dataDetector == nil) {
+            dataDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:&error];
+        }
+
         NSMutableArray *results = [[NSMutableArray alloc] init];
         @try {
-            [dataDetector enumerateMatchesInString:text options:0 range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult *match, __unused NSMatchingFlags flags, __unused BOOL *stop)
-             {
-                 @try {
-                     NSTextCheckingType type = [match resultType];
-                     NSString *scheme = [[[match URL] scheme] lowercaseString];
-                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] || [scheme isEqualToString:@"ton"] || [scheme isEqualToString:@"mailto"] || scheme == nil))
-                     {
-                         [results addObject:[NSValue valueWithRange:match.range]];
-                     }
-                 } @catch (NSException *exception) {
-                     
-                 }
-                 
-             }];
+            // First, use NSDataDetector to detect standard links
+            [dataDetector enumerateMatchesInString:text options:0 range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult *match, __unused NSMatchingFlags flags, __unused BOOL *stop) {
+                @try {
+                    NSTextCheckingType type = [match resultType];
+                    NSString *scheme = [[[match URL] scheme] lowercaseString];
+                    if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) &&
+                        ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] ||
+                         [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] ||
+                         [scheme isEqualToString:@"mailto"] || scheme == nil))
+                    {
+                        [results addObject:[NSValue valueWithRange:match.range]];
+                    }
+                } @catch (NSException *exception) {
+                    // Handle any exceptions here
+                }
+            }];
+
+            // Custom detection for .ton links without schemes using regular expression
+            NSString *regexPattern = @"\\b[a-zA-Z0-9.-]+\\.ton\\b";
+            NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexPattern options:0 error:&error];
+            if (error) {
+                NSLog(@"Error creating regex: %@", error.localizedDescription);
+            } else {
+                [regex enumerateMatchesInString:text options:0 range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult *match, __unused NSMatchingFlags flags, __unused BOOL *stop) {
+                    @try {
+                        [results addObject:[NSValue valueWithRange:match.range]];
+                    } @catch (NSException *exception) {
+                        // Handle any exceptions here
+                    }
+                }];
+            }
+
         } @catch (NSException *exception) {
-            
+            // Handle any exceptions here
         }
+
         
         
         static NSCharacterSet *characterSet = nil;

@@ -625,17 +625,19 @@ final class AccountContext {
         let _ = self.engine.peers.requestRecommendedAppsIfNeeded().startStandalone()
         let _ = self.engine.peers.managedUpdatedRecentApps().startStandalone()
         
-        self.reactions.checkStarsAmount = { [weak self] amount in
+        self.reactions.checkStarsAmount = { [weak self] amount, peerId in
             if let self {
-                return self.starsContext.state
-                |> filter { $0 != nil }
-                |> map { $0! }
-                |> take(1)
-                |> map { state in
-                    return state.balance >= amount
-                }
+                let starsAllowed = self.engine.data.get(TelegramEngine.EngineData.Item.Peer.ReactionSettings(id: peerId)) |> map { $0.knownValue?.starsAllowed == true }
+                
+                return combineLatest(queue: .mainQueue(), self.starsContext.state
+                                     |> filter { $0 != nil }
+                                     |> map { $0! }
+                                     |> take(1)
+                                     |> map { state in
+                                         return state.balance >= amount
+                                     }, starsAllowed)
             } else {
-                return .single(false)
+                return .single((false, false))
             }
         }
         
@@ -653,7 +655,11 @@ final class AccountContext {
         self.reactions.successStarsAmount = { [weak self] amount in
             self?.starsContext.add(balance: -Int64(amount))
         }
-
+        self.reactions.starsDisabled = { [weak self] in
+            if let self {
+                showModalText(for: self.window, text: strings().chatReactionStarsDisabled)
+            }
+        }
     #endif
         
         

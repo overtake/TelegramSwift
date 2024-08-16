@@ -24,10 +24,10 @@ public final class Reactions {
         public let rect: NSRect?
     }
     
-    public var checkStarsAmount:((Int)->Signal<Bool, NoError>)?
+    public var checkStarsAmount:((Int, PeerId)->Signal<(Bool, Bool), NoError>)?
     public var failStarsAmount:((Int, MessageId)->Void)?
     public var successStarsAmount:((Int)->Void)?
-
+    public var starsDisabled:(()->Void)?
     
     private(set) public var available: AvailableReactions?
         
@@ -72,14 +72,18 @@ public final class Reactions {
     }
     
     public func sendStarsReaction(_ messageId: MessageId, count: Int, isAnonymous: Bool, fromRect: NSRect? = nil) {
-        if let signal = checkStarsAmount?(count) {
-            _ = signal.start(next: { [weak self] value in
-                if value {
+        if let signal = checkStarsAmount?(count, messageId.peerId) {
+            _ = signal.start(next: { [weak self] value, starsAllowed in
+                if value && starsAllowed {
                     _ = self?._isInteractive.swap(.init(messageId: messageId, reaction: .stars, rect: fromRect))
                     self?.engine.messages.sendStarsReaction(id: messageId, count: count, isAnonymous: isAnonymous)
                     self?.successStarsAmount?(count)
                 } else {
-                    self?.failStarsAmount?(count, messageId)
+                    if !value {
+                        self?.failStarsAmount?(count, messageId)
+                    } else {
+                        self?.starsDisabled?()
+                    }
                 }
             })
         }

@@ -1213,7 +1213,7 @@ private final class BrowserView : View {
         }
         transition.updateFrame(view: header, frame: NSMakeRect(0, 0, size.width, 50))
 
-        transition.updateFrame(view: tabsView, frame: NSMakeRect(50, 0, size.width - 100, header.frame.height))
+        transition.updateFrame(view: tabsView, frame: NSMakeRect(40, 0, size.width - 80, header.frame.height))
 
         transition.updateFrame(view: close, frame: close.centerFrameY(x: 0))
         transition.updateFrame(view: more, frame: more.centerFrameY(x: size.width - more.frame.width))

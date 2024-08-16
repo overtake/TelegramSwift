@@ -68,7 +68,7 @@ func iconForSession(_ session: RecentAccountSession) -> (CGImage?, LocalAnimated
     if platform.contains("windows") || systemVersion.contains("windows") {
         return (NSImage(named: "Icon_Device_Windows")?.precomposed(), LocalAnimatedSticker.device_windows, NSColor(rgb: 0x0079ff), ["Union.Union.Заливка 1"])
     }
-    return (nil, nil, nil, nil)
+    return (NSImage(named: "Icon_Device_Ipad2")?.precomposed(), LocalAnimatedSticker.device_ipad, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
 }
 
 

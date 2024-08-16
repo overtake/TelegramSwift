@@ -340,6 +340,7 @@ public struct ParsingType: OptionSet {
     public static let Mentions = ParsingType(rawValue: 2)
     public static let Commands = ParsingType(rawValue: 4)
     public static let Hashtags = ParsingType(rawValue: 8)
+    public static let Ton = ParsingType(rawValue: 16)
 }
 
 public extension NSAttributedString {

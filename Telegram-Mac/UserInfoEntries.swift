@@ -2076,16 +2076,24 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     if let about = cachedUserData.about, !about.isEmpty, !user.isScam && !user.isFake {
                         if let botInfo = peer.botInfo {
                             infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, launchApp: botInfo.flags.contains(.hasWebApp), viewType: .singleItem))
-                            if peer.botInfo?.flags.contains(.canEdit) == true {
+                            if botInfo.flags.contains(.canEdit) {
                                 infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfo, viewType: .textBottomItem))
+                            } else {
+                                let privacyPolicyUrl = cachedUserData.botInfo?.privacyPolicyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                                infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfoUser(privacyPolicyUrl), viewType: .textBottomItem))
+                                
                             }
                         } else {
                             infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, PeerEquatable(peer), viewType: .singleItem))
                         }
                     } else if cachedUserData.about == nil, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp) {
                         infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: "", launchApp: botInfo.flags.contains(.hasWebApp), viewType: .singleItem))
-                        if peer.botInfo?.flags.contains(.canEdit) == true {
+                        if botInfo.flags.contains(.canEdit) {
                             infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfo, viewType: .textBottomItem))
+                        } else {
+                            let privacyPolicyUrl = cachedUserData.botInfo?.privacyPolicyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                            infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfoUser(privacyPolicyUrl), viewType: .textBottomItem))
+                            
                         }
                     }
                 }

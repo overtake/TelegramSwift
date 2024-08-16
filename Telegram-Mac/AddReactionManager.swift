@@ -300,19 +300,25 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 }
             }))
             
+            set(handler: { control in
+                if let window = control.window {
+                    let wrect = control.convert(control.frame.size.bounds, to: nil)
+                    let srect = window.convertToScreen(wrect)
+                    add(reaction.value, true, context.window.convertFromScreen(srect))
+                }
+            }, for: .Click)
+            
             if case .stars = reaction.value, let message {
                 self.set(handler: { _ in
                     showModal(with: Star_ReactionsController(context: context, message: message), for: context.window)
-                }, for: .Click)
-            } else {
+                    AppMenu.closeAll()
+                }, for: .RightDown)
                 
-                set(handler: { control in
-                    if let window = control.window {
-                        let wrect = control.convert(control.frame.size.bounds, to: nil)
-                        let srect = window.convertToScreen(wrect)
-                        add(reaction.value, true, context.window.convertFromScreen(srect))
-                    }
-                }, for: .Click)
+                self.set(handler: { _ in
+                    showModal(with: Star_ReactionsController(context: context, message: message), for: context.window)
+                    AppMenu.closeAll()
+                }, for: .LongMouseDown)
+            } else {
                 
                 contextMenu = {
                     let menu = ContextMenu()
