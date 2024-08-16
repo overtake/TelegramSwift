@@ -45,8 +45,8 @@ final class StarsButtonEffectLayer: SimpleLayer {
         
         let emitter = CAEmitterCell()
         emitter.name = "emitter"
-        emitter.contents = NSImage(resource: .starReactionParticle).precomposed()
-        emitter.birthRate = 10
+        emitter.contents = NSImage(resource: .starReactionParticle).precomposed(.white)
+        emitter.birthRate = 20
         emitter.lifetime = 1.5
         emitter.velocity = 10.0
         emitter.velocityRange = 3
