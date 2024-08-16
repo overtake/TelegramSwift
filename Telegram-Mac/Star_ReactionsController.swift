@@ -66,7 +66,7 @@ private final class BadgeStarsViewEffect: View {
         
         let staticEmitter = CAEmitterCell()
         staticEmitter.name = "emitter"
-        staticEmitter.contents = NSImage(resource: .starReactionParticle).precomposed()
+        staticEmitter.contents = NSImage(resource: .starReactionParticle).precomposed(.white)
         staticEmitter.birthRate = 20.0
         staticEmitter.lifetime = 2.7
         staticEmitter.velocity = 30.0
@@ -79,7 +79,7 @@ private final class BadgeStarsViewEffect: View {
         
         let dynamicEmitter = CAEmitterCell()
         dynamicEmitter.name = "emitter"
-        dynamicEmitter.contents = NSImage(resource: .starReactionParticle).precomposed()
+        dynamicEmitter.contents = NSImage(resource: .starReactionParticle).precomposed(.white)
         dynamicEmitter.birthRate = 0.0
         dynamicEmitter.lifetime = 2.7
         dynamicEmitter.velocity = 30.0

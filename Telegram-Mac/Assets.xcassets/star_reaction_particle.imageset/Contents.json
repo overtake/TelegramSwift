@@ -1,11 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "star_reaction_particle.png",
+      "filename" : "star 22x22.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "star 22x22@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
