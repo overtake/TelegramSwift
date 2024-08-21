@@ -814,9 +814,8 @@ class ChatListController : PeersListController {
             
             self?.removeHighlightEvents()
             
-            if let searchController = self?.searchController {
-                searchController.updateHighlightEvents(location != nil)
-            }
+            self?.updateHighlightEvents(location != nil)
+            
             if location == nil {
                 self?.setHighlightEvents()
             }
@@ -1184,7 +1183,7 @@ class ChatListController : PeersListController {
         switch mode {
         case .folder, .plain, .filter:
             let downloadArguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
-                self?.showDownloads(animated: true)
+                self?.makeDownloadSearch()
             }, navigate: { [weak self] messageId in
                 self?.open(with: .chatId(.chatList(messageId.peerId), messageId.peerId, -1), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
             })
@@ -1298,7 +1297,7 @@ class ChatListController : PeersListController {
             return item.isFixedItem || item.groupId != .root
         }
         
-        self.searchController?.pinnedItems = self.collectPinnedItems
+        self.updatePinnedItems(self.collectPinnedItems)
         self.genericView.tableView.resortController?.resortRange = pinnedRange
         
         
@@ -1424,7 +1423,7 @@ class ChatListController : PeersListController {
             return
         }
         
-        if searchController != nil {
+        if searchSection != nil {
             self.genericView.searchView.change(state: .None, true)
             return
         }
@@ -1483,66 +1482,12 @@ class ChatListController : PeersListController {
         let context = self.context
         
         let invoke = { [weak self] in
-            self?.genericView.searchView.change(state: .Focus, false)
-            
             if let peer {
-                
                 let peerId = peer.id
-                
-                enum SearchMode : Equatable {
-                    case thisChat
-                    case myMessages
-                    case publicPosts
-                }
-                
-                var updateSearchView:(()->Void)? = nil
-                
-                var mode: SearchMode = peer._asPeer().isChannel ? .publicPosts : .myMessages {
-                    didSet {
-                        updateSearchView?()
-                    }
-                }
-                
-                let contextMenu:()->[ContextMenuItem] = {
-                    
-                    var items: [ContextMenuItem] = []
-                    
-                    items.append(.init(strings().chatHashtagThisChat, handler: {
-                        mode = .thisChat
-                    }, state: mode == .thisChat ? .on : nil, itemImage: MenuAnimation.menu_read.value))
-                    
-                    items.append(.init(strings().chatHashtagMyMessages, handler: {
-                        mode = .myMessages
-                    }, state: mode == .myMessages ? .on : nil, itemImage: MenuAnimation.menu_folder_all_chats.value))
-                    
-                    items.append(.init(strings().chatHashtagPublicPosts, handler: {
-                        mode = .publicPosts
-                    }, state: mode == .publicPosts ? .on : nil, itemImage: MenuAnimation.menu_channel.value))
-                    
-                    return items
-                }
-                
-                updateSearchView = { [weak self] in
-                    let text: String
-                    let tags: SearchTags
-                    switch mode {
-                    case .thisChat:
-                        text = strings().chatHashtagThisChat
-                        tags = .init(messageTags: nil, peerTag: peerId, text: nil)
-                    case .myMessages:
-                        text = strings().chatHashtagMyMessages
-                        tags = .init(messageTags: nil, peerTag: nil, text: nil, myMessages: true)
-                    case .publicPosts:
-                        text = strings().chatHashtagPublicPosts
-                        tags = .init(messageTags: nil, peerTag: nil, text: nil, publicPosts: true)
-                    }
-                    self?.genericView.searchView.updateTags([.init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu, isTextTied: true)], theme.icons.search_filter_hashtag, animated: false)
-                    self?.searchController?.updateSearchTags(tags)
-                }
-                
-                updateSearchView?()
+                let mode: PeerListState.SelectedSearchTag = peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
+                self?.makeHashtag(.init(mode: mode, peerId: peerId, text: query))
             }
-            self?.genericView.searchView.setString(query)
+            self?.genericView.searchView.change(state: .Focus, false)
         }
         
         switch context.layout {

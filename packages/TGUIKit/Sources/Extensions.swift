@@ -936,6 +936,9 @@ public extension NSView {
     }
 
 
+    func rect(_ point:NSPoint) -> NSRect {
+        return NSMakeRect(point.x, point.y, frame.width, frame.height)
+    }
     
     func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
         

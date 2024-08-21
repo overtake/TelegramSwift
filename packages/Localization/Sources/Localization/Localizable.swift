@@ -6133,6 +6133,8 @@ public final class L10n {
   }
   /// Channels
   public static var chatListChannelsTag: String  { return L10n.tr("Localizable", "ChatList.ChannelsTag") }
+  /// Chats
+  public static var chatListChatsTag: String  { return L10n.tr("Localizable", "ChatList.ChatsTag") }
   /// Show All
   public static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// All
@@ -6153,6 +6155,8 @@ public final class L10n {
   public static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
   public static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
+  /// Messages
+  public static var chatListMessagesTag: String  { return L10n.tr("Localizable", "ChatList.MessagesTag") }
   /// My Notes
   public static var chatListMyNotes: String  { return L10n.tr("Localizable", "ChatList.MyNotes") }
   /// Proxy Sponsor
@@ -6191,6 +6195,8 @@ public final class L10n {
   }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
+  /// Messages
+  public static var chatListTopicsTag: String  { return L10n.tr("Localizable", "ChatList.TopicsTag") }
   /// Unhide Muted
   public static var chatListUnhideMuted: String  { return L10n.tr("Localizable", "ChatList.UnhideMuted") }
   /// Message is not supported
@@ -6843,8 +6849,40 @@ public final class L10n {
   public static var chatMessageSponsoredReportSuccess: String  { return L10n.tr("Localizable", "ChatMessage.Sponsored.Report.Success") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
-  /// Stars reactions is disabled by the channel.
+  /// Star reactions have been disabled for this channel.
   public static var chatReactionStarsDisabled: String  { return L10n.tr("Localizable", "ChatReaction.StarsDisabled") }
+  /// Undo
+  public static var chatReactionUndo: String  { return L10n.tr("Localizable", "ChatReaction.Undo") }
+  /// %d
+  public static func chatReactionUndoReactedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_countable", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_few", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_many", p1)
+  }
+  /// You have reacted with %d star.
+  public static func chatReactionUndoReactedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_one", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_other", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_two", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_zero", p1)
+  }
+  /// Stars Sent!
+  public static var chatReactionUndoStarsSent: String  { return L10n.tr("Localizable", "ChatReaction.Undo.StarsSent") }
   /// Tag the message with an emoji for quick search
   public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage") }
   /// Organize your Saved Messages with tags\nfor quicker access. [Learn More...]()

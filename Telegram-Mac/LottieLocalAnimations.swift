@@ -116,6 +116,7 @@ enum LocalAnimatedSticker : String {
     case stories_archive
     
     case share_folder
+    case countdown5s
     
     case text_to_voice
     case voice_to_text

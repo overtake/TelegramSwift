@@ -250,13 +250,15 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         actionsDisposable.dispose()
     }
     
+    controller.makeFirstResponder = false
+    
     
     controller.didLoad = { controller, _ in
         controller.tableView.getBackgroundColor = {
             return theme.colors.background
         }
-        controller.genericView.border = [.Right]
-        controller.tableView.border = [.Right]
+      //  controller.genericView.border = [.Right]
+      //  controller.tableView.border = [.Right]
         
         let supplyment = GallerySupplyment(tableView: controller.tableView)
         
