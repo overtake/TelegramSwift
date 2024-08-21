@@ -1443,7 +1443,13 @@ class PeerListContainerView : Control {
     
     
     private func updateTags(_ state: PeerListState,updateSearchTags: @escaping(PeerListState.SelectedSearchTag)->Void) {
-        
+        if searchView.customSearchControl == nil {
+            searchView.customSearchControl = CustomSearchController(clickHandler: { _, _ in
+                
+            }, deleteTag: { index in
+                updateSearchTags(.chats)
+            }, icon: theme.icons.search_filter)
+        }
     }
     
     fileprivate func searchStateChanged(_ state: PeerListState, arguments: Arguments, animated: Bool, updateSearchTags: @escaping(PeerListState.SelectedSearchTag)->Void) {
