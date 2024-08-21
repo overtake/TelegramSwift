@@ -1961,6 +1961,12 @@ private class SearchContainer : View {
                         
             current.updateItems(items, animated: animated, autoscroll: previous?.selectedTag != state.selectedTag)
             current.theme = presentation
+            
+            current.didChangeSelectedItem = { [weak arguments] item in
+                if let tag = PeerListState.SelectedSearchTag(rawValue: item.uniqueId) {
+                    arguments?.selectSearchTag(tag)
+                }
+            }
                         
         }
         self.state = state
