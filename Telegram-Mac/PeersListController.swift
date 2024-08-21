@@ -1784,8 +1784,7 @@ class PeerListContainerView : Control {
                 }
             }
             current.update(state, context: context, arguments: arguments, animated: animated)
-            current.removeAllHandlers()
-            current.set(handler: { _ in
+            current.setSingle(handler: { _ in
                 arguments.open()
             }, for: .Click)
         } else if let view = self.downloads {
@@ -1882,12 +1881,14 @@ enum PeerListMode : Equatable {
 }
 
 private class SearchContainer : View {
-    var tagsView: ScrollableSegmentView?
+    let tagsView: ScrollableSegmentView
     let searchView: NSView
     
     init(frame frameRect: NSRect, searchView: NSView) {
         self.searchView = searchView
+        self.tagsView = .init(frame:NSMakeRect(0, -10, frameRect.width, 40))
         super.init(frame: frameRect)
+        addSubview(tagsView)
         addSubview(searchView)
     }
     
@@ -1907,26 +1908,9 @@ private class SearchContainer : View {
         
         let previous = self.state
         if state.searchState == .Focus {
-            let current: ScrollableSegmentView
-            if let view = self.tagsView {
-                current = view
-            } else {
-                current = .init(frame: NSMakeRect(0, 80, frame.width, 40))
-                addSubview(current)
-                self.tagsView = current
-                if animated {
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                }
-                
-                current.didChangeSelectedItem = { [weak arguments] item in
-                    if let tag = PeerListState.SelectedSearchTag(rawValue: item.uniqueId) {
-                        arguments?.selectSearchTag(tag)
-                    }
-                }
-            }
+            let current: ScrollableSegmentView = self.tagsView
             
             let presentation = ScrollableSegmentTheme(background: .clear, border: theme.colors.border, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
-            
             
             var items: [ScrollableSegmentItem] = []
             let insets = NSEdgeInsets(left: 10, right: 10)
@@ -1972,11 +1956,6 @@ private class SearchContainer : View {
             current.updateItems(items, animated: animated, autoscroll: previous?.selectedTag != state.selectedTag)
             current.theme = presentation
                         
-        } else {
-            if let view = self.tagsView {
-                performSubviewRemoval(view, animated: animated)
-                self.tagsView = nil
-            }
         }
         self.state = state
         needsLayout = true
@@ -1984,12 +1963,8 @@ private class SearchContainer : View {
     
     override func layout() {
         super.layout()
-        if let tagsView {
-            tagsView.frame = NSMakeRect(0, -10, frame.width, 40)
-            self.searchView.frame = NSMakeRect(0, tagsView.frame.maxY, frame.width, frame.height - tagsView.frame.maxY)
-        } else {
-            self.searchView.frame = bounds
-        }
+        tagsView.frame = NSMakeRect(0, -10, frame.width, 40)
+        self.searchView.frame = NSMakeRect(0, tagsView.frame.maxY, frame.width, frame.height - tagsView.frame.maxY)
     }
 }
 
@@ -2104,13 +2079,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     func makeDownloadSearch() {
-        self.takeArguments()?.selectSearchTag(.downloads)
+        showDownloads(animated: true)
     }
     
     func showDownloads(animated: Bool) {
         
         self.genericView.searchView.change(state: .Focus,  true)
-        let context = self.context
         if let controller = self.searchSection {
             let ready = controller.ready.get()
             |> filter { $0 }
@@ -2988,7 +2962,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.genericView.tableView.isHidden = false
             self.genericView.tableView.change(opacity: 1, animated: animated)
         
-            container._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: .easeOut, completion: { [weak container] completed in
+            container._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: .spring, completion: { [weak container] completed in
                 container?.removeFromSuperview()
             })
             if animated {
