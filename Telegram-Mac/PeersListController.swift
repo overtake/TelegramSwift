@@ -1886,7 +1886,7 @@ enum PeerListMode : Equatable {
     }
 }
 
-private class SearchContainer : View {
+private class SearchContainer : Control {
     let tagsView: ScrollableSegmentView
     let searchView: NSView
     
@@ -1896,6 +1896,10 @@ private class SearchContainer : View {
         super.init(frame: frameRect)
         addSubview(tagsView)
         addSubview(searchView)
+    }
+    
+    override var sendRightMouseAnyway: Bool {
+        return false
     }
     
     required init(frame frameRect: NSRect) {
