@@ -1996,4 +1996,19 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         return true
     }
     
+    override var supportSwipes: Bool {
+        if let location = window?.mouseLocationOutsideOfEventStream {
+            let point = self.genericView.convert(location, from: nil)
+            let row = self.genericView.row(at: point)
+            if row != -1 {
+                let item = self.genericView.item(at: row)
+                if item is PopularPeersRowItem {
+                    return false
+                }
+                return true
+            }
+        }
+        return true
+    }
+    
 }
