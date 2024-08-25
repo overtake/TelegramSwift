@@ -1201,7 +1201,7 @@ class APController : NSResponder {
     }
 
     var isLatest:Bool {
-        return current == 0
+        return current == 0 && self.state.orderState == .normal
     }
 
     func audioPlayerDidFinishPlaying() {
