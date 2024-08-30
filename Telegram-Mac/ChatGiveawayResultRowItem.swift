@@ -105,15 +105,26 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
     }
     
     var giftAnimation: LocalAnimatedSticker {
-        switch media.months {
-        case 12:
-            return LocalAnimatedSticker.premium_gift_12
-        case 6:
-            return LocalAnimatedSticker.premium_gift_6
-        case 3:
-            return LocalAnimatedSticker.premium_gift_3
-        default:
-            return LocalAnimatedSticker.premium_gift_3
+        switch media.prize {
+        case .premium(let months):
+            switch months {
+            case 12:
+                return LocalAnimatedSticker.premium_gift_12
+            case 6:
+                return LocalAnimatedSticker.premium_gift_6
+            case 3:
+                return LocalAnimatedSticker.premium_gift_3
+            default:
+                return LocalAnimatedSticker.premium_gift_3
+            }
+        case .stars(let amount):
+            if amount <= 1000 {
+                return LocalAnimatedSticker.premium_gift_3
+            } else if amount < 2500 {
+                return LocalAnimatedSticker.premium_gift_6
+            } else {
+                return LocalAnimatedSticker.premium_gift_12
+            }
         }
     }
     

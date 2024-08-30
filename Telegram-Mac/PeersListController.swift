@@ -611,20 +611,19 @@ fileprivate final class WebappsControl : Control {
         static func < (lhs: WebAppItem, rhs: WebAppItem) -> Bool {
             return lhs.index < rhs.index
         }
-        let peer: EnginePeer
+        let data: BrowserTabData
         let index: Int
         var stableId: AnyHashable {
-            return peer.id
+            return data.unique
         }
     }
     
     class Control : View {
-        private let avatar = AvatarControl(font: .avatar(8))
+        private var avatarView: AvatarControl?
+        private var iconView: ImageView?
+        
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            avatar.frame = bounds
-            addSubview(avatar)
-            avatar.userInteractionEnabled = false
             self.layer?.cornerRadius = 4
             self.layer?.borderWidth = 2
             self.layer?.borderColor = theme.colors.background.cgColor
@@ -640,7 +639,52 @@ fileprivate final class WebappsControl : Control {
         }
         
         func update(item: WebAppItem, context: AccountContext) {
-            self.avatar.setPeer(account: context.account, peer: item.peer._asPeer(), size: NSMakeSize(24, 24), cornerRadius: 0)
+            if let enginePeer = item.data.peer {
+                let current: AvatarControl
+                if let view = self.avatarView {
+                    current = view
+                } else {
+                    current = AvatarControl(font: .avatar(8))
+                    current.setFrameSize(24, 24)
+                    current.userInteractionEnabled = false
+                    self.avatarView = current
+                    addSubview(current)
+                    current.center()
+                }
+                current.setPeer(account: context.account, peer: enginePeer._asPeer())
+            } else if let avatarView {
+                performSubviewRemoval(avatarView, animated: false)
+                self.avatarView = nil
+            }
+            
+            if item.data.external?.isSite == true {
+                let current: ImageView
+                if let view = self.iconView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    current.setFrameSize(24, 24)
+                    current.isEventLess = true
+                    current.layer?.cornerRadius = 4
+                    self.iconView = current
+                    addSubview(current)
+                    current.animates = true
+                    current.center()
+                }
+                
+                let color: NSColor = theme.colors.listBackground
+
+                if case .instantView = item.data.unique {
+                    current.nsImage = generateContextMenuInstantView(color: color, size: NSMakeSize(24, 24))
+                } else  if let favicon = item.data.external?.favicon {
+                    current.nsImage = favicon
+                } else {
+                    current.nsImage = generateContextMenuUrl(color: color, state: item.data.external, size: NSMakeSize(24, 24))
+                }
+            } else if let iconView {
+                performSubviewRemoval(iconView, animated: false)
+                self.iconView = nil
+            }
         }
         
         override func layout() {
@@ -649,7 +693,12 @@ fileprivate final class WebappsControl : Control {
         }
         
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-            transition.updateFrame(view: avatar, frame: size.bounds)
+            if let avatarView {
+                transition.updateFrame(view: avatarView, frame: size.bounds)
+            }
+            if let iconView {
+                transition.updateFrame(view: iconView, frame: size.bounds)
+            }
         }
     }
     
@@ -667,11 +716,11 @@ fileprivate final class WebappsControl : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(webapps: [EnginePeer], context: AccountContext, animated: Bool) {
+    func update(webapps: [BrowserTabData], context: AccountContext, animated: Bool) {
         var items: [WebAppItem] = []
         var index: Int = .max
         for webapp in webapps.prefix(4).reversed() {
-            items.append(.init(peer: webapp, index: index))
+            items.append(.init(data: webapp, index: index))
             index -= 1
         }
         
@@ -1310,7 +1359,7 @@ class PeerListContainerView : Control {
             self.backButton = nil
         }
         
-        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, state.selectedForum == nil {
+        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, !state.mode.isForumLike {
             let current: WebappsControl
             let isNew: Bool
             if let view = self.webapps {
@@ -1323,18 +1372,43 @@ class PeerListContainerView : Control {
                 isNew = true
             }
             
-            let openedItems = Array(webapps.opened.compactMap { $0.data.peer }.reversed())
+            let openedItems = Array(webapps.opened.reversed())
             current.update(webapps: openedItems, context: arguments.context, animated: animated)
             
             current.contextMenu = {
                 let menu = ContextMenu()
                 
+                
+                let appItem:(BrowserStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
+                    if let user = webapp.peer._asPeer() as? TelegramUser {
+                        
+                        let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
+                        
+                        return ReactionPeerMenu(title: user.displayTitle, handler: {
+                            BrowserStateContext.get(arguments.context).open(tab: .mainapp(bot: webapp.peer, source: .generic))
+                        }, peer: user, context: arguments.context, reaction: nil, afterNameBadge: afterNameBadge)
+                    } else {
+                        return nil
+                    }
+                }
+                
                 if !webapps.opened.isEmpty {
                     for webapp in webapps.opened {
-                        if let peer = webapp.data.peer {
-                            menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                        switch webapp.data {
+                        case .tonsite:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
                                 BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
-                            }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                            }, image: webapp.external?.favicon ?? generateContextMenuUrl(color: theme.colors.listBackground, state: webapp.external)))
+                        case .instantView:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: generateContextMenuInstantView(color: theme.colors.listBackground)))
+                        default:
+                            if let peer = webapp.data.peer {
+                                menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                                    BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                                }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                            }
                         }
                     }
                     menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
@@ -1347,50 +1421,57 @@ class PeerListContainerView : Control {
                     if !menu.items.isEmpty {
                         menu.addItem(ContextSeparatorItem())
                     }
-                    for recent in webapps.recentlyMenu {
-                        if let peer = webapps.peers[recent.peerId] {
-                            menu.addItem(ReactionPeerMenu(title: peer._asPeer().displayTitle, handler: {
-                                BrowserStateContext.get(arguments.context).open(tab: recent.tab)
-                            }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                    for webapp in webapps.recentlyMenu.map(\.tab) {
+                        switch webapp.data {
+                        case .tonsite:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: webapp.external?.favicon ?? generateContextMenuUrl(color: theme.colors.listBackground, state: webapp.external)))
+                        case .instantView:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: generateContextMenuInstantView(color: theme.colors.listBackground)))
+                        default:
+                            if let peer = webapp.data.peer {
+                                menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                                    BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                                }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                            }
                         }
                     }
-                    menu.addItem(ContextMenuItem(strings().chatListAppsClearRecent, handler: {
+                    menu.addItem(ContextMenuItem(strings().chatListAppsClear, handler: {
                         BrowserStateContext.get(arguments.context).clearRecent()
                     }, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
+               
+
+                if !webapps.recentUsedApps.isEmpty {
+                    
+                    menu.addItem(ContextSeparatorItem())
+                    let header = ContextMenuItem(strings().chatListAppsRecentUsedHeader)
+                    header.isEnabled = false
+                    menu.addItem(header)
+                    
+                    for webapp in webapps.recentUsedApps {
+                        let contains = webapps.recentlyMenu.contains(where: { $0.tab.data.savebleId == webapp.peer.id }) || webapps.opened.contains(where: { $0.data.savebleId == webapp.peer.id })
+                        if !contains {
+                            if let item = appItem(webapp) {
+                                menu.addItem(item)
+                            }
+                        }
+                    }
+                }
                 
-                if !webapps.recommended.isEmpty || !webapps.recentUsedApps.isEmpty {
+                
+                if !webapps.recommended.isEmpty {
                     
                     if !menu.items.isEmpty {
                         menu.addItem(ContextSeparatorItem())
                     }
                                         
                     let subMenu = ContextMenu()
-                    
-                    let appItem:(BrowserStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
-                        if let user = webapp.peer._asPeer() as? TelegramUser {
-                            
-                            let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
-                            
-                            return ReactionPeerMenu(title: user.displayTitle, handler: {
-                                BrowserStateContext.get(arguments.context).open(tab: .mainapp(bot: webapp.peer, source: .generic))
-                            }, peer: user, context: arguments.context, reaction: nil, afterNameBadge: afterNameBadge)
-                        } else {
-                            return nil
-                        }
-                    }
-                    
-                    if !webapps.recentUsedApps.isEmpty {
-                        for webapp in webapps.recentUsedApps {
-                            if let item = appItem(webapp) {
-                                subMenu.addItem(item)
-                            }
-                        }
-                    }
-                    if !subMenu.items.isEmpty && !webapps.recommended.isEmpty {
-                        subMenu.addItem(ContextSeparatorItem())
-                    }
+                
                     for webapp in webapps.recommended {
                         if let item = appItem(webapp) {
                             subMenu.addItem(item)
@@ -1926,7 +2007,7 @@ private class SearchContainer : Control {
             let insets = NSEdgeInsets(left: 10, right: 10)
             var index: Int = 0
             
-            if let hashtag = state.hashtag {
+            if state.hashtag != nil {
                 let tags: [PeerListState.SelectedSearchTag] = [.hashtagThisChat, .hashtagMyMessages, .hashtagPublicPosts]
                 for tag in tags {
                     items.append(.init(title: tag.title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))

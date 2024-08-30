@@ -246,6 +246,9 @@ class WPLayout: Equatable {
         if content.story != nil {
             return false
         }
+        if content.embedType == "iframe" {
+            return false
+        }
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
             return !content.url.isEmpty && content.type != "telegram_background" && content.type != "telegram_theme"
         }

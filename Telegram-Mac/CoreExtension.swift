@@ -3160,15 +3160,15 @@ enum FaqDestination {
 func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    let url = dest.url + language
+    let url = dest.url + (language == "en" ? "" : language)
     
     _ = showModalProgress(signal: webpagePreview(account: context.account, urls: [url]) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
         switch result {
         case let .result(webpage):
             if let webpage = webpage {
-                showInstantPage(InstantPageViewController(context, url: url, webPage: webpage.webpage, message: nil))
+                BrowserStateContext.get(context).open(tab: .instantView(url: url, webPage: webpage.webpage, anchor: nil))
             } else {
-                execute(inapp: .external(link: dest.url + language, true))
+                execute(inapp: .external(link: dest.url, true))
             }
         default:
             break

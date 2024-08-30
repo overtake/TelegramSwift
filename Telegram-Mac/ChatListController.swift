@@ -969,13 +969,13 @@ class ChatListController : PeersListController {
                 }
             }
             
-            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(.gracePremium) {
                     additionItems.append(.grace(true))
                 }
             }
             
-            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(.setupBirthday), myBirthday == nil {
                     additionItems.append(.birthdays([]))
                 } else {
@@ -1424,6 +1424,14 @@ class ChatListController : PeersListController {
         }
         
         if searchSection != nil {
+            updateState { current in
+                var current = current
+                current.peerTag = nil
+                current.hashtag = nil
+                current.selectedTag = .chats
+                current.searchState = .None
+                return current
+            }
             self.genericView.searchView.change(state: .None, true)
             return
         }

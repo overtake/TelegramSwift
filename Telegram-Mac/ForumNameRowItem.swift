@@ -63,7 +63,7 @@ private final class ForumNameRowItemView: InputDataRowView {
         
         let getColors:(TelegramMediaFile)->[LottieColor] = { file in
             var colors: [LottieColor] = []
-            if isDefaultStatusesPackId(file.emojiReference) {
+            if isDefaultStatusesPackId(file.emojiReference) || file.isCustomTemplateEmoji {
                 colors.append(.init(keyPath: "", color: theme.colors.accent))
             }
             return colors

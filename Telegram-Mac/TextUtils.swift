@@ -935,16 +935,16 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case .joinedChannel:
             text = strings().chatServiceJoinedChannel
-        case let .giveawayResults(winners, unclaimed):
+        case let .giveawayResults(winners, unclaimed, stars):
             if winners == 0 {
-                text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+                text = stars ? strings().chatServiceGiveawayResultsNoWinnersStarsCountable(Int(unclaimed)) : strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
             } else if unclaimed > 0 {
-                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
-                let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
-                let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                text = stars ? strings().chatServiceGiveawayResultsStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsCountable(Int(winners))
+                let winnersString = stars ? strings().chatServiceGiveawayResultsMixedWinnersStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                let unclaimedString = stars ? strings().chatServiceGiveawayResultsMixedUnclaimedStarsCountable(Int(unclaimed)) : strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
                 text = winnersString + "\n" + unclaimedString
             } else {
-                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                text = stars ? strings().chatServiceGiveawayResultsStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsCountable(Int(winners))
             }
         case let .boostsApplied(boosts):
             if message.author?.id == account.peerId {
@@ -973,6 +973,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         case let .paymentRefunded(_, currency, totalAmount, _, _):
             let peerName = message.author?.compactDisplayTitle ?? ""
             text = strings().chatServiceRefundedBackCountable(peerName, currency + TINY_SPACE, Int(totalAmount))
+        case let .prizeStars(amount, _, _, _, _):
+            text = "You won a prize in a giveaway organized by \(authorName).\n\nYour prize is \(amount) Stars."
+
+
         }
     }
     return (text, entities, media)
@@ -1267,7 +1271,7 @@ func parseTextEntities(_ message:String) -> (String, [MessageTextEntity]) {
     
 }
 
-func timeIntervalString( _ value: Int) -> String {
+func timeIntervalString( _ value: Int, months: Bool = false) -> String {
     if value < 60 {
         return strings().timerSecondsCountable(value)
     } else if value < 60 * 60 {
@@ -1278,7 +1282,7 @@ func timeIntervalString( _ value: Int) -> String {
         return strings().timerDaysCountable(max(1, value / (60 * 60 * 24)))
     } else if value < 60 * 60 * 24 * 30 {
         return strings().timerWeeksCountable(max(1, value / (60 * 60 * 24 * 7)))
-    } else if value < 60 * 60 * 24 * 360 {
+    } else if value < 60 * 60 * 24 * 360 || months {
         return strings().timerMonthsCountable(max(1, value / (60 * 60 * 24 * 30)))
     } else {
         return strings().timerYearsCountable(max(1, value / (60 * 60 * 24 * 365)))

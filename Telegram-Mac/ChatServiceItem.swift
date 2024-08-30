@@ -147,7 +147,7 @@ class ChatServiceItem: ChatRowItem {
             case .premium:
                 showModal(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, media: [], subscriptionPeriod: nil)
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil)
                 
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: .gift), for: context.window)
             }
@@ -541,7 +541,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, media: [], subscriptionPeriod: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil)
                                         showModal(with: Star_TransactionScreen(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -1097,8 +1097,13 @@ class ChatServiceItem: ChatRowItem {
                             }
                         }
                     }
-                case .giveawayLaunched:
-                    let text = strings().chatServiceGiveawayStarted(authorName)
+                case let .giveawayLaunched(stars):
+                    let text: String
+                    if let stars {
+                        text = strings().chatServiceGiveawayStartedStarsCountable(authorName, Int(stars))
+                    } else {
+                        text = strings().chatServiceGiveawayStarted(authorName)
+                    }
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     
                     if let authorId = authorId {
@@ -1119,17 +1124,17 @@ class ChatServiceItem: ChatRowItem {
                     if let recommendedChannels = entry.additionalData.recommendedChannels, !recommendedChannels.channels.isEmpty, !recommendedChannels.isHidden {
                         self.suggestChannelsData = .init(channels: recommendedChannels, context: context, presentation: theme)
                     }
-                case let .giveawayResults(winners, unclaimed):
+                case let .giveawayResults(winners, unclaimed, stars):
                     var text: String
                     if winners == 0 {
-                        text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+                        text = stars ? strings().chatServiceGiveawayResultsNoWinnersStarsCountable(Int(unclaimed)) : strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
                     } else if unclaimed > 0 {
-                        text = strings().chatServiceGiveawayResultsCountable(Int(winners))
-                        let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
-                        let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                        text = stars ? strings().chatServiceGiveawayResultsStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsCountable(Int(winners))
+                        let winnersString = stars ? strings().chatServiceGiveawayResultsMixedWinnersStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                        let unclaimedString = stars ? strings().chatServiceGiveawayResultsMixedUnclaimedStarsCountable(Int(unclaimed)) : strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
                         text = winnersString + "\n" + unclaimedString
                     } else {
-                        text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                        text = stars ? strings().chatServiceGiveawayResultsStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsCountable(Int(winners))
                     }
                     let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
@@ -1180,7 +1185,7 @@ class ChatServiceItem: ChatRowItem {
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, media: [], subscriptionPeriod: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, peer: .init(peer), transaction: transaction), for: context.window)
                         })

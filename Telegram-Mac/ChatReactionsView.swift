@@ -666,7 +666,7 @@ final class ChatReactionsLayout {
                        tagAction(value)
                     } else {
                         if value == .stars {
-                            engine.sendStarsReaction(message.id, count: 1, isAnonymous: message.isAnonymousInStarReaction)
+                            engine.sendStarsReaction(message.id, count: 1, isAnonymous: nil)
                         } else {
                             engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
                         }
