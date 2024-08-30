@@ -980,7 +980,7 @@ class APController : NSResponder {
 
     private func playOrPause(_ index: Int?) -> Bool {
         if let index = index {
-            if index != self.current {
+            if index != self.current, current != -1 {
                 self.current = index
                 dequeueCurrent()
             } else {
@@ -1201,7 +1201,7 @@ class APController : NSResponder {
     }
 
     var isLatest:Bool {
-        return current == 0
+        return current == 0 && self.state.orderState == .normal
     }
 
     func audioPlayerDidFinishPlaying() {

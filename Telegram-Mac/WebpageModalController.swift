@@ -271,13 +271,21 @@ private final class WebpageView : View {
 
     
     var standalone: Bool = true
+    var state: WebpageModalState?
     
+    var mainButtonAction:(()->Void)?
+    var secondaryButtonAction:(()->Void)?
+
     private let loading: LinearProgressControl = LinearProgressControl(progressHeight: 2)
 
-    
+   
     private class MainButton : Control {
+        
+        var state: WebpageModalState.ButtonState?
+        
         private let textView: TextView = TextView()
         private var loading: InfiniteProgressView?
+        private var shimmer: ShimmerEffectView?
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             
@@ -288,7 +296,9 @@ private final class WebpageView : View {
             
         }
         
-        func update(_ state: WebpageModalController.MainButtonState, animated: Bool) {
+        func update(_ state: WebpageModalState.ButtonState, animated: Bool) {
+            
+            self.state = state
             
             let textLayout = TextViewLayout(.initialize(string: state.text, color: state.textColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
             textLayout.measure(width: frame.width - 60)
@@ -303,7 +313,7 @@ private final class WebpageView : View {
                     current = view
                 } else {
                     current = .init(color: state.textColor, lineWidth: 2)
-                    current.setFrameSize(NSMakeSize(30, 30))
+                    current.setFrameSize(NSMakeSize(20, 20))
                     self.loading = current
                     addSubview(current)
                 }
@@ -312,15 +322,46 @@ private final class WebpageView : View {
                 performSubviewRemoval(view, animated: animated)
                 self.loading = nil
             }
+            
+            self.textView.change(opacity: loading == nil ? 1 : 0, animated: animated)
+            
+            if state.isShining {
+                let current: ShimmerEffectView
+                if let view = self.shimmer {
+                    current = view
+                } else {
+                    current = ShimmerEffectView()
+                    addSubview(current)
+                    self.shimmer = current
+                    
+                    
+                }
+                current.isStatic = true
+                
+            } else if let view = shimmer {
+                performSubviewRemoval(view, animated: animated)
+                self.shimmer = nil
+            }
+            
             needsLayout = true
         }
         
         override func layout() {
             super.layout()
             textView.resize(frame.width - 60)
-            textView.center()
-            if let loading = loading {
-                loading.centerY(x: frame.width - loading.frame.width - 10)
+            updateLayout(self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: textView, frame: textView.centerFrame())
+            if let loading = self.loading {
+                transition.updateFrame(view: loading, frame: loading.centerFrame())
+            }
+            
+            if let current = self.shimmer {
+                current.frame = size.bounds
+                current.updateAbsoluteRect(size.bounds, within: size)
+                current.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.bounds.height / 2)], horizontal: true, size: size.bounds.size)
             }
         }
         
@@ -329,7 +370,125 @@ private final class WebpageView : View {
         }
     }
     
-    private var mainButton:MainButton?
+    private class ButtonsBlock: View {
+        private var mainButton:MainButton?
+        private var secondaryButton:MainButton?
+        
+        var mainAction:(()->Void)?
+        var secondaryAction:(()->Void)?
+
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            border = [.Top]
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(_ state: WebpageModalState, animated: Bool) {
+            
+            
+            var animated = animated
+            
+            self.backgroundColor = state.bottomBarColor ?? theme.colors.grayForeground
+            self.borderColor = state.backgroundColor
+            
+            let (mainRect, secondaryRect) = rects(position: state.secondary?.position ?? .bottom, size: frame.size)
+            
+            if let state = state.main, state.isVisible, let text = state.text, !text.isEmpty {
+                let current: MainButton
+                if let view = self.mainButton {
+                    current = view
+                } else {
+                    current = .init(frame: mainRect)
+                    self.mainButton = current
+                    current.layer?.cornerRadius = 10
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    animated = false
+                    current.setSingle(handler: { [weak self] _ in
+                        self?.mainAction?()
+                    }, for: .Click)
+                }
+                current.update(state, animated: animated)
+                self.addSubview(current, positioned: .above, relativeTo: self.secondaryButton)
+
+                
+            } else if let view = self.mainButton {
+                performSubviewRemoval(view, animated: animated)
+                self.mainButton = nil
+            }
+            
+            if let state = state.secondary, state.isVisible, let text = state.text, !text.isEmpty {
+                let current: MainButton
+                if let view = self.secondaryButton {
+                    current = view
+                } else {
+                    current = .init(frame: secondaryRect)
+                    self.secondaryButton = current
+                    current.layer?.cornerRadius = 10
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    current.setSingle(handler: { [weak self] _ in
+                        self?.secondaryAction?()
+                    }, for: .Click)
+                }
+                self.addSubview(current, positioned: .below, relativeTo: self.mainButton)
+                current.update(state, animated: animated)
+            } else if let view = self.secondaryButton {
+                performSubviewRemoval(view, animated: animated)
+                self.secondaryButton = nil
+            }
+            
+            self.updateLayout(frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        }
+        
+        func rects(position: WebpageModalState.ButtonState.Position, size: NSSize) -> (main: NSRect, secondary: NSRect) {
+            let mainRect: NSRect
+            let secondaryRect: NSRect
+            switch position {
+            case .top:
+                secondaryRect = size.bounds.focusX(NSMakeSize(size.width - 20, 50), y: 10)
+                mainRect = size.bounds.focusX(NSMakeSize(size.width - 20, 50), y: secondaryRect.maxY + 10)
+            case .bottom:
+                mainRect = size.bounds.focusX(NSMakeSize(size.width - 20, 50), y: 10)
+                secondaryRect = size.bounds.focusX(NSMakeSize(size.width - 20, 50), y: mainRect.maxY + 10)
+            case .left:
+                secondaryRect = size.bounds.focusY(NSMakeSize(floorToScreenPixels((size.width - 30) / 2), 50), x: 10)
+                mainRect = size.bounds.focusY(NSMakeSize(floorToScreenPixels((size.width - 30) / 2), 50), x: secondaryRect.maxX + 10)
+            case .right:
+                mainRect = size.bounds.focusY(NSMakeSize(floorToScreenPixels((size.width - 30) / 2), 50), x: 10)
+                secondaryRect = size.bounds.focusY(NSMakeSize(floorToScreenPixels((size.width - 30) / 2), 50), x: mainRect.maxX + 10)
+            }
+            return (main: mainRect, secondary: secondaryRect)
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+            
+            if let secondaryButton, let mainButton {
+                let position = secondaryButton.state?.position ?? .bottom
+                let (mainRect, secondaryRect) = self.rects(position: position, size: size)
+                transition.updateFrame(view: secondaryButton, frame: secondaryRect)
+                transition.updateFrame(view: mainButton, frame: mainRect)
+                
+            } else if let button = (self.mainButton ?? self.secondaryButton) {
+                let rect = size.bounds.insetBy(dx: 10, dy: 10)
+                transition.updateFrame(view: button, frame: rect)
+                button.updateLayout(rect.size, transition: transition)
+            }
+        }
+        
+    }
+    
+    private var buttonsBlock: ButtonsBlock?
     
     private let headerView = WebpageHeaderView(frame: .zero)
     
@@ -355,6 +514,12 @@ private final class WebpageView : View {
             updateLocalizationAndTheme(theme: theme)
         }
     }
+    var _bottomBarColor: NSColor? {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
     var _headerColorKey: String? {
         didSet {
             updateLocalizationAndTheme(theme: theme)
@@ -371,6 +536,7 @@ private final class WebpageView : View {
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
         self.backgroundColor = _backgroundColor ?? theme.colors.background
         webview.background = theme.colors.background
+        buttonsBlock?.background = _bottomBarColor ?? theme.colors.grayForeground
         
         if let key = _headerColorKey {
             if key == "bg_color" {
@@ -449,29 +615,35 @@ private final class WebpageView : View {
         }
     }
     
-    func updateMainButton(_ state: WebpageModalController.MainButtonState?, animated: Bool, callback:@escaping()->Void) {
-        if let state = state, state.isVisible, let text = state.text, !text.isEmpty {
-            let current: MainButton
-            if let view = self.mainButton {
+    func update(_ state: WebpageModalState, animated: Bool) {
+        
+        self.state = state
+        
+        if state.hasButton {
+            let current: ButtonsBlock
+            if let view = self.buttonsBlock {
                 current = view
             } else {
-                current = .init(frame: NSMakeRect(0, frame.height, frame.width, 50))
-                self.mainButton = current
+                current = .init(frame: NSMakeRect(0, frame.height, frame.width, state.buttonsHeight))
+                self.buttonsBlock = current
                 self.addSubview(current)
                 
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
-                
-                current.set(handler: { _ in
-                    callback()
-                }, for: .Click)
             }
             current.update(state, animated: animated)
-        } else if let view = self.mainButton {
+            
+            current.mainAction = { [weak self] in
+                self?.mainButtonAction?()
+            }
+            current.secondaryAction = { [weak self] in
+                self?.secondaryButtonAction?()
+            }
+        } else if let view = self.buttonsBlock {
             performSubviewRemoval(view, animated: animated)
             view.layer?.animatePosition(from: view.frame.origin, to: view.frame.origin.offset(dx: 0, dy: view.frame.height), removeOnCompletion: false)
-            self.mainButton = nil
+            self.buttonsBlock = nil
         }
         self.updateLayout(frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
@@ -489,9 +661,10 @@ private final class WebpageView : View {
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: self.headerView, frame: NSMakeRect(0, 0, size.width, standalone ? 50 : 0))
-        if let mainButton = mainButton {
-            transition.updateFrame(view: mainButton, frame: NSMakeRect(0, size.height - 50, size.width, 50))
-            self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - mainButton.frame.height - self.headerView.frame.height)
+        if let buttonsBlock = buttonsBlock, let state = state {
+            transition.updateFrame(view: buttonsBlock, frame: NSMakeRect(0, size.height - state.buttonsHeight, size.width, state.buttonsHeight))
+            buttonsBlock.updateLayout(buttonsBlock.frame.size, transition: transition)
+            self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - buttonsBlock.frame.height - self.headerView.frame.height)
         } else {
             self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - self.headerView.frame.height)
         }
@@ -521,9 +694,33 @@ private final class WebpageView : View {
 
 
 struct WebpageModalState : Equatable {
+    
+    struct ButtonState : Equatable {
+        enum Priority {
+            case main
+            case secondary
+        }
+        enum Position : String {
+            case top
+            case bottom
+            case left
+            case right
+        }
+        var priority: Priority
+        var text: String?
+        var backgroundColor: NSColor
+        var textColor: NSColor
+        var isVisible: Bool
+        var isLoading: Bool
+        var isShining: Bool
+        var position: Position?
+    }
+    
+    
     var backgroundColor: NSColor?
     var headerColor: NSColor?
     var headerColorKey: String?
+    var bottomBarColor: NSColor?
     var hasSettings: Bool = false
     var isBackButton: Bool = false
     var needConfirmation: Bool = false
@@ -539,6 +736,32 @@ struct WebpageModalState : Equatable {
     var subtitle: String?
     
     var peer: EnginePeer?
+    
+    var main: ButtonState?
+    var secondary: ButtonState?
+    
+    var buttonsHeight: CGFloat {
+        if let secondary {
+            switch secondary.position {
+            case .top:
+                return 130
+            case .bottom:
+                return 130
+            case .left:
+                return 70
+            case .right:
+                return 70
+            case .none:
+                return 70
+            }
+        } else {
+            return 70
+        }
+    }
+    
+    var hasButton: Bool {
+        return main?.isVisible == true || secondary?.isVisible == true
+    }
 }
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate, BrowserPage {
@@ -601,37 +824,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
     }
     
-    
-    struct MainButtonState {
-        let text: String?
-        let backgroundColor: NSColor
-        let textColor: NSColor
-        let isVisible: Bool
-        let isLoading: Bool
-        
-        public init(
-            text: String?,
-            backgroundColor: NSColor,
-            textColor: NSColor,
-            isVisible: Bool,
-            isLoading: Bool
-        ) {
-            self.text = text
-            self.backgroundColor = backgroundColor
-            self.textColor = textColor
-            self.isVisible = isVisible
-            self.isLoading = isLoading
-        }
-        
-        static var initial: MainButtonState {
-            return MainButtonState(text: nil, backgroundColor: .clear, textColor: .clear, isVisible: false, isLoading: false)
-        }
-    }
-
-
-
-    
-
     private(set) var url:String
     private let context:AccountContext
     private var effectiveSize: NSSize?
@@ -679,6 +871,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
         }
     }
+    
+    private var _bottomBarColor: NSColor? {
+        didSet {
+            genericView._bottomBarColor = _bottomBarColor
+            updateState { current in
+                var current = current
+                current.bottomBarColor = _bottomBarColor
+                return current
+            }
+        }
+    }
+
+    
     private var _headerColorKey: String? {
         didSet {
             genericView._headerColorKey = _headerColorKey
@@ -718,6 +923,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
     }
     private var biometryDisposable: Disposable?
+    private let stateDisposable = MetaDisposable()
     
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil, fromMenu: Bool? = nil, hasSettings: Bool = false, browser: BrowserLinkManager? = nil) {
         self.url = url
@@ -861,6 +1067,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             FastSettings.markWebAppAsConfirmed(peerId)
         }
         
+        genericView.mainButtonAction = { [weak self] in
+            self?.pressMainButton()
+        }
+        genericView.secondaryButtonAction = { [weak self] in
+            self?.pressSecondaryButton()
+        }
         genericView.standalone = self.browser == nil
         
         genericView._holder.uiDelegate = self
@@ -903,6 +1115,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         biometryDisposable = biometrySignal.start(next: { [weak self] result in
             self?.biometryState = result
         })
+        
+        let signal = statePromise.get() |> deliverOnMainQueue
+        
+        let first = Atomic(value: true)
+        self.stateDisposable.set(signal.startStrict(next: { [weak self] state in
+            self?.genericView.update(state, animated: !first.swap(false))
+        }))
 
     }
     
@@ -1098,6 +1317,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         iconDisposable?.dispose()
         biometryDisposable?.dispose()
         apperanceDisposable.dispose()
+        stateDisposable.dispose()
         if isLoaded() {
             self.genericView._holder.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
         }
@@ -1222,10 +1442,35 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     let textColor = textColorString.flatMap({ NSColor(hexString: $0) }) ?? theme.colors.underSelectedColor
                     
                     let isLoading = json["is_progress_visible"] as? Bool
-                    let state = MainButtonState(text: text, backgroundColor: backgroundColor, textColor: textColor, isVisible: isVisible, isLoading: isLoading ?? false)
-                    self.genericView.updateMainButton(state, animated: true, callback: { [weak self] in
-                        self?.pressMainButton()
-                    })
+                    let isShining = json["has_shine_effect"] as? Bool ?? false
+
+                    let state = WebpageModalState.ButtonState(priority: .main, text: text, backgroundColor: backgroundColor, textColor: textColor, isVisible: isVisible, isLoading: isLoading ?? false, isShining: isShining)
+                    self.updateState { current in
+                        var current = current
+                        current.main = state
+                        return current
+                    }
+                }
+            }
+        case "web_app_setup_secondary_button":
+            if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                if let isVisible = json["is_visible"] as? Bool {
+                    let text = json["text"] as? String
+                    let backgroundColorString = json["color"] as? String
+                    let backgroundColor = backgroundColorString.flatMap({ NSColor(hexString: $0) }) ?? theme.colors.accent
+                    let textColorString = json["text_color"] as? String
+                    let textColor = textColorString.flatMap({ NSColor(hexString: $0) }) ?? theme.colors.underSelectedColor
+                    
+                    let isLoading = json["is_progress_visible"] as? Bool
+                    let isShining = json["has_shine_effect"] as? Bool ?? false
+                    let position = (json["position"] as? String).flatMap { WebpageModalState.ButtonState.Position(rawValue: $0) }
+
+                    let state = WebpageModalState.ButtonState(priority: .secondary, text: text, backgroundColor: backgroundColor, textColor: textColor, isVisible: isVisible, isLoading: isLoading ?? false, isShining: isShining, position: position)
+                    self.updateState { current in
+                        var current = current
+                        current.secondary = state
+                        return current
+                    }
                 }
             }
         case "web_app_request_viewport":
@@ -1439,6 +1684,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             } else if let json = json, let color = json["color"] as? String {
                 self._headerColor = NSColor(hexString: color)
                 self._headerColorKey = nil
+            }
+        case "web_app_set_bottom_bar_color":
+            if let json = json, let colorValue = json["color"] as? String, let color = NSColor(hexString: colorValue) {
+                self._bottomBarColor = color
             }
         case "web_app_request_write_access":
             self.requestWriteAccess()
@@ -1847,7 +2096,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     fileprivate func pressMainButton() {
         self.sendEvent(name: "main_button_pressed", data: nil)
     }
-
+    fileprivate func pressSecondaryButton() {
+        self.sendEvent(name: "secondary_button_pressed", data: nil)
+    }
     
     func contextMenu() -> ContextMenu {
         var items:[ContextMenuItem] = []

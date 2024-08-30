@@ -540,7 +540,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             }, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
             }, unreadBadge: badge, canAddAsTag: canAddAsTag, storyStats: storyStats, openStory: arguments.openStory)
-        case let .topic(item, _, badge, border, canAddAsTag):
+        case let .topic(item, _, _, _, _):
             return SearchTopicRowItem(initialSize, stableId: entry.stableId, item: item, context: arguments.context)
         case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder, storyStats, canRemoveRecent):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: canRemoveRecent, controlAction: {
@@ -1069,7 +1069,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                 }
                 
-                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single((cachedData.with({ $0.cachedMessages(for: .init(query: query)) }), true, nil, nil)) |> then(remoteSearch)
+                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
                 
                 return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState)
                     |> map { localPeers, remotePeers, remoteMessages, isRevealed, storySearchState -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
@@ -1293,8 +1293,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             for channelId in list {
                                 let subscribers = localChannels.1.3[channelId] ?? 0
                                 let peer = localChannels.1.0[channelId] ?? nil
-                                let notificationSettings = localChannels.1.1[channelId] ?? nil
-                                let unreadCount = localChannels.1.2[channelId] ?? nil
 
                                 let storyStats = localChannels.1.4[channelId] ?? nil
 

@@ -86,13 +86,11 @@ private final class Webapp : Window {
 
 class WebappRecentlyUsed : Equatable {
     static func == (lhs: WebappRecentlyUsed, rhs: WebappRecentlyUsed) -> Bool {
-        return lhs.peerId != rhs.peerId
+        return lhs.tabdata.unique != rhs.tabdata.unique
     }
-    let peerId: PeerId
-    let tabdata: BrowserTabData.Data
+    var tabdata: BrowserTabData
     
-    init(peerId: PeerId, tabdata: BrowserTabData.Data) {
-        self.peerId = peerId
+    init(tabdata: BrowserTabData) {
         self.tabdata = tabdata
     }
 }
@@ -136,9 +134,6 @@ final class WebappWindow {
 struct WebappsState : Equatable {
     var recentlyUsed: [WebappRecentlyUsed] = []
     
-    var peerIds: [PeerId] {
-        return recentlyUsed.map { $0.peerId }
-    }
     
     var isEmpty: Bool {
         return recentlyUsed.isEmpty
@@ -269,14 +264,12 @@ final class BrowserStateContext {
     struct FullState : Equatable {
         
         struct ResolvedRecently : Equatable {
-            var peerId: PeerId
-            let tab: BrowserTabData.Data
+            let tab: BrowserTabData
         }
         
         let opened: [BrowserTabData]
         
         let state: WebappsState
-        let peers: [EnginePeer.Id : EnginePeer]
         let recentlyMenu: [ResolvedRecently]
         
         struct Recommended : Equatable {
@@ -293,19 +286,6 @@ final class BrowserStateContext {
     
     func fullState(_ context: AccountContext) -> Signal<FullState, NoError> {
         return combineLatest(statePromise.get(), browserState.get()) |> mapToSignal { value, browserState in
-            let peersSignal: [Signal<EnginePeer?, NoError>] = value.peerIds.map {
-                context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: $0))
-            }
-            let recentApps: [Signal<(EnginePeer, BrowserTabData.Data)?, NoError>] = value.recentlyUsed.map { value in
-                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: value.peerId)) |> map { peer in
-                    if let peer {
-                        return (peer, value.tabdata)
-                    } else {
-                        return nil
-                    }
-                }
-            }
-            
             let recommendedList:(Signal<[EnginePeer.Id]?, NoError>) -> Signal<[FullState.Recommended], NoError> = { signal in
                 return signal |> mapToSignal { appIds in
                     if let appIds {
@@ -333,27 +313,19 @@ final class BrowserStateContext {
             let recentUsedApps: Signal<[FullState.Recommended], NoError> = recommendedList(context.engine.peers.recentApps() |> map(Optional.init)) |> map { Array($0.filter { $0.peer._asPeer().botInfo?.flags.contains(.hasWebApp) == true }.prefix(10)) }
             
             
-            let combinedRecentApps = combineLatest(recentApps) |> map { peers in
-                var recent: [FullState.ResolvedRecently] = []
-                let peers = peers.compactMap { $0 }
-                for (peer, tab) in peers {
-                    if !browserState.contains(where: { $0.data.peer?.id == peer.id }) {
-                        recent.append(.init(peerId: peer.id, tab: tab))
-                    }
+            let combinedRecentApps: [FullState.ResolvedRecently] = value.recentlyUsed.compactMap { recent in
+                if !browserState.contains(where: { $0.unique == recent.tabdata.unique }) {
+                    return .init(tab: recent.tabdata)
                 }
-                return recent
+                return nil
             }
             
-            let combinedPeers = combineLatest(peersSignal)
-            let peers: Signal<[EnginePeer.Id : EnginePeer], NoError> = combinedPeers |> map { peers in
-                return peers.compactMap { $0 }.toDictionary(with: { $0.id })
-            }
                         
-            return combineLatest(peers, combinedRecentApps, recommendedApps, recentUsedApps) |> map { (peers, recentlyMenu, recommendedApps, recentUsedApps) in
+            return combineLatest(recommendedApps, recentUsedApps) |> map { (recommendedApps, recentUsedApps) in
                 let recommended = recommendedApps.filter { value in
                     return !recentUsedApps.contains(where: { $0.peer.id == value.peer.id })
                 }
-                return FullState(opened: browserState.filter { $0.data.peer != nil }, state: value, peers: peers, recentlyMenu: recentlyMenu, recommended: recommended, recentUsedApps: recentUsedApps)
+                return FullState(opened: browserState, state: value, recentlyMenu: combinedRecentApps, recommended: recommended, recentUsedApps: recentUsedApps)
             }
         }
     }
@@ -364,17 +336,34 @@ final class BrowserStateContext {
 
     
     func add(_ recently: WebappRecentlyUsed) {
+        if recently.tabdata.data.canBeRecent {
+            updateState { current in
+                var current = current
+                if let index = current.recentlyUsed.firstIndex(where: { $0.tabdata.unique == recently.tabdata.unique }) {
+                    current.recentlyUsed.move(at: index, to: 0)
+                    current.recentlyUsed[0] = recently
+                } else {
+                    current.recentlyUsed.insert(recently, at: 0)
+                }
+                return current
+            }
+        }
+    }
+    func setExternalState(_ unique: BrowserTabData.Unique, external: WebpageModalState) {
         updateState { current in
             var current = current
-            if let index = current.recentlyUsed.firstIndex(where: { $0.peerId == recently.peerId }) {
-                current.recentlyUsed.move(at: index, to: 0)
-            } else {
-                current.recentlyUsed.insert(recently, at: 0)
+            if let index = current.recentlyUsed.firstIndex(where: { $0.tabdata.unique == unique }) {
+                current.recentlyUsed[index].tabdata.external = external
             }
             return current
         }
     }
     
+    func getExternal(_ unique: BrowserTabData.Unique) -> WebpageModalState? {
+        return self.stateValue.with {
+            $0.recentlyUsed.first(where: { $0.tabdata.unique == unique })?.tabdata.external
+        }
+    }
     
     func closeAll() {
         hide()
@@ -400,9 +389,7 @@ final class BrowserStateContext {
                 let controller = WebappBrowserController(context: context, initialTab: tab)
                 self.show(controller)
             }
-            if let savebleId = tab.savebleId {
-                self.add(.init(peerId: savebleId, tabdata: tab))
-            }
+
         }
         
         let window = self.browser?.window ?? context.window

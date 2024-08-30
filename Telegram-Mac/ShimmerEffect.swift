@@ -8,7 +8,7 @@
 
 import Foundation
 import TGUIKit
-
+import SwiftSignalKit
 
 final class ShimmerEffectForegroundView: View {
     private var currentBackgroundColor: NSColor?
@@ -22,6 +22,11 @@ final class ShimmerEffectForegroundView: View {
     private var shouldBeAnimating = false
     
     public var isStatic: Bool = false
+    private var disposable: Disposable?
+    
+    deinit {
+        disposable?.dispose()
+    }
     
     override init() {
         super.init()
@@ -161,14 +166,15 @@ final class ShimmerEffectForegroundView: View {
         if isStatic {
             animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
                 if completed {
-                    delay(2 - duration, closure: {
+                    self?.disposable = delaySignal(2 - duration).startStrict(completed: {
                         self?.addImageAnimation()
                     })
                 }
             })
         }
         
-        
+        self.disposable?.dispose()
+        self.imageView.layer!.removeAnimation(forKey: "shimmer")
         self.imageView.layer!.add(animation, forKey: "shimmer")
 
     }

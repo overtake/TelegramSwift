@@ -746,6 +746,7 @@ class SharedAccountContext {
     }
     func endInlinePlayer(animated: Bool) -> Void {
         let value = crossInlinePlayer.swap(nil)
+        value?.controller.stop()
         appDelegate?.enumerateAccountContexts { accountContext in
             let header = accountContext.bindings.rootNavigation().header
             header?.hide(animated)
@@ -757,7 +758,8 @@ class SharedAccountContext {
             let header = accountContext.bindings.rootNavigation().header
             header?.show(true, contextObject: object)
         }
-        _ = crossInlinePlayer.swap(object)
+        let previous = crossInlinePlayer.swap(object)
+        previous?.controller.stop()
     }
     
     func getAudioPlayer() -> APController? {

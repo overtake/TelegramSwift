@@ -1027,7 +1027,7 @@ public final class TextViewLayout : Equatable {
                     return
                 }
                                         
-                if abs(rightOffset - leftOffset) < 100, abs(rightOffset - leftOffset) > 8 {
+                if abs(rightOffset - leftOffset) < 200 {
                     let x = floor(min(leftOffset, rightOffset)) + 1
                     var width = floor(abs(rightOffset - leftOffset) + rightInset)
                     if Int(width) % 2 != 0 {
