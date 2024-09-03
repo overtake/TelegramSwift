@@ -12235,6 +12235,8 @@ public final class L10n {
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
   public static var peerInfoReport: String  { return L10n.tr("Localizable", "PeerInfo.Report") }
+  /// Report Bot
+  public static var peerInfoReportBot: String  { return L10n.tr("Localizable", "PeerInfo.ReportBot") }
   /// Block and Report
   public static var peerInfoReportReaction: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction") }
   /// Restart Bot
@@ -19888,6 +19890,10 @@ public final class L10n {
   /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
   public static func webAppFirstOpenInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.FirstOpen.Info", p1)
+  }
+  /// By launching this mini app, you agree to the [Terms of Service for Mini Apps.](%@)
+  public static func webAppFirstOpenTerms(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.FirstOpen.Terms", p1)
   }
   /// Open Web App
   public static var webAppFirstOpenTitle: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.Title") }

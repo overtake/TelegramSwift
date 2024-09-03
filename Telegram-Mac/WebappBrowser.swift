@@ -1760,7 +1760,7 @@ final class WebappBrowserController : ViewController {
             guard let event = NSApp.currentEvent else {
                 return
             }
-            let state = BrowserStateContext.get(context).fullState(context)
+            let state = BrowserStateContext.get(context).fullState()
             |> take(1)
             |> deliverOnMainQueue
             actionsDisposable.add(state.startStrict(next: { [weak control] webapps in

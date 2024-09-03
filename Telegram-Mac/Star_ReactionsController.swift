@@ -1138,7 +1138,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     ))
     
     let messageView = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.Message(id: message.id))
-    
+    var isFirst: Bool = true
     actionsDisposable.add(combineLatest(context.starsContext.state, topPeersSignal, messageView).start(next: { state, top, updatedMessage in
         
         var values: [State.TopPeer] = []
@@ -1151,14 +1151,17 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
             }
             values.append(.init(peer: currentPeer, isMy: topPeer.isMy, count: Int64(topPeer.count), isAnonymous: topPeer.isAnonymous))
         }
-        
         updateState { current in
             var current = current
             current.myBalance = state?.balance ?? 0
             current.topPeers = values
             current.message = updatedMessage ?? .init(message)
+            if isFirst {
+                current.showMeInTop = !message.isAnonymousInStarReaction
+            }
             return current
         }
+        isFirst = false
     }))
     
     let react:()->Void = {
@@ -1207,10 +1210,8 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
             current.showMeInTop = !current.showMeInTop
             return current
         }
-        let reacted = message.reactionsAttribute?.reactions.first(where: { $0.value == .stars && $0.isSelected }) != nil
-        if reacted {
-            _ = context.engine.messages.updateStarsReactionIsAnonymous(id: message.id, isAnonymous: stateValue.with { !$0.showMeInTop }).startStandalone()
-        }
+        _ = context.engine.messages.updateStarsReactionIsAnonymous(id: message.id, isAnonymous: stateValue.with { !$0.showMeInTop }).startStandalone()
+
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

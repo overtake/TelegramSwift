@@ -272,7 +272,7 @@ public extension NSFont {
             return font
         }
         if #available(OSX 10.15, *) {
-            return NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+            return NSFont.monospacedSystemFont(ofSize: size, weight: .medium)
         } else {
             return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: size)
         }

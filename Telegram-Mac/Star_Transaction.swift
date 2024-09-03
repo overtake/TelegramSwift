@@ -437,6 +437,10 @@ private final class HeaderView : GeneralContainableRowView {
         self.dismiss.autohighlight = false
         
         
+        dismiss.setSingle(handler: { [weak item] _ in
+            item?.arguments.close()
+        }, for: .Click)
+        
         if item.peer == nil {
             let current: ImageView
             if let view = self.outgoingView {
@@ -540,13 +544,15 @@ private final class Arguments {
     let openLink:(String)->Void
     let previewMedia:()->Void
     let openApps:()->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void) {
+    let close: ()->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
         self.openLink = openLink
         self.previewMedia = previewMedia
         self.openApps = openApps
+        self.close = close
     }
 }
 
@@ -809,6 +815,8 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         }
     }, openApps: {
         showModal(with: Star_AppExamples(context: context), for: window)
+    }, close: {
+        close?()
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

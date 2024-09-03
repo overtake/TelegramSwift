@@ -15,6 +15,17 @@ import Postbox
 import InAppPurchaseManager
 import CurrencyFormat
 
+extension PrepaidGiveaway {
+    var purpose: LaunchGiveawayPurpose {
+        switch self.prize {
+        case let .stars(stars, _):
+            return .stars(stars: stars, users: quantity)
+        case .premium:
+            return .premium
+        }
+    }
+}
+
 
 private final class StarsToDistributeRowItem : GeneralRowItem {
     let context: AccountContext
@@ -635,9 +646,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(months) % 7)
             title = strings().giveawayTypePrepaidTitle(Int(prepaid.quantity))
             info = strings().giveawayTypePrepaidDesc(Int(months))
-        case let .stars(stars):
-            countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(prepaid.quantity)", color: theme.colors.accent, font: .avatar(.text)))
-            icon = NSImage.init(resource: .iconGiveawayStars).precomposed()
+        case let .stars(stars, boosts):
+            countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(boosts)", color: theme.colors.accent, font: .avatar(.text)))
+            icon = NSImage.init(resource: .iconGiveawayStars).precomposed(flipVertical: true)
             title = strings().giveawayStarsPrepaidTitle(Int(stars))
             info = strings().giveawayStarsPrepaidDescCountable(Int(prepaid.quantity))
         }
@@ -768,6 +779,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let maximumReached = arguments.context.appConfiguration.getGeneralValue("giveaway_add_peers_max", orElse: 10) == channels.count
         
+        let perSentGift = arguments.context.appConfiguration.getGeneralValue("boosts_per_sent_gift", orElse: 4)
+        
         for (i, channel) in channels.enumerated() {
             var viewType = bestGeneralViewType(channels, for: i)
             if !maximumReached {
@@ -779,11 +792,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }
                 }
             }
-            
-            
-            channelItems.append(.init(peer: channel, quantity: state.quantity, viewType: viewType, deletable: i != 0))
+            var quantity = state.quantity
+            switch state.type {
+            case .prepaid(let prepaidGiveaway):
+                switch prepaidGiveaway.prize {
+                case .premium:
+                    quantity = quantity * perSentGift
+                case let .stars(_, boosts):
+                    quantity = boosts
+                }
+            case .stars:
+                quantity = state.quantity
+            default:
+                quantity = quantity * perSentGift
+            }
+            channelItems.append(.init(peer: channel, quantity: quantity, viewType: viewType, deletable: i != 0))
         }
-        let perSentGift = arguments.context.appConfiguration.getGeneralValue("boosts_per_sent_gift", orElse: 4)
 
         
         for item in channelItems {
@@ -791,10 +815,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 let status: String?
                 if item.peer.peer.id == state.channels[0].peer.id {
+                    
                     if state.isGroup {
-                        status = strings().giveawayChannelsBoostReceiveGroupCountable(Int(item.quantity * perSentGift))
+                        status = strings().giveawayChannelsBoostReceiveGroupCountable(Int(item.quantity))
                     } else {
-                        status = strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity * perSentGift))
+                        status = strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity))
                     }
                 } else {
                     status = nil
@@ -1455,7 +1480,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                 let state = stateValue.with { $0 }
                 let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
                 let countries = state.countries.map { $0.id }
-                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: state.showWinners, prizeDescription: state.prizeDescription, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
+                let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, purpose: prepaid.purpose, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, showWinners: state.showWinners, prizeDescription: state.prizeDescription, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
                 _ = showModalProgress(signal: signal, for: context.window).start(completed: {
                     PlayConfetti(for: context.window)
                     showModalText(for: context.window, text: strings().giveawayAlertCreated)
