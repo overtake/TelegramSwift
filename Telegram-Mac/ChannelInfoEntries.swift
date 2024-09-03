@@ -587,12 +587,12 @@ class ChannelInfoArguments : PeerInfoArguments {
         if datacenterId == 0 {
             self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId))
         } else {
-            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true, monetization: monetization, stars: stars))
+            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true, monetization: monetization, stars: stars && !monetization))
         }
     }
     
     func openStats(_ ton: Int64, _ stars: Int64, _ canSeeTon: Bool, _ canSeeStars: Bool) {
-        self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true, monetization: canSeeTon, stars: canSeeStars, onlyMonetization: true))
+        self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true, monetization: canSeeTon, stars: canSeeStars && !canSeeTon, onlyMonetization: true))
     }
     
     func share() {

@@ -284,7 +284,8 @@ final class BrowserStateContext {
         let recentUsedApps: [Recommended]
     }
     
-    func fullState(_ context: AccountContext) -> Signal<FullState, NoError> {
+    func fullState() -> Signal<FullState, NoError> {
+        let context = self.context
         return combineLatest(statePromise.get(), browserState.get()) |> mapToSignal { value, browserState in
             let recommendedList:(Signal<[EnginePeer.Id]?, NoError>) -> Signal<[FullState.Recommended], NoError> = { signal in
                 return signal |> mapToSignal { appIds in
@@ -397,10 +398,17 @@ final class BrowserStateContext {
         if let peer = tab.peer {
             let peerId = peer.id
             if FastSettings.shouldConfirmWebApp(peerId) {
-                verifyAlert_button(for: window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer._asPeer().displayTitle), successHandler: { _ in
-                    invoke()
-                    FastSettings.markWebAppAsConfirmed(peerId)
+                
+                let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
+                _ = signal.startStandalone(next: { privacyUrl in
+                    let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                    verifyAlert_button(for: window, header: peer._asPeer().displayTitle, information: strings().webAppFirstOpenTerms(privacyUrl), successHandler: { _ in
+                        invoke()
+                        FastSettings.markWebAppAsConfirmed(peerId)
+                    })
                 })
+                
+                
             } else {
                 invoke()
             }

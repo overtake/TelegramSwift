@@ -784,9 +784,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(months) % 7)
                     title = strings().giveawayTypePrepaidTitle(Int(prepaid.quantity))
                     info = strings().giveawayTypePrepaidDesc(Int(months))
-                case let .stars(stars):
-                    countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(prepaid.quantity)", color: theme.colors.accent, font: .avatar(.text)))
-                    icon = NSImage.init(resource: .iconGiveawayStars).precomposed()
+                case let .stars(stars, boosts):
+                    countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(boosts)", color: theme.colors.accent, font: .avatar(.text)))
+                    icon = NSImage(resource: .iconGiveawayStars).precomposed(flipVertical: true)
                     title = strings().giveawayStarsPrepaidTitle(Int(stars))
                     info = strings().giveawayStarsPrepaidDescCountable(Int(prepaid.quantity))
                 }

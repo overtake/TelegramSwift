@@ -139,34 +139,6 @@ struct PeerListState : Equatable {
             }
         }
         
-        var icon: CGImage {
-            switch self {
-            case .chats:
-                return theme.icons.search_filter
-            case .downloads:
-                return theme.icons.search_filter_downloads
-            case .channels:
-                return theme.icons.search_filter
-            case .apps:
-                return theme.icons.search_filter
-            case .photos:
-                return theme.icons.search_filter_media
-            case .videos:
-                return theme.icons.search_filter_media
-            case .links:
-                return theme.icons.search_filter_links
-            case .music:
-                return theme.icons.search_filter_music
-            case .voice:
-                return theme.icons.search_filter_music
-            case .gif:
-                return theme.icons.search_filter_music
-            case .files:
-                return theme.icons.search_filter_files
-            default:
-                return theme.icons.search_filter
-            }
-        }
         
         var title: String {
             switch self {
@@ -1358,8 +1330,8 @@ class PeerListContainerView : Control {
             performSubviewRemoval(view, animated: animated)
             self.backButton = nil
         }
-        
-        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, !state.mode.isForumLike {
+                
+        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, !hasForumTitle || state.forumPeer == nil {
             let current: WebappsControl
             let isNew: Bool
             if let view = self.webapps {
@@ -1494,9 +1466,11 @@ class PeerListContainerView : Control {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-        } else if let view = self.webapps {
-            performSubviewRemoval(view, animated: animated)
-            self.webapps = nil
+        } else {
+            if let view = self.webapps {
+                performSubviewRemoval(view, animated: animated)
+                self.webapps = nil
+            }
         }
         
         
@@ -1529,7 +1503,7 @@ class PeerListContainerView : Control {
                 
             }, deleteTag: { index in
                 updateSearchTags(.chats)
-            }, icon: theme.icons.search_filter)
+            }, icon: theme.search.searchImage)
         }
     }
     
@@ -1977,6 +1951,7 @@ private class SearchContainer : Control {
         super.init(frame: frameRect)
         addSubview(tagsView)
         addSubview(searchView)
+        border = [.Right]
     }
     
     override var sendRightMouseAnyway: Bool {
@@ -2450,7 +2425,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
        
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, BrowserStateContext.get(context).fullState(context)).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, BrowserStateContext.get(context).fullState()).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0
@@ -2654,11 +2629,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         _ = context.engine.peers.updateForumViewAsMessages(peerId: peer.peer.id, value: true).start()
                     }, itemImage: MenuAnimation.menu_read.value))
                 }
-                if let cachedData = self?.state?.forumPeer?.peerView.cachedData as? CachedChannelData {
-                    if case .thread = chatController?.chatInteraction.chatLocation {
-                        
-                    }
-                }
+               
 
                 if peer.peer.hasPermission(.manageTopics) {
                     if topicController?.identifier != "ForumTopic" {
@@ -2821,45 +2792,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         self.searchContainer?.update(state, animated: animated, arguments: arguments)
         
-       // self.searchController?.updateSearchTags(state.selectedTag.searchTags(state.peerTag?.id))
-//        self.sharedMediaWithToken(state.selectedTag.searchTags(state.peerTag?.id))
     }
     
-    /*
-     let contextMenu:()->[ContextMenuItem] = { [weak self] in
-         
-         var items: [ContextMenuItem] = []
-         
-         items.append(.init(strings().chatHashtagThisChat, handler: {
-             self?.updateState { current in
-                 var current = current
-                 current.hashtag?.mode = .thisChat
-                 return current
-             }
-         }, state: mode == .thisChat ? .on : nil, itemImage: MenuAnimation.menu_read.value))
-         
-         items.append(.init(strings().chatHashtagMyMessages, handler: {
-             self?.updateState { current in
-                 var current = current
-                 current.hashtag?.mode = .myMessages
-                 return current
-             }
-         }, state: mode == .myMessages ? .on : nil, itemImage: MenuAnimation.menu_folder_all_chats.value))
-         
-         items.append(.init(strings().chatHashtagPublicPosts, handler: {
-             self?.updateState { current in
-                 var current = current
-                 current.hashtag?.mode = .publicPosts
-                 return current
-             }
-         }, state: mode == .publicPosts ? .on : nil, itemImage: MenuAnimation.menu_channel.value))
-         
-         return items
-     }
-     
-     //self?.genericView.searchView.updateTags([.init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu, isTextTied: true)], theme.icons.search_filter_hashtag, animated: false)
 
-     */
         
     private var takeArguments:()->Arguments? = {
         return nil
@@ -3358,6 +3293,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.updateState { current in
                 var current = current
                 current.selectedForum = peerId
+                if peerId == nil {
+                    current.forumPeer = nil
+                }
                 return current
             }
             let context = self.context
