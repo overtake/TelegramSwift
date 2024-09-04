@@ -317,6 +317,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
             case .Local, .Remote:
                 if let wrapper = item.audioWrapper {
                     if let controller = item.context.sharedContext.getAudioPlayer(), controller.playOrPause(wrapper) {
+                        
                     } else {
                         let controller = APSingleResourceController(context: item.context, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
@@ -339,17 +340,17 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     }
     
     func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     
     func audioDidCompleteQueue(for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     
     func checkState() {

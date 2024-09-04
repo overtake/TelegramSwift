@@ -102,7 +102,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var tagsInfo: [TagInfo] = []
     
-    public struct TagInfo {
+    public struct TagInfo : Equatable {
+        public static func == (lhs: SearchView.TagInfo, rhs: SearchView.TagInfo) -> Bool {
+            return lhs.text == rhs.text && lhs.blockInput == rhs.blockInput && lhs.isTextTied == rhs.isTextTied
+        }
+        
         let text: String
         let image: CGImage?
         let contextMenu:(()->[ContextMenuItem])?
@@ -118,6 +122,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     public func updateTags(_ tags: [TagInfo], _ image: CGImage, animated: Bool = true) {
+        guard self.tagsInfo != tags || tags.isEmpty else {
+            return
+        }
         self.tagsInfo = tags
         for tag in self.tags {
             if animated {

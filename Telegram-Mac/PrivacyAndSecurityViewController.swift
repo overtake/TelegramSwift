@@ -637,7 +637,7 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         } else {
             value = privacySettings.accountRemovalTimeout
         }
-        entries.append(.accountTimeout(sectionId: sectionId, timeIntervalString(Int(value)), viewType: .singleItem))
+        entries.append(.accountTimeout(sectionId: sectionId, timeIntervalString(Int(value), months: true), viewType: .singleItem))
 
     } else {
         entries.append(.accountTimeout(sectionId: sectionId, "", viewType: .singleItem))
@@ -1042,7 +1042,8 @@ class PrivacyAndSecurityViewController: TableViewController {
                             1 * 30 * 24 * 60 * 60,
                             3 * 30 * 24 * 60 * 60,
                             180 * 24 * 60 * 60,
-                            365 * 24 * 60 * 60
+                            365 * 24 * 60 * 60,
+                            548 * 24 * 60 * 60
                         ]
                         var items: [ContextMenuItem] = []
 
@@ -1055,8 +1056,11 @@ class PrivacyAndSecurityViewController: TableViewController {
                         items.append(ContextMenuItem(strings().timerMonthsCountable(6), handler: {
                             timeoutAction(timeoutValues[2])
                         }))
-                        items.append(ContextMenuItem(strings().timerYearsCountable(1), handler: {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(12), handler: {
                             timeoutAction(timeoutValues[3])
+                        }))
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(18), handler: {
+                            timeoutAction(timeoutValues[4])
                         }))
 
                         let stableId = PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId

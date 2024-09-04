@@ -14,22 +14,6 @@ import TGUIKit
 
 private let gradient = [NSColor(0xFFAC04), NSColor(0xFFCA35)]
 
-private func calculateSliderValue(from progress: Double, minValue: Double = 1, maxValue: Double = 2500) -> Double {
-    let clampedProgress = min(max(progress, 0), 1)
-    let logarithmicProgress = log(1 + clampedProgress * 9) / log(10)  // Using log base 10 for ease
-    let sliderValue = minValue + logarithmicProgress * (maxValue - minValue)
-    
-    return sliderValue
-}
-func calculateProgress(from value: Double, minValue: Double = 1, maxValue: Double = 2500) -> Double {
-    let clampedValue = min(max(value, minValue), maxValue)
-    let normalizedValue = (clampedValue - minValue) / (maxValue - minValue)
-    let logBase: Double = 10
-    let progress = (pow(logBase, normalizedValue) - 1) / 9
-    let clampedProgress = min(max(progress, 0), 1)
-    
-    return clampedProgress
-}
 
 private final class BadgeStarsViewEffect: View {
     private let staticEmitterLayer = CAEmitterLayer()
@@ -190,6 +174,84 @@ private final class Arguments {
 
 private struct State : Equatable {
     
+    struct Amount: Equatable {
+        private let sliderSteps: [Int]
+        let maxRealValue: Int
+        let maxSliderValue: Int
+        private let isLogarithmic: Bool
+        
+        private(set) var realValue: Int
+        private(set) var sliderValue: Int
+        
+        private static func makeSliderSteps(maxRealValue: Int, isLogarithmic: Bool) -> [Int] {
+            if isLogarithmic {
+                var sliderSteps: [Int] = [ 1, 10, 50, 100, 500, 1_000, 2_000, 5_000, 7_500, 10_000 ]
+                sliderSteps.removeAll(where: { $0 >= maxRealValue })
+                sliderSteps.append(maxRealValue)
+                return sliderSteps
+            } else {
+                return [1, maxRealValue]
+            }
+        }
+        
+        private static func remapValueToSlider(realValue: Int, maxSliderValue: Int, steps: [Int]) -> Int {
+            guard realValue >= steps.first!, realValue <= steps.last! else { return 0 }
+
+            for i in 0 ..< steps.count - 1 {
+                if realValue >= steps[i] && realValue <= steps[i + 1] {
+                    let range = steps[i + 1] - steps[i]
+                    let relativeValue = realValue - steps[i]
+                    let stepFraction = Float(relativeValue) / Float(range)
+                    return Int(Float(i) * Float(maxSliderValue) / Float(steps.count - 1)) + Int(stepFraction * Float(maxSliderValue) / Float(steps.count - 1))
+                }
+            }
+            return maxSliderValue // Return max slider position if value equals the last step
+        }
+
+        private static func remapSliderToValue(sliderValue: Int, maxSliderValue: Int, steps: [Int]) -> Int {
+            guard sliderValue >= 0, sliderValue <= maxSliderValue else { return steps.first! }
+
+            let stepIndex = Int(Float(sliderValue) / Float(maxSliderValue) * Float(steps.count - 1))
+            let fraction = Float(sliderValue) / Float(maxSliderValue) * Float(steps.count - 1) - Float(stepIndex)
+            
+            if stepIndex >= steps.count - 1 {
+                return steps.last!
+            } else {
+                let range = steps[stepIndex + 1] - steps[stepIndex]
+                return steps[stepIndex] + Int(fraction * Float(range))
+            }
+        }
+        
+        init(realValue: Int, maxRealValue: Int, maxSliderValue: Int, isLogarithmic: Bool) {
+            self.sliderSteps = Amount.makeSliderSteps(maxRealValue: maxRealValue, isLogarithmic: isLogarithmic)
+            self.maxRealValue = maxRealValue
+            self.maxSliderValue = maxSliderValue
+            self.isLogarithmic = isLogarithmic
+            
+            self.realValue = realValue
+            self.sliderValue = Amount.remapValueToSlider(realValue: self.realValue, maxSliderValue: self.maxSliderValue, steps: self.sliderSteps)
+        }
+        
+        init(sliderValue: Int, maxRealValue: Int, maxSliderValue: Int, isLogarithmic: Bool) {
+            self.sliderSteps = Amount.makeSliderSteps(maxRealValue: maxRealValue, isLogarithmic: isLogarithmic)
+            self.maxRealValue = maxRealValue
+            self.maxSliderValue = maxSliderValue
+            self.isLogarithmic = isLogarithmic
+            
+            self.sliderValue = sliderValue
+            self.realValue = Amount.remapSliderToValue(sliderValue: self.sliderValue, maxSliderValue: self.maxSliderValue, steps: self.sliderSteps)
+        }
+        
+        func withRealValue(_ realValue: Int) -> Amount {
+            return Amount(realValue: realValue, maxRealValue: self.maxRealValue, maxSliderValue: self.maxSliderValue, isLogarithmic: self.isLogarithmic)
+        }
+        
+        func withSliderValue(_ sliderValue: Int) -> Amount {
+            return Amount(sliderValue: sliderValue, maxRealValue: self.maxRealValue, maxSliderValue: self.maxSliderValue, isLogarithmic: self.isLogarithmic)
+        }
+    }
+
+    
     struct TopPeer : Equatable {
         var peer: EnginePeer?
         var isMy: Bool
@@ -197,9 +259,10 @@ private struct State : Equatable {
         var isAnonymous: Bool
     }
     
+    var amount: Amount = Amount(realValue: 1, maxRealValue: 2500, maxSliderValue: 2500, isLogarithmic: true)
+    
     var myPeer: EnginePeer
     var myBalance: Int64 = 1000
-    var count: Int64 = 50
     var countUpdated: Bool = false
     var message: EngineMessage
     var showMeInTop: Bool = true
@@ -208,7 +271,7 @@ private struct State : Equatable {
         if let myTopIndex = topPeers.firstIndex(where: { $0.isMy }) {
             var topPeers = self.topPeers
             if countUpdated {
-                topPeers[myTopIndex].count += count
+                topPeers[myTopIndex].count += Int64(amount.realValue)
             }
             topPeers[myTopIndex].isAnonymous = !self.showMeInTop
             topPeers[myTopIndex].peer = myPeer
@@ -216,7 +279,7 @@ private struct State : Equatable {
         } else {
             var topPeers = self.topPeers
             if countUpdated {
-                let myTopPeer = TopPeer(peer: self.myPeer, isMy: true, count: count, isAnonymous: !self.showMeInTop)
+                let myTopPeer = TopPeer(peer: self.myPeer, isMy: true, count: Int64(amount.realValue), isAnonymous: !self.showMeInTop)
                 topPeers.append(myTopPeer)
             }
             return Array(topPeers.sorted(by: { $0.count > $1.count }).prefix(3))
@@ -351,7 +414,7 @@ private final class AcceptView : Control {
     func update(_ item: HeaderItem, animated: Bool) {
         let attr = NSMutableAttributedString()
         
-        attr.append(string: strings().starsReactScreenSendCountable(clown_space, Int(item.state.count)), color: theme.colors.underSelectedColor, font: .medium(.text))
+        attr.append(string: strings().starsReactScreenSendCountable(clown_space, Int(item.state.amount.realValue)), color: theme.colors.underSelectedColor, font: .medium(.text))
         attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: clown)
         
         let layout = TextViewLayout(attr)
@@ -695,7 +758,7 @@ private final class SliderView : Control {
     
     func update(count: Int64, minValue: Int64, maxValue: Int64) {
         
-        self.progress = calculateProgress(from: Double(count), minValue: Double(minValue), maxValue: Double(maxValue))//CGFloat(max(minValue - 1, min(maxValue, count - 1))) / CGFloat(maxValue - 1)
+        self.progress = CGFloat(max(minValue - 1, min(maxValue, count - 1))) / CGFloat(maxValue - 1)
         
         layout()
     }
@@ -742,7 +805,7 @@ private final class BadgeView : View {
         container.layer?.masksToBounds = false
     }
     
-    func update(_ count: Int64, max maxValue: Int64, context: AccountContext) -> NSSize {
+    func update(sliderValue: Int64, realValue: Int64, max maxValue: Int64, context: AccountContext) -> NSSize {
         
         
         if inlineView == nil {
@@ -754,7 +817,7 @@ private final class BadgeView : View {
         }
         
         let attr = NSMutableAttributedString()
-        attr.append(string: "\(count)", color: NSColor.white, font: .avatar(25))
+        attr.append(string: "\(realValue)", color: NSColor.white, font: .avatar(25))
         let textLayout = TextViewLayout(attr)
         textLayout.measure(width: .greatestFiniteMagnitude)
         self.textView.set(text: textLayout, context: context)
@@ -762,7 +825,7 @@ private final class BadgeView : View {
         
         container.setFrameSize(NSMakeSize(container.subviewsWidthSize.width + 2, container.subviewsWidthSize.height))
         
-        self.tailPosition = max(0, min(1, CGFloat(count) / CGFloat(maxValue)))
+        self.tailPosition = max(0, min(1, CGFloat(sliderValue) / CGFloat(maxValue)))
                 
         let size = NSMakeSize(max(100, container.frame.width + 30), frame.height)
         
@@ -883,13 +946,10 @@ private final class HeaderItemView : GeneralContainableRowView {
         sliderView.updateProgress = { [weak self] progress, maybeToBalance in
             if let item = self?.item as? HeaderItem {
                 
-                var value = calculateSliderValue(from: progress, minValue: 1, maxValue: Double(item.maxValue))//progress * CGFloat(item.maxValue)
+                var value = progress * CGFloat(item.maxValue)
                 let myBalance = CGFloat(item.state.myBalance)
-                if maybeToBalance, item.state.count < item.state.myBalance, value > myBalance {
-                    value = myBalance
-                }
-                if myBalance == ceil(value) || myBalance == floor(value), abs(myBalance - value) < 3 {
-                    value = myBalance
+                if maybeToBalance, item.state.amount.realValue < item.state.myBalance, value > myBalance {
+                    value = Double(item.state.amount.withRealValue(Int(myBalance + 1)).sliderValue)
                 }
                 item.updateValue(Int64(ceil(value)))
             }
@@ -934,14 +994,14 @@ private final class HeaderItemView : GeneralContainableRowView {
         
         showMeInTop.update(showMe: item.showMe)
 
-        let size = badgeView.update(item.state.count, max: item.maxValue, context: item.context)
+        let size = badgeView.update(sliderValue: Int64(item.state.amount.sliderValue), realValue: Int64(item.state.amount.realValue), max: item.maxValue, context: item.context)
         
         transition.updateFrame(view: self.badgeView, frame: self.focus(size))
         badgeView.updateLayout(size: size, transition: transition)
         
         info.set(text: item.info, context: item.context)
         
-        sliderView.update(count: item.state.count, minValue: 1, maxValue: item.maxValue)
+        sliderView.update(count: Int64(item.state.amount.sliderValue), minValue: 1, maxValue: item.maxValue)
         
                 
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
@@ -995,6 +1055,7 @@ private final class HeaderItemView : GeneralContainableRowView {
         }
         
         sliderView.frame = NSMakeRect(10, 50 + badgeView.frame.height + 10, frame.width - 20, 30)
+        sliderView.layout()
         
         badgeView.centerX(y: 50)
         
@@ -1044,7 +1105,11 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(myPeer: .init(context.myPeer!), message: .init(message), showMeInTop: !message.isAnonymousInStarReaction, topPeers: [])
+    let max_value = Int(context.appConfiguration.getGeneralValue("stars_paid_reaction_amount_max", orElse: 1))
+    
+    let amount = State.Amount(realValue: 50, maxRealValue: max_value, maxSliderValue: max_value, isLogarithmic: true)
+    
+    let initialState = State(amount: amount, myPeer: .init(context.myPeer!), message: .init(message), showMeInTop: !message.isAnonymousInStarReaction, topPeers: [])
     
     let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -1073,7 +1138,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     ))
     
     let messageView = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.Message(id: message.id))
-    
+    var isFirst: Bool = true
     actionsDisposable.add(combineLatest(context.starsContext.state, topPeersSignal, messageView).start(next: { state, top, updatedMessage in
         
         var values: [State.TopPeer] = []
@@ -1086,18 +1151,21 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
             }
             values.append(.init(peer: currentPeer, isMy: topPeer.isMy, count: Int64(topPeer.count), isAnonymous: topPeer.isAnonymous))
         }
-        
         updateState { current in
             var current = current
             current.myBalance = state?.balance ?? 0
             current.topPeers = values
             current.message = updatedMessage ?? .init(message)
+            if isFirst {
+                current.showMeInTop = !message.isAnonymousInStarReaction
+            }
             return current
         }
+        isFirst = false
     }))
     
     let react:()->Void = {
-        let count = stateValue.with { Int($0.count) }
+        let count = stateValue.with { Int($0.amount.realValue) }
         let myBalance = stateValue.with { $0.myBalance }
         
         if let peer = message.peers[message.id.peerId] {
@@ -1121,13 +1189,14 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     let arguments = Arguments(context: context, dismiss: {
         close?()
     }, react: react, updateValue: { value in
+        
         updateState { current in
             var current = current
-            current.count = max(1, value)
+            current.amount = current.amount.withSliderValue(Int(value))
             current.countUpdated = true
             return current
         }
-        let current = stateValue.with { $0.count }
+        let current = stateValue.with { $0.amount.realValue }
         let myBalance = stateValue.with { $0.myBalance }
         if current == myBalance {
             NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
@@ -1141,10 +1210,8 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
             current.showMeInTop = !current.showMeInTop
             return current
         }
-        let reacted = message.reactionsAttribute?.reactions.first(where: { $0.value == .stars && $0.isSelected }) != nil
-        if reacted {
-            _ = context.engine.messages.updateStarsReactionIsAnonymous(id: message.id, isAnonymous: stateValue.with { !$0.showMeInTop }).startStandalone()
-        }
+        _ = context.engine.messages.updateStarsReactionIsAnonymous(id: message.id, isAnonymous: stateValue.with { !$0.showMeInTop }).startStandalone()
+
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

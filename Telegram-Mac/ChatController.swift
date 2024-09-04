@@ -21,27 +21,18 @@ import CodeSyntax
 private func calculateAdjustedPoint(for point: CGPoint,
                             floatingPhotosView: NSView,
                             tableView: TableView) -> CGPoint? {
-    // Ensure both views have superviews and that tableView has a documentView
-    guard let floatingPhotosSuperview = floatingPhotosView.superview,
-          let tableViewDocumentView = tableView.documentView else {
-        return nil // Return nil if the conditions are not met
+    guard let tableViewDocumentView = tableView.documentView else {
+        return nil
     }
     
-    
-
-    // Get the frames relative to their superviews
     let floatingPhotosFrameInSuperview = floatingPhotosView.frame
     let tableViewDocumentFrameInSuperview = tableViewDocumentView.frame
 
-    // Calculate the offset between the frames, considering the scroll view's content offset
     let contentOffset = tableView.contentView.bounds.origin
     let offsetX = floatingPhotosFrameInSuperview.origin.x - tableViewDocumentFrameInSuperview.origin.x + contentOffset.x
     let offsetY = floatingPhotosFrameInSuperview.origin.y - tableViewDocumentFrameInSuperview.origin.y + contentOffset.y
-
-    // Adjust the point based on the offset
     let adjustedPoint = CGPoint(x: point.x + offsetX, y: point.y + offsetY)
-
-    // Return the adjusted point
+    
     return adjustedPoint
 }
 
@@ -496,6 +487,8 @@ class ChatControllerView : View, ChatInputDelegate {
     private var textInputSuggestionsView: InputSwapSuggestionsPanel?
     
     
+    private var starUndoView: ChatStarReactionUndoView?
+    
     var scroll: ScrollPosition {
         return self.tableView.scrollPosition().current
     }
@@ -874,6 +867,10 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
         }
         
+        if let starUndoView {
+            transition.updateFrame(view: starUndoView, frame: starUndoView.centerFrameX(y: header.state.height + 10))
+        }
+        
         self.textInputSuggestionsView?.updateRect(transition: transition)
       //  self.updateFloatingPhotos?(self.scroll, transition.isAnimated)
         //self.chatInteraction.updateFrame(frame, transition)
@@ -1210,6 +1207,41 @@ class ChatControllerView : View, ChatInputDelegate {
         tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction, theme: chatTheme)
     }
 
+    
+    
+    func updateStars(context: AccountContext, count: Int32, messageId: MessageId) {
+        let current: ChatStarReactionUndoView
+        let animated: Bool
+        if let view = self.starUndoView {
+            current = view
+            animated = true
+        } else {
+            current = ChatStarReactionUndoView(frame: .zero)
+            addSubview(current)
+            self.starUndoView = current
+            animated = false
+            
+        }
+        let size = current.update(context: context, messageId: messageId, count: count, animated: animated, complete: { [weak self] in
+            if let starUndoView = self?.starUndoView {
+                performSubviewRemoval(starUndoView, animated: true)
+                self?.starUndoView = nil
+            }
+        }, undo: {
+            context.engine.messages.cancelPendingSendStarsReaction(id: messageId)
+        })
+        
+        let rect = self.frame.focusX(size, y: header.state.height + 10)
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        transition.updateFrame(view: current, frame: rect)
+        
+        if !animated {
+            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+        }
+        
+        self.updateFrame(self.frame, transition: transition)
+    }
     
 }
 
@@ -8162,6 +8194,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             selectTextController.removeHandlers(for: window)
         }
         self.visibility.set(false)
+        
+        context.reactions.sentStarReactions = nil
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -8648,6 +8682,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        let context = self.context
+        
         switch self.mode {
         case .history, .thread:
             self.context.globalPeerHandler.set(.single(chatLocation))
@@ -8662,6 +8699,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             header.view.update(with: object)
         }
         self.visibility.set(true)
+        
+        context.reactions.sentStarReactions = { [weak self] messageId, count in
+            self?.genericView.updateStars(context: context, count: Int32(count), messageId: messageId)
+        }
     }
     
     private func updateMaxVisibleReadIncomingMessageIndex(_ index: MessageIndex) {

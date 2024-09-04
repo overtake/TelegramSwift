@@ -2143,7 +2143,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                     if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
                         current = current.withUpdatedFilter(updated)
                     } else {
-                        current = current.withUpdatedFilter(nil)
+                        current = current.withUpdatedFilter(.allChats)
                     }
                     return current
                 } )
@@ -2174,7 +2174,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         
         let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, search.get() |> distinctUntilChanged, forumPeerId.get(), multipleSelection.get(), chatList) |> mapToSignal { query, forumPeerId, multipleSelection, chatList -> Signal<TableUpdateTransition, NoError> in
             
-            if query.request.isEmpty || query.state == .None {
+            if query.request.isEmpty {
                 if !multipleSelection && query.state == .Focus && forumPeerId == nil {
                     return combineLatest(context.account.postbox.loadedPeerWithId(context.peerId), context.engine.peers.recentPeers() |> deliverOnPrepareQueue, context.engine.peers.recentlySearchedPeers() |> deliverOnPrepareQueue) |> map { user, rawTop, recent -> TableUpdateTransition in
                         

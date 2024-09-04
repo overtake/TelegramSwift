@@ -20,11 +20,13 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     
     
     struct GiftData {
-        let slug: String
+        let slug: String?
+        let starsAmount: Int?
         let fromGiveaway: Bool
         let boostPeerId: PeerId?
         let months: Int32
         let unclaimed: Bool
+        let media: TelegramMediaAction
     }
     
     private(set) var headerText: TextViewLayout!
@@ -44,7 +46,9 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         switch media.action {
         case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
-            self.data = .init(slug: slug, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed)
+            self.data = .init(slug: slug, starsAmount: nil, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed, media: media)
+        case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
+            self.data = .init(slug: nil, starsAmount: Int(amount), fromGiveaway: true, boostPeerId: boostPeerId, months: 0, unclaimed: isUnclaimed, media: media)
         default:
             fatalError()
         }
@@ -89,12 +93,16 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         let infoText: String
         if data.fromGiveaway {
-            if data.unclaimed {
-                infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
-            } else if data.fromGiveaway {
-                infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+            if let amount = data.starsAmount {
+                infoText = strings().chatGiftInfoGiveawayStarsCountable(channelName, amount)
             } else {
-                infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
+                if data.unclaimed {
+                    infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
+                } else if data.fromGiveaway {
+                    infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+                } else {
+                    infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
+                }
             }
         } else {
             if isIncoming {
@@ -135,11 +143,28 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     }
     
     func openLink() {
-        guard let fromId = message?.author?.id, let toId = message?.id.peerId else {
+        guard let message, let fromId = message.author?.id else {
             return
         }
+        let toId = message.id.peerId
+        
         if data.fromGiveaway {
-            execute(inapp: .gift(link: "", slug: data.slug, context: context))
+            if let slug = data.slug {
+                execute(inapp: .gift(link: "", slug: slug, context: context))
+            } else {
+                switch data.media.action {
+                case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
+                    if let transactionId, let boostPeerId, let peer = message.peers[boostPeerId] {
+                        
+                        let transaction = StarsContext.State.Transaction(flags: [.isGift], id: transactionId, count: amount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: giveawayMessageId, media: [], subscriptionPeriod: nil)
+                        
+                        showModal(with: Star_TransactionScreen(context: context, peer: .init(peer), transaction: transaction), for: context.window)
+                    }
+                default:
+                    break
+                }
+                
+            }
         } else {
             showModal(with: PremiumBoardingController(context: context, source: .gift(from: fromId, to: toId, months: data.months, slug: data.slug, unclaimed: data.unclaimed)), for: context.window)
         }
@@ -257,20 +282,21 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
             } else {
                 current = VisualEffect(frame: container.bounds)
                 self.visualEffect = current
-                current.alphaValue = 0.8
                 container.addSubview(current, positioned: .below, relativeTo: container.subviews.first)
             }
             current.bgColor = item.presentation.blurServiceColor
             
             container.backgroundColor = .clear
             
-        } else if let view = visualEffect {
-            performSubviewRemoval(view, animated: animated)
-            self.visualEffect = nil
-            container.backgroundColor = item.presentation.chatServiceItemColor
+        } else {
+            if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+            }
+            container.backgroundColor = item.presentation.colors.chatBackground == item.presentation.colors.background ? item.presentation.colors.listBackground : item.presentation.colors.background
         }
         
-//        container.backgroundColor = theme.colors.background
+//
         
         container.layer?.cornerRadius = 10
         
@@ -284,7 +310,11 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         }
 
         if item.data.fromGiveaway {
-            action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
+            if item.data.slug != nil {
+                action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
+            } else {
+                action.set(text: strings().chatMessageOpenGiftStars, for: .Normal)
+            }
         } else {
             action.set(text: strings().chatMessageViewGiftLink, for: .Normal)
         }

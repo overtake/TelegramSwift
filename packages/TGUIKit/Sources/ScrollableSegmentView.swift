@@ -126,8 +126,8 @@ extension UIEquatable : CustomReflectable {
 }
 
 public final class ScrollableSegmentItem : Equatable, Comparable, Identifiable {
-    let title: String
-    let selected: Bool
+    public let title: String
+    public let selected: Bool
     let theme: ScrollableSegmentTheme
     let insets: NSEdgeInsets
     let icon: CGImage?
@@ -544,7 +544,7 @@ public class ScrollableSegmentView: View {
         }
        
         
-        if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view {
+        if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view, autoscroll {
             let point = NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0)
             if point != scrollView.documentOffset, frame != .zero {
                 scrollView.clipView.scroll(to: point, animated: animated)

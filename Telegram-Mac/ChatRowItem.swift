@@ -1191,7 +1191,9 @@ class ChatRowItem: TableRowItem {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
                 
                
-                
+                if let media = message.anyMedia as? TelegramMediaGiveaway {
+                    disable = true
+                }
                 
                 if let media = message.anyMedia {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
@@ -2572,6 +2574,8 @@ class ChatRowItem: TableRowItem {
                    switch action.action {
                    case .giftCode:
                        return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
+                   case .prizeStars:
+                       return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    case .phoneCall:
                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    default:
@@ -3682,7 +3686,7 @@ class ChatRowItem: TableRowItem {
                         showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
                         if value == .stars {
-                            context.reactions.sendStarsReaction(message.id, count: 1, isAnonymous: message.isAnonymousInStarReaction, fromRect: fromRect)
+                            context.reactions.sendStarsReaction(message.id, count: 1, isAnonymous: nil, fromRect: fromRect)
                         } else {
                             context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
                         }

@@ -207,20 +207,22 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     private let placeholder: TextView = TextView()
     
     public func addTokens(tokens: [SearchToken], animated: Bool) -> Void {
-        self.tokens.append(contentsOf: tokens)
-        
-        for token in tokens {
-            let view = TokenView(token, maxSize: NSMakeSize(frame.width - 10, 22), onDismiss: { [weak self] in
-                self?.removeTokens(uniqueIds: [token.uniqueId], animated: true)
-            }, onSelect: { [weak self] in
-                self?.selectedIndex = self?.tokens.firstIndex(of: token)
-            }, customTheme: self.customTheme)
-            container.addSubview(view)
+        if !tokens.isEmpty {
+            self.tokens.append(contentsOf: tokens)
+            
+            for token in tokens {
+                let view = TokenView(token, maxSize: NSMakeSize(frame.width - 10, 22), onDismiss: { [weak self] in
+                    self?.removeTokens(uniqueIds: [token.uniqueId], animated: true)
+                }, onSelect: { [weak self] in
+                    self?.selectedIndex = self?.tokens.firstIndex(of: token)
+                }, customTheme: self.customTheme)
+                container.addSubview(view)
+            }
+            _tokensUpdater.set(.single(self.tokens))
+            input.string = ""
+            textDidChange(Notification(name: NSText.didChangeNotification))
+            (contentView as? TGClipView)?.scroll(to: NSMakePoint(0, max(0, container.frame.height - frame.height)), animated: animated)
         }
-        _tokensUpdater.set(.single(self.tokens))
-        input.string = ""
-        textDidChange(Notification(name: NSText.didChangeNotification))
-        (contentView as? TGClipView)?.scroll(to: NSMakePoint(0, max(0, container.frame.height - frame.height)), animated: animated)
     }
     
     public func removeTokens(uniqueIds: [Int64], animated: Bool) {

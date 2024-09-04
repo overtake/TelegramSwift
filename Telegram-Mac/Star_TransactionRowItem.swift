@@ -77,6 +77,8 @@ final class Star_TransactionItem : GeneralRowItem {
             default:
                 break
             }
+        } else if transaction.native.giveawayMessageId != nil {
+            descString = strings().starsTransactionReceivedPrize
         } else {
             if transaction.native.flags.contains(.isGift) {
                 descString = strings().starsTransactionReceivedGift

@@ -228,7 +228,7 @@ class PopularPeersRowItem: GeneralRowItem {
         self.selfPeer = selfPeer
         self.actionHandler = action
         self.unreadArticles = unreadArticles
-        super.init(initialSize, height: 74, stableId: stableId)
+        super.init(initialSize, height: 84, stableId: stableId)
     }
     
     override func viewClass() -> AnyClass {
@@ -245,7 +245,7 @@ private final class PopularPeersRowView : TableRowView {
     private let tableView: HorizontalTableView
     private let separator: View = View()
     required init(frame frameRect: NSRect) {
-        tableView = HorizontalTableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        tableView = HorizontalTableView(frame: NSMakeRect(0, 10, frameRect.width, frameRect.height - 10))
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(separator)
@@ -253,7 +253,7 @@ private final class PopularPeersRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        tableView.frame = bounds
+        tableView.frame = NSMakeRect(0, 10, frame.width, frame.height - 10)
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
     }
     

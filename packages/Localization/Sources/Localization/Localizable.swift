@@ -2467,6 +2467,34 @@ public final class L10n {
   public static func channelBoostBoosterDuration(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Booster.Duration", p1)
   }
+  /// %d
+  public static func channelBoostBoosterStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_countable", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_few", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_many", p1)
+  }
+  /// %d Star
+  public static func channelBoostBoosterStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_one", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_other", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_two", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_zero", p1)
+  }
   /// To Be Distributed
   public static var channelBoostBoosterToBeDistributed: String  { return L10n.tr("Localizable", "ChannelBoost.Booster.ToBeDistributed") }
   /// Unclaimed
@@ -4219,6 +4247,14 @@ public final class L10n {
   public static func chatGiveawayInfoWon(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Won", p1)
   }
+  /// The giveaway was sponsored by the admins of **%1$@**, who acquired %2$@ for its followers.
+  public static func chatGiveawayInfoEndedIntroStars(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedIntro.Stars", p1, p2)
+  }
+  /// The giveaway is sponsored by the admins of **%1$@**, who acquired %2$@ for its followers.
+  public static func chatGiveawayInfoOngoingIntroStars(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingIntro.Stars", p1, p2)
+  }
   /// , 
   public static var chatGiveawayMessageCountriesDelimiter: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.CountriesDelimiter") }
   /// from %@
@@ -4274,6 +4310,62 @@ public final class L10n {
   /// Giveaway Prizes
   public static var chatGiveawayMessagePrizeTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.PrizeTitle") }
   /// %d
+  public static func chatGiveawayMessageStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_countable", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_few", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_many", p1)
+  }
+  /// **%d** Star
+  public static func chatGiveawayMessageStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_one", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_other", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_two", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatGiveawayMessageStarWinnersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_countable", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_few", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_many", p1)
+  }
+  /// among **%d** winner
+  public static func chatGiveawayMessageStarWinnersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_one", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_other", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_two", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_zero", p1)
+  }
+  /// %d
   public static func chatGiveawayMessageSubscriptionsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_countable", p1)
   }
@@ -4300,6 +4392,10 @@ public final class L10n {
   /// **%d** Telegram Premium Subscriptions
   public static func chatGiveawayMessageSubscriptionsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_zero", p1)
+  }
+  /// %1$@ will be distributed\n%2$@.
+  public static func chatGiveawayMessageStarsPrizeText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars.PrizeText", p1, p2)
   }
   /// Sorry, this group is not accessible.
   public static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
@@ -4683,6 +4779,8 @@ public final class L10n {
   public static var chatMessageLaunchBot: String  { return L10n.tr("Localizable", "Chat.Message.LaunchBot") }
   /// Open Gift Link
   public static var chatMessageOpenGiftLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenGiftLink") }
+  /// Open
+  public static var chatMessageOpenGiftStars: String  { return L10n.tr("Localizable", "Chat.Message.OpenGiftStars") }
   /// Open Link
   public static var chatMessageOpenLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenLink") }
   /// OPEN STORY
@@ -5359,6 +5457,34 @@ public final class L10n {
   public static var chatServiceDisabledThemeYou: String  { return L10n.tr("Localizable", "Chat.Service.DisabledTheme.You") }
   /// You sent a gift
   public static var chatServiceGiftLinkSent: String  { return L10n.tr("Localizable", "Chat.Service.GiftLink.Sent") }
+  /// %1$@ %2$d
+  public static func chatServiceGiveawayStartedStarsCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_countable", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsFew(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_few", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsMany(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_many", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsOne(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_one", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsOther(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_other", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsTwo(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_two", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsZero(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_zero", p1, p2)
+  }
   /// %1$@ invited %2$@
   public static func chatServiceGroupAddedMembers1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers1", p1, p2)
@@ -6021,6 +6147,34 @@ public final class L10n {
   public static func chatGiftInfoFromGiveAway(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ChatGift.Info.FromGiveAway", p1, p2)
   }
+  /// %1$@ %2$d
+  public static func chatGiftInfoGiveawayStarsCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_countable", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsFew(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_few", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsMany(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_many", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Star**.
+  public static func chatGiftInfoGiveawayStarsOne(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_one", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsOther(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_other", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsTwo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_two", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsZero(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_zero", p1, p2)
+  }
   /// You've received a gift from **%1$@**.\n\nYour gift is a **Telegram Premium** subscription for **%2$@** months.
   public static func chatGiftInfoNormal(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ChatGift.Info.Normal", p1, p2)
@@ -6133,6 +6287,8 @@ public final class L10n {
   }
   /// Channels
   public static var chatListChannelsTag: String  { return L10n.tr("Localizable", "ChatList.ChannelsTag") }
+  /// Chats
+  public static var chatListChatsTag: String  { return L10n.tr("Localizable", "ChatList.ChatsTag") }
   /// Show All
   public static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// All
@@ -6153,6 +6309,8 @@ public final class L10n {
   public static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
   public static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
+  /// Messages
+  public static var chatListMessagesTag: String  { return L10n.tr("Localizable", "ChatList.MessagesTag") }
   /// My Notes
   public static var chatListMyNotes: String  { return L10n.tr("Localizable", "ChatList.MyNotes") }
   /// Proxy Sponsor
@@ -6191,6 +6349,8 @@ public final class L10n {
   }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
+  /// Topics
+  public static var chatListTopicsTag: String  { return L10n.tr("Localizable", "ChatList.TopicsTag") }
   /// Unhide Muted
   public static var chatListUnhideMuted: String  { return L10n.tr("Localizable", "ChatList.UnhideMuted") }
   /// Message is not supported
@@ -6817,6 +6977,10 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
+  /// Clear
+  public static var chatListAppsClear: String  { return L10n.tr("Localizable", "ChatListApps.Clear") }
+  /// RECENT USED APPS
+  public static var chatListAppsRecentUsedHeader: String  { return L10n.tr("Localizable", "ChatListApps.RecentUsed.Header") }
   /// BOOST
   public static var chatMessageBoostChannel: String  { return L10n.tr("Localizable", "ChatMessage.BoostChannel") }
   /// Open App
@@ -6843,8 +7007,40 @@ public final class L10n {
   public static var chatMessageSponsoredReportSuccess: String  { return L10n.tr("Localizable", "ChatMessage.Sponsored.Report.Success") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
-  /// Stars reactions is disabled by the channel.
+  /// Star reactions have been disabled for this channel.
   public static var chatReactionStarsDisabled: String  { return L10n.tr("Localizable", "ChatReaction.StarsDisabled") }
+  /// Undo
+  public static var chatReactionUndo: String  { return L10n.tr("Localizable", "ChatReaction.Undo") }
+  /// %d
+  public static func chatReactionUndoReactedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_countable", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_few", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_many", p1)
+  }
+  /// You have reacted with %d star.
+  public static func chatReactionUndoReactedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_one", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_other", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_two", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_zero", p1)
+  }
+  /// Stars Sent!
+  public static var chatReactionUndoStarsSent: String  { return L10n.tr("Localizable", "ChatReaction.Undo.StarsSent") }
   /// Tag the message with an emoji for quick search
   public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage") }
   /// Organize your Saved Messages with tags\nfor quicker access. [Learn More...]()
@@ -6991,6 +7187,106 @@ public final class L10n {
   public static func chatServiceYouChangedWallpaperBoth(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.YouChangedWallpaperBoth", p1)
   }
+  /// %d winner of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_countable", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_few", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_many", p1)
+  }
+  /// %d winner of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_one", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_other", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_two", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_countable", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_few", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_many", p1)
+  }
+  /// %d undistributed prizes code was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_one", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_other", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_two", p1)
+  }
+  /// %d undistributed prizes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatServiceGiveawayResultsMixedWinnersStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_countable", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_few", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_many", p1)
+  }
+  /// **%d** winner of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_one", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_other", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_two", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatServiceGiveawayResultsNoWinnersStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_countable", p1)
+  }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsFew: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_few") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsMany: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_many") }
+  /// Due to the giveaway terms, no winner could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsOne: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_one") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsOther: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_other") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsTwo: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_two") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsZero: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_zero") }
   /// You successfully updated your profile photo
   public static var chatServiceSuggestSuccess: String  { return L10n.tr("Localizable", "ChatService.Suggest.Success") }
   /// View Photo
@@ -9077,6 +9373,80 @@ public final class L10n {
   public static var giveawayReceiverTypeNew: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.New") }
   /// USERS ELIGIBLE FOR THE GIVEAWAY
   public static var giveawayReceiverTypeTitle: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.Title") }
+  /// %d
+  public static func giveawayStarAmountPerCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_countable", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_few", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_many", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_one", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_other", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_two", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_zero", p1)
+  }
+  /// Choose Randomly
+  public static var giveawayStarChooseRandomly: String  { return L10n.tr("Localizable", "Giveaway.Star.ChooseRandomly") }
+  /// Choose how many stars to give away and how many boosts to receive for 1 year.
+  public static var giveawayStarOptionsInfo: String  { return L10n.tr("Localizable", "Giveaway.Star.OptionsInfo") }
+  /// STARS TO DISTRIBUTE
+  public static var giveawayStarOptionsHeader: String  { return L10n.tr("Localizable", "Giveaway.Star.Options.Header") }
+  /// NUMBER OF WINNERS
+  public static var giveawayStarQuantityHeader: String  { return L10n.tr("Localizable", "Giveaway.Star.Quantity.Header") }
+  /// Choose how many winners you want to distribute stars among.
+  public static var giveawayStarQuantityInfo: String  { return L10n.tr("Localizable", "Giveaway.Star.Quantity.Info") }
+  /// %d
+  public static func giveawayStarsPrepaidDescCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_countable", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_few", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_many", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_one", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_other", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_two", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_zero", p1)
+  }
+  /// %d Telegram Stars
+  public static func giveawayStarsPrepaidTitle(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Title", p1)
+  }
+  /// Telegram Premium
+  public static var giveawayTypePremiumTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Premium.Title") }
+  /// winners are chosen randomly
+  public static var giveawayTypePremiumRandomText: String  { return L10n.tr("Localizable", "Giveaway.Type.Premium.Random.Text") }
   /// %d-months subscriptions
   public static func giveawayTypePrepaidDesc(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Giveaway.Type.Prepaid.Desc", p1)
@@ -9095,6 +9465,10 @@ public final class L10n {
   public static var giveawayTypeSpecificTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Title") }
   /// Select Users
   public static var giveawayTypeSpecificModalSelectUsers: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Modal.SelectUsers") }
+  /// winners are chosen randomly
+  public static var giveawayTypeStarsText: String  { return L10n.tr("Localizable", "Giveaway.Type.Stars.Text") }
+  /// Telegram Stars
+  public static var giveawayTypeStarsTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Stars.Title") }
   /// Choose the channels users need to be subscribed to take part in the giveaway.
   public static var givewayChannelsInfo: String  { return L10n.tr("Localizable", "Giveway.Channels.Info") }
   /// Choose the groups or channels users need to be subscribed to take part in the giveaway.
@@ -11861,6 +12235,8 @@ public final class L10n {
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
   public static var peerInfoReport: String  { return L10n.tr("Localizable", "PeerInfo.Report") }
+  /// Report Bot
+  public static var peerInfoReportBot: String  { return L10n.tr("Localizable", "PeerInfo.ReportBot") }
   /// Block and Report
   public static var peerInfoReportReaction: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction") }
   /// Restart Bot
@@ -16099,18 +16475,24 @@ public final class L10n {
   public static var starTransactionDate: String  { return L10n.tr("Localizable", "Star.Transaction.Date") }
   /// From
   public static var starTransactionFrom: String  { return L10n.tr("Localizable", "Star.Transaction.From") }
+  /// Gift
+  public static var starTransactionGift: String  { return L10n.tr("Localizable", "Star.Transaction.Gift") }
   /// Transaction ID
   public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
   /// Media
   public static var starTransactionMessageId: String  { return L10n.tr("Localizable", "Star.Transaction.MessageId") }
   /// Message
   public static var starTransactionReactionId: String  { return L10n.tr("Localizable", "Star.Transaction.ReactionId") }
+  /// Reason
+  public static var starTransactionReason: String  { return L10n.tr("Localizable", "Star.Transaction.Reason") }
   /// To
   public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
   /// Review the [Terms of Services](https://telegram.org) for Stars.
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
   /// [Unknown User](https://fragment.com/stars)
   public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
+  /// Giveaway
+  public static var starTransactionReasonGiveaway: String  { return L10n.tr("Localizable", "Star.Transaction.Reason.Giveaway") }
   /// %@ Gift Stars to Friends
   public static func starsGiftToFriends(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stars.GiftToFriends", p1)
@@ -16245,6 +16627,8 @@ public final class L10n {
   public static var starsTransactionPaidReaction: String  { return L10n.tr("Localizable", "Stars.Transaction.PaidReaction") }
   /// Received Gift
   public static var starsTransactionReceivedGift: String  { return L10n.tr("Localizable", "Stars.Transaction.ReceivedGift") }
+  /// Received Prize
+  public static var starsTransactionReceivedPrize: String  { return L10n.tr("Localizable", "Stars.Transaction.ReceivedPrize") }
   /// Sent Gift
   public static var starsTransactionSentGift: String  { return L10n.tr("Localizable", "Stars.Transaction.SentGift") }
   /// Stars Top-Up
@@ -16529,6 +16913,12 @@ public final class L10n {
   public static var statsMessageTitle: String  { return L10n.tr("Localizable", "Stats.MessageTitle") }
   /// Monetization
   public static var statsMonetization: String  { return L10n.tr("Localizable", "Stats.Monetization") }
+  /// Revenue in Stars
+  public static var statsRevenueInStars: String  { return L10n.tr("Localizable", "Stats.RevenueInStars") }
+  /// Revenue in TON
+  public static var statsRevenueInTon: String  { return L10n.tr("Localizable", "Stats.RevenueInTon") }
+  /// Revenue in USD
+  public static var statsRevenueInUsd: String  { return L10n.tr("Localizable", "Stats.RevenueInUsd") }
   /// %d
   public static func statsShowMoreCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.ShowMore_countable", p1)
@@ -19500,6 +19890,10 @@ public final class L10n {
   /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
   public static func webAppFirstOpenInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.FirstOpen.Info", p1)
+  }
+  /// By launching this mini app, you agree to the [Terms of Service for Mini Apps.](%@)
+  public static func webAppFirstOpenTerms(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.FirstOpen.Terms", p1)
   }
   /// Open Web App
   public static var webAppFirstOpenTitle: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.Title") }

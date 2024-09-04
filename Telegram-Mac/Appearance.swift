@@ -25,6 +25,47 @@ import CodeSyntax
 let premiumGradient = [NSColor(rgb: 0x6B93FF), NSColor(rgb: 0x976FFF), NSColor(rgb: 0xE46ACE)]
 
 
+func generateContextMenuInstantView(color: NSColor, size: NSSize = NSMakeSize(20, 20)) -> NSImage {
+    let icon = NSImage(resource: .iconInstantViewFavicon).precomposed(theme.colors.darkGrayText, flipVertical: true)
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, 4)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+        
+        ctx.draw(icon, in: size.bounds.focus(icon.backingSize))
+    }).flatMap {
+        NSImage(cgImage: $0, size: size)
+    }!
+}
+
+#if !SHARE
+func generateContextMenuUrl(color: NSColor, state: WebpageModalState?, size: NSSize = NSMakeSize(20, 20)) -> NSImage {
+    
+    let text: String
+    if state?.error != nil {
+        text = "!"
+    } else if let url = state?.url, let parsedUrl = URL(string: url) {
+        text = parsedUrl.host?.first.flatMap(String.init) ?? "!"
+    } else {
+        text = "!"
+    }
+    
+    let textNode = TextNode.layoutText(.initialize(string: text.uppercased(), color: theme.colors.darkGrayText, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, 4)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+        
+        textNode.1.draw(size.bounds.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    }).flatMap {
+        NSImage(cgImage: $0, size: size)
+    }!
+}
+#endif
+
 func generateContextMenuSubsCount(_ count: Int32?) -> CGImage? {
     
     guard let count else {
@@ -3293,5 +3334,60 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "section_header_text_color": Int32(bitPattern: presentationTheme.colors.listGrayText.rgb),
         "subtitle_text_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
         "destructive_text_color": Int32(bitPattern: presentationTheme.colors.redUI.rgb),
+        "bottom_bar_bg_color": Int32(bitPattern: presentationTheme.colors.grayForeground.rgb)
     ]
 }
+
+
+#if !SHARE
+func generateSyntaxThemeParams(_ presentationTheme: TelegramPresentationTheme, bubbled: Bool, isIncoming: Bool) -> [String: NSColor] {
+    var textColor = presentationTheme.chat.textColor(isIncoming, bubbled)
+    var grayColor = presentationTheme.chat.grayText(isIncoming, bubbled)
+    var redColor = presentationTheme.chat.redUI(isIncoming, bubbled)
+    var greenColor = presentationTheme.chat.greenUI(isIncoming, bubbled)
+    var blueColor = presentationTheme.chat.linkColor(isIncoming, bubbled)
+    
+    if presentationTheme.colors.isDark {
+        textColor = textColor.lighter(amount: 0.05)
+        grayColor = grayColor.lighter(amount: 0.05)
+        redColor = redColor.lighter(amount: 0.05)
+        greenColor = greenColor.lighter(amount: 0.05)
+        blueColor = blueColor.lighter(amount: 0.05)
+    } else {
+        textColor = textColor.darker(amount: 0.15)
+        grayColor = grayColor.darker(amount: 0.15)
+        redColor = redColor.darker(amount: 0.15)
+        greenColor = greenColor.darker(amount: 0.15)
+        blueColor = blueColor.darker(amount: 0.15)
+    }
+    return [
+        "comment": grayColor,
+        "block-comment": grayColor,
+        "prolog": grayColor,
+        "doctype": grayColor,
+        "cdata": grayColor,
+        "punctuation": grayColor,
+        "property": redColor,
+        "tag": greenColor,
+        "boolean": greenColor,
+        "number": greenColor,
+        "constant": redColor,
+        "symbol": redColor,
+        "deleted": redColor,
+        "selector": redColor,
+        "attr-name": redColor,
+        "string": textColor,
+        "char": textColor,
+        "builtin": textColor,
+        "inserted": greenColor,
+        "operator": blueColor,
+        "entity": blueColor,
+        "url": blueColor,
+        "atrule": textColor,
+        "attr-value": blueColor,
+        "keyword": blueColor,
+        "function-definition": greenColor,
+        "class-name": redColor
+    ]
+}
+#endif

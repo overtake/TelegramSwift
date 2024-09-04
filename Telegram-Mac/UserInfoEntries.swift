@@ -452,6 +452,16 @@ class UserInfoArguments : PeerInfoArguments {
         pullNavigation()?.back()
     }
     
+    func reportBot() {
+        let peerId = self.peerId
+        let context = self.context
+        
+        showModal(with: ReportReasonController(context: context, callback: { value in
+            _ = context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment).startStandalone()
+            showModalText(for: context.window, text: strings().peerInfoReportReactionSuccess)
+        }), for: context.window)
+    }
+    
     func botPrivacy() {
         _ = Sender.enqueue(input: ChatTextInputState(inputText: "/privacy"), context: context, peerId: peerId, replyId: nil, threadId: nil).start()
         pullNavigation()?.back()
