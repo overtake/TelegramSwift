@@ -29,6 +29,8 @@ public final class Reactions {
     public var successStarsAmount:((Int)->Void)?
     public var starsDisabled:(()->Void)?
     
+    public var sentStarReactions: ((MessageId, Int)->Void)? = nil
+    
     private(set) public var available: AvailableReactions?
         
     public var stateValue: Signal<AvailableReactions?, NoError> {
@@ -71,13 +73,14 @@ public final class Reactions {
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
-    public func sendStarsReaction(_ messageId: MessageId, count: Int, isAnonymous: Bool, fromRect: NSRect? = nil) {
+    public func sendStarsReaction(_ messageId: MessageId, count: Int, isAnonymous: Bool?, fromRect: NSRect? = nil) {
         if let signal = checkStarsAmount?(count, messageId.peerId) {
             _ = signal.start(next: { [weak self] value, starsAllowed in
                 if value && starsAllowed {
                     _ = self?._isInteractive.swap(.init(messageId: messageId, reaction: .stars, rect: fromRect))
-                    self?.engine.messages.sendStarsReaction(id: messageId, count: count, isAnonymous: isAnonymous)
+                    _ = self?.engine.messages.sendStarsReaction(id: messageId, count: count, isAnonymous: isAnonymous).startStandalone()
                     self?.successStarsAmount?(count)
+                    self?.sentStarReactions?(messageId, count)
                 } else {
                     if !value {
                         self?.failStarsAmount?(count, messageId)

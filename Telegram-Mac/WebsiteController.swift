@@ -475,7 +475,7 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
             webView.underPageBackgroundColor = theme.colors.listBackground
         }
         
-        self._state = BrowserContentState(title: title, url: url, estimatedProgress: 0.0, readingProgress: 0.0, contentType: .webPage, error: nil)
+        self._state = BrowserContentState(title: title, url: url, estimatedProgress: 0.0, readingProgress: 0.0, contentType: .webPage, favicon: self.browser.getExternal()?.favicon, error: nil)
         statePromise.set(.single(self._state))
         
         self.webView.navigationDelegate = self
@@ -759,7 +759,16 @@ final class WebsiteController : ModalViewController, WKNavigationDelegate, WKUID
                     guard let self else {
                         return
                     }
-                    self.updateState { $0.withUpdatedFavicon(favicon) }
+                    let updated = favicon.flatMap { favicon in
+                        generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+                            ctx.clear(size.bounds)
+                            ctx.round(size, 4)
+                            ctx.draw(favicon._cgImage!, in: size.bounds)
+                        }).flatMap {
+                            NSImage(cgImage: $0, size: NSMakeSize(20, 20))
+                        }
+                    }
+                    self.updateState { $0.withUpdatedFavicon(updated) }
                     
                 }))
             }

@@ -96,13 +96,14 @@ NSString* stringToNSString(const std::string& cppString) {
 
 @implementation SyntaxterTheme
 
--(id)initWithDark:(BOOL)dark textColor:(NSColor *)textColor textFont:(NSFont *)textFont italicFont:(NSFont *)italicFont mediumFont:(NSFont *)mediumFont {
+-(id)initWithDark:(BOOL)dark textColor:(NSColor *)textColor textFont:(NSFont *)textFont italicFont:(NSFont *)italicFont mediumFont:(NSFont *)mediumFont themeKeys: (NSDictionary<NSString *, NSColor *> *)colors {
     if (self = [super init]) {
         _dark = dark;
         _textColor = textColor;
         _textFont = textFont;
         _italicFont = italicFont;
         _mediumFont = mediumFont;
+        _colors = colors;
     }
     return self;
 }
@@ -145,11 +146,7 @@ Brush *makeBrush(std::string alias, std::string type, SyntaxterTheme * theme, Br
     
     
     NSDictionary<NSString *, NSColor *> *colors;
-    if (theme.dark) {
-        colors = dark;
-    } else {
-        colors = light;
-    }
+    colors = theme.colors;
     
     NSColor *color = colors[aliasKey];
     NSFont *font = theme.textFont;

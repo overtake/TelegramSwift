@@ -53,6 +53,7 @@ private final class HeaderItem : GeneralRowItem {
     
     fileprivate var refund: TextViewLayout?
     fileprivate let arguments: Arguments
+    fileprivate let isGift: Bool
     
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?, purpose: Star_TransactionPurpose, arguments: Arguments) {
         self.context = context
@@ -61,13 +62,17 @@ private final class HeaderItem : GeneralRowItem {
         self.arguments = arguments
         self.purpose = purpose
         
-        let isGift = purpose == .gift || transaction.flags.contains(.isGift)
+        self.isGift = purpose == .gift || transaction.flags.contains(.isGift) || transaction.giveawayMessageId != nil
         
         let header: String
         let incoming: Bool = transaction.count > 0
         let amount: Int64
         if isGift {
-            header = incoming ? strings().starsTransactionReceivedGift : strings().starsTransactionSentGift
+            if transaction.giveawayMessageId != nil {
+                header = strings().starsTransactionReceivedPrize
+            } else {
+                header = incoming ? strings().starsTransactionReceivedGift : strings().starsTransactionSentGift
+            }
             amount = abs(transaction.count)
         } else if transaction.flags.contains(.isReaction) {
             header = strings().starsTransactionPaidReaction
@@ -190,11 +195,10 @@ private final class HeaderItem : GeneralRowItem {
     override var height: CGFloat {
         var height = 10 + 10 + headerLayout.layoutSize.height + 5 + infoLayout.layoutSize.height + 10
         
-        switch purpose {
-        case .payment:
-            height += 80
-        case .gift:
+        if isGift {
             height += 100
+        } else {
+            height += 80
         }
         
         if let descLayout {
@@ -271,7 +275,7 @@ private final class HeaderView : GeneralContainableRowView {
         }
         
         
-        if item.purpose == .gift {
+        if item.isGift {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
@@ -433,6 +437,10 @@ private final class HeaderView : GeneralContainableRowView {
         self.dismiss.autohighlight = false
         
         
+        dismiss.setSingle(handler: { [weak item] _ in
+            item?.arguments.close()
+        }, for: .Click)
+        
         if item.peer == nil {
             let current: ImageView
             if let view = self.outgoingView {
@@ -536,13 +544,15 @@ private final class Arguments {
     let openLink:(String)->Void
     let previewMedia:()->Void
     let openApps:()->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void) {
+    let close: ()->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
         self.openLink = openLink
         self.previewMedia = previewMedia
         self.openApps = openApps
+        self.close = close
     }
 }
 
@@ -579,7 +589,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let peer = state.peer {
         
         let fromPeer: String
-        if peer.id == servicePeerId {
+        if let messageId = state.transaction.giveawayMessageId {
+            fromPeer = "[\(peer._asPeer().displayTitle)](t.me/c/\(peer.id.id._internalGetInt64Value())/\(messageId.id))"
+        } else if peer.id == servicePeerId {
             fromPeer = strings().starTransactionUnknwonUser
         } else {
             fromPeer = "[\(peer._asPeer().displayTitle)](peer_id_\(peer.id.toInt64()))"
@@ -600,7 +612,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         let fromText: String
-        if peer._asPeer().isUser && state.transaction.count > 0 {
+        if state.transaction.giveawayMessageId != nil {
+            fromText = strings().starTransactionFrom
+        } else if peer._asPeer().isUser && state.transaction.count > 0 {
             fromText = strings().starTransactionFrom
         } else {
             fromText = strings().starTransactionTo
@@ -679,7 +693,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         })))
     }
     
-    if !state.transaction.id.isEmpty {
+    if !state.transaction.id.isEmpty, state.transaction.giveawayMessageId == nil {
         let transactionId: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(state.transaction.id)](\(state.transaction.id))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, contents)
         })), alwaysStaticItems: true)
@@ -690,6 +704,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }        
         rows.append(.init(left: .init(.initialize(string: strings().starTransactionId, color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+    }
+    
+    if state.transaction.giveawayMessageId != nil {
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionGift, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starListItemCountCountable(Int(state.transaction.count)), color: theme.colors.text, font: .normal(.text))))))
+
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionReasonGiveaway, color: theme.colors.text, font: .normal(.text))))))
     }
     
     
@@ -795,6 +815,8 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         }
     }, openApps: {
         showModal(with: Star_AppExamples(context: context), for: window)
+    }, close: {
+        close?()
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

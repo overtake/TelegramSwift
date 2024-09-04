@@ -728,13 +728,16 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
     private let _renderedResult:Atomic<[PeerId:RenderedChannelParticipant]> = Atomic(value: [:])
     private let peerChannelMemberContextsManager: PeerChannelMemberCategoriesContextsManager
     private let loadDisposable = MetaDisposable()
+    var additionTopItem:SelectPeers_AdditionTopItem?
+
     override var participants:[PeerId:RenderedChannelParticipant] {
         return _renderedResult.modify({$0})
     }
 
-    init(peerId:PeerId, peerChannelMemberContextsManager: PeerChannelMemberCategoriesContextsManager, limit: Int32 = .max, settings: SelectPeerSettings = [.remote]) {
+    init(peerId:PeerId, peerChannelMemberContextsManager: PeerChannelMemberCategoriesContextsManager, limit: Int32 = .max, settings: SelectPeerSettings = [.remote], additionTopItem:SelectPeers_AdditionTopItem? = nil) {
         self.peerId = peerId
         self.peerChannelMemberContextsManager = peerChannelMemberContextsManager
+        self.additionTopItem = additionTopItem
         super.init(settings: settings, limit: limit)
     }
     
@@ -747,6 +750,8 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
         let account = context.account
         let peerChannelMemberContextsManager = self.peerChannelMemberContextsManager
         let previousSearch = Atomic<String?>(value: nil)
+        let additionTopItem = self.additionTopItem
+
         return search |> mapToSignal { query -> Signal<SearchState, NoError> in
             if query.request.isEmpty {
                 return .single(query)
@@ -816,12 +821,12 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
             if !search.request.isEmpty {
                 return combineLatest(participantsPromise.get(), contactsSearch) |> map { participants, peers in
                     let updatedSearch = previousSearch.swap(search.request) != search.request
-                    return (channelMembersEntries(participants, users: peers.0, remote: peers.1, account: account, isLoading: isListLoading && peers.2), updatedSearch)
+                    return (channelMembersEntries(participants, users: peers.0, remote: peers.1, account: account, isLoading: isListLoading && peers.2, additionTopItem: additionTopItem), updatedSearch)
                 }
             } else {
                 return participantsPromise.get() |> map { participants in
                     let updatedSearch = previousSearch.swap(search.request) != search.request
-                    return (channelMembersEntries(participants, account: account, isLoading: isListLoading), updatedSearch)
+                    return (channelMembersEntries(participants, account: account, isLoading: isListLoading, additionTopItem: additionTopItem), updatedSearch)
                 }
             }
         }
@@ -834,9 +839,15 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
     }
 }
 
-private func channelMembersEntries(_ participants:[RenderedChannelParticipant], users:[TemporaryPeer]? = nil, remote:[TemporaryPeer] = [], account: Account, isLoading: Bool) -> [SelectPeerEntry] {
+private func channelMembersEntries(_ participants:[RenderedChannelParticipant], users:[TemporaryPeer]? = nil, remote:[TemporaryPeer] = [], account: Account, isLoading: Bool, additionTopItem: SelectPeers_AdditionTopItem? = nil) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     var peerIds:[PeerId:PeerId] = [:]
+    
+    if let item = additionTopItem {
+        entries.append(SelectPeerEntry.actionButton(item.title, item.icon, 0, .initialize(theme), { _ in
+            item.callback()
+        }, false))
+    }
     
     let participants = participants.filter({ participant -> Bool in
         let result = peerIds[participant.participant.peerId] == nil
@@ -1476,7 +1487,7 @@ fileprivate class SelectPeersView : View, TokenizedProtocol {
 }
 
 
-private class SelectPeersModalController : ModalViewController, Notifable {
+class SelectPeersModalController : ModalViewController, Notifable {
     
     private let behavior:SelectPeersBehavior
     private let search:Promise<SearchState> = Promise()

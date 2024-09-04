@@ -114,7 +114,8 @@ private final class Arguments {
     let contextMenu:(BrowserTabData)->ContextMenu?
     let insertTab:(BrowserTabData.Data)->Void
     let shake:(BrowserTabData.Unique)->Void
-    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData.Unique)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void) {
+    let getExternalState: (BrowserTabData.Unique)->WebpageModalState?
+    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData.Unique)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void, getExternalState: @escaping(BrowserTabData.Unique)->WebpageModalState?) {
         self.context = context
         self.add = add
         self.close = close
@@ -127,6 +128,7 @@ private final class Arguments {
         self.contextMenu = contextMenu
         self.insertTab = insertTab
         self.shake = shake
+        self.getExternalState = getExternalState
     }
 }
 
@@ -380,37 +382,11 @@ private final class TabView: Control {
             let color: NSColor = item.selected ? theme.colors.listBackground : theme.colors.background
 
             if case .instantView = item.unique {
-                let icon = NSImage(resource: .iconInstantViewFavicon).precomposed(theme.colors.darkGrayText, flipVertical: true)
-                current.image = generateImage(NSMakeSize(20, 20), rotatedContext: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(color.cgColor)
-                    ctx.fill(size.bounds)
-                    
-                    ctx.draw(icon, in: size.bounds.focus(icon.backingSize))
-                })
+                current.nsImage = generateContextMenuInstantView(color: color)
             } else  if let favicon = item.external?.favicon {
                 current.nsImage = favicon
             } else {
-                
-                
-                let text: String
-                if item.external?.error != nil {
-                    text = "!"
-                } else if let url = item.external?.url, let parsedUrl = URL(string: url) {
-                    text = parsedUrl.host?.first.flatMap(String.init) ?? "!"
-                } else {
-                    text = "!"
-                }
-                
-                let textNode = TextNode.layoutText(.initialize(string: text.uppercased(), color: theme.colors.darkGrayText, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
-
-                current.image = generateImage(NSMakeSize(20, 20), rotatedContext: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(color.cgColor)
-                    ctx.fill(size.bounds)
-                    
-                    textNode.1.draw(size.bounds.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
-                })
+                current.nsImage = generateContextMenuUrl(color: color, state: item.external)
             }
         } else if let iconView {
             performSubviewRemoval(iconView, animated: animated)
@@ -861,6 +837,27 @@ struct BrowserTabData : Comparable, Identifiable {
             }
         }
         
+        var canBeRecent: Bool {
+            switch self {
+            case let .mainapp(bot, _):
+                return true
+            case let .webapp(bot, _, _, _, _, _, _, fromMenu):
+                if fromMenu {
+                    return true
+                } else {
+                    return false
+                }
+            case .instantView:
+                return true
+            case .game:
+                return true
+            case .tonsite:
+                return true
+            default:
+                return false
+            }
+        }
+        
         var newUniqueId: Unique {
             switch self {
             case let .mainapp(bot, _):
@@ -1243,7 +1240,7 @@ private struct State : Equatable {
         return tabs.first(where: { $0.selected })
     }
 
-    func newTab(_ data: BrowserTabData.Data, unique: BrowserTabData.Unique) -> (State, BrowserTabData?) {
+    func newTab(_ data: BrowserTabData.Data, unique: BrowserTabData.Unique, external: WebpageModalState?) -> (State, BrowserTabData?) {
         var tabs = self.tabs
         for i in 0 ..< tabs.count {
             tabs[i].selected = false
@@ -1255,7 +1252,8 @@ private struct State : Equatable {
             tabs[index].selected = true
             newData = nil
         } else {
-            let new = BrowserTabData(index: tabs.count, unique: unique, data: data, selected: true)
+            var new = BrowserTabData(index: tabs.count, unique: unique, data: data, selected: true)
+            new.external = external
             newData = new
             tabs.append(new)
         }
@@ -1558,6 +1556,10 @@ final class BrowserLinkManager {
     func open(_ tab: BrowserTabData.Data) {
         arguments?.insertTab(tab)
     }
+    
+    func getExternal() -> WebpageModalState? {
+        return arguments?.getExternalState(unique)
+    }
 }
 
 
@@ -1727,7 +1729,7 @@ final class WebappBrowserController : ViewController {
                 
                 var insertedData: BrowserTabData? = nil
                 
-                (state, insertedData) = state.newTab(data, unique: unique)
+                (state, insertedData) = state.newTab(data, unique: unique, external: BrowserStateContext.get(context).getExternal(unique))
                 
                 if let insertedData, let arguments = getArguments?() {
                     let controller = WebpageContainerController(data: insertedData, context: context, arguments: arguments)
@@ -1736,6 +1738,8 @@ final class WebappBrowserController : ViewController {
                     updateState { current in
                         return state
                     }
+                    BrowserStateContext.get(context).add(.init(tabdata: insertedData))
+                    
                 }  else {
                     let added = self?.webpages[unique]?.add(data) ?? false
                     
@@ -1756,7 +1760,7 @@ final class WebappBrowserController : ViewController {
             guard let event = NSApp.currentEvent else {
                 return
             }
-            let state = BrowserStateContext.get(context).fullState(context)
+            let state = BrowserStateContext.get(context).fullState()
             |> take(1)
             |> deliverOnMainQueue
             actionsDisposable.add(state.startStrict(next: { [weak control] webapps in
@@ -1855,6 +1859,7 @@ final class WebappBrowserController : ViewController {
                 current = current.setExternal(unique, external: state)
                 return current
             }
+            BrowserStateContext.get(context).setExternalState(unique, external: state)
         }, closeTab: { [weak self] unique, checkAdmission in
             let unique = unique ?? stateValue.with { $0.selected?.unique }
             let count = stateValue.with { $0.tabs.count }
@@ -1918,6 +1923,10 @@ final class WebappBrowserController : ViewController {
             insertTab(data)
         }, shake: { [weak self] unique in
             self?.tabs.shake(unique)
+        }, getExternalState: { unique in
+            return stateValue.with {
+                $0.tabs.first(where: { $0.unique == unique })?.external
+            }
         })
         
         self.arguments = arguments

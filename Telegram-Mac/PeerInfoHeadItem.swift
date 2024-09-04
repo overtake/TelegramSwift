@@ -259,9 +259,14 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                         items.append(ActionItem(text: strings().peerInfoBotPrivacy, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botPrivacy))
                     }
                 }
+                
+                items.append(ActionItem(text: strings().peerInfoReportBot, color: item.accentColor, image: theme.icons.profile_report, animation: .menu_report, action: arguments.reportBot))
+                
                 items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_restrict, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
                 }))
+                
+                
             }
         }
         

@@ -559,6 +559,11 @@ open class ViewController : NSObject {
     
     public let isKeyWindow:Promise<Bool> = Promise(false)
     
+    private let _viewOnState: ValuePromise<Bool> = .init(false, ignoreRepeated: true)
+    public var viewOnStage: Signal<Bool, NoError> {
+        return _viewOnState.get()
+    }
+    
     open var view:NSView {
         get {
             if(_view == nil) {
@@ -810,7 +815,7 @@ open class ViewController : NSObject {
     
     
     open func viewWillAppear(_ animated:Bool) -> Void {
-        
+        _viewOnState.set(true)
     }
     
     open func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
@@ -855,6 +860,7 @@ open class ViewController : NSObject {
         NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
         isKeyWindow.set(.single(false))
+        _viewOnState.set(false)
     }
     
     public func isLoaded() -> Bool {

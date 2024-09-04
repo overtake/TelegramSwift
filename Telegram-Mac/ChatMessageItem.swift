@@ -837,8 +837,10 @@ class ChatMessageItem: ChatRowItem {
                 
                 if let language = language?.lowercased() {
                     
+                    let themeKeys = generateSyntaxThemeParams(theme, bubbled: bubbled, isIncoming: isIncoming)
+                    
                     let code = string.attributedSubstring(from: range).string
-                    let theme = SyntaxterTheme(dark: isDark, textColor: textColor, textFont: .code(fontSize), italicFont: .italicMonospace(fontSize), mediumFont: .semiboldMonospace(fontSize))!
+                    let theme = SyntaxterTheme(dark: isDark, textColor: textColor, textFont: .code(fontSize), italicFont: .italicMonospace(fontSize), mediumFont: .semiboldMonospace(fontSize), themeKeys: themeKeys)!
                     var cachedData: CodeSyntaxResult? = nil
                     
                     if let messageId = message?.id {

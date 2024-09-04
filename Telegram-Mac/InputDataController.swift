@@ -592,6 +592,8 @@ class InputDataController: GenericViewController<InputDataView> {
 
     var afterViewDidLoad:(()->Void)?
     
+    var makeFirstResponder: Bool = true
+    
     var _abolishWhenNavigationSame: Bool = false
 
     var getTitle:(()->String)? = nil
@@ -1012,7 +1014,9 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        _ = self.window?.makeFirstResponder(nextResponder())
+        if makeFirstResponder {
+            _ = self.window?.makeFirstResponder(nextResponder())
+        }
         super.viewDidAppear(animated)
         
         didAppear?(self)

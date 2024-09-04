@@ -480,7 +480,7 @@ private func entries(state: State, data: DataAndStorageData, proxy: ProxySetting
     if let contentSettingsConfiguration = contentSettingsConfiguration, contentSettingsConfiguration.canAdjustSensitiveContent {
         entries.append(.sectionId(sectionId))
         sectionId += 1
-        entries.append(.sensitiveContent(sectionId, false, viewType: .singleItem))
+        entries.append(.sensitiveContent(sectionId, contentSettingsConfiguration.sensitiveContentEnabled, viewType: .singleItem))
         entries.append(.sensitiveContentInfo(sectionId, viewType: .textBottomItem))
     }
     

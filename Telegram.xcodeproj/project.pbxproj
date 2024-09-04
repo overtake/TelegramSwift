@@ -439,6 +439,8 @@
 		27819CC62C6017A6005B3F13 /* premium_reaction_effect_3.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27819CC12C6017A4005B3F13 /* premium_reaction_effect_3.tgs */; };
 		27819CC72C6017A6005B3F13 /* premium_reaction_effect_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27819CC22C6017A5005B3F13 /* premium_reaction_effect_1.tgs */; };
 		27819CC82C6017A6005B3F13 /* premium_reaction_effect_2.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27819CC32C6017A6005B3F13 /* premium_reaction_effect_2.tgs */; };
+		27819CE42C737CE7005B3F13 /* countdown5s.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27819CE32C737CE7005B3F13 /* countdown5s.tgs */; };
+		27819CE62C738462005B3F13 /* ChatStarReactionUndo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27819CE52C738462005B3F13 /* ChatStarReactionUndo.swift */; };
 		2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27841869285A05840010E0F1 /* StickersCarouselView.swift */; };
 		2786367A27C66F5A00690B10 /* RTMPStartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2786367927C66F5A00690B10 /* RTMPStartController.swift */; };
 		2786367C27C7C5D600690B10 /* group_call_share.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367B27C7C5D600690B10 /* group_call_share.tgs */; };
@@ -2044,6 +2046,8 @@
 		27819CC12C6017A4005B3F13 /* premium_reaction_effect_3.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_reaction_effect_3.tgs; sourceTree = "<group>"; };
 		27819CC22C6017A5005B3F13 /* premium_reaction_effect_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_reaction_effect_1.tgs; sourceTree = "<group>"; };
 		27819CC32C6017A6005B3F13 /* premium_reaction_effect_2.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_reaction_effect_2.tgs; sourceTree = "<group>"; };
+		27819CE32C737CE7005B3F13 /* countdown5s.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = countdown5s.tgs; sourceTree = "<group>"; };
+		27819CE52C738462005B3F13 /* ChatStarReactionUndo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStarReactionUndo.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
 		27841869285A05840010E0F1 /* StickersCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickersCarouselView.swift; sourceTree = "<group>"; };
 		2785F7FE274F707F00FDF88F /* InAppSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppSettings; path = packages/InAppSettings; sourceTree = "<group>"; };
@@ -4747,6 +4751,7 @@
 				2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */,
 				27CCE83B2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift */,
 				276143362BD93AE00034338C /* InlineAvatarLayer.swift */,
+				27819CE52C738462005B3F13 /* ChatStarReactionUndo.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -6177,6 +6182,7 @@
 				270FD5952C516A99000070E6 /* browser_back_to_close.tgs */,
 				270FD5992C5181D9000070E6 /* browser_more.tgs */,
 				270FD5962C516A9A000070E6 /* browser_close_to_back.tgs */,
+				27819CE32C737CE7005B3F13 /* countdown5s.tgs */,
 				270FD5892C41A31C000070E6 /* menu_apps.tgs */,
 				27A01AE92BA07ACF00C59661 /* fragment.tgs */,
 				276154922C1A0D430090BFFC /* menu_paid.tgs */,
@@ -6959,6 +6965,7 @@
 				27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */,
 				2750B8C62B887E9C0035C37F /* business_quick_reply.tgs in Resources */,
 				275549142747C24F0098A3CD /* device_edge.tgs in Resources */,
+				27819CE42C737CE7005B3F13 /* countdown5s.tgs in Resources */,
 				27336733276240A60027441E /* menu_view_replies.tgs in Resources */,
 				27994EDA2A5EF7C30084D982 /* stories_archive.tgs in Resources */,
 				27F2BBC527BE4E7B00A37463 /* code_note.tgs in Resources */,
@@ -7992,6 +7999,7 @@
 				9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */,
 				C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */,
 				27F4F190284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift in Sources */,
+				27819CE62C738462005B3F13 /* ChatStarReactionUndo.swift in Sources */,
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
 				9F1C279321D38A96003CD033 /* InstantPageScrollableItem.swift in Sources */,
 				279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */,
@@ -8489,7 +8497,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.0.2;
+				MARKETING_VERSION = 11.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8541,7 +8549,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.0.2;
+				MARKETING_VERSION = 11.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8589,7 +8597,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.0.2;
+				MARKETING_VERSION = 11.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8708,7 +8716,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.0.2;
+				MARKETING_VERSION = 11.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
