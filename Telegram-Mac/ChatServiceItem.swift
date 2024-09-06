@@ -1588,9 +1588,11 @@ class ChatServiceRowView: TableRowView {
                 
                 self.backgroundColor = .clear
                 
-            } else if let view = visualEffect {
-                performSubviewRemoval(view, animated: animated)
-                self.visualEffect = nil
+            } else {
+                if let view = visualEffect {
+                    performSubviewRemoval(view, animated: animated)
+                    self.visualEffect = nil
+                }
                 self.backgroundColor = item.presentation.chatServiceItemColor
             }
         }

@@ -335,6 +335,10 @@
 		276976912C0635310016BACB /* star2.scn in Resources */ = {isa = PBXBuildFile; fileRef = 276976902C0635310016BACB /* star2.scn */; };
 		276976932C0636800016BACB /* star.scn in Resources */ = {isa = PBXBuildFile; fileRef = 276976922C0636800016BACB /* star.scn */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
+		276B5D182C8897BE00DB82E2 /* GiftingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D172C8897BE00DB82E2 /* GiftingController.swift */; };
+		276B5D1A2C89121900DB82E2 /* PreviewStarGiftController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D192C89121900DB82E2 /* PreviewStarGiftController.swift */; };
+		276B5D1C2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */; };
+		276B5D1E2C8A57C600DB82E2 /* GiftOptionsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D1D2C8A57C600DB82E2 /* GiftOptionsRowItem.swift */; };
 		276E767B2B3BEA9B00440A4F /* ChannelWallpapersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */; };
 		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
 		276F9B8A2935FD7800E35997 /* pirate_flag.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B892935FD7800E35997 /* pirate_flag.tgs */; };
@@ -1940,6 +1944,10 @@
 		276B5982261C79250029FD3F /* GroupCallTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTitleView.swift; sourceTree = "<group>"; };
 		276B5985261C79940029FD3F /* GroupCallControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallControlsView.swift; sourceTree = "<group>"; };
 		276B5988261C7AC60029FD3F /* GroupCallSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSchedule.swift; sourceTree = "<group>"; };
+		276B5D172C8897BE00DB82E2 /* GiftingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftingController.swift; sourceTree = "<group>"; };
+		276B5D192C89121900DB82E2 /* PreviewStarGiftController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewStarGiftController.swift; sourceTree = "<group>"; };
+		276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGiftsController.swift; sourceTree = "<group>"; };
+		276B5D1D2C8A57C600DB82E2 /* GiftOptionsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftOptionsRowItem.swift; sourceTree = "<group>"; };
 		276C1EBE261B451500FE41C9 /* Currency.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
 		276E76422B373E1B00440A4F /* libswiftAppKit.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftAppKit.tbd; path = usr/lib/swift/libswiftAppKit.tbd; sourceTree = SDKROOT; };
 		276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelWallpapersController.swift; sourceTree = "<group>"; };
@@ -3489,6 +3497,9 @@
 				275E85532B284AF0007A72CA /* PremiumGiftingController.swift */,
 				27F3BB8D2B4C399400BC37C2 /* PremiumShowStatusController.swift */,
 				27CCE82B2B839AB800F7C687 /* PremiumCoinSceneView.swift */,
+				276B5D172C8897BE00DB82E2 /* GiftingController.swift */,
+				276B5D192C89121900DB82E2 /* PreviewStarGiftController.swift */,
+				276B5D1D2C8A57C600DB82E2 /* GiftOptionsRowItem.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -4861,6 +4872,7 @@
 				D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */,
 				271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */,
 				2745B0682B35691600EF8623 /* SavedPeersController.swift */,
+				276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */,
 			);
 			name = list;
 			sourceTree = "<group>";
@@ -7370,6 +7382,7 @@
 				279DF45B2B999D7D00E644A7 /* FragmentUsernameController.swift in Sources */,
 				27A69764273D090F00B33415 /* SoundEffectPlayQueue.swift in Sources */,
 				27A69763273D08E900B33415 /* OngoingCallContext.swift in Sources */,
+				276B5D1A2C89121900DB82E2 /* PreviewStarGiftController.swift in Sources */,
 				27A69762273D08B600B33415 /* PCallSession.swift in Sources */,
 				27A69761273D08A000B33415 /* GroupCallUIState.swift in Sources */,
 				27A69760273D088B00B33415 /* GroupCallDisplayAsController.swift in Sources */,
@@ -7548,6 +7561,7 @@
 				27E1F2442B7B007B00DCF241 /* BusinessLocationController.swift in Sources */,
 				277E228028E4C27600001689 /* ForwardChatListController.swift in Sources */,
 				D07C6D7D234698C600468B1A /* DynamicHeightRowItem.swift in Sources */,
+				276B5D1C2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift in Sources */,
 				A73884352580E501002E8424 /* CGChatListIndicator.swift in Sources */,
 				C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */,
 				C218FF9A1F42030B00DD7D35 /* InstantPageChannelItem.swift in Sources */,
@@ -7756,6 +7770,7 @@
 				2744018526E6344E0035C55D /* WidgetRecentPeersController.swift in Sources */,
 				27AAAD57299F5F9E00F70A9A /* LiteModeController.swift in Sources */,
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
+				276B5D1E2C8A57C600DB82E2 /* GiftOptionsRowItem.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
 				27F4F1862848B91C00A3B4D4 /* PremiumLockModalController.swift in Sources */,
@@ -8083,6 +8098,7 @@
 				9F10CE8A20611536002DD61A /* PassportHeaderItem.swift in Sources */,
 				27307E9A2ADE6E0C00D970EE /* SelectCountryModalController.swift in Sources */,
 				C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */,
+				276B5D182C8897BE00DB82E2 /* GiftingController.swift in Sources */,
 				D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
 				C2E8BA0A1FB5F15900DEB5E2 /* GalleryThumbsControlView.swift in Sources */,

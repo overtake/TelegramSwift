@@ -1109,6 +1109,8 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     
     let amount = State.Amount(realValue: 50, maxRealValue: max_value, maxSliderValue: max_value, isLogarithmic: true)
     
+    context.reactions.forceSendStarReactions?()
+    
     let initialState = State(amount: amount, myPeer: .init(context.myPeer!), message: .init(message), showMeInTop: !message.isAnonymousInStarReaction, topPeers: [])
     
     let statePromise = ValuePromise<State>(ignoreRepeated: true)

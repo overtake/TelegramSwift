@@ -1208,6 +1208,12 @@ class ChatControllerView : View, ChatInputDelegate {
     }
 
     
+    func forceCancelPendingStars() {
+        if let starUndoView = self.starUndoView {
+            performSubviewRemoval(starUndoView, animated: true)
+            self.starUndoView = nil
+        }
+    }
     
     func updateStars(context: AccountContext, count: Int32, messageId: MessageId) {
         let current: ChatStarReactionUndoView
@@ -8196,6 +8202,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.visibility.set(false)
         
         context.reactions.sentStarReactions = nil
+        context.reactions.forceSendStarReactions = nil
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -8702,6 +8709,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         context.reactions.sentStarReactions = { [weak self] messageId, count in
             self?.genericView.updateStars(context: context, count: Int32(count), messageId: messageId)
+        }
+        context.reactions.forceSendStarReactions = { [weak self] in
+            self?.genericView.forceCancelPendingStars()
         }
     }
     

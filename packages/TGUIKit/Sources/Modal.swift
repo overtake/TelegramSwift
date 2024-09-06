@@ -435,6 +435,11 @@ private final class ModalHeaderView: View {
             background = .clear
             borderColor = customTheme().border
         }
+        if customTheme().hideUnactiveText {
+            self.titleView.change(opacity: state == .normal ? 0 : 1, animated: animated)
+        } else {
+            self.titleView.change(opacity: 1, animated: animated)
+        }
         if animated, self.layer?.animation(forKey: "backgroundColor") == nil {
             self.layer?.animateBackground()
         }

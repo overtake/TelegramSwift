@@ -31,6 +31,9 @@ public final class Reactions {
     
     public var sentStarReactions: ((MessageId, Int)->Void)? = nil
     
+    public var forceSendStarReactions: (()->Void)? = nil
+
+    
     private(set) public var available: AvailableReactions?
         
     public var stateValue: Signal<AvailableReactions?, NoError> {

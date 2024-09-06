@@ -1043,7 +1043,8 @@ class PrivacyAndSecurityViewController: TableViewController {
                             3 * 30 * 24 * 60 * 60,
                             180 * 24 * 60 * 60,
                             365 * 24 * 60 * 60,
-                            548 * 24 * 60 * 60
+                            548 * 24 * 60 * 60,
+                            730 * 24 * 60 * 60
                         ]
                         var items: [ContextMenuItem] = []
 
@@ -1061,6 +1062,9 @@ class PrivacyAndSecurityViewController: TableViewController {
                         }))
                         items.append(ContextMenuItem(strings().timerMonthsCountable(18), handler: {
                             timeoutAction(timeoutValues[4])
+                        }))
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(24), handler: {
+                            timeoutAction(timeoutValues[5])
                         }))
 
                         let stableId = PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId
