@@ -231,7 +231,7 @@ class GeneralTextRowView : GeneralRowView {
         guard let item = item as? GeneralTextRowItem else {return}
         textView.textView.isSelectable = item.isTextSelectable
         textView.userInteractionEnabled = !item.clickable
-        
+        textView.textView.userInteractionEnabled = !item.clickable
         textView.set(text: item.layout, context: item.context)
         
         if item.additionLoading || item.rightItem.isLoading {
@@ -314,7 +314,7 @@ class GeneralTextRowView : GeneralRowView {
             } else {
                 current = Control()
                 self.clickable = current
-                addSubview(current, positioned: .above, relativeTo: self.textView)
+                addSubview(current, positioned: .below, relativeTo: self.textView)
             }
             current.set(background: item.customTheme?.backgroundColor ?? theme.colors.background, for: .Normal)
             current.layer?.cornerRadius = .cornerRadius
@@ -329,6 +329,7 @@ class GeneralTextRowView : GeneralRowView {
                 }
                 return nil
             }
+            
         }
         
         needsDisplay = true
