@@ -32,7 +32,8 @@ final class PeerMediaCollectionInteraction : InterfaceObserver {
 }
 
 enum PeerMediaCollectionMode : Int32 {
-    case stories = -5
+    case stories = -6
+    case gifts = -5
     case savedMessages = -4
     case members = -3
     case archiveStories = -2
@@ -72,6 +73,8 @@ enum PeerMediaCollectionMode : Int32 {
         case .savedMessages:
             return []
         case .saved:
+            return []
+        case .gifts:
             return []
         }
     }

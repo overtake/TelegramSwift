@@ -528,7 +528,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
-            BrowserStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"))
+            showModal(with: GiftingController(context: context, peerId: context.peerId), for: context.window)
+            
+            //BrowserStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"))
             
             
            // showModal(with: Star_AppExamples(context: context), for: context.window)

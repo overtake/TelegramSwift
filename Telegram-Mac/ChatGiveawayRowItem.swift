@@ -184,17 +184,21 @@ final class ChatGiveawayRowItem : ChatRowItem {
         }
 
         
-        let under = theme.colors.underSelectedColor
+        var under = theme.colors.underSelectedColor
 
         let badgeText: String
+        let color: NSColor
         switch media.prize {
         case .premium:
             badgeText = "X\(media.quantity)"
+            color = theme.colors.accent
         case let .stars(amount):
             badgeText = "\(amount)"
+            color = NSColor(0xFFAC04)
+            under = .white
         }
         
-        badge = .init(.initialize(string: badgeText, color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: theme.chat.bubbleBackgroundColor(isIncoming, object.renderType == .bubble), additionSize: NSMakeSize(16, 7))
+        badge = .init(.initialize(string: badgeText, color: under, font: .avatar(.small)), color, aroundFill: theme.chat.bubbleBackgroundColor(isIncoming, object.renderType == .bubble), additionSize: NSMakeSize(16, 7))
         
         var channels:[Channel] = []
         for peerId in media.channelPeerIds {
@@ -382,8 +386,15 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 let finishDate = stringForFullDate(timestamp: finish)
                 
                 title = strings().chatGiveawayInfoEndedTitle
-                let intro = strings().chatGiveawayInfoEndedIntro(peerName, strings().chatGiveawayInfoSubscriptionsCountable(Int(giveaway.quantity)), strings().chatGiveawayInfoMonthsCountable(Int(months)))
                 
+                let intro: String
+                switch giveaway.prize {
+                case .premium:
+                    intro = strings().chatGiveawayInfoEndedIntro(peerName, strings().chatGiveawayInfoSubscriptionsCountable(Int(giveaway.quantity)), strings().chatGiveawayInfoMonthsCountable(Int(months)))
+                case let .stars(amount):
+                    intro = strings().chatGiveawayInfoEndedIntroStars(peerName, "\(amount)")
+                }
+                                
                 var ending: String
                 if giveaway.flags.contains(.onlyNewSubscribers) {
                     let randomUsers = strings().chatGiveawayInfoRandomUsersCountable(Int(giveaway.quantity))
@@ -419,17 +430,22 @@ final class ChatGiveawayRowItem : ChatRowItem {
                     ok = strings().chatGiveawayInfoViewPrize
                     cancel = strings().alertCancel
                     prizeSlug = slug
-                case let .wonStars(amount):
+                case .wonStars:
                     result = "\n\n" + strings().chatGiveawayInfoWon("🏆")
                     ok = strings().chatGiveawayInfoViewPrize
-                    cancel = strings().alertCancel
+                    cancel = strings().navigationClose
                     prizeSlug = nil
                 }
                 
                 text = "\(intro)\n\n\(additionalPrize)\(ending)\(result)"
             }
 
-            if let cancel = cancel, let prizeSlug = prizeSlug {
+            if let cancel = cancel, prizeSlug == nil {
+                verifyAlert(for: context.window, header: title, information: text, ok: ok, cancel: cancel, successHandler: { _ in
+                    showModal(with: Star_ListScreen(context: context, source: .account), for: context.window)
+                    //openSlug(prizeSlug)
+                })
+            } else if let cancel = cancel, let prizeSlug = prizeSlug {
                 verifyAlert(for: context.window, header: title, information: text, ok: ok, cancel: cancel, successHandler: { _ in
                     openSlug(prizeSlug)
                 })

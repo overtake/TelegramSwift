@@ -105,6 +105,38 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
     })!
 }
 
+func generateGiftBadgeBackground(size: NSSize, text: String, color: NSColor, textColor: NSColor = NSColor.white) -> CGImage {
+    
+    let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .bold(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(CGRect(origin: .zero, size: size))
+
+        ctx.setFillColor(color.cgColor)
+        
+        let path = CGMutablePath()
+        path.move(to: NSMakePoint(0, 0))
+        path.addLine(to: NSMakePoint(25, 0))
+        path.addLine(to: NSMakePoint(size.width, size.height - 25))
+        path.addLine(to: NSMakePoint(size.width, size.height))
+        path.addLine(to: NSMakePoint(0, 0))
+
+        ctx.addPath(path)
+        ctx.fillPath()
+        
+        ctx.saveGState()
+        ctx.translateBy(x: size.width / 2, y: size.height / 2)
+        ctx.rotate(by: CGFloat.pi / 4)
+        ctx.translateBy(x: -size.width / 2, y: -size.height / 2)
+        
+        textNode.1.draw(size.bounds.focus(textNode.0.size).offsetBy(dx: 0, dy: -9), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+
+        ctx.restoreGState()
+
+    })!
+}
+
+
 #if !SHARE
 public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImage {
     let attributedText = NSAttributedString(string: text, attributes: [

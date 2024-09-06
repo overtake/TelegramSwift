@@ -949,7 +949,13 @@ public final class TextViewLayout : Equatable {
         var fontLineSpacing:CGFloat = lineSpacing ?? floor(fontLineHeight * 0.12)
 
         
-        let attributedString = self.attributedString
+        let attributedString = self.attributedString.mutableCopy() as! NSMutableAttributedString
+        
+        attributedString.enumerateAttributes(in: attributedString.range, options: []) { attributes, range, _ in
+            if let _ = attributes[TextInputAttributes.embedded] as? AnyHashable {
+                attributedString.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+            }
+        }
         
         var maybeTypesetter: CTTypesetter?
         
@@ -1022,10 +1028,14 @@ public final class TextViewLayout : Equatable {
                 
                 let lineRange = NSMakeRange(CTLineGetStringRange(line).location, CTLineGetStringRange(line).length)
                 let range = NSMakeRange(startIndex, endIndex - startIndex)
-                
+                                
                 if lineRange.intersection(range) != range {
                     return
                 }
+                if lineRange.location != startIndex, rawLeftOffset == 0 {
+                    return
+                }
+               // return;
                                         
                 if abs(rightOffset - leftOffset) < 200 {
                     let x = floor(min(leftOffset, rightOffset)) + 1
@@ -2725,16 +2735,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         let glyphCount = CTRunGetGlyphCount(run)
                         let range = CTRunGetStringRange(run)
                                                 
-                        let under = layout.embeddedItems.contains(where: { value in
-                            return value.range.intersection(NSMakeRange(range.location, range.length)) != nil
-                        })
+//                        let under = layout.embeddedItems.contains(where: { value in
+//                            return value.range.intersection(NSMakeRange(range.location, range.length)) != nil
+//                        })
                         
                         
                         ctx.textPosition = textPosition
                         
-                        if !under {
+                     //   if !under {
                             CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
-                        }
+                      //  }
                     }
                 }
                 for strikethrough in line.strikethrough {

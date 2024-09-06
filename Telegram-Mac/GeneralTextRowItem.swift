@@ -314,7 +314,7 @@ class GeneralTextRowView : GeneralRowView {
             } else {
                 current = Control()
                 self.clickable = current
-                addSubview(current, positioned: .below, relativeTo: self.textView)
+                addSubview(current, positioned: .above, relativeTo: self.textView)
             }
             current.set(background: item.customTheme?.backgroundColor ?? theme.colors.background, for: .Normal)
             current.layer?.cornerRadius = .cornerRadius

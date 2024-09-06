@@ -1163,8 +1163,10 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let activeBackground: NSColor
         let activeBorder: NSColor
         let listBackground: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground) {
+        let hideUnactiveText: Bool
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground, hideUnactiveText: Bool = false) {
             self.text = text
+            self.hideUnactiveText = hideUnactiveText
             self.grayText = grayText
             self.background = background
             self.border = border
@@ -1184,6 +1186,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
             self.activeBackground = presentation.colors.background
             self.activeBorder = presentation.colors.border
             self.listBackground = presentation.colors.listBackground
+            self.hideUnactiveText = false
         }
     }
     

@@ -4247,11 +4247,11 @@ public final class L10n {
   public static func chatGiveawayInfoWon(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Won", p1)
   }
-  /// The giveaway was sponsored by the admins of **%1$@**, who acquired %2$@ for its followers.
+  /// The giveaway was sponsored by the admins of **%1$@**, who acquired **%2$@** for its followers.
   public static func chatGiveawayInfoEndedIntroStars(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedIntro.Stars", p1, p2)
   }
-  /// The giveaway is sponsored by the admins of **%1$@**, who acquired %2$@ for its followers.
+  /// The giveaway is sponsored by the admins of **%1$@**, who acquired **%2$@** for its followers.
   public static func chatGiveawayInfoOngoingIntroStars(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingIntro.Stars", p1, p2)
   }
@@ -4393,9 +4393,97 @@ public final class L10n {
   public static func chatGiveawayMessageSubscriptionsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_zero", p1)
   }
+  /// %d
+  public static func chatGiveawayMessageWinnersInfoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_countable", p1)
+  }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoFew: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_few") }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoMany: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_many") }
+  /// The winner received gift link in private messages.
+  public static var chatGiveawayMessageWinnersInfoOne: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_one") }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoOther: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_other") }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoTwo: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_two") }
+  /// The winner received their gift link in a private message.
+  public static var chatGiveawayMessageWinnersInfoZero: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_zero") }
+  /// %d
+  public static func chatGiveawayMessageWinnersSelectedTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_countable", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_few", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_many", p1)
+  }
+  /// **%d** winner of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_one", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_other", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_two", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_zero", p1)
+  }
+  /// %d
+  public static func chatGiveawayMessageWinnersSelectedTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_countable", p1)
+  }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleFew: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_few") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleMany: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_many") }
+  /// Winner Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleOne: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_one") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleOther: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_other") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleTwo: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_two") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleZero: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_zero") }
   /// %1$@ will be distributed\n%2$@.
   public static func chatGiveawayMessageStarsPrizeText(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars.PrizeText", p1, p2)
+  }
+  /// %d %@
+  public static func chatGiveawayMessageWinnersInfoStarCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_countable", p1, p2)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarFew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_few", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarMany(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_many", p1)
+  }
+  /// The winner received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarOne(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_one", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarOther(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_other", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarTwo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_two", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_zero", p1)
   }
   /// Sorry, this group is not accessible.
   public static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
