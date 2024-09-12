@@ -2262,15 +2262,15 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let emojies: Signal<ItemCollectionsView, NoError>
         switch mode {
         case .reactions, .quickReaction, .defaultTags:
-            emojies = context.diceCache.emojies_reactions_small |> take(1) |> then(context.diceCache.emojies_reactions |> delay(1.0, queue: prepareQueue))
+            emojies = context.diceCache.emojies_reactions_small |> take(1) |> then(context.diceCache.emojies_reactions)
         case .status:
-            emojies = context.diceCache.emojies_status_small |> take(1) |> then(context.diceCache.emojies_status |> delay(1.0, queue: prepareQueue))
+            emojies = context.diceCache.emojies_status_small |> take(1) |> then(context.diceCache.emojies_status)
         case .backgroundIcon:
-            emojies = context.diceCache.background_icons_small |> take(1) |> then(context.diceCache.background_icons |> delay(1.0, queue: prepareQueue))
+            emojies = context.diceCache.background_icons_small |> take(1) |> then(context.diceCache.background_icons)
         case .channelStatus:
-            emojies = context.diceCache.channel_statuses_small |> take(1) |> then(context.diceCache.channel_statuses |> delay(1.0, queue: prepareQueue))
+            emojies = context.diceCache.channel_statuses_small |> take(1) |> then(context.diceCache.channel_statuses)
         default:
-            emojies = context.diceCache.emojies_small |> take(1) |> then(context.diceCache.emojies |> delay(1.0, queue: prepareQueue))
+            emojies = context.diceCache.emojies_small |> take(1) |> then(context.diceCache.emojies)
         }
         
         

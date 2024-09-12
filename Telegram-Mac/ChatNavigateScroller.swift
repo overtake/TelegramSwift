@@ -20,6 +20,7 @@ class ChatNavigationScroller: ImageButton {
         case failed
         case reactions
         case scroller
+        case scrollerUp
         var image: CGImage {
             switch self {
             case .mentions:
@@ -30,6 +31,8 @@ class ChatNavigationScroller: ImageButton {
                 return theme.icons.chat_reactions_badge
             case .scroller:
                 return theme.icons.chatScrollUp
+            case .scrollerUp:
+                return theme.icons.chatScrollDown
             }
         }
         var active: CGImage {
@@ -42,6 +45,8 @@ class ChatNavigationScroller: ImageButton {
                 return theme.icons.chat_reactions_badge_active
             case .scroller:
                 return theme.icons.chatScrollUpActive
+            case .scrollerUp:
+                return theme.icons.chatScrollDownActive
             }
         }
     }

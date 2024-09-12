@@ -383,7 +383,7 @@ final class BrowserStateContext {
             guard let self else {
                 return
             }
-            if let browser = self.browser {
+            if let browser = self.browser, !browser.markAsDeinit {
                 browser.add(tab, uniqueId: uniqueId)
                 browser.makeKeyAndOrderFront()
             } else {
@@ -393,19 +393,26 @@ final class BrowserStateContext {
 
         }
         
-        let window = self.browser?.window ?? context.window
         
         if let peer = tab.peer {
             let peerId = peer.id
             if FastSettings.shouldConfirmWebApp(peerId) {
                 
                 let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
-                _ = signal.startStandalone(next: { privacyUrl in
-                    let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
-                    verifyAlert_button(for: window, header: peer._asPeer().displayTitle, information: strings().webAppFirstOpenTerms(privacyUrl), successHandler: { _ in
-                        invoke()
-                        FastSettings.markWebAppAsConfirmed(peerId)
-                    })
+                _ = signal.startStandalone(next: { [weak self] privacyUrl in
+                    var window: Window?
+                    if self?.browser?.markAsDeinit == false {
+                        window = self?.browser?.window
+                    } else {
+                        window = self?.context.window
+                    }
+                    if let window {
+                        let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                        verifyAlert_button(for: window, header: peer._asPeer().displayTitle, information: strings().webAppFirstOpenTerms(privacyUrl), successHandler: { _ in
+                            invoke()
+                            FastSettings.markWebAppAsConfirmed(peerId)
+                        })
+                    }
                 })
                 
                 

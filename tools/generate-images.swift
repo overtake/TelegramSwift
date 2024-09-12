@@ -84,6 +84,8 @@ func initialize() -> [String] {
     array.append("dismissAccessory")
     array.append("chatScrollUp")
     array.append("chatScrollUpActive")
+    array.append("chatScrollDown")
+    array.append("chatScrollDownActive")
     array.append("chatSendMessage")
     array.append("chatSaveEditedMessage")
     array.append("chatRecordVoice")

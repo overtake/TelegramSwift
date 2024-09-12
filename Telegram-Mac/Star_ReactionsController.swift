@@ -640,7 +640,7 @@ private final class SendersView: View {
     }
 }
 
-private final class SliderView : Control {
+private final class Star_SliderView : Control {
     let dotLayer = View(frame: NSMakeRect(0, 0, 28, 28))
     private let foregroundLayer = SimpleGradientLayer()
     private let emptyLayer = SimpleLayer()
@@ -923,7 +923,7 @@ private final class HeaderItemView : GeneralContainableRowView {
     private let accept: AcceptView = AcceptView(frame: .zero)
     
     let badgeView = BadgeView(frame: NSMakeRect(0, 0, 100, 48))
-    let sliderView = SliderView(frame: NSMakeRect(0, 0, 100, 30))
+    let sliderView = Star_SliderView(frame: NSMakeRect(0, 0, 100, 30))
     
     private var sendersView: SendersView?
     

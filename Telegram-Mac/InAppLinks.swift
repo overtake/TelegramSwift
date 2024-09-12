@@ -657,7 +657,13 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     ForumUI.open(peer.id, context: context)
                 }
             } else {
-                callback(peer.id, (peer.isChannel || peer.isSupergroup || peer.isBot) && !forceProfile, messageId, forceProfile ? nil : action)
+                let openChat: Bool
+                if case .inputText = action {
+                    openChat = true
+                } else {
+                    openChat = false
+                }
+                callback(peer.id, (peer.isChannel || peer.isSupergroup || peer.isBot || openChat) && !forceProfile, messageId, forceProfile ? nil : action)
             }
         }
         

@@ -605,8 +605,8 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
             for (i, option) in state.data.options.enumerated() {
                 result[i] = option.isSelected
             }
-            completion(.init(selected: result))
             close?()
+            completion(.init(selected: result))
         } else {
             NSSound.beep()
         }

@@ -1071,6 +1071,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chatScrollDown: CGImage {
+      if let image = cached.with({ $0["chatScrollDown"] }) {
+          return image
+      } else {
+          let image = _chatScrollDown()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatScrollDown"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chatScrollDownActive: CGImage {
+      if let image = cached.with({ $0["chatScrollDownActive"] }) {
+          return image
+      } else {
+          let image = _chatScrollDownActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatScrollDownActive"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chatSendMessage: CGImage {
       if let image = cached.with({ $0["chatSendMessage"] }) {
           return image
@@ -10657,6 +10683,8 @@ public final class TelegramIconsTheme {
   private let _dismissAccessory: ()->CGImage
   private let _chatScrollUp: ()->CGImage
   private let _chatScrollUpActive: ()->CGImage
+  private let _chatScrollDown: ()->CGImage
+  private let _chatScrollDownActive: ()->CGImage
   private let _chatSendMessage: ()->CGImage
   private let _chatSaveEditedMessage: ()->CGImage
   private let _chatRecordVoice: ()->CGImage
@@ -11472,6 +11500,8 @@ public final class TelegramIconsTheme {
       dismissAccessory: @escaping()->CGImage,
       chatScrollUp: @escaping()->CGImage,
       chatScrollUpActive: @escaping()->CGImage,
+      chatScrollDown: @escaping()->CGImage,
+      chatScrollDownActive: @escaping()->CGImage,
       chatSendMessage: @escaping()->CGImage,
       chatSaveEditedMessage: @escaping()->CGImage,
       chatRecordVoice: @escaping()->CGImage,
@@ -12286,6 +12316,8 @@ public final class TelegramIconsTheme {
       self._dismissAccessory = dismissAccessory
       self._chatScrollUp = chatScrollUp
       self._chatScrollUpActive = chatScrollUpActive
+      self._chatScrollDown = chatScrollDown
+      self._chatScrollDownActive = chatScrollDownActive
       self._chatSendMessage = chatSendMessage
       self._chatSaveEditedMessage = chatSaveEditedMessage
       self._chatRecordVoice = chatRecordVoice

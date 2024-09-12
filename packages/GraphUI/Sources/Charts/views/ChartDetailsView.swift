@@ -15,11 +15,12 @@ private let verticalMargins: CGFloat = 8
 private var labelHeight: CGFloat = 18
 private var margin: CGFloat = 10
 private var prefixLabelWidth: CGFloat = 35
-private var valueLabelWidth: CGFloat = 65
 
 
 class ChartDetailsView: Control {
    
+    
+    private var valueLabelWidth: CGFloat = 65
     
     override var alphaValue: CGFloat {
         didSet {
@@ -71,6 +72,10 @@ class ChartDetailsView: Control {
     
     func setup(viewModel: ChartDetailsViewModel, animated: Bool) {
         self.viewModel = viewModel
+        
+        self.valueLabelWidth = viewModel.values.map { value -> CGFloat in
+            return TextButton.size(with: value.value, font: NSFont.systemFont(ofSize: 12, weight: .regular)).width
+        }.max() ?? 0
         
         titleLabel.setText(viewModel.title, animated: animated)
         titleLabel.setVisible(!viewModel.title.isEmpty, animated: animated)
@@ -125,7 +130,7 @@ class ChartDetailsView: Control {
                 let valueLabel = self.valuesViews[index]
                 valueLabel.setTextColor(value.color, animated: false)
                 valueLabel.setText(value.value, animated: false)
-                valueLabel.frame = CGRect(x: viewWidth - valueLabelWidth - margin, y: y, width: valueLabelWidth, height: labelHeight)
+                valueLabel.frame = CGRect(x: viewWidth - self.valueLabelWidth - margin, y: y, width: self.valueLabelWidth, height: labelHeight)
                 valueLabel.alphaValue = value.visible ? 1 : 0
                 
                 if value.visible {
@@ -154,7 +159,7 @@ class ChartDetailsView: Control {
                 let valueLabel = self.valuesViews[viewModel.values.count]
                 valueLabel.setTextColor(self.theme.chartDetailsTextColor, animated: false)
                 valueLabel.setText(value.value, animated: false)
-                valueLabel.frame = CGRect(x: self.bounds.width - valueLabelWidth - margin, y: y, width: valueLabelWidth, height: labelHeight)
+                valueLabel.frame = CGRect(x: self.bounds.width - self.valueLabelWidth - margin, y: y, width: self.valueLabelWidth, height: labelHeight)
                 valueLabel.alphaValue = value.visible ? 1 : 0
             }
         })

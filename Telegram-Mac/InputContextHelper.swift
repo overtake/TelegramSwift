@@ -497,7 +497,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 } else {
                     chatInteraction.sendCommand(selectedItem.command)
                 }
-            } else if let selectedItem = selectedItem as? ContextClueRowItem {
+            } else if let selectedItem = selectedItem as? ContextClueRowItem, selectedItem.selectedIndex != -1 {
                 let sources:[ContextClueRowItem.Source] = selectedItem.sources
                 let clue = selectedItem.selectedIndex != nil ? sources[selectedItem.selectedIndex!] : nil
                 

@@ -1660,8 +1660,9 @@ private func generateClockMinImage(_ color: NSColor) -> CGImage {
 }
 
 
-private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor: NSColor, arrowColor: NSColor) -> CGImage {
-    return generateImage(CGSize(width: 38.0, height: 38.0), contextGenerator: { size, context in
+private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor: NSColor, arrowColor: NSColor, reversed: Bool = false) -> CGImage {
+    
+    let generator:(NSSize, CGContext)->Void = { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         context.setFillColor(backgroundColor.cgColor)
         context.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
@@ -1679,7 +1680,12 @@ private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor:
         context.addLine(to: CGPoint(x: position.x + 10.0, y: position.y - 10.0))
         context.addLine(to: CGPoint(x: position.x + 19.0, y: position.y - 1.0))
         context.strokePath()
-    })!
+    }
+    if !reversed {
+        return generateImage(CGSize(width: 38.0, height: 38.0), contextGenerator: generator)!
+    } else {
+        return generateImage(CGSize(width: 38.0, height: 38.0), rotatedContext: generator)!
+    }
 }
 
 private func generateConfirmDeleteMessagesAccessory(backgroundColor: NSColor) -> CGImage {
@@ -2503,6 +2509,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                dismissAccessory: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.grayIcon) },
                                                chatScrollUp: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, arrowColor: palette.grayIcon) },
                                                chatScrollUpActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, arrowColor: palette.accentIcon) },
+                                               chatScrollDown: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, arrowColor: palette.grayIcon, reversed: true) },
+                                               chatScrollDownActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, arrowColor: palette.accentIcon, reversed: true) },
                                                chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.accentIcon) },
                                                chatSaveEditedMessage: { generateSendIcon(NSImage(named: "Icon_SaveEditedMessage")!, palette.accentIcon) },
                                                chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
@@ -3366,7 +3374,8 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "section_header_text_color": Int32(bitPattern: presentationTheme.colors.listGrayText.rgb),
         "subtitle_text_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
         "destructive_text_color": Int32(bitPattern: presentationTheme.colors.redUI.rgb),
-        "bottom_bar_bg_color": Int32(bitPattern: presentationTheme.colors.grayForeground.rgb)
+        "bottom_bar_bg_color": Int32(bitPattern: presentationTheme.colors.grayForeground.rgb),
+        "section_separator_color": Int32(bitPattern: presentationTheme.colors.border.rgb)
     ]
 }
 

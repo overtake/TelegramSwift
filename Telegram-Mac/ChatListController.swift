@@ -565,7 +565,8 @@ struct FilterData : Equatable {
     let request: ChatListIndexRequest
     let badges: ChatListFilterBadges
     let requestTimestamp: TimeInterval
-    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, showTags: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: []), requestTimestamp: TimeInterval = CACurrentMediaTime()) {
+    var isTop: Bool
+    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, showTags: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: []), requestTimestamp: TimeInterval = CACurrentMediaTime(), isTop: Bool = true) {
         self.filter = filter
         self.tabs = tabs
         self.sidebar = sidebar
@@ -573,6 +574,7 @@ struct FilterData : Equatable {
         self.badges = badges
         self.showTags = showTags
         self.requestTimestamp = requestTimestamp
+        self.isTop = isTop
     }
     
     var isEmpty: Bool {
@@ -584,27 +586,31 @@ struct FilterData : Equatable {
     }
     func withUpdatedFilterId(_ filterId: Int32?) -> FilterData {
         let filter = self.tabs.first(where: { $0.id == filterId }) ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedFilter(_ filter: ChatListFilter?) -> FilterData {
         let filter = filter ?? self.tabs.first ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedTabs(_ tabs:  [ChatListFilter]) -> FilterData {
-        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedSidebar(_ sidebar: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedShowTags(_ showTags: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: self.sidebar, showTags: showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: self.sidebar, showTags: showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedRequest(_ request: ChatListIndexRequest, removeAnimation: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: self.badges, requestTimestamp: removeAnimation ? CACurrentMediaTime() : self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: self.badges, requestTimestamp: removeAnimation ? CACurrentMediaTime() : self.requestTimestamp, isTop: self.isTop)
+    }
+    func withUpdatedIsTop(_ isTop: Bool) -> FilterData {
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges, requestTimestamp: self.requestTimestamp, isTop: isTop)
     }
     func withUpdatedBadges(_ badges: ChatListFilterBadges) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
+    
 }
 
 
@@ -631,7 +637,7 @@ class ChatListController : PeersListController {
             var previous = previous
             var current = f(previous.filterData)
             if previous.filterData.filter.id != current.filter.id {
-                current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil), removeAnimation: false)
+                current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil), removeAnimation: false).withUpdatedIsTop(true)
                 changedFolder = true
             }
             previous.filterData = current
@@ -1100,17 +1106,25 @@ class ChatListController : PeersListController {
             if let strongSelf = self, let view = view {
                 var messageIndex:EngineChatList.Item.Index?
                 
+                let isTop: Bool
+                
                 switch scroll.direction {
                 case .bottom:
                     if view.hasEarlier {
                         messageIndex = view.items.first?.index
+                        isTop = false
+                    } else {
+                        isTop = true
                     }
                 case .top:
                     if view.hasLater {
                         messageIndex = view.items.last?.index
+                        isTop = false
+                    } else {
+                        isTop = true
                     }
                 case .none:
-                    break
+                    isTop = true
                 }
                 if let messageIndex = messageIndex {
                     _ = animated.swap(false)
@@ -1120,7 +1134,11 @@ class ChatListController : PeersListController {
                         }
                     }
                     strongSelf.updateFilter {
-                        $0.withUpdatedRequest(.Index(messageIndex, nil), removeAnimation: true)
+                        $0.withUpdatedRequest(.Index(messageIndex, nil), removeAnimation: true).withUpdatedIsTop(isTop)
+                    }
+                } else {
+                    strongSelf.updateFilter {
+                        $0.withUpdatedIsTop(isTop)
                     }
                 }
             }
@@ -1464,7 +1482,7 @@ class ChatListController : PeersListController {
             if view?.hasLater == true {
                 _ = self.first.swap(true)
                 self.updateFilter {
-                    $0.withUpdatedRequest(.Initial(50, .up(true)), removeAnimation: true)
+                    $0.withUpdatedRequest(.Initial(50, .up(true)), removeAnimation: true).withUpdatedIsTop(true)
                 }
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
@@ -1479,6 +1497,9 @@ class ChatListController : PeersListController {
                     }
                 } else {
                     self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
+                }
+                self.updateFilter {
+                    $0.withUpdatedIsTop(true)
                 }
             }
         }
