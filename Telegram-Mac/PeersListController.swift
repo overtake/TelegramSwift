@@ -1033,7 +1033,7 @@ class PeerListContainerView : Control {
 
     private var forumTitle: TitleForumView?
     
-
+    private var scrollerView: ChatNavigationScroller?
     
     let backgroundView = View(frame: NSZeroRect)
     
@@ -1481,6 +1481,7 @@ class PeerListContainerView : Control {
             self.delta = nil
         }
         
+        self.updateScroller(animated: animated)
 
         
         let transition: ContainedViewLayoutTransition
@@ -1495,6 +1496,38 @@ class PeerListContainerView : Control {
         }
         self.updateLayout(self.frame.size, transition: transition)
     }
+    
+    func updateScroller(animated: Bool) {
+        guard let state else {
+            return
+        }
+        
+        let isShown: Bool = !state.filterData.isTop || (tableView.currentScroll.rect.minY - tableView.frame.height) > tableView.frame.height
+        
+        if !state.isContacts, isShown {
+            let current: ChatNavigationScroller
+            if let view = self.scrollerView {
+                current = view
+            } else {
+                current = ChatNavigationScroller(.scrollerUp)
+                current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, frame.height - current.frame.height - 10))
+                addSubview(current)
+                self.scrollerView = current
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.setSingle(handler: { [weak self] _ in
+                self?.arguments?.getController()?.scrollup()
+            }, for: .Click)
+            
+        } else if let view = self.scrollerView {
+            performSubviewRemoval(view, animated: animated)
+            self.scrollerView = nil
+        }
+    }
+    
     
     
     private func updateTags(_ state: PeerListState,updateSearchTags: @escaping(PeerListState.SelectedSearchTag)->Void) {
@@ -1697,6 +1730,10 @@ class PeerListContainerView : Control {
         
         if let view = self.webapps {
             transition.updateFrame(view: view, frame: CGRect(origin: NSMakePoint(10, floorToScreenPixels((50 - view.frame.height) / 2)), size: view.frame.size))
+        }
+        
+        if let view = self.scrollerView {
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, size.height - view.frame.height - 10, view.frame.width, view.frame.height))
         }
         
 
@@ -2260,6 +2297,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
         genericView.tableView.addScroll(listener: revealListener)
         
+        genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.genericView.updateScroller(animated: true)
+        }))
+        
 
         genericView.titleView.set(handler: { [weak self] _ in
             self?.toggleStoriesState()
@@ -2739,6 +2780,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func updateState(_ state: PeerListState, previous: PeerListState?, arguments: Arguments) {
+        
+       
+        
         if previous?.forumPeer != state.forumPeer {
             if state.forumPeer == nil {
                 switch self.mode {

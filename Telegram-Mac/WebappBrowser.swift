@@ -1572,6 +1572,8 @@ final class WebappBrowserController : ViewController {
     
     private var initialTab: BrowserTabData.Data?
     
+    private(set) var markAsDeinit: Bool = false
+    
     private let publicStateValue: Promise<[BrowserTabData]> = Promise()
     var publicState:Signal<[BrowserTabData], NoError> {
         return publicStateValue.get()
@@ -1679,6 +1681,7 @@ final class WebappBrowserController : ViewController {
     }
     
     func hide(_ completion: @escaping()->Void, close: Bool = true) {
+        markAsDeinit = true
         if close {
             closeAllModals(window: browser)
         }
@@ -1834,6 +1837,7 @@ final class WebappBrowserController : ViewController {
         }, close: { [weak self] in
             let current = stateValue.with { $0.selected }
             guard let current else {
+                BrowserStateContext.get(context).closeAll()
                 return
             }
             if current.external?.isBackButton == true {
@@ -1869,7 +1873,7 @@ final class WebappBrowserController : ViewController {
                 return
             }
             let invoke:()->Void = {
-                if count == 1 {
+                if count == 1, let window = self?.window, !hasModals(window) {
                     BrowserStateContext.get(context).hide()
                 } else {
                     updateState {
@@ -1981,30 +1985,39 @@ final class WebappBrowserController : ViewController {
     }
     
     private func updateWebpage(_ tabs: [BrowserTabData], animated: Bool) {
-        guard let tab = tabs.first(where: { $0.selected }), let arguments else {
+        guard let arguments else {
             return
         }
         
-        let controller = webpages[tab.unique]!
-        if current != controller {
-            controller._frameRect = genericView.contentView.bounds
-            current?.viewWillDisappear(animated)
-            controller.viewWillAppear(animated)
-        }
-        
-        genericView.contentView.update(newView: controller.view, item: tab, animated: animated)
+        if let tab = tabs.first(where: { $0.selected }) {
+            let controller = webpages[tab.unique]!
+            if current != controller {
+                controller._frameRect = genericView.contentView.bounds
+                current?.viewWillDisappear(animated)
+                controller.viewWillAppear(animated)
+            }
+            
+            genericView.contentView.update(newView: controller.view, item: tab, animated: animated)
 
-        if current != controller {
-            controller.viewDidAppear(animated)
-            current?.viewDidDisappear(animated)
+            if current != controller {
+                controller.viewDidAppear(animated)
+                current?.viewDidDisappear(animated)
+            }
+            
+            
+            for tab in tabs {
+                webpages[tab.unique]?.update(data: tab, arguments: arguments, animated: animated)
+            }
+            self.current = controller
+        } else {
+            self.current?.viewWillDisappear(animated)
+            if let view = self.current?.view {
+                performSubviewRemoval(view, animated: animated)
+            }
+            self.current = nil
         }
         
-        
-        for tab in tabs {
-            webpages[tab.unique]?.update(data: tab, arguments: arguments, animated: animated)
-        }
-        
-        self.current = controller
+     
         
     }
     

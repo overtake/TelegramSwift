@@ -652,7 +652,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             guard let `self` = self else {return}
             
             if let view = view as? MGalleryItemView {
-                view.preventsCapture = entry.isProtected
+                view.preventsCapture = false
             }
             view.layer?.contents = value.image
             

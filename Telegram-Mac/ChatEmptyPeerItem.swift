@@ -16,7 +16,7 @@ import SwiftSignalKit
 class ChatEmptyPeerItem: TableRowItem {
 
     private(set) var textViewLayout:TextViewLayout
-    private(set) var image: TelegramMediaImage?
+    private(set) var image: Media?
     private(set) var sticker: TelegramMediaFile?
     private(set) var premiumRequired: Bool = false
     
@@ -189,7 +189,7 @@ class ChatEmptyPeerItem: TableRowItem {
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
                         self.textViewLayout.interactions = globalLinkExecutor
-                        self.image = botInfo.photo
+                        self.image = botInfo.video ?? botInfo.photo
                     } else if cachedData.flags.contains(.premiumRequired), !chatInteraction.context.isPremium {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
@@ -248,7 +248,7 @@ class ChatEmptyPeerItem: TableRowItem {
 
 class ChatEmptyPeerView : TableRowView {
     let textView:TextView = TextView()
-    private var imageView: TransformImageView? = nil
+    private var imageView: ChatMediaContentView? = nil
     private var stickerView: StickerMediaContentView? = nil
     private var visualEffect: VisualEffect?
     private var bgView: View?
@@ -354,27 +354,25 @@ class ChatEmptyPeerView : TableRowView {
             var size = NSMakeSize(max(300, item.textViewLayout.layoutSize.width + 20), 300)
 
             
-            if let image = item.image, let rep = image.representationForDisplayAtSize(PixelDimensions.init(1280, 1280)) {
-                let current: TransformImageView
-                if let view = self.imageView {
-                    current = view
-                } else {
-                    current = TransformImageView()
-                    bgView.addSubview(current)
-                    self.imageView = current
+            let bgWidth = max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20)
+            
+            if let media = item.image {
+                
+                let contentNode = ChatLayoutUtils.contentNode(for: media)
+                let contentSize = ChatLayoutUtils.contentSize(for: media, with: bgWidth)
+
+                if imageView == nil || !imageView!.isKind(of: contentNode) {
+                    if let view = self.imageView {
+                        performSubviewRemoval(view, animated: false)
+                    }
+                    self.imageView = contentNode.init(frame: contentSize.bounds)
+                    bgView.addSubview(self.imageView!)
                 }
                 
-                let signal = chatMessagePhoto(account: item.chatInteraction.context.account, imageReference: .standalone(media: image), peer: item.chatInteraction.peer, scale: System.backingScale, autoFetchFullSize: true)
+                self.imageView?.update(with: media, size: contentSize, context: item.chatInteraction.context, parent: nil, table: item.table)
+                self.imageView?.fetch(userInitiated: true)
+//                let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
                 
-                current.setSignal(signal)
-                
-                size = rep.dimensions.size.aspectFitted(size)
-                
-                let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
-                
-                
-                current.set(arguments: arguments)
-                current.setFrameSize(size)
             } else if let view = self.imageView {
                 performSubviewRemoval(view, animated: false)
                 self.imageView = nil
@@ -518,7 +516,7 @@ class ChatEmptyPeerView : TableRowView {
             }
             
             
-            bgView.setFrameSize(NSMakeSize(max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20), h + textView.frame.height + 20))
+            bgView.setFrameSize(NSMakeSize(bgWidth, h + textView.frame.height + 20))
 
             
             bgView.addSubview(self.textView)

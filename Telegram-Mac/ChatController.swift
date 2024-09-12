@@ -6720,6 +6720,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let row = tableView.topVisibleRow, let item = tableView.item(at: row) as? ChatRowItem, let id = item.message?.id {
                     strongSelf.historyState = strongSelf.historyState.withRemovingReplies(max: id)
                 }
+                if !strongSelf.context.window.isKeyWindow {
+                    return
+                }
                 
                 var message:Message? = nil
                 
@@ -7088,11 +7091,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.windowDidBecomeKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState: immediateScrollState())
+        self.genericView.tableView.notifyScrollHandlers()
     }
     override func windowDidResignKey() {
         super.windowDidResignKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState:immediateScrollState())
+        self.genericView.tableView.notifyScrollHandlers()
     }
     
     private func anchorMessageInCurrentHistoryView() -> Message? {
@@ -8212,6 +8217,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.didRemovedFromStack()
         chatInteraction.remove(observer: self)
     }
+    
+    
     
 
     

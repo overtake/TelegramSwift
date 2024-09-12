@@ -682,6 +682,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if parent?.media.first is TelegramMediaStory {
             return false
         }
+        if parent == nil {
+            return true
+        }
         if let media = media as? TelegramMediaFile, let parameters = self.parameters {
             let autoplay = (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
             return autoplay

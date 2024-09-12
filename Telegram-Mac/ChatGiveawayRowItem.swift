@@ -118,6 +118,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         let prizes_info = NSMutableAttributedString()
         switch media.prize {
         case .premium:
+            _ = prizes_info.append(string: strings().chatGiveawayMessageSubscriptionsCountable(Int(media.quantity)), color: givePresentation.text, font: .normal(.text))
             _ = prizes_info.append(string: "\n", color: givePresentation.text, font: .normal(.text))
             _ = prizes_info.append(string: strings().chatGiveawayMessageMonthsCountable(Int(months)), color: givePresentation.text, font: .normal(.text))
         case let .stars(amount):
