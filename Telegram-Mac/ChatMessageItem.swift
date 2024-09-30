@@ -560,7 +560,7 @@ class ChatMessageItem: ChatRowItem {
             let interactions: TextViewInteractions = globalLinkExecutor
             if let adAttribute = message.adAttribute {
                 interactions.processURL = { [weak chatInteraction] link in
-                    chatInteraction?.markAdAction(adAttribute.opaqueId)
+                    chatInteraction?.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
                     globalLinkExecutor.processURL(link)
                 }
             }

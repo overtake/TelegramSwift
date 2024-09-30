@@ -304,6 +304,8 @@ final class SVideoInteractions {
 
 private final class SVideoControlsView : Control {
     
+    fileprivate weak var mediaPlayer: (UniversalVideoContentView & NSView)?
+    
     var isControlsLimited: Bool = false {
         didSet {
             let controlStyle = self.controlStyle
@@ -333,11 +335,11 @@ private final class SVideoControlsView : Control {
             volumeContainer.isHidden = controlStyle.isCompact
             togglePip.set(image: controlStyle.isPip ? theme.icons.videoPlayerPIPOut : theme.icons.videoPlayerPIPIn, for: .Normal)
             toggleFullscreen.set(image: controlStyle.isPip ? theme.icons.videoPlayerClose : controlStyle.isFullScreen ? theme.icons.videoPlayerExitFullScreen : theme.icons.videoPlayerEnterFullScreen, for: .Normal)
-            menuItems.isHidden = controlStyle.isPip || isControlsLimited
-            togglePip.isHidden = isControlsLimited
-            toggleFullscreen.isHidden = isControlsLimited
+            menuItems.isHidden = controlStyle.isPip || isControlsLimited || controlStyle.isCompact
+            togglePip.isHidden = isControlsLimited || controlStyle.isCompact
+            toggleFullscreen.isHidden = isControlsLimited || controlStyle.isCompact
             playOrPause.isHidden = isControlsLimited
-            volumeContainer.isHidden = isControlsLimited
+            volumeContainer.isHidden = isControlsLimited || controlStyle.isCompact
             layout()
         }
     }
@@ -464,6 +466,7 @@ private final class SVideoControlsView : Control {
         durationView.needsDisplay = true
         
         updateBaseRate()
+        
 
     }
     
@@ -665,9 +668,16 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
-        
-        menuItems.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true), for: .Normal)
+        let image: CGImage
+        if let mediaPlayer, let quality = mediaPlayer.videoQualityState(), !quality.available.isEmpty {
+            image = NSImage(resource: .iconVideoSettings).precomposed(.white)
+        } else {
+            image = optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true)
+        }
+        menuItems.set(image: image, for: .Normal)
         self.menuItems.sizeToFit()
+        
+        needsLayout = true
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -682,6 +692,7 @@ private final class SVideoControlsView : Control {
         
         rewindBackward.setFrameOrigin(playOrPause.frame.minX - rewindBackward.frame.width - 36, 16)
         rewindForward.setFrameOrigin(playOrPause.frame.maxX + 36, 16)
+        
         
         menuItems.setFrameOrigin(NSMakePoint(frame.width - menuItems.frame.width - 16, 16))
 
@@ -836,13 +847,15 @@ class SVideoView: NSView {
         }
     }
 
-    let mediaPlayer: MediaPlayerView = MediaPlayerView()
+    let mediaPlayer: (NSView & UniversalVideoContentView)
+    
     private let backgroundView: NSView = NSView()
+    
     override func layout() {
         super.layout()
         let oldSize = mediaPlayer.frame.size
         mediaPlayer.frame = bounds
-        mediaPlayer.updateLayout()
+        mediaPlayer.updateLayout(size: bounds.size, transition: .immediate)
         let previousIsCompact: Bool = self.controlsStyle.isCompact
         self.controlsStyle = self.controlsStyle.withUpdatedStyle(compact: frame.width < 300).withUpdatedHideRewind(hideRewind: frame.width < 400)
         controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), self.isControlsLimited ? 46 : 94)
@@ -983,6 +996,9 @@ class SVideoView: NSView {
         
     }
     
+    override init(frame frameRect: NSRect) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -999,7 +1015,9 @@ class SVideoView: NSView {
         controls.rewindForward.send(event: .Click)
     }
     
-    required override init(frame frameRect: NSRect) {
+    init(frame frameRect: NSRect, mediaPlayer: (NSView & UniversalVideoContentView)) {
+        self.mediaPlayer = mediaPlayer
+        self.controls.mediaPlayer = mediaPlayer
         super.init(frame: frameRect)
         addSubview(backgroundView)
         addSubview(mediaPlayer)
@@ -1094,6 +1112,19 @@ class SVideoView: NSView {
                 self?.isInMenu = false
             }
             menu.delegate = menu
+            
+            if let mediaPlayer = self?.mediaPlayer, let quality = mediaPlayer.videoQualityState() {
+                menu.addItem(ContextMenuItem(strings().videoQualityAuto, handler: { [weak mediaPlayer] in
+                    mediaPlayer?.setVideoQuality(.auto)
+                }, state: quality.preferred == .auto ? .on : nil))
+                
+                for value in quality.available {
+                    menu.addItem(ContextMenuItem("\(value)p", handler: { [weak mediaPlayer] in
+                        mediaPlayer?.setVideoQuality(.quality(value))
+                    }, state: quality.preferred == .quality(value) ? .on : nil))
+                }
+                menu.addItem(ContextSeparatorItem())
+            }
             
             let customItem = ContextMenuItem(String(format: "%.1fx", FastSettings.playingVideoRate), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
             

@@ -354,7 +354,6 @@ final class StoryArguments {
     let startRecording: (Bool)->Void
     let togglePinned:(StoryContentItem)->Void
     let hashtag:(String)->Void
-    let report:(PeerId, Int32, ReportReason)->Void
     let toggleHide:(Peer, Bool)->Void
     let showFriendsTooltip:(Control, StoryContentItem)->Void
     let showTooltipText:(String, MenuAnimation)->Void
@@ -366,7 +365,7 @@ final class StoryArguments {
     let setupPrivacy:(StoryContentItem)->Void
     let loadForward:(StoryId)->Promise<EngineStoryItem?>
     let openStory:(StoryId)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, repost:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void, loadForward:@escaping(StoryId)->Promise<EngineStoryItem?>, openStory:@escaping(StoryId)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, repost:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void, loadForward:@escaping(StoryId)->Promise<EngineStoryItem?>, openStory:@escaping(StoryId)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -390,7 +389,6 @@ final class StoryArguments {
         self.startRecording = startRecording
         self.togglePinned = togglePinned
         self.hashtag = hashtag
-        self.report = report
         self.toggleHide = toggleHide
         self.showFriendsTooltip = showFriendsTooltip
         self.showTooltipText = showTooltipText
@@ -2479,10 +2477,6 @@ final class StoryModalController : ModalViewController, Notifable {
             })
         }
         
-        let report:(PeerId, Int32, ReportReason)->Void = { [weak self] peerId, storyId, reason in
-            _ = context.engine.peers.reportPeerStory(peerId: peerId, storyId: storyId, reason: reason, message: "").start()
-            self?.genericView.showTooltip(.justText(strings().storyReportSuccessText))
-        }
 
         
         let toggleHide:(Peer, Bool)->Void = { [weak self] peer, value in
@@ -2656,7 +2650,7 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }, hashtag: { string in
             showModal(with: StoryFoundListController(context: context, source: .hashtag(string), presentation: darkAppearance), for: context.window)
-        }, report: report,
+        },
         toggleHide: toggleHide,
         showFriendsTooltip: { [weak self] _, story in
             guard let peer = story.peer?._asPeer() else {
@@ -2738,7 +2732,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     let resource: TelegramMediaFile?
                     if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                         if let res = media.representations.last?.resource {
-                            resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                            resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")], alternativeRepresentations: [])
                         } else {
                             resource = nil
                         }
@@ -2797,19 +2791,10 @@ final class StoryModalController : ModalViewController, Notifable {
                             deleteStory(story)
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     } else {
-                        let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                        let reportItem = ContextMenuItem(strings().storyControlsMenuReport, handler: {
+                            reportComplicated(context: context, subject: .stories(peer.id, [story.storyItem.id]), title: strings().reportComplicatedStoryTitle)
+                        }, itemImage: MenuAnimation.menu_report.value)
                         
-                        let submenu = ContextMenu()
-                                    
-                        let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                        let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                        
-                        for i in 0 ..< options.count {
-                            submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                                report(peerId, story.storyItem.id, options[i])
-                            }, itemImage: animation[i].value))
-                        }
-                        reportItem.submenu = submenu
                         menu.addItem(reportItem)
                     }
                 }
@@ -2826,7 +2811,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                     if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")], alternativeRepresentations: [])
                     } else {
                         resource = nil
                     }

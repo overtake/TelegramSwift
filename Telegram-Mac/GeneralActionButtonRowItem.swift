@@ -11,9 +11,9 @@ import TGUIKit
 
 final class GeneralActionButtonRowItem : GeneralRowItem {
     fileprivate let text: String
-    init(_ initialSize: NSSize, stableId: AnyHashable, text: String, viewType: GeneralViewType, action: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, text: String, viewType: GeneralViewType, action: @escaping()->Void, inset: NSEdgeInsets = NSEdgeInsetsMake(0, 20, 0, 20)) {
         self.text = text
-        super.init(initialSize, stableId: stableId, viewType: viewType, action: action)
+        super.init(initialSize, stableId: stableId, viewType: viewType, action: action, inset: inset)
     }
     override func viewClass() -> AnyClass {
         return GeneralActionButtonView.self
@@ -21,6 +21,24 @@ final class GeneralActionButtonRowItem : GeneralRowItem {
     
     override var height: CGFloat {
         return 60
+    }
+    
+    override var backdorColor: NSColor {
+        switch viewType {
+        case .legacy:
+            return .clear
+        default:
+            return super.backgroundColor
+        }
+    }
+    
+    override var blockWidth: CGFloat {
+        switch viewType {
+        case .legacy:
+            return width
+        default:
+            return super.blockWidth
+        }
     }
 }
 
@@ -30,6 +48,13 @@ private final class GeneralActionButtonView: GeneralContainableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(button)
+    }
+    
+    override var backdorColor: NSColor {
+        guard let item = item as? GeneralRowItem else {
+            return .clear
+        }
+        return item.backdorColor
     }
     
     required init?(coder: NSCoder) {

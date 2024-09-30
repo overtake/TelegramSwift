@@ -495,7 +495,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         timestamp: item.timestamp,
                         expirationTimestamp: item.expirationTimestamp,
                         media: EngineMedia(media),
-                        alternativeMedia: item.alternativeMedia.flatMap(EngineMedia.init),
+                        alternativeMediaList: item.alternativeMediaList.compactMap(EngineMedia.init),
                         mediaAreas: item.mediaAreas,
                         text: item.text,
                         entities: item.entities,
@@ -543,7 +543,7 @@ final class StoryContentContextImpl: StoryContentContext {
                                 timestamp: item.timestamp,
                                 expirationTimestamp: Int32.max,
                                 media: EngineMedia(item.media), 
-                                alternativeMedia: nil,
+                                alternativeMediaList: [],
                                 mediaAreas: item.mediaAreas,
                                 text: item.text,
                                 entities: item.entities,
@@ -1195,7 +1195,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 }
                 
                 var selectedMedia: EngineMedia
-                if let slice = stateValue.slice, let alternativeMedia = item.alternativeMedia, !slice.additionalPeerData.preferHighQualityStories {
+                if let slice = stateValue.slice, let alternativeMedia = item.alternativeMediaList.first, !slice.additionalPeerData.preferHighQualityStories {
                     selectedMedia = alternativeMedia
                 } else {
                     selectedMedia = item.media
@@ -1514,7 +1514,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     timestamp: itemValue.timestamp,
                     expirationTimestamp: itemValue.expirationTimestamp,
                     media: EngineMedia(media),
-                    alternativeMedia: itemValue.alternativeMedia.flatMap(EngineMedia.init),
+                    alternativeMediaList: itemValue.alternativeMediaList.compactMap(EngineMedia.init),
                     mediaAreas: itemValue.mediaAreas,
                     text: itemValue.text,
                     entities: itemValue.entities,
@@ -1854,7 +1854,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                             }
                             
                             var selectedMedia: EngineMedia
-                            if let alternativeMedia = item.alternativeMedia, !preferHighQualityStories {
+                            if let alternativeMedia = item.alternativeMediaList.first, !preferHighQualityStories {
                                 selectedMedia = alternativeMedia
                             } else {
                                 selectedMedia = item.media
@@ -1979,7 +1979,7 @@ func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signa
     case let .file(file):
         var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
         for attribute in file.attributes {
-            if case let .Video(_, _, _, preloadSize, _) = attribute {
+            if case let .Video(_, _, _, preloadSize, _, _) = attribute {
                 if let preloadSize {
                     fetchRange = (0 ..< Int64(preloadSize), .default)
                 }
@@ -2161,7 +2161,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
         var fetchPriorityDisposable: Disposable?
         
         let selectedMedia: EngineMedia
-        if !preferHighQualityStories, let alternativeMedia = storyItem.alternativeMedia {
+        if !preferHighQualityStories, let alternativeMedia = storyItem.alternativeMediaList.first {
             selectedMedia = alternativeMedia
         } else {
             selectedMedia = storyItem.media
@@ -2204,7 +2204,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
         case let .file(file):
             var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
             for attribute in file.attributes {
-                if case let .Video(_, _, _, preloadSize, _) = attribute {
+                if case let .Video(_, _, _, preloadSize, _, _) = attribute {
                     if let preloadSize {
                         fetchRange = (0 ..< Int64(preloadSize), .default)
                     }
@@ -2404,7 +2404,7 @@ private func getCachedStory(storyId: StoryId, transaction: Transaction) -> Engin
             timestamp: item.timestamp,
             expirationTimestamp: item.expirationTimestamp,
             media: EngineMedia(media),
-            alternativeMedia: item.alternativeMedia.flatMap(EngineMedia.init),
+            alternativeMediaList: item.alternativeMediaList.compactMap(EngineMedia.init),
             mediaAreas: item.mediaAreas,
             text: item.text,
             entities: item.entities,

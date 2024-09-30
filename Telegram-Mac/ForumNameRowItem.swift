@@ -24,7 +24,7 @@ final class ForumNameRowItem : InputDataRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, icon: Icon?, name: String, updatedText:@escaping(String)->Void, viewType: GeneralViewType) {
         self.context = context
         self.icon = icon
-        super.init(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: name, placeholder: nil, inputPlaceholder: strings().forumTopicNamePlaceholder, filter: { $0 }, updated: updatedText, limit: 70)
+        super.init(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: name, placeholder: nil, inputPlaceholder: strings().forumTopicNamePlaceholder, filter: { $0 }, updated: updatedText, limit: 128)
     }
     
     override var textFieldLeftInset: CGFloat {

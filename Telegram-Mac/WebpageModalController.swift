@@ -924,6 +924,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     private var biometryDisposable: Disposable?
     private let stateDisposable = MetaDisposable()
+    private let backDisposable = MetaDisposable()
     
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil, fromMenu: Bool? = nil, hasSettings: Bool = false, browser: BrowserLinkManager? = nil) {
         self.url = url
@@ -1318,6 +1319,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         biometryDisposable?.dispose()
         apperanceDisposable.dispose()
         stateDisposable.dispose()
+        backDisposable.dispose()
         if isLoaded() {
             self.genericView._holder.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
         }
@@ -1331,12 +1333,16 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var isBackButton: Bool = false {
         didSet {
-            updateLocalizationAndTheme(theme: theme)
-            updateState { current in
-                var current = current
-                current.isBackButton = isBackButton
-                return current
-            }
+            let isBackButton = isBackButton
+            backDisposable.set(delaySignal(0.05).startStrict(completed: { [weak self] in
+                self?.updateLocalizationAndTheme(theme: theme)
+                self?.updateState { current in
+                    var current = current
+                    current.isBackButton = isBackButton
+                    return current
+                }
+            }))
+            
         }
     }
     private var hasSettings: Bool = false {
@@ -1511,7 +1517,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
                 if !alert.buttons.isEmpty {
-                    alert.beginSheetModal(for: context.window, completionHandler: { [weak self] response in
+                    alert.beginSheetModal(for: window, completionHandler: { [weak self] response in
                         let index = response.rawValue - 1000
                         if let id = buttons?[index]["id"] as? String {
                             self?.poupDidClose(id)

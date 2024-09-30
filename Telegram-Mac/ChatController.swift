@@ -1844,8 +1844,8 @@ private final class ChatAdData {
         self.context.markAsSeen(opaqueId: opaqueId)
     }
 
-    func markAction(opaqueId: Data) {
-        self.context.markAction(opaqueId: opaqueId)
+    func markAction(opaqueId: Data, media: Bool) {
+        self.context.markAction(opaqueId: opaqueId, media: media, fullscreen: false)
     }
     
     func remove(opaqueId: Data) {
@@ -2228,7 +2228,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var hasPhotos: Bool = false
     private func updateHasPhotos(_ theme: TelegramPresentationTheme) {
         if let peer = self.chatInteraction.peer {
-            let peerAccept = peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId || mode.isSavedMessagesThread
+            let peerAccept = peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId || mode.isSavedMessagesThread || peer.id == verifyCodePeerId
             self.hasPhotos = peerAccept && theme.bubbled
         } else {
             self.hasPhotos = false
@@ -5753,8 +5753,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.markAdAction = { [weak self] opaqueId in
-            self?.adMessages?.markAction(opaqueId: opaqueId)
+        chatInteraction.markAdAction = { [weak self] opaqueId, media in
+            self?.adMessages?.markAction(opaqueId: opaqueId, media: media)
         }
         
         chatInteraction.toggleSidebar = { [weak self] in

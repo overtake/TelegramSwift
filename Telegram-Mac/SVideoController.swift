@@ -16,6 +16,18 @@ import RangeSet
 import IOKit.pwr_mgt
 import TelegramMedia
 
+
+
+private func makePlayer(account: Account, reference: FileMediaReference, fetchAutomatically: Bool = false) -> (UniversalVideoContentView & NSView) {
+    let player: (UniversalVideoContentView & NSView)
+    if #available(macOS 14.0, *), !reference.media.alternativeRepresentations.isEmpty {
+        player = HLSVideoContent(id: .message(MessageId(peerId: PeerId(0), namespace: 0, id: 0), arc4random(), reference.media.fileId), userLocation: reference.userLocation, fileReference: reference).makeContentView(accountId: account.id, postbox: account.postbox)
+    } else {
+        player = NativeMediaPlayer(postbox: account.postbox, reference: reference, fetchAutomatically: fetchAutomatically)
+    }
+    return player
+}
+
 enum SVideoStyle {
     case regular
     case pictureInPicture
@@ -32,13 +44,13 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     var style: SVideoStyle = .regular
     private var fullScreenWindow: Window?
     private var fullScreenRestoreState: (rect: NSRect, view: NSView)?
-    private let mediaPlayer: MediaPlayer
+    private var mediaPlayer: (UniversalVideoContentView & NSView)!
     private let reference: FileMediaReference
     private let statusDisposable = MetaDisposable()
     private let bufferingDisposable = MetaDisposable()
     private let hideOnIdleDisposable = MetaDisposable()
     private let hideControlsDisposable = MetaDisposable()
-    private let postbox: Postbox
+    private let account: Account
     private var pictureInPicture: Bool = false
     private var hideControls: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
     private var controlsIsHidden: Bool = false
@@ -55,7 +67,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         if let videoFramePreview = _videoFramePreview {
             return videoFramePreview
         } else {
-            self._videoFramePreview = MediaPlayerFramePreview(postbox: postbox, fileReference: reference)
+            self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: reference)
         }
         return _videoFramePreview!
     }
@@ -72,12 +84,13 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private let isProtected: Bool
     private let isControlsLimited: Bool
     
-    init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
+    private var endPlaybackId: Int?
+    
+    init(account: Account, reference: FileMediaReference, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
         self.reference = reference
-        self.postbox = postbox
+        self.account = account
         self.isProtected = isProtected
         self.isControlsLimited = isControlsLimited
-        mediaPlayer = MediaPlayer(postbox: postbox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)
     }
@@ -90,7 +103,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         mediaPlayer.play()
         self.isPaused = false
         if let startTime = startTime, startTime > 0 {
-            mediaPlayer.seek(timestamp: startTime)
+            mediaPlayer.seek(startTime)
         }
     }
     
@@ -105,7 +118,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         if let status = genericView.status {
             switch status.status {
             case .buffering:
-                mediaPlayer.seek(timestamp: status.timestamp / status.duration)
+                mediaPlayer.seek(status.timestamp / status.duration)
             default:
                 break
             }
@@ -181,7 +194,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         
         updateIdleTimer()
         
-        let mouseInsidePlayer = genericView.mediaPlayer.mouseInside()
+        let mouseInsidePlayer = genericView.mediaPlayer._mouseInside()
         
         hideControls.set(!mouseInsidePlayer || forceHiddenControls)
         
@@ -222,7 +235,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }, with: self, for: .mouseEntered, priority: .modal)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
-            if self?.genericView.mediaPlayer.mouseInside() == true {
+            if self?.genericView.mediaPlayer._mouseInside() == true {
                 self?.updateControlVisibility(true)
             }
             return .rejected
@@ -285,6 +298,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         _ = enableScreenSleep()
         NSCursor.unhide()
         window?.removeAllHandlers(for: self)
+        
     }
     
     var isPictureInPicture: Bool {
@@ -314,13 +328,14 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     override func viewDidLoad() {
         super.viewDidLoad()
         
+
+        
         genericView.layerContentsRedrawPolicy = .duringViewResize
 
-        genericView.mediaPlayer.preventsCapture = isProtected
         
         genericView.isControlsLimited = isControlsLimited
         
-        mediaPlayer.attachPlayerView(genericView.mediaPlayer)
+        
         genericView.isStreamable = reference.media.isStreamable
         hideControlsDisposable.set(hideControls.get().start(next: { [weak self] hide in
             self?.genericView.hideControls(hide, animated: true)
@@ -355,10 +370,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }))
         let size = reference.media.resource.size ?? 0
         
-        let bufferingStatus = postbox.mediaBox.resourceRangesStatus(reference.media.resource)
-            |> map { ranges -> (RangeSet<Int64>, Int64) in
-                return (ranges, size)
-        } |> deliverOnMainQueue
+        let bufferingStatus = mediaPlayer.bufferingStatus |> deliverOnMainQueue
         
         bufferingDisposable.set(bufferingStatus.start(next: { [weak self] bufferingStatus in
             self?.genericView.bufferingStatus = bufferingStatus
@@ -384,7 +396,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         genericView.interactions = SVideoInteractions(playOrPause: { [weak self] in
             self?.playOrPause()
         }, rewind: { [weak self] timestamp in
-            self?.mediaPlayer.seek(timestamp: timestamp)
+            self?.mediaPlayer.seek(timestamp)
         }, scrobbling: { [weak self] timecode in
             guard let `self` = self else { return }
 
@@ -427,15 +439,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         })
         
         if let duration = reference.media.duration, duration < 30 {
-            mediaPlayer.actionAtEnd = .loop({ [weak self] in
+            endPlaybackId = mediaPlayer.addPlaybackCompleted { [weak self] in
                 Queue.mainQueue().async {
+                    self?.mediaPlayer.seek(0)
                     self?.updateIdleTimer()
                 }
-            })
+            }
         } else {
-            mediaPlayer.actionAtEnd = .action { [weak self] in
+            endPlaybackId = mediaPlayer.addPlaybackCompleted { [weak self] in
                 Queue.mainQueue().async {
-                    self?.mediaPlayer.seek(timestamp: 0)
+                    self?.mediaPlayer.seek(0)
                     self?.mediaPlayer.pause()
                     self?.updateIdleTimer()
                     self?.hideControls.set(false)
@@ -495,7 +508,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 state.view.addSubview(view)
                 
                 genericView.set(isInFullScreen: false)
-                genericView.mediaPlayer.setVideoLayerGravity(.resizeAspectFill)
+                mediaPlayer.setVideoLayerGravity(.resizeAspectFill)
 
                 
                 window.removeAllHandlers(for: self)
@@ -507,7 +520,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 self.fullScreenRestoreState = nil
             } else {
                 
-                genericView.mediaPlayer.setVideoLayerGravity(.resizeAspect)
+                mediaPlayer.setVideoLayerGravity(.resizeAspect)
 
                 
                 fullScreenRestoreState = (rect: view.frame, view: view.superview!)
@@ -530,11 +543,19 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }
     }
     
+    override func initializer() -> SVideoView {
+        mediaPlayer = makePlayer(account: account, reference: reference)
+        return SVideoView(frame: _frameRect, mediaPlayer: self.mediaPlayer)
+    }
+    
     deinit {
         statusDisposable.dispose()
         bufferingDisposable.dispose()
         hideOnIdleDisposable.dispose()
         hideControlsDisposable.dispose()
+        if let endPlaybackId {
+            mediaPlayer.removePlaybackCompleted(endPlaybackId)
+        }
         updateControls?.invalidate()
         _ = IOPMAssertionRelease(assertionID)
         NSCursor.unhide()

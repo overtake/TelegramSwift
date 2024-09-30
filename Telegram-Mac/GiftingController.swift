@@ -21,28 +21,26 @@ private final class HeaderTextRowItem : GeneralRowItem {
         case stars
         
         var headerText: String {
-            //TODOLANG
             switch self {
             case .premium:
-                return "Gift Premium"
+                return strings().giftingPremiumTitle
             case .stars:
-                return "Gift Stars"
+                return strings().giftingStarGiftTitle
             }
         }
         func infoText(_ peer: EnginePeer) -> String {
-            //TODOLANG
             switch self {
             case .premium:
-                return "Give \(peer._asPeer().displayTitle) access to exclusive features with Telegram Premium. [See Features >](premium)"
+                return strings().giftingPremiumInfo(peer._asPeer().displayTitle)
             case .stars:
-                return "Give \(peer._asPeer().displayTitle) gifts that can be kept on the profile or converted to Stars. [What are Stars >](stars)"
+                return strings().giftingStarGiftInfo(peer._asPeer().displayTitle)
             }
         }
     }
     fileprivate let context: AccountContext
     fileprivate let headerLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, type: HeaderTextType, context: AccountContext) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, type: HeaderTextType, context: AccountContext, openPromo: @escaping(String)->Void) {
         self.context = context
         
         self.headerLayout = .init(.initialize(string: type.headerText, color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1, alignment: .center)
@@ -51,7 +49,14 @@ private final class HeaderTextRowItem : GeneralRowItem {
         }))
         
         self.infoLayout = .init(info, alignment: .center)
-        self.infoLayout.interactions = globalLinkExecutor
+        
+        var interactions = globalLinkExecutor
+        interactions.processURL = { url in
+            if let url = url as? String {
+                openPromo(url)
+            }
+        }
+        self.infoLayout.interactions = interactions
         
         super.init(initialSize, stableId: stableId)
     }
@@ -311,12 +316,11 @@ private final class StarGiftFilterRowItem : GeneralRowItem {
         
         var text: NSAttributedString {
             let attr = NSMutableAttributedString()
-            //TODOLANG
             switch self.value {
             case .all:
-                attr.append(string: "All", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.append(string: strings().giftingStarGiftAll, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
             case .limited:
-                attr.append(string: "Limited", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.append(string: strings().giftingStarGiftLimited, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
             case .stars(let int64):
                 attr.append(string: "\(clown_space)\(int64)", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
@@ -420,13 +424,15 @@ private final class Arguments {
     let openGift:(PeerStarGift)->Void
     let giftPremium:(PremiumPaymentOption)->Void
     let close:()->Void
-    init(context: AccountContext, selectFilter:@escaping(State.StarGiftFilter)->Void, executeLink:@escaping(String)->Void, openGift:@escaping(PeerStarGift)->Void, giftPremium:@escaping(PremiumPaymentOption)->Void, close:@escaping()->Void) {
+    let openPromo:(String)->Void
+    init(context: AccountContext, selectFilter:@escaping(State.StarGiftFilter)->Void, executeLink:@escaping(String)->Void, openGift:@escaping(PeerStarGift)->Void, giftPremium:@escaping(PremiumPaymentOption)->Void, close:@escaping()->Void, openPromo:@escaping(String)->Void) {
         self.context = context
         self.selectFilter = selectFilter
         self.executeLink = executeLink
         self.openGift = openGift
         self.giftPremium = giftPremium
         self.close = close
+        self.openPromo = openPromo
     }
 }
 
@@ -454,7 +460,7 @@ private struct State : Equatable {
     var premiumConfiguration: PremiumPromoConfiguration = .defaultValue
     var peer: EnginePeer?
     
-    var starFilters: [StarGiftFilter] = [.emptyLeft, .all , .limited, .stars(10), .stars(25), .stars(50), .stars(100), .stars(200), .stars(500), .stars(1000), .emptyRight]
+    var starFilters: [StarGiftFilter] = [.emptyLeft, .all , .limited, .emptyRight]
     var selectedStarFilter: StarGiftFilter = .all
     
     var starGifts: [PeerStarGift] = []
@@ -484,13 +490,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .premium, context: arguments.context)
-        }))
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
+       
         
         var paymentOptions: [PremiumPaymentOption] = []
         
@@ -530,31 +530,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             paymentOptions.append(option)
         }
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_gifts, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: paymentOptions.map { .initialize($0) }, callback: { option in
-                if let option = option.nativePayment {
-                    arguments.giftPremium(option)
-                }
-            })
-        }))
         
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars, context: arguments.context)
-        }))
-        
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
-        sectionId += 1
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_filters, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return StarGiftFilterRowItem(initialSize, stableId: stableId, context: arguments.context, filters: state.starFilters, selected: state.selectedStarFilter, arguments: arguments)
-        }))
-        
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
-        sectionId += 1
+        if !paymentOptions.isEmpty {
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .premium, context: arguments.context, openPromo: arguments.openPromo)
+            }))
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_gifts, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: paymentOptions.map { .initialize($0) }, callback: { option in
+                    if let option = option.nativePayment {
+                        arguments.giftPremium(option)
+                    }
+                })
+            }))
+        }
         
         let filtered:([PeerStarGift], State.StarGiftFilter) -> [PeerStarGift] = { list, filter in
             switch filter {
@@ -568,23 +562,45 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return list
             }
         }
-                
+
         let chunks = filtered(state.starGifts, state.selectedStarFilter).chunks(3)
+
         
-        for (i, chunk) in chunks.enumerated() {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0) }, callback: { option in
-                    if let option = option.nativeStarGift {
-                        arguments.openGift(option)
-                    }
-                })
+        if !chunks.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars, context: arguments.context, openPromo: arguments.openPromo)
             }))
             
             entries.append(.sectionId(sectionId, type: .customModern(10)))
             sectionId += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_filters, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return StarGiftFilterRowItem(initialSize, stableId: stableId, context: arguments.context, filters: state.starFilters, selected: state.selectedStarFilter, arguments: arguments)
+            }))
+            
+            entries.append(.sectionId(sectionId, type: .customModern(10)))
+            sectionId += 1
+            
+            
+            for (i, chunk) in chunks.enumerated() {
+                if !chunk.isEmpty {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
+                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0) }, callback: { option in
+                            if let option = option.nativeStarGift {
+                                arguments.openGift(option)
+                            }
+                        })
+                    }))
+                    
+                    entries.append(.sectionId(sectionId, type: .customModern(10)))
+                    sectionId += 1
+                }
+            }
         }
-       
-
+        
         
     }
     
@@ -603,16 +619,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
-
-    var starGifts: [PeerStarGift] = []
-    let prices: [Int64] = [10, 25, 50, 100, 200, 500, 1000]
-    let files: [TelegramMediaFile] = [LocalAnimatedSticker.premium_gift_3.file, LocalAnimatedSticker.premium_gift_6.file, LocalAnimatedSticker.premium_gift_12.file]
-
-    for i in 0 ..< 100 {
-        starGifts.append(.init(media: files[Int(abs(arc4random64())) % files.count], stars: prices[Int(abs(arc4random64())) % prices.count], limited: arc4random64() % 2 == 0))
-    }
+    let paymentDisposable = MetaDisposable()
+    actionsDisposable.add(paymentDisposable)
     
-    let initialState = State(starGifts: starGifts)
+    let initialState = State()
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -661,19 +671,132 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
         return (gifts, defaultPrice)
     }
     
+    
+//    
+    let buyNonStore:(PremiumPaymentOption)->Void = { option in
+        let state = stateValue.with { $0 }
+        
+        var selectedProduct: PremiumGiftProduct?
+        let selectedMonths = option.months
+        if let product = state.products.first(where: { $0.months == selectedMonths }) {
+            selectedProduct = product
+        }
+        
+        guard let premiumProduct = selectedProduct, let peer = state.peer else {
+            return
+        }
+        
+        let source = BotPaymentInvoiceSource.giftCode(users: [peer.id], currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: 1, months: selectedMonths, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount))
+                        
+        let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
+
+        actionsDisposable.add(invoice.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+                switch status {
+                case .paid:
+                    PlayConfetti(for: context.window)
+                    close?()
+                default:
+                    break
+                }
+            }), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        }))
+        
+    }
+    
+    let buyAppStore:(PremiumPaymentOption)->Void = { option in
+        
+        let state = stateValue.with { $0 }
+        
+        var selectedProduct: PremiumGiftProduct?
+        let selectedMonths = option.months
+        if let product = state.products.first(where: { $0.months == selectedMonths }) {
+            selectedProduct = product
+        }
+                
+        guard let premiumProduct = selectedProduct, let peer = state.peer else {
+            return
+        }
+
+        guard let storeProduct = premiumProduct.storeProduct else {
+            buyNonStore(option)
+            return
+        }
+        
+        let lockModal = PremiumLockModalController()
+        
+        var needToShow = true
+        delay(0.2, closure: {
+            if needToShow {
+                showModal(with: lockModal, for: context.window)
+            }
+        })
+        let purpose: AppStoreTransactionPurpose = .giftCode(peerIds: [peer.id], boostPeer: nil, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
+        
+                
+        let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
+        |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+            if available {
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, quantity: premiumProduct.giftOption.storeQuantity, purpose: purpose)
+                |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+    
+                    lockModal?.close()
+                    needToShow = false
+                    
+                    inAppPurchaseManager.finishAllTransactions()
+                    PlayConfetti(for: context.window)
+                    close?()
+                    
+                }, error: { [weak lockModal] error in
+                    let errorText: String
+                    switch error {
+                        case .generic:
+                            errorText = strings().premiumPurchaseErrorUnknown
+                        case .network:
+                            errorText =  strings().premiumPurchaseErrorNetwork
+                        case .notAllowed:
+                            errorText =  strings().premiumPurchaseErrorNotAllowed
+                        case .cantMakePayments:
+                            errorText =  strings().premiumPurchaseErrorCantMakePayments
+                        case .assignFailed:
+                            errorText =  strings().premiumPurchaseErrorUnknown
+                        case .cancelled:
+                            errorText = strings().premiumBoardingAppStoreCancelled
+                    }
+                    lockModal?.close()
+                    showModalText(for: context.window, text: errorText)
+                    inAppPurchaseManager.finishAllTransactions()
+                }))
+            } else {
+                lockModal?.close()
+                needToShow = false
+            }
+        })
+    }
+    
+    
     let premiumPromo = context.engine.data.get(TelegramEngine.EngineData.Item.Configuration.PremiumPromo())
     |> deliverOnMainQueue
     
 
     let peer = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
     
-    actionsDisposable.add(combineLatest(productsAndDefaultPrice, peer, premiumPromo).start(next: { products, peer, premiumPromo in
+    actionsDisposable.add(combineLatest(productsAndDefaultPrice, peer, premiumPromo, context.engine.payments.cachedStarGifts()).start(next: { products, peer, premiumPromo, gifts in
         updateState { current in
             var current = current
             current.products = products.0
             current.defaultPrice = .init(intergal: products.1.0, decimal: products.1.1)
             current.peer = peer
             current.premiumConfiguration = premiumPromo
+            if let gifts {
+                current.starGifts = gifts.map {
+                    .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: $0)
+                }
+                let customFilters: [State.StarGiftFilter] = gifts.map { $0.price }.uniqueElements.map { .stars($0) }
+                current.starFilters = [.emptyLeft, .all, .limited] + customFilters + [.emptyRight]
+            }
             return current
         }
     }))
@@ -692,17 +815,26 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
             showModal(with: PreviewStarGiftController(context: context, option: option, peer: peer), for: window)
         }
     }, giftPremium: { option in
-        
+#if APP_STORE
+        buyAppStore(option)
+#else
+        buyNonStore(option)
+#endif
     }, close: {
         close?()
+    }, openPromo: { value in
+        if value == "stars" {
+            showModal(with: StarUsePromoController(context: context), for: window)
+        } else {
+            showModal(with: PremiumBoardingController(context: context), for: window)
+        }
     })
     
     let signal = statePromise.get() |> filter { $0.peer != nil } |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Gift Premium or Stars")
+    let controller = InputDataController(dataSignal: signal, title: strings().giftingTitle)
     
     getController = { [weak controller] in
         return controller
@@ -719,7 +851,7 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
         controller.tableView.clipView.layer?.masksToBounds = false
     }
 
-    let modalController = InputDataModalController(controller, size: NSMakeSize(360, 0))
+    let modalController = InputDataModalController(controller, size: NSMakeSize(380, 0))
     
     
     

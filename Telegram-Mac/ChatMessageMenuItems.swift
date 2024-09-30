@@ -328,13 +328,13 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         case .adsHidden:
                             break
                         case let .options(title, options):
-                            showComplicatedReport(context: context, title: title, info: strings().chatMessageSponsoredReportLearnMore, data: .init(list: options.map { .init(string: $0.text, id: $0.option) }, title: strings().chatMessageSponsoredReportOptionTitle), report: { report in
+                            showComplicatedReport(context: context, title: title, info: strings().chatMessageSponsoredReportLearnMore, header: strings().chatMessageSponsoredReport, data: .init(subject: .list(options.map { .init(string: $0.text, id: $0.option) }), title: strings().chatMessageSponsoredReportOptionTitle), report: { report in
                                 return context.engine.messages.reportAdMessage(peerId: data.peerId, opaqueId: adAttribute.opaqueId, option: report.id) |> `catch` { error in
                                     return .single(.reported)
                                 } |> deliverOnMainQueue |> map { result in
                                     switch result {
                                     case let .options(_, options):
-                                        return .init(list: options.map { .init(string: $0.text, id: $0.option) }, title: report.string)
+                                        return .init(subject: .list(options.map { .init(string: $0.text, id: $0.option) }), title: report.string)
                                     case .reported:
                                         showModalText(for: context.window, text: strings().chatMessageSponsoredReportSuccess)
                                         chatInteraction.removeAd(adAttribute.opaqueId)
@@ -995,9 +995,16 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
-//        #if DEBUG
-//        fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message))
-//        #endif
+        #if DEBUG
+        if let file = message.media.first as? TelegramMediaFile, file.alternativeRepresentations.count > 0 {
+            fourthBlock.append(ContextMenuItem("HSL TEST", handler: {
+                showModal(with: HLSVideoController(context: context, message: message), for: context.window)
+                
+            }))
+        }
+        
+        
+        #endif
         
         
         if let peer = peer, peer.isChannel, !peer.isAdmin {
@@ -1012,32 +1019,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         if canReportMessage(data.message, context), data.chatMode != .pinned, !data.isLogInteraction {
             
-            let report = ContextMenuItem(strings().messageContextReport, itemImage: MenuAnimation.menu_report.value)
-            
-            
-            let submenu = ContextMenu()
+            let reportItem = ContextMenuItem(strings().messageContextReport, handler: {
+                reportComplicated(context: context, subject: .messages([message.id]), title: strings().reportComplicatedMessageTitle)
+            }, itemImage: MenuAnimation.menu_report.value)
                         
-            let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-            let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-            
-            for i in 0 ..< options.count {
-                submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                    _ = showModalProgress(signal: context.engine.peers.reportPeerMessages(messageIds: [messageId], reason: options[i], message: ""), for: context.window).start(completed: {
-                        showModalText(for: context.window, text: strings().messageContextReportAlertOK)
-                    })
-                }, itemImage: animation[i].value))
-            }
-            
-            submenu.addItem(ContextMenuItem(strings().reportReasonOther, handler: {
-                showModal(with: ReportDetailsController(context: context, reason: .init(reason: .custom, comment: ""), updated: { value in
-                    _ = showModalProgress(signal: context.engine.peers.reportPeerMessages(messageIds: [messageId], reason: .custom, message: value.comment), for: context.window).start(completed: {
-                        showModalText(for: context.window, text: strings().messageContextReportAlertOK)
-                    })
-                }), for: context.window)
-            }, itemImage: MenuAnimation.menu_read.value))
-            report.submenu = submenu
-            
-            fifthBlock.append(report)
+            fifthBlock.append(reportItem)
         }
         if let peer = data.peer as? TelegramChannel, peer.isSupergroup, data.chatMode == .history {
             if peer.groupAccess.canEditMembers, let author = data.message.author {

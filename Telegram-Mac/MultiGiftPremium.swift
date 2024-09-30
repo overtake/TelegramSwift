@@ -16,9 +16,17 @@ import Postbox
 enum MultigiftType {
     case premium
     case stars
+    case both
 }
 
-func multigift(context: AccountContext, type: MultigiftType = .premium, selected: [PeerId] = []) {
+func multigift(context: AccountContext, type: MultigiftType = .both, selected: [PeerId] = []) {
+    
+    
+    var type = type
+    if context.appConfiguration.getBoolValue("stargifts_blocked", orElse: true) {
+        type = .premium
+    }
+    
     let birthdays: Signal<[UIChatListBirthday], NoError> = context.account.stateManager.contactBirthdays |> map {
         return $0.filter {
             $0.value.isEligble
@@ -73,6 +81,8 @@ func multigift(context: AccountContext, type: MultigiftType = .premium, selected
             limit = 10
         case .stars:
             limit = 1
+        case .both:
+            limit = 1
         }
         
         let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected)
@@ -84,6 +94,8 @@ func multigift(context: AccountContext, type: MultigiftType = .premium, selected
             title = strings().premiumGiftTitle
         case .stars:
             title = strings().starsGiftTitle
+        case .both:
+            title = strings().giftingTitle
         }
         
         _ = selectModalPeers(window: context.window, context: context, title: title, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
@@ -97,6 +109,8 @@ func multigift(context: AccountContext, type: MultigiftType = .premium, selected
                         showModal(with: Star_ListScreen(context: context, source: .gift(peer)), for: context.window)
                     }
                 })
+            case .both:
+                showModal(with: GiftingController(context: context, peerId: peerIds[0]), for: context.window)
             }
         })
     })

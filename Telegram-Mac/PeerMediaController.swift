@@ -427,8 +427,7 @@ protocol PeerMediaSearchable : AnyObject {
             return strings().peerMediaGifs
         }
          if self == .gifts {
-             //TODOLANG
-             return "Gifts"
+             return strings().peerMediaGifts
          }
         if self == .stories {
             if peer?.isBot == true {
@@ -927,11 +926,12 @@ protocol PeerMediaSearchable : AnyObject {
         let savedTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
 
         
-        //TODO
         giftsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
-            #if DEBUG
-            return (exist: peerViewMainPeer(view)?.isUser == true, loaded: true)
-            #endif
+            if let cachedData = view.cachedData as? CachedUserData {
+                if let starGiftsCount = cachedData.starGiftsCount, starGiftsCount > 0 {
+                    return (exist: true, loaded: true)
+                }
+            }
             return (exist: false, loaded: true)
         } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
             return (tag: .gifts, exists: data.exist, hasLoaded: data.loaded)
@@ -1434,6 +1434,8 @@ protocol PeerMediaSearchable : AnyObject {
         } else {
             archiveStoriesCount = .single(0)
         }
+        let giftsCount: Signal<Int32, NoError> = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.StarGiftsCount(id: peerId)) |> map { $0 ?? 0 }
+        
         
         
         var summaries: [MessageTags] = []
@@ -1447,8 +1449,8 @@ protocol PeerMediaSearchable : AnyObject {
 
         let counters: Signal<(PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]), NoError> = combineLatest(self.modeValue.get(), context.engine.data.subscribe(EngineDataMap(
             summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: peerId, threadId: nil, tag: $0) }
-        )), storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount)
-        |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
+        )), storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount)
+        |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
             var result: [PeerMediaCollectionMode: Int32] = [:]
             var photoOrVideo: Int32 = 0
             for (key, count) in summaries {
@@ -1475,6 +1477,7 @@ protocol PeerMediaSearchable : AnyObject {
                 result[.photoOrVideo] = photoOrVideo
                 result[.savedMessages] = savedMessagesCount
                 result[.saved] = savedCount
+                result[.gifts] = giftsCount
             }
             return (mode, result)
         } |> deliverOnMainQueue
@@ -1515,8 +1518,7 @@ protocol PeerMediaSearchable : AnyObject {
                 case .members:
                     string = nil
                 case .gifts:
-                    //TODOLANG
-                    string = "\(count) gifts"
+                    string = strings().sharedMediaStarGiftsCountable(count)
                 }
                 if let string {
                     self?.centerBar.status = .initialize(string: string, color: theme.colors.grayText, font: .normal(.text))

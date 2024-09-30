@@ -577,13 +577,15 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
                 current.formId = form.id
                 return current
             }
-            actionsDisposable?.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: form.paymentBotId)).startStrict(next: { peer in
-                updateState { current in
-                    var current = current
-                    current.peer = peer
-                    return current
-                }
-            }))
+            if let paymentBotId = form.paymentBotId {
+                actionsDisposable?.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: paymentBotId)).startStrict(next: { peer in
+                    updateState { current in
+                        var current = current
+                        current.peer = peer
+                        return current
+                    }
+                }))
+            }
             
         }))
     }
@@ -687,7 +689,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
     
     close = { [weak modalController] in
         modalController?.modal?.close()
-        if procced {
+        if !procced {
             completion(.cancelled)
         }
     }

@@ -105,34 +105,28 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
     })!
 }
 
-func generateGiftBadgeBackground(size: NSSize, text: String, color: NSColor, textColor: NSColor = NSColor.white) -> CGImage {
+func generateGiftBadgeBackground(background: CGImage, text: String, textColor: NSColor = NSColor.white) -> CGImage {
     
     let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .bold(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
 
-    return generateImage(size, rotatedContext: { size, ctx in
+    let textImage = generateImage(background.systemSize, rotatedContext: { size, ctx in
         ctx.clear(CGRect(origin: .zero, size: size))
 
-        ctx.setFillColor(color.cgColor)
-        
-        let path = CGMutablePath()
-        path.move(to: NSMakePoint(0, 0))
-        path.addLine(to: NSMakePoint(25, 0))
-        path.addLine(to: NSMakePoint(size.width, size.height - 25))
-        path.addLine(to: NSMakePoint(size.width, size.height))
-        path.addLine(to: NSMakePoint(0, 0))
-
-        ctx.addPath(path)
-        ctx.fillPath()
-        
         ctx.saveGState()
         ctx.translateBy(x: size.width / 2, y: size.height / 2)
         ctx.rotate(by: CGFloat.pi / 4)
         ctx.translateBy(x: -size.width / 2, y: -size.height / 2)
-        
-        textNode.1.draw(size.bounds.focus(textNode.0.size).offsetBy(dx: 0, dy: -9), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+        //-9
+        textNode.1.draw(size.bounds.focus(textNode.0.size).offsetBy(dx: 0, dy: -10), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
 
         ctx.restoreGState()
 
+    })!
+    
+    return generateImage(background.systemSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: .zero, size: size))
+        ctx.draw(background, in: size.bounds)
+        ctx.draw(textImage, in: size.bounds)
     })!
 }
 
@@ -182,6 +176,73 @@ public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImag
     })!
 }
 #endif
+
+public enum GradientImageDirection {
+    case vertical
+    case horizontal
+    case diagonal
+    case mirroredDiagonal
+}
+
+
+func generateGradientTintedImage(image: CGImage?, colors: [NSColor], direction: GradientImageDirection = .vertical) -> CGImage? {
+    guard let image = image else {
+        return nil
+    }
+    
+    let imageSize = image.systemSize
+    
+    return generateImage(imageSize, rotatedContext: { size, context in
+        context.clear(size.bounds)
+        
+        let imageRect = CGRect(origin: CGPoint(), size: imageSize)
+        context.saveGState()
+        context.translateBy(x: imageRect.midX, y: imageRect.midY)
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.translateBy(x: -imageRect.midX, y: -imageRect.midY)
+        context.clip(to: imageRect, mask: image)
+
+        if colors.count >= 2 {
+            let gradientColors = colors.map { $0.cgColor } as CFArray
+
+            var locations: [CGFloat] = []
+            for i in 0 ..< colors.count {
+                let t = CGFloat(i) / CGFloat(colors.count - 1)
+                locations.append(t)
+            }
+            let colorSpace = DeviceGraphicsContextSettings.shared.colorSpace
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+
+            let start: CGPoint
+            let end: CGPoint
+            switch direction {
+            case .horizontal:
+                start = .zero
+                end = CGPoint(x: imageRect.width, y: 0.0)
+            case .vertical:
+                start = CGPoint(x: 0.0, y: imageRect.height)
+                end = .zero
+            case .diagonal:
+                start = CGPoint(x: 0.0, y: 0.0)
+                end = CGPoint(x: imageRect.width, y: imageRect.height)
+            case .mirroredDiagonal:
+                start = CGPoint(x: imageRect.width, y: 0.0)
+                end = CGPoint(x: 0.0, y: imageRect.height)
+            }
+            
+            context.drawLinearGradient(gradient, start: start, end: end, options: CGGradientDrawingOptions())
+        } else if !colors.isEmpty {
+            context.setFillColor(colors[0].cgColor)
+            context.fill(imageRect)
+        }
+        
+        context.restoreGState()
+            
+    })
+
+}
+
+
 
 
 private func generateAvatarStarBadge(color: NSColor) -> CGImage {

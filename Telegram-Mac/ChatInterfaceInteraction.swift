@@ -164,7 +164,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var afterSentTransition:()->Void = {}
     var getGradientOffsetRect:()->NSRect = {  return .zero }
-    var markAdAction:(Data)->Void = { _ in }
+    var markAdAction:(Data, Bool)->Void = { _, _ in }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
     var openFocusedMedia:(Int32?)->Void = { _ in return }
@@ -842,6 +842,9 @@ final class ChatInteraction : InterfaceObserver  {
                         }
                     case let .requestPeer(peerType, buttonId, maxQuantity):
                         selectSpecificPeer(context: context, peerType: peerType, messageId: keyboardMessage.id, buttonId: buttonId, maxQuantity: maxQuantity)
+                    case let .copyText(payload):
+                        copyToClipboard(payload)
+                        showModalText(for: context.window, text: strings().shareLinkCopied)
                     default:
                         break
                     }

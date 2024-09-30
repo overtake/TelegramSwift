@@ -305,11 +305,12 @@ class ChatListRowItem: TableRowItem {
         if case .ad = pinnedType {
             return false
         }
-        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
-        if self.peer?.id == supportId {
+        if self.peer?.id == servicePeerId {
             return false
         }
-        
+        if self.peer?.id == verifyCodePeerId {
+            return false
+        }
         return true
     }
     
@@ -705,9 +706,8 @@ class ChatListRowItem: TableRowItem {
                 draft = nil
             }
         }
-        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
-        if let peerPresence = peerPresence?._asPresence(), context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
+        if let peerPresence = peerPresence?._asPresence(), context.peerId != renderedPeer.peerId, renderedPeer.peerId != servicePeerId {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
             let relative = relativeUserPresenceStatus(peerPresence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
             switch relative {

@@ -260,11 +260,14 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                     }
                 }
                 
-                items.append(ActionItem(text: strings().peerInfoReportBot, color: item.accentColor, image: theme.icons.profile_report, animation: .menu_report, action: arguments.reportBot))
-                
-                items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_restrict, destruct: true, action: {
-                    arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
-                }))
+                if peer.id != verifyCodePeerId {
+                    items.append(ActionItem(text: strings().peerInfoReportBot, color: item.accentColor, image: theme.icons.profile_report, animation: .menu_report, action: arguments.reportBot))
+                    
+                    items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_restrict, destruct: true, action: {
+                        arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
+                    }))
+                }
+            
                 
                 
             }
@@ -1489,7 +1492,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                     self.photoVideoView!.frame = self.photoView.frame
 
                     
-                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [], alternativeRepresentations: [])
                     
                     
                     let reference: MediaResourceReference

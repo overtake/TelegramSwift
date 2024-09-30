@@ -657,6 +657,9 @@ class ChatRowItem: TableRowItem {
         if let _ = message?.adAttribute {
             return false
         }
+        if message?.id.peerId == verifyCodePeerId {
+            return true
+        }
         if case .searchHashtag = chatInteraction.mode.customChatContents?.kind {
             return true
         }
@@ -1188,10 +1191,10 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.chatLocation {
         case .peer, .thread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
-                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
+                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.id.peerId == verifyCodePeerId || message.adAttribute != nil)
                 
                
-                if let media = message.anyMedia as? TelegramMediaGiveaway {
+                if let _ = message.anyMedia as? TelegramMediaGiveaway {
                     disable = true
                 }
                 
@@ -2008,7 +2011,7 @@ class ChatRowItem: TableRowItem {
                     accept = false
                 }
                 
-                if accept || (ChatRowItem.authorIsChannel(message: message, account: context.account) && info.author?.id != message.chatPeer(context.peerId)?.id) {
+                if accept || (ChatRowItem.authorIsChannel(message: message, account: context.account) && info.author?.id != message.chatPeer(context.peerId)?.id), message.id.peerId != verifyCodePeerId {
                     forwardType = fwdType
                     
                     var attr = NSMutableAttributedString()
@@ -2578,6 +2581,8 @@ class ChatRowItem: TableRowItem {
                        return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    case .phoneCall:
                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
+//                   case .starGift:
+//                       return ChatServiceStarsGiftItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    default:
                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    }

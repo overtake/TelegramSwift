@@ -26,7 +26,7 @@ class StoryLayoutView : Control {
     
     var media: EngineMedia? {
         if let story = self.story {
-            return isHighQuality ? story.media : (story.alternativeMedia ?? story.media)
+            return isHighQuality ? story.media : (story.alternativeMediaList.first ?? story.media)
         }
         return nil
     }

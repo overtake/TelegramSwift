@@ -64,7 +64,7 @@ class StickerPackRowItem: TableRowItem {
         let packInfo = self.info
         let topItem: TelegramMediaFile?
         if let thumbnail = packInfo.thumbnail {
-            topItem = TelegramMediaFile(fileId: MediaId(namespace: 0, id: packInfo.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: packInfo.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: packInfo.id.id, accessHash: packInfo.accessHash), maskData: nil)])
+            topItem = TelegramMediaFile(fileId: MediaId(namespace: 0, id: packInfo.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: packInfo.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: packInfo.id.id, accessHash: packInfo.accessHash), maskData: nil)], alternativeRepresentations: [])
         } else {
             topItem = self.topItem?.file
         }
@@ -418,7 +418,7 @@ private final class StickerPackRowView : HorizontalRowView {
             var file: TelegramMediaFile?
             var fileId: Int64?
             if let thumbnail = item.info.thumbnail {
-                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: item.info.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: item.info.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)], alternativeRepresentations: [])
                 fileId = file?.fileId.id
             } else if let fid = item.info.thumbnailFileId {
                 fileId = fid

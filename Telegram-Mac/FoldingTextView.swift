@@ -185,6 +185,8 @@ public class FoldingTextLayout {
         })
         var range: NSRange = NSMakeRange(NSNotFound, 0)
         
+        let attributedString = NSMutableAttributedString()
+        
         var offset: Int = 0
         for block in blocks {
             let current = block.text.selectedRange.range
@@ -195,6 +197,7 @@ public class FoldingTextLayout {
                 range.length += current.length
             }
             offset += block.text.string.length
+            attributedString.append(block.text.attributedString)
         }
         let merged = TextViewLayout(attributedString)
         merged.lines = lines

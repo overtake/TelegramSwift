@@ -45,6 +45,20 @@ class WPMediaLayout: WPLayout {
         super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue, mayCopyText: mayCopyText, entities: entities, adAttribute: adAttribute)
         
     }
+    
+    override var isMediaClickable: Bool {
+        if let adAttribute, adAttribute.hasContentMedia {
+            if let media = media as? TelegramMediaFile {
+                if media.hasNoSound {
+                    return false
+                } else {
+                    return true
+                }
+            }
+            return false
+        }
+        return super.isMediaClickable
+    }
 
     
     override func measure(width: CGFloat) {

@@ -177,7 +177,7 @@ extension RenderedPeer {
 extension TelegramMediaFile {
     var videoSize:NSSize {
         for attr in attributes {
-            if case let .Video(_,size, _, _, _) = attr {
+            if case let .Video(_,size, _, _, _, _) = attr {
                 return size.size
             }
         }
@@ -186,7 +186,7 @@ extension TelegramMediaFile {
     
     var isStreamable: Bool {
         for attr in attributes {
-            if case let .Video(_, _, flags, _, _) = attr {
+            if case let .Video(_, _, flags, _, _, _) = attr {
                 return flags.contains(.supportsStreaming)
             }
         }
@@ -218,7 +218,7 @@ extension TelegramMediaFile {
     
     var videoDuration: Double {
         for attr in attributes {
-            if case let .Video(duration,_, _, _, _) = attr {
+            if case let .Video(duration,_, _, _, _, _) = attr {
                 return duration
             }
         }
@@ -230,11 +230,11 @@ extension TelegramMediaFile {
     }
     
     func withUpdatedResource(_ resource: TelegramMediaResource) -> TelegramMediaFile {
-        return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
+        return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes, alternativeRepresentations: self.alternativeRepresentations)
     }
     
     func withUpdatedFileId(_ fileId: MediaId) -> TelegramMediaFile {
-        return TelegramMediaFile(fileId: fileId, partialReference: self.partialReference, resource: self.resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
+        return TelegramMediaFile(fileId: fileId, partialReference: self.partialReference, resource: self.resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes, alternativeRepresentations: self.alternativeRepresentations)
     }
 }
 
@@ -300,10 +300,6 @@ extension Media {
     }
 }
 
-enum ChatListIndexRequest :Equatable {
-    case Initial(Int, TableScrollState?)
-    case Index(EngineChatList.Item.Index, TableScrollState?)
-}
 
 
 public extension PeerView {
@@ -833,6 +829,11 @@ public extension Message {
         if let _ = adAttribute {
             return author
         }
+       
+        if self.id.peerId == verifyCodePeerId {
+            return forwardInfo?.author ?? author
+        }
+        
         for attr in attributes {
             if let source = attr as? SourceReferenceMessageAttribute {
                 if let info = forwardInfo {
@@ -845,6 +846,7 @@ public extension Message {
                 break
             }
         }
+        
         
         if let peer = coreMessageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
             _peer = author ?? peer
@@ -1494,7 +1496,7 @@ extension Media {
         if let media = self as? TelegramMediaFile {
             for attr in media.attributes {
                 switch attr {
-                case let .Video(_, _, flags, _, _):
+                case let .Video(_, _, flags, _, _, _):
                     return flags.contains(.isSilent)
                 default:
                     return false
@@ -3615,7 +3617,7 @@ extension Wallpaper {
         case let .image(representation, settings):
             let resource = representation.last?.resource as? LocalFileMediaResource
             let dimension: PixelDimensions = representation.last?.dimensions ?? .init(WallpaperDimensions)
-            return .file(.init(id: resource?.fileId ?? 0, accessHash: 0, isCreator: true, isDefault: false, isPattern: false, isDark: false, slug: "", file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: resource?.fileId ?? 0), partialReference: nil, resource: representation.last!.resource, previewRepresentations: representation, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.ImageSize(size: dimension)]), settings: settings))
+            return .file(.init(id: resource?.fileId ?? 0, accessHash: 0, isCreator: true, isDefault: false, isPattern: false, isDark: false, slug: "", file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: resource?.fileId ?? 0), partialReference: nil, resource: representation.last!.resource, previewRepresentations: representation, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.ImageSize(size: dimension)], alternativeRepresentations: []), settings: settings))
         default:
             return nil
         }
@@ -3860,7 +3862,7 @@ extension NSAttributedString {
     
     static func embedded(name: String, color: NSColor, resize: Bool) -> NSAttributedString {
         
-        let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+        let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [], alternativeRepresentations: [])
         
         let emoji: String = clown
         

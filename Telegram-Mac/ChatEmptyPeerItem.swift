@@ -166,7 +166,7 @@ class ChatEmptyPeerItem: TableRowItem {
             let sticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(chatInteraction.context.engine.stickers.randomGreetingSticker() |> deliverOnMainQueue)
             
             peerViewDisposable.set(combineLatest(cachedData, peer, sticker).start(next: { [weak self] cachedData, peer, sticker in
-                if let cachedData = cachedData as? CachedUserData, let user = peer, let self, self.chatInteraction.mode == .history {
+                if let cachedData = cachedData as? CachedUserData, let user = peer, let self, self.chatInteraction.mode == .history, peer?.restrictionInfo == nil {
                     if let botInfo = cachedData.botInfo {
                         var about = botInfo.description
                         if about.isEmpty {

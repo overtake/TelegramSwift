@@ -79,12 +79,12 @@ final class DockIconRowItem: GeneralRowItem {
     let icons: [DockIconData]
     let context: AccountContext
     let callback: (TelegramApplicationIcons.Icon)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, dockIcons: TelegramApplicationIcons, selected: String?, action: @escaping(TelegramApplicationIcons.Icon)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, dockIcons: [TelegramApplicationIcons.Icon], selected: String?, action: @escaping(TelegramApplicationIcons.Icon)->Void, insets: NSEdgeInsets = NSEdgeInsetsMake(0, 20, 0, 20)) {
         self.context = context
         self.callback = action
         var icons: [DockIconData] = []
         var frame: CGRect = CGRect(origin: CGPointMake(20, 20), size: DockIconRowItem.iconSize)
-        for (i, icon) in dockIcons.icons.enumerated() {
+        for (i, icon) in dockIcons.enumerated() {
             icons.append(DockIconData(icon: icon, selected: selected == icon.file.fileName || (icon.file.fileName == TelegramApplicationIcons.Icon.defaultIconName && selected == nil), frame: frame))
             frame.origin.x += DockIconRowItem.iconSize.width
             if (i + 1) % Int(DockIconRowItem.rowCount) == 0 {
@@ -96,16 +96,10 @@ final class DockIconRowItem: GeneralRowItem {
         self.icons = icons
         
         
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets)
         
-        let workspace = NSWorkspace.shared
-        if let screen = NSScreen.main, let wallpaperURL = workspace.desktopImageURL(for: screen), let image = NSImage(contentsOf: wallpaperURL)?._cgImage {
-            self.wallpaperImage = generateImage(NSMakeSize(blockWidth, height), contextGenerator: { size, ctx in
-                ctx.draw(image, in: size.bounds.focus(image.backingSize), byTiling: false)
-            })
-        } else {
-            self.wallpaperImage = nil
-        }
+        self.wallpaperImage = nil
+
     }
     
     override func viewClass() -> AnyClass {
@@ -302,7 +296,7 @@ private class Container : NSVisualEffectView {
     }
 }
 
-private final class DockIconRowView : GeneralContainableRowView {
+final class DockIconRowView : GeneralContainableRowView {
     private let backgroundView = BackgroundView(frame: .zero)
     private let visualEffect = Container()
     
@@ -361,5 +355,6 @@ private final class DockIconRowView : GeneralContainableRowView {
         visualEffect.layer?.borderColor = NSColor.white.withAlphaComponent(0.2).cgColor
         
 
+        needsLayout = true
     }
 }
