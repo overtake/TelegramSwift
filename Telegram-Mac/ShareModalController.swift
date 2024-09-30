@@ -70,9 +70,9 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     fileprivate let dismiss:ImageButton = ImageButton()
 
     
-    fileprivate let textView:UITextView = UITextView(frame: NSMakeRect(0, 0, 100, 50))
     fileprivate let sendButton = ImageButton()
     fileprivate let emojiButton = ImageButton()
+    fileprivate let textView:UITextView = UITextView(frame: NSMakeRect(0, 0, 100, 50))
     fileprivate let actionsContainerView: Control = Control()
     fileprivate let textContainerView: View = View()
     fileprivate let bottomSeparator: View = View()
@@ -716,7 +716,7 @@ class ShareUrlObject : ShareObject {
             
             let attributes:[MessageAttribute] = attributes(peerId)
             
-            let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)])
+            let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)], alternativeRepresentations: [])
                         
             _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
         }
@@ -1475,7 +1475,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             let theme = share.presentation ?? theme
             return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .interactable(selectInteraction), action: {
                 if peer.isForum && share.selectTopics {
-                    selectInteraction.openForum(peer.id)
+                    _ = selectInteraction.openForum(peer.id)
                 } else {
                     selectInteraction.action(peer.id, nil)
                 }
@@ -1532,6 +1532,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     private let contextChatInteraction: ChatInteraction
     
     private let forumDisposable = MetaDisposable()
+    
     
     private let multipleSelection: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
 

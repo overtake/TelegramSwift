@@ -617,27 +617,33 @@ class ChannelInfoArguments : PeerInfoArguments {
     func report() -> Void {
         let context = self.context
         let peerId = self.peerId
+        
+        guard let peer = peer else {
+            return
+        }
+        
+        reportComplicated(context: context, subject: .peer(peerId), title: strings().reportComplicatedPeerTitle(peer.displayTitle))
 
-        let report = reportReasonSelector(context: context) |> map { value -> (ChatController?, ReportReasonValue) in
-            switch value.reason {
-            case .fake:
-                return (nil, value)
-            default:
-                return (ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: value)), value)
-            }
-        } |> deliverOnMainQueue
-
-        reportPeerDisposable.set(report.start(next: { [weak self] controller, value in
-            if let controller = controller {
-                self?.pullNavigation()?.push(controller)
-            } else {
-                showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
-                    _ = showModalProgress(signal: context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
-                        showModalText(for: context.window, text: strings().peerInfoChannelReported)
-                    })
-                }), for: context.window)
-            }
-        }))
+//        let report = reportReasonSelector(context: context) |> map { value -> (ChatController?, ReportReasonValue) in
+//            switch value.reason {
+//            case .fake:
+//                return (nil, value)
+//            default:
+//                return (ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: value)), value)
+//            }
+//        } |> deliverOnMainQueue
+//
+//        reportPeerDisposable.set(report.start(next: { [weak self] controller, value in
+//            if let controller = controller {
+//                self?.pullNavigation()?.push(controller)
+//            } else {
+//                showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
+//                    _ = showModalProgress(signal: context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
+//                        showModalText(for: context.window, text: strings().peerInfoChannelReported)
+//                    })
+//                }), for: context.window)
+//            }
+//        }))
     }
     
     func join_channel() {

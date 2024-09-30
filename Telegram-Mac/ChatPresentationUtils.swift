@@ -307,8 +307,19 @@ final class TelegramChatColors {
         if let chatActionUrl = _chatActionUrl {
             return chatActionUrl
         } else {
-            let image = #imageLiteral(resourceName: "Icon_InlineBotUrl").precomposed(theme.chatServiceItemTextColor)
+            let image = NSImage(resource: .iconInlineBotUrl).precomposed(theme.chatServiceItemTextColor)
             _chatActionUrl = image
+            return image
+        }
+    }
+    
+    private var _chatActionCopy: CGImage?
+    func chatActionCopy(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionUrl = _chatActionCopy {
+            return chatActionUrl
+        } else {
+            let image = NSImage(resource: .iconInlineBotCopy).precomposed(theme.chatServiceItemTextColor)
+            _chatActionCopy = image
             return image
         }
     }

@@ -326,13 +326,16 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
 
 }
 
-func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: AccountContext) -> Signal<[TelegramMediaFile], NoError> {
+func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: AccountContext, ignorePremium: Bool = false) -> Signal<[TelegramMediaFile], NoError> {
     
     let query = query.emojiUnmodified
     
-    if (peerId != context.peerId && !context.isPremium ) || !FastSettings.suggestSwapEmoji {
-        return .single([])
+    if !ignorePremium {
+        if (peerId != context.peerId && !context.isPremium) || !FastSettings.suggestSwapEmoji {
+            return .single([])
+        }
     }
+    
     
     let boxKey = ValueBoxKey(query)
     let searchQuery: ItemCollectionSearchQuery = .exact(boxKey)

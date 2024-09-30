@@ -87,7 +87,7 @@ class WPLayout: Equatable {
         }
     }
     private let entities: [MessageTextEntity]?
-    private let adAttribute: AdMessageAttribute?
+    let adAttribute: AdMessageAttribute?
     
     init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil) {
         self.content = content
@@ -208,10 +208,10 @@ class WPLayout: Equatable {
                             }
                         case "twitter":
                             if url.hasPrefix("@") {
-                                link = .external(link: "https://twitter.com/\(url.nsstring.substring(from: 1))", false)
+                                link = .external(link: "https://x.com/\(url.nsstring.substring(from: 1))", false)
                             }
                             if url.hasPrefix("#") {
-                                link = .external(link: "https://twitter.com/hashtag/\(url.nsstring.substring(from: 1))", false)
+                                link = .external(link: "https://x.com/hashtag/\(url.nsstring.substring(from: 1))", false)
                             }
                         default:
                             link = inApp(for: url.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
@@ -219,7 +219,7 @@ class WPLayout: Equatable {
                         }
                     }
                     if let adAttribute = adAttribute {
-                        chatInteraction.markAdAction(adAttribute.opaqueId)
+                        chatInteraction.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
                     }
                     execute(inapp: link)
                 }
@@ -230,6 +230,10 @@ class WPLayout: Equatable {
         }
 //        attributedText.fixUndefinedEmojies()
         
+    }
+    
+    var isMediaClickable: Bool {
+       return true
     }
     
     var isStory: Bool {
@@ -411,7 +415,7 @@ class WPLayout: Equatable {
         } else if let adAttribute = parent.adAttribute {
             let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
-            chatInteraction.markAdAction(adAttribute.opaqueId)
+            chatInteraction.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
         } else {
             let link = inApp(for: self.content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)

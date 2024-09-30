@@ -22,7 +22,6 @@ enum MessageTextMediaViewType {
     case none
 }
 
-let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
 
 func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
@@ -46,8 +45,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     }
     
     
-    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
-        let regexPattern = #"[\d\-]{5,7}"#
+    if message.id.peerId == servicePeerId || message.id.peerId == verifyCodePeerId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
+        let regexPattern = #"[\d\-]{3,7}"#
         do {
             let regex = try NSRegularExpression(pattern: regexPattern, options: [])
             let range = NSRange(location: 0, length: messageText.utf16.count)
@@ -574,7 +573,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 text = strings().chatServiceGroupAddedMembers1(authorName, peerDebugDisplayTitles(peerIds, message.peers))
             }
         case .phoneNumberRequest:
-            text = "phone number request"
+            text = strings().chatServicePhoneNumberRequest
         case .channelMigratedFromGroup:
             text = ""
         case let .groupCreated(title: title):
@@ -974,9 +973,13 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             let peerName = message.author?.compactDisplayTitle ?? ""
             text = strings().chatServiceRefundedBackCountable(peerName, currency + TINY_SPACE, Int(totalAmount))
         case let .prizeStars(amount, _, _, _, _):
-            text = "You won a prize in a giveaway organized by \(authorName).\n\nYour prize is \(amount) Stars."
-
-
+            text = strings().chatServiceStarsPrize(authorName, strings().channelBoostBoosterStarsCountable(Int(amount)))
+        case let .starGift(gift, _, _, _, _, messageText, _):
+            if authorId == account.peerId {
+                text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.price)))
+            } else {
+                text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.price)))
+            }
         }
     }
     return (text, entities, media)

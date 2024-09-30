@@ -497,6 +497,14 @@ private final class MediaPlayerContext {
         
     }
     
+    fileprivate func setSoundEnabled(_ value: Bool) {
+        assert(self.queue.isCurrent())
+        if enableSound != value {
+            toggleSoundEnabled()
+        }
+    }
+    
+    
     fileprivate func continuePlayingWithoutSound() {
         if self.enableSound {
             self.lastStatusUpdateTimestamp = nil
@@ -974,6 +982,13 @@ public final class MediaPlayer {
             $0.toggleSoundEnabled()
         }
     }
+    
+    public func setSoundEnabled(_ value: Bool) {
+        contextRef.with {
+            $0.setSoundEnabled(value)
+        }
+    }
+
     
     public func continuePlayingWithoutSound() {
         contextRef.with {

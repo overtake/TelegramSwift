@@ -108,6 +108,10 @@ class ReplyMarkupNode: Node {
                     urlView = ImageView()
                     urlView?.image = theme.chat.chatActionWebUrl(theme: theme)
                     urlView?.sizeToFit()
+                case .copyText:
+                    urlView = ImageView()
+                    urlView?.image = theme.chat.chatActionCopy(theme: theme)
+                    urlView?.sizeToFit()
                 default:
                     break
                 }

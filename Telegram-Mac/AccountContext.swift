@@ -22,8 +22,9 @@ import InAppPurchaseManager
 import ApiCredentials
 
 
-let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
+let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
+let verifyCodePeerId = PeerId.init(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(489000))
 
 
 func bestWindow(_ accountContext: AccountContext, _ controller: ViewController?) -> Window {
@@ -620,6 +621,8 @@ final class AccountContext {
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         self.starsContext = engine.payments.peerStarsContext()
         self.starsSubscriptionsContext = engine.payments.peerStarsSubscriptionsContext(starsContext: self.starsContext)
+        
+        _ = self.engine.payments.keepStarGiftsUpdated().start()
         
         let _ = self.engine.peers.requestGlobalRecommendedChannelsIfNeeded().startStandalone()
         let _ = self.engine.peers.requestRecommendedAppsIfNeeded().startStandalone()

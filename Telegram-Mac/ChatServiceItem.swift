@@ -28,46 +28,64 @@ class ChatServiceItem: ChatRowItem {
     
     struct GiftData {
         
+        struct Ribbon {
+            let color: NSColor
+            let text: String
+        }
+        
         enum Source {
-            case premium
+            case premium(months: Int32)
+            case starGift(amount: Int64, date: Int32, peer: EnginePeer?, purpose: Star_TransactionPurpose)
             case stars(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
         }
         
         let from: PeerId
         let to: PeerId
         let text: TextViewLayout
-        let months: Int32
+        let info: TextViewLayout?
         let source: Source
+        let ribbon: Ribbon?
         
-        init(from: PeerId, to: PeerId, text: TextViewLayout, months: Int32, source: Source) {
+        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?) {
             self.from = from
             self.to = to
             self.text = text
-            self.months = months
+            self.info = info
             self.source = source
-            self.text.measure(width: 180)
+            self.ribbon = ribbon
+            self.text.measure(width: 200)
+            self.info?.measure(width: 200)
         }
         
         var height: CGFloat {
-            return 150 + text.layoutSize.height + 10 + 10
-        }
-        var alt: String {
-            let alt: String
-            switch months {
-            case 1:
-                alt = "1️⃣"
-            case 3:
-                alt = "2️⃣"
-            case 6:
-                alt = "3️⃣"
-            case 12:
-                alt = "4️⃣"
-            case 24:
-                alt = "5️⃣"
-            default:
-                alt = "5️⃣"
+            var height = 150 + text.layoutSize.height + 15
+            if let info {
+                height += 4 + info.layoutSize.height
             }
-            return alt
+            return height + 40
+        }
+        
+        var alt: String {
+            if case .premium(let months) = source {
+                let alt: String
+                switch months {
+                case 1:
+                    alt = "1️⃣"
+                case 3:
+                    alt = "2️⃣"
+                case 6:
+                    alt = "3️⃣"
+                case 12:
+                    alt = "4️⃣"
+                case 24:
+                    alt = "5️⃣"
+                default:
+                    alt = "5️⃣"
+                }
+                return alt
+            } else {
+                return ""
+            }
         }
     }
     
@@ -144,12 +162,14 @@ class ChatServiceItem: ChatRowItem {
     func openGift() {
         if let giftData {
             switch giftData.source {
-            case .premium:
-                showModal(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months, slug: nil, unclaimed: false)), for: context.window)
+            case let .premium(months):
+                showModal(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil)
-                
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: .gift), for: context.window)
+            case let .starGift(amount, date, to, purpose):
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift)
+                showModal(with: Star_TransactionScreen(context: context, peer: to, transaction: transaction, purpose: purpose, messageId: message?.id), for: context.window)
             }
         }
     }
@@ -198,9 +218,6 @@ class ChatServiceItem: ChatRowItem {
                                 attributedString.add(link: link, for: range, color: nameColor(authorId))
                                 attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                                 
-                                if let author = message.author {
-                                   // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                                }
                             }
                         }
                     } else {
@@ -239,10 +256,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     
@@ -277,10 +290,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     
@@ -307,10 +316,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     self.image = image
@@ -326,10 +331,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId: authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .customText(text, _, additionalAttributes):
@@ -376,9 +377,6 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     
@@ -390,10 +388,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     
@@ -444,10 +438,6 @@ class ChatServiceItem: ChatRowItem {
                                     let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                                     attributedString.add(link: link, for: range, color: nameColor(authorId))
                                     attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
-                                    
-                                    if let author = message.author {
-                               //         attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                                    }
                                 }
                             }
 
@@ -461,10 +451,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .phoneCall(callId: _, discardReason: reason, duration: duration, _):
@@ -510,9 +496,6 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             _ = attributedString.append(string: " ")
                             
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     _ = attributedString.append(string: strings().chatListServiceGameScored1Countable(Int(score), gameName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -541,7 +524,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
                                         showModal(with: Star_TransactionScreen(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -577,9 +560,6 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .geoProximityReached(fromId, toId, distance):
@@ -601,9 +581,6 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
-                            if let author = message.author {
-                               // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     if let peer = message.peers[toId], !peer.displayTitle.isEmpty {
@@ -672,10 +649,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                          //      attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .setChatTheme(emoji):
@@ -709,9 +682,6 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
-                            if let author = message.author {
-                          //      attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     
@@ -774,9 +744,6 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             
-                            if let author = message.author {
-                          //      attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case .joinedByRequest:
@@ -803,9 +770,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            if let author = message.author {
-                          //      attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .webViewData(text):
@@ -813,11 +777,12 @@ class ChatServiceItem: ChatRowItem {
                 case let .giftPremium(currency, amount, months, cryptoCurrency, cryptoCurrencyAmount):
                     
                     
-                    let info = NSMutableAttributedString()
-                    _ = info.append(string: strings().chatServicePremiumGiftInfoCountable(Int(months)), color: grayTextColor, font: .normal(theme.fontSize))
-                    info.detectBoldColorInString(with: .medium(theme.fontSize))
+                    let header = NSMutableAttributedString()
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), months: months, source: .premium)
+                    _ = header.append(string: strings().chatServicePremiumGiftInfoCountable(Int(months)), color: grayTextColor, font: .normal(theme.fontSize))
+                    header.detectBoldColorInString(with: .medium(theme.fontSize))
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: nil, source: .premium(months: months), ribbon: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -833,10 +798,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                          //      attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .suggestedProfilePhoto(image):
@@ -866,10 +827,6 @@ class ChatServiceItem: ChatRowItem {
                                 let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                                 attributedString.add(link: link, for: range, color: nameColor(authorId))
                                 attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                                
-                                if let author = message.author {
-                                   // attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                                }
                             }
                         }
                     }
@@ -889,10 +846,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                                //attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     if let fileId = iconFileId {
@@ -1002,9 +955,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            if let author = message.author {
-                                //attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                     
@@ -1066,10 +1016,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                              //  attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                        
                     }
@@ -1091,10 +1037,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                                //attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .giveawayLaunched(stars):
@@ -1112,10 +1054,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                                //attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case .joinedChannel:
@@ -1172,10 +1110,6 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                                //attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
                 case let .paymentRefunded(peerId, currency, totalAmount, payload, transactionId):
@@ -1185,7 +1119,7 @@ class ChatServiceItem: ChatRowItem {
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, peer: .init(peer), transaction: transaction), for: context.window)
                         })
@@ -1195,14 +1129,16 @@ class ChatServiceItem: ChatRowItem {
                 case let .giftStars(currency, amount, count, cryptoCurrency, cryptoAmount, transactionId):
                     
                     let info = NSMutableAttributedString()
-                    info.append(string: strings().starListItemCountCountable(Int(count)), color: grayTextColor, font: .medium(theme.fontSize + 1))
-                    info.append(string: "\n", font: .medium(theme.fontSize + 1))
+                    let header = NSMutableAttributedString()
+                    header.append(string: strings().starListItemCountCountable(Int(count)), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                    
+                    
                     _ = info.append(string: strings().starsGiftServiceInfo, color: grayTextColor, font: .normal(theme.fontSize))
                     info.detectBoldColorInString(with: .medium(theme.fontSize))
                     
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), months: 1, source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)))
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1222,12 +1158,78 @@ class ChatServiceItem: ChatRowItem {
                             let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
                             attributedString.add(link: link, for: range, color: nameColor(authorId))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                            
-                            if let author = message.author {
-                          //      attributedString.insert(.embeddedAvatar(.init(author), space: !noSpace, link: link), at: range.location)
-                            }
                         }
                     }
+                case let .starGift(gift, convertStars, text, entities, nameHidden, savedToProfile, convertedToStars):
+                    let info = NSMutableAttributedString()
+                    let header = NSMutableAttributedString()
+                    
+                    
+                    header.append(string: strings().chatServiceStarGiftFrom("\(clown)\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                    if let author = message.author {
+                        header.insertEmbedded(.embeddedAvatar(.init(author)), for: clown)
+                    }
+
+                    if let text = text, !text.isEmpty {
+                        let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities ?? [])], for: text, message: nil, context: context, fontSize: theme.fontSize, openInfo: { _, _, _, _ in }, textColor: grayTextColor, isDark: theme.colors.isDark, bubbled: true).mutableCopy() as! NSMutableAttributedString
+                        
+                        InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities ?? [], isPremium: context.isPremium)
+
+                        info.append(attr)
+
+                    } else {
+                        let text: String
+                        let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle ?? ""
+                        let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
+                        if isIncoming {
+                            if savedToProfile {
+                                text = strings().starsStarGiftTextKeptOnPageIncoming
+                            } else if convertedToStars {
+                                text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
+                            } else {
+                                text = strings().starsStarGiftTextIncoming(convertStarsString)
+                            }
+                        } else {
+                            if savedToProfile {
+                                text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
+                            } else if convertedToStars {
+                                text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
+                            } else {
+                                text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
+                            }
+                        }
+                        info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+                    }
+                    
+                    let purpose: Star_TransactionPurpose = .starGift(gift: gift, convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false)
+                    
+                    let ribbon: ChatServiceItem.GiftData.Ribbon?
+                    if let availability = gift.availability {
+                        ribbon = .init(color: theme.chatServiceItemColor, text: strings().starTransactionAvailabilityOf(1, Int(availability.total)))
+                    } else {
+                        ribbon = nil
+                    }
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, peer: message.peers[message.id.peerId].flatMap( { .init($0) }), purpose: purpose), ribbon: ribbon)
+                    
+                    let text: String
+                    if authorId == context.peerId {
+                        text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.price)))
+                    } else {
+                        text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.price)))
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+
+
                 default:
                     break
                 }
@@ -1531,14 +1533,19 @@ class ChatServiceRowView: TableRowView {
         
         private var visualEffect: VisualEffect?
         
-        private let textView = TextView()
+        private let textView = InteractiveTextView()
+        private var infoView: InteractiveTextView?
+        
+        private let button = TextButton()
+        
+        private var badgeView: ImageView?
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(stickerView)
             addSubview(textView)
+            addSubview(button)
             textView.userInteractionEnabled = false
-            textView.isSelectable = false
             
             stickerView.userInteractionEnabled = false 
             self.scaleOnClick = true
@@ -1548,11 +1555,55 @@ class ChatServiceRowView: TableRowView {
         func update(item: ChatServiceItem, data: ChatServiceItem.GiftData, animated: Bool) {
             
             let context = item.context
-            
             let alt:String = data.alt
             
+            textView.set(text: data.text, context: item.context)
             
-            textView.update(data.text)
+            if let badge = data.ribbon {
+                let current: ImageView
+                if let view = self.badgeView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    addSubview(current)
+                    self.badgeView = current
+                }
+                                
+                let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: [badge.color.withMultipliedBrightnessBy(1.1), badge.color.withMultipliedBrightnessBy(0.9)], direction: .diagonal)!
+                
+                
+                current.image = generateGiftBadgeBackground(background: ribbon, text: badge.text)
+                
+                current.sizeToFit()
+            } else if let view = badgeView {
+                performSubviewRemoval(view, animated: false)
+                self.badgeView = nil
+            }
+            
+            
+            button.userInteractionEnabled = false
+            button.set(font: .medium(.text), for: .Normal)
+            button.set(color: item.presentation.chatServiceItemTextColor, for: .Normal)
+            button.set(background: item.shouldBlurService ? item.presentation.blurServiceColor : item.presentation.chatServiceItemColor, for: .Normal)
+            button.set(text: strings().chatServiceGiftView, for: .Normal)
+            button.sizeToFit(NSMakeSize(20, 14))
+            button.layer?.cornerRadius = button.frame.height / 2
+            
+            if let infoLayout = data.info {
+                let current: InteractiveTextView
+                if let view = self.infoView {
+                    current = view
+                } else {
+                    current = InteractiveTextView(frame: .zero)
+                    current.userInteractionEnabled = false
+                    self.infoView = current
+                    self.addSubview(current)
+                }
+                current.set(text: infoLayout, context: item.context)
+            } else if let view = self.infoView {
+                performSubviewRemoval(view, animated: animated)
+                self.infoView = nil
+            }
             
             let stickerFile: Signal<TelegramMediaFile, NoError>
             switch data.source {
@@ -1569,6 +1620,13 @@ class ChatServiceRowView: TableRowView {
                 |> deliverOnMainQueue
             case let .stars(amount, _, _, _):
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
+            case let .starGift(_, _, _, purpose):
+                switch purpose {
+                case let .starGift(gift, _, _, _, _, _, _, _):
+                    stickerFile = .single(gift.file)
+                default:
+                    stickerFile = .complete()
+                }
             }
             
             disposable.set(stickerFile.start(next: { [weak self] file in
@@ -1595,6 +1653,8 @@ class ChatServiceRowView: TableRowView {
                 }
                 self.backgroundColor = item.presentation.chatServiceItemColor
             }
+            
+            needsLayout = true
         }
         
         private func setFile(_ file: TelegramMediaFile, context: AccountContext) {
@@ -1606,7 +1666,15 @@ class ChatServiceRowView: TableRowView {
         override func layout() {
             super.layout()
             stickerView.centerX(y: 0)
-            textView.centerX(y: stickerView.frame.height + 10)
+            textView.centerX(y: stickerView.frame.height)
+            if let infoView {
+                infoView.centerX(y: textView.frame.maxY + 4)
+            }
+            if let badgeView {
+                badgeView.setFrameOrigin(frame.width - badgeView.frame.width, 0)
+            }
+            button.centerX(y: frame.height - 15 - button.frame.height)
+            visualEffect?.frame = bounds
         }
         
         deinit {
@@ -1720,7 +1788,7 @@ class ChatServiceRowView: TableRowView {
                     
                     self.photoVideoView!.frame = size.bounds
 
-                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: data.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: data.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [], alternativeRepresentations: [])
                     
                     
                     let reference: MediaResourceReference
@@ -2283,7 +2351,7 @@ class ChatServiceRowView: TableRowView {
                     }
                     self.photoVideoView!.frame = NSMakeRect(0, 0, ChatServiceItem.photoSize.width, ChatServiceItem.photoSize.height)
                     
-                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [], alternativeRepresentations: [])
                     
                     let userLocation: MediaResourceUserLocation
                     if let id = item.message?.id.peerId {
@@ -2328,10 +2396,11 @@ class ChatServiceRowView: TableRowView {
             if let view = self.giftView {
                 current = view
             } else {
-                current = GiftView(frame: NSMakeRect(0, 0, 200, giftData.height))
+                current = GiftView(frame: NSMakeRect(0, 0, 220, giftData.height))
                 self.giftView = current
                 addSubview(current)
             }
+            current.setFrameSize(NSMakeSize(220, giftData.height))
             current.removeAllHandlers()
             current.set(handler: { [weak item] _ in
                 item?.openGift()

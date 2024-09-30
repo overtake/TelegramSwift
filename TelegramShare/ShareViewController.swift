@@ -17,6 +17,7 @@ import OpenSSLEncryption
 import BuildConfig
 import Localization
 import System
+import RLottie
 
 class ShareViewController: NSViewController {
 
@@ -35,6 +36,8 @@ class ShareViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        System.legacyMenu = false
+        System.updateScaleFactor(NSScreen.main?.backingScaleFactor ?? 1)
         
 
         guard let containerUrl = ApiEnvironment.containerURL else {
@@ -105,6 +108,7 @@ class ShareViewController: NSViewController {
     
     private func launchExtension(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
+        
         let extensionContext = self.extensionContext!
 
         let containerUrl = ApiEnvironment.containerURL!
@@ -153,13 +157,18 @@ class ShareViewController: NSViewController {
                     readyDisposable.set((context.rootController.ready.get() |> take(1)).start(next: { [weak context] _ in
                         guard let context = context else { return }
                         if let contextValue = self.contextValue {
-                            contextValue.rootController.view.removeFromSuperview()
+                            performSubviewRemoval(contextValue.rootController.view, animated: false)
                         }
+                        let hasPrevious = self.contextValue != nil
                         self.contextValue = context
                         if let passlock = self.passlock, passlock.isLoaded() {
-                            self.passlock?.view.removeFromSuperview()
+                            performSubviewRemoval(passlock.view, animated: true)
+                            self.passlock = nil
                         }
                         self.view.addSubview(context.rootController.view, positioned: .below, relativeTo: self.view.subviews.first)
+                        if hasPrevious {
+                            context.rootController.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
                         
                     }))
                 }

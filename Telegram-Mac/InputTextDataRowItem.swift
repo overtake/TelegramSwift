@@ -469,7 +469,7 @@ class InputTextDataRowView : GeneralContainableRowView {
                 
                 current.set(handler: { [weak self] control in
                     if let item = self?.item as? InputTextDataRowItem {
-                        let emojis = EmojiesController(item.context)
+                        let emojis = EmojiesController(item.context, ignorePremium: true)
                         emojis._frameRect = NSMakeRect(0, 0, 350, 300)
                         let interactions = EntertainmentInteractions(.emoji, peerId: item.context.peerId)
                         emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(item.context.peerId), context: item.context))
@@ -574,7 +574,7 @@ class InputTextDataRowView : GeneralContainableRowView {
                 let range = NSRange(string: input.inputText, range: stringRange)
                 if !input.isAnimatedEmoji(at: range) {
                     let query = String(input.inputText[stringRange])
-                    let signal = InputSwapSuggestionsPanelItems(query, peerId: context.peerId, context: context)
+                    let signal = InputSwapSuggestionsPanelItems(query, peerId: context.peerId, context: context, ignorePremium: item.hasEmoji)
                     |> deliverOnMainQueue
                     self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
                         self?.updateTextInputSuggestions(files, range: range, animated: true)

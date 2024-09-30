@@ -1502,7 +1502,7 @@ class PeerListContainerView : Control {
             return
         }
         
-        let isShown: Bool = !state.filterData.isTop || (tableView.currentScroll.rect.minY - tableView.frame.height) > tableView.frame.height
+        let isShown: Bool = !state.filterData.isTop || tableView.documentOffset.y > tableView.frame.height
         
         if !state.isContacts, isShown {
             let current: ChatNavigationScroller
@@ -3181,6 +3181,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 if current?.mode.isForum == true {
                     navigationController?.back()
                 }
+                self.updateState { current in
+                    var current = current
+                    current.selectedTag = .chats
+                    current.peerTag = nil
+                    current.hashtag = nil
+                    return current
+                }
+                self.genericView.searchView.cancelSearch()
+                self.genericView.searchView.change(state: .None, true)
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
         case .birthdays:

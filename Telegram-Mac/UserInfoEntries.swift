@@ -456,10 +456,8 @@ class UserInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         let context = self.context
         
-        showModal(with: ReportReasonController(context: context, callback: { value in
-            _ = context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment).startStandalone()
-            showModalText(for: context.window, text: strings().peerInfoReportReactionSuccess)
-        }), for: context.window)
+        reportComplicated(context: context, subject: .peer(peerId), title: strings().reportComplicatedPeerTitle(self.peer?.displayTitle ?? ""))
+        
     }
     
     func botPrivacy() {

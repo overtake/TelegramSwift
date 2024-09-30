@@ -592,11 +592,15 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             }
             
             let botPeer: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
-                return transaction.getPeer(form.paymentBotId)
+                if let paymentBotId = form.paymentBotId {
+                    return transaction.getPeer(paymentBotId)
+                } else {
+                    return nil
+                }
             }
 
-            if let providerId = form.providerId {
-                let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: form.paymentBotId), botPeer, context.account.postbox.loadedPeerWithId(providerId))
+            if let providerId = form.providerId, let paymentBotId = form.paymentBotId {
+                let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: paymentBotId), botPeer, context.account.postbox.loadedPeerWithId(providerId))
                 
                 let _ = checkSignal.startStandalone(next: { value, botPeer, providerPeer in
                     if let botPeer = botPeer {
@@ -712,8 +716,12 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
     
     
     let botPeer: Signal<Peer?, BotPaymentFormRequestError> = formPromise.get() |> mapToSignal { value in
-        return context.account.postbox.transaction {
-            $0.getPeer(value.0.paymentBotId)
+        return context.account.postbox.transaction { transaction in
+            if let paymentBotId = value.0.paymentBotId {
+                return transaction.getPeer(paymentBotId)
+            } else {
+                return nil
+            }
         }
     } |> castError(BotPaymentFormRequestError.self)
     

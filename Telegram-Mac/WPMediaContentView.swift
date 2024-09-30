@@ -77,6 +77,7 @@ class WPMediaContentView: WPContentView {
                 self.contentNode = node.init(frame:NSZeroRect)
                 self.addSubview(self.contentNode!)
             }
+            contentNode?.userInteractionEnabled = layout.isMediaClickable
             
             self.contentNode?.update(with: layout.media, size: layout.mediaSize, context: layout.context, parent:layout.parent, table:layout.table, parameters: layout.parameters, approximateSynchronousValue: layout.approximateSynchronousValue)
         }

@@ -17,6 +17,7 @@ import AppKit
 import KeyboardKey
 import TelegramMedia
 import Localization
+import IOKit.pwr_mgt
 
 protocol CallViewUpdater {
     func updateState(_ state: PeerCallState, arguments: Arguments, transition: ContainedViewLayoutTransition)
@@ -434,6 +435,10 @@ public final class PeerCallScreen : ViewController {
             self.onCompletion?()
             self.onCompletion = nil
         }
+        
+        if state.externalState.canBeRemoved {
+            enableScreenSleep();
+        }
        
         self.videoViewState = videoViewState
         self.previousState = state
@@ -441,6 +446,7 @@ public final class PeerCallScreen : ViewController {
     
     public func show() {
         
+        _ = disableScreenSleep()
         
         if !screen.isOnActiveSpace {
             self.screen.alphaValue = 0
@@ -461,9 +467,29 @@ public final class PeerCallScreen : ViewController {
         self.genericView.updateLayout(size: screen.frame.size, transition: .immediate)
     }
     
+    
+    private var assertionID: IOPMAssertionID = 0
+    private var success: IOReturn?
+    
+    private func disableScreenSleep() -> Bool? {
+        guard success == nil else { return nil }
+        success = IOPMAssertionCreateWithName( kIOPMAssertionTypeNoDisplaySleep as CFString,
+                                               IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                                               "Phone Call" as CFString,
+                                               &assertionID )
+        return success == kIOReturnSuccess
+    }
+    
+    private func  enableScreenSleep() -> Bool {
+        if success != nil {
+            success = IOPMAssertionRelease(assertionID)
+            success = nil
+            return true
+        }
+        return false
+    }
+    
     deinit {
-        var bp = 0
-        bp += 1
     }
 }
 

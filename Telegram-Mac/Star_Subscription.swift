@@ -223,7 +223,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_rows, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .singleItem, rows: rows)
+        return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .singleItem, rows: rows, context: arguments.context)
     }))
     index += 1
     
