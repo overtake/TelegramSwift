@@ -94,99 +94,100 @@ private final class RowView : GeneralRowView {
     }
 }
 
-
-private final class WebviewRowItem : GeneralRowItem {
-    fileprivate let context: AccountContext
-    fileprivate let message: Message
-    fileprivate let file: TelegramMediaFile
-    fileprivate let quality: UniversalVideoContentVideoQuality
-    fileprivate let source: HLSServerSource
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, message: Message, quality: UniversalVideoContentVideoQuality) {
-        self.context = context
-        self.message = message
-        self.quality = quality
-        self.file = message.media.first! as! TelegramMediaFile
-        
-        let height = file.dimensions!.size.aspectFitted(initialSize).height
-        
-        let fileReference = FileMediaReference.message(message: .init(message), media: file)
-        
-        var qualityFiles: [Int: FileMediaReference] = [:]
-        for alternativeRepresentation in file.alternativeRepresentations {
-            if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
-                for attribute in alternativeFile.attributes {
-                    if case let .Video(_, size, _, _, _, videoCodec) = attribute {
-                        let _ = size
-                        if let videoCodec, isVideoCodecSupported(videoCodec: videoCodec) {
-                            qualityFiles[Int(size.height)] = fileReference.withMedia(alternativeFile)
-                        }
-                    }
-                }
-            }
-        }
-        var playlistFiles: [Int: FileMediaReference] = [:]
-        for alternativeRepresentation in file.alternativeRepresentations {
-            if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
-                if alternativeFile.mimeType == "application/x-mpegurl" {
-                    if let fileName = alternativeFile.fileName {
-                        if fileName.hasPrefix("mtproto:") {
-                            let fileIdString = String(fileName[fileName.index(fileName.startIndex, offsetBy: "mtproto:".count)...])
-                            if let fileId = Int64(fileIdString) {
-                                for (quality, file) in qualityFiles {
-                                    if file.media.fileId.id == fileId {
-                                        playlistFiles[quality] = fileReference.withMedia(alternativeFile)
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        source = HLSServerSource(id: UUID(), postbox: context.account.postbox, userLocation: .other, playlistFiles: playlistFiles, qualityFiles: qualityFiles)
-        
-        super.init(initialSize, height: height, stableId: stableId)
-    }
-    
-    
-    override func viewClass() -> AnyClass {
-        return WebviewRowView.self
-    }
-}
-private final class WebviewRowView : GeneralRowView {
-    private var videoPlayer: WebviewHLSView?
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func set(item: TableRowItem, animated: Bool = false) {
-        super.set(item: item, animated: animated)
-        
-        guard let item = item as? WebviewRowItem else {
-            return
-        }
-        
-        if videoPlayer == nil {
-            let player = WebviewHLSView(frame: self.bounds, source: item.source)
-            addSubview(player)
-            self.videoPlayer = player
-        }
-        
-        videoPlayer?.updateVideoQuality(to: item.quality.value)
-        
-        needsLayout = true
-    }
-    override func layout() {
-        super.layout()
-        videoPlayer?.frame = bounds
-    }
-}
+//
+//private final class WebviewRowItem : GeneralRowItem {
+//    fileprivate let context: AccountContext
+//    fileprivate let message: Message
+//    fileprivate let file: TelegramMediaFile
+//    fileprivate let quality: UniversalVideoContentVideoQuality
+//    fileprivate let source: HLSServerSource
+//    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, message: Message, quality: UniversalVideoContentVideoQuality) {
+//        self.context = context
+//        self.message = message
+//        self.quality = quality
+//        self.file = message.media.first! as! TelegramMediaFile
+//        
+//        let height = file.dimensions!.size.aspectFitted(initialSize).height
+//        
+//        let fileReference = FileMediaReference.message(message: .init(message), media: file)
+//        
+//        var qualityFiles: [Int: FileMediaReference] = [:]
+//        for alternativeRepresentation in file.alternativeRepresentations {
+//            if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
+//                for attribute in alternativeFile.attributes {
+//                    if case let .Video(_, size, _, _, _, videoCodec) = attribute {
+//                        let _ = size
+//                        if let videoCodec, isVideoCodecSupported(videoCodec: videoCodec) {
+//                            qualityFiles[Int(size.height)] = fileReference.withMedia(alternativeFile)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        var playlistFiles: [Int: FileMediaReference] = [:]
+//        for alternativeRepresentation in file.alternativeRepresentations {
+//            if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
+//                if alternativeFile.mimeType == "application/x-mpegurl" {
+//                    if let fileName = alternativeFile.fileName {
+//                        if fileName.hasPrefix("mtproto:") {
+//                            let fileIdString = String(fileName[fileName.index(fileName.startIndex, offsetBy: "mtproto:".count)...])
+//                            if let fileId = Int64(fileIdString) {
+//                                for (quality, file) in qualityFiles {
+//                                    if file.media.fileId.id == fileId {
+//                                        playlistFiles[quality] = fileReference.withMedia(alternativeFile)
+//                                        break
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        
+//        source = HLSServerSource(id: UUID(), postbox: context.account.postbox, userLocation: .other, playlistFiles: playlistFiles, qualityFiles: qualityFiles)
+//        
+//        super.init(initialSize, height: height, stableId: stableId)
+//    }
+//    
+//    
+//    override func viewClass() -> AnyClass {
+//        return WebviewRowView.self
+//    }
+//}
+//
+//private final class WebviewRowView : GeneralRowView {
+//    private var videoPlayer: WebviewHLSView?
+//    required init(frame frameRect: NSRect) {
+//        super.init(frame: frameRect)
+//    }
+//    
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//    
+//    override func set(item: TableRowItem, animated: Bool = false) {
+//        super.set(item: item, animated: animated)
+//        
+//        guard let item = item as? WebviewRowItem else {
+//            return
+//        }
+//        
+//        if videoPlayer == nil {
+//            let player = WebviewHLSView(frame: self.bounds, source: item.source)
+//            addSubview(player)
+//            self.videoPlayer = player
+//        }
+//        
+//        videoPlayer?.updateVideoQuality(to: item.quality.value)
+//        
+//        needsLayout = true
+//    }
+//    override func layout() {
+//        super.layout()
+//        videoPlayer?.frame = bounds
+//    }
+//}
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -202,9 +203,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("id2"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return WebviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message._asMessage(), quality: state.quality)
-    }))
+//    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("id2"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+//        return WebviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message._asMessage(), quality: state.quality)
+//    }))
     
     
   
