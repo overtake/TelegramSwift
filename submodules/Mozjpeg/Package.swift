@@ -22,10 +22,8 @@ let package = Package(
             publicHeadersPath: "Sources",
             cSettings: [
                 .headerSearchPath("Sources"),
-                .unsafeFlags([
-                    "-I../../core-xprojects/Mozjpeg/build",
-                    "-I../../submodules/telegram-ios/third-party/mozjpeg/mozjpeg"
-                ])
+                .headerSearchPath("SharedHeaders/libmozjpeg"),
+                .headerSearchPath("SharedHeaders/ios-mozjpeg"),
             ]),
     ]
 )///../../submodules/telegram-ios/third-party/mozjpeg/mozjpeg

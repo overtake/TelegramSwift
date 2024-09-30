@@ -7,15 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		279E8ECF27428E6D000E1BD5 /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983C41256815B200467703 /* libmac_framework_objc_static.a */; };
-		27E77944273BBAE300C026A3 /* RTCMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E77943273BBAE300C026A3 /* RTCMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		27E77945273BBCA900C026A3 /* webrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983BFE2566C86800467703 /* webrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27E77945273BBCA900C026A3 /* OpenH264.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983BFE2566C86800467703 /* OpenH264.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		27E77943273BBAE300C026A3 /* RTCMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RTCMacros.h; path = build/src/sdk/objc/base/RTCMacros.h; sourceTree = "<group>"; };
-		D0983BFB2566C86800467703 /* webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D0983BFE2566C86800467703 /* webrtc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = webrtc.h; sourceTree = "<group>"; };
+		D0983BFB2566C86800467703 /* OpenH264.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = OpenH264.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0983BFE2566C86800467703 /* OpenH264.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenH264.h; sourceTree = "<group>"; };
 		D0983BFF2566C86800467703 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D0983C122566CCD900467703 /* OpenSSLEncryption.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenSSLEncryption.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0983C41256815B200467703 /* libmac_framework_objc_static.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmac_framework_objc_static.a; path = build/webrtc/libmac_framework_objc_static.a; sourceTree = "<group>"; };
@@ -26,7 +23,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				279E8ECF27428E6D000E1BD5 /* libmac_framework_objc_static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -36,8 +32,7 @@
 		D0983BF12566C86800467703 = {
 			isa = PBXGroup;
 			children = (
-				27E77943273BBAE300C026A3 /* RTCMacros.h */,
-				D0983BFD2566C86800467703 /* webrtc */,
+				D0983BFD2566C86800467703 /* OpenH264 */,
 				D0983BFC2566C86800467703 /* Products */,
 				D0983C112566CCD900467703 /* Frameworks */,
 			);
@@ -46,18 +41,18 @@
 		D0983BFC2566C86800467703 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D0983BFB2566C86800467703 /* webrtc.framework */,
+				D0983BFB2566C86800467703 /* OpenH264.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		D0983BFD2566C86800467703 /* webrtc */ = {
+		D0983BFD2566C86800467703 /* OpenH264 */ = {
 			isa = PBXGroup;
 			children = (
-				D0983BFE2566C86800467703 /* webrtc.h */,
+				D0983BFE2566C86800467703 /* OpenH264.h */,
 				D0983BFF2566C86800467703 /* Info.plist */,
 			);
-			path = webrtc;
+			path = OpenH264;
 			sourceTree = "<group>";
 		};
 		D0983C112566CCD900467703 /* Frameworks */ = {
@@ -76,17 +71,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E77945273BBCA900C026A3 /* webrtc.h in Headers */,
-				27E77944273BBAE300C026A3 /* RTCMacros.h in Headers */,
+				27E77945273BBCA900C026A3 /* OpenH264.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		D0983BFA2566C86800467703 /* webrtc */ = {
+		D0983BFA2566C86800467703 /* OpenH264 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D0983C032566C86800467703 /* Build configuration list for PBXNativeTarget "webrtc" */;
+			buildConfigurationList = D0983C032566C86800467703 /* Build configuration list for PBXNativeTarget "OpenH264" */;
 			buildPhases = (
 				D0983C102566C9DF00467703 /* ShellScript */,
 				D0983BF62566C86800467703 /* Headers */,
@@ -98,9 +92,9 @@
 			);
 			dependencies = (
 			);
-			name = webrtc;
+			name = OpenH264;
 			productName = webrtc;
-			productReference = D0983BFB2566C86800467703 /* webrtc.framework */;
+			productReference = D0983BFB2566C86800467703 /* OpenH264.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -116,7 +110,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D0983BF52566C86800467703 /* Build configuration list for PBXProject "webrtc" */;
+			buildConfigurationList = D0983BF52566C86800467703 /* Build configuration list for PBXProject "OpenH264" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -129,7 +123,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D0983BFA2566C86800467703 /* webrtc */,
+				D0983BFA2566C86800467703 /* OpenH264 */,
 			);
 		};
 /* End PBXProject section */
@@ -160,7 +154,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n\n# Check if the build directory exists; if not, execute the build script\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n    sh $PROJECT_DIR/webrtc/build.sh \\\n    $PROJECT_DIR/../../submodules/tg_owt/ \\\n    $PROJECT_DIR/../openssl/build/openssl/include \\\n    $PROJECT_DIR/../Mozjpeg/build \\\n    $PROJECT_DIR/../libopus/build/libopus/include/opus \\\n    $PROJECT_DIR/../ffmpeg/build/ffmpeg/include \\\n    $PROJECT_DIR/../libvpx/build/libvpx/include \\\n    $PROJECT_DIR/../OpenH264/build/output/include/include\nfi\n";
+			shellScript = "if [ ! -d \"$PROJECT_DIR/build\" ]; then\nsh $PROJECT_DIR/OpenH264/build.sh \nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -309,7 +303,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
-				INFOPLIST_FILE = webrtc/Info.plist;
+				INFOPLIST_FILE = OpenH264/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -344,7 +338,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
-				INFOPLIST_FILE = webrtc/Info.plist;
+				INFOPLIST_FILE = OpenH264/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -369,7 +363,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D0983BF52566C86800467703 /* Build configuration list for PBXProject "webrtc" */ = {
+		D0983BF52566C86800467703 /* Build configuration list for PBXProject "OpenH264" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0983C012566C86800467703 /* Debug */,
@@ -378,7 +372,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D0983C032566C86800467703 /* Build configuration list for PBXNativeTarget "webrtc" */ = {
+		D0983C032566C86800467703 /* Build configuration list for PBXNativeTarget "OpenH264" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0983C042566C86800467703 /* Debug */,
