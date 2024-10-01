@@ -588,7 +588,7 @@ private final class HeaderView : GeneralContainableRowView {
         super.layout()
         sceneView.centerX(y: 0)
         
-        control.centerX(y: 20)
+        control.centerX(y: 30)
         
         avatar?.center()
         photo?.center()
@@ -697,7 +697,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             fromText = strings().starTransactionFrom
         } else if peer._asPeer().isUser && state.transaction.count > 0 {
             fromText = strings().starTransactionFrom
-        } else {
+        } else if state.transaction.count < 0, state.transaction.starGift != nil {
+            fromText = strings().starTransactionFrom
+        }  else {
             fromText = strings().starTransactionTo
         }
         
@@ -854,7 +856,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     switch state.purpose {
     case let .starGift(gift, _, text, entities, _, _, _, _):
         if let availability = gift.availability {
-            rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOf(Int(availability.total - availability.remains), Int(availability.total)), color: theme.colors.text, font: .normal(.text))))))
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOf(Int(availability.total - availability.remains), Int(availability.total).prettyNumber), color: theme.colors.text, font: .normal(.text))))))
         }
         
         if let text {

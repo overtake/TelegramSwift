@@ -35,7 +35,7 @@ class ChatServiceItem: ChatRowItem {
         
         enum Source {
             case premium(months: Int32)
-            case starGift(amount: Int64, date: Int32, peer: EnginePeer?, purpose: Star_TransactionPurpose)
+            case starGift(amount: Int64, date: Int32, from: EnginePeer?, to: EnginePeer?, purpose: Star_TransactionPurpose)
             case stars(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
         }
         
@@ -167,9 +167,9 @@ class ChatServiceItem: ChatRowItem {
             case let .stars(amount, date, _, from):
                 let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: .gift), for: context.window)
-            case let .starGift(amount, date, to, purpose):
+            case let .starGift(amount, date, from, to, purpose):
                 let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift)
-                showModal(with: Star_TransactionScreen(context: context, peer: to, transaction: transaction, purpose: purpose, messageId: message?.id), for: context.window)
+                showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: purpose, messageId: message?.id), for: context.window)
             }
         }
     }
@@ -1205,12 +1205,20 @@ class ChatServiceItem: ChatRowItem {
                     
                     let ribbon: ChatServiceItem.GiftData.Ribbon?
                     if let availability = gift.availability {
-                        ribbon = .init(color: theme.chatServiceItemColor, text: strings().starTransactionAvailabilityOf(1, Int(availability.total)))
+                        ribbon = .init(color: theme.chatServiceItemColor, text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber))
                     } else {
                         ribbon = nil
                     }
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, peer: message.peers[message.id.peerId].flatMap( { .init($0) }), purpose: purpose), ribbon: ribbon)
+                    
+                    let toPeer: EnginePeer?
+                    if authorId != context.peerId {
+                        toPeer = context.myPeer.flatMap { .init($0) }
+                    } else {
+                        toPeer = message.peers[message.id.peerId].flatMap( { .init($0) })
+                    }
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1620,7 +1628,7 @@ class ChatServiceRowView: TableRowView {
                 |> deliverOnMainQueue
             case let .stars(amount, _, _, _):
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
-            case let .starGift(_, _, _, purpose):
+            case let .starGift(_, _, _, _, purpose):
                 switch purpose {
                 case let .starGift(gift, _, _, _, _, _, _, _):
                     stickerFile = .single(gift.file)

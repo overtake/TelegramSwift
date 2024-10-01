@@ -507,7 +507,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             products.append(product)
         }
         
-        for (i, product) in products.enumerated() {
+        for (i, product) in products.reversed().enumerated() {
             
             let giftTitle: String
             if product.months == 12 {

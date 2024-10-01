@@ -191,7 +191,7 @@ private final class PreviewRowView : GeneralContainableRowView {
                     self.imageView = current
                 }
                 
-                let text: String = strings().starTransactionAvailabilityOf(1, Int(availability.total))
+                let text: String = strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber)
                 let color = item.presentation.chatServiceItemColor
                 
                 let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: [color.withMultipliedBrightnessBy(1.1), color.withMultipliedBrightnessBy(0.9)], direction: .diagonal)!

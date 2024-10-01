@@ -133,6 +133,8 @@ public final class L10n {
   public static var accountSettingsProxy: String  { return L10n.tr("Localizable", "AccountSettings.Proxy") }
   /// Read Articles
   public static var accountSettingsReadArticles: String  { return L10n.tr("Localizable", "AccountSettings.ReadArticles") }
+  /// Send a Gift
+  public static var accountSettingsSendGift: String  { return L10n.tr("Localizable", "AccountSettings.SendGift") }
   /// Set a Bio
   public static var accountSettingsSetBio: String  { return L10n.tr("Localizable", "AccountSettings.SetBio") }
   /// Set Profile Photo
@@ -12485,6 +12487,8 @@ public final class L10n {
   public static var peerInfoActionReport: String  { return L10n.tr("Localizable", "PeerInfo.Action.Report") }
   /// Secret
   public static var peerInfoActionSecretChat: String  { return L10n.tr("Localizable", "PeerInfo.Action.SecretChat") }
+  /// Send a Gift
+  public static var peerInfoActionSendGift: String  { return L10n.tr("Localizable", "PeerInfo.Action.SendGift") }
   /// Share
   public static var peerInfoActionShare: String  { return L10n.tr("Localizable", "PeerInfo.Action.Share") }
   /// Statistics
@@ -16673,8 +16677,8 @@ public final class L10n {
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
   /// [Unknown User](https://fragment.com/stars)
   public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
-  /// %1$d of %2$d
-  public static func starTransactionAvailabilityOf(_ p1: Int, _ p2: Int) -> String {
+  /// %1$d of %2$@
+  public static func starTransactionAvailabilityOf(_ p1: Int, _ p2: String) -> String {
     return L10n.tr("Localizable", "Star.Transaction.Availability.Of", p1, p2)
   }
   /// Convert Gift to Stars
@@ -16739,13 +16743,13 @@ public final class L10n {
   }
   /// What are Stars?
   public static var starsPromoHeader: String  { return L10n.tr("Localizable", "Stars.Promo.Header") }
-  /// Buy packages of Stars on Telegram that let you do following:
+  /// Buy Stars on Telegram that let you do following:
   public static var starsPromoHeaderInfo: String  { return L10n.tr("Localizable", "Stars.Promo.HeaderInfo") }
   /// Give your friends gifts that can be kept on their profiles or converted to Stars.
   public static var starsPromoOption1Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option1.Info") }
   /// Send Gifts to Friends
   public static var starsPromoOption1Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option1.Title") }
-  /// Buy additional content and services in Telegram miniapps.
+  /// Buy additional content and services in Telegram miniapps. [See Examples >](examples)
   public static var starsPromoOption2Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option2.Info") }
   /// Use Stars in miniapps
   public static var starsPromoOption2Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option2.Title") }
@@ -16873,7 +16877,7 @@ public final class L10n {
   }
   /// [More about Stars >](stars)
   public static var starsStarGiftTextLink: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.Link") }
-  /// %1$@ can keep this gift in your Profile or convert it to %2$@.
+  /// %1$@ can keep this gift in Profile or convert it to %2$@.
   public static func starsStarGiftTextOutgoing(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Stars.StarGift.Text.Outgoing", p1, p2)
   }
@@ -16887,7 +16891,7 @@ public final class L10n {
   }
   /// You kept this gift in your Profile.
   public static var starsStarGiftTextKeptOnPageIncoming: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.KeptOnPage.Incoming") }
-  /// %1$@ kept this gift in your Profile.
+  /// %1$@ kept this gift in Profile.
   public static func starsStarGiftTextKeptOnPageOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stars.StarGift.Text.KeptOnPage.Outgoing", p1)
   }

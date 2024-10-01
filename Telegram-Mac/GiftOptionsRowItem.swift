@@ -78,7 +78,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
         static func initialize(_ option: ProfileGiftsContext.State.StarGift) -> Option {
             let badge: Badge?
             if let availability = option.gift.availability {
-                badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total)), color: theme.colors.accent)
+                badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), color: theme.colors.accent)
             } else {
                 badge = nil
             }
