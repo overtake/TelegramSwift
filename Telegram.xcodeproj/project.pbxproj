@@ -204,9 +204,7 @@
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
 		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
-		2739A4AC2CABC29D0065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AB2CABC29D0065186B /* TelegramSystem */; };
 		2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4AF2CABC4260065186B /* libopenh264.a */; };
-		2739A4BA2CABDD5F0065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AD2CABC2A60065186B /* TelegramSystem */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
 		273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273C04042C2B75E900AF2751 /* MediaPlayer.framework */; };
@@ -634,6 +632,8 @@
 		27ABFD302858C838006C3301 /* badge.scn in Resources */ = {isa = PBXBuildFile; fileRef = 27ABFD2E2858C838006C3301 /* badge.scn */; };
 		27ABFD312858C838006C3301 /* badgestar.png in Resources */ = {isa = PBXBuildFile; fileRef = 27ABFD2F2858C838006C3301 /* badgestar.png */; };
 		27ABFD332858DF9E006C3301 /* PremiumStickersDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */; };
+		27B29E3F2CABEC4B007FDA6B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AB2CABC29D0065186B /* TelegramSystem */; };
+		27B29E412CABEC55007FDA6B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 27B29E402CABEC55007FDA6B /* TelegramSystem */; };
 		27B4A8F12C2DA0340000F3DF /* emoji144.txt in Resources */ = {isa = PBXBuildFile; fileRef = 27B4A8F02C2DA0340000F3DF /* emoji144.txt */; };
 		27B6AF8E2B4D6E0B001D0983 /* MessagesPrivacyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */; };
 		27B6AFA72B4FB317001D0983 /* menu_tag_filter.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */; };
@@ -1847,7 +1847,6 @@
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
 		2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRequestJoinRowItem.swift; sourceTree = "<group>"; };
-		2739A4AA2CABC28B0065186B /* TelegramSystem */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramSystem; path = packages/TelegramSystem; sourceTree = "<group>"; };
 		2739A4AF2CABC4260065186B /* libopenh264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopenh264.a; path = "core-xprojects/OpenH264/build/output/lib/libopenh264.a"; sourceTree = "<group>"; };
 		273C04042C2B75E900AF2751 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
@@ -1909,6 +1908,7 @@
 		2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1d.tgs; sourceTree = "<group>"; };
 		2751E7A227F3480C003E3937 /* menu_autodelete_customize.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_autodelete_customize.tgs; sourceTree = "<group>"; };
 		2751E7A427F72078003E3937 /* menu_note_slash.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_note_slash.tgs; sourceTree = "<group>"; };
+		27528F5A2CABE98E0003810A /* TelegramSystem */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramSystem; path = packages/TelegramSystem; sourceTree = "<group>"; };
 		2754D29827909668000DDAD3 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = "core-xprojects/libvpx/build/libvpx/lib/libvpx.a"; sourceTree = "<group>"; };
 		275549052747C2380098A3CD /* device_chrome.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_chrome.tgs; sourceTree = "<group>"; };
 		275549062747C23B0098A3CD /* device_firefox.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_firefox.tgs; sourceTree = "<group>"; };
@@ -3231,9 +3231,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27B29E3F2CABEC4B007FDA6B /* TelegramSystem in Frameworks */,
 				27F3B75627391E9200B81F10 /* TelegramIconsTheme in Frameworks */,
 				270376232CA1FC8C003EC235 /* libswresample.a in Frameworks */,
-				2739A4AC2CABC29D0065186B /* TelegramSystem in Frameworks */,
 				270375FD2C9DBC13003EC235 /* InputView in Frameworks */,
 				2703761F2CA1FAC8003EC235 /* TelegramMediaPlayer in Frameworks */,
 				278926C727550C8800923087 /* Strings in Frameworks */,
@@ -3291,7 +3291,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2739A4BA2CABDD5F0065186B /* TelegramSystem in Frameworks */,
 				27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */,
 				2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */,
 				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
@@ -3331,6 +3330,7 @@
 				D06E38AC24A5F3B700C7D03A /* MetalKit.framework in Frameworks */,
 				27A69790273D1DE900B33415 /* FFMpegBinding in Frameworks */,
 				D06E38AD24A5F3B700C7D03A /* Metal.framework in Frameworks */,
+				27B29E412CABEC55007FDA6B /* TelegramSystem in Frameworks */,
 				279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */,
 				A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */,
 				2738A2D4289C41CE00EC1010 /* CurrencyFormat in Frameworks */,
@@ -4340,7 +4340,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				2739A4AA2CABC28B0065186B /* TelegramSystem */,
+				27528F5A2CABE98E0003810A /* TelegramSystem */,
 				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
 				27B8361A2B5FCCF800E82683 /* Dock */,
 				27B6AFB22B555C03001D0983 /* CallVideoLayer */,
@@ -6801,7 +6801,6 @@
 				27D9130628323A74007CF40F /* RangeSet */,
 				27D9130F28353E53007CF40F /* InAppPurchaseManager */,
 				2738A2D3289C41CE00EC1010 /* CurrencyFormat */,
-				27AAAD5929A4A11600F70A9A /* System */,
 				277D28192AD02F1800CC6420 /* InputView */,
 				271891F72B08A7DB0008B238 /* LokiRng */,
 				275E851B2B20C4EC007A72CA /* ShelfPack */,
@@ -6812,7 +6811,7 @@
 				27B8361B2B5FCD0300E82683 /* Dock */,
 				27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */,
 				273C04022C2B75E400AF2751 /* TelegramMediaPlayer */,
-				2739A4AD2CABC2A60065186B /* TelegramSystem */,
+				27B29E402CABEC55007FDA6B /* TelegramSystem */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -8996,10 +8995,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = TelegramSystem;
 		};
-		2739A4AD2CABC2A60065186B /* TelegramSystem */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = TelegramSystem;
-		};
 		273C04022C2B75E400AF2751 /* TelegramMediaPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TelegramMediaPlayer;
@@ -9208,9 +9203,9 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = Localization;
 		};
-		27AAAD5929A4A11600F70A9A /* System */ = {
+		27B29E402CABEC55007FDA6B /* TelegramSystem */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = System;
+			productName = TelegramSystem;
 		};
 		27B6AFB32B557BEE001D0983 /* CallVideoLayer */ = {
 			isa = XCSwiftPackageProductDependency;
