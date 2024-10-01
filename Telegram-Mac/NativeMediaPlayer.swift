@@ -18,6 +18,10 @@ import TelegramCore
 final class NativeMediaPlayer : View, UniversalVideoContentView {
     
     
+    var duration: Double {
+        return reference.media.duration ?? 0
+    }
+    
     private let mediaPlayerView: MediaPlayerView = MediaPlayerView()
     private let mediaPlayer: MediaPlayer
     private let postbox: Postbox

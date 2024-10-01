@@ -14,6 +14,18 @@ import RangeSet
 import TelegramMedia
 import TelegramMediaPlayer
 
+private func roundToStandardQuality(size: Int) -> Int {
+    // List of standard video qualities
+    let standardQualities = [360, 480, 720, 1080, 1440, 2160]
+    
+    // Find the closest value using `min` and a closure to calculate the absolute difference
+    guard let closestQuality = standardQualities.min(by: { abs($0 - size) < abs($1 - size) }) else {
+        return size // Return the original size if no standard qualities are found
+    }
+    
+    return closestQuality
+}
+
 private final class SVideoPipControls : Control {
     
     var bufferingRanges:[Range<CGFloat>] = [] {
@@ -1119,7 +1131,7 @@ class SVideoView: NSView {
                 }, state: quality.preferred == .auto ? .on : nil))
                 
                 for value in quality.available {
-                    menu.addItem(ContextMenuItem("\(value)p", handler: { [weak mediaPlayer] in
+                    menu.addItem(ContextMenuItem("\(roundToStandardQuality(size: value))p", handler: { [weak mediaPlayer] in
                         mediaPlayer?.setVideoQuality(.quality(value))
                     }, state: quality.preferred == .quality(value) ? .on : nil))
                 }

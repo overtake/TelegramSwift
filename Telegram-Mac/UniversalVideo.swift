@@ -22,6 +22,9 @@ public enum UniversalVideoContentVideoQuality: Equatable {
 }
 
 public protocol UniversalVideoContentView: AnyObject {
+    
+    var duration: Double { get }
+    
     var ready: Signal<Void, NoError> { get }
     var status: Signal<MediaPlayerStatus, NoError> { get }
     var bufferingStatus: Signal<(RangeSet<Int64>, Int64)?, NoError> { get }
@@ -44,6 +47,8 @@ public protocol UniversalVideoContentView: AnyObject {
     func fetchControl(_ control: UniversalVideoNodeFetchControl)
     
     func setVideoLayerGravity(_ gravity: AVLayerVideoGravity)
+    
+    
 }
 
 public protocol UniversalVideoContent {

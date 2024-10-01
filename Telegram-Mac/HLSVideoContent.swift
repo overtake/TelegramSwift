@@ -150,9 +150,9 @@ private final class HLSServerSource: SharedHLSServer.Source {
             let partialFile = TempBox.shared.tempFile(fileName: "data")
             
             if let cachedData = postbox.mediaBox.internal_resourceData(id: file.media.resource.id, size: size, in: Int64(range.lowerBound) ..< Int64(range.upperBound)) {
-                #if DEBUG
+#if DEBUG
                 print("Fetched \(quality)p part from cache")
-                #endif
+#endif
                 
                 let outputFile = ManagedFile(queue: nil, path: partialFile.path, mode: .readwrite)
                 if let outputFile {
@@ -173,9 +173,9 @@ private final class HLSServerSource: SharedHLSServer.Source {
                     subscriber.putNext((partialFile, 0 ..< cachedData.length, Int(size)))
                     subscriber.putCompletion()
                 } else {
-                    #if DEBUG
+#if DEBUG
                     print("Error writing cached file to disk")
-                    #endif
+#endif
                 }
                 
                 return EmptyDisposable
@@ -221,19 +221,19 @@ private final class HLSServerSource: SharedHLSServer.Source {
                 }
             )
             
-            #if DEBUG
+#if DEBUG
             let startTime = CFAbsoluteTimeGetCurrent()
-            #endif
+#endif
             
             let dataDisposable = fileContext.data(
                 range: mappedRange,
                 waitUntilAfterInitialFetch: true,
                 next: { result in
                     if result.complete {
-                        #if DEBUG
+#if DEBUG
                         let fetchTime = CFAbsoluteTimeGetCurrent() - startTime
                         print("Fetching \(quality)p part took \(fetchTime * 1000.0) ms")
-                        #endif
+#endif
                         subscriber.putNext((partialFile, Int(result.offset) ..< Int(result.offset + result.size), Int(size)))
                         subscriber.putCompletion()
                     }
@@ -320,7 +320,7 @@ func isVideoCodecSupported(videoCodec: String) -> Bool {
     return videoCodec == "h264" || videoCodec == "h265" || videoCodec == "avc" || videoCodec == "hevc"
 }
 
-private func isHLSVideo(file: TelegramMediaFile) -> Bool {
+func isHLSVideo(file: TelegramMediaFile) -> Bool {
     for alternativeRepresentation in file.alternativeRepresentations {
         if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
             if alternativeFile.mimeType == "application/x-mpegurl" {
@@ -417,7 +417,7 @@ final class HLSVideoContent : UniversalVideoContent {
     }
     
     func makeContentView(accountId: AccountRecordId, postbox: Postbox) -> (NSView & UniversalVideoContentView) {
-        return HLSVideoJSContentView(accountId: accountId, postbox: postbox, userLocation: self.userLocation, fileReference: self.fileReference, streamVideo: self.streamVideo, loopVideo: self.loopVideo, enableSound: self.enableSound, baseRate: self.baseRate, fetchAutomatically: self.fetchAutomatically)
+        return HLSVideoContentView(accountId: accountId, postbox: postbox, userLocation: self.userLocation, fileReference: self.fileReference, streamVideo: self.streamVideo, loopVideo: self.loopVideo, enableSound: self.enableSound, baseRate: self.baseRate, fetchAutomatically: self.fetchAutomatically)
     }
     
     func isEqual(to other: UniversalVideoContent) -> Bool {
@@ -433,17 +433,116 @@ final class HLSVideoContent : UniversalVideoContent {
         return false
     }
     
-    static func minimizedHLSQualityFile(file: FileMediaReference) -> FileMediaReference? {
-        guard let qualitySet = HLSQualitySet(baseFile: file) else {
-            return nil
-        }
-        for (quality, qualityFile) in qualitySet.qualityFiles.sorted(by: { $0.key < $1.key }) {
-            if quality >= 400 {
-                return qualityFile
-            }
-        }
-        return nil
-    }
+    public static func minimizedHLSQuality(file: FileMediaReference) -> (playlist: FileMediaReference, file: FileMediaReference)? {
+           guard let qualitySet = HLSQualitySet(baseFile: file) else {
+               return nil
+           }
+           for (quality, qualityFile) in qualitySet.qualityFiles.sorted(by: { $0.key < $1.key }) {
+               if quality >= 400 {
+                   guard let playlistFile = qualitySet.playlistFiles[quality] else {
+                       return nil
+                   }
+                   return (playlistFile, qualityFile)
+               }
+           }
+           return nil
+       }
+       
+       public static func minimizedHLSQualityPreloadData(postbox: Postbox, file: FileMediaReference, userLocation: MediaResourceUserLocation, prefixSeconds: Int, autofetchPlaylist: Bool) -> Signal<(FileMediaReference, Range<Int64>)?, NoError> {
+           guard let fileSet = minimizedHLSQuality(file: file) else {
+               return .single(nil)
+           }
+           
+           let playlistData: Signal<Range<Int64>?, NoError> = Signal { subscriber in
+               var fetchDisposable: Disposable?
+               if autofetchPlaylist {
+                   fetchDisposable = freeMediaFileResourceInteractiveFetched(postbox: postbox, userLocation: userLocation, fileReference: fileSet.playlist, resource: fileSet.playlist.media.resource).start()
+               }
+               let dataDisposable = postbox.mediaBox.resourceData(fileSet.playlist.media.resource).start(next: { data in
+                   if !data.complete {
+                       return
+                   }
+                   guard let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) else {
+                       subscriber.putNext(nil)
+                       subscriber.putCompletion()
+                       return
+                   }
+                   guard let playlistString = String(data: data, encoding: .utf8) else {
+                       subscriber.putNext(nil)
+                       subscriber.putCompletion()
+                       return
+                   }
+                   
+                   var durations: [Int] = []
+                   var byteRanges: [Range<Int>] = []
+                   
+                   let extinfRegex = try! NSRegularExpression(pattern: "EXTINF:(\\d+)", options: [])
+                   let byteRangeRegex = try! NSRegularExpression(pattern: "EXT-X-BYTERANGE:(\\d+)@(\\d+)", options: [])
+                   
+                   let extinfResults = extinfRegex.matches(in: playlistString, range: NSRange(playlistString.startIndex..., in: playlistString))
+                   for result in extinfResults {
+                       if let durationRange = Range(result.range(at: 1), in: playlistString) {
+                           if let duration = Int(String(playlistString[durationRange])) {
+                               durations.append(duration)
+                           }
+                       }
+                   }
+                   
+                   let byteRangeResults = byteRangeRegex.matches(in: playlistString, range: NSRange(playlistString.startIndex..., in: playlistString))
+                   for result in byteRangeResults {
+                       if let lengthRange = Range(result.range(at: 1), in: playlistString), let upperBoundRange = Range(result.range(at: 2), in: playlistString) {
+                           if let length = Int(String(playlistString[lengthRange])), let lowerBound = Int(String(playlistString[upperBoundRange])) {
+                               byteRanges.append(lowerBound ..< (lowerBound + length))
+                           }
+                       }
+                   }
+                   
+                   if durations.count != byteRanges.count {
+                       subscriber.putNext(nil)
+                       subscriber.putCompletion()
+                       return
+                   }
+                   
+                   var rangeUpperBound: Int64 = 0
+                   var remainingSeconds = prefixSeconds
+                   
+                   for i in 0 ..< durations.count {
+                       if remainingSeconds <= 0 {
+                           break
+                       }
+                       let duration = durations[i]
+                       let byteRange = byteRanges[i]
+                       
+                       remainingSeconds -= duration
+                       rangeUpperBound = max(rangeUpperBound, Int64(byteRange.upperBound))
+                   }
+                   
+                   if rangeUpperBound != 0 {
+                       subscriber.putNext(0 ..< rangeUpperBound)
+                       subscriber.putCompletion()
+                   } else {
+                       subscriber.putNext(nil)
+                       subscriber.putCompletion()
+                   }
+                   
+                   return
+               })
+               
+               return ActionDisposable {
+                   fetchDisposable?.dispose()
+                   dataDisposable.dispose()
+               }
+           }
+           
+           return playlistData
+           |> map { range -> (FileMediaReference, Range<Int64>)? in
+               guard let range else {
+                   return nil
+               }
+               return (fileSet.file, range)
+           }
+       }
+
 
 }
 
@@ -451,6 +550,9 @@ final class HLSVideoContent : UniversalVideoContent {
 private final class HLSVideoContentView: NSView, UniversalVideoContentView {
    
 
+    var duration: Double {
+        return statusValue.duration
+    }
     
     private let postbox: Postbox
     private let userLocation: MediaResourceUserLocation
@@ -756,12 +858,13 @@ private final class HLSVideoContentView: NSView, UniversalVideoContentView {
             self._status.set(MediaPlayerStatus(generationTimestamp: 0.0, duration: Double(self.approximateDuration), dimensions: CGSize(), timestamp: 0.0, baseRate: 1.0, volume: self.player.volume, seekId: self.seekId, status: .buffering(initial: true, whilePlaying: true)))
         }
         self.player.play()
-
+        self.updateStatus()
     }
     
     func pause() {
         assert(Queue.mainQueue().isCurrent())
         self.player.pause()
+        self.updateStatus()
     }
     
     func togglePlayPause() {
@@ -780,12 +883,19 @@ private final class HLSVideoContentView: NSView, UniversalVideoContentView {
         } else {
             self.player.volume = 0.0
         }
+        self.updateStatus()
     }
     
     func seek(_ timestamp: Double) {
         assert(Queue.mainQueue().isCurrent())
         self.seekId += 1
-        self.player.seek(to: CMTime(seconds: timestamp, preferredTimescale: 30))
+        if timestamp == 0 {
+            self.player.seek(to: .zero) { _ in
+                self.player.play()
+            }
+        } else {
+            self.player.seek(to: CMTime(seconds: timestamp, preferredTimescale: 30))
+        }
     }
     
     func playOnceWithSound(playAndRecord: Bool, actionAtEnd: MediaPlayerActionAtEnd) {
@@ -877,6 +987,10 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
 @available(macOS 14.0, *)
 final class HLSVideoJSContentView: NSView, UniversalVideoContentView {
+    var duration: Double {
+        return statusValue.duration
+    }
+    
  
     private struct Level {
         let bitrate: Int
@@ -1108,7 +1222,7 @@ final class HLSVideoJSContentView: NSView, UniversalVideoContentView {
                         if !self.hasRequestedPlayerLoad {
                             if !self.playerAvailableLevels.isEmpty {
                                 var selectedLevelIndex: Int?
-                                if let minimizedQualityFile = HLSVideoContent.minimizedHLSQualityFile(file: self.fileReference) {
+                                if let minimizedQualityFile = HLSVideoContent.minimizedHLSQuality(file: self.fileReference)?.file {
                                     if let dimensions = minimizedQualityFile.media.dimensions {
                                         for (index, level) in self.playerAvailableLevels {
                                             if level.height == Int(dimensions.height) {

@@ -418,7 +418,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.openPremium(true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .giftPremium(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGiftPremium, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsSendGift, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stars(_, stars, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStars, icon: theme.icons.settingsStars, activeIcon: theme.icons.settingsStars, type: .nextContext(stars > 0 ? "\(stars)" : ""), viewType: viewType, action: arguments.stars, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .faq(_, viewType):

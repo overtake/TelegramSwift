@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMediaPlayer
 import SwiftSignalKit
 import Postbox
 import RangeSet
@@ -83,6 +83,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var scrubbingFrameDisposable: Disposable?
     private let isProtected: Bool
     private let isControlsLimited: Bool
+    
+    private let partDisposable = MetaDisposable()
     
     private var endPlaybackId: Int?
     
@@ -328,6 +330,25 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let account = self.account
+        
+        if isHLSVideo(file: reference.media),  #available(macOS 14.0, *) {
+            let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: account.postbox, file: reference, userLocation: .other, prefixSeconds: 10, autofetchPlaylist: true)
+            |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
+                guard let fileAndRange else {
+                    return .complete()
+                }
+                return freeMediaFileResourceInteractiveFetched(postbox: account.postbox, userLocation: .other, fileReference: fileAndRange.0, resource: fileAndRange.0.media.resource, range: (fileAndRange.1, .default))
+                |> ignoreValues
+                |> `catch` { _ -> Signal<Never, NoError> in
+                    return .complete()
+                }
+            }
+            partDisposable.set(fetchSignal.start())
+        } else {
+            let preload = preloadVideoResource(postbox: account.postbox, userLocation: .other, userContentType: .init(file: reference.media), resourceReference: reference.resourceReference(reference.media.resource), duration: 3.0)
+            partDisposable.set(preload.start())
+        }
 
         
         genericView.layerContentsRedrawPolicy = .duringViewResize
@@ -447,11 +468,12 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             }
         } else {
             endPlaybackId = mediaPlayer.addPlaybackCompleted { [weak self] in
-                Queue.mainQueue().async {
-                    self?.mediaPlayer.seek(0)
-                    self?.mediaPlayer.pause()
-                    self?.updateIdleTimer()
+                DispatchQueue.main.async {
+                    if let duration = self?.mediaPlayer.duration, duration < 30 {
+                        self?.mediaPlayer.seek(0)
+                    }
                     self?.hideControls.set(false)
+                    self?.updateIdleTimer()
                 }
             }
         }
@@ -553,6 +575,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         bufferingDisposable.dispose()
         hideOnIdleDisposable.dispose()
         hideControlsDisposable.dispose()
+        partDisposable.dispose()
         if let endPlaybackId {
             mediaPlayer.removePlaybackCompleted(endPlaybackId)
         }

@@ -233,7 +233,8 @@ public class LinearProgressControl: Control {
     }
     
     public func set(progress:CGFloat, animated:Bool, duration: Double, beginTime: Double?, offset: Double, speed: Float, repeatForever: Bool = false) {
-        let progress:CGFloat = progress.isNaN ? 1 : progress
+        let progress:CGFloat = min(progress.isNaN ? 1 : progress, 1)
+        let progressUpdated = self.progress != progress
         self.progress = progress
         let size = NSMakeSize(floorToScreenPixels(backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
         
@@ -243,12 +244,13 @@ public class LinearProgressControl: Control {
         let fromBounds = NSMakeRect(0, progressView.frame.minY, 0, size.height)
         let toBounds = NSMakeRect(0, progressView.frame.minY, containerView.frame.width, size.height)
         
-        if animated, scrubblingTempState == nil {
+        if animated, scrubblingTempState == nil, progressUpdated {
             progressView.layer?.add(preparedAnimation(keyPath: "bounds", from: NSValue(rect: fromBounds), to: NSValue(rect: toBounds), duration: duration, beginTime: beginTime, offset: offset, speed: speed), forKey: "bounds")
-            if let scrubber = scrubber  {
+            if let scrubber = scrubber {
                 scrubber.layer?.add(preparedAnimation(keyPath: "position", from: NSValue(point: NSMakePoint(containerView.frame.minX - scrubber.frame.width / 2, scrubber.frame.minY)), to: NSValue(point: NSMakePoint(containerView.frame.maxX - scrubber.frame.width / 2, scrubber.frame.minY)), duration: duration, beginTime: beginTime, offset: offset, speed: speed), forKey: "position")
             }
         } else {
+            scrubber?.layer?.removeAllAnimations()
             progressView.layer?.removeAllAnimations()
             set(progress: progress)
         }

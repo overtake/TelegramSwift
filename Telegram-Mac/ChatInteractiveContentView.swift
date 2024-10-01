@@ -1228,16 +1228,27 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     
     override func preloadStreamblePart() {
-        if let context = context, !isLite(.any) {
+        if let context = context {
             if let media = media as? TelegramMediaFile, let parent = parent {
-                let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
-                
-               // preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
-                
-                
-                let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
-                partDisposable.set(preload.start())
-
+                if isHLSVideo(file: media),  #available(macOS 14.0, *) {
+                    let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: .message(message: MessageReference(parent), media: media), userLocation: .peer(parent.id.peerId), prefixSeconds: 10, autofetchPlaylist: true)
+                    |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
+                        guard let fileAndRange else {
+                            return .complete()
+                        }
+                        return freeMediaFileResourceInteractiveFetched(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), fileReference: fileAndRange.0, resource: fileAndRange.0.media.resource, range: (fileAndRange.1, .default))
+                        |> ignoreValues
+                        |> `catch` { _ -> Signal<Never, NoError> in
+                            return .complete()
+                        }
+                    }
+                    partDisposable.set(fetchSignal.start())
+                } else {
+                    let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
+                                    
+                    let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                    partDisposable.set(preload.start())
+                }
             }
         }
     }
