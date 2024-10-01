@@ -23,7 +23,7 @@ import InAppSettings
 import ThemeSettings
 import ColorPalette
 import WebKit
-import System
+import TelegramSystem
 import CodeSyntax
 import MetalEngine
 import TelegramMedia

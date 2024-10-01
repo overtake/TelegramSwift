@@ -16,7 +16,7 @@ import ThemeSettings
 import OpenSSLEncryption
 import BuildConfig
 import Localization
-import System
+import TelegramSystem
 import RLottie
 
 class ShareViewController: NSViewController {
