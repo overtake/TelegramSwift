@@ -12,7 +12,7 @@ import TgVoipWebrtc
 import SwiftSignalKit
 import MetalEngine
 import TelegramVoip
-
+import YuvConversion
 
 private func copyI420BufferToNV12Buffer(buffer: OngoingGroupCallContext.VideoFrameData.I420Buffer, pixelBuffer: CVPixelBuffer) -> Bool {
     guard CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange else {

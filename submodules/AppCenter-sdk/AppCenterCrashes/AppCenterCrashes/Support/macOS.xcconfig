@@ -1,5 +1,0 @@
-#include "../../../Config/macOS.xcconfig"
-#include "../../../Config/Framework.xcconfig"
-
-HEADER_SEARCH_PATHS = "$(SRCROOT)/../Vendor/macOS"/**
-LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../Vendor/macOS"/**

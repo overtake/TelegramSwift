@@ -28,6 +28,8 @@
 		270375EF2C9CD26F003EC235 /* ChatListFilterPredicate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7919137240D1077002011CA /* ChatListFilterPredicate.swift */; };
 		270375F12C9CDF20003EC235 /* duck_passcode.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270375F02C9CDF20003EC235 /* duck_passcode.tgs */; };
 		270375F22C9CDF20003EC235 /* duck_passcode.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270375F02C9CDF20003EC235 /* duck_passcode.tgs */; };
+		270375F72C9DB4BF003EC235 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
+		270375F82C9DB4BF003EC235 /* RLottie.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		270375FB2C9DB505003EC235 /* SELottiePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270375FA2C9DB505003EC235 /* SELottiePlayer.swift */; };
 		270375FD2C9DBC13003EC235 /* InputView in Frameworks */ = {isa = PBXBuildFile; productRef = 270375FC2C9DBC13003EC235 /* InputView */; };
 		270376002C9DBCFE003EC235 /* SEUIInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270375FF2C9DBCFE003EC235 /* SEUIInputView.swift */; };
@@ -73,6 +75,7 @@
 		270B7CC229F7CC66009C994C /* StoryFetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC129F7CC66009C994C /* StoryFetchManager.swift */; };
 		270B7CC429FA925D009C994C /* StoryControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC329FA925D009C994C /* StoryControlsView.swift */; };
 		270B7CC629FA9E1E009C994C /* StoryListNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */; };
+		270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
 		270F020726F0B0830099D2AA /* EmojiAnimationEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */; };
@@ -146,8 +149,6 @@
 		272C7DF02AA07EDD00F89190 /* StoryLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */; };
 		272C7DF32AA090F900F89190 /* StoryChannelInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */; };
 		272C7DF62AA1C10C00F89190 /* SuspiciousAuthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */; };
-		272CD0CD2CAB024100D7B135 /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272CD0CC2CAB024100D7B135 /* AppCenterCrashes.framework */; };
-		272CD0CE2CAB024100D7B135 /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272CD0CB2CAB024100D7B135 /* AppCenter.framework */; };
 		27303AC12AC1D13600433CED /* GiveawayModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303AC02AC1D13600433CED /* GiveawayModalController.swift */; };
 		27303ACB2AC2B20C00433CED /* GiftLinkModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */; };
 		27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */; };
@@ -203,9 +204,9 @@
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
 		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
-		2739A4822CAB538C0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4812CAB536B0065186B /* libopenh264.a */; };
-		2739A4832CAB53A10065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4812CAB536B0065186B /* libopenh264.a */; };
-		2739A4862CAB54080065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4852CAB54080065186B /* TelegramSystem */; };
+		2739A4AC2CABC29D0065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AB2CABC29D0065186B /* TelegramSystem */; };
+		2739A4AE2CABC2A60065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AD2CABC2A60065186B /* TelegramSystem */; };
+		2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4AF2CABC4260065186B /* libopenh264.a */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
 		273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273C04042C2B75E900AF2751 /* MediaPlayer.framework */; };
@@ -1088,6 +1089,8 @@
 		A7C7215723FD45D300CE3F75 /* SaveModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C7215623FD45D300CE3F75 /* SaveModalController.swift */; };
 		A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7C7215823FD473D00CE3F75 /* success_saved.tgs */; };
 		A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C7215A23FD4BAA00CE3F75 /* LottieLocalAnimations.swift */; };
+		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7D2822F236C549B0000A9BF /* SyncCoreExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2822E236C549B0000A9BF /* SyncCoreExtension.swift */; };
 		A7D28230236C549B0000A9BF /* SyncCoreExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2822E236C549B0000A9BF /* SyncCoreExtension.swift */; };
 		A7D28237236C5B2C0000A9BF /* PhoneNumberUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28236236C5B2C0000A9BF /* PhoneNumberUtils.swift */; };
@@ -1096,6 +1099,7 @@
 		A7E831F4255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
 		A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */; };
 		A7E83214255E992D0095A167 /* WaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E83213255E992D0095A167 /* WaveView.swift */; };
+		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
 		A7F283002395168300742C20 /* SettingsSearchRecentQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */; };
 		A7F283022395185B00742C20 /* SettingsSearchableItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F283012395185B00742C20 /* SettingsSearchableItems.swift */; };
 		A7F283042395289B00742C20 /* AccountUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F283032395289B00742C20 /* AccountUtils.swift */; };
@@ -1473,6 +1477,7 @@
 		D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */; };
 		D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */; };
 		D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
+		D0076EE825685A50007EF588 /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076EE725685A50007EF588 /* AppCenter.framework */; };
 		D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */; };
 		D00B191C24E54BA3006CCB87 /* CallReceptionControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */; };
 		D00B191E24E54F20006CCB87 /* CallStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00B191D24E54F20006CCB87 /* CallStatusView.swift */; };
@@ -1539,6 +1544,7 @@
 		D0830FC424127473006198E7 /* new_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* new_folder.tgs */; };
 		D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */; };
 		D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */; };
+		D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E182568373E00467703 /* AppCenterCrashes.framework */; };
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
 		D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D098C71C1D7E175A007784E4 /* MainMenu.xib */; };
@@ -1603,6 +1609,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				270375F82C9DB4BF003EC235 /* RLottie.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1613,6 +1620,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1704,6 +1712,8 @@
 		270B7CC129F7CC66009C994C /* StoryFetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFetchManager.swift; sourceTree = "<group>"; };
 		270B7CC329FA925D009C994C /* StoryControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryControlsView.swift; sourceTree = "<group>"; };
 		270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListNavigationView.swift; sourceTree = "<group>"; };
+		270D04492AEA742F00EFF1E1 /* libCodeSyntax.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libCodeSyntax.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CodeSyntax.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
 		270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiAnimationEffectView.swift; sourceTree = "<group>"; };
@@ -1781,8 +1791,6 @@
 		272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryLayoutView.swift; sourceTree = "<group>"; };
 		272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChannelInputView.swift; sourceTree = "<group>"; };
 		272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousAuthRowItem.swift; sourceTree = "<group>"; };
-		272CD0CB2CAB024100D7B135 /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
-		272CD0CC2CAB024100D7B135 /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		27303AC02AC1D13600433CED /* GiveawayModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiveawayModalController.swift; sourceTree = "<group>"; };
 		27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftLinkModalController.swift; sourceTree = "<group>"; };
 		27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataTableBasedItem.swift; sourceTree = "<group>"; };
@@ -1839,8 +1847,8 @@
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
 		2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRequestJoinRowItem.swift; sourceTree = "<group>"; };
-		2739A4812CAB536B0065186B /* libopenh264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopenh264.a; path = "core-xprojects/OpenH264/build/output/lib/libopenh264.a"; sourceTree = "<group>"; };
-		2739A4842CAB53F90065186B /* TelegramSystem */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramSystem; path = packages/TelegramSystem; sourceTree = "<group>"; };
+		2739A4AA2CABC28B0065186B /* TelegramSystem */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramSystem; path = packages/TelegramSystem; sourceTree = "<group>"; };
+		2739A4AF2CABC4260065186B /* libopenh264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopenh264.a; path = "core-xprojects/OpenH264/build/output/lib/libopenh264.a"; sourceTree = "<group>"; };
 		273C04042C2B75E900AF2751 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
 		2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRecentPeersController.swift; sourceTree = "<group>"; };
@@ -1863,6 +1871,7 @@
 		2748C56027BA477900F05503 /* Auth_Token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Token.swift; sourceTree = "<group>"; };
 		2748C56227BA53C800F05503 /* Auth_Loading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Loading.swift; sourceTree = "<group>"; };
 		2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PhoneNumber.swift; sourceTree = "<group>"; };
+		2748D44427C61DCF0057CF99 /* libtgvoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libtgvoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2749527F2AA1D8AB00499498 /* SuspiciousRevokeModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousRevokeModal.swift; sourceTree = "<group>"; };
 		274952812AA1E79E00499498 /* hand_animation.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_animation.tgs; sourceTree = "<group>"; };
 		274952842AA472F600499498 /* BoostChannelModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostChannelModalController.swift; sourceTree = "<group>"; };
@@ -2375,6 +2384,7 @@
 		27D43DA527917714006968A6 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebp.a"; sourceTree = "<group>"; };
 		27D43DA72791771A006968A6 /* libwebpdecoder.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpdecoder.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebpdecoder.a"; sourceTree = "<group>"; };
 		27D43DA92791771F006968A6 /* libwebpdemux.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpdemux.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebpdemux.a"; sourceTree = "<group>"; };
+		27D43DAB27917724006968A6 /* libwebpmux.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpmux.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebpmux.a"; sourceTree = "<group>"; };
 		27D43DAD27917735006968A6 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = "core-xprojects/Mozjpeg/build/libjpeg.a"; sourceTree = "<group>"; };
 		27D43DAF27917747006968A6 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "core-xprojects/openssl/build/openssl/lib/libssl.a"; sourceTree = "<group>"; };
 		27D43DB12791774A006968A6 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = "core-xprojects/openssl/build/openssl/lib/libcrypto.a"; sourceTree = "<group>"; };
@@ -2533,6 +2543,8 @@
 		9F0AE6BD2199BEBE00A8B53A /* SVideoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVideoController.swift; sourceTree = "<group>"; };
 		9F0AE6BF2199CDB500A8B53A /* SVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVideoView.swift; sourceTree = "<group>"; };
 		9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentColorRowItem.swift; sourceTree = "<group>"; };
+		9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sparkle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F0E6F77203ED1380086699C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		9F0E6F79203EFE870086699C /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		9F0F8E81226DCD1C00A97F6A /* OpmizeDatabaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpmizeDatabaseView.swift; sourceTree = "<group>"; };
@@ -2685,6 +2697,7 @@
 		A7E831F2255041020095A167 /* IsEqualMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsEqualMessages.swift; sourceTree = "<group>"; };
 		A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColdStartPasslockController.swift; sourceTree = "<group>"; };
 		A7E83213255E992D0095A167 /* WaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveView.swift; sourceTree = "<group>"; };
+		A7ED5DAE236C7CE100040372 /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchRecentQueries.swift; sourceTree = "<group>"; };
 		A7F283012395185B00742C20 /* SettingsSearchableItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchableItems.swift; sourceTree = "<group>"; };
 		A7F283032395289B00742C20 /* AccountUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountUtils.swift; sourceTree = "<group>"; };
@@ -3077,6 +3090,7 @@
 		D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewModalController.swift; sourceTree = "<group>"; };
 		D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerShimmerEffectView.swift; sourceTree = "<group>"; };
 		D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushToTalkRowItem.swift; sourceTree = "<group>"; };
+		D0076EE725685A50007EF588 /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.1.0.tbd; path = usr/lib/libbz2.1.0.tbd; sourceTree = SDKROOT; };
 		D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallReceptionControl.swift; sourceTree = "<group>"; };
 		D00B191D24E54F20006CCB87 /* CallStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallStatusView.swift; sourceTree = "<group>"; };
@@ -3142,12 +3156,15 @@
 		D0830FC324127468006198E7 /* new_folder.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = new_folder.tgs; sourceTree = "<group>"; };
 		D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalPreviews.swift; sourceTree = "<group>"; };
 		D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGroupPeersController.swift; sourceTree = "<group>"; };
+		D0983E162568373E00467703 /* AppCenterAnalytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterAnalytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0983E182568373E00467703 /* AppCenterCrashes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterCrashes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7151D7E175A007784E4 /* Telegram.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telegram.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7181D7E175A007784E4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D098C71A1D7E175A007784E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D098C71F1D7E175A007784E4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D098C7381D7E1A62007784E4 /* Telegram-Mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Telegram-Mac.entitlements"; sourceTree = "<group>"; };
 		D098C7391D7E1C40007784E4 /* AuthController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthController.swift; sourceTree = "<group>"; };
+		D09D836D24A6205500120F73 /* libtgvoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libtgvoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedStickerUtils.swift; sourceTree = "<group>"; };
 		D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotos.swift; sourceTree = "<group>"; };
 		D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsStatsController.swift; sourceTree = "<group>"; };
@@ -3216,6 +3233,7 @@
 			files = (
 				27F3B75627391E9200B81F10 /* TelegramIconsTheme in Frameworks */,
 				270376232CA1FC8C003EC235 /* libswresample.a in Frameworks */,
+				2739A4AC2CABC29D0065186B /* TelegramSystem in Frameworks */,
 				270375FD2C9DBC13003EC235 /* InputView in Frameworks */,
 				2703761F2CA1FAC8003EC235 /* TelegramMediaPlayer in Frameworks */,
 				278926C727550C8800923087 /* Strings in Frameworks */,
@@ -3247,6 +3265,7 @@
 				278926C527550C8200923087 /* FoundationUtils in Frameworks */,
 				278926C327550BB200923087 /* ColorPalette in Frameworks */,
 				2703760D2CA1ECE2003EC235 /* FFMpegBinding in Frameworks */,
+				270375F72C9DB4BF003EC235 /* RLottie.framework in Frameworks */,
 				27D43DCA279191F7006968A6 /* libjpeg.a in Frameworks */,
 				2745FED5274F952600546B05 /* Localization in Frameworks */,
 				277C209527A2F5940070B3BF /* ManagedFile in Frameworks */,
@@ -3273,6 +3292,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */,
+				2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */,
+				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
 				27034076282CF79E00D0156C /* SceneKit.framework in Frameworks */,
 				27D43DA1279176E0006968A6 /* libavutil.a in Frameworks */,
 				27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */,
@@ -3296,14 +3317,15 @@
 				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
 				27A697A3273D313000B33415 /* Stripe in Frameworks */,
 				27C2B1A627C3CF13004BC87B /* FetchManager in Frameworks */,
+				D0076EE825685A50007EF588 /* AppCenter.framework in Frameworks */,
 				27B6D05927393A4200C785C7 /* SwiftSignalKit in Frameworks */,
 				2796FEFE274241D600DA653C /* FastBlur in Frameworks */,
 				27D43DA0279176DE006968A6 /* libavformat.a in Frameworks */,
+				D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */,
 				27D43DA627917717006968A6 /* libwebp.a in Frameworks */,
 				27B8E7C027424F2E001B8DF7 /* TGCurrencyFormatter in Frameworks */,
 				27D696F6274F8458008A723E /* ColorPalette in Frameworks */,
 				27D43DA2279176E2006968A6 /* libswresample.a in Frameworks */,
-				2739A4822CAB538C0065186B /* libopenh264.a in Frameworks */,
 				27D43DAA27917721006968A6 /* libwebpdemux.a in Frameworks */,
 				D06E38AC24A5F3B700C7D03A /* MetalKit.framework in Frameworks */,
 				27A69790273D1DE900B33415 /* FFMpegBinding in Frameworks */,
@@ -3311,6 +3333,7 @@
 				279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */,
 				A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */,
 				2738A2D4289C41CE00EC1010 /* CurrencyFormat in Frameworks */,
+				A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */,
 				27B6D05727393A3D00C785C7 /* GraphUI in Frameworks */,
 				27A69796273D253B00B33415 /* rnoise in Frameworks */,
 				277C209827A2F6160070B3BF /* YuvConversion in Frameworks */,
@@ -3320,6 +3343,7 @@
 				27B6D05B27393A4700C785C7 /* TGUIKit in Frameworks */,
 				27A697A9273D3A5F00B33415 /* Localization in Frameworks */,
 				27B8E7C627425279001B8DF7 /* TGModernGrowingTextView in Frameworks */,
+				A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */,
 				D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */,
 				27D43DA4279176FC006968A6 /* libopus.a in Frameworks */,
 				27D9130728323A74007CF40F /* RangeSet in Frameworks */,
@@ -3347,8 +3371,6 @@
 				271891F82B08A7DB0008B238 /* LokiRng in Frameworks */,
 				279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */,
 				27D43DC3279191A5006968A6 /* OpenSSLEncryption in Frameworks */,
-				272CD0CD2CAB024100D7B135 /* AppCenterCrashes.framework in Frameworks */,
-				272CD0CE2CAB024100D7B135 /* AppCenter.framework in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				2796FEF527423D2100DA653C /* EDSunriseSet in Frameworks */,
 				2796FEFB2742408C00DA653C /* OCR in Frameworks */,
@@ -3356,7 +3378,6 @@
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
-				2739A4862CAB54080065186B /* TelegramSystem in Frameworks */,
 				2795578E2AB86A65007EC996 /* libsharpyuv.a in Frameworks */,
 				27F3BB772B48375800BC37C2 /* TelegramMedia in Frameworks */,
 				2796FF082742484A00DA653C /* CalendarUtils in Frameworks */,
@@ -3378,7 +3399,6 @@
 				2796FF0B274248FB00DA653C /* ObjcUtils in Frameworks */,
 				279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */,
 				27B8E7BD27424E90001B8DF7 /* TGGifConverter in Frameworks */,
-				2739A4832CAB53A10065186B /* libopenh264.a in Frameworks */,
 				2796FF0D274249B000DA653C /* RingBuffer in Frameworks */,
 				C250B0331DB788B3004E9FBE /* Foundation.framework in Frameworks */,
 				27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */,
@@ -3390,6 +3410,7 @@
 				27D696F4274F8451008A723E /* Colors in Frameworks */,
 				2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */,
 				27D696FA274F8462008A723E /* InAppSettings in Frameworks */,
+				2739A4AE2CABC2A60065186B /* TelegramSystem in Frameworks */,
 				2796FF042742462400DA653C /* Svg in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4319,7 +4340,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				2739A4842CAB53F90065186B /* TelegramSystem */,
+				2739A4AA2CABC28B0065186B /* TelegramSystem */,
 				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
 				27B8361A2B5FCCF800E82683 /* Dock */,
 				27B6AFB22B555C03001D0983 /* CallVideoLayer */,
@@ -6476,20 +6497,24 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2739A4812CAB536B0065186B /* libopenh264.a */,
+				2739A4AF2CABC4260065186B /* libopenh264.a */,
 				2703762E2CA1FEC4003EC235 /* libiconv.2.tbd */,
 				2703762D2CA1FE62003EC235 /* libSystem.B.tbd */,
 				273C04042C2B75E900AF2751 /* MediaPlayer.framework */,
 				2761435D2BDA57350034338C /* AppIntents.framework */,
 				276E76422B373E1B00440A4F /* libswiftAppKit.tbd */,
+				270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */,
+				270D04492AEA742F00EFF1E1 /* libCodeSyntax.a */,
 				2795578D2AB86A5C007EC996 /* libsharpyuv.a */,
 				279BD40B29B71FA200A8B640 /* Network.framework */,
 				27D913092833A1C9007CF40F /* StoreKit.framework */,
 				27034075282CF79E00D0156C /* SceneKit.framework */,
+				2748D44427C61DCF0057CF99 /* libtgvoip.framework */,
 				27D43DB327917798006968A6 /* libmac_framework_objc_static.a */,
 				27D43DB12791774A006968A6 /* libcrypto.a */,
 				27D43DAF27917747006968A6 /* libssl.a */,
 				27D43DAD27917735006968A6 /* libjpeg.a */,
+				27D43DAB27917724006968A6 /* libwebpmux.a */,
 				27D43DA92791771F006968A6 /* libwebpdemux.a */,
 				27D43DA72791771A006968A6 /* libwebpdecoder.a */,
 				27D43DA527917714006968A6 /* libwebp.a */,
@@ -6503,22 +6528,29 @@
 				271999E62683C04B000DE2B7 /* MetalPerformanceShaders.framework */,
 				272C182F267D00350030B5FB /* CoreMediaIO.framework */,
 				D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */,
+				D0076EE725685A50007EF588 /* AppCenter.framework */,
+				D0983E162568373E00467703 /* AppCenterAnalytics.framework */,
+				D0983E182568373E00467703 /* AppCenterCrashes.framework */,
+				D09D836D24A6205500120F73 /* libtgvoip.framework */,
 				D06E38AB24A5F3B700C7D03A /* Metal.framework */,
 				D06E38AA24A5F3B700C7D03A /* MetalKit.framework */,
 				A7377E5B23B5E99500AD3ADD /* libxml2.tbd */,
 				A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */,
 				A74EB06F237961A1005F55AE /* AppCenter.framework */,
 				A74EB070237961A1005F55AE /* AppCenterCrashes.framework */,
+				A7ED5DAE236C7CE100040372 /* RLottie.framework */,
 				9F6FF3212248E298004364FE /* UserNotifications.framework */,
 				9F4EEF8321D4F59C002C3B33 /* Accelerate.framework */,
 				9F13EE182100B6DA00562E53 /* Contacts.framework */,
 				9F21F65C20B5A9C900332C85 /* MapKit.framework */,
+				9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */,
 				9FFAE513205AB50C000C028E /* libz.tbd */,
 				9FFAE510205AB4AB000C028E /* libbz2.tbd */,
 				9FFAE50E205AB4A3000C028E /* libiconv.tbd */,
 				9F0E6F77203ED1380086699C /* AppKit.framework */,
 				C251FB501FEE300E0035E5D7 /* Telegram.xcodeproj */,
 				C256A9131FB9CBF10043D497 /* LocalAuthentication.framework */,
+				9F0BCD9C2087BA81001D8D8A /* Sparkle.framework */,
 				C2EBBEA01FB5CA94009AD8ED /* CoreServices.framework */,
 				C2A8E14A1F7D2690000FD5E3 /* CoreVideo.framework */,
 				C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */,
@@ -6538,8 +6570,6 @@
 				C250B0341DB78A0A004E9FBE /* Quartz.framework */,
 				C250B0321DB788B3004E9FBE /* Foundation.framework */,
 				C253A9661D92E3AE00CDC850 /* AVFoundation.framework */,
-				272CD0CB2CAB024100D7B135 /* AppCenter.framework */,
-				272CD0CC2CAB024100D7B135 /* AppCenterCrashes.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -6676,7 +6706,6 @@
 				277C209427A2F5940070B3BF /* ManagedFile */,
 				27EE444B297FD91B0077AA0F /* DateUtils */,
 				27EE444D297FD9950077AA0F /* CalendarUtils */,
-				27AAAD5B29A4A2E600F70A9A /* System */,
 				27C1FF4C2B749D6D00B086E3 /* ShelfPack */,
 				270375EA2C9CCE11003EC235 /* InAppSettings */,
 				270375FC2C9DBC13003EC235 /* InputView */,
@@ -6686,6 +6715,7 @@
 				2703761C2CA1FA0A003EC235 /* YuvConversion */,
 				2703761E2CA1FAC8003EC235 /* TelegramMediaPlayer */,
 				2703762A2CA1FD92003EC235 /* libwebp */,
+				2739A4AB2CABC29D0065186B /* TelegramSystem */,
 			);
 			productName = TelegramShare;
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
@@ -6783,7 +6813,7 @@
 				27B8361B2B5FCD0300E82683 /* Dock */,
 				27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */,
 				273C04022C2B75E400AF2751 /* TelegramMediaPlayer */,
-				2739A4852CAB54080065186B /* TelegramSystem */,
+				2739A4AD2CABC2A60065186B /* TelegramSystem */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -8646,7 +8676,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.1.2;
+				MARKETING_VERSION = 11.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8872,7 +8902,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.1.2;
+				MARKETING_VERSION = 11.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8981,7 +9011,11 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = CurrencyFormat;
 		};
-		2739A4852CAB54080065186B /* TelegramSystem */ = {
+		2739A4AB2CABC29D0065186B /* TelegramSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TelegramSystem;
+		};
+		2739A4AD2CABC2A60065186B /* TelegramSystem */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TelegramSystem;
 		};
@@ -9194,10 +9228,6 @@
 			productName = Localization;
 		};
 		27AAAD5929A4A11600F70A9A /* System */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = System;
-		};
-		27AAAD5B29A4A2E600F70A9A /* System */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = System;
 		};
