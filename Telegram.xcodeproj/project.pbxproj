@@ -29,7 +29,6 @@
 		270375F12C9CDF20003EC235 /* duck_passcode.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270375F02C9CDF20003EC235 /* duck_passcode.tgs */; };
 		270375F22C9CDF20003EC235 /* duck_passcode.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270375F02C9CDF20003EC235 /* duck_passcode.tgs */; };
 		270375F72C9DB4BF003EC235 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
-		270375F82C9DB4BF003EC235 /* RLottie.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		270375FB2C9DB505003EC235 /* SELottiePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270375FA2C9DB505003EC235 /* SELottiePlayer.swift */; };
 		270375FD2C9DBC13003EC235 /* InputView in Frameworks */ = {isa = PBXBuildFile; productRef = 270375FC2C9DBC13003EC235 /* InputView */; };
 		270376002C9DBCFE003EC235 /* SEUIInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270375FF2C9DBCFE003EC235 /* SEUIInputView.swift */; };
@@ -1603,17 +1602,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		270375F92C9DB4BF003EC235 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				270375F82C9DB4BF003EC235 /* RLottie.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C20D5AB61DAA94500042616A /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6673,7 +6661,6 @@
 				C232EA8E1E1D07E700C4D38C /* Frameworks */,
 				C232EA8F1E1D07E700C4D38C /* Resources */,
 				C232EAA91E1D080100C4D38C /* CopyFiles */,
-				270375F92C9DB4BF003EC235 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
