@@ -11,7 +11,7 @@ CPPATH="../../../../../build-${BUILD_CONFIGURATION}"
 PROJECT="${CPPATH}/telegrammacos"
 
 
-rsync -av --progress ../telegrammacos $CPPATH  > /dev/null
+rsync -av --progress --delete --force ../telegrammacos $CPPATH  > /dev/null
 
 cd $PROJECT
 cd ..
