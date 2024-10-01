@@ -8676,7 +8676,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.1;
+				MARKETING_VERSION = 11.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8731,7 +8731,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.1;
+				MARKETING_VERSION = 11.2;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8782,7 +8782,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.1;
+				MARKETING_VERSION = 11.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8902,7 +8902,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.1;
+				MARKETING_VERSION = 11.2;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
