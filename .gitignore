@@ -12,3 +12,5 @@ core-xprojects/webrtc/build
 core-xprojects/libvpx/build
 core-xprojects/OpenH264/build
 submodules/libwebp/SharedHeaders
+submodules/Mozjpeg/SharedHeaders
+submodules/OpenSSLEncryptionProvider/SharedHeaders
