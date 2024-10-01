@@ -205,7 +205,6 @@
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
 		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
 		2739A4AC2CABC29D0065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AB2CABC29D0065186B /* TelegramSystem */; };
-		2739A4AE2CABC2A60065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AD2CABC2A60065186B /* TelegramSystem */; };
 		2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4AF2CABC4260065186B /* libopenh264.a */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
@@ -8676,7 +8675,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.2;
+				MARKETING_VERSION = 11.2.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8902,7 +8901,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.2;
+				MARKETING_VERSION = 11.2.2;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
