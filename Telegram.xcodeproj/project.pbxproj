@@ -206,7 +206,6 @@
 		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
 		2739A4AC2CABC29D0065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AB2CABC29D0065186B /* TelegramSystem */; };
 		2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4AF2CABC4260065186B /* libopenh264.a */; };
-		2739A4B92CABDD5F0065186B /* System in Frameworks */ = {isa = PBXBuildFile; productRef = 27AAAD5929A4A11600F70A9A /* System */; };
 		2739A4BA2CABDD5F0065186B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AD2CABC2A60065186B /* TelegramSystem */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
@@ -3293,7 +3292,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2739A4BA2CABDD5F0065186B /* TelegramSystem in Frameworks */,
-				2739A4B92CABDD5F0065186B /* System in Frameworks */,
 				27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */,
 				2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */,
 				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
