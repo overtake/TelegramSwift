@@ -61,8 +61,6 @@
 		2703763F2CA43E04003EC235 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2703763E2CA43E04003EC235 /* Report.swift */; };
 		270376412CA59398003EC235 /* NativeMediaPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376402CA59398003EC235 /* NativeMediaPlayer.swift */; };
 		270376452CAA78FA003EC235 /* HLSVideoJSContentNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376442CAA78FA003EC235 /* HLSVideoJSContentNode.swift */; };
-		270376472CAA865A003EC235 /* hls.js in Resources */ = {isa = PBXBuildFile; fileRef = 270376462CAA865A003EC235 /* hls.js */; };
-		270376492CAA866E003EC235 /* HLSVideoPlayer.html in Resources */ = {isa = PBXBuildFile; fileRef = 270376482CAA866E003EC235 /* HLSVideoPlayer.html */; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
 		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
@@ -1687,8 +1685,6 @@
 		2703763E2CA43E04003EC235 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
 		270376402CA59398003EC235 /* NativeMediaPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMediaPlayer.swift; sourceTree = "<group>"; };
 		270376442CAA78FA003EC235 /* HLSVideoJSContentNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HLSVideoJSContentNode.swift; sourceTree = "<group>"; };
-		270376462CAA865A003EC235 /* hls.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = hls.js; sourceTree = "<group>"; };
-		270376482CAA866E003EC235 /* HLSVideoPlayer.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = HLSVideoPlayer.html; sourceTree = "<group>"; };
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270595D72B6941C400E05493 /* ChatSearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchHeader.swift; sourceTree = "<group>"; };
 		270595E32B6BDCF500E05493 /* menu_boost.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost.tgs; sourceTree = "<group>"; };
@@ -5588,8 +5584,6 @@
 				C2CFCAB81EBB4A1600843F6A /* voip */,
 				2718920D2B0DD1550008B238 /* grammars.dat */,
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
-				270376462CAA865A003EC235 /* hls.js */,
-				270376482CAA866E003EC235 /* HLSVideoPlayer.html */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
 				C252532C1DF0440300ADBC98 /* begin_record.caf */,
 				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
@@ -7032,7 +7026,6 @@
 				2747968E28F5983E00A891F3 /* menu_pause.tgs in Resources */,
 				27803C0527A3E944007B0FA9 /* menu_folder_game.tgs in Resources */,
 				27CB1756276357B600DD25E0 /* menu_show_in_finder.tgs in Resources */,
-				270376472CAA865A003EC235 /* hls.js in Resources */,
 				27CB176A27638EEE00DD25E0 /* menu_expand.tgs in Resources */,
 				27CB175A2763739C00DD25E0 /* menu_statistics.tgs in Resources */,
 				27CE156D297966D8001F8CE8 /* emoji_category_recent.tgs in Resources */,
@@ -7094,7 +7087,6 @@
 				275549102747C24F0098A3CD /* device_chrome.tgs in Resources */,
 				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
 				277C208A27A2858D0070B3BF /* menu_speaker_muted.tgs in Resources */,
-				270376492CAA866E003EC235 /* HLSVideoPlayer.html in Resources */,
 				27CE376B2760960A007E6F1B /* menu_unmuted.tgs in Resources */,
 				27CB174E276325C600DD25E0 /* menu_call.tgs in Resources */,
 				274B9E40273008EB009993C7 /* sent.mp3 in Resources */,
