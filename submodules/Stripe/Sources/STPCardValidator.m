@@ -143,10 +143,15 @@ static NSString * _Nonnull stringByRemovingCharactersFromSet(NSString * _Nonnull
     if (sanitizedNumber.length == 0) {
         return STPCardValidationStateIncomplete;
     }
+    
+    //BOOL isValidLuhn = [self stringIsValidLuhn:sanitizedNumber];
+    //return isValidLuhn ? STPCardValidationStateValid : STPCardValidationStateInvalid;
+    
     STPBINRange *binRange = [STPBINRange mostSpecificBINRangeForNumber:sanitizedNumber];
     if (binRange.brand == STPCardBrandUnknown && validatingCardBrand) {
-        return STPCardValidationStateInvalid;
+        //return STPCardValidationStateInvalid;
     }
+    
     if (sanitizedNumber.length == binRange.length) {
         BOOL isValidLuhn = [self stringIsValidLuhn:sanitizedNumber];
         return isValidLuhn ? STPCardValidationStateValid : STPCardValidationStateInvalid;
@@ -156,6 +161,7 @@ static NSString * _Nonnull stringByRemovingCharactersFromSet(NSString * _Nonnull
         return STPCardValidationStateIncomplete;
     }
 }
+
 
 + (STPCardValidationState)validationStateForCard:(nonnull STPCardParams *)card inCurrentYear:(NSInteger)currentYear currentMonth:(NSInteger)currentMonth {
     STPCardValidationState numberValidation = [self validationStateForNumber:card.number validatingCardBrand:YES];
