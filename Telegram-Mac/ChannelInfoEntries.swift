@@ -1137,7 +1137,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 }
             }, hashtag: { hashtag in
                 arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
-            })
+            }, canTranslate: true)
         case let .userName(_, value, viewType):
             let link = "@\(value[0].username)"
             

@@ -11,13 +11,269 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import TGUIKit
-import SwiftSignalKit
 import InputView
+import InAppPurchaseManager
+
+private final class LimitedRowItem : GeneralRowItem {
+    fileprivate let availability: StarGift.Availability
+    init(_ initialSize: NSSize, stableId: AnyHashable, availability: StarGift.Availability) {
+        self.availability = availability
+        super.init(initialSize, height: 30 + 48, stableId: stableId)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return LimitedRowView.self
+    }
+}
+
+private final class LimitedRowView : GeneralRowView {
+    
+    
+    private final class BadgeView : View {
+        private let shapeLayer = SimpleShapeLayer()
+        private let foregroundLayer = SimpleGradientLayer()
+        private let textView = InteractiveTextView()
+        private let container = View()
+        
+        private(set) var tailPosition: CGFloat = 0.0
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            
+            textView.userInteractionEnabled = false
+            
+            foregroundLayer.colors = [theme.colors.accent, theme.colors.accent].map { $0.cgColor }
+            foregroundLayer.startPoint = NSMakePoint(0, 0.5)
+            foregroundLayer.endPoint = NSMakePoint(1, 0.2)
+            foregroundLayer.mask = shapeLayer
+            
+            
+            self.layer?.masksToBounds = false
+            self.foregroundLayer.masksToBounds = false
+            
+            
+            self.layer?.addSublayer(foregroundLayer)
+
+
+            self.layer?.masksToBounds = false
+            
+            shapeLayer.fillColor = NSColor.red.cgColor
+            shapeLayer.transform = CATransform3DMakeScale(1.0, -1.0, 1.0)
+            
+
+            
+            container.addSubview(textView)
+            addSubview(container)
+            container.layer?.masksToBounds = false
+        }
+        
+        func update(sliderValue: Int64, realValue: Int64, max maxValue: Int64) -> NSSize {
+            
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: "\(realValue.formattedWithSeparator)", color: theme.colors.underSelectedColor, font: .medium(16))
+            let textLayout = TextViewLayout(attr)
+            textLayout.measure(width: .greatestFiniteMagnitude)
+            self.textView.set(text: textLayout, context: nil)
+
+            
+            container.setFrameSize(NSMakeSize(container.subviewsWidthSize.width + 2, container.subviewsWidthSize.height))
+            
+            self.tailPosition = max(0, min(1, CGFloat(sliderValue) / CGFloat(maxValue)))
+                    
+            let size = NSMakeSize(container.frame.width + 30, frame.height)
+            
+            
+            foregroundLayer.frame = size.bounds.insetBy(dx: 0, dy: -10)
+            shapeLayer.frame = foregroundLayer.frame.focus(size)
+            
+            shapeLayer.path = generateRoundedRectWithTailPath(rectSize: size, tailPosition: tailPosition)._cgPath
+            
+            return size
+            
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: container, frame: container.centerFrameX(y: 1))
+
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: -3))
+            
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+         //   shapeLayer.frame = bounds
+        }
+    }
+
+    private class LineView : View {
+        private var availability: StarGift.Availability?
+        private let limitedView = TextView()
+        private let totalView = TextView()
+        
+        private let limitColorMask = SimpleLayer()
+        private let totalColorMask = SimpleLayer()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.layer?.cornerRadius = 10
+            addSubview(limitedView)
+            addSubview(totalView)
+            
+            self.layer?.addSublayer(self.limitColorMask)
+            self.layer?.addSublayer(self.totalColorMask)
+            
+            limitedView.userInteractionEnabled = false
+            limitedView.isSelectable = false
+            
+            totalView.userInteractionEnabled = false
+            totalView.isSelectable = false
+        }
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            super.draw(layer, in: ctx)
+            
+            guard let availability else {
+                return
+            }
+            
+            let percent = CGFloat(availability.remains) / CGFloat(availability.total)
+            
+            ctx.setFillColor(theme.colors.grayForeground.cgColor)
+            ctx.fill(bounds)
+            
+            
+            ctx.setFillColor(theme.colors.accent.cgColor)
+            ctx.fill(NSMakeRect(0, 0, bounds.width * percent, bounds.height))
+            
+        }
+        
+        func set(availability: StarGift.Availability) {
+            self.availability = availability
+            needsDisplay = true
+            
+            
+            
+            
+            
+            let limitedLayout = TextViewLayout(.initialize(string: strings().giftingStarGiftLimited, color: .white, font: .medium(.text)))
+            limitedLayout.measure(width: .greatestFiniteMagnitude)
+            self.limitedView.update(limitedLayout)
+            
+            
+            let percent = CGFloat(availability.remains) / CGFloat(availability.total)
+
+            let w = frame.width * percent
+
+            limitColorMask.contents = generateImage(limitedLayout.layoutSize, contextGenerator: { size, ctx in
+                let width = w - 10
+                ctx.setFillColor(theme.colors.underSelectedColor.cgColor)
+                ctx.fill(NSMakeRect(0, 0, width, size.height))
+                
+                ctx.setFillColor(theme.colors.grayIcon.cgColor)
+                ctx.fill(NSMakeRect(width, 0, size.width - width, size.height))
+            })
+            
+            limitColorMask.mask = self.limitedView.drawingLayer
+            
+                        
+            let totalLayout = TextViewLayout(.initialize(string: availability.total.formattedWithSeparator, color: .white, font: .medium(.text)))
+            totalLayout.measure(width: .greatestFiniteMagnitude)
+            self.totalView.update(totalLayout)
+            
+            totalColorMask.contents = generateImage(totalLayout.layoutSize, contextGenerator: { size, ctx in
+                let minx = frame.width - 10 - size.width
+                
+                let width = max(0,  w - minx)
+                ctx.setFillColor(theme.colors.underSelectedColor.cgColor)
+                ctx.fill(NSMakeRect(0, 0, width, size.height))
+                
+                ctx.setFillColor(theme.colors.grayIcon.cgColor)
+                ctx.fill(NSMakeRect(width, 0, size.width - width, size.height))
+                
+            })
+            
+            totalColorMask.mask = self.totalView.drawingLayer
+
+        }
+        
+        override func layout() {
+            super.layout()
+            limitedView.centerY(x: 10)
+            limitColorMask.frame = limitedView.frame
+            self.totalView.centerY(x: frame.width - totalView.frame.width - 10)
+            self.totalColorMask.frame = totalView.frame
+        }
+    }
+    
+    private let lineView = LineView(frame: .zero)
+    private let badgeView = BadgeView(frame: NSMakeSize(100, 30).bounds)
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(lineView)
+        addSubview(badgeView)
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? LimitedRowItem else {
+            return
+        }
+        
+        let availability = item.availability
+
+        lineView.frame = NSMakeRect(20, frame.height - 30, frame.width - 40, 30)
+
+        lineView.set(availability: item.availability)
+        let size = badgeView.update(sliderValue: Int64(availability.remains), realValue: Int64(availability.remains), max: Int64(availability.total))
+        badgeView.setFrameSize(size)
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        guard let item = item as? LimitedRowItem else {
+            return
+        }
+        
+        let availability = item.availability
+        let percent = CGFloat(availability.remains) / CGFloat(availability.total)
+        
+        let w = floorToScreenPixels(percent * (frame.width - 40))
+        
+        badgeView.setFrameOrigin(NSMakePoint(20 + w - badgeView.frame.width * badgeView.tailPosition, 10))
+
+        lineView.frame = NSMakeRect(20, frame.height - 30, frame.width - 40, 30)
+        
+    }
+    
+}
 
 private final class PreviewRowItem : GeneralRowItem {
     let context: AccountContext
     let peer: EnginePeer
-    let gift: PeerStarGift
+    let source: PreviewGiftSource
     
     let headerLayout: TextViewLayout
     
@@ -25,16 +281,22 @@ private final class PreviewRowItem : GeneralRowItem {
     let titleLayout: TextViewLayout
     let infoLayout: TextViewLayout
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, gift: PeerStarGift, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType) {
         self.context = context
         self.peer = peer
-        self.gift = gift
+        self.source = source
         self.presentation = theme.withUpdatedChatMode(true)
         
         let titleAttr = NSMutableAttributedString()
         
-        titleAttr.append(string: strings().chatServiceStarGiftFrom("\(clown_space)\(myPeer._asPeer().compactDisplayTitle)"), color: presentation.chatServiceItemTextColor, font: .medium(.header))
-        titleAttr.insertEmbedded(.embeddedAvatar(myPeer), for: clown)
+        switch source {
+        case .starGift(let option):
+            titleAttr.append(string: strings().chatServiceStarGiftFrom("\(clown_space)\(myPeer._asPeer().compactDisplayTitle)"), color: presentation.chatServiceItemTextColor, font: .medium(.header))
+            titleAttr.insertEmbedded(.embeddedAvatar(myPeer), for: clown)
+        case .premium(let option):
+            titleAttr.append(string: strings().giftPremiumHeader(timeIntervalString(Int(option.months) * 30 * 60 * 60 * 24)), color: presentation.chatServiceItemTextColor, font: .medium(.header))
+        }
+        
         
         self.titleLayout = TextViewLayout(titleAttr, alignment: .center)
         
@@ -48,13 +310,23 @@ private final class PreviewRowItem : GeneralRowItem {
             InlineStickerItem.apply(to: attr, associatedMedia: textInputState.inlineMedia, entities: entities, isPremium: context.isPremium)
             infoText.append(attr)
         } else {
-            infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(gift.native.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+            switch source {
+            case .starGift(let option):
+                infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+            case .premium:
+                infoText.append(string: strings().giftPremiumText, color: presentation.chatServiceItemTextColor, font: .normal(.text))
+            }
+             
         }
         
         self.infoLayout = .init(infoText, alignment: .center)
         
-        
-        headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(gift.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+        switch source {
+        case .starGift(let option):
+            headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(option.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+        case .premium(let option):
+            headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, option.price), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+        }
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
@@ -79,7 +351,7 @@ private final class PreviewRowItem : GeneralRowItem {
 //        } else {
 //            headerLayout.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
 //        }
-//        
+//
         return true
     }
     
@@ -155,10 +427,23 @@ private final class PreviewRowView : GeneralContainableRowView {
             button.set(text: strings().chatServiceGiftView, for: .Normal)
             button.sizeToFit(NSMakeSize(20, 14))
             button.layer?.cornerRadius = button.frame.height / 2
-            
-            let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .onceEnd, media: item.gift.media)
-            
-            sticker.update(with: item.gift.media, size: sticker.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
+            switch item.source {
+            case .starGift(let option):
+                let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .onceEnd, media: option.media)
+                sticker.update(with: option.media, size: sticker.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
+            case .premium(let option):
+                let media: TelegramMediaFile
+                switch option.months {
+                case 3:
+                    media = LocalAnimatedSticker.premium_gift_3.file
+                case 6:
+                    media = LocalAnimatedSticker.premium_gift_6.file
+                default:
+                    media = LocalAnimatedSticker.premium_gift_12.file
+                }
+                let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .onceEnd, media: media)
+                sticker.update(with: media, size: sticker.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
+            }
             
             if item.shouldBlurService {
                 let current: VisualEffect
@@ -181,27 +466,37 @@ private final class PreviewRowView : GeneralContainableRowView {
                 self.backgroundColor = item.presentation.chatServiceItemColor
             }
             
-            if let availability = item.gift.native.availability {
-                let current: ImageView
-                if let view = self.imageView {
-                    current = view
-                } else {
-                    current = ImageView()
-                    addSubview(current)
-                    self.imageView = current
+            switch item.source {
+            case .starGift(let option):
+                if let availability = option.native.availability {
+                    let current: ImageView
+                    if let view = self.imageView {
+                        current = view
+                    } else {
+                        current = ImageView()
+                        addSubview(current)
+                        self.imageView = current
+                    }
+                    
+                    let text: String = strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber)
+                    let color = item.presentation.chatServiceItemColor
+                    
+                    let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: [color.withMultipliedBrightnessBy(1.1), color.withMultipliedBrightnessBy(0.9)], direction: .diagonal)!
+                    
+                    current.image = generateGiftBadgeBackground(background: ribbon, text: text)
+                    current.sizeToFit()
+                } else if let view = self.imageView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.imageView = nil
                 }
-                
-                let text: String = strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber)
-                let color = item.presentation.chatServiceItemColor
-                
-                let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: [color.withMultipliedBrightnessBy(1.1), color.withMultipliedBrightnessBy(0.9)], direction: .diagonal)!
-                
-                current.image = generateGiftBadgeBackground(background: ribbon, text: text)
-                current.sizeToFit()
-            } else if let view = self.imageView {
-                performSubviewRemoval(view, animated: animated)
-                self.imageView = nil
+            case .premium:
+                if let view = self.imageView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.imageView = nil
+                }
             }
+            
+            
             
             needsLayout = true
         }
@@ -292,7 +587,7 @@ private final class Arguments {
 private struct State : Equatable {
     var peer: EnginePeer
     var myPeer: EnginePeer
-    var option: PeerStarGift
+    var option: PreviewGiftSource
     var isAnonymous: Bool = false
     var textState: Updated_ChatTextInputState
     var starsState: StarsContext.State?
@@ -301,6 +596,9 @@ private struct State : Equatable {
 private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_input = InputDataIdentifier("_id_input")
 private let _id_anonymous = InputDataIdentifier("_id_anonymous")
+private let _id_limit = InputDataIdentifier("_id_limit")
+
+
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -311,11 +609,26 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
+    switch state.option {
+    case .starGift(let option):
+        if let limited = option.native.availability {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_limit, equatable: .init(option), comparable: nil, item: { initialSize, stableId in
+                return LimitedRowItem(initialSize, stableId: stableId, availability: limited)
+            }))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+        }
+    case .premium(let option):
+        break
+    }
+    
+    
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starsGiftPreviewCustomize), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, gift: state.option, message: state.textState, context: arguments.context, viewType: .firstItem)
+        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: .firstItem)
     }))
     
     
@@ -338,31 +651,45 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    
   
-//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.message), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: .lastItem), placeholder: nil, inputPlaceholder: "Enter Message", filter: { $0 }, limit: 140))
-    
-    // entries
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_anonymous, data: .init(name: strings().starsGiftPreviewHideMyName, color: theme.colors.text, type: .switchable(state.isAnonymous), viewType: .singleItem, action: arguments.toggleAnonymous)))
-    
-    let name = state.peer._asPeer().compactDisplayTitle
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starsGiftPreviewHideMyNameInfo(name, name)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
-    
+    switch state.option {
+    case .starGift:
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_anonymous, data: .init(name: strings().starsGiftPreviewHideMyName, color: theme.colors.text, type: .switchable(state.isAnonymous), viewType: .singleItem, action: arguments.toggleAnonymous)))
+        
+        let name = state.peer._asPeer().compactDisplayTitle
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starsGiftPreviewHideMyNameInfo(name, name)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+    case .premium:
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giftPremiumPreviewInfo(state.peer._asPeer().compactDisplayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+        
+        
+    }
+   
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries
 }
 
-func PreviewStarGiftController(context: AccountContext, option: PeerStarGift, peer: EnginePeer) -> InputDataModalController {
+enum PreviewGiftSource : Equatable {
+    case starGift(option: PeerStarGift)
+    case premium(option: PremiumGiftProduct)
+}
+
+func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSource, peer: EnginePeer) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
-
+    let paymentDisposable = MetaDisposable()
+    actionsDisposable.add(paymentDisposable)
+    
+    let inAppPurchaseManager = context.inAppPurchaseManager
+    
     let initialState = State(peer: peer, myPeer: .init(context.myPeer!), option: option, textState: .init())
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -417,6 +744,95 @@ func PreviewStarGiftController(context: AccountContext, option: PeerStarGift, pe
         actionsDisposable.dispose()
     }
     
+    
+    let buyNonStore:(PremiumGiftProduct)->Void = { premiumProduct in
+        let state = stateValue.with { $0 }
+        
+        let peer = state.peer
+        
+        let source = BotPaymentInvoiceSource.giftCode(users: [peer.id], currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: 1, months: premiumProduct.months, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount), text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
+                        
+        let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
+
+        actionsDisposable.add(invoice.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+                switch status {
+                case .paid:
+                    PlayConfetti(for: context.window)
+                    close?()
+                default:
+                    break
+                }
+            }), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        }))
+        
+    }
+    
+    let buyAppStore:(PremiumGiftProduct)->Void = { premiumProduct in
+        
+        let state = stateValue.with { $0 }
+        
+        let peer = state.peer
+
+        guard let storeProduct = premiumProduct.storeProduct else {
+            buyNonStore(premiumProduct)
+            return
+        }
+        
+        let lockModal = PremiumLockModalController()
+        
+        var needToShow = true
+        delay(0.2, closure: {
+            if needToShow {
+                showModal(with: lockModal, for: context.window)
+            }
+        })
+        let purpose: AppStoreTransactionPurpose = .giftCode(peerIds: [peer.id], boostPeer: nil, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
+        
+                
+        let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
+        |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+            if available {
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, quantity: premiumProduct.giftOption.storeQuantity, purpose: purpose)
+                |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+    
+                    lockModal?.close()
+                    needToShow = false
+                    
+                    inAppPurchaseManager.finishAllTransactions()
+                    PlayConfetti(for: context.window)
+                    close?()
+                    
+                }, error: { [weak lockModal] error in
+                    let errorText: String
+                    switch error {
+                        case .generic:
+                            errorText = strings().premiumPurchaseErrorUnknown
+                        case .network:
+                            errorText = strings().premiumPurchaseErrorNetwork
+                        case .notAllowed:
+                            errorText = strings().premiumPurchaseErrorNotAllowed
+                        case .cantMakePayments:
+                            errorText = strings().premiumPurchaseErrorCantMakePayments
+                        case .assignFailed:
+                            errorText = strings().premiumPurchaseErrorUnknown
+                        case .cancelled:
+                            errorText = strings().premiumBoardingAppStoreCancelled
+                    }
+                    lockModal?.close()
+                    showModalText(for: context.window, text: errorText)
+                    inAppPurchaseManager.finishAllTransactions()
+                }))
+            } else {
+                lockModal?.close()
+                needToShow = false
+            }
+        })
+    }
+    
+    
     controller.validateData = { _ in
         
         let state = stateValue.with { $0 }
@@ -425,38 +841,57 @@ func PreviewStarGiftController(context: AccountContext, option: PeerStarGift, pe
             return .none
         }
         
-        if starsState.balance < state.option.stars {
-            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: state.option.stars)), for: window)
-            return .none
-        }
-        
-        let source: BotPaymentInvoiceSource = .starGift(hideName: state.isAnonymous, peerId: state.peer.id, giftId: state.option.native.id, text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
-        
-        let paymentForm = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil) |> mapToSignal {
-            return context.engine.payments.sendStarsPaymentForm(formId: $0.id, source: source) |> mapError { _ in
-                return .generic
+        switch state.option {
+        case let .starGift(option):
+            if starsState.balance < option.stars {
+                showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: option.stars)), for: window)
+                return .none
             }
-        }
-        
-        _ = showModalProgress(signal: paymentForm, for: context.window).start(next: { result in
-            switch result {
-            case let .done(receiptMessageId, _):
-                PlayConfetti(for: window, stars: true)
-                closeAllModals(window: window)
-                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
-            default:
-                break
-                
+            
+            let source: BotPaymentInvoiceSource = .starGift(hideName: state.isAnonymous, peerId: state.peer.id, giftId: option.native.id, text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
+            
+            let paymentForm = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil) |> mapToSignal {
+                return context.engine.payments.sendStarsPaymentForm(formId: $0.id, source: source) |> mapError { _ in
+                    return .generic
+                }
             }
-        }, error: { error in
-            var bp = 0
-            bp += 1
-        })
+            
+            _ = showModalProgress(signal: paymentForm, for: context.window).start(next: { result in
+                switch result {
+                case let .done(receiptMessageId, _):
+                    PlayConfetti(for: window, stars: true)
+                    closeAllModals(window: window)
+                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
+                default:
+                    break
+                    
+                }
+            }, error: { error in
+                var bp = 0
+                bp += 1
+            })
+        case let .premium(option):
+#if APP_STORE
+            buyAppStore(option)
+#else
+            buyNonStore(option)
+#endif
+        }
+
+        
         
         return .none
     }
+    
+    let okText: String
+    switch option {
+    case let .starGift(option):
+        okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.stars)))
+    case let .premium(option):
+        okText = strings().starsGiftPreviewSend(option.price)
+    }
 
-    let modalInteractions = ModalInteractions(acceptTitle: strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.stars))), accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: okText, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     

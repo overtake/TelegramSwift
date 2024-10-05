@@ -1820,7 +1820,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     }
                 }, hashtag: { hashtag in
                     arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
-                }, launchApp: launchApp ? arguments.openApp : nil)
+                }, launchApp: launchApp ? arguments.openApp : nil, canTranslate: true)
             }
         case let .aboutInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .markdown(text, linkHandler: { link in
@@ -1835,7 +1835,7 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
             }, hashtag: { value in
                 arguments.context.bindings.globalSearch(value, nil)
-            })
+            }, canTranslate: true)
         case let .birthday(_, text, canBirth, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)
         case let .phoneNumber(_, _, value, canCopy, viewType):

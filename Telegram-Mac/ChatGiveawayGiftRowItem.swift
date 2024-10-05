@@ -45,7 +45,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
 
         
         switch media.action {
-        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount, _, _):
             self.data = .init(slug: slug, starsAmount: nil, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed, media: media)
         case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
             self.data = .init(slug: nil, starsAmount: Int(amount), fromGiveaway: true, boostPeerId: boostPeerId, months: 0, unclaimed: isUnclaimed, media: media)

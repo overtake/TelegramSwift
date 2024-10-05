@@ -9015,6 +9015,8 @@ public final class L10n {
   public static var fragmentStarsWithdrawInfo: String  { return L10n.tr("Localizable", "Fragment.Stars.WithdrawInfo") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
+  /// Hide Translatation
+  public static var galleryHideTranslation: String  { return L10n.tr("Localizable", "Gallery.HideTranslation") }
   /// public photo
   public static var galleryPublicPhoto: String  { return L10n.tr("Localizable", "Gallery.PublicPhoto") }
   /// Remove GIF
@@ -9023,6 +9025,8 @@ public final class L10n {
   public static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Edit & Send
   public static var gallerySendHere: String  { return L10n.tr("Localizable", "Gallery.SendHere") }
+  /// Translate Text
+  public static var galleryTranslate: String  { return L10n.tr("Localizable", "Gallery.Translate") }
   /// Only you can see this photo.
   public static var galleryContactPhotoByYou: String  { return L10n.tr("Localizable", "Gallery.Contact.PhotoByYou") }
   /// Copy to Clipboard
@@ -9241,6 +9245,16 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// %@ Premium
+  public static func giftPremiumHeader(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.Header", p1)
+  }
+  /// Only %@ will see your message.
+  public static func giftPremiumPreviewInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.PreviewInfo", p1)
+  }
+  /// Subscription for exclusive Telegram features
+  public static var giftPremiumText: String  { return L10n.tr("Localizable", "Gift.Premium.Text") }
   /// No Recipient
   public static var giftLinkNoRecipient: String  { return L10n.tr("Localizable", "GiftLink.NoRecipient") }
   /// Gift Link

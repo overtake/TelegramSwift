@@ -245,11 +245,11 @@ final class FactCheckMessageView : View {
             current.update(layout: layout, animated: animated)
             
             if !layout.revealed {
-                textView.textView.drawingLayer?.mask = textMask
+                textView.textView.drawingLayer.mask = textMask
                 textMask.contents = generateMaskImage(size: textView.textView.frame.size)
                 textMask.frame = textView.textView.bounds
             } else {
-                textView.textView.drawingLayer?.mask = nil
+                textView.textView.drawingLayer.mask = nil
             }
             
         } else {
@@ -257,7 +257,7 @@ final class FactCheckMessageView : View {
                 performSubviewRemoval(view, animated: animated)
                 self.revealView = nil
             }
-            textView.textView.drawingLayer?.mask = nil
+            textView.textView.drawingLayer.mask = nil
         }
         
         if let clarification = layout.clarification {
