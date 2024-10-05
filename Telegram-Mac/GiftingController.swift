@@ -672,111 +672,6 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
     }
     
     
-//    
-    let buyNonStore:(PremiumPaymentOption)->Void = { option in
-        let state = stateValue.with { $0 }
-        
-        var selectedProduct: PremiumGiftProduct?
-        let selectedMonths = option.months
-        if let product = state.products.first(where: { $0.months == selectedMonths }) {
-            selectedProduct = product
-        }
-        
-        guard let premiumProduct = selectedProduct, let peer = state.peer else {
-            return
-        }
-        
-        let source = BotPaymentInvoiceSource.giftCode(users: [peer.id], currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: 1, months: selectedMonths, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount))
-                        
-        let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
-
-        actionsDisposable.add(invoice.start(next: { invoice in
-            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
-                switch status {
-                case .paid:
-                    PlayConfetti(for: context.window)
-                    close?()
-                default:
-                    break
-                }
-            }), for: context.window)
-        }, error: { error in
-            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
-        }))
-        
-    }
-    
-    let buyAppStore:(PremiumPaymentOption)->Void = { option in
-        
-        let state = stateValue.with { $0 }
-        
-        var selectedProduct: PremiumGiftProduct?
-        let selectedMonths = option.months
-        if let product = state.products.first(where: { $0.months == selectedMonths }) {
-            selectedProduct = product
-        }
-                
-        guard let premiumProduct = selectedProduct, let peer = state.peer else {
-            return
-        }
-
-        guard let storeProduct = premiumProduct.storeProduct else {
-            buyNonStore(option)
-            return
-        }
-        
-        let lockModal = PremiumLockModalController()
-        
-        var needToShow = true
-        delay(0.2, closure: {
-            if needToShow {
-                showModal(with: lockModal, for: context.window)
-            }
-        })
-        let purpose: AppStoreTransactionPurpose = .giftCode(peerIds: [peer.id], boostPeer: nil, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
-        
-                
-        let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
-        |> deliverOnMainQueue).start(next: { [weak lockModal] available in
-            if available {
-                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, quantity: premiumProduct.giftOption.storeQuantity, purpose: purpose)
-                |> deliverOnMainQueue).start(next: { [weak lockModal] status in
-    
-                    lockModal?.close()
-                    needToShow = false
-                    
-                    inAppPurchaseManager.finishAllTransactions()
-                    PlayConfetti(for: context.window)
-                    close?()
-                    
-                }, error: { [weak lockModal] error in
-                    let errorText: String
-                    switch error {
-                        case .generic:
-                            errorText = strings().premiumPurchaseErrorUnknown
-                        case .network:
-                            errorText =  strings().premiumPurchaseErrorNetwork
-                        case .notAllowed:
-                            errorText =  strings().premiumPurchaseErrorNotAllowed
-                        case .cantMakePayments:
-                            errorText =  strings().premiumPurchaseErrorCantMakePayments
-                        case .assignFailed:
-                            errorText =  strings().premiumPurchaseErrorUnknown
-                        case .cancelled:
-                            errorText = strings().premiumBoardingAppStoreCancelled
-                    }
-                    lockModal?.close()
-                    showModalText(for: context.window, text: errorText)
-                    inAppPurchaseManager.finishAllTransactions()
-                }))
-            } else {
-                lockModal?.close()
-                needToShow = false
-            }
-        })
-    }
-    
-    
     let premiumPromo = context.engine.data.get(TelegramEngine.EngineData.Item.Configuration.PremiumPromo())
     |> deliverOnMainQueue
     
@@ -812,14 +707,16 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
         
     }, openGift: { option in
         if let peer = stateValue.with({ $0.peer }) {
-            showModal(with: PreviewStarGiftController(context: context, option: option, peer: peer), for: window)
+            showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer), for: window)
         }
     }, giftPremium: { option in
-#if APP_STORE
-        buyAppStore(option)
-#else
-        buyNonStore(option)
-#endif
+        let state = stateValue.with { $0 }
+        if let peer = state.peer {
+            if let product = state.products.first(where: { $0.months == option.months }) {
+                showModal(with: PreviewStarGiftController(context: context, option: .premium(option: product), peer: peer), for: window)
+            }
+        }
+
     }, close: {
         close?()
     }, openPromo: { value in

@@ -1297,6 +1297,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
     }
     
+    var recognition: GalleryRecognition? {
+        return (self.controller.selectedViewController?.view as? GMagnifyView)?.recognition
+    }
+    
     deinit {
         window.removeAllHandlers(for: self)
         ioDisposabe.dispose()

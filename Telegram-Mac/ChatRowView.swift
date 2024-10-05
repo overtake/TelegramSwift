@@ -855,9 +855,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func forwardPhotoPoint(_ item: ChatRowItem) -> NSPoint {
         var point = self.forwardNamePoint(item)
         if let layout = item.forwardNameLayout, let range = item.forwardPhotoPlaceRange {
-            if let rect = layout.rects(range).first {
+            if let rect = layout.rects(range).last {
                 point.x += rect.0.minX + 2
-                point.y += 1
+                point.y += rect.0.minY
             }
         }
         return point.toScreenPixel

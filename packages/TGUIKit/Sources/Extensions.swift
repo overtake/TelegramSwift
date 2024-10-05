@@ -3022,3 +3022,25 @@ public extension CGPath {
     }
     
 }
+
+
+public func fontSizeThatFits(text: String, in rect: CGRect, initialFont: NSFont, minFontSize: CGFloat = 5.0) -> NSFont {
+    var fontSize = initialFont.pointSize
+    var currentFont = initialFont
+
+    // Create an attributed string to measure
+    let attributedText = NSMutableAttributedString(string: text, attributes: [.font: currentFont])
+
+    // Measure the text size with the current font
+    var textSize = attributedText.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: rect.height), options: .usesLineFragmentOrigin, context: nil)
+
+    // Reduce the font size until it fits within the rect's width or reaches the minimum size
+    while textSize.width > rect.width && fontSize > minFontSize {
+        fontSize -= 1
+        currentFont = NSFont(name: initialFont.fontName, size: fontSize) ?? initialFont
+        attributedText.addAttribute(.font, value: currentFont, range: NSRange(location: 0, length: attributedText.length))
+        textSize = attributedText.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: rect.height), options: .usesLineFragmentOrigin, context: nil)
+    }
+
+    return currentFont
+}

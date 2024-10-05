@@ -8,6 +8,7 @@
 import Foundation
 import TGUIKit
 import Cocoa
+import CoreGraphics
 
 private extension NSPoint {
     func apply(_ size: NSSize, _ multiplier: CGPoint = NSMakePoint(1, 1)) -> CGPoint {
@@ -29,8 +30,9 @@ private extension TextRecognizing.Result.Detected {
     }
     func rect(_ size: NSSize, viewSize: NSSize) -> CGRect {
         let multiplier = NSMakePoint(viewSize.width / size.width, viewSize.height / size.height)
-        return NSMakeRect(self.boundingBox.minX * size.width * multiplier.x, self.boundingBox.minY * size.height * multiplier.y, self.boundingBox.width * size.width * multiplier.x, self.boundingBox.height * size.height * multiplier.y)
+        return NSMakeRect(self.frameRect.minX * size.width * multiplier.x, self.frameRect.minY * size.height * multiplier.y, self.frameRect.width * size.width * multiplier.x, self.frameRect.height * size.height * multiplier.y)
     }
+    
 }
 
 
@@ -63,6 +65,32 @@ public extension TextRecognizing.Result {
                 paths.append(value.path(image.size, viewSize: viewSize))
             }
             return paths
+        default:
+            return []
+        }
+    }
+    
+    func selectableRects(viewSize: NSSize) -> [CGRect] {
+        switch self {
+        case let .finish(image, text):
+            var rects:[CGRect] = []
+            for value in text {
+                rects.append(value.rect(image.size, viewSize: viewSize))
+            }
+            return rects
+        default:
+            return []
+        }
+    }
+    
+    func rotations() -> [CGFloat] {
+        switch self {
+        case let .finish(image, text):
+            var rotations:[CGFloat] = []
+            for value in text {
+                rotations.append(value.rotationAngle)
+            }
+            return rotations
         default:
             return []
         }

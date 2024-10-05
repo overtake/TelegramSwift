@@ -588,7 +588,7 @@ private final class HeaderView : GeneralContainableRowView {
         super.layout()
         sceneView.centerX(y: 0)
         
-        control.centerX(y: 30)
+        control.centerX(y: 20)
         
         avatar?.center()
         photo?.center()

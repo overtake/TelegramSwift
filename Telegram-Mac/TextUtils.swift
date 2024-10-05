@@ -783,14 +783,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .webViewData(data):
             text = strings().chatServiceWebData(data)
-        case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount):
+        case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount, _, _):
             let formatted = formatCurrencyAmount(amount, currency: currency)
             if authorId == account.peerId {
                 text = strings().chatServicePremiumGiftSentYou(formatted)
             } else {
                 text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
-        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount, _, _):
             if authorId == account.peerId {
                 text = strings().chatServiceGiftLinkSent
             } else {

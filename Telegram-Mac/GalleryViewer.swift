@@ -1250,6 +1250,17 @@ class GalleryViewer: NSResponder {
                 }, itemImage: MenuAnimation.menu_copy_media.value))
             }
             
+            if let recognition = self.pager.recognition {
+                if #available(macOS 10.15, *) {
+                    if recognition.canTranslate() {
+                        let text: String = !recognition.hasTranslation() ? strings().galleryTranslate : strings().galleryHideTranslation
+                        menu.addItem(ContextMenuItem.init(text, handler: { [weak recognition] in
+                            recognition?.toggleTranslate(to: appAppearance.languageCode)
+                        }, itemImage: MenuAnimation.menu_translate.value))
+                    }
+                }
+            }
+            
         }
         
         

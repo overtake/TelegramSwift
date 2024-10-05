@@ -774,15 +774,26 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case let .webViewData(text):
                     let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .giftPremium(currency, amount, months, cryptoCurrency, cryptoCurrencyAmount):
+                case let .giftPremium(currency, amount, months, cryptoCurrency, cryptoCurrencyAmount, text, entities):
                     
                     
                     let header = NSMutableAttributedString()
                     
-                    _ = header.append(string: strings().chatServicePremiumGiftInfoCountable(Int(months)), color: grayTextColor, font: .normal(theme.fontSize))
+                    _ = header.append(string: strings().giftPremiumHeader(timeIntervalString(Int(months) * 30 * 60 * 60 * 24)), color: grayTextColor, font: .normal(theme.fontSize))
                     header.detectBoldColorInString(with: .medium(theme.fontSize))
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: nil, source: .premium(months: months), ribbon: nil)
+                    let info = NSMutableAttributedString()
+                    
+                    if let text = text, !text.isEmpty {
+                        let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities ?? [])], for: text, message: nil, context: context, fontSize: theme.fontSize, openInfo: { _, _, _, _ in }, textColor: grayTextColor, isDark: theme.colors.isDark, bubbled: true).mutableCopy() as! NSMutableAttributedString
+                        InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities ?? [], isPremium: context.isPremium)
+                        info.append(attr)
+                    } else {
+                        info.append(string: strings().giftPremiumText, color: grayTextColor, font: .normal(.text))
+                    }
+                    
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil)
                     
                     let text: String
                     if authorId == context.peerId {

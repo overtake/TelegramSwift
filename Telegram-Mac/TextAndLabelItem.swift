@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import Translate
 import Postbox
 import SwiftSignalKit
 
@@ -56,8 +56,10 @@ class TextAndLabelItem: GeneralRowItem {
     let _borderColor: NSColor
     let gift: (()->Void)?
     let launchApp: (()->Void)?
+    let canTranslate: Bool
+    let context: AccountContext?
     private let added_contextItems: [ContextMenuItem]
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = [], gift: (()->Void)? = nil, launchApp:(()->Void)? = nil) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = [], gift: (()->Void)? = nil, launchApp:(()->Void)? = nil, canTranslate: Bool = false) {
         self.callback = callback
         self.launchApp = launchApp
         self.accentColor = accentColor
@@ -67,6 +69,8 @@ class TextAndLabelItem: GeneralRowItem {
         self.isTextSelectable = isTextSelectable
         self.copyMenuText = copyMenuText
         self._borderColor = borderColor
+        self.canTranslate = canTranslate
+        self.context = context
         self.gift = gift
         self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))
         let attr = NSMutableAttributedString()
@@ -197,6 +201,19 @@ class TextAndLabelItem: GeneralRowItem {
                     }
                 }
             }, itemImage: MenuAnimation.menu_copy.value))
+            
+            let text = self.textLayout.attributedString.string
+            
+            if canTranslate, let context = context {
+                let fromLang = Translate.detectLanguage(for: text)
+                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
+                
+                if fromLang == nil || !toLang.contains(fromLang!) {
+                    items.append(ContextMenuItem.init(strings().peerInfoTranslate, handler: {
+                        showModal(with: TranslateModalController(context: context, from: fromLang, toLang: appAppearance.languageCode, text: text), for: context.window)
+                    }, itemImage: MenuAnimation.menu_translate.value))
+                }
+            }
             
             items.append(contentsOf: added_contextItems)
             

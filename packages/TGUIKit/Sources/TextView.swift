@@ -2253,6 +2253,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private let drawLayer: TextDrawLayer = TextDrawLayer()
     private var blockMask: SimpleLayer?
     
+    public var lockDrawingLayer: Bool = false
+    
     
     var hasBackground: Bool {
         return blurBackground != nil
@@ -2343,7 +2345,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.draw(dirtyRect)
     }
     
-    public var drawingLayer: CALayer? {
+    public var drawingLayer: CALayer {
         return drawLayer
     }
     
@@ -2958,13 +2960,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public override func setNeedsDisplayLayer() {
         self.layer?.setNeedsDisplay()
-        self.drawingLayer?.setNeedsDisplay()
+        self.drawingLayer.setNeedsDisplay()
        // self.drawLayer.displayIfNeeded()
     }
     
     public override func setNeedsDisplay() {
         self.layer?.setNeedsDisplay()
-        self.drawingLayer?.setNeedsDisplay()
+        self.drawingLayer.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
@@ -3215,6 +3217,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     private func updateBackgroundBlur() {
+        
+        if lockDrawingLayer {
+            return
+        }
         
         self.layer?.masksToBounds = blurBackground != nil
         if let blurBackground = blurBackground {

@@ -584,6 +584,7 @@ extension InAppPurchaseManager: SKPaymentTransactionObserver {
 }
 
 
+
 private final class PendingInAppPurchaseState: Codable {
     enum CodingKeys: String, CodingKey {
         case productId
@@ -610,8 +611,9 @@ private final class PendingInAppPurchaseState: Codable {
             case untilDate
             case stars
             case users
+            case text
+            case entities
         }
-
         
         enum PurposeType: Int32 {
             case subscription
@@ -629,12 +631,12 @@ private final class PendingInAppPurchaseState: Codable {
         case upgrade
         case restore
         case gift(peerId: EnginePeer.Id)
-        case giftCode(peerIds: [EnginePeer.Id], boostPeer: EnginePeer.Id?)
+        case giftCode(peerIds: [EnginePeer.Id], boostPeer: EnginePeer.Id?, text: String?, entities: [MessageTextEntity]?)
         case giveaway(boostPeer: EnginePeer.Id, additionalPeerIds: [EnginePeer.Id], countries: [String], onlyNewSubscribers: Bool, showWinners: Bool, prizeDescription: String?, randomId: Int64, untilDate: Int32)
         case stars(count: Int64)
         case starsGift(peerId: EnginePeer.Id, count: Int64)
         case starsGiveaway(stars: Int64, boostPeer: EnginePeer.Id, additionalPeerIds: [EnginePeer.Id], countries: [String], onlyNewSubscribers: Bool, showWinners: Bool, prizeDescription: String?, randomId: Int64, untilDate: Int32, users: Int32)
-
+        
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -653,7 +655,9 @@ private final class PendingInAppPurchaseState: Codable {
             case .giftCode:
                 self = .giftCode(
                     peerIds: try container.decode([Int64].self, forKey: .peers).map { EnginePeer.Id($0) },
-                    boostPeer: try container.decodeIfPresent(Int64.self, forKey: .boostPeer).flatMap({ EnginePeer.Id($0) })
+                    boostPeer: try container.decodeIfPresent(Int64.self, forKey: .boostPeer).flatMap({ EnginePeer.Id($0) }),
+                    text: try container.decodeIfPresent(String.self, forKey: .text),
+                    entities: try container.decodeIfPresent([MessageTextEntity].self, forKey: .entities)
                 )
             case .giveaway:
                 self = .giveaway(
@@ -667,7 +671,9 @@ private final class PendingInAppPurchaseState: Codable {
                     untilDate: try container.decode(Int32.self, forKey: .untilDate)
                 )
             case .stars:
-                self = .stars(count: try container.decode(Int64.self, forKey: .stars))
+                self = .stars(
+                    count: try container.decode(Int64.self, forKey: .stars)
+                )
             case .starsGift:
                 self = .starsGift(
                     peerId: EnginePeer.Id(try container.decode(Int64.self, forKey: .peer)),
@@ -704,10 +710,12 @@ private final class PendingInAppPurchaseState: Codable {
             case let .gift(peerId):
                 try container.encode(PurposeType.gift.rawValue, forKey: .type)
                 try container.encode(peerId.toInt64(), forKey: .peer)
-            case let .giftCode(peerIds, boostPeer):
+            case let .giftCode(peerIds, boostPeer, text, entities):
                 try container.encode(PurposeType.giftCode.rawValue, forKey: .type)
                 try container.encode(peerIds.map { $0.toInt64() }, forKey: .peers)
                 try container.encodeIfPresent(boostPeer?.toInt64(), forKey: .boostPeer)
+                try container.encodeIfPresent(text, forKey: .text)
+                try container.encodeIfPresent(entities, forKey: .entities)
             case let .giveaway(boostPeer, additionalPeerIds, countries, onlyNewSubscribers, showWinners, prizeDescription, randomId, untilDate):
                 try container.encode(PurposeType.giveaway.rawValue, forKey: .type)
                 try container.encode(boostPeer.toInt64(), forKey: .boostPeer)
@@ -750,8 +758,8 @@ private final class PendingInAppPurchaseState: Codable {
                 self = .restore
             case let .gift(peerId, _, _):
                 self = .gift(peerId: peerId)
-            case let .giftCode(peerIds, boostPeer, _, _):
-                self = .giftCode(peerIds: peerIds, boostPeer: boostPeer)
+            case let .giftCode(peerIds, boostPeer, _, _, text, entities):
+                self = .giftCode(peerIds: peerIds, boostPeer: boostPeer, text: text, entities: entities)
             case let .giveaway(boostPeer, additionalPeerIds, countries, onlyNewSubscribers, showWinners, prizeDescription, randomId, untilDate, _, _):
                 self = .giveaway(boostPeer: boostPeer, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: onlyNewSubscribers, showWinners: showWinners, prizeDescription: prizeDescription, randomId: randomId, untilDate: untilDate)
             case let .stars(count, _, _):
@@ -774,8 +782,8 @@ private final class PendingInAppPurchaseState: Codable {
                 return .restore
             case let .gift(peerId):
                 return .gift(peerId: peerId, currency: currency, amount: amount)
-            case let .giftCode(peerIds, boostPeer):
-                return .giftCode(peerIds: peerIds, boostPeer: boostPeer, currency: currency, amount: amount)
+            case let .giftCode(peerIds, boostPeer, text, entities):
+                return .giftCode(peerIds: peerIds, boostPeer: boostPeer, currency: currency, amount: amount, text: text, entities: entities)
             case let .giveaway(boostPeer, additionalPeerIds, countries, onlyNewSubscribers, showWinners, prizeDescription, randomId, untilDate):
                 return .giveaway(boostPeer: boostPeer, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: onlyNewSubscribers, showWinners: showWinners, prizeDescription: prizeDescription, randomId: randomId, untilDate: untilDate, currency: currency, amount: amount)
             case let .stars(count):
