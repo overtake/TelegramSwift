@@ -454,7 +454,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
     }
     
-    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true) {
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil) {
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
             controller.view.shake(beep: true)
             return
@@ -462,17 +462,20 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
         _ = signal.start(next: { [weak navigation] peer in
             if peer.restrictionText(context.contentSettings) == nil {
-                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source), animated, style: animated ? .push : Optional.none)
+                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode), animated, style: animated ? .push : Optional.none)
             }
         })
     }
     
-    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
+    private let mediaMode: PeerMediaCollectionMode?
+    
+    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, mediaMode: PeerMediaCollectionMode? = nil) {
         let peerId = peer.id
         self.peerId = peer.id
         self.peer = peer
         self.source = source
         self.threadInfo = threadInfo
+        self.mediaMode = mediaMode
         
         if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             self.stories = stories ?? .init(account: context.account, peerId: peerId)
@@ -496,7 +499,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             self.tonRevenueContext = nil
         }
         
-        self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true, isBot: peer.isBot)
+        self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true, isBot: peer.isBot, mode: mediaMode)
         super.init(context)
         
         bar = .init(height: 50, enableBorder: false)

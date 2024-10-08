@@ -128,7 +128,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId) -> InputD
     controller.didResize = { controller in
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
-        let blockWidth = min(600, controller.atomicSize.with { $0.width })
+        let blockWidth = max(380, min(600, controller.atomicSize.with { $0.width }))
         while true {
             let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)

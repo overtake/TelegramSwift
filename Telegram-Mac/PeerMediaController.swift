@@ -576,12 +576,13 @@ protocol PeerMediaSearchable : AnyObject {
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
             if isLoaded() {
-                currentMainTableView?(genericView.mainTable, false, false)
+                currentMainTableView?(genericView.mainTable, initialMode != nil, initialMode != nil)
             }
         }
     }
     
     private let isProfileIntended: Bool
+     private var initialMode: PeerMediaCollectionMode?
     
     private let editing: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     override var state:ViewControllerState {
@@ -599,11 +600,13 @@ protocol PeerMediaSearchable : AnyObject {
         }
     }
     
-     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil, isBot: Bool) {
+     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil, isBot: Bool, mode: PeerMediaCollectionMode? = nil) {
         self.externalSearchData = externalSearchData
         self.peerId = peerId
+        self.mode = mode
         self.threadInfo = threadInfo
         self.isProfileIntended = isProfileIntended
+        self.initialMode = mode
         if peerId == context.peerId, !isProfileIntended {
             self.savedMessages = SavedPeersController(context: context)
         } else {
@@ -697,6 +700,7 @@ protocol PeerMediaSearchable : AnyObject {
         if let mode = self.mode {
             self.controller(for: mode).viewDidAppear(animated)
         }
+        
         
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
@@ -896,6 +900,16 @@ protocol PeerMediaSearchable : AnyObject {
         }
         return false
     }
+     
+     override func readyOnce() {
+         let didSetReady = self.didSetReady
+         super.readyOnce()
+         
+         if !didSetReady, let mode = initialMode {
+             self.applyReadyController(mode: mode, animated: false)
+         }
+         
+     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -915,6 +929,7 @@ protocol PeerMediaSearchable : AnyObject {
         let peerId = self.peerId
         let threadInfo = self.threadInfo
         let isProfileIntended = self.isProfileIntended
+        let initialMode = self.initialMode
         
         let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let storiesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
@@ -1081,7 +1096,7 @@ protocol PeerMediaSearchable : AnyObject {
                     }
                     selectedValue = perhapsBest ?? tabs.filter { $0.exists }.last?.tag ?? selected
                 } else {
-                    selectedValue = tabs.filter { $0.exists }.first?.tag
+                    selectedValue = initialMode ?? tabs.filter { $0.exists }.first?.tag
                 }
                 
             }
@@ -1413,6 +1428,7 @@ protocol PeerMediaSearchable : AnyObject {
                         self.viewDidDisappear(true)
                     }
                 }
+                self.readyOnce()
             }
         }))
         

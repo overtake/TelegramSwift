@@ -1071,8 +1071,36 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
                 
-                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState)
-                    |> map { localPeers, remotePeers, remoteMessages, isRevealed, storySearchState -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
+                
+                let hashtagSearch: Signal<([ChatListSearchEntry], Bool), NoError>
+                if globalTags.isEmpty, query.hasPrefix("#") {
+                    hashtagSearch = .single(([], false)) |> then(context.engine.messages.searchHashtagPosts(hashtag: query.replacingOccurrences(of: "#", with: ""), state: nil, limit: 3) |> map { result in
+                        var entries: [ChatListSearchEntry] = []
+                        var index = 20001
+                        for message in result.0.messages {
+                            switch target {
+                            case .forum:
+                                if let threadInfo = result.0.threadInfo[message.id] {
+                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], threadInfo, index))
+                                    index += 1
+                                }
+                            case .common:
+                                entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
+                                index += 1
+                            case .savedMessages:
+                                entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
+                                index += 1
+                            }
+                            
+                        }
+                        return (entries, result.0.totalCount > 3)
+                    } |> delay(0.2, queue: .mainQueue()))
+                } else {
+                    hashtagSearch = .single(([], false))
+                }
+                
+                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState, hashtagSearch)
+                    |> map { localPeers, remotePeers, remoteMessages, isRevealed, storySearchState, hashtagSearch -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                         
                         cachedData.with { value -> Void in
                             value.cacheMessages(remoteMessages.0, for: .key(query: query, tags: globalTags))
@@ -1086,6 +1114,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         if let storySearchState, !storySearchState.items.isEmpty, globalTags.publicPosts {
                             entries.append(.foundStories(storySearchState, index: 0, query: query))
                         }
+                        
+                        
+                   
                         
                         
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
@@ -1125,6 +1156,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 entries += remotePeers.1
                             }
                         }
+                        
+                        if !hashtagSearch.0.isEmpty {
+                            entries.append(.separator(text: strings().chatHashtagPublicPosts, index: 15000, state: hashtagSearch.1 ? .custom(strings().separatorShowMore, .showPublicPosts) : .none))
+                            entries += hashtagSearch.0
+                        }
+                        
+                        
                         if !remoteMessages.0.isEmpty {
                             let blockState: SeparatorBlockState
                             if globalTags.publicPosts || globalTags.myMessages {
@@ -1842,6 +1880,19 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 default:
                     break
                 }
+            } else if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(15000)) {
+                switch item.state {
+                case let .custom(_, action):
+                    switch action {
+                    case .showPublicPosts:
+                        let query = self.query ?? ""
+                        context.bindings.globalSearch(query, nil)
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
             } else if item.stableId == AnyHashable(ChatListSearchEntryStableId.separator(20000)) {
                 switch item.state {
                 case let .custom(_, action):
@@ -1856,7 +1907,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         } else {
                             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId), mode: .customChatContents(contents: customChatContents)))
                         }
-                        
+                    default:
+                        break
                     }
                 default:
                     break

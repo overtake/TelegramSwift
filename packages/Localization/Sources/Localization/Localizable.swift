@@ -3697,6 +3697,10 @@ public final class L10n {
   public static var chatContextDisableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.DisableNotifications") }
   /// Edit
   public static var chatContextEdit1: String  { return L10n.tr("Localizable", "Chat.Context.Edit1") }
+  /// edited %@
+  public static func chatContextEditedAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.EditedAt", p1)
+  }
   /// click on date
   public static var chatContextEditHelp: String  { return L10n.tr("Localizable", "Chat.Context.EditHelp") }
   /// Edit Topic
@@ -9025,7 +9029,7 @@ public final class L10n {
   public static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Edit & Send
   public static var gallerySendHere: String  { return L10n.tr("Localizable", "Gallery.SendHere") }
-  /// Translate Text
+  /// Translate
   public static var galleryTranslate: String  { return L10n.tr("Localizable", "Gallery.Translate") }
   /// Only you can see this photo.
   public static var galleryContactPhotoByYou: String  { return L10n.tr("Localizable", "Gallery.Contact.PhotoByYou") }
@@ -9245,6 +9249,10 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// sold out
+  public static var giftSoldOut: String  { return L10n.tr("Localizable", "Gift.SoldOut") }
+  /// Unavailable
+  public static var giftUnavailable: String  { return L10n.tr("Localizable", "Gift.Unavailable") }
   /// %@ Premium
   public static func giftPremiumHeader(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Premium.Header", p1)
@@ -9255,6 +9263,8 @@ public final class L10n {
   }
   /// Subscription for exclusive Telegram features
   public static var giftPremiumText: String  { return L10n.tr("Localizable", "Gift.Premium.Text") }
+  /// This gift has sold out
+  public static var giftSoldOutError: String  { return L10n.tr("Localizable", "Gift.SoldOut.Error") }
   /// No Recipient
   public static var giftLinkNoRecipient: String  { return L10n.tr("Localizable", "GiftLink.NoRecipient") }
   /// Gift Link
@@ -16685,15 +16695,51 @@ public final class L10n {
   public static var starTransactionReactionId: String  { return L10n.tr("Localizable", "Star.Transaction.ReactionId") }
   /// Reason
   public static var starTransactionReason: String  { return L10n.tr("Localizable", "Star.Transaction.Reason") }
+  /// %d
+  public static func starTransactionSaleForCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_countable", p1)
+  }
+  /// sale for %d stars
+  public static func starTransactionSaleForFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_few", p1)
+  }
+  /// sale for %d stars
+  public static func starTransactionSaleForMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_many", p1)
+  }
+  /// sale for %d star
+  public static func starTransactionSaleForOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_one", p1)
+  }
+  /// sale for %d stars
+  public static func starTransactionSaleForOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_other", p1)
+  }
+  /// sale for %d stars
+  public static func starTransactionSaleForTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_two", p1)
+  }
+  /// sale for %d stars
+  public static func starTransactionSaleForZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_zero", p1)
+  }
+  /// send a gift
+  public static var starTransactionSendGift: String  { return L10n.tr("Localizable", "Star.Transaction.SendGift") }
   /// To
   public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
   /// Review the [Terms of Services](https://telegram.org) for Stars.
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
   /// [Unknown User](https://fragment.com/stars)
   public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
+  /// Value
+  public static var starTransactionValue: String  { return L10n.tr("Localizable", "Star.Transaction.Value") }
   /// %1$d of %2$@
   public static func starTransactionAvailabilityOf(_ p1: Int, _ p2: String) -> String {
     return L10n.tr("Localizable", "Star.Transaction.Availability.Of", p1, p2)
+  }
+  /// %1$@ of %2$@ left
+  public static func starTransactionAvailabilityOfLeft(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Availability.OfLeft", p1, p2)
   }
   /// Convert Gift to Stars
   public static var starTransactionConvertAlertHeader: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Header") }
@@ -16715,6 +16761,8 @@ public final class L10n {
   public static var starTransactionStarGiftDisplayOnMyPage: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.DisplayOnMyPage") }
   /// Hide from my Page
   public static var starTransactionStarGiftHideFromMyPage: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.HideFromMyPage") }
+  /// The gift is visible on your page. [View >](view)
+  public static var starTransactionStarGiftSeeInProfile: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.SeeInProfile") }
   /// You Successfully converted Gift to Stars
   public static var starTransactionStarGiftConvertToStarsAlert: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.ConvertToStars.Alert") }
   /// The gift is now displayed in your profile.

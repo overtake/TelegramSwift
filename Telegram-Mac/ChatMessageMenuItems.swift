@@ -258,6 +258,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
         
+        if !isService, let edited = message.editedAttribute {
+            let string = stringForRelativeTimestamp(relativeTimestamp: edited.date, relativeTo: context.timestamp)
+            zeroBlock.append(ContextMenuItem(strings().chatContextEditedAt(string), itemImage: MenuAnimation.menu_edited.value))
+        }
+        
         
         if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, mode != .pinned, mode != .scheduled, !mode.isSavedMode, mode.customChatContents == nil, entry?.additionalData.translate == nil {
             firstBlock.append(ContextMenuItem(strings().chatMessageContextQuote, handler: {

@@ -76,7 +76,9 @@ private final class HeaderItem : GeneralRowItem {
         let incoming: Bool = transaction.count > 0
         let amount: Int64
         if isGift {
-            if transaction.giveawayMessageId != nil {
+            if purpose == .unavailableGift {
+                header = strings().giftUnavailable
+            } else if transaction.giveawayMessageId != nil {
                 header = strings().starsTransactionReceivedPrize
             } else {
                 if fromProfile {
@@ -136,13 +138,19 @@ private final class HeaderItem : GeneralRowItem {
 
         
         let attr = NSMutableAttributedString()
-        attr.append(string: "\(incoming && !fromProfile ? "+" : "")\(amount) \(clown)", color: incoming ? theme.colors.greenUI : (amount > 0 ? theme.colors.text : theme.colors.redUI), font: .normal(15))
-        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+        switch purpose {
+        case .unavailableGift, .starGift:
+            break
+        default:
+            attr.append(string: "\(incoming && !fromProfile ? "+" : "")\(amount) \(clown)", color: incoming ? theme.colors.greenUI : (amount > 0 ? theme.colors.text : theme.colors.redUI), font: .normal(15))
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+        }
         
         self.infoLayout = .init(attr)
         
-        
-        if !transaction.media.isEmpty {
+        if purpose == .unavailableGift {
+            self.descLayout = .init(.initialize(string: strings().giftSoldOutError, color: theme.colors.redUI, font: .normal(.text)), alignment: .center)
+        } else if !transaction.media.isEmpty {
             
             var description: String = ""
             
@@ -170,56 +178,66 @@ private final class HeaderItem : GeneralRowItem {
         } else if let desc = transaction.description {
             self.descLayout = .init(.initialize(string: desc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         } else if isGift && purpose.isGift {
-            
-            var text: String
-            var fromProfile: Bool = false
-            var nameHidden: Bool = false
-            switch purpose {
-            case let .starGift(_, convertStars, _, _, _nameHidden, savedToProfile, convertedToStars, _fromProfile):
-                let displayTitle = peer?._asPeer().compactDisplayTitle ?? ""
-                let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
-                fromProfile = _fromProfile
-                nameHidden = _nameHidden
-                if incoming {
-                    if savedToProfile {
-                        text = strings().starsStarGiftTextKeptOnPageIncoming
-                    } else if convertedToStars {
-                        text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
-                    } else {
-                        text = strings().starsStarGiftTextIncoming(convertStarsString)
-                    }
-                } else {
-                    if savedToProfile {
-                        text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
-                    } else if convertedToStars {
-                        text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
-                    } else {
-                        text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
-                    }
-                }
-            default:
-                text = strings().starsExampleAppsText
-            }
-            if !fromProfile {
-                text += " " + strings().starsStarGiftTextLink
-                
-                let textAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, contents)
-                })).mutableCopy() as! NSMutableAttributedString
-                
-                if nameHidden, incoming {
-                    textAttr.append(string: "\n\n")
-                    textAttr.append(string: strings().starTransactionStarGiftAnonymous, color: theme.colors.grayText, font: .normal(.text))
-                }
-                
-                self.descLayout = .init(textAttr, alignment: .center)
-            } else if nameHidden, incoming, !fromProfile {
-                let textAttr = NSMutableAttributedString()
-                textAttr.append(string: strings().starTransactionStarGiftAnonymous, color: theme.colors.grayText, font: .normal(.text))
-                self.descLayout = .init(textAttr, alignment: .center)
+            if purpose == .unavailableGift {
+                self.descLayout = .init(.initialize(string: strings().giftSoldOutError, color: theme.colors.redUI, font: .normal(.text)), alignment: .center)
             } else {
-                self.descLayout = nil
+                var text: String
+                var fromProfile: Bool = false
+                var nameHidden: Bool = false
+                switch purpose {
+                case let .starGift(_, convertStars, _, _, _nameHidden, savedToProfile, convertedToStars, _fromProfile):
+                    let displayTitle: String
+                    switch transaction.peer {
+                    case let .peer(peer):
+                        displayTitle = peer._asPeer().displayTitle
+                    default:
+                        displayTitle = peer?._asPeer().compactDisplayTitle ?? ""
+                    }
+                    let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
+                    fromProfile = _fromProfile
+                    nameHidden = _nameHidden
+                    if incoming {
+                        if savedToProfile {
+                            text = strings().starsStarGiftTextKeptOnPageIncoming
+                        } else if convertedToStars {
+                            text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
+                        } else {
+                            text = strings().starsStarGiftTextIncoming(convertStarsString)
+                        }
+                    } else {
+                        if savedToProfile {
+                            text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
+                        } else if convertedToStars {
+                            text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
+                        } else {
+                            text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
+                        }
+                    }
+                default:
+                    text = strings().starsExampleAppsText
+                }
+                if !fromProfile {
+                    text += " " + strings().starsStarGiftTextLink
+                    
+                    let textAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, contents)
+                    })).mutableCopy() as! NSMutableAttributedString
+                    
+                    if nameHidden, incoming {
+                        textAttr.append(string: "\n\n")
+                        textAttr.append(string: strings().starTransactionStarGiftAnonymous, color: theme.colors.grayText, font: .normal(.text))
+                    }
+                    
+                    self.descLayout = .init(textAttr, alignment: .center)
+                } else if nameHidden, incoming, !fromProfile {
+                    let textAttr = NSMutableAttributedString()
+                    textAttr.append(string: strings().starTransactionStarGiftAnonymous, color: theme.colors.grayText, font: .normal(.text))
+                    self.descLayout = .init(textAttr, alignment: .center)
+                } else {
+                    self.descLayout = nil
+                }
             }
+            
             
         } else {
             self.descLayout = nil
@@ -276,6 +294,8 @@ private final class HeaderItem : GeneralRowItem {
         switch purpose {
         case let .starGift(gift, _, _, _, _, _, _, _):
             return gift.file
+        case .unavailableGift:
+            return self.transaction.starGift?.file ?? LocalAnimatedSticker.bestForStarsGift(abs(transaction.count)).file
         default:
             return LocalAnimatedSticker.bestForStarsGift(abs(transaction.count)).file
         }
@@ -515,7 +535,7 @@ private final class HeaderView : GeneralContainableRowView {
             item?.arguments.close()
         }, for: .Click)
         
-        if item.peer == nil {
+        if item.peer == nil, item.transaction.starGift == nil {
             let current: ImageView
             if let view = self.outgoingView {
                 current = view
@@ -592,7 +612,7 @@ private final class HeaderView : GeneralContainableRowView {
         
         avatar?.center()
         photo?.center()
-        giftView?.center()
+        giftView?.centerX(y: -20)
         outgoingView?.center()
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2)))
         
@@ -622,7 +642,9 @@ private final class Arguments {
     let close: ()->Void
     let convertStars:()->Void
     let displayOnMyPage:()->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void) {
+    let seeInProfile: () ->Void
+    let sendGift:(PeerId)->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
@@ -633,6 +655,8 @@ private final class Arguments {
         self.openStars = openStars
         self.convertStars = convertStars
         self.displayOnMyPage = displayOnMyPage
+        self.seeInProfile = seeInProfile
+        self.sendGift = sendGift
     }
 }
 
@@ -662,6 +686,40 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
+    
+    
+    let done: String
+    var convertStarsAmount: Int64? = nil
+    var savedToProfile: Bool = false
+    switch state.purpose {
+    case let .starGift(gift, convertStars, _, _, _, _savedToProfile, converted, _):
+        savedToProfile = _savedToProfile
+        if state.transaction.count > 0 {
+            switch state.transaction.peer {
+            case let .peer(peer):
+                if peer.id == arguments.context.peerId {
+                    if !converted {
+                        convertStarsAmount = convertStars
+                    }
+                    if savedToProfile {
+                        done = strings().starTransactionStarGiftHideFromMyPage
+                    } else {
+                        done = strings().starTransactionStarGiftDisplayOnMyPage
+                    }
+                } else {
+                    done = strings().modalDone
+                }
+            default:
+                done = strings().modalDone
+            }
+            
+        } else {
+            done = strings().modalDone
+        }
+    default:
+        done = strings().modalDone
+    }
+    
   
     
     
@@ -671,11 +729,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let fromPeer: String
         if let messageId = state.transaction.giveawayMessageId {
-            fromPeer = "[\(peer._asPeer().displayTitle)](t.me/c/\(peer.id.id._internalGetInt64Value())/\(messageId.id))"
+            fromPeer = "[\(peer._asPeer().compactDisplayTitle)](t.me/c/\(peer.id.id._internalGetInt64Value())/\(messageId.id))"
         } else if peer.id == servicePeerId {
             fromPeer = strings().starTransactionUnknwonUser
         } else {
-            fromPeer = "[\(peer._asPeer().displayTitle)](peer_id_\(peer.id.toInt64()))"
+            fromPeer = "[\(peer._asPeer().compactDisplayTitle)](peer_id_\(peer.id.toInt64()))"
         }
         
         let from: TextViewLayout = .init(parseMarkdownIntoAttributedString(fromPeer, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
@@ -703,8 +761,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             fromText = strings().starTransactionTo
         }
         
-        
-        
+        let badge: InputDataTableBasedItem.Row.Right.Badge?
+        if fromText == strings().starTransactionFrom, state.transaction.starGift != nil, peer.id != arguments.context.peerId {
+            badge = .init(text: strings().starTransactionSendGift, callback: {
+                arguments.sendGift(peer.id)
+            })
+        } else {
+            badge = nil
+        }
         rows.append(.init(left: .init(.initialize(string: fromText, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
             if peer.id == servicePeerId {
                 let control: ImageView
@@ -727,7 +791,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return control
             }
             
-        })))
+        }, badge: badge)))
+        
         
         switch state.purpose {
         case .starGift:
@@ -804,30 +869,32 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         }
     } else if state.transaction.flags.contains(.isGift) {
-        let fromPeer: String = strings().starTransactionUnknwonUser
-        
-        let from: TextViewLayout = .init(parseMarkdownIntoAttributedString(fromPeer, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, contents)
-        })), maximumNumberOfLines: 1, alwaysStaticItems: true)
-        
-        from.interactions.processURL = { url in
-            if let url = url as? String {
-                arguments.openLink(url)
+        if state.purpose != .unavailableGift {
+            let fromPeer: String = strings().starTransactionUnknwonUser
+            
+            let from: TextViewLayout = .init(parseMarkdownIntoAttributedString(fromPeer, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })), maximumNumberOfLines: 1, alwaysStaticItems: true)
+            
+            from.interactions.processURL = { url in
+                if let url = url as? String {
+                    arguments.openLink(url)
+                }
             }
+            
+            let fromText: String = strings().starTransactionFrom
+            
+            rows.append(.init(left: .init(.initialize(string: fromText, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+                let control: ImageView
+                if let previous = previous as? ImageView {
+                    control = previous
+                } else {
+                    control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
+                }
+                control.image = NSImage(resource: .iconStarTransactionAnonymous).precomposed()
+                return control
+            })))
         }
-        
-        let fromText: String = strings().starTransactionFrom
-        
-        rows.append(.init(left: .init(.initialize(string: fromText, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
-            let control: ImageView
-            if let previous = previous as? ImageView {
-                control = previous
-            } else {
-                control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
-            }
-            control.image = NSImage(resource: .iconStarTransactionAnonymous).precomposed()
-            return control
-        })))
     }
     
     if !state.transaction.id.isEmpty, state.transaction.giveawayMessageId == nil {
@@ -854,9 +921,30 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     switch state.purpose {
+    case .unavailableGift:
+        if let gift = state.transaction.starGift {
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionValue, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: gift.price.formattedWithSeparator, color: theme.colors.text, font: .normal(.text))), leftView: { previous in
+                
+                let imageView = previous as? ImageView ?? ImageView()
+                imageView.image = NSImage(resource: .iconStarCurrency).precomposed()
+                imageView.setFrameSize(18, 18)
+                imageView.contentGravity = .resizeAspectFill
+                return imageView
+            })))
+        }
     case let .starGift(gift, _, text, entities, _, _, _, _):
+        
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionValue, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: gift.price.formattedWithSeparator, color: theme.colors.text, font: .normal(.text))), leftView: { previous in
+            
+            let imageView = previous as? ImageView ?? ImageView()
+            imageView.image = NSImage(resource: .iconStarCurrency).precomposed()
+            imageView.setFrameSize(18, 18)
+            imageView.contentGravity = .resizeAspectFill
+            return imageView
+        }, badge: convertStarsAmount != nil ? .init(text: strings().starTransactionSaleForCountable(Int(convertStarsAmount!)), callback: arguments.convertStars) : nil)))
+        
         if let availability = gift.availability {
-            rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOf(Int(availability.total - availability.remains), Int(availability.total).prettyNumber), color: theme.colors.text, font: .normal(.text))))))
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOfLeft(Int(availability.remains).formattedWithSeparator, Int(availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
         }
         
         if let text {
@@ -877,39 +965,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
   
-    
-    
-    
-    let done: String
-    var convertStarsAmount: Int64? = nil
-    switch state.purpose {
-    case let .starGift(gift, convertStars, _, _, _, savedToProfile, converted, _):
-        if state.transaction.count > 0 {
-            switch state.transaction.peer {
-            case let .peer(peer):
-                if peer.id == arguments.context.peerId {
-                    if !converted {
-                        convertStarsAmount = convertStars
-                    }
-                    if savedToProfile {
-                        done = strings().starTransactionStarGiftHideFromMyPage
-                    } else {
-                        done = strings().starTransactionStarGiftDisplayOnMyPage
-                    }
-                } else {
-                    done = strings().modalDone
-                }
-            default:
-                done = strings().modalDone
-            }
-            
-        } else {
-            done = strings().modalDone
-        }
-    default:
-        done = strings().modalDone
+    if done != strings().modalDone, savedToProfile {
+        
+        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        sectionId += 1
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionStarGiftSeeInProfile, linkHandler: { _ in
+            arguments.seeInProfile()
+        }), data: .init(color: theme.colors.listGrayText, viewType: .modern(position: .single, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        index += 1
+
     }
     
+   
     if done == strings().modalDone {
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionTos, linkHandler: arguments.openLink), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
         index += 1
@@ -928,20 +996,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }, inset: .init(left: 10, right: 10))
     }))
     
-    if let convertStarsAmount {
-        
-        entries.append(.sectionId(sectionId, type: .customModern(5)))
-        sectionId += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionStarGiftConvertTo(strings().starListItemCountCountable(Int(convertStarsAmount))), linkHandler: { _ in
-            arguments.convertStars()
-        }), data: .init(color: theme.colors.accent, viewType: .modern(position: .single, insets: .init()), fontSize: 14, centerViewAlignment: true, alignment: .center)))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .customModern(5)))
-        sectionId += 1
 
-    }
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
@@ -952,11 +1007,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 enum Star_TransactionPurpose : Equatable {
     case payment
     case gift
+    case unavailableGift
     case starGift(gift: StarGift, convertStars: Int64, text: String?, entities: [MessageTextEntity]?, nameHidden: Bool, savedToProfile: Bool, converted: Bool, fromProfile: Bool)
     
     var isGift: Bool {
         switch self {
-        case .gift, .starGift:
+        case .gift, .starGift, .unavailableGift:
             return true
         default:
             return false
@@ -1101,6 +1157,12 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
                 break
             }
         }
+    }, seeInProfile: {
+        closeAllModals(window: window)
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: context.peerId, mediaMode: .gifts)
+    }, sendGift: { peerId in
+        showModal(with: GiftingController(context: context, peerId: peerId), for: window)
+        close?()
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

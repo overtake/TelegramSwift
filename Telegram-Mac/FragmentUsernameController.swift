@@ -205,7 +205,10 @@ private final class RowView: GeneralContainableRowView {
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         dismiss.sizeToFit()
         
-        stickerView.update(with: LocalAnimatedSticker.fragment.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment.parameters, animated: animated)
+        var parameters = LocalAnimatedSticker.fragment.parameters
+        parameters.colors = [.init(keyPath: "", color: theme.colors.underSelectedColor)]
+        
+        stickerView.update(with: LocalAnimatedSticker.fragment.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
         
         needsLayout = true
     }

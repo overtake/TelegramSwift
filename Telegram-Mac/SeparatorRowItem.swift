@@ -12,6 +12,7 @@ import TGUIKit
 enum SeparatorBlockState : Equatable {
     enum Action : Equatable {
         case showAsMessages(onlyMy: Bool)
+        case showPublicPosts
     }
     case short
     case all

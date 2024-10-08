@@ -217,12 +217,15 @@ private final class PeerMediaBlockRowView : TableRowView {
         if item.isMediaVisible {
             item.controller.currentMainTableView = { [weak item, weak self] mainTable, animated, updated in
                 if let item = item, animated {
-                    if item.table?.documentOffset.y == self?.frame.minY {
+                    let frame = item.table?.rectOf(item: item) ?? .zero
+                    if item.table?.documentOffset.y == frame.minY {
                         if !updated {
                             mainTable?.scroll(to: .up(true))
                         }
                     } else if updated {
-                        item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                        DispatchQueue.main.async {
+                            item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                        }
                     }
                 }
                 

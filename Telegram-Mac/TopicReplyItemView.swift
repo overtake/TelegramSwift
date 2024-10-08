@@ -105,7 +105,7 @@ final class TopicReplyItemView : Control {
                 
                 
                 var rect: NSRect
-                rect = item.rect.insetBy(dx: -2, dy: -2)
+                rect = item.rect.insetBy(dx: 1, dy: 1)
 
                 rect = rect.offsetBy(dx: 6, dy: 2)
 

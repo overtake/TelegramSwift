@@ -660,6 +660,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
                             text = strings().checkoutErrorPaymentFailed
                         case .precheckoutFailed:
                             text = strings().checkoutErrorPrecheckoutFailed
+                        case .starGiftOutOfStock:
+                            text = strings().giftSoldOutError
                         }
                         showModalText(for: window, text: text)
                         completion(.failed)
