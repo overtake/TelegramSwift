@@ -334,11 +334,11 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
     }
     
     private func runTimer() {
-        self.disposable?.dispose()
-        
-        self.disposable = delaySignal(10).startStrict(completed: { [weak self] in
-            self?.next()
-        })
+//        self.disposable?.dispose()
+//        
+//        self.disposable = delaySignal(10).startStrict(completed: { [weak self] in
+//            self?.next()
+//        })
     }
     
     override func viewWillAppear(_ animated: Bool) {

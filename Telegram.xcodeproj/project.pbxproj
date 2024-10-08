@@ -631,6 +631,7 @@
 		27ABFD332858DF9E006C3301 /* PremiumStickersDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */; };
 		27B29E3F2CABEC4B007FDA6B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 2739A4AB2CABC29D0065186B /* TelegramSystem */; };
 		27B29E412CABEC55007FDA6B /* TelegramSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 27B29E402CABEC55007FDA6B /* TelegramSystem */; };
+		27B29E472CB51432007FDA6B /* menu_edited.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B29E462CB51432007FDA6B /* menu_edited.tgs */; };
 		27B4A8F12C2DA0340000F3DF /* emoji144.txt in Resources */ = {isa = PBXBuildFile; fileRef = 27B4A8F02C2DA0340000F3DF /* emoji144.txt */; };
 		27B6AF8E2B4D6E0B001D0983 /* MessagesPrivacyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */; };
 		27B6AFA72B4FB317001D0983 /* menu_tag_filter.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */; };
@@ -2233,6 +2234,7 @@
 		27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStickersDemoView.swift; sourceTree = "<group>"; };
 		27B15D2E259B2DA700C7F280 /* DesktopCaptureListUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListUI.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
+		27B29E462CB51432007FDA6B /* menu_edited.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_edited.tgs; sourceTree = "<group>"; };
 		27B4A8F02C2DA0340000F3DF /* emoji144.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji144.txt; sourceTree = "<group>"; };
 		27B6AF8D2B4D6E0B001D0983 /* MessagesPrivacyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesPrivacyController.swift; sourceTree = "<group>"; };
 		27B6AFA52B4FB316001D0983 /* menu_tag_filter.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_tag_filter.tgs; sourceTree = "<group>"; };
@@ -4086,6 +4088,7 @@
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
+				27B29E462CB51432007FDA6B /* menu_edited.tgs */,
 				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
 				275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */,
 				27B836472B6396E500E82683 /* menu_hd_lock.tgs */,
@@ -7319,6 +7322,7 @@
 				272934122778E01100F10D3C /* menu_video.tgs in Resources */,
 				2751E79527F340AD003E3937 /* menu_webapp_placeholder.tgs in Resources */,
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
+				27B29E472CB51432007FDA6B /* menu_edited.tgs in Resources */,
 				270FD59E2C53CEAF000070E6 /* menu_close_multiple.tgs in Resources */,
 				27803C0027A3E944007B0FA9 /* menu_folder_book.tgs in Resources */,
 				271F78CE280AD9520040EE8F /* durgerking.placeholder in Resources */,

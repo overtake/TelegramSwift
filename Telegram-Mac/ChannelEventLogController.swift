@@ -521,6 +521,14 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         return bar
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
+            header.view.update(with: object)
+        }
+    }
+    
     override func escapeKeyAction() -> KeyHandlerResult {
         if genericView.inSearch {
             genericView.hideSearch()
@@ -585,6 +593,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         chatInteraction.focusMessageId = { [weak self] messageId, focusTarget, _ in
             self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: focusTarget))
         }
+        
 
         genericView.info.set(handler: { _ in
             alert(for: context.window, header: strings().channelEventLogAlertHeader, info: strings().channelEventLogAlertInfo)

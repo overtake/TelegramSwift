@@ -1493,6 +1493,8 @@ class ChatListController : PeersListController {
                 let peerId = peer.id
                 let mode: PeerListState.SelectedSearchTag = peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
                 self?.makeHashtag(.init(mode: mode, peerId: peerId, text: query))
+            } else {
+                self?.makeHashtag(.init(mode: .hashtagPublicPosts, peerId: nil, text: query))
             }
             self?.genericView.searchView.change(state: .Focus, false)
         }

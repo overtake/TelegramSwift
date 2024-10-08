@@ -14,6 +14,7 @@ import InAppSettings
 import Postbox
 import AVFoundation
 import ColorPalette
+import Translate
 
 final class GalleryInteractions {
     var dismiss:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
@@ -1214,7 +1215,8 @@ class GalleryViewer: NSResponder {
     
     var contextMenu:ContextMenu {
         let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
-        
+        let context = self.context
+        let window = self.window
 
         if let item = self.pager.selectedItem, item.entry.message?.adAttribute == nil {
             if !(item is MGalleryExternalVideoItem) {
@@ -1233,6 +1235,15 @@ class GalleryViewer: NSResponder {
                     menu.addItem(ContextMenuItem(strings().chatCopySelectedText, handler: {
                         copyToClipboard(text)
                     }, itemImage: MenuAnimation.menu_copy.value))
+                    
+                    let fromLang = Translate.detectLanguage(for: text)
+                    let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
+                    
+                    if fromLang == nil || !toLang.contains(fromLang!) {
+                        menu.addItem(ContextMenuItem.init(strings().peerInfoTranslate, handler: {
+                            showModal(with: TranslateModalController(context: context, from: fromLang, toLang: appAppearance.languageCode, text: text), for: window)
+                        }, itemImage: MenuAnimation.menu_translate.value))
+                    }
                 }
             }
             

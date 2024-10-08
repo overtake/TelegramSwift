@@ -302,7 +302,7 @@ struct PeerListState : Equatable {
     
     struct Hashtag : Equatable {
         var mode: SelectedSearchTag
-        var peerId: PeerId
+        var peerId: PeerId?
         var text: String
     }
     
@@ -2019,7 +2019,7 @@ private class SearchContainer : Control {
             let insets = NSEdgeInsets(left: 10, right: 10)
             var index: Int = 0
             
-            if state.hashtag != nil {
+            if state.hashtag?.peerId != nil {
                 let tags: [PeerListState.SelectedSearchTag] = [.hashtagThisChat, .hashtagMyMessages, .hashtagPublicPosts]
                 for tag in tags {
                     items.append(.init(title: tag.title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
@@ -2031,6 +2031,12 @@ private class SearchContainer : Control {
                 
                 items.append(.init(title: isForum ? strings().chatListTopicsTag : state.peerTag == nil ? strings().chatListChatsTag : strings().chatListMessagesTag, index: index, uniqueId: -4, selected: state.selectedTag == .chats, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                 index += 1
+                
+                if state.hashtag != nil {
+                    let tag = PeerListState.SelectedSearchTag.hashtagPublicPosts
+                    items.append(.init(title: tag.title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+                }
                 
                 if state.peerTag == nil, state.forumPeer == nil, !state.mode.isForumLike {
                     items.append(.init(title: strings().chatListDownloadsTag, index: index, uniqueId: -3, selected: state.selectedTag == .downloads, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
@@ -2251,7 +2257,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             current.selectedTag = hashtag.mode
             return current
         }
-        //self.genericView.searchView.setString(hashtag.text)
+        if hashtag.peerId == nil {
+            self.takeArguments()?.selectSearchTag(.hashtagPublicPosts)
+            self.genericView.searchView.setString("")
+        }
     }
     
     override func viewDidLoad() {

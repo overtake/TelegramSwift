@@ -707,7 +707,12 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
         
     }, openGift: { option in
         if let peer = stateValue.with({ $0.peer }) {
-            showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer), for: window)
+            if option.native.availability?.remains == 0 {
+//                showModalText(for: window, text: strings().giftSoldOutError)
+                showModal(with: Star_TransactionScreen(context: context, peer: nil, transaction: .init(flags: [.isGift], id: "", count: 0, date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native), purpose: .unavailableGift), for: context.window)
+            } else {
+                showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer), for: window)
+            }
         }
     }, giftPremium: { option in
         let state = stateValue.with { $0 }

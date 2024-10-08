@@ -57,6 +57,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
         struct Badge {
             let text: String
             let color: NSColor
+            let textColor: NSColor
         }
         let file: TelegramMediaFile
         let text: NSAttributedString?
@@ -70,15 +71,25 @@ final class GiftOptionsRowItem : GeneralRowItem {
         var nativeProfileGift: ProfileGiftsContext.State.StarGift?
         
         static func initialize(_ option: PremiumPaymentOption) -> Option {
-            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, color: theme.colors.redUI )}, peer: nil, invisible: false, nativePayment: option)
+            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, color: theme.colors.redUI, textColor: .white )}, peer: nil, invisible: false, nativePayment: option)
         }
         static func initialize(_ option: PeerStarGift) -> Option {
-            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: option.limited ? .init(text: strings().starGiftLimited, color: theme.colors.accent) : nil, peer: nil, invisible: false, nativeStarGift: option)
+            let badge: Badge?
+            if let availability = option.native.availability {
+                if availability.remains == 0 {
+                    badge = .init(text: strings().giftSoldOut, color: theme.colors.redUI, textColor: .white)
+                } else {
+                    badge = .init(text: strings().starGiftLimited, color: theme.colors.accent, textColor: theme.colors.underSelectedColor)
+                }
+            } else {
+                badge = nil
+            }
+            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, nativeStarGift: option)
         }
         static func initialize(_ option: ProfileGiftsContext.State.StarGift) -> Option {
             let badge: Badge?
             if let availability = option.gift.availability {
-                badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), color: theme.colors.accent)
+                badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), color: theme.colors.accent, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
@@ -344,7 +355,7 @@ private final class GiftOptionsRowView:  GeneralRowView {
                 let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: [badge.color.withMultipliedBrightnessBy(1.1), badge.color.withMultipliedBrightnessBy(0.9)], direction: .diagonal)!
                 
                 
-                current.image = generateGiftBadgeBackground(background: ribbon, text: badge.text)
+                current.image = generateGiftBadgeBackground(background: ribbon, text: badge.text, textColor: badge.textColor)
                 
                 current.sizeToFit()
             } else if let view = badgeView {

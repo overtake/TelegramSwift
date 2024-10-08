@@ -584,6 +584,8 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                         text = strings().checkoutErrorPaymentFailed
                     case .precheckoutFailed:
                         text = strings().checkoutErrorPrecheckoutFailed
+                    case .starGiftOutOfStock:
+                        text = strings().giftSoldOutError
                     }
                     alert(for: window(), info: text)
                     invokeCompletion(.failed)

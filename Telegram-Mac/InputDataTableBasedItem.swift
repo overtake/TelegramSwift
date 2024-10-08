@@ -14,8 +14,13 @@ final class InputDataTableBasedItem : GeneralRowItem {
     
     struct Row {
         struct Right {
-            let name: TextViewLayout
+            struct Badge {
+                var text: String
+                var callback:()->Void
+            }
+            var name: TextViewLayout
             var leftView: ((NSView?)->NSView)?
+            var badge: Badge?
         }
         let left: TextViewLayout?
         let right: Right
@@ -25,10 +30,18 @@ final class InputDataTableBasedItem : GeneralRowItem {
         }
         
         func measure(_ width: CGFloat, basic: CGFloat) {
-            if left == nil {
-                right.name.measure(width: basic)
+            let additional: CGFloat
+            if let badge = right.badge {
+                let layout = TextViewLayout(.initialize(string: badge.text, font: .normal(.small)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                additional = layout.layoutSize.width + 16
             } else {
-                right.name.measure(width: width - 20)
+                additional = 0
+            }
+            if left == nil {
+                right.name.measure(width: basic - additional)
+            } else {
+                right.name.measure(width: width - 20 - additional)
             }
         }
         func prepare() {
@@ -80,11 +93,49 @@ final class InputDataTableBasedItem : GeneralRowItem {
 final class InputDataTableBasedItemView: TableRowView {
     
     private class RowView: View {
+        
+        private class BadgeView : Control {
+            private let textView = TextView()
+            required init(frame frameRect: NSRect) {
+                super.init(frame: frameRect)
+                addSubview(textView)
+                textView.userInteractionEnabled = false
+                textView.isSelectable = false
+                textView.isEventLess = true
+                self.scaleOnClick = true
+            }
+            
+            required init?(coder: NSCoder) {
+                fatalError("init(coder:) has not been implemented")
+            }
+            
+            func set(badge: InputDataTableBasedItem.Row.Right.Badge) -> NSSize {
+                let layout = TextViewLayout(.initialize(string: badge.text, color: theme.colors.accent, font: .normal(.small)))
+                layout.measure(width: .greatestFiniteMagnitude)
+                textView.update(layout)
+                
+                setSingle(handler: { _ in
+                    badge.callback()
+                }, for: .Click)
+                
+                self.backgroundColor = theme.colors.accent.withAlphaComponent(0.2)
+                self.layer?.cornerRadius = (layout.layoutSize.height + 4) / 2
+                
+                return textView.frame.insetBy(dx: -5, dy: -2).size
+            }
+            
+            override func layout() {
+                super.layout()
+                textView.center()
+            }
+        }
+        
         private let leftView = TextView()
         private let rightView = InteractiveTextView()
         private let left = View()
         
         private var rightLeft: NSView?
+        private var rightBadge: BadgeView?
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -130,6 +181,22 @@ final class InputDataTableBasedItemView: TableRowView {
                 addSubview(rightLeft)
             }
             
+            if let badge = row.right.badge {
+                let current: BadgeView
+                if let view = self.rightBadge {
+                    current = view
+                } else {
+                    current = BadgeView(frame: .zero)
+                    self.rightBadge = current
+                    addSubview(current)
+                }
+                let size = current.set(badge: badge)
+                current.setFrameSize(size)
+            } else if let rightBadge {
+                performSubviewRemoval(rightBadge, animated: false)
+                self.rightBadge = nil
+            }
+            
             needsLayout = true
 
         }
@@ -142,6 +209,9 @@ final class InputDataTableBasedItemView: TableRowView {
                 rightView.centerY(x: rightLeft.frame.maxX + 5)
             } else {
                 rightView.centerY(x: startRight)
+            }
+            if let rightBadge {
+                rightBadge.centerY(x: rightView.frame.maxX + 6)
             }
             left.frame = NSMakeRect(0, 0, startRight - 10, frame.height)
         }
